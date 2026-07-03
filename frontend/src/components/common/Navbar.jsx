@@ -29,7 +29,7 @@ export default function Navbar() {
 
   // Route to the correct dashboard based on the user's stored role
   const handleDashboardClick = async () => {
-    if (!user) { navigate('/auth/login-selection'); return; }
+    if (!user) { navigate('/auth/login?role=customer'); return; }
     try {
       const activeRole = localStorage.getItem('lumora_active_role');
       const snap = await getDoc(doc(db, 'users', user.uid));
@@ -64,6 +64,10 @@ export default function Navbar() {
       handleDashboardClick();
     } else if (item.href === '#cart') {
       navigateTo('cart');
+    } else if (item.href === '/partnerships') {
+      navigate('/partnerships');
+    } else if (item.href === '#categories') {
+      navigateTo('categories');
     } else if (item.href.startsWith('#')) {
       const elementId = item.href.substring(1);
       if (elementId === 'products') {
@@ -98,7 +102,7 @@ export default function Navbar() {
         transform: 'translateX(-50%)',
         width: scrolled ? 'min(1200px, 92%)' : 'min(1340px, 94%)',
         zIndex: 900,
-        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1))',
+        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <div 
@@ -109,7 +113,7 @@ export default function Navbar() {
           justifyContent: 'space-between',
           padding: scrolled ? '12px 24px' : '20px 40px',
           borderRadius: '100px',
-          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1))',
+          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           background: scrolled ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.15)',
           backdropFilter: 'blur(36px) saturate(200%) brightness(1.04)',
           WebkitBackdropFilter: 'blur(36px) saturate(200%) brightness(1.04)',
@@ -153,7 +157,7 @@ export default function Navbar() {
             { label: 'Explore', icon: <Compass size={14} />, href: '#products' },
             { label: 'Categories', icon: <Sparkles size={14} />, href: '#categories' },
             { label: 'Creators', icon: <Users size={14} />, href: '#creators' },
-            { label: `Cart${cart?.length > 0 ? ` (${cart.length})` : ''}`, icon: <ShoppingBag size={14} />, href: '#cart' },
+            { label: 'Partnership', icon: <Users size={14} />, href: '/partnerships' },
             ...(user ? [{ label: 'Dashboard', icon: <LayoutDashboard size={14} />, href: '#dashboard' }] : [])
           ].map((item, index) => (
             <a
@@ -171,7 +175,7 @@ export default function Navbar() {
                 gap: '6px',
                 position: 'relative',
                 padding: '6px 0',
-                transition: 'color 0.3s cubic-bezier(0.16, 1, 0.3, 1))',
+                transition: 'color 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 cursor: 'none'
               }}
               onMouseEnter={(e) => {
@@ -198,7 +202,7 @@ export default function Navbar() {
                   height: '4px',
                   borderRadius: '50%',
                   backgroundColor: 'var(--color-latte)',
-                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1))',
+                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   transformOrigin: 'center center'
                 }}
               />
@@ -249,7 +253,7 @@ export default function Navbar() {
             <>
               <a
                 href="#"
-                onClick={(e) => { e.preventDefault(); navigateTo('login-selection'); }}
+                onClick={(e) => { e.preventDefault(); navigateTo('login', 'customer'); }}
                 className="text-sans"
                 style={{
                   fontSize: '0.85rem',
@@ -267,7 +271,7 @@ export default function Navbar() {
               
               <a 
                 href="#"
-                onClick={(e) => { e.preventDefault(); navigateTo('register-selection'); }}
+                onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); }}
                 className="btn-premium"
                 style={{
                   padding: scrolled ? '10px 22px' : '14px 28px',

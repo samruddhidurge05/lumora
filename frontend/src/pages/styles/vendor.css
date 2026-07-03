@@ -41,7 +41,7 @@
   overflow-x: hidden;
 }
 
-/* White background base with animated orbs — same as other dashboards */
+/* White background base — same as other dashboards */
 .vendor-shell::before {
   content: '';
   position: fixed;
@@ -146,55 +146,6 @@
   .vendor-topnav { padding: 14px 20px; }
 }
 
-/* ── Animated background orbs (same system as .dash-orb in index.css) ─────── */
-.v-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(90px);
-  pointer-events: none;
-  z-index: 0;
-}
-.v-orb-1 {
-  width: 560px; height: 560px;
-  top: -120px; left: -120px;
-  background: radial-gradient(circle, rgba(167,105,220,0.28) 0%, transparent 68%);
-  animation: vOrb1 24s ease-in-out infinite alternate;
-}
-.v-orb-2 {
-  width: 480px; height: 480px;
-  bottom: -100px; right: -100px;
-  background: radial-gradient(circle, rgba(123,63,160,0.24) 0%, transparent 68%);
-  animation: vOrb2 30s ease-in-out infinite alternate;
-}
-.v-orb-3 {
-  width: 380px; height: 380px;
-  top: 42%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(196,148,230,0.20) 0%, transparent 68%);
-  animation: vOrb3 20s ease-in-out infinite alternate;
-}
-.v-orb-4 {
-  width: 300px; height: 300px;
-  top: 10%; right: 6%;
-  background: radial-gradient(circle, rgba(216,191,240,0.22) 0%, transparent 68%);
-  animation: vOrb1 28s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes vOrb1 {
-  0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(55px, 45px) scale(1.09); }
-  100% { transform: translate(-25px, 75px) scale(0.95); }
-}
-@keyframes vOrb2 {
-  0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(-50px, -55px) scale(1.06); }
-  100% { transform: translate(30px, -30px) scale(0.92); }
-}
-@keyframes vOrb3 {
-  0%   { transform: translate(-50%, -50%) scale(1); }
-  50%  { transform: translate(-45%, -55%) scale(1.09); }
-  100% { transform: translate(-55%, -44%) scale(0.93); }
-}
 @keyframes vPageIn {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }

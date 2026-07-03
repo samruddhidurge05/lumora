@@ -1,10 +1,36 @@
+// src/pages/auth/VerifyEmail.jsx
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { applyActionCode, checkActionCode } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.75, 
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] }
+  }
+};
 
 export default function VerifyEmail() {
   const [cooldown, setCooldown] = useState(60);
@@ -52,11 +78,8 @@ export default function VerifyEmail() {
     const verify = async () => {
       setIsLoading(true);
       try {
-        // Validate the action code first
         await checkActionCode(auth, oobCode);
-        // Apply the verification code (marks email as verified)
         await applyActionCode(auth, oobCode);
-        // Force reload user token to get updated emailVerified flag
         await reloadUser();
         setStatus('success');
         setMessage('Email verified successfully.');
@@ -120,10 +143,15 @@ export default function VerifyEmail() {
   return (
     <AuthBackground>
       <div className="auth-container">
-        <div className="auth-blob b1"></div>
-        <div className="auth-blob b2"></div>
-        <div className="auth-card">
-          <div className="card-brand">
+        <motion.div 
+          className="auth-card"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <div className="auth-card-border" />
+          
+          <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5L15.5 5.25V12.75L9 16.5L2.5 12.75V5.25L9 1.5Z" fill="rgba(255,255,255,0.88)"/>
@@ -131,29 +159,32 @@ export default function VerifyEmail() {
               </svg>
             </div>
             <span className="card-name">Lumora</span>
-          </div>
+          </motion.div>
 
-          <h2 className="card-heading">Verify Email</h2>
-          <p className="card-subheading">
+          <motion.h2 className="card-heading" variants={itemVariants}>Verify Email</motion.h2>
+          <motion.p className="card-subheading" variants={itemVariants}>
             Verification email sent to: {email}
-          </p>
+          </motion.p>
 
           {status && (
-            <div className={`auth-alert auth-alert-${status}`} role="alert" aria-live="assertive">
-              <span>{status === 'success' ? '✦' : status === 'expired' ? '⚠' : '⚠'}</span>
+            <motion.div className={`auth-alert auth-alert-${status}`} role="alert" aria-live="assertive" variants={itemVariants}>
+              <span>{status === 'success' ? '✦' : '⚠'}</span>
               <p>{message}</p>
-            </div>
+            </motion.div>
           )}
 
-          <button
+          <motion.button
             className="btn-cta"
             onClick={handleCheckVerified}
             disabled={isLoading}
+            variants={itemVariants}
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.985 }}
           >
             {isLoading ? 'Checking...' : "I've Verified My Email"}
-          </button>
+          </motion.button>
 
-          <div className="signup-prompt" style={{ marginTop: '1rem' }}>
+          <motion.div className="signup-prompt" style={{ marginTop: '1rem' }} variants={itemVariants}>
             {cooldown > 0 ? (
               <span style={{ color: '#7B3FA0', fontWeight: '500' }}>
                 Resend in {cooldown}s
@@ -163,8 +194,8 @@ export default function VerifyEmail() {
                 Resend verification email
               </a>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </AuthBackground>
   );

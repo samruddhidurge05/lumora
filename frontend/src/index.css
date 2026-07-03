@@ -185,23 +185,6 @@ button { font-family: inherit; }
 .buy-now-glow { box-shadow: 0 6px 24px rgba(123,63,160,.38); }
 .clickable { cursor: pointer; }
 
-/* ── Dashboard ─────────────────────────────────── */
-.dash-orb { position:fixed; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; }
-.dash-orb-1 { width:560px; height:560px; top:-120px; left:-120px; background:radial-gradient(circle,rgba(167,105,220,0.28) 0%,transparent 68%); animation: dashOrb1 24s ease-in-out infinite alternate; }
-.dash-orb-2 { width:480px; height:480px; bottom:-100px; right:-100px; background:radial-gradient(circle,rgba(123,63,160,0.24) 0%,transparent 68%); animation: dashOrb2 30s ease-in-out infinite alternate; }
-.dash-orb-3 { width:380px; height:380px; top:42%; left:50%; transform:translate(-50%,-50%); background:radial-gradient(circle,rgba(196,148,230,0.20) 0%,transparent 68%); animation: dashOrb3 20s ease-in-out infinite alternate; }
-.dash-orb-4 { width:300px; height:300px; top:12%; right:8%; background:radial-gradient(circle,rgba(216,191,227,0.22) 0%,transparent 68%); animation: dashOrb1 28s ease-in-out infinite alternate-reverse; }
-
-/* ── Page-level floating orbs (for landing + marketplace) ──────── */
-.page-orb { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:0; }
-.page-orb-1 { width:700px; height:700px; top:-15%; left:-10%; background:radial-gradient(circle,rgba(200,170,240,0.35) 0%,transparent 65%); animation: pageOrb1 26s ease-in-out infinite alternate; }
-.page-orb-2 { width:600px; height:600px; bottom:-10%; right:-8%; background:radial-gradient(circle,rgba(255,195,170,0.25) 0%,transparent 65%); animation: pageOrb2 22s ease-in-out infinite alternate; }
-.page-orb-3 { width:500px; height:500px; top:35%; left:55%; background:radial-gradient(circle,rgba(180,220,200,0.22) 0%,transparent 65%); animation: pageOrb3 30s ease-in-out infinite alternate; }
-.page-orb-4 { width:450px; height:450px; top:60%; left:10%; background:radial-gradient(circle,rgba(220,198,255,0.28) 0%,transparent 65%); animation: pageOrb1 20s ease-in-out infinite alternate-reverse; }
-@keyframes pageOrb1 { 0%{transform:translate(0,0) scale(1)} 50%{transform:translate(5%,8%) scale(1.08)} 100%{transform:translate(-3%,4%) scale(0.96)} }
-@keyframes pageOrb2 { 0%{transform:translate(0,0) scale(1)} 50%{transform:translate(-6%,5%) scale(1.05)} 100%{transform:translate(4%,-6%) scale(0.97)} }
-@keyframes pageOrb3 { 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-45%,-55%) scale(1.06)} 100%{transform:translate(-55%,-48%) scale(0.95)} }
-
 /* ── Scrollbar ─────────────────────────────────── */
 .custom-scrollbar::-webkit-scrollbar { width:4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background:transparent; }
@@ -217,9 +200,6 @@ button { font-family: inherit; }
 @keyframes spin           { to{transform:rotate(360deg)} }
 @keyframes pulse-glow     { 0%,100%{box-shadow:0 0 20px rgba(123,63,160,.25)} 50%{box-shadow:0 0 40px rgba(123,63,160,.45)} }
 @keyframes float-slow     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-@keyframes float-card-1   { 0%{transform:rotate(-5deg) translateY(0)} 100%{transform:rotate(-3deg) translateY(-14px)} }
-@keyframes float-card-2   { 0%{transform:rotate(4deg) translateY(0)} 100%{transform:rotate(6deg) translateY(-18px)} }
-@keyframes float-card-3   { 0%{transform:rotate(-2deg) translateY(0)} 100%{transform:rotate(-1deg) translateY(-10px)} }
 @keyframes shimmer        { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes skeletonPulse  { 0%,100%{opacity:.5} 50%{opacity:1} }
 
@@ -247,19 +227,4 @@ button { font-family: inherit; }
 @media(max-width:800px) { .cart-grid,.checkout-grid { grid-template-columns:1fr !important; } }
 @media(max-width:700px) { .updates-layout { grid-template-columns:1fr !important; } }
 
-/* ── Dashboard Orbs Animations ─────────────────── */
-@keyframes dashOrb1 {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(60px, 40px) scale(1.1); }
-  100% { transform: translate(-20px, 80px) scale(0.95); }
-}
-@keyframes dashOrb2 {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-50px, -60px) scale(1.05); }
-  100% { transform: translate(30px, -30px) scale(0.9); }
-}
-@keyframes dashOrb3 {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-45%, -55%) scale(1.08); }
-  100% { transform: translate(-55%, -45%) scale(0.92); }
-}
+
