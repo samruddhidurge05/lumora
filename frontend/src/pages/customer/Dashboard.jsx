@@ -118,7 +118,14 @@ export default function Dashboard() {
           ordersCount: fetchedOrders.length || 4,
         });
 
-        if (profileRes.status === 'rejected' && ordersRes.status === 'rejected') {
+        // Only show "unreachable" banner when the failure is a network error
+        // (TypeError: Failed to fetch), NOT a 401/403 auth error.
+        // A 401 means the server IS reachable but the user has no valid session.
+        const isNetworkError = (res) =>
+          res.status === 'rejected' &&
+          res.reason instanceof TypeError;
+
+        if (isNetworkError(profileRes) && isNetworkError(ordersRes)) {
           setApiError('Notice: Live server unreachable. Displaying fallback data.');
         }
 
