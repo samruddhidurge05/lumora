@@ -1,0 +1,454 @@
+import React, { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppContextProvider, useApp } from './context/AppContext';
+import AnimatedBackground from './components/AnimatedBackground';
+import ThreeDBackground from './components/ThreeDBackground';
+import NavigationProgress from './components/NavigationProgress';
+import CartDrawer from './components/cart/CartDrawer';
+
+/* ── Error boundary ── */
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error('[Lumora] Render error:', error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', background: '#FAF5FF', padding: '40px', textAlign: 'center' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
+          <h2 style={{ color: '#2D004D', marginBottom: '8px', fontWeight: 700 }}>Something went wrong</h2>
+          <p style={{ color: '#7B5FA0', marginBottom: '24px', maxWidth: '500px' }}>
+            {this.state.error?.message || 'An unexpected error occurred.'}
+          </p>
+          <button onClick={() => window.location.reload()}
+            style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+            Reload App
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ── Lazy page imports ─────────────────────────────────────────────
+const Home           = lazy(() => import('./pages/marketplace/Home'));
+const Products       = lazy(() => import('./pages/marketplace/Products'));
+const ProductPage    = lazy(() => import('./pages/marketplace/ProductPage'));
+const CreatorProfile = lazy(() => import('./pages/marketplace/CreatorProfile'));
+const Cart           = lazy(() => import('./pages/marketplace/Cart'));
+const Checkout       = lazy(() => import('./pages/marketplace/Checkout'));
+const Payment        = lazy(() => import('./pages/marketplace/Payment'));
+const Success        = lazy(() => import('./pages/marketplace/Success'));
+const Wishlist       = lazy(() => import('./pages/marketplace/Wishlist'));
+const Search         = lazy(() => import('./pages/marketplace/Search'));
+const Categories     = lazy(() => import('./pages/marketplace/Categories'));
+const About          = lazy(() => import('./pages/marketplace/About'));
+const Contact        = lazy(() => import('./pages/marketplace/Contact'));
+const Downloads      = lazy(() => import('./pages/marketplace/Downloads'));
+
+const LoginSelection    = lazy(() => import('./pages/auth/LoginSelection'));
+const RegisterSelection = lazy(() => import('./pages/auth/RegisterSelection'));
+const Login             = lazy(() => import('./pages/auth/Login'));
+const Register          = lazy(() => import('./pages/auth/Register'));
+const ForgotPassword    = lazy(() => import('./pages/auth/ForgotPassword'));
+const VerifyEmail       = lazy(() => import('./pages/auth/VerifyEmail'));
+
+const CustomerDashboard  = lazy(() => import('./pages/customer/Dashboard'));
+const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard'));
+
+// Vendor pages
+const VendorDashboard     = lazy(() => import('./pages/vendor/Dashboard'));
+const VendorOrders        = lazy(() => import('./pages/vendor/Orders'));
+const VendorProducts      = lazy(() => import('./pages/vendor/ManageProducts'));
+const VendorAddProduct    = lazy(() => import('./pages/vendor/AddProduct'));
+const VendorEditProduct   = lazy(() => import('./pages/vendor/EditProduct'));
+const VendorAnalytics     = lazy(() => import('./pages/vendor/Analytics'));
+const VendorEarnings      = lazy(() => import('./pages/vendor/Earnings'));
+const VendorWithdrawals   = lazy(() => import('./pages/vendor/Withdrawals'));
+const VendorReviews       = lazy(() => import('./pages/vendor/Reviews'));
+const VendorAffiliate     = lazy(() => import('./pages/vendor/Affiliate'));
+const VendorVerification  = lazy(() => import('./pages/vendor/Verification'));
+const VendorStoreSettings = lazy(() => import('./pages/vendor/StoreSettings'));
+const VendorProfile       = lazy(() => import('./pages/vendor/Profile'));
+
+const NotFound = lazy(() => import('./pages/error/NotFound'));
+
+// Admin pages
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
+const AdminProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
+const AdminOrdersManagement = lazy(() => import('./pages/admin/OrdersManagement'));
+const AdminPayments = lazy(() => import('./pages/admin/Payments'));
+const AdminVendors = lazy(() => import('./pages/admin/Vendors'));
+const AdminCustomersManagement = lazy(() => import('./pages/admin/CustomersManagement'));
+const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
+const AdminReports = lazy(() => import('./pages/admin/Reports'));
+const AdminCampaignManager = lazy(() => import('./pages/admin/CampaignManager'));
+const PlatformSettings = lazy(() => import('./pages/admin/platform/PlatformSettings'));
+const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+
+// ── Loading spinner ───────────────────────────────────────────────
+function PageLoader() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(196,181,253,0.2)', borderTop: '3px solid #7B3FA0', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// ── SPA router — handles marketplace / cart / product pages ──────
+function SPARouter() {
+  const { currentView, platformStatus } = useApp();
+  const isPlatformPaused = platformStatus?.isPlatformPaused;
+
+  const renderPage = () => {
+    switch (currentView) {
+      case 'landing':           return <Home />;
+      case 'marketplace':       return <Products />;
+      case 'product-detail':    return <ProductPage />;
+      case 'creator-profile':   return <CreatorProfile />;
+      case 'cart':              return <Cart />;
+      case 'checkout':          return <Checkout />;
+      case 'payment':           return <Payment />;
+      case 'checkout/success':  return <Success />;
+      case 'wishlist':          return <Wishlist />;
+      case 'search':            return <Search />;
+      case 'categories':        return <Categories />;
+      case 'about':             return <About />;
+      case 'contact':           return <Contact />;
+      case 'downloads':         return <Downloads />;
+      // Legacy in-SPA auth views (navigateTo still works from other components)
+      case 'login-selection':    return <LoginSelection />;
+      case 'register-selection': return <RegisterSelection />;
+      case 'login':              return <Login />;
+      case 'register':           return <Register />;
+      case 'forgot-password':    return <ForgotPassword />;
+      case 'verify-email':       return <VerifyEmail />;
+      // In-SPA dashboards
+      case 'dashboard':          return <CustomerDashboard />;
+      case 'affiliate':          return <AffiliateDashboard />;
+      case 'vendor':             return <VendorDashboard />;
+      default:                   return <Home />;
+    }
+  };
+
+  return (
+    <>
+      <AnimatedBackground />
+      <ThreeDBackground />
+      <NavigationProgress />
+      <CartDrawer />
+      {isPlatformPaused && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
+          color: '#fff',
+          textAlign: 'center',
+          padding: '10px 20px',
+          fontSize: '0.85rem',
+          fontWeight: 700,
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(29,78,216,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+        }}>
+          <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.2)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>Platform Maintenance</span>
+          <span>Purchases are temporarily disabled. {platformStatus?.pauseMessage}</span>
+        </div>
+      )}
+      <Suspense fallback={<PageLoader />}>
+        {renderPage()}
+      </Suspense>
+    </>
+  );
+}
+
+function AppContent() {
+  const { isAccountDisabled, isPlatformPaused, user, userRole, logout } = useAuth();
+  
+  // Exclude vendor and affiliate roles from the global full-screen blocker
+  // since they display the suspension card inside their custom layout (sidebar remains visible).
+  const showDisabledBlocker = isAccountDisabled && !['vendor', 'affiliate'].includes(userRole);
+  
+  // Exclude admin role from seeing platform pause screen so they can unpause!
+  const showMaintenance = isPlatformPaused && userRole !== 'admin';
+
+  return (
+    <>
+      {showDisabledBlocker && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(15, 10, 22, 0.95)',
+          backdropFilter: 'blur(20px)',
+          color: '#fff',
+          zIndex: 999999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '40px',
+            borderRadius: '24px',
+            textAlign: 'center',
+            maxWidth: '480px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+              color: '#ef4444'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '12px', letterSpacing: '-0.025em', color: '#fca5a5' }}>Account Suspended</h2>
+            <p style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '32px' }}>
+              Your account has been disabled by the platform administrator. If you believe this is an error, please contact support.
+            </p>
+            <button 
+              onClick={logout}
+              style={{
+                background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                border: 'none',
+                color: '#fff',
+                padding: '12px 30px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                borderRadius: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(123, 63, 160, 0.2)'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {showMaintenance && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(15, 10, 22, 0.95)',
+          backdropFilter: 'blur(20px)',
+          color: '#fff',
+          zIndex: 999999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '40px',
+            borderRadius: '24px',
+            textAlign: 'center',
+            maxWidth: '480px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              background: 'rgba(123, 63, 160, 0.1)',
+              border: '1px solid rgba(123, 63, 160, 0.2)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+              color: '#d8b4fe'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '12px', letterSpacing: '-0.025em', color: '#e9d5ff' }}>Platform Under Maintenance</h2>
+            <p style={{ fontSize: '0.95rem', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '32px' }}>
+              Lumora is currently undergoing maintenance. Please try again later.
+            </p>
+            {user && (
+              <button 
+                onClick={logout}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  padding: '12px 30px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Sign Out
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* ── Auth routes ── */}
+          <Route path="/auth/login-selection"    element={<LoginSelection />} />
+          <Route path="/auth/register-selection" element={<RegisterSelection />} />
+          <Route path="/auth/login"              element={<Login />} />
+          <Route path="/auth/register"           element={<Register />} />
+          <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
+          <Route path="/auth/verify-email"       element={<VerifyEmail />} />
+
+          {/* ── Protected dashboard routes ── */}
+          <Route path="/vendor" element={<Navigate to="/vendor/dashboard" replace />} />
+          <Route path="/affiliate" element={<Navigate to="/affiliate/dashboard" replace />} />
+          <Route path="/affiliate/dashboard"
+            element={
+              <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole="affiliate">
+                <AffiliateDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/customer/dashboard"
+            element={
+              <ProtectedRoute redirectTo="/auth/login?role=customer" requiredRole="customer">
+                <CustomerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/vendor/dashboard"
+            element={
+              <ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor">
+                <VendorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/vendor/orders"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute>}
+          />
+          <Route path="/vendor/products"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProducts /></ProtectedRoute>}
+          />
+          <Route path="/vendor/add-product"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAddProduct /></ProtectedRoute>}
+          />
+          <Route path="/vendor/edit-product/:id"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEditProduct /></ProtectedRoute>}
+          />
+          <Route path="/vendor/analytics"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute>}
+          />
+          <Route path="/vendor/earnings"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEarnings /></ProtectedRoute>}
+          />
+          <Route path="/vendor/withdrawals"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorWithdrawals /></ProtectedRoute>}
+          />
+          <Route path="/vendor/reviews"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorReviews /></ProtectedRoute>}
+          />
+          <Route path="/vendor/affiliate"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAffiliate /></ProtectedRoute>}
+          />
+          <Route path="/vendor/verification"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorVerification /></ProtectedRoute>}
+          />
+          <Route path="/vendor/store-settings"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorStoreSettings /></ProtectedRoute>}
+          />
+          <Route path="/vendor/profile"
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProfile /></ProtectedRoute>}
+          />
+
+          {/* ── Admin routes ── */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard"
+            element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>}
+          />
+          <Route path="/admin/analytics"
+            element={<ProtectedRoute requiredRole="admin"><AdminAnalytics /></ProtectedRoute>}
+          />
+          <Route path="/admin/products"
+            element={<ProtectedRoute requiredRole="admin"><AdminProductsManagement /></ProtectedRoute>}
+          />
+          <Route path="/admin/orders"
+            element={<ProtectedRoute requiredRole="admin"><AdminOrdersManagement /></ProtectedRoute>}
+          />
+          <Route path="/admin/payments"
+            element={<ProtectedRoute requiredRole="admin"><AdminPayments /></ProtectedRoute>}
+          />
+          <Route path="/admin/vendors"
+            element={<ProtectedRoute requiredRole="admin"><AdminVendors /></ProtectedRoute>}
+          />
+          <Route path="/admin/customers"
+            element={<ProtectedRoute requiredRole="admin"><AdminCustomersManagement /></ProtectedRoute>}
+          />
+          <Route path="/admin/reviews"
+            element={<ProtectedRoute requiredRole="admin"><AdminReviews /></ProtectedRoute>}
+          />
+          <Route path="/admin/reports"
+            element={<ProtectedRoute requiredRole="admin"><AdminReports /></ProtectedRoute>}
+          />
+          <Route path="/admin/campaign-manager"
+            element={<ProtectedRoute requiredRole="admin"><AdminCampaignManager /></ProtectedRoute>}
+          />
+          <Route path="/admin/platform"
+            element={<ProtectedRoute requiredRole="admin"><PlatformSettings /></ProtectedRoute>}
+          />
+          <Route path="/admin/settings"
+            element={<ProtectedRoute requiredRole="admin"><AdminSettings /></ProtectedRoute>}
+          />
+
+          {/* ── SPA fallback ── */}
+          <Route path="*" element={<SPARouter />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
+// ── Root App ──────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContextProvider>
+          <AppContent />
+        </AppContextProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+}

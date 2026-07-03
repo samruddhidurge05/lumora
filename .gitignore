@@ -1,0 +1,73 @@
+# ── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# ── Environment files (secrets — never commit) ────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+
+# ── Build & dist output ───────────────────────────────────────────────────────
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# ── Vite / bundler cache ──────────────────────────────────────────────────────
+.cache/
+**/.cache/
+frontend/.vite/
+.vite/
+
+# ── Python virtual environment ────────────────────────────────────────────────
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.eggs/
+
+# ── Uploaded product assets (served from Firebase Storage in production) ──────
+backend/uploads/
+
+# ── SQLite databases (local dev only) ─────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/*.sqlite
+
+# ── Firebase local cache ──────────────────────────────────────────────────────
+.firebase/
+.firebaserc.local
+
+# ── OS/editor artifacts ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
+*.log
+
+# ── Test / coverage output ────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.pem
+*.key
+serviceAccountKey.json

@@ -1,0 +1,158 @@
+from app.shared.firebase.connection import db, firebase_connected
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException
+
+def _map_report(doc):
+    r = doc.to_dict()
+    return {
+        "id":          doc.id,
+        "title":       r.get("title", "Report issue"),
+        "reporter":    r.get("reporter", "Anonymous"),
+        "status":      r.get("status", "Pending"),
+        "severity":    r.get("severity", "medium"),
+        "category":    r.get("category", "General"),
+        "createdAt":   r.get("createdAt") or datetime.utcnow().isoformat() + "Z",
+        "resolvedAt":  r.get("resolvedAt"),
+        "assignee":    r.get("assignee", "Unassigned"),
+        "description": r.get("description", ""),
+        "productId":   r.get("productId", ""),
+        "productTitle":r.get("productTitle", r.get("productName", "")),
+    }
+
+def get_reports_list():
+    if not firebase_connected or db is None:
+        return []
+    return [_map_report(d) for d in db.collection("reports").stream()]
+
+def get_reports_analytics_data():
+    if not firebase_connected or db is None:
+        today = datetime.utcnow()
+        reports_per_day = []
+        for i in range(4, -1, -1):
+            d = today - timedelta(days=i)
+            reports_per_day.append({
+                "label": d.strftime("%a"),
+                "date":  d.strftime("%Y-%m-%d"),
+                "count": 0,
+            })
+        return {
+            "total":              0,
+            "openCount":          0,
+            "resolvedCount":      0,
+            "criticalCount":      0,
+            "rejectedCount":      0,
+            "avgResolutionHours": 0,
+            "reportsPerDay":      reports_per_day,
+            "mostReportedProducts": [],
+            "categoryBreakdown": [],
+            "insights": [
+                {"type": "info", "text": "No reports submitted yet."}
+            ],
+            "reports": [],
+        }
+
+    docs = list(db.collection("reports").stream())
+    reports_list = [_map_report(d) for d in docs]
+
+    total = resolved = open_count = rejected = critical = 0
+    resolution_hours = []
+    category_counts  = {}
+    product_counts   = {}
+    daily_counts     = {}
+
+    for r in reports_list:
+        total += 1
+        status   = r["status"]
+        severity = r["severity"]
+        category = r["category"]
+
+        if status == "Pending":    open_count += 1
+        elif status == "Resolved": resolved   += 1
+        elif status == "Rejected": rejected   += 1
+        if severity == "high":     critical   += 1
+
+        category_counts[category] = category_counts.get(category, 0) + 1
+
+        pid = r["productId"]
+        if pid:
+            if pid not in product_counts:
+                product_counts[pid] = {"title": r["productTitle"], "count": 0}
+            product_counts[pid]["count"] += 1
+
+        if status == "Resolved" and r["createdAt"] and r["resolvedAt"]:
+            try:
+                c = datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+                s = datetime.fromisoformat(r["resolvedAt"].replace("Z", "+00:00"))
+                resolution_hours.append((s - c).total_seconds() / 3600)
+            except Exception:
+                pass
+
+        try:
+            daily_counts[r["createdAt"][:10]] = daily_counts.get(r["createdAt"][:10], 0) + 1
+        except Exception:
+            pass
+
+    avg_hours = round(sum(resolution_hours) / len(resolution_hours), 1) if resolution_hours else 0
+
+    today = datetime.utcnow()
+    reports_per_day = []
+    for i in range(4, -1, -1):
+        d = today - timedelta(days=i)
+        reports_per_day.append({
+            "label": d.strftime("%a"),
+            "date":  d.strftime("%Y-%m-%d"),
+            "count": daily_counts.get(d.strftime("%Y-%m-%d"), 0),
+        })
+
+    return {
+        "total":              total,
+        "openCount":          open_count,
+        "resolvedCount":      resolved,
+        "criticalCount":      critical,
+        "rejectedCount":      rejected,
+        "avgResolutionHours": avg_hours,
+        "reportsPerDay":      reports_per_day,
+        "mostReportedProducts": sorted(
+            [{"productId": k, "title": v["title"], "count": v["count"]} for k, v in product_counts.items()],
+            key=lambda x: x["count"], reverse=True,
+        ),
+        "categoryBreakdown": sorted(
+            [{"category": k, "count": v} for k, v in category_counts.items()],
+            key=lambda x: x["count"], reverse=True,
+        ),
+        "insights": [
+            {
+                "type": "critical" if critical > 2 else "warning",
+                "text": f"{critical} critical priority reports are unresolved.",
+            },
+            {
+                "type": "info",
+                "text": f"Average resolution time: {avg_hours} hours.",
+            },
+        ],
+        "reports": reports_list,
+    }
+
+def update_report_status(report_id: str, status: str):
+    if not firebase_connected or db is None:
+        return {"success": True, "id": report_id, "status": status}
+    update = {"status": status, "updatedAt": datetime.utcnow().isoformat() + "Z"}
+    if status == "Resolved":
+        update["resolvedAt"] = datetime.utcnow().isoformat() + "Z"
+    db.collection("reports").document(report_id).update(update)
+    return {"success": True, "id": report_id, "status": status}
+
+def assign_report_moderator(report_id: str, assignee: str):
+    if not firebase_connected or db is None:
+        return {"success": True, "id": report_id, "assignee": assignee}
+    db.collection("reports").document(report_id).update({
+        "assignee":  assignee,
+        "updatedAt": datetime.utcnow().isoformat() + "Z",
+    })
+    return {"success": True, "id": report_id, "assignee": assignee}
+
+def remove_report(report_id: str):
+    if not firebase_connected or db is None:
+        return {"success": True, "id": report_id}
+    db.collection("reports").document(report_id).delete()
+    return {"success": True, "id": report_id}

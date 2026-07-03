@@ -1,0 +1,181 @@
+from app.shared.firebase.connection import db, firebase_connected
+from fastapi import HTTPException
+from app.db.session import SessionLocal
+from app.models.review import Review as ReviewModel
+from app.models.user import User as UserModel
+
+def get_reviews_dashboard_data():
+    if not firebase_connected or db is None:
+        db_s = SessionLocal()
+        try:
+            docs = db_s.query(ReviewModel).order_by(ReviewModel.created_at.desc()).all()
+            latest_reviews = []
+            ratings = []
+            positive_count = neutral_count = negative_count = 0
+
+            for r in docs:
+                rating = int(r.rating or 5)
+                ratings.append(rating)
+
+                if rating == 3:
+                    sentiment = "neutral"
+                    neutral_count += 1
+                elif rating < 3:
+                    sentiment = "negative"
+                    negative_count += 1
+                else:
+                    sentiment = "positive"
+                    positive_count += 1
+
+                p_title = r.product.title if r.product else "Product"
+                u_name = r.user.name if r.user else "Anonymous"
+
+                latest_reviews.append({
+                    "id":       str(r.id),
+                    "customer": u_name,
+                    "comment":  r.comment or "",
+                    "product":  p_title,
+                    "sentiment":sentiment,
+                    "rating":   rating,
+                    "date":     r.created_at.isoformat() + "Z" if r.created_at else "recently",
+                    "verified": bool(r.verified),
+                    "flagged":  False,
+                })
+
+            total    = len(ratings)
+            avg      = round(sum(ratings) / total, 2) if total > 0 else 0
+            pos_pct  = round(positive_count / total * 100) if total > 0 else 0
+            neu_pct  = round(neutral_count  / total * 100) if total > 0 else 0
+            neg_pct  = round(negative_count / total * 100) if total > 0 else 0
+
+            prod_map = {}
+            for rev in latest_reviews:
+                p = rev["product"]
+                if p not in prod_map:
+                    prod_map[p] = {"ratings": [], "count": 0}
+                prod_map[p]["ratings"].append(rev["rating"])
+                prod_map[p]["count"] += 1
+
+            product_satisfaction = [
+                {
+                    "name":         name,
+                    "rating":       round(sum(v["ratings"]) / len(v["ratings"]), 1),
+                    "reviewsCount": v["count"],
+                    "trustScore":   min(99, round((sum(v["ratings"]) / len(v["ratings"])) / 5 * 100)),
+                }
+                for name, v in prod_map.items()
+            ]
+
+            return {
+                "averageRating":      avg,
+                "totalReviews":       total,
+                "positivePercentage": pos_pct,
+                "neutralPercentage":  neu_pct,
+                "negativePercentage": neg_pct,
+                "sentimentTrend":     [pos_pct] * 6,
+                "latestReviews":      latest_reviews,
+                "productSatisfaction":product_satisfaction,
+                "voiceHighlights": {
+                    "positive":     next((r["comment"] for r in latest_reviews if r["sentiment"] == "positive"), ""),
+                    "constructive": next((r["comment"] for r in latest_reviews if r["sentiment"] == "neutral"),  ""),
+                    "requests":     next((r["comment"] for r in latest_reviews if r["sentiment"] == "negative"), ""),
+                },
+            }
+        finally:
+            db_s.close()
+
+    docs = list(db.collection("reviews").stream())
+
+    latest_reviews = []
+    ratings = []
+    positive_count = neutral_count = negative_count = 0
+
+    for doc in docs:
+        r = doc.to_dict()
+        rating = int(r.get("rating", 5))
+        ratings.append(rating)
+
+        if rating == 3:
+            sentiment = "neutral"
+            neutral_count += 1
+        elif rating < 3:
+            sentiment = "negative"
+            negative_count += 1
+        else:
+            sentiment = "positive"
+            positive_count += 1
+
+        latest_reviews.append({
+            "id":       doc.id,
+            "customer": r.get("customer", "Anonymous"),
+            "comment":  r.get("comment", ""),
+            "product":  r.get("product", "General Product"),
+            "sentiment":sentiment,
+            "rating":   rating,
+            "date":     r.get("date", r.get("createdAt", "recently")),
+            "verified": bool(r.get("verified", True)),
+            "flagged":  bool(r.get("flagged", False)),
+        })
+
+    total    = len(ratings)
+    avg      = round(sum(ratings) / total, 2) if total > 0 else 0
+    pos_pct  = round(positive_count / total * 100) if total > 0 else 0
+    neu_pct  = round(neutral_count  / total * 100) if total > 0 else 0
+    neg_pct  = round(negative_count / total * 100) if total > 0 else 0
+
+    prod_map = {}
+    for rev in latest_reviews:
+        p = rev["product"]
+        if p not in prod_map:
+            prod_map[p] = {"ratings": [], "count": 0}
+        prod_map[p]["ratings"].append(rev["rating"])
+        prod_map[p]["count"] += 1
+
+    product_satisfaction = [
+        {
+            "name":         name,
+            "rating":       round(sum(v["ratings"]) / len(v["ratings"]), 1),
+            "reviewsCount": v["count"],
+            "trustScore":   min(99, round((sum(v["ratings"]) / len(v["ratings"])) / 5 * 100)),
+        }
+        for name, v in prod_map.items()
+    ]
+
+    return {
+        "averageRating":      avg,
+        "totalReviews":       total,
+        "positivePercentage": pos_pct,
+        "neutralPercentage":  neu_pct,
+        "negativePercentage": neg_pct,
+        "sentimentTrend":     [pos_pct] * 6,
+        "latestReviews":      latest_reviews,
+        "productSatisfaction":product_satisfaction,
+        "voiceHighlights": {
+            "positive":     next((r["comment"] for r in latest_reviews if r["sentiment"] == "positive"), ""),
+            "constructive": next((r["comment"] for r in latest_reviews if r["sentiment"] == "neutral"),  ""),
+            "requests":     next((r["comment"] for r in latest_reviews if r["sentiment"] == "negative"), ""),
+        },
+    }
+
+def moderate_review(review_id: str, action: str):
+    db_s = SessionLocal()
+    try:
+        review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
+        if review:
+            if action == "delete":
+                db_s.delete(review)
+            db_s.commit()
+    finally:
+        db_s.close()
+
+    if firebase_connected and db is not None:
+        ref = db.collection("reviews").document(review_id)
+        if action == "flag":
+            ref.update({"flagged": True})
+        elif action == "unflag":
+            ref.update({"flagged": False})
+        elif action == "delete":
+            ref.delete()
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown moderation action: {action}")
+    return {"success": True, "action": action, "id": review_id}

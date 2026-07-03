@@ -1,0 +1,145 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ─────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isVendorOrAdmin() {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendor' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // ── Platform settings — admin write, authenticated read ─────────────────
+    match /platformSettings/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Users — own profile read/write, admin can read all ──────────────────
+    match /users/{userId} {
+      allow read:  if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+      // Allow querying users collection (for vendor/affiliate lists in admin)
+      allow list:  if isAdmin();
+    }
+
+    // ── Vendors collection — own record or admin ─────────────────────────────
+    match /vendors/{vendorId} {
+      allow read:  if isOwner(vendorId) || isAdmin();
+      allow write: if isOwner(vendorId) || isAdmin();
+      allow list:  if isAdmin();
+    }
+
+    // ── Affiliates collection — own record or admin ──────────────────────────
+    match /affiliates/{affiliateId} {
+      allow read:  if isOwner(affiliateId) || isAdmin();
+      allow write: if isOwner(affiliateId) || isAdmin();
+      allow list:  if isAdmin();
+    }
+
+    // ── Customers collection — own record or admin ───────────────────────────
+    match /customers/{customerId} {
+      allow read:  if isOwner(customerId) || isAdmin();
+      allow write: if isOwner(customerId) || isAdmin();
+      allow list:  if isAdmin();
+    }
+
+    // ── Products — public read, vendor/admin write ───────────────────────────
+    match /products/{productId} {
+      allow read:  if true;    // Public marketplace read
+      allow create: if isVendorOrAdmin();
+      allow update: if isVendorOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Orders — buyer or vendor who owns a line item, or admin ─────────────
+    match /orders/{orderId} {
+      allow read:  if isSignedIn();   // vendor, customer, admin all need to read
+      allow write: if isSignedIn();   // created by payment flow (authenticated)
+      allow list:  if isSignedIn();
+    }
+
+    // ── Purchases — buyer or admin ───────────────────────────────────────────
+    match /purchases/{purchaseId} {
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // ── Downloads — buyer or admin ────────────────────────────────────────────
+    match /downloads/{downloadId} {
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // ── Reviews — public read, authenticated write (for review authors) ──────
+    match /reviews/{reviewId} {
+      allow read:  if true;
+      allow write: if isSignedIn();
+    }
+
+    // ── Vendor stats — vendor or admin ────────────────────────────────────────
+    match /vendorStats/{vendorId} {
+      allow read:  if isOwner(vendorId) || isAdmin();
+      allow write: if isAdmin();    // only backend admin SDK writes these
+    }
+
+    // ── Vendor notifications — vendor or admin ────────────────────────────────
+    match /vendorNotifications/{notifId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Affiliate conversions — affiliate or admin ────────────────────────────
+    match /affiliateConversions/{convId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Auth logs — append-only by authenticated users ────────────────────────
+    match /auth_logs/{logId} {
+      allow create: if isSignedIn();
+      allow read:   if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ── Cart — own cart only ──────────────────────────────────────────────────
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Wishlist — own wishlist only ─────────────────────────────────────────
+    match /wishlists/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Notifications — own only ──────────────────────────────────────────────
+    match /notifications/{userId}/{notifId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Deny everything else by default ──────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,265 @@
+/* ══════════════════════════════════════════
+   LUMORA — Universal Glassmorphism Theme
+══════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design tokens ─────────────────────────────── */
+:root {
+  --font-editorial : 'Cormorant Garamond', Georgia, serif;
+  --font-sans      : 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* Brand */
+  --purple-300: #D8BFE3;
+  --purple-400: #C084FC;
+  --purple-600: #9333EA;
+  --purple-700: #7B3FA0;
+  --purple-800: #5A1E7E;
+  --purple-900: #3B0764;
+
+  /* Semantic */
+  --color-espresso   : #2D004D;
+  --color-mocha      : #7B3FA0;
+  --color-latte      : #C7A55A;
+  --color-lavender   : #D8BFE3;
+  --color-warm-white : #FFFDF9;
+  --color-rose       : #E8B4C8;
+  --color-peach      : #F0C4A0;
+  --color-mint-glow  : #A8E6CF;
+
+  /* Text */
+  --text-primary  : #2D004D;
+  --text-secondary: #4A1070;
+  --text-muted    : #8B5FAA;
+
+  /* Glass system — optimised for white+orb background */
+  --glass-bg      : rgba(255, 255, 255, 0.62);
+  --glass-bg-dark : rgba(255, 255, 255, 0.45);
+  --glass-blur    : 40px;
+  --glass-border  : rgba(255, 255, 255, 0.72);
+  --glass-border-sm: rgba(196, 148, 230, 0.28);
+  --glass-shadow  : 0 8px 32px rgba(90, 30, 126, 0.07), 0 1px 3px rgba(90,30,126,0.03), inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  --glass-shadow-hover: 0 20px 56px rgba(90, 30, 126, 0.12), 0 6px 16px rgba(90,30,126,0.06), inset 0 1px 0 rgba(255, 255, 255, 0.90);
+
+  --shadow-premium: 0 8px 32px rgba(90,30,126,0.06);
+}
+
+/* ── Base ──────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: #FAF6F0;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: auto;
+}
+
+img { display: block; max-width: 100%; }
+button { font-family: inherit; }
+::selection { background: rgba(123,63,160,0.22); color: #2D004D; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(123,63,160,0.22); border-radius: 5px; }
+
+/* ── Typography ─────────────────────────────────── */
+.text-editorial  { font-family: var(--font-editorial); }
+.caption-premium { font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; font-family:var(--font-sans); }
+
+/* ════════════════════════════════════════════════
+   GLASS CARD SYSTEM  — every card uses this
+════════════════════════════════════════════════ */
+.glass-card {
+  background     : var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
+  border         : 1px solid var(--glass-border);
+  border-top     : 1.5px solid rgba(255,255,255,0.60);
+  border-left    : 1.5px solid rgba(255,255,255,0.50);
+  border-radius  : 22px;
+  box-shadow     : var(--glass-shadow);
+  transition     : transform .3s cubic-bezier(.16,1,.3,1),
+                   box-shadow .3s cubic-bezier(.16,1,.3,1),
+                   border-color .25s;
+  position: relative;
+  overflow: hidden;
+}
+/* Top glass sheen */
+.glass-card::before {
+  content : '';
+  position: absolute;
+  top: 0; left: 8%; right: 8%;
+  height : 1px;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,.70),transparent);
+  pointer-events: none;
+}
+.glass-card:hover {
+  transform  : translateY(-5px);
+  box-shadow : var(--glass-shadow-hover);
+  border-color: rgba(255,255,255,0.55);
+}
+
+/* Lighter variant */
+.glass-surface {
+  background     : rgba(255,255,255,0.18);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
+  border         : 1px solid rgba(255,255,255,0.35);
+  border-radius  : 14px;
+  box-shadow     : 0 4px 20px rgba(90,30,126,0.08), inset 0 1px 0 rgba(255,255,255,0.50);
+}
+
+/* Solid-ish card (dashboard, settings) -> Now premium Glassmorphism */
+.premium-flat-card {
+  background     : rgba(255,255,255,0.30);
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04);
+  border         : 1px solid rgba(255,255,255,0.45);
+  border-top     : 1.5px solid rgba(255, 255, 255, 0.55);
+  border-left    : 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius  : 18px;
+  box-shadow     : var(--glass-shadow);
+  transition     : transform .25s, box-shadow .25s, border-color .25s;
+}
+.premium-flat-card:hover {
+  transform  : translateY(-4px);
+  box-shadow : var(--glass-shadow-hover);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Input glass */
+.glass-input {
+  background     : rgba(255,255,255,0.60);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border         : 1.5px solid rgba(196,181,253,0.35);
+  border-radius  : 12px;
+  transition     : border-color .22s, box-shadow .22s;
+}
+.glass-input:focus-within {
+  border-color: var(--purple-700);
+  box-shadow  : 0 0 0 3px rgba(123,63,160,0.14);
+  background  : rgba(255,255,255,0.78);
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn-premium {
+  display    : inline-flex;
+  align-items: center;
+  gap        : 6px;
+  padding    : 10px 20px;
+  border-radius: 12px;
+  border     : 1.5px solid rgba(196,181,253,0.40);
+  background : rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color      : var(--text-primary);
+  font-family: var(--font-sans);
+  font-size  : .82rem;
+  font-weight: 700;
+  cursor     : pointer;
+  outline    : none;
+  transition : all .22s cubic-bezier(.16,1,.3,1);
+}
+.btn-premium:hover {
+  background: rgba(255,255,255,.92);
+  border-color: rgba(123,63,160,.50);
+  transform : translateY(-2px);
+  box-shadow: 0 6px 20px rgba(90,30,126,0.14);
+}
+.btn-premium-solid {
+  background   : linear-gradient(135deg,#7B3FA0,#5A1E7E);
+  border-color : transparent;
+  color        : #fff;
+  box-shadow   : 0 4px 16px rgba(90,30,126,.35);
+}
+.btn-premium-solid:hover {
+  background: linear-gradient(135deg,#8B4FAF,#6A2E8E);
+  box-shadow: 0 8px 28px rgba(90,30,126,.45);
+  transform : translateY(-2px);
+}
+.btn-minimal { display:inline-flex; align-items:center; gap:5px; background:none; border:none; color:var(--text-muted); font-size:.78rem; font-weight:600; cursor:pointer; font-family:var(--font-sans); transition:color .2s; }
+.btn-minimal:hover { color: var(--purple-700); }
+.buy-now-glow { box-shadow: 0 6px 24px rgba(123,63,160,.38); }
+.clickable { cursor: pointer; }
+
+/* ── Dashboard ─────────────────────────────────── */
+.dash-orb { position:fixed; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; }
+.dash-orb-1 { width:560px; height:560px; top:-120px; left:-120px; background:radial-gradient(circle,rgba(167,105,220,0.28) 0%,transparent 68%); animation: dashOrb1 24s ease-in-out infinite alternate; }
+.dash-orb-2 { width:480px; height:480px; bottom:-100px; right:-100px; background:radial-gradient(circle,rgba(123,63,160,0.24) 0%,transparent 68%); animation: dashOrb2 30s ease-in-out infinite alternate; }
+.dash-orb-3 { width:380px; height:380px; top:42%; left:50%; transform:translate(-50%,-50%); background:radial-gradient(circle,rgba(196,148,230,0.20) 0%,transparent 68%); animation: dashOrb3 20s ease-in-out infinite alternate; }
+.dash-orb-4 { width:300px; height:300px; top:12%; right:8%; background:radial-gradient(circle,rgba(216,191,227,0.22) 0%,transparent 68%); animation: dashOrb1 28s ease-in-out infinite alternate-reverse; }
+
+/* ── Page-level floating orbs (for landing + marketplace) ──────── */
+.page-orb { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:0; }
+.page-orb-1 { width:700px; height:700px; top:-15%; left:-10%; background:radial-gradient(circle,rgba(200,170,240,0.35) 0%,transparent 65%); animation: pageOrb1 26s ease-in-out infinite alternate; }
+.page-orb-2 { width:600px; height:600px; bottom:-10%; right:-8%; background:radial-gradient(circle,rgba(255,195,170,0.25) 0%,transparent 65%); animation: pageOrb2 22s ease-in-out infinite alternate; }
+.page-orb-3 { width:500px; height:500px; top:35%; left:55%; background:radial-gradient(circle,rgba(180,220,200,0.22) 0%,transparent 65%); animation: pageOrb3 30s ease-in-out infinite alternate; }
+.page-orb-4 { width:450px; height:450px; top:60%; left:10%; background:radial-gradient(circle,rgba(220,198,255,0.28) 0%,transparent 65%); animation: pageOrb1 20s ease-in-out infinite alternate-reverse; }
+@keyframes pageOrb1 { 0%{transform:translate(0,0) scale(1)} 50%{transform:translate(5%,8%) scale(1.08)} 100%{transform:translate(-3%,4%) scale(0.96)} }
+@keyframes pageOrb2 { 0%{transform:translate(0,0) scale(1)} 50%{transform:translate(-6%,5%) scale(1.05)} 100%{transform:translate(4%,-6%) scale(0.97)} }
+@keyframes pageOrb3 { 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-45%,-55%) scale(1.06)} 100%{transform:translate(-55%,-48%) scale(0.95)} }
+
+/* ── Scrollbar ─────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar { width:4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background:transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background:rgba(196,181,253,.35); border-radius:4px; }
+.scroll-container { scrollbar-width:none; -ms-overflow-style:none; }
+.scroll-container::-webkit-scrollbar { display:none; }
+
+/* ── Keyframes ─────────────────────────────────── */
+@keyframes fade-in        { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fade-in-up     { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fade-in-right  { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes scale-in       { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+@keyframes spin           { to{transform:rotate(360deg)} }
+@keyframes pulse-glow     { 0%,100%{box-shadow:0 0 20px rgba(123,63,160,.25)} 50%{box-shadow:0 0 40px rgba(123,63,160,.45)} }
+@keyframes float-slow     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes float-card-1   { 0%{transform:rotate(-5deg) translateY(0)} 100%{transform:rotate(-3deg) translateY(-14px)} }
+@keyframes float-card-2   { 0%{transform:rotate(4deg) translateY(0)} 100%{transform:rotate(6deg) translateY(-18px)} }
+@keyframes float-card-3   { 0%{transform:rotate(-2deg) translateY(0)} 100%{transform:rotate(-1deg) translateY(-10px)} }
+@keyframes shimmer        { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes skeletonPulse  { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* ── Animation utilities ─────────────────────────── */
+.animate-fade-in      { animation: fade-in      .7s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-in-up   { animation: fade-in-up   .8s cubic-bezier(.16,1,.3,1) both; }
+.animate-scale-in     { animation: scale-in     .6s cubic-bezier(.16,1,.3,1) both; }
+.animate-float        { animation: float-slow   4s  ease-in-out infinite; }
+.animate-pulse-glow   { animation: pulse-glow   3s  ease-in-out infinite; }
+.delay-100  { animation-delay:.10s; }
+.delay-200  { animation-delay:.20s; }
+.delay-300  { animation-delay:.30s; }
+.delay-400  { animation-delay:.40s; }
+.delay-500  { animation-delay:.50s; }
+
+/* ── Section layouts ─────────────────────────────── */
+.section-pad { padding: 80px clamp(1.5rem,6vw,7rem); }
+
+/* ── Responsive ──────────────────────────────────── */
+@media(max-width:900px) {
+  .product-layout { grid-template-columns:1fr !important; }
+  .hero-grid { grid-template-columns:1fr !important; }
+  .hero-cards { display:none !important; }
+}
+@media(max-width:800px) { .cart-grid,.checkout-grid { grid-template-columns:1fr !important; } }
+@media(max-width:700px) { .updates-layout { grid-template-columns:1fr !important; } }
+
+/* ── Dashboard Orbs Animations ─────────────────── */
+@keyframes dashOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(60px, 40px) scale(1.1); }
+  100% { transform: translate(-20px, 80px) scale(0.95); }
+}
+@keyframes dashOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, -60px) scale(1.05); }
+  100% { transform: translate(30px, -30px) scale(0.9); }
+}
+@keyframes dashOrb3 {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-45%, -55%) scale(1.08); }
+  100% { transform: translate(-55%, -45%) scale(0.92); }
+}
