@@ -8,12 +8,12 @@ import {
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
-import ThreeDBackground from '../../components/ThreeDBackground';
-import AnimatedBackground from '../../components/AnimatedBackground';
 import AffiliateDashboardHome from './Dashboard';
 import AffiliateProducts       from './Products';
 import AffiliateEarnings       from './Earnings';
 import AffiliateProfile        from './Profile';
+import { AffiliateCartProvider, useAffiliateCart } from '../../context/AffiliateCartContext';
+import AffiliateCartDrawer from '../../components/affiliate/AffiliateCartDrawer';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={17} /> },
@@ -23,7 +23,16 @@ const NAV_ITEMS = [
 ];
 
 export default function AffiliateDashboard() {
-  const { navigateTo, cart } = useApp();
+  return (
+    <AffiliateCartProvider>
+      <AffiliateDashboardInner />
+    </AffiliateCartProvider>
+  );
+}
+
+function AffiliateDashboardInner() {
+  const { navigateTo } = useApp();
+  const { affCart, affCartCount, setIsAffCartOpen } = useAffiliateCart();
   const { user, loading, logout, isAccountDisabled, isPlatformPaused } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
@@ -135,12 +144,8 @@ export default function AffiliateDashboard() {
       display: 'flex',
       position: 'relative',
     }}>
-      {/* ── BACKGROUND: Three.js + CSS animated orbs ── */}
-      <ThreeDBackground />
-      <AnimatedBackground />
-      <div className="dash-orb dash-orb-1" />
-      <div className="dash-orb dash-orb-2" />
-      <div className="dash-orb dash-orb-3" />
+      {/* ── Affiliate Cart Drawer ── */}
+      <AffiliateCartDrawer />
 
       {/* ── SIDEBAR (desktop) ─────────────────────────────────────────── */}
       <aside style={{
@@ -294,9 +299,9 @@ export default function AffiliateDashboard() {
 
           {/* Right: breadcrumb + quick actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Cart Icon Option */}
+            {/* Affiliate Cart Button */}
             <button
-              onClick={() => navigateTo('cart')}
+              onClick={() => setIsAffCartOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -306,17 +311,27 @@ export default function AffiliateDashboard() {
                 fontWeight: 700,
                 borderRadius: '20px',
                 border: '1px solid rgba(196,181,253,0.35)',
-                background: 'rgba(255,255,255,0.80)',
+                background: affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)',
                 color: '#7B3FA0',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sans)',
                 transition: 'all 0.2s',
+                position: 'relative',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)'; }}
             >
               <ShoppingBag size={12} />
-              <span>Cart ({cart?.length || 0})</span>
+              <span>Cart</span>
+              {affCartCount > 0 && (
+                <span style={{
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                  color: '#fff', fontSize: '0.6rem', fontWeight: 800,
+                  minWidth: '16px', height: '16px', borderRadius: '50%',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 3px',
+                }}>{affCartCount}</span>
+              )}
             </button>
 
             {activeTab !== 'products' && !isSuspended && (

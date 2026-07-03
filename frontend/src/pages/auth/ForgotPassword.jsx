@@ -1,7 +1,32 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './auth.css';
 import AuthBackground from '../../components/AuthBackground';
 import { useAuth } from '../../context/AuthContext';
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.75, 
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] }
+  }
+};
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -58,11 +83,15 @@ export default function ForgotPassword() {
   return (
     <AuthBackground>
       <div className="auth-container">
-        <div className="auth-blob b1"></div>
-        <div className="auth-blob b2"></div>
+        <motion.div 
+          className="auth-card"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <div className="auth-card-border" />
 
-        <div className="auth-card">
-          <div className="card-brand">
+          <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5L15.5 5.25V12.75L9 16.5L2.5 12.75V5.25L9 1.5Z" fill="rgba(255,255,255,0.88)"/>
@@ -70,71 +99,96 @@ export default function ForgotPassword() {
               </svg>
             </div>
             <span className="card-name">Lumora</span>
-          </div>
+          </motion.div>
 
-          <h2 className="card-heading">Reset Password</h2>
+          <motion.h2 className="card-heading" variants={itemVariants}>Reset Password</motion.h2>
 
-          {!linkSent ? (
-            <>
-              <p className="card-subheading">Enter your email and we'll send you a recovery link</p>
+          <AnimatePresence mode="wait">
+            {!linkSent ? (
+              <motion.div
+                key="form-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <p className="card-subheading">Enter your email and we'll send you a recovery link</p>
 
-              {status && (
-                <div className={`auth-alert auth-alert-${status}`}>
-                  <span>⚠</span>
+                {status && (
+                  <div className={`auth-alert auth-alert-${status}`}>
+                    <span>⚠</span>
+                    <p>{message}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleSendLink}>
+                  <div className="field">
+                    <label className="field-label" htmlFor="email">Email Address</label>
+                    <div className="field-input-wrapper">
+                      <input
+                        className="field-input"
+                        id="email"
+                        type="email"
+                        placeholder="you@lumora.co"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {errors.email && <div className="field-error">{errors.email}</div>}
+                  </div>
+
+                  <motion.button 
+                    className="btn-cta" 
+                    type="submit" 
+                    disabled={isLoading}
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.985 }}
+                  >
+                    {isLoading && <div className="shimmer"></div>}
+                    {isLoading ? 'Sending Link...' : 'Send Recovery Link'}
+                  </motion.button>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="success-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="auth-alert auth-alert-success" style={{ marginTop: '20px' }}>
+                  <span>✦</span>
                   <p>{message}</p>
                 </div>
-              )}
+                <p className="card-subheading" style={{ marginBottom: '30px' }}>
+                  Click the link in your email to reset your password.
+                </p>
+                <motion.button
+                  className="btn-cta"
+                  type="button"
+                  onClick={() => {
+                    setLinkSent(false);
+                    setEmail('');
+                    setStatus(null);
+                  }}
+                  whileHover={{ scale: 1.015 }}
+                  whileTap={{ scale: 0.985 }}
+                >
+                  Back to Forgot Password
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              <form onSubmit={handleSendLink}>
-                <div className="field">
-                  <label className="field-label" htmlFor="email">Email address</label>
-                  <div className="field-input-wrapper">
-                    <input
-                      className="field-input"
-                      id="email"
-                      type="email"
-                      placeholder="you@lumora.co"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {errors.email && <div className="field-error">{errors.email}</div>}
-                </div>
-
-                <button className="btn-cta" type="submit" disabled={isLoading}>
-                  {isLoading && <div className="shimmer"></div>}
-                  {isLoading ? 'Sending Link...' : 'Send Recovery Link'}
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="auth-alert auth-alert-success" style={{ marginTop: '20px' }}>
-                <span>✦</span>
-                <p>{message}</p>
-              </div>
-              <p className="card-subheading" style={{ marginBottom: '30px' }}>
-                Click the link in your email to reset your password.
-              </p>
-              <button
-                className="btn-cta"
-                type="button"
-                onClick={() => {
-                  setLinkSent(false);
-                  setEmail('');
-                  setStatus(null);
-                }}
-              >
-                Back to Forgot Password
-              </button>
-            </>
-          )}
-
-          <div className="signup-prompt">
-            Remember your password? <a href="/auth/login" onClick={(e) => { e.preventDefault(); window.location.href = '/auth/login'; }}>Sign in →</a>
-          </div>
-        </div>
+          <motion.div className="signup-prompt" variants={itemVariants}>
+            Remember your password?{' '}
+            <a href="/auth/login?role=customer" onClick={(e) => { e.preventDefault(); window.location.href = '/auth/login?role=customer'; }}>
+              Sign in →
+            </a>
+          </motion.div>
+        </motion.div>
       </div>
     </AuthBackground>
   );

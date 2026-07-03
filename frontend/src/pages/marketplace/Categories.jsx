@@ -4,22 +4,22 @@ import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
 
 const CAT_META = [
-  { name: 'Website Templates',  emoji: '🌐', color: 'rgba(123,63,160,0.08)' },
+  { name: 'Website Templates',  emoji: '💻', color: 'rgba(123,63,160,0.08)' },
   { name: 'Mobile App Designs', emoji: '📱', color: 'rgba(59,130,246,0.08)' },
-  { name: 'AI Tools',           emoji: '🤖', color: 'rgba(16,185,129,0.08)' },
+  { name: 'AI Tools',           emoji: '🧠', color: 'rgba(16,185,129,0.08)' },
   { name: 'Design Assets',      emoji: '🎨', color: 'rgba(245,158,11,0.08)' },
-  { name: 'E-books',            emoji: '📚', color: 'rgba(239,68,68,0.08)' },
-  { name: 'Notion Templates',   emoji: '📋', color: 'rgba(99,102,241,0.08)' },
+  { name: 'E-books',            emoji: '📖', color: 'rgba(239,68,68,0.08)' },
+  { name: 'Notion Templates',   emoji: '🚀', color: 'rgba(99,102,241,0.08)' },
   { name: 'Productivity Tools', emoji: '⚡', color: 'rgba(20,184,166,0.08)' },
   { name: 'Social Media Kits',  emoji: '📸', color: 'rgba(236,72,153,0.08)' },
-  { name: 'UI Kits',            emoji: '🎯', color: 'rgba(168,85,247,0.08)' },
+  { name: 'UI Kits',            emoji: '💎', color: 'rgba(168,85,247,0.08)' },
   { name: 'React Templates',    emoji: '⚛️', color: 'rgba(6,182,212,0.08)' },
   { name: 'AI Prompt Packs',    emoji: '💬', color: 'rgba(251,191,36,0.08)' },
   { name: 'Icons & Illustrations', emoji: '✏️', color: 'rgba(34,197,94,0.08)' },
   { name: 'Resume Templates',   emoji: '📄', color: 'rgba(239,68,68,0.08)' },
   { name: 'Business Templates', emoji: '💼', color: 'rgba(99,102,241,0.08)' },
-  { name: 'Productivity Systems', emoji: '🔧', color: 'rgba(20,184,166,0.08)' },
-  { name: 'Figma Resources',    emoji: '🖌️', color: 'rgba(236,72,153,0.08)' },
+  { name: 'Productivity Systems', emoji: '⚙️', color: 'rgba(20,184,166,0.08)' },
+  { name: 'Figma Resources',    emoji: '🎯', color: 'rgba(236,72,153,0.08)' },
 ];
 
 export default function Categories() {

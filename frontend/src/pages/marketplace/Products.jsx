@@ -7,21 +7,21 @@ import { useApp } from '../../context/AppContext';
 
 const ALL_CATS = [
   { id: 'All', icon: '✦' },
-  { id: 'UI Kits', icon: '🎨' },
+  { id: 'UI Kits', icon: '💎' },
   { id: 'Mobile App Designs', icon: '📱' },
   { id: 'React Templates', icon: '⚛️' },
-  { id: 'Website Templates', icon: '🌐' },
-  { id: 'Design Assets', icon: '🖼️' },
-  { id: 'E-books', icon: '📚' },
-  { id: 'Notion Templates', icon: '📋' },
+  { id: 'Website Templates', icon: '💻' },
+  { id: 'Design Assets', icon: '🎨' },
+  { id: 'E-books', icon: '📖' },
+  { id: 'Notion Templates', icon: '🚀' },
   { id: 'Social Media Kits', icon: '📸' },
-  { id: 'AI Tools', icon: '🤖' },
+  { id: 'AI Tools', icon: '🧠' },
   { id: 'AI Prompt Packs', icon: '💬' },
   { id: 'Icons & Illustrations', icon: '✏️' },
   { id: 'Resume Templates', icon: '📄' },
   { id: 'Business Templates', icon: '💼' },
   { id: 'Productivity Tools', icon: '⚡' },
-  { id: 'Productivity Systems', icon: '🔧' },
+  { id: 'Productivity Systems', icon: '⚙️' },
   { id: 'Figma Resources', icon: '🎯' },
 ];
 
@@ -70,7 +70,7 @@ export default function Products() {
   return (
     <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <Navbar />
-      <div style={{ paddingTop: '90px' }}>
+      <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
         {/* ── Header band ── */}
         <div style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(32px) saturate(200%)', borderBottom: '1px solid rgba(196,148,230,0.20)', padding: '28px clamp(1.5rem,5vw,5rem) 0', boxShadow: '0 4px 24px rgba(123,63,160,0.06)' }}>
@@ -105,7 +105,7 @@ export default function Products() {
           <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: '200px', maxWidth: '320px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(196,181,253,0.30)', backdropFilter: 'blur(12px)', boxShadow: '0 2px 12px rgba(123,63,160,0.06)' }}>
               <Search size={15} style={{ color: '#8B6B5B', flexShrink: 0 }} />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search 103 products…"
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…"
                 style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: '0.83rem', fontFamily: 'var(--font-sans)', color: '#2D004D', width: '100%' }} />
               {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6B5B', padding: 0, display: 'flex' }}><X size={13} /></button>}
             </div>
