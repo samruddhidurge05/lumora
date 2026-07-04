@@ -16,8 +16,13 @@ class User(Base):
     avatar_url    = Column(String(512), nullable=True)
     is_active     = Column(Boolean, default=True)
     is_verified   = Column(Boolean, default=False)
+    firebase_uid  = Column(String(128), unique=True, index=True, nullable=True)
     created_at    = Column(DateTime, default=datetime.utcnow)
     updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @property
+    def sqlite_user_id(self) -> int:
+        return self.id
 
     # Relationships
     orders           = relationship("Order",          back_populates="user",   cascade="all, delete-orphan")

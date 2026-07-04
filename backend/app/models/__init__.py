@@ -1,4 +1,6 @@
 from app.models.user import Base, User
+from app.models.audit_log import AuditLog
+from app.models.platform_setting import PlatformSetting
 from app.models.product import Product
 from app.models.product_version import ProductVersion
 from app.models.conversation import Conversation
@@ -21,6 +23,8 @@ from app.models.verification import Verification
 __all__ = [
     "Base",
     "User",
+    "AuditLog",
+    "PlatformSetting",
     "Product",
     "ProductVersion",
     "Conversation",
