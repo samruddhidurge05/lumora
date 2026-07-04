@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from sqlalchemy import cast, String
+from sqlalchemy import cast, String, or_
 from app.db.session import get_db
 from app.models.product import Product
 from app.models.user import User
@@ -23,9 +23,9 @@ def read_products(
     db: Session = Depends(get_db)
 ):
     """List all published products. Public — no authentication required."""
-    query = db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     )
     if category and category != "All":
         query = query.filter(Product.category == category)
@@ -44,9 +44,9 @@ def search_products(
     db: Session = Depends(get_db)
 ):
     """Full-text search products. Public."""
-    query = db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     )
     if q:
         like_q = f"%{q.lower()}%"
@@ -84,29 +84,29 @@ def search_products(
 @router.get("/featured", response_model=List[ProductResponse])
 def get_featured_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return featured products."""
-    return db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    return db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.featured == True,
         Product.status == "published",
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     ).limit(limit).all()
 
 
 @router.get("/trending", response_model=List[ProductResponse])
 def get_trending_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return trending products sorted by downloads."""
-    return db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    return db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.trending == True,
         Product.status == "published",
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     ).order_by(Product.downloads.desc()).limit(limit).all()
 
 
 @router.get("/categories", response_model=List[str])
 def get_product_categories(db: Session = Depends(get_db)):
     """Return all unique categories from published products. Public."""
-    categories = db.query(Product.category).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    categories = db.query(Product.category).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     ).distinct().all()
     return [c[0] for c in categories if c[0]]
 
@@ -114,9 +114,9 @@ def get_product_categories(db: Session = Depends(get_db)):
 @router.get("/{product_id}", response_model=ProductResponse)
 def read_product(product_id: str, db: Session = Depends(get_db)):
     """Get a single product by ID. Public — no authentication required."""
-    product = db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    product = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.id == product_id,
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     ).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -216,9 +216,9 @@ def download_product(
     check_platform_paused()
     
     # Check if vendor is active
-    product = db.query(Product).join(User, Product.vendor_id == cast(User.id, String)).filter(
+    product = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.id == product_id,
-        User.is_active == True
+        or_(User.id == None, User.is_active == True)
     ).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found or vendor is disabled")

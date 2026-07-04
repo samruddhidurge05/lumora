@@ -94,9 +94,9 @@ def create_new_order(
         if not prod:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product {item.product_id} not found")
             
-        # Verify vendor is active
+        # Verify vendor is active (if vendor exists as a User)
         vendor_user = db.query(User).filter(cast(User.id, String) == prod.vendor_id).first()
-        if not vendor_user or not vendor_user.is_active:
+        if vendor_user and not vendor_user.is_active:
             raise LumoraException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 code="VENDOR_DISABLED",
