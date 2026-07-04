@@ -25,22 +25,6 @@ export default function PlatformSettings() {
 
   // Subscribe to real-time status changes
   useEffect(() => {
-    const isMockAdmin = !!localStorage.getItem('lumora_mock_user');
-    if (isMockAdmin) {
-      // Mock admin is active — bypass Firestore entirely to prevent permission warnings
-      const loadRest = async () => {
-        try {
-          const data = await getPlatformStatus();
-          setPlatformStatus(data);
-        } catch (restErr) {
-          console.error('[PlatformSettings] REST fallback failed:', restErr);
-        }
-        setLoading(false);
-      };
-      loadRest();
-      return;
-    }
-
     let hasFailed = false;
     const unsub = subscribePlatformStatus(
       (data) => {
