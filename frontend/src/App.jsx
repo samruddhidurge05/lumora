@@ -354,7 +354,7 @@ function AppContent() {
             element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEditProduct /></ProtectedRoute>}
           />
           <Route path="/vendor/analytics"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute>}
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAnalytics /></ProtectedRoute>}
           />
           <Route path="/vendor/earnings"
             element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEarnings /></ProtectedRoute>}
