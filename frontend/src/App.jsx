@@ -82,6 +82,7 @@ const VendorProfile       = lazy(() => import('./pages/vendor/Profile'));
 const NotFound = lazy(() => import('./pages/error/NotFound'));
 
 // Admin pages
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
 const AdminProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
@@ -157,8 +158,9 @@ function AppContent() {
   // since they display the suspension card inside their custom layout (sidebar remains visible).
   const showDisabledBlocker = isAccountDisabled && !['vendor', 'affiliate'].includes(userRole);
   
-  // Exclude admin role from seeing platform pause screen so they can unpause!
-  const showMaintenance = isPlatformPaused && userRole !== 'admin';
+  // Exclude admin, vendor, and affiliate roles from seeing the platform pause overlay
+  // so they can access their dashboard panels and unpause if they are admins.
+  const showMaintenance = isPlatformPaused && (userRole === 'customer' || !userRole);
 
   return (
     <>
@@ -322,7 +324,7 @@ function AppContent() {
           <Route path="/affiliate" element={<Navigate to="/affiliate/dashboard" replace />} />
           <Route path="/affiliate/dashboard"
             element={
-              <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole="affiliate">
+              <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole={['affiliate', 'vendor']}>
                 <AffiliateDashboard />
               </ProtectedRoute>
             }
@@ -380,6 +382,7 @@ function AppContent() {
 
           {/* ── Admin routes ── */}
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard"
             element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>}
           />

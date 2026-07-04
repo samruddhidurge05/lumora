@@ -1,7 +1,8 @@
 /* src/context/AuthContext.jsx */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { auth, db } from '../services/firebase';
 import { syncWithBackend, clearBackendToken } from '../services/authService';
+import { adminLogin, adminRefreshToken } from '../services/adminAuthService';
 import { backendFetch, registerGlobalErrorListener } from '../utils/api';
 import {
   createUserWithEmailAndPassword,
@@ -18,7 +19,6 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  signInAnonymously,
 } from 'firebase/auth';
 import {
   doc,
@@ -90,35 +90,51 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // Ref guard: prevent the /auth/me status check from re-running after it
+  // updates userRole (which would trigger this same effect again → loop).
+  const statusCheckDoneRef = useRef(false);
+
+  // ── One-time /auth/me check per session ───────────────────────────────────
+  // Runs once when user is set. Checks is_active and syncs role from backend.
+  // Separated from the Firestore listener so it doesn't restart on role changes.
   useEffect(() => {
     if (!user) {
       setIsAccountDisabled(false);
+      statusCheckDoneRef.current = false; // reset for next login
       return;
     }
 
-    const isMockAdminActive = !!localStorage.getItem('lumora_mock_user');
-    if (isMockAdminActive || userRole === 'admin') {
-      setIsAccountDisabled(false);
-      return;
+    // One-time check: only runs once per user session
+    if (!statusCheckDoneRef.current) {
+      statusCheckDoneRef.current = true;
+      backendFetch('/auth/me')
+        .then(session => {
+          if (session) {
+            if (!session.is_active) {
+              setIsAccountDisabled(true);
+            }
+            // Keep role in sync with backend SOT (only update if it actually changed)
+            if (session.role && session.role !== 'user') {
+              const backendRole = session.role;
+              setUserRole(prev => {
+                if (backendRole !== prev) {
+                  localStorage.setItem('lumora_active_role', backendRole);
+                  return backendRole;
+                }
+                return prev;
+              });
+            }
+          }
+        })
+        .catch(() => {});
     }
+  }, [user]); // ← depends only on user, not userRole
 
-    // One-time fallback check against SQLite backend on load/change
-    // Also updates role from backend in case it changed (e.g. admin role assignment)
-    backendFetch('/auth/me')
-      .then(session => {
-        if (session) {
-          if (!session.is_active) {
-            setIsAccountDisabled(true);
-          }
-          // Keep role in sync with backend SOT
-          if (session.role && session.role !== 'user') {
-            const backendRole = session.role;
-            setUserRole(backendRole);
-            localStorage.setItem('lumora_active_role', backendRole);
-          }
-        }
-      })
-      .catch(() => {});
+  // ── Firestore real-time user status listener ───────────────────────────────
+  // Separate effect so it never restarts due to userRole changes.
+  // The listener fires instantly when the admin disables the account in Firestore.
+  useEffect(() => {
+    if (!user) return;
 
     const userDocRef = doc(db, 'users', user.uid);
     const unsubUser = onSnapshot(userDocRef, (snap) => {
@@ -136,7 +152,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       unsubUser();
     };
-  }, [user, userRole]);
+  }, [user]); // ← depends only on user — never restarts due to role changes
 
   // Helper to change role manually
   const updateRole = (newRole) => {
@@ -145,27 +161,82 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('lumora_active_role', norm);
   };
 
+  // ── Backend session polling ─────────────────────────────────────────────────
+  // Poll /auth/me every 10 s while a non-admin user is logged in.
+  // Uses a ref for userRole so the interval is NOT restarted when role changes.
+  // This ensures account suspension and platform pause are detected within ~10 s.
+  const userRoleRef = useRef(userRole);
+  useEffect(() => {
+    userRoleRef.current = userRole;
+  }, [userRole]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const poll = async () => {
+      try {
+        const session = await backendFetch('/auth/me');
+        if (!session) return;
+        // Update suspension state
+        setIsAccountDisabled(!session.is_active);
+        // Update platform pause state
+        if (session.platform_paused !== undefined) {
+          setIsPlatformPaused(!!session.platform_paused);
+        }
+        // Keep role in sync — read current role via ref to avoid stale closure
+        if (session.role) {
+          const normalized = session.role === 'user' ? 'customer' : session.role;
+          if (normalized !== userRoleRef.current) {
+            setUserRole(normalized);
+            localStorage.setItem('lumora_active_role', normalized);
+          }
+        }
+      } catch (_) {
+        // Non-fatal — backend may be temporarily unreachable
+      }
+    };
+
+    const intervalId = setInterval(poll, 10000); // every 10 s
+    return () => clearInterval(intervalId);
+  }, [user]); // ← depends only on user — interval never restarts on role change
+
+  // ── Proactive admin JWT refresh ────────────────────────────────────────────
+  // Runs every 60 s for admin sessions. Refreshes the backend JWT when it has
+  // less than 30 minutes remaining. On failure, signs out and redirects to
+  // /admin/login so the admin can re-authenticate cleanly.
+  useEffect(() => {
+    if (!user || userRole !== 'admin') return;
+
+    const refreshInterval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem('lumora_backend_token');
+        if (!token) return;
+        let exp = 0;
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          exp = (payload.exp || 0) * 1000; // convert to ms
+        } catch (_) {
+          // Malformed token — treat as expired
+          exp = 0;
+        }
+        const thirtyMinutesMs = 30 * 60 * 1000;
+        if (exp - Date.now() < thirtyMinutesMs) {
+          await adminRefreshToken(user);
+        }
+      } catch (refreshErr) {
+        console.warn('[AuthContext] Admin JWT refresh failed:', refreshErr.message);
+        await signOut(auth);
+        clearBackendToken();
+        window.location.href = '/admin/login';
+      }
+    }, 60000); // every 60 s
+
+    return () => clearInterval(refreshInterval);
+  }, [user, userRole]);
+
   // Observe auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // ── Admin mock session path (no Firebase user) ──────────────────────
-      const isMockAdminActive = !!localStorage.getItem('lumora_mock_user');
-      if (isMockAdminActive) {
-        const storedMock = localStorage.getItem('lumora_mock_user');
-        if (storedMock) {
-          try {
-            const parsed = JSON.parse(storedMock);
-            if (firebaseUser) parsed.uid = firebaseUser.uid;
-            setUser(parsed);
-            setUserRole('admin');
-            setIsAccountDisabled(false);
-            // loading is already false for admin or will be set below
-          } catch (e) {}
-        }
-        setLoading(false);
-        return;
-      }
-
       if (firebaseUser) {
         setUser(firebaseUser);
 
@@ -180,6 +251,25 @@ export const AuthProvider = ({ children }) => {
         // ── STEP 2: syncWithBackend — backend is the authoritative role SOT ─
         // setLoading(false) is deferred until AFTER this completes so
         // ProtectedRoute never renders with a stale / wrong role.
+
+        // ── Admin branch: if hint is 'admin', use Firebase ID token flow ────
+        // Skip firebase-sync entirely for admin — call adminLogin instead.
+        if (localHint === 'admin') {
+          try {
+            await adminLogin(firebaseUser);
+            setUserRole('admin');
+            localStorage.setItem('lumora_active_role', 'admin');
+          } catch (adminErr) {
+            console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+            await signOut(auth);
+            clearBackendToken();
+            window.location.href = '/admin/login';
+            return;
+          }
+          setLoading(false);
+          return; // do NOT call syncWithBackend for admin
+        }
+
         let backendRole = null;
         let backendIsActive = true;
         try {
@@ -233,20 +323,11 @@ export const AuthProvider = ({ children }) => {
 
       } else {
         // No Firebase user — clear all session state
-        const mockUserStr = localStorage.getItem('lumora_mock_user');
-        if (mockUserStr) {
-          // Admin session was just cleared — shouldn't normally reach here since
-          // admin mock path is handled above, but handle defensively.
-          setUser(null);
-          setUserRole(null);
-          localStorage.removeItem('lumora_mock_user');
-        } else {
-          setUser(null);
-          setUserRole(null);
-          setIsAccountDisabled(false);
-          localStorage.removeItem('lumora_user');
-          clearBackendToken();
-        }
+        setUser(null);
+        setUserRole(null);
+        setIsAccountDisabled(false);
+        localStorage.removeItem('lumora_user');
+        clearBackendToken();
       }
 
       // ── CRITICAL: setLoading(false) is ALWAYS called last ────────────────
@@ -368,103 +449,6 @@ export const AuthProvider = ({ children }) => {
 
   /** Login with optional Remember Me */
   const login = async (email, password, rememberMe = false, role = null) => {
-    if (email === 'admin@lumora.co' || email === 'admin@lumora.com' || email === 'admin@gmail.com') {
-      // ── ALWAYS clear any stale token from a previous non-admin session ────
-      // This prevents an old vendor/customer JWT from being sent to admin-only
-      // endpoints and causing 403 errors on the fallback REST calls.
-      localStorage.removeItem('lumora_backend_token');
-      localStorage.removeItem('lumora_backend_uid');
-
-      // ── Obtain a real Firebase session so Firestore operations succeed ──
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (fbErr) {
-        console.warn('[admin-login] Firebase credential login failed, falling back to anonymous:', fbErr.message);
-        try {
-          await signInAnonymously(auth);
-        } catch (anonErr) {
-          console.warn('[admin-login] Firebase anonymous signin failed:', anonErr.message);
-        }
-      }
-
-      const mockUser = {
-        uid:           auth.currentUser?.uid || 'admin-mock-uid',
-        email:         email,
-        displayName:   'Platform Admin',
-        emailVerified: true,
-      };
-
-      const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-
-      // Try the exact email the user typed first, then the canonical aliases.
-      // This handles both admin@lumora.com (password: admin123) and
-      // admin@lumora.co (password: Admin1234) transparently.
-      const loginAttempts = [
-        { email: email,              password: password },
-        { email: 'admin@gmail.com',  password: password },
-        { email: 'admin@lumora.com', password: password },
-        { email: 'admin@lumora.co',  password: password },
-        { email: 'admin@gmail.com',  password: 'admin123'  },
-        { email: 'admin@lumora.com', password: 'admin123'  },
-        { email: 'admin@lumora.co',  password: 'Admin1234' },
-      ];
-
-      // Deduplicate: keep first occurrence of each email+password pair
-      const seen = new Set();
-      const uniqueAttempts = loginAttempts.filter(a => {
-        const key = a.email + '|' + a.password;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      let jwtObtained = false;
-      try {
-        // Fire all credential attempts IN PARALLEL — first success wins.
-        // This eliminates the sequential latency (up to 7 × round-trip time).
-        const winner = await Promise.any(
-          uniqueAttempts.map(async (attempt) => {
-            const res = await fetch(`${BACKEND_URL}/auth/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: attempt.email, password: attempt.password }),
-            });
-            if (!res.ok) throw new Error(`${attempt.email}: HTTP ${res.status}`);
-            const data = await res.json();
-            if (!data.access_token || data.user?.role !== 'admin') {
-              throw new Error(`${attempt.email}: not admin`);
-            }
-            return data;
-          })
-        );
-        localStorage.setItem('lumora_backend_token', winner.access_token);
-        if (winner.user?.id != null) {
-          localStorage.setItem('lumora_backend_uid', String(winner.user.id));
-        }
-        window.dispatchEvent(new Event('lumora_backend_ready'));
-        console.log('[admin-login] Backend JWT obtained id=', winner.user?.id);
-        jwtObtained = true;
-      } catch (_) {
-        // AggregateError — all attempts failed
-        console.warn('[admin-login] All login attempts failed — admin UI will load but API calls may return 401/403.');
-      }
-
-      if (!jwtObtained) {
-        console.warn('[admin-login] Admin UI will load but API calls may return 401/403.');
-      }
-
-      setUser(mockUser);
-      setUserRole('admin');
-      localStorage.setItem('lumora_active_role', 'admin');
-      localStorage.setItem('lumora_mock_user', JSON.stringify(mockUser));
-      localStorage.setItem('lumora_user', JSON.stringify({
-        uid:         mockUser.uid,
-        email:       mockUser.email,
-        displayName: mockUser.displayName,
-      }));
-      setLoading(false);
-      return mockUser;
-    }
     try {
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
@@ -575,14 +559,17 @@ export const AuthProvider = ({ children }) => {
 
   /** Logout */
   const logout = async () => {
+    const wasAdmin = userRole === 'admin';
     setIsAccountDisabled(false);
     setIsPlatformPaused(false);
-    localStorage.removeItem('lumora_mock_user');
     if (auth.currentUser) {
       await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, 'logout', true);
     }
     clearBackendToken();   // remove lumora_backend_token + lumora_backend_uid
     await signOut(auth);
+    if (wasAdmin) {
+      window.location.href = '/admin/login';
+    }
   };
 
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
