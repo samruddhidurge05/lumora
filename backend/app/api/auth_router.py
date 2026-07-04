@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -60,6 +60,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
+    check_user_active(user)
     return user
 
 # ── /register ─────────────────────────────────────────────────────────────────
@@ -118,7 +119,25 @@ def check_user_active(user):
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email.lower()).first()
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
+    # Firebase-managed accounts have a sentinel hash — they cannot use /login.
+    # They must authenticate via /firebase-sync (Firebase ID token exchange).
+    if user.password_hash == "firebase_managed":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This account uses Firebase sign-in. Please use the Firebase login flow."
+        )
+    try:
+        password_valid = verify_password(request.password, user.password_hash)
+    except Exception:
+        # Malformed hash — never crash as 500
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
@@ -144,10 +163,15 @@ def read_me(current_user: User = Depends(get_current_user), db: Session = Depend
         is_paused = _local_platform_state.get("isPlatformPaused", False)
         
     return {
-        "id": current_user.id,
-        "role": current_user.role,
-        "is_active": current_user.is_active,
-        "platform_paused": is_paused
+        "id":              current_user.id,
+        "name":            current_user.name or "",
+        "email":           current_user.email or "",
+        "role":            current_user.role or "customer",
+        "is_active":       bool(current_user.is_active),
+        "is_verified":     bool(current_user.is_verified),
+        "platform_paused": bool(is_paused),
+        "firebase_uid":    current_user.firebase_uid,
+        "sqlite_user_id":  current_user.id,
     }
 
 @router.put("/me", response_model=UserResponse)
@@ -160,6 +184,8 @@ def update_me(
         current_user.name = user_in.name
     if user_in.role is not None:
         current_user.role = user_in.role
+    if user_in.firebase_uid is not None:
+        current_user.firebase_uid = user_in.firebase_uid
     db.commit()
     db.refresh(current_user)
     return current_user
@@ -216,6 +242,7 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
             password_hash="firebase_managed",   # not a valid bcrypt hash
             role=role,
             is_verified=email_verified,
+            firebase_uid=claims.get("uid"),
         )
         db.add(user)
         db.commit()
@@ -226,6 +253,11 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
         changed = False
         if email_verified and not user.is_verified:
             user.is_verified = True
+            changed = True
+        # Sync Firebase UID to user if missing or mismatched
+        fb_uid = claims.get("uid")
+        if fb_uid and user.firebase_uid != fb_uid:
+            user.firebase_uid = fb_uid
             changed = True
         # Only update role when the user currently has the default 'customer' role
         # AND the incoming role is more specific.  This prevents a vendor who logs

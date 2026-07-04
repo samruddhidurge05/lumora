@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from admin.routes.auth import router as admin_auth_router
 from admin.routes.analytics import router as analytics_router
 from admin.routes.reports import router as reports_router
 from admin.routes.reviews import router as reviews_router
@@ -12,6 +13,7 @@ from admin.routes.products import router as products_router
 
 router = APIRouter()
 
+router.include_router(admin_auth_router, prefix="/auth", tags=["Admin Auth"])
 router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
 router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 router.include_router(reviews_router, prefix="/reviews", tags=["Reviews"])

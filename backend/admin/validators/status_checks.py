@@ -1,6 +1,9 @@
+import json
 from fastapi import Depends, status
 from app.dependencies import get_current_user_required
 from app.models.user import User
+from app.models.platform_setting import PlatformSetting
+from app.db.database import SessionLocal
 from admin.firestore.admin_firestore import get_platform_settings
 from app.shared.firebase.connection import db, firebase_connected
 from app.core.exceptions import LumoraException
@@ -15,11 +18,23 @@ def check_platform_paused():
             is_paused = True
             pause_msg = settings.get("pauseMessage") or "Platform is temporarily paused."
     else:
-        # Fallback to local settings store
-        from admin.routes.settings import _local_platform_state
-        if _local_platform_state.get("isPlatformPaused", False):
-            is_paused = True
-            pause_msg = _local_platform_state.get("pauseMessage") or "Platform is temporarily paused."
+        # Fallback: read from SQLite platform_settings table
+        db_session = SessionLocal()
+        try:
+            paused_setting = db_session.query(PlatformSetting).filter(
+                PlatformSetting.key == "isPlatformPaused"
+            ).first()
+            if paused_setting:
+                raw = json.loads(paused_setting.value).get("value", False)
+                if raw:
+                    is_paused = True
+                    msg_setting = db_session.query(PlatformSetting).filter(
+                        PlatformSetting.key == "pauseMessage"
+                    ).first()
+                    if msg_setting:
+                        pause_msg = json.loads(msg_setting.value).get("value") or "Platform is temporarily paused."
+        finally:
+            db_session.close()
             
     if is_paused:
         raise LumoraException(
@@ -74,7 +89,6 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
 
     # For vendor-role users, verify they actually have an affiliate profile
     if current_user.role == "vendor":
-        from app.db.session import SessionLocal
         from app.models.affiliate import AffiliateProfile
         db_s = SessionLocal()
         try:

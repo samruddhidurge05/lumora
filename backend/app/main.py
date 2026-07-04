@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 import os
 from app.db.database import engine
 from app.models import Base
+from app.middleware.rate_limit import limiter, _rate_limit_handler
+from slowapi.errors import RateLimitExceeded
 
 # Import Routers
 from app.api.auth_router import router as auth_router
@@ -30,29 +32,23 @@ Base.metadata.create_all(bind=engine)
 # Seed Admin Users
 from app.db.database import SessionLocal
 from app.models.user import User
-from app.core.security import get_password_hash
 
 db_session = SessionLocal()
 try:
-    for email, pwd, name in [
-        ("admin@lumora.com", "admin123", "Platform Admin"),
-        ("admin@gmail.com", "admin123", "Platform Super Admin"),
-        ("admin@lumora.co", "Admin1234", "Lumora Admin")
-    ]:
-        admin_user = db_session.query(User).filter(User.email == email).first()
-        if not admin_user:
-            hashed_password = get_password_hash(pwd)
-            admin_user = User(
-                name=name,
-                email=email,
-                password_hash=hashed_password,
-                role="admin",
-                is_active=True,
-                is_verified=True
-            )
-            db_session.add(admin_user)
-            db_session.commit()
-            print(f"[seed] Admin user created successfully: {email} / {pwd}")
+    admin_email = "avikapawar4@gmail.com"
+    admin_user = db_session.query(User).filter(User.email == admin_email).first()
+    if not admin_user:
+        admin_user = User(
+            name="Platform Admin",
+            email=admin_email,
+            password_hash="firebase_managed",
+            role="admin",
+            is_active=True,
+            is_verified=True,
+        )
+        db_session.add(admin_user)
+        db_session.commit()
+        print(f"[seed] Admin user created: {admin_email}")
 except Exception as e:
     print(f"[seed] Error seeding admin user: {e}")
 finally:
@@ -63,6 +59,9 @@ app = FastAPI(
     description="Backend API for Lumora digital assets store",
     version="1.0.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 
 from fastapi.responses import JSONResponse
 from app.core.exceptions import LumoraException
