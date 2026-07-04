@@ -14,17 +14,17 @@ class LoginRequest(BaseModel):
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = None
     role: Optional[str] = None
+    firebase_uid: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
     role: str
-    # is_active is returned so the frontend can detect account suspension
-    # without a separate API call.
     is_active: bool = True
-    # Field name matches the SQLAlchemy model column (is_verified)
     is_verified: bool = False
+    firebase_uid: Optional[str] = None
+    sqlite_user_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

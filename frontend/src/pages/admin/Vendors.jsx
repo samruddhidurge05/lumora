@@ -111,37 +111,6 @@ export default function Vendors() {
   const [actionLoading, setActionLoading] = useState({}); // { [uid]: true/false }
   const [notification, setNotification]   = useState(null);
 
-  // ── Self-healing admin token re-acquisition ──────────────────────────────
-  // When the REST fallback returns 403, it means the stored JWT belongs to a
-  // non-admin (stale vendor/customer session). Silently swap it for an admin JWT.
-  const reacquireAdminToken = useCallback(async () => {
-    const BACKEND = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-    const attempts = [
-      { email: 'admin@gmail.com',  password: 'admin123'  },
-      { email: 'admin@lumora.com', password: 'admin123'  },
-      { email: 'admin@lumora.co',  password: 'Admin1234' },
-    ];
-    for (const cred of attempts) {
-      try {
-        const res = await fetch(`${BACKEND}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(cred),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.access_token && data.user?.role === 'admin') {
-            localStorage.setItem('lumora_backend_token', data.access_token);
-            if (data.user?.id != null) localStorage.setItem('lumora_backend_uid', String(data.user.id));
-            window.dispatchEvent(new Event('lumora_backend_ready'));
-            return true; // success
-          }
-        }
-      } catch (_) { /* try next */ }
-    }
-    return false; // all attempts failed
-  }, []);
-
   // ── Sort helper ─────────────────────────────────────────────────────────────
   const sortByStatus = useCallback((arr) => {
     return [...arr].sort((a, b) => {
@@ -151,83 +120,36 @@ export default function Vendors() {
     });
   }, []);
 
-  // ── REST fallback fetch with auto-heal on 403 ────────────────────────────
+  // ── REST fallback fetch ──────────────────────────────────────────────────
+  // Token refresh is handled by AuthContext — no need to reacquire here.
   const fetchVendorsRest = useCallback(async () => {
     try {
       const data = await backendFetch('/admin/vendors/');
       setVendors(sortByStatus(Array.isArray(data) ? data : []));
     } catch (err) {
-      if (err.status === 403 || err.status === 401) {
-        // Stale / wrong JWT — try to swap for admin token then retry once
-        const ok = await reacquireAdminToken();
-        if (ok) {
-          try {
-            const data = await backendFetch('/admin/vendors/');
-            setVendors(sortByStatus(Array.isArray(data) ? data : []));
-            return; // recovered
-          } catch (_) { /* fall through to error */ }
-        }
-        setError('Session expired — please sign out and sign back in as Admin.');
-      } else {
-        setError('Failed to load vendors. Check backend connection.');
-      }
+      setError('Failed to load vendors. Check backend connection.');
     }
-  }, [reacquireAdminToken, sortByStatus]);
+  }, [sortByStatus]);
 
   const fetchAffiliatesRest = useCallback(async () => {
     try {
       const data = await backendFetch('/admin/affiliates/');
       setAffiliates(sortByStatus(Array.isArray(data) ? data : []));
     } catch (err) {
-      if (err.status === 403 || err.status === 401) {
-        const ok = await reacquireAdminToken();
-        if (ok) {
-          try {
-            const data = await backendFetch('/admin/affiliates/');
-            setAffiliates(sortByStatus(Array.isArray(data) ? data : []));
-            return;
-          } catch (_) { /* fall through */ }
-        }
-      }
+      console.warn('[Vendors] REST affiliates fallback failed:', err.message);
     }
-  }, [reacquireAdminToken, sortByStatus]);
+  }, [sortByStatus]);
 
   // ── Real-time listeners ────────────────────────────────────────────────────
-  // vendorFetched / affiliateFetched refs prevent the Firestore error handler
-  // from calling the REST fallback repeatedly. Firestore onSnapshot error
-  // callbacks fire on every reconnect attempt — without a guard the REST call
-  // would loop continuously when rules are not deployed.
   useEffect(() => {
     setLoading(true);
     setError(null);
-
-    // Eagerly ensure we have a valid admin JWT before starting the listeners.
-    // This handles the race condition where the page mounts before AuthContext
-    // finishes writing the token to localStorage after login.
-    const ensureAdminToken = async () => {
-      const existing = localStorage.getItem('lumora_backend_token');
-      if (!existing) {
-        await reacquireAdminToken();
-      }
-    };
-    ensureAdminToken(); // non-blocking — listeners start immediately, 403s get self-healed
-
-    const isMockAdmin = !!localStorage.getItem('lumora_mock_user');
-    if (isMockAdmin) {
-      // Mock admin is active — bypass Firestore entirely to prevent permission warnings
-      fetchVendorsRest();
-      fetchAffiliatesRest();
-      setLoading(false);
-      return;
-    }
 
     const vendorQuery    = query(collection(db, 'users'), where('role', 'in', ['vendor', 'Vendor']));
     const affiliateQuery = query(collection(db, 'users'), where('role', 'in', ['affiliate', 'Affiliate']));
 
     let vendorFetched = false;    // guard: call REST fallback only once
     let affiliateFetched = false; // guard: call REST fallback only once
-    let hasLoggedVendorWarning = false;
-    let hasLoggedAffiliateWarning = false;
 
     let unsubVendors;
     unsubVendors = onSnapshot(
@@ -238,15 +160,10 @@ export default function Vendors() {
         setLoading(false);
       },
       async (err) => {
-        if (unsubVendors) {
-          unsubVendors();
-        }
-        if (vendorFetched) return; // Firestore keeps retrying — ignore repeats
+        if (unsubVendors) unsubVendors();
+        if (vendorFetched) return;
         vendorFetched = true;
-        if (!hasLoggedVendorWarning) {
-          hasLoggedVendorWarning = true;
-          console.warn('[Vendors] Firestore vendor read error, falling back to REST API:', err.message);
-        }
+        console.warn('[Vendors] Firestore vendor read error, falling back to REST API:', err.message);
         await fetchVendorsRest();
         setLoading(false);
       }
@@ -261,22 +178,17 @@ export default function Vendors() {
         setLoading(false);
       },
       async (err) => {
-        if (unsubAffiliates) {
-          unsubAffiliates();
-        }
-        if (affiliateFetched) return; // guard against repeated calls
+        if (unsubAffiliates) unsubAffiliates();
+        if (affiliateFetched) return;
         affiliateFetched = true;
-        if (!hasLoggedAffiliateWarning) {
-          hasLoggedAffiliateWarning = true;
-          console.warn('[Vendors] Firestore affiliate read error, falling back to REST API:', err.message);
-        }
+        console.warn('[Vendors] Firestore affiliate read error, falling back to REST API:', err.message);
         await fetchAffiliatesRest();
         setLoading(false);
       }
     );
 
     return () => { unsubVendors(); unsubAffiliates(); };
-  }, [fetchVendorsRest, fetchAffiliatesRest, reacquireAdminToken, sortByStatus]);
+  }, [fetchVendorsRest, fetchAffiliatesRest, sortByStatus]);
 
   // ── Notification helper ────────────────────────────────────────────────────
   const notify = (text, type = 'success') => {
@@ -285,9 +197,7 @@ export default function Vendors() {
   };
 
   // ── Generic action runner ──────────────────────────────────────────────────
-  // ── Generic action runner — with 403 self-healing ─────────────────────────
-  // When the action returns 403 it means the stored JWT is stale (wrong role).
-  // reacquireAdminToken() swaps it for a valid admin JWT, then retries once.
+  // Token refresh is handled by AuthContext's proactive refresh interval.
   const runAction = useCallback(async (uid, actionFn, successMsg) => {
     setActionLoading(prev => ({ ...prev, [uid]: true }));
 
@@ -324,34 +234,11 @@ export default function Vendors() {
         fetchAffiliatesRest();
       }
     } catch (err) {
-      // 403 = stale / wrong JWT — re-acquire admin token and retry once
-      if (err.status === 403 || err.message?.includes('403')) {
-        notify('Re-authenticating, please wait…', 'info');
-        const ok = await reacquireAdminToken();
-        if (ok) {
-          try {
-            await actionFn(uid);
-            applyOptimistic(actionFn);
-            notify(successMsg);
-            // Background REST refresh
-            if (activeTab === 'vendors') {
-              fetchVendorsRest();
-            } else {
-              fetchAffiliatesRest();
-            }
-          } catch (retryErr) {
-            notify(retryErr.message || 'Action failed after re-auth.', 'error');
-          }
-        } else {
-          notify('Session expired — please sign out and sign back in as Admin.', 'error');
-        }
-      } else {
-        notify(err.message || 'Action failed. Please try again.', 'error');
-      }
+      notify(err.message || 'Action failed. Please try again.', 'error');
     } finally {
       setActionLoading(prev => ({ ...prev, [uid]: false }));
     }
-  }, [activeTab, fetchVendorsRest, fetchAffiliatesRest, reacquireAdminToken]);
+  }, [activeTab, fetchVendorsRest, fetchAffiliatesRest]);
 
 
 

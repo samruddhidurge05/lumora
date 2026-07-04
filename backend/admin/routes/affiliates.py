@@ -1,8 +1,15 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from admin.validators.admin_auth import require_admin_role
 from admin_controls.affiliate.services import update_affiliate_status
-from app.shared.firebase.connection import db, firebase_connected
+from app.shared.firebase.connection import db as fdb, firebase_connected
+from app.db.session import get_db
+from app.models.user import User
+from app.models.audit_log import AuditLog
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -11,7 +18,7 @@ class AffiliateStatusUpdateSchema(BaseModel):
 
 @router.get("/")
 def list_affiliates(admin_user = Depends(require_admin_role)):
-    if not firebase_connected or db is None:
+    if not firebase_connected or fdb is None:
         from app.db.session import SessionLocal
         from app.models.user import User as UserModel
         from app.models.affiliate import AffiliateProfile
@@ -59,7 +66,7 @@ def list_affiliates(admin_user = Depends(require_admin_role)):
     try:
         users = []
         for r_val in ("affiliate", "Affiliate"):
-            snap = db.collection("users").where("role", "==", r_val).stream()
+            snap = fdb.collection("users").where("role", "==", r_val).stream()
             for doc in snap:
                 data = doc.to_dict()
                 users.append({"uid": doc.id, **data})
@@ -87,3 +94,65 @@ def change_affiliate_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@router.post("/{id}/enable")
+def enable_affiliate(
+    id: int,
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Affiliate not found")
+
+    user.is_active = True
+    audit = AuditLog(
+        admin_user_id=admin_user.id,
+        action="affiliate_enable",
+        target_type="affiliate",
+        target_id=str(id),
+    )
+    db.add(audit)
+    db.commit()
+
+    if firebase_connected and fdb is not None and user.firebase_uid:
+        try:
+            fdb.collection("users").document(user.firebase_uid).set(
+                {"accountStatus": "active"}, merge=True
+            )
+        except Exception as exc:
+            logger.error("[affiliate_enable] Firestore write failed for uid=%s: %s", user.firebase_uid, exc)
+
+    return {"success": True, "message": f"Affiliate {id} has been enabled."}
+
+
+@router.post("/{id}/disable")
+def disable_affiliate(
+    id: int,
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Affiliate not found")
+
+    user.is_active = False
+    audit = AuditLog(
+        admin_user_id=admin_user.id,
+        action="affiliate_disable",
+        target_type="affiliate",
+        target_id=str(id),
+    )
+    db.add(audit)
+    db.commit()
+
+    if firebase_connected and fdb is not None and user.firebase_uid:
+        try:
+            fdb.collection("users").document(user.firebase_uid).set(
+                {"accountStatus": "disabled"}, merge=True
+            )
+        except Exception as exc:
+            logger.error("[affiliate_disable] Firestore write failed for uid=%s: %s", user.firebase_uid, exc)
+
+    return {"success": True, "message": f"Affiliate {id} has been disabled."}

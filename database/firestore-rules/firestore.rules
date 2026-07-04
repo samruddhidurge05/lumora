@@ -29,9 +29,9 @@ service cloud.firestore {
       );
     }
 
-    // ── Platform settings — admin write, authenticated read ─────────────────
+    // ── Platform settings — public read (needed for maintenance banner), admin write ──
     match /platformSettings/{docId} {
-      allow read: if isSignedIn();
+      allow read: if true;       // platform status must be readable by guests too
       allow write: if isAdmin();
     }
 
@@ -74,9 +74,24 @@ service cloud.firestore {
 
     // ── Orders — buyer or vendor who owns a line item, or admin ─────────────
     match /orders/{orderId} {
-      allow read:  if isSignedIn();   // vendor, customer, admin all need to read
-      allow write: if isSignedIn();   // created by payment flow (authenticated)
-      allow list:  if isSignedIn();
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.buyerId ||
+        request.auth.uid == resource.data.vendorId ||
+        isAdmin()
+      );
+      allow write: if isSignedIn() && (
+        request.auth.uid == request.resource.data.buyerId ||
+        request.auth.uid == request.resource.data.vendorId ||
+        isAdmin()
+      );
+      // NOTE: Firestore cannot filter list results server-side, so a broad
+      // `allow list: if isSignedIn()` exposes the existence of every order
+      // (document metadata leaks even before field-level read).
+      // Restrict list to admin only. Frontend queries for buyer/vendor orders
+      // must use `get` on individual documents or a collection group query
+      // constrained by buyerId/vendorId — both of which are covered by the
+      // read rule above.
+      allow list: if isAdmin();
     }
 
     // ── Purchases — buyer or admin ───────────────────────────────────────────
@@ -116,10 +131,25 @@ service cloud.firestore {
     }
 
     // ── Auth logs — append-only by authenticated users ────────────────────────
+    // logAuthEvent is only called when a Firebase user is signed in.
+    // Admin mock sessions skip logAuthEvent (no Firebase session active).
     match /auth_logs/{logId} {
       allow create: if isSignedIn();
       allow read:   if isAdmin();
       allow update, delete: if false;
+    }
+
+    // ── Admin-only collections ─────────────────────────────────────────────────
+    match /adminReferralLinks/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /adminAnalytics/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /adminPromotions/{docId} {
+      allow read, write: if isAdmin();
     }
 
     // ── Cart — own cart only ──────────────────────────────────────────────────
