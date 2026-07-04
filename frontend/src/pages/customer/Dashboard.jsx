@@ -16,6 +16,7 @@ import MessagesCenter from './MessagesCenter';
 import PriceAlerts from './PriceAlerts';
 import ProductUpdates from './ProductUpdates';
 import RecentlyViewed from './RecentlyViewed';
+import RecentPurchases from './RecentPurchases';
 import ReviewsManager from './ReviewsManager';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -30,6 +31,7 @@ const PRIMARY_NAV = [
 ];
 
 const MORE_NAV = [
+  { name: 'Recent Purchases', icon: <ShoppingBag size={14} /> },
   { name: 'Orders',          icon: <CreditCard size={14} /> },
   { name: 'Messages Center', icon: <MessageSquare size={14} /> },
   { name: 'Notifications',   icon: <Bell size={14} />, badge: true },
@@ -182,6 +184,7 @@ export default function Dashboard() {
     switch (dashboardTab) {
       case 'Downloads':        return <Downloads />;
       case 'Purchases':        return <Purchases />;
+      case 'Recent Purchases': return <RecentPurchases />;
       case 'Wishlist':         return <Wishlist />;
       case 'Orders':           return <Orders />;
       case 'Notifications':    return <Notifications />;

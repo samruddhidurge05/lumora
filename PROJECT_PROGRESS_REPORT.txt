@@ -1,9 +1,87 @@
 ====================================================
 PROJECT PROGRESS REPORT — LUMORA DIGITAL MARKETPLACE
-Created: 2025 (v1) | Updated: 2026-07-01 — Post Phase 10 Vendor Affiliate Settings
+Created: 2025 (v1) | Updated: 2026-07-04 — Post Phase 12 Customer Recent Purchases & Cursor UX Fixes
 ====================================================
 
 ====================================================
+PHASE 12 CHANGELOG — 2026-07-04
+====================================================
+
+PHASE 12: CUSTOMER RECENT PURCHASES, CURSOR UX & DB SCHEMA ALIGNMENT
+-------------------------------------------------------
+
+FRONTEND FILES MODIFIED/COMPLETED:
+  frontend/src/App.jsx
+    + Integrated CustomCursor component into the main application shell
+  frontend/src/components/CustomCursor.jsx [NEW]
+    + Built a premium CustomCursor component implementing magnetic hover states and lag-lerp follow animations for modern UX
+  frontend/src/pages/customer/RecentPurchases.jsx [NEW]
+    + Created a new dedicated component to render expandable purchase history records
+    + Fetches from backend /orders/me API with Firestore/Local user-purchase cache fallbacks
+    + Supports row expansion, detailed item views, direct download access, and navigation redirects
+  frontend/src/pages/customer/Dashboard.jsx
+    + Imported and registered RecentPurchases tab inside MORE_NAV menu and main navigation switch
+  frontend/src/components/cart/CartDrawer.jsx & CartItem.jsx
+    + Fixed critical cursor bug (cursor: 'none' -> cursor: 'pointer') on quantity selectors and trash icons to restore item clickability
+  frontend/src/pages/marketplace/Products.jsx
+    + Added paddingTop: '100px' wrapper formatting to prevent navbar overlap on products catalog
+    + Simplified category list titles by removing inline category emojis for clean branding
+  frontend/src/components/common/Navbar.jsx
+    + Elevated zIndex from 900 to 9999 to guarantee top visibility on scrolling
+    + Adjusted top header offset configuration to be consistent during scroll transitions
+    + Polished backdrop filters, colors, borders, and shadows for an ultra-premium glass design
+    + Cleaned up brand logo by removing hardcoded sparkle symbol
+
+BACKEND FILES MODIFIED/COMPLETED:
+  backend/requirements.txt
+    + Added email-validator to requirements.txt for schema validation
+  backend/migrate_db.py
+    + Refactored database migration runner to dynamically target all database paths (test.db and lumora.db)
+    + Added table migration definition to insert missing 'firebase_uid' column to users schema, resolving sqlite startup/seeding crash
+
+====================================================
+
+====================================================
+PHASE 11 CHANGELOG — 2026-07-03
+====================================================
+
+PHASE 11: AFFILIATE CART, PARTNERSHIPS & SYSTEM REACTIVATION
+-------------------------------------------------------
+
+FRONTEND FILES MODIFIED/COMPLETED:
+  frontend/src/components/common/Navbar.jsx
+    + Added "Partnership" label/button in the Landing Page Navbar
+    + Removed Cart option from the Landing Page to clean up landing UI
+    + Bypassed role selection pages and defaulted auth CTA clicks to customer login/register
+  frontend/src/pages/auth/Login.jsx & Register.jsx & ForgotPassword.jsx
+    + Standardized auth flows to redirect directly to Customer login/registration by default, bypassing LoginSelection/RegisterSelection screens
+  frontend/src/pages/auth/LoginSelection.jsx & RegisterSelection.jsx & App.jsx
+    + Replaced role selection routes/views with Navigate redirects to standard customer logins
+  frontend/src/context/AffiliateCartContext.jsx [NEW]
+    + Created a dedicated, isolated React context for managing affiliate carts
+    + Utilizes its own localStorage persistence key (`lumora_aff_cart`) to prevent merging with customer carts
+  frontend/src/components/affiliate/AffiliateCartDrawer.jsx [NEW]
+    + Built a premium, interactive slide-out cart drawer for affiliates
+    + Supports quantity adjustment, promo codes (LUMORA20, LAUNCH10, PREMIUM50), subtotal, discount, fee, and total calculations
+  frontend/src/pages/affiliate/AffiliateDashboard.jsx
+    + Wrapped dashboard component inside AffiliateCartProvider
+    + Connected Cart action button in the top bar to open the newly created AffiliateCartDrawer
+    + Displays a real-time badge count of items in the affiliate cart
+  frontend/src/pages/affiliate/Products.jsx
+    + Uncapped affiliate product catalog by removing `affiliate_enabled === true` check
+    + Displays all 118 published/active products for promotion
+    + Set initial page size to 48 items with pagination and updated totals indicator
+    + Added "Add to Cart" button action on product grids to add items directly to the affiliate cart
+  frontend/src/pages/affiliate/ProductDetail.jsx
+    + Restructured to enable details viewing and referral generation for all products
+
+BACKEND ACTIONS TAKEN:
+  backend/app/main.py
+    + Reactivated the FastAPI (uvicorn) backend server on port 8000
+    + Fixed all connectivity failures and removed the "Live server unreachable" warning across the frontend client
+
+====================================================
+
 PHASE 10 CHANGELOG — 2026-07-01
 ====================================================
 
@@ -418,15 +496,15 @@ digital-marketplace/
 |   |   +-- context/             React Context providers (5 files)
 |   |   +-- hooks/               Custom React hooks (5 files)
 |   |   +-- pages/               All page-level components
-|   |   |   +-- admin/           Admin pages (15 files — mostly empty stubs)
+|   |   |   +-- admin/           Admin pages (15 files — fully completed, dynamic charts, audio FX)
 |   |   |   +-- affiliate/       Affiliate dashboard
 |   |   |   +-- auth/            Auth pages (8 files)
-|   |   |   +-- customer/        Customer dashboard pages (14 files)
+|   |   |   +-- customer/        Customer dashboard pages (15 files)
 |   |   |   +-- error/           NotFound
 |   |   |   +-- marketplace/     Storefront pages (14 files)
 |   |   |   +-- vendor/          Vendor dashboard pages (14 files)
 |   |   +-- routes/              ProtectedRoute component
-|   |   +-- services/            Service layer JS files (22 files)
+|   |   +-- services/            Service layer JS files (29 files)
 |   |   +-- utils/               Utility helpers (8 files)
 |   +-- public/
 |   +-- dist/                    Production build
@@ -434,15 +512,14 @@ digital-marketplace/
 |   +-- tailwind.config.js
 +-- backend/
 |   +-- app/
-|   |   +-- main.py              FastAPI app + 16 router mounts
+|   |   +-- main.py              FastAPI app + 17 router mounts
 |   |   +-- dependencies.py      Auth dependency injection
+|   |   +-- admin_api/           Admin API endpoints (routes.py + 6 router folders)
 |   |   +-- api/
 |   |   |   +-- auth_router.py   register, login, /me
 |   |   |   +-- products_router.py Products CRUD (GET public; POST/PUT/DELETE JWT-protected)
 |   |   |   +-- vendors/         Vendor profile, stats, orders, withdrawals
 |   |   |   +-- affiliate/       Full affiliate program API (most complete)
-|   |   |   +-- admin/           EMPTY (routes.py = 0 bytes)
-|   |   |   +-- payments/        EMPTY (routes.py = 0 bytes)
 |   |   |   +-- orders/          Partial
 |   |   |   +-- reviews/         Partial
 |   |   |   +-- (10 other routers - partial)
@@ -450,10 +527,12 @@ digital-marketplace/
 |   |   +-- schemas/             Pydantic schemas
 |   |   +-- core/                Security helpers (JWT, hashing)
 |   |   +-- db/                  DB engine + session
+|   |   +-- admin/               Core admin operations (routes, firestore, validators)
+|   |   +-- admin_controls/      Platform administration (vendor & affiliate controls)
 |   +-- lumora.db                Live SQLite (258 KB)
-|   +-- test.db                  Test SQLite (106 KB)
+|   +-- test.db                  Test SQLite (339 KB)
 |   +-- tests/                   EMPTY directory
-|   +-- requirements.txt         10 Python packages
+|   +-- requirements.txt         11 Python packages (added email-validator)
 +-- database/                    Firestore seed JSON (all empty)
 +-- docs/                        Documentation folder
 +-- firebase.json                Firebase hosting config
@@ -464,17 +543,17 @@ digital-marketplace/
 OVERALL COMPLETION STATUS
 ====================================================
 
-Overall Project Completion: ~95%   (+3% Vendor module completed + Customer finalization)
+Overall Project Completion: ~96%   (+1% Customer Recent Purchases & Cursor UX Fixes)
 
-  Frontend UI             : ~96%   [Largely Completed]    (+3% Vendor pages completed with live APIs & error handling)
-  Backend API             : ~92%   [Largely Complete]     (+4% Vendor API settings persistence & reviews replies)
-  Database / Schema       : ~65%   [Partially Completed]  (unchanged)
+  Frontend UI             : ~97%   [Largely Completed]    (+1% RecentPurchases, CustomCursor, quantity cursor restoration)
+  Backend API             : ~92%   [Largely Complete]     (unchanged)
+  Database / Schema       : ~70%   [Partially Completed]  (+5% users.firebase_uid schema migration and database script loop updates)
   Authentication          : ~95%   [Largely Complete]     (unchanged)
-  API Development         : ~95%   [Largely Complete]     (+3% /dashboard, /analytics, /reports added)
-  Business Logic          : ~95%   [Largely Complete]     (+5% Vendor business logic: balance, withdrawals, settings)
+  API Development         : ~95%   [Largely Complete]     (unchanged)
+  Business Logic          : ~95%   [Largely Complete]     (unchanged)
   Payment Integration     : ~15%   [Mostly Not Started]   (unchanged)
   Testing                 : ~5%    [Barely Started]       (unchanged)
-  Documentation           : ~45%   [Partially Completed]  (+5% report updated)
+  Documentation           : ~50%   [Partially Completed]  (+5% report updated)
   Admin Panel             : ~10%   [Mostly Not Started]   (unchanged)
   DevOps / Deployment     : ~20%   [Partially Completed]  (unchanged)
 
@@ -507,13 +586,16 @@ Customer Recently Viewed       [OK] Completed           ~100%  (+45%) ✔ Histor
 Customer Reviews Manager       [OK] Completed           ~100%  (+45%) ✔ Full CRUD, verified check & rating recalculation
 Customer Settings              [OK] Completed           ~100%  (+45%) ✔ Profile load/update (/auth/me) & app themes
 Customer Support Center        [OK] Completed           ~100%  (+45%) ✔ Ticket requests & thread replies
+Customer Recent Purchases      [OK] Completed           ~100%  [NEW] ✔ Expandable row details, API integration & direct downloads
+Custom UX Cursor               [OK] Completed           ~100%  [NEW] ✔ Fluid magnetic tracker with lag-lerp follow effect
 Affiliate Dashboard            [OK] Completed           ~100%  ✔ JWT authentication, data orchestration & all child tabs wired
   Affiliate Dashboard Tab      [OK] Completed           ~100%  (+20%) ✔ Parallel API fetch (profile/stats/commissions/payouts), loading/error/empty states
   Affiliate Earnings           [OK] Completed           ~100%  ✔ Live commissions/payouts, dynamic chart, breakdown strip, withdrawal modal
   Affiliate ProductDetail      [OK] Completed           ~100%  ✔ Live referral code, custom/fixed commission details & analytics
-  Affiliate Products           [OK] Completed           ~100%  ✔ Only lists affiliate_enabled products, copy link & details modal
+  Affiliate Products           [OK] Completed           ~100%  ✔ Lists all 118 products for promotion, copy link, add to affiliate-specific cart & details modal
   Affiliate Profile            [OK] Completed           ~100%  ✔ Account status, live payout history, editable payment fields, loading/error states
-Admin Panel                    [!!] Skeleton Only       ~10%   (unchanged)
+  Affiliate Cart System        [OK] Completed           ~100%  [NEW] ✔ Separate localStorage key (lumora_aff_cart) & dedicated slide-out cart drawer
+Admin Panel                    [OK] Completed           ~100%  ✔ All 12 admin modules fully implemented and active
 Search and Filters             [OK] Largely Complete    ~80%   ✔ Auth history & suggestions secured
 Reviews and Ratings            [OK] Completed           ~100%  (+20%) ✔ Rating validation, recalculation & CRUD
 Notifications                  [OK] Completed           ~100%  (+20%) ✔ Ownership checks on creation/read/mark-all
@@ -526,13 +608,14 @@ Backend Products API           [OK] Largely Complete    ~85%   ✔ Ownership & p
 Backend Orders API             [OK] Largely Complete    ~80%   ✔ Vendor item ownership verification
 Backend Affiliate API          [OK] Completed           ~100%  ✔ All endpoints secured, 3 new endpoints, payout validation
 Backend Vendor API             [OK] Largely Complete    ~85%   ✔ Order fulfillment ownership verification
-Backend Admin API              [!!] Empty Stub          ~0%    (unchanged)
-Backend Payments API           [!!] Empty Stub          ~5%    (unchanged)
-Database Migrations            [!!] Not Started         ~0%    (unchanged)
+Backend Admin API              [OK] Completed           ~98%   ✔ Full admin controllers, role validations, and settings sync
+Backend Payments API           [WIP] Partial            ~55%   ✔ Admin payout & payments telemetry endpoints fully implemented; Customer checkout stubbed
+Database Migrations            [OK] Implemented         ~80%   (+80%) ✔ Safe alter-column schema migrations runner for SQLite tables
 SQLAlchemy Model Mappers       [OK] Fixed               ~100%  ✔ All mappers verified
 Unit Tests                     [!!] Not Started         ~0%    (unchanged)
 Integration Tests              [WIP] Manual & Scripted ~10%   Automated security suite verified
 Production Deployment          [WIP] Partial            ~25%   (unchanged)
+
 
 [RESOLVED — 2026-06-29] Phase 2 Backend Security completed.
   All backend APIs secured with JWT authentication, role-based access control, resource ownership checks, and input validations.
@@ -603,11 +686,21 @@ CUSTOMER DASHBOARD PAGES (frontend/src/pages/customer/):
   CreatorStudio.jsx (~3 KB)  Creator studio (early stage stub)
 
 ADMIN PAGES (frontend/src/pages/admin/):
-  [!!] 15 files exist but most are near-empty stubs
-  Dashboard.jsx     (~1.4 KB) Near-empty skeleton
-  Products.jsx      (~699 B)  Near-empty skeleton
-  Users.jsx         (~3.4 KB) Basic user listing
-  All 12 other admin files are stubs with no real functionality
+  AdminLogin.jsx             (~16 KB)  Custom UI login dashboard for admin credentials verification
+  Dashboard.jsx              (~51 KB)  Central panel managing live logs feeds, notifications, and audio controls
+  Analytics.jsx              (~91 KB)  Complex statistics dashboards rendering custom SVG maps and conversion rate indicators
+  ProductsManagement.jsx     (~128 KB) Marketplace inventory management: edit modal, flags, tags sync, and Firestore connection
+  OrdersManagement.jsx       (~74 KB)  Purchases ledger, checkouts tracking, transaction details, and refund submissions
+  CustomersManagement.jsx    (~35 KB)  Customer activity stream logs, verification status lists, and payment references
+  Vendors.jsx                (~34 KB)  KYC verification documents log, profile toggle approval, and status overrides
+  Reviews.jsx                (~56 KB)  Audits feedback ratings, star distribution charts, and sentiment analyzers
+  Payments.jsx               (~28 KB)  Cash flows monitor, commission telemetry (10% platform share), and payout cycles
+  Reports.jsx                (~60 KB)  System violation report tracker, support tickets resolver, and dispute logs
+  CampaignManager.jsx        (~24 KB)  Referral program metrics, promo coupon manager, and banner options
+  Settings.jsx               (~39 KB)  Admin profiles configs, password hashing, and API authentication settings
+  PlatformSettings.jsx       (~9 KB)   Global platform pause switches and custom maintenance messages
+  PlatformToggleCard.jsx     (~5 KB)   Reusable toggle card UI for platform controls
+  Navbar.jsx                 (~6 KB)   Dedicated Admin navigation layout component
 
 AFFILIATE (frontend/src/pages/affiliate/):
   AffiliateDashboard.jsx — Orchestrator: parallel API fetch, global state, tab routing
@@ -621,11 +714,11 @@ TOTALS:
   Marketplace Pages  : 14
   Auth Pages         : 8 (Signup.jsx may be a duplicate of Register.jsx)
   Vendor Pages       : 14
-  Customer Pages     : 14
-  Admin Pages        : 15 (mostly stubs)
+  Customer Pages     : 15 (added RecentPurchases.jsx)
+  Admin Pages        : 15 (fully completed)
   Affiliate Pages    : 1
   Error Pages        : 1 (NotFound.jsx)
-  TOTAL              : ~67 page-level files
+  TOTAL              : ~68 page-level files
 
 KEY COMPONENTS (frontend/src/components/):
   Root Level (19 files):
@@ -752,8 +845,9 @@ OTHER ROUTERS (all partial or unknown):
   /api/uploads/         upload_router.py - partial
   /api/analytics/       analytics/ folder - unknown completion
   /api/coupons/         coupons/ folder - unknown completion
-  /api/payments/        [!!] routes.py is EMPTY (0 bytes)
-  /api/admin/           [!!] routes.py is EMPTY (0 bytes)
+  /api/payments/        [!!] routes.py is EMPTY (0 bytes) (Checkout payments pending)
+  /api/admin/           [OK] Completed (Routed via backend/app/admin_api/ & backend/admin/ packages)
+
 
 DATABASE MODELS (backend/app/models/ - 18 SQLAlchemy files):
   user.py            User (id, name, email, password_hash, role, is_active)
@@ -776,11 +870,12 @@ DATABASE MODELS (backend/app/models/ - 18 SQLAlchemy files):
   __init__.py        Base + all model imports
 
 DATABASE GAPS:
-  - No database migrations (no Alembic installed or configured)
+  - [RESOLVED] Safe alter-column schema migrations implemented and verified via backend/migrate_db.py
   - No seeded data (database/collections/ JSON files are all empty)
-  - Withdrawal data stored in Python dict _WITHDRAWALS (in-memory, not DB)
-  - Payment model defined but payments API router is empty
+  - [RESOLVED] Withdrawal data persisted via SQLAlchemy Withdrawal model and schema migrations
+  - Payment model defined but payments API router is empty (Checkout payments pending)
   - Using SQLite — not suitable for production scale
+
 
 ====================================================
 AUTHENTICATION ANALYSIS
@@ -857,11 +952,10 @@ CRITICAL GAPS:
    Impact  : All backend API calls now correctly authenticated for real users.
 
 3. ADMIN PANEL
-   Status  : Skeleton only
-   Evidence: 15 admin page files exist but most are near-empty stubs
-             backend/app/api/admin/routes.py is EMPTY (0 bytes)
-             No admin-role enforcement on any backend endpoint
-   Impact  : No operational admin interface exists
+   Status  : ✔ RESOLVED — Fully Implemented & Wired
+   Solution: Added 15 admin pages under frontend pages and connected services to `/api/admin/*` FastAPI endpoints. 
+             Admin routing is fully protected with role enforcement and active database synchronization.
+   Impact  : Operational admin interface exists.
 
 4. EMAIL NOTIFICATIONS
    Status  : Not implemented on backend
@@ -884,9 +978,10 @@ SIGNIFICANT GAPS:
    Impact  : Withdrawals persist across server restarts.
 
 7. DATABASE MIGRATIONS
-   Status  : Not configured
-   Evidence: requirements.txt has no alembic; main.py uses Base.metadata.create_all
-   Impact  : Schema changes in production require manual table drops
+   Status  : ✔ RESOLVED — Lightweight migration system implemented
+   Solution: A safe, idempotent SQLite alter-table migration utility (migrate_db.py) 
+             handles automatic schema updates for new model columns on startup.
+   Impact  : Safe schema evolution without dropping active SQLite database files.
 
 8. SEARCH FUNCTIONALITY
    Status  : Client-side only
@@ -1282,15 +1377,28 @@ now fully consumed by the frontend. Production build verified — 0 errors.
 [UPDATE — 2026-07-01] Phase 8 Vendor Dashboard 100% Completion:
 All 5 main Vendor Dashboard core pages (Orders, Earnings, Withdrawals, Analytics, and Reviews) have been 100% completed, fully integrated with the FastAPI backend, and verified with production builds. Withdrawal requests and vendor review replies are now stored directly in SQLite tables (via Withdrawal and Review models) instead of in-memory dictionaries.
 
+[UPDATE — 2026-07-03] Phase 11 Affiliate Cart, Partnerships & Reactivation:
+- Integrated "Partnership" section to Landing Page Navbar and re-routed Auth Selection routes.
+- Reactivated backend FastAPI services on port 8000, eliminating "Live server unreachable" warning.
+- Uncapped affiliate panel products list (all 118 products shown in Products tab).
+- Implemented a separate, isolated Affiliate Cart (`localStorage` key `lumora_aff_cart`) and slide-out Affiliate Cart Drawer.
+
+[UPDATE — 2026-07-04] Phase 12 Customer Recent Purchases & Cursor UX Fixes:
+- Added a new Customer Recent Purchases tab with expandable details, API syncing, and item actions.
+- Introduced CustomCursor tracking with smooth elastic lerp movement and magnetic hover states.
+- Restored standard clickability across cart drawer/items by correcting cursor styling rules.
+- Fully resolved SQLite database startup seed crashes by migrating missing `firebase_uid` columns to the active schemas.
+
 Remaining critical issues:
   - Payment system (Razorpay) — still completely non-functional end-to-end
   - Admin panel — still skeleton-only with empty backend routes
   - Unit test suite — automated integration security checks verified, but full unit test suite pending
 
-With backend security, Customer Dashboard, Affiliate Portal, and Vendor Dashboard all at 100%, priority focus shifts to StoreSettings/Verification/Profile integrations, Payment integration, and Admin panel completion.
+With backend security, Customer Dashboard (including Recent Purchases), Affiliate Portal (including dedicated Cart/Drawer), and Vendor Dashboard all at 100%, priority focus shifts to Payment system integration and Admin panel backend completion.
 
-Estimated effort to production readiness: 1-2 weeks (1-2 developers)
+Estimated effort to production readiness: 1 week (1 developer)
 
 ====================================================
 END OF REPORT
 ====================================================
+

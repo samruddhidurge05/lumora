@@ -97,11 +97,11 @@ export default function Navbar() {
     <header 
       style={{
         position: 'fixed',
-        top: isPlatformPaused ? (scrolled ? '3.5rem' : '4.5rem') : (scrolled ? '1rem' : '2rem'),
+        top: isPlatformPaused ? (scrolled ? '1rem' : '2rem') : (scrolled ? '1rem' : '2rem'),
         left: '50%',
         transform: 'translateX(-50%)',
         width: scrolled ? 'min(1200px, 92%)' : 'min(1340px, 94%)',
-        zIndex: 900,
+        zIndex: 9999, // Ensure it is always on top of all page elements
         transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
@@ -111,16 +111,17 @@ export default function Navbar() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: scrolled ? '12px 24px' : '20px 40px',
+          padding: scrolled ? '10px 24px' : '16px 40px',
           borderRadius: '100px',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          background: scrolled ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(36px) saturate(200%) brightness(1.04)',
-          WebkitBackdropFilter: 'blur(36px) saturate(200%) brightness(1.04)',
+          background: scrolled ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.25)',
+          backdropFilter: 'blur(24px) saturate(180%) brightness(1.02)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%) brightness(1.02)',
           boxShadow: scrolled 
-            ? '0 12px 40px -10px rgba(90, 30, 126, 0.12), inset 0 1px 0 rgba(255,255,255,0.55)' 
-            : '0 4px 20px rgba(90, 30, 126, 0.06), inset 0 1px 0 rgba(255,255,255,0.40)',
-          borderColor: scrolled ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.25)',
+            ? '0 10px 30px rgba(90, 30, 126, 0.12), inset 0 1px 0 rgba(255,255,255,0.40)' 
+            : '0 4px 20px rgba(90, 30, 126, 0.05), inset 0 1px 0 rgba(255,255,255,0.30)',
+          border: '1px solid',
+          borderColor: scrolled ? 'rgba(255, 255, 255, 0.50)' : 'rgba(255, 255, 255, 0.30)',
         }}
       >
         {/* Brand Logo */}
@@ -140,7 +141,6 @@ export default function Navbar() {
             cursor: 'none'
           }}
         >
-          <span style={{ fontSize: '1.25rem', verticalAlign: 'middle', filter: 'drop-shadow(0 0 8px var(--color-lilac-glow))' }}>✧</span>
           Lumora
         </a>
 
