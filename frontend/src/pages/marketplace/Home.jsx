@@ -224,24 +224,13 @@ export default function Home() {
 
   return (
     <div style={{ minHeight:'100vh', position:'relative', zIndex:10 }}>
-      {/* Floating page orbs for glass refraction */}
-      <div className="page-orb page-orb-1" />
-      <div className="page-orb page-orb-2" />
-      <div className="page-orb page-orb-3" />
-      <div className="page-orb page-orb-4" />
       <Navbar />
 
       {/* ═══════════ 1. HERO ═══════════ */}
       <motion.div style={{ y:heroY, opacity:heroOpacity }}>
         <section style={{ minHeight:'100vh', position:'relative', display:'flex', alignItems:'center', padding:'clamp(6rem,12vw,10rem) clamp(1.5rem,6vw,7rem) 5rem', overflow:'hidden' }}>
-          {/* Extra in-hero blobs */}
-          <div style={{ position:'absolute', top:'-10%', right:'-5%', width:'650px', height:'650px', borderRadius:'50%', background:'radial-gradient(circle,rgba(220,198,255,0.32) 0%,transparent 65%)', filter:'blur(80px)', pointerEvents:'none', zIndex:0 }} />
-          <div style={{ position:'absolute', bottom:'-5%', left:'-8%', width:'550px', height:'550px', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,214,186,0.26) 0%,transparent 65%)', filter:'blur(80px)', pointerEvents:'none', zIndex:0 }} />
-          <div style={{ position:'absolute', top:'40%', left:'45%', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle,rgba(207,232,214,0.20) 0%,transparent 65%)', filter:'blur(60px)', pointerEvents:'none', zIndex:0 }} />
 
-          <div style={{ maxWidth:'1280px', margin:'0 auto', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'64px', alignItems:'center', position:'relative', zIndex:2 }} className="hero-grid">
-
-            {/* LEFT */}
+          <div style={{ maxWidth:'1280px', margin:'0 auto', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'64px', alignItems:'center', position:'relative', zIndex:2 }} className="hero-grid">            {/* LEFT */}
             <div>
               <motion.div initial={{opacity:0,y:22}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.1}}
                 style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'6px 16px', borderRadius:'100px', background:'rgba(220,198,255,0.30)', border:'1px solid rgba(220,198,255,0.55)', marginBottom:'28px' }}>
@@ -291,9 +280,9 @@ export default function Home() {
             {/* RIGHT — floating glass cards */}
             <div style={{ position:'relative', height:'520px' }} className="hero-cards">
               {[
-                { src:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80', style:{ top:'8%', left:'4%', width:'320px', height:'200px', transform:'rotate(-5deg)', animation:'float-card-1 6s ease-in-out infinite alternate' }},
-                { src:'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80', style:{ top:'33%', right:'4%', width:'300px', height:'220px', transform:'rotate(4deg)', animation:'float-card-2 8s ease-in-out infinite alternate' }},
-                { src:'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80', style:{ bottom:'4%', left:'14%', width:'260px', height:'180px', transform:'rotate(-2deg)', animation:'float-card-3 7s ease-in-out infinite alternate' }},
+                { src:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80', style:{ top:'8%', left:'4%', width:'320px', height:'200px', transform:'rotate(-5deg)' }},
+                { src:'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80', style:{ top:'33%', right:'4%', width:'300px', height:'220px', transform:'rotate(4deg)' }},
+                { src:'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80', style:{ bottom:'4%', left:'14%', width:'260px', height:'180px', transform:'rotate(-2deg)' }},
               ].map((c,i)=>(
                 <motion.div key={i} initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} transition={{duration:1,delay:.4+i*.12,ease:[.16,1,.3,1]}}
                   style={{ position:'absolute', ...c.style, borderRadius:'18px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.55)', boxShadow:'0 20px 50px rgba(90,30,126,.14)', ...c.style }}>

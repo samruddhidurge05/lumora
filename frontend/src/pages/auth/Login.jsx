@@ -1,5 +1,6 @@
 // src/pages/auth/Login.jsx
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +29,30 @@ const ROLE_META = {
   },
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.75, 
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] }
+  }
+};
+
 export default function Login() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role');
@@ -35,7 +60,7 @@ export default function Login() {
   const validRoles = ['customer', 'affiliate', 'vendor', 'admin'];
 
   if (!role || !validRoles.includes(role)) {
-    return <Navigate to="/auth/login-selection" replace />;
+    return <Navigate to="/auth/login?role=customer" replace />;
   }
 
   const meta = ROLE_META[role];
@@ -123,13 +148,16 @@ export default function Login() {
   return (
     <AuthBackground>
       <div className="auth-container">
-        <div className="auth-blob b1" />
-        <div className="auth-blob b2" />
-        <div className="auth-card">
+        <motion.div 
+          className="auth-card"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
           <div className="auth-card-border" />
 
           {/* Brand */}
-          <div className="card-brand">
+          <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5L15.5 5.25V12.75L9 16.5L2.5 12.75V5.25L9 1.5Z" fill="rgba(255,255,255,0.88)"/>
@@ -137,24 +165,24 @@ export default function Login() {
               </svg>
             </div>
             <span className="card-name">Lumora</span>
-          </div>
+          </motion.div>
 
           {/* Role badge */}
-          <div style={{ marginBottom: '10px', position: 'relative', zIndex: 2 }}>
+          <motion.div style={{ marginBottom: '10px', position: 'relative', zIndex: 2 }} variants={itemVariants}>
             <span className="role-badge">{meta.badge}</span>
-          </div>
+          </motion.div>
 
-          <h2 className="card-heading">{meta.heading}</h2>
-          <p className="card-subheading">{meta.sub}</p>
+          <motion.h2 className="card-heading" variants={itemVariants}>{meta.heading}</motion.h2>
+          <motion.p className="card-subheading" variants={itemVariants}>{meta.sub}</motion.p>
 
           {authStatus && (
-            <div className={`auth-alert auth-alert-${authStatus}`} role="alert" aria-live="assertive">
+            <motion.div className={`auth-alert auth-alert-${authStatus}`} role="alert" aria-live="assertive" variants={itemVariants}>
               <span>{authStatus === 'success' ? '✦' : '⚠'}</span>
               <p>{statusMessage}</p>
-            </div>
+            </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate>
+          <motion.form onSubmit={handleSubmit} noValidate variants={itemVariants}>
             {/* Email */}
             <div className="field">
               <label className="field-label" htmlFor="email">Email Address</label>
@@ -201,18 +229,31 @@ export default function Login() {
               </a>
             </div>
 
-            <button className="btn-cta" type="submit" disabled={isLoading}>
+            <motion.button 
+              className="btn-cta" 
+              type="submit" 
+              disabled={isLoading}
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.985 }}
+            >
               {isLoading && <div className="shimmer" />}
               {isLoading ? 'Signing In...' : `Sign In to ${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`}
-            </button>
-          </form>
+            </motion.button>
+          </motion.form>
 
-          <div className="divider">
+          <motion.div className="divider" variants={itemVariants}>
             <div className="div-line" /><div className="div-text">or continue with</div><div className="div-line" />
-          </div>
+          </motion.div>
 
-          <div className="social-row">
-            <button className="btn-social" type="button" disabled={isLoading} onClick={handleGoogleLogin}>
+          <motion.div className="social-row" variants={itemVariants}>
+            <motion.button 
+              className="btn-social" 
+              type="button" 
+              disabled={isLoading} 
+              onClick={handleGoogleLogin}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -220,35 +261,36 @@ export default function Login() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
               Google
-            </button>
-            <button className="btn-social" type="button" disabled={isLoading} onClick={handleGitHubLogin}>
+            </motion.button>
+            <motion.button 
+              className="btn-social" 
+              type="button" 
+              disabled={isLoading} 
+              onClick={handleGitHubLogin}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
               </svg>
               GitHub
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
-          <div className="signup-prompt">
+          <motion.div className="signup-prompt" variants={itemVariants}>
             Don't have a {role} account?{' '}
             <a href="#" onClick={(e) => { e.preventDefault(); navigate(`/auth/register?role=${role}`); }}>
               Register here →
             </a>
-          </div>
+          </motion.div>
 
-          <div className="signup-prompt" style={{ marginTop: '8px' }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/auth/login-selection'); }}
-              style={{ color: 'rgba(123,63,160,0.55)', fontSize: '12px' }}>
-              ← Sign in as a different account type
-            </a>
-          </div>
 
-          <div className="trust-strip">
+          <motion.div className="trust-strip" variants={itemVariants}>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#7B3FA0' }} />256-bit SSL</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#B886D0' }} />SOC 2 Type II</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#D8BFE3' }} />GDPR Ready</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </AuthBackground>
   );

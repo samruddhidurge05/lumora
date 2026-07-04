@@ -112,7 +112,7 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
  */
 export const checkBackendOnline = async () => {
   try {
-    const res = await fetch('http://localhost:8000/', { method: 'GET' });
+    const res = await fetch(`${BACKEND_URL.replace('/api', '')}/`, { method: 'GET' });
     return res.ok;
   } catch (err) {
     return false;

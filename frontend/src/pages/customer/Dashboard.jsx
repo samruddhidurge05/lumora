@@ -20,8 +20,6 @@ import ReviewsManager from './ReviewsManager';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
-import ThreeDBackground from '../../components/ThreeDBackground';
-import AnimatedBackground from '../../components/AnimatedBackground';
 
 /* ── Primary nav items (always visible in horizontal bar) ─────────── */
 const PRIMARY_NAV = [
@@ -118,7 +116,14 @@ export default function Dashboard() {
           ordersCount: fetchedOrders.length || 4,
         });
 
-        if (profileRes.status === 'rejected' && ordersRes.status === 'rejected') {
+        // Only show "unreachable" banner when the failure is a network error
+        // (TypeError: Failed to fetch), NOT a 401/403 auth error.
+        // A 401 means the server IS reachable but the user has no valid session.
+        const isNetworkError = (res) =>
+          res.status === 'rejected' &&
+          res.reason instanceof TypeError;
+
+        if (isNetworkError(profileRes) && isNetworkError(ordersRes)) {
           setApiError('Notice: Live server unreachable. Displaying fallback data.');
         }
 
@@ -230,11 +235,6 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: 'var(--font-sans)', position: 'relative', color: 'var(--text-primary)' }}>
-      <AnimatedBackground />
-      <ThreeDBackground />
-      <div className="dash-orb dash-orb-1" />
-      <div className="dash-orb dash-orb-2" />
-      <div className="dash-orb dash-orb-3" />
 
       {/* ── UNIFIED SINGLE TOP NAVBAR ───────────────────────────────── */}
       <header style={{

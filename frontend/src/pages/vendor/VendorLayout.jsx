@@ -2,8 +2,6 @@ import React from 'react';
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import ThreeDBackground from '../../components/ThreeDBackground';
-import AnimatedBackground from '../../components/AnimatedBackground';
 import '../styles/vendor.css';
 
 export default function VendorLayout({ activePage, title, subtitle, actions, children }) {
@@ -29,15 +27,6 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
 
   return (
     <div className="vendor-shell">
-      {/* ── Three.js animated background (glass spheres + torus + particles) ── */}
-      <ThreeDBackground />
-      <AnimatedBackground />
-
-      {/* ── CSS animated orbs layer ── */}
-      <div className="v-orb v-orb-1" />
-      <div className="v-orb v-orb-2" />
-      <div className="v-orb v-orb-3" />
-      <div className="v-orb v-orb-4" />
 
       {/* ── Top Navigation Bar ── */}
       <header className="vendor-topnav">

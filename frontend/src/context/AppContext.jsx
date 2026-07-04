@@ -1025,9 +1025,13 @@ export function AppContextProvider({ children }) {
       const hash = window.location.hash;
 
       if (path === '/login-selection' || path === '/auth/login-selection') {
-        setCurrentView('login-selection');
+        setSelectedAuthRole('customer');
+        navigate('/auth/login?role=customer', { replace: true });
+        setCurrentView('login');
       } else if (path === '/register-selection' || path === '/auth/register-selection') {
-        setCurrentView('register-selection');
+        setSelectedAuthRole('customer');
+        navigate('/auth/register?role=customer', { replace: true });
+        setCurrentView('register');
       } else if (path === '/login' || path === '/auth/login') {
         setCurrentView('login');
       } else if (path === '/register' || path === '/auth/register') {
@@ -1110,7 +1114,7 @@ export function AppContextProvider({ children }) {
   const addToCart = (product) => {
     if (!user) {
       alert("Please sign in or create an account to purchase products or add items to your cart.");
-      navigate('/auth/login-selection');
+      navigate('/auth/login?role=customer');
       return;
     }
     setCart((prev) => {
@@ -1144,7 +1148,7 @@ export function AppContextProvider({ children }) {
     }
     if (!user) {
       alert("Please sign in or create an account to purchase products.");
-      navigate('/auth/login-selection');
+      navigate('/auth/login?role=customer');
       return;
     }
     setBuyNowProduct(product);
@@ -1265,11 +1269,13 @@ export function AppContextProvider({ children }) {
 
   const navigateTo = (view, payload = '') => {
     if (view === 'login-selection') {
-      navigate('/auth/login-selection');
-      setCurrentView('login-selection');
+      setSelectedAuthRole('customer');
+      navigate('/auth/login?role=customer');
+      setCurrentView('login');
     } else if (view === 'register-selection') {
-      navigate('/auth/register-selection');
-      setCurrentView('register-selection');
+      setSelectedAuthRole('customer');
+      navigate('/auth/register?role=customer');
+      setCurrentView('register');
     } else if (view === 'login') {
       if (payload) setSelectedAuthRole(payload);
       navigate(payload ? `/auth/login?role=${payload}` : '/auth/login');

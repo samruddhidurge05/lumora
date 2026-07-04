@@ -3,8 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppContextProvider, useApp } from './context/AppContext';
-import AnimatedBackground from './components/AnimatedBackground';
-import ThreeDBackground from './components/ThreeDBackground';
 import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
 
@@ -16,7 +14,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.error) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', background: '#FAF5FF', padding: '40px', textAlign: 'center' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: '#FAF5FF', padding: '40px', textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
           <h2 style={{ color: '#2D004D', marginBottom: '8px', fontWeight: 700 }}>Something went wrong</h2>
           <p style={{ color: '#7B5FA0', marginBottom: '24px', maxWidth: '500px' }}>
@@ -55,6 +53,13 @@ const Login             = lazy(() => import('./pages/auth/Login'));
 const Register          = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword    = lazy(() => import('./pages/auth/ForgotPassword'));
 const VerifyEmail       = lazy(() => import('./pages/auth/VerifyEmail'));
+const JoinAffiliate     = lazy(() => import('./pages/marketplace/JoinAffiliate'));
+const JoinVendor        = lazy(() => import('./pages/marketplace/JoinVendor'));
+
+// Partnerships
+const PartnershipHub    = lazy(() => import('./pages/partnerships/PartnershipHub'));
+const Affiliate         = lazy(() => import('./pages/partnerships/Affiliate'));
+const Vendor            = lazy(() => import('./pages/partnerships/Vendor'));
 
 const CustomerDashboard  = lazy(() => import('./pages/customer/Dashboard'));
 const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard'));
@@ -101,11 +106,9 @@ function PageLoader() {
   );
 }
 
-// ── SPA router — handles marketplace / cart / product pages ──────
+// ── SPA Switcher ──────────────────────────────────────────────────
 function SPARouter() {
-  const { currentView, platformStatus } = useApp();
-  const isPlatformPaused = platformStatus?.isPlatformPaused;
-
+  const { currentView, activeProductId, activeCreatorId } = useApp();
   const renderPage = () => {
     switch (currentView) {
       case 'landing':           return <Home />;
@@ -139,33 +142,8 @@ function SPARouter() {
 
   return (
     <>
-      <AnimatedBackground />
-      <ThreeDBackground />
       <NavigationProgress />
       <CartDrawer />
-      {isPlatformPaused && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
-          color: '#fff',
-          textAlign: 'center',
-          padding: '10px 20px',
-          fontSize: '0.85rem',
-          fontWeight: 700,
-          zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(29,78,216,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-        }}>
-          <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.2)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>Platform Maintenance</span>
-          <span>Purchases are temporarily disabled. {platformStatus?.pauseMessage}</span>
-        </div>
-      )}
       <Suspense fallback={<PageLoader />}>
         {renderPage()}
       </Suspense>
@@ -327,12 +305,19 @@ function AppContent() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* ── Auth routes ── */}
-          <Route path="/auth/login-selection"    element={<LoginSelection />} />
-          <Route path="/auth/register-selection" element={<RegisterSelection />} />
+          <Route path="/auth/login-selection"    element={<Navigate to="/auth/login?role=customer" replace />} />
+          <Route path="/auth/register-selection" element={<Navigate to="/auth/register?role=customer" replace />} />
           <Route path="/auth/login"              element={<Login />} />
           <Route path="/auth/register"           element={<Register />} />
           <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
           <Route path="/auth/verify-email"       element={<VerifyEmail />} />
+
+          {/* ── Partnership routes ── */}
+          <Route path="/partnerships"           element={<PartnershipHub />} />
+          <Route path="/partnerships/affiliate" element={<Affiliate />} />
+          <Route path="/partnerships/vendor"    element={<Vendor />} />
+          <Route path="/partnership/affiliate"  element={<JoinAffiliate />} />
+          <Route path="/partnership/vendor"     element={<JoinVendor />} />
 
           {/* ── Protected dashboard routes ── */}
           <Route path="/vendor" element={<Navigate to="/vendor/dashboard" replace />} />

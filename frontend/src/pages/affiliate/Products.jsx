@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye } from 'lucide-react';
+import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, ShoppingCart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAffiliateCart } from '../../context/AffiliateCartContext';
 import AffiliateProductDetail from './ProductDetail';
 
 const COMMISSION_RATES = {
@@ -24,13 +25,15 @@ const COMMISSION_RATES = {
 
 export default function AffiliateProducts({ profile, stats, commissions }) {
   const { products, formatPrice } = useApp();
+  const { addToAffCart } = useAffiliateCart();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortBy, setSortBy] = useState('popular');
   const [copiedId, setCopiedId] = useState(null);
+  const [addedId, setAddedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showCount, setShowCount] = useState(24);
+  const [showCount, setShowCount] = useState(48);
 
   const REFERRAL_CODE = stats?.referral_code || profile?.referral_code || 'AFF001';
   const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
@@ -52,7 +55,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   }
 
   const filtered = products
-    .filter(p => p.affiliate_enabled === true) // ONLY products with Affiliate Marketing enabled
+    .filter(p => !p.status || p.status === 'published' || p.status === 'active') // All published products
     .filter(p => activeCategory === 'All' || p.category === activeCategory)
     .filter(p =>
       p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -78,6 +81,13 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     setCopiedId(productId);
     setToast('Referral link copied to clipboard!');
     setTimeout(() => { setCopiedId(null); setToast(null); }, 2400);
+  };
+
+  const handleAddToCart = (product) => {
+    addToAffCart(product);
+    setAddedId(product.id);
+    setToast('Added to your affiliate cart!');
+    setTimeout(() => { setAddedId(null); setToast(null); }, 2000);
   };
 
   const formatCommission = (product) => {
@@ -124,7 +134,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Affiliate Tools</span>
           <h2 className="text-editorial" style={{ fontSize: '2.2rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Browse & Promote</h2>
           <p style={{ color: 'var(--text-light)', fontSize: '0.82rem', marginTop: '4px', fontWeight: 500 }}>
-            {filtered.length} products · earn custom commission · showing {Math.min(showCount, filtered.length)}
+            {filtered.length} products available · earn commissions on every sale · showing {Math.min(showCount, filtered.length)} of {filtered.length}
           </p>
         </div>
 
@@ -145,7 +155,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         {/* Categories */}
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }} className="aff-cat-scroll">
-          {CATEGORIES.slice(0, 25).map(cat => (
+          {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => { setActiveCategory(cat); setShowCount(24); }}
@@ -266,14 +276,14 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                   </div>
 
                   {/* Action buttons */}
-                  <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                    {/* View Details button */}
+                  <div style={{ display: 'flex', gap: '6px', marginTop: 'auto', flexWrap: 'wrap' }}>
+                    {/* View Details */}
                     <button
                       onClick={() => setSelectedProduct(product)}
                       style={{
-                        flex: 1,
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        padding: '10px', fontSize: '0.76rem', fontWeight: 700,
+                        flex: '1 1 auto',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        padding: '9px 8px', fontSize: '0.72rem', fontWeight: 700,
                         borderRadius: '10px',
                         border: '1.5px solid rgba(123,63,160,0.22)',
                         background: 'rgba(255,255,255,0.80)',
@@ -282,19 +292,39 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                         fontFamily: 'var(--font-sans)',
                         transition: 'all 0.22s',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.40)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.22)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
                     >
-                      <Eye size={13} /> Details
+                      <Eye size={12} /> Details
                     </button>
 
-                    {/* Copy Affiliate Link button */}
+                    {/* Add to Affiliate Cart */}
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      style={{
+                        flex: '0 0 auto',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        padding: '9px 10px', fontSize: '0.72rem', fontWeight: 700,
+                        borderRadius: '10px',
+                        border: addedId === product.id ? '1.5px solid rgba(34,197,94,0.50)' : '1.5px solid rgba(123,63,160,0.22)',
+                        background: addedId === product.id ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.80)',
+                        color: addedId === product.id ? '#16a34a' : '#7B3FA0',
+                        cursor: 'pointer', outline: 'none',
+                        fontFamily: 'var(--font-sans)',
+                        transition: 'all 0.22s',
+                      }}
+                      title="Add to cart"
+                    >
+                      {addedId === product.id ? <Check size={12} /> : <ShoppingCart size={12} />}
+                    </button>
+
+                    {/* Copy Affiliate Link */}
                     <button
                       onClick={() => handleCopy(product.id)}
                       style={{
-                        flex: 1,
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        padding: '10px', fontSize: '0.76rem', fontWeight: 700,
+                        flex: '1 1 auto',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        padding: '9px 8px', fontSize: '0.72rem', fontWeight: 700,
                         borderRadius: '10px',
                         border: isCopied ? '1.5px solid rgba(34,197,94,0.50)' : '1.5px solid rgba(123,63,160,0.35)',
                         background: isCopied ? 'rgba(34,197,94,0.07)' : 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
@@ -305,7 +335,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                         boxShadow: isCopied ? 'none' : '0 3px 12px rgba(123,63,160,0.28)',
                       }}
                     >
-                      {isCopied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Link</>}
+                      {isCopied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Link</>}
                     </button>
                   </div>
                 </div>
@@ -316,7 +346,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
         {filtered.length > showCount && (
           <div style={{ textAlign: 'center', marginTop: '8px' }}>
             <button
-              onClick={() => setShowCount(c => c + 24)}
+              onClick={() => setShowCount(c => c + 48)}
               style={{
                 padding: '12px 40px', borderRadius: '30px',
                 border: '1.5px solid rgba(123,63,160,0.30)',
@@ -328,7 +358,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.08)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.50)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.30)'; }}
             >
-              Load More · {filtered.length - showCount} remaining
+              Load {Math.min(48, filtered.length - showCount)} More · {filtered.length - showCount} remaining
             </button>
           </div>
         )}

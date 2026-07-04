@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import './auth.css';
 
@@ -46,18 +47,64 @@ const Arrow = () => (
   </svg>
 );
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.75, 
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.08
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] }
+  }
+};
+
+const roleContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
+};
+
+const roleCardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: 'spring', stiffness: 260, damping: 22 }
+  }
+};
+
 export default function RegisterSelection() {
   const navigate = useNavigate();
 
   return (
     <AuthBackground>
       <div className="auth-container">
-        <div className="auth-blob b1" />
-        <div className="auth-blob b2" />
-        <div className="auth-card">
+        <motion.div 
+          className="auth-card"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
           <div className="auth-card-border" />
 
-          <div className="card-brand">
+          <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5L15.5 5.25V12.75L9 16.5L2.5 12.75V5.25L9 1.5Z" fill="rgba(255,255,255,0.88)"/>
@@ -65,18 +112,26 @@ export default function RegisterSelection() {
               </svg>
             </div>
             <span className="card-name">Lumora</span>
-          </div>
+          </motion.div>
 
-          <h2 className="card-heading">Join Lumora</h2>
-          <p className="card-subheading">
+          <motion.h2 className="card-heading" variants={itemVariants}>Join Lumora</motion.h2>
+          <motion.p className="card-subheading" variants={itemVariants}>
             Pick your role. Each account type is separate — one email per role.
-          </p>
+          </motion.p>
 
-          <div className="role-cards-container">
+          <motion.div className="role-cards-container" variants={roleContainerVariants}>
             {ROLES.map((role) => (
-              <div
+              <motion.div
                 key={role.id}
                 className="role-card"
+                variants={roleCardVariants}
+                whileHover={{ 
+                  scale: 1.025, 
+                  y: -2, 
+                  boxShadow: '0 12px 30px rgba(123, 63, 160, 0.12)',
+                  borderColor: 'rgba(184, 134, 208, 0.5)'
+                }}
+                whileTap={{ scale: 0.985 }}
                 onClick={() => navigate(`/auth/register?role=${role.id}`)}
               >
                 <div className="role-card-icon">{role.icon}</div>
@@ -85,23 +140,23 @@ export default function RegisterSelection() {
                   <p className="role-card-desc">{role.desc}</p>
                 </div>
                 <span className="role-card-arrow"><Arrow /></span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="signup-prompt">
+          <motion.div className="signup-prompt" variants={itemVariants}>
             Already have an account?{' '}
             <a href="/auth/login-selection" onClick={(e) => { e.preventDefault(); navigate('/auth/login-selection'); }}>
               Sign in →
             </a>
-          </div>
+          </motion.div>
 
-          <div className="trust-strip">
+          <motion.div className="trust-strip" variants={itemVariants}>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#7B3FA0' }} />256-bit SSL</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#B886D0' }} />SOC 2 Type II</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#D8BFE3' }} />GDPR Ready</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </AuthBackground>
   );

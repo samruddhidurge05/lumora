@@ -1,6 +1,7 @@
 // src/pages/auth/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import './auth.css';
 import AuthBackground from '../../components/AuthBackground';
 import { useAuth } from '../../context/AuthContext';
@@ -26,13 +27,37 @@ const ROLE_META = {
   },
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.97 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.75, 
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] }
+  }
+};
+
 export default function Register() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role');
   const validRoles = ['customer', 'affiliate', 'vendor'];
 
   if (!role || !validRoles.includes(role)) {
-    return <Navigate to="/auth/register-selection" replace />;
+    return <Navigate to="/auth/register?role=customer" replace />;
   }
 
   const meta = ROLE_META[role];
@@ -71,7 +96,6 @@ export default function Register() {
       await register(name, email, password, role);
       navigate(`/auth/login?role=${role}&registered=true`);
     } catch (err) {
-      // Map error codes to friendly messages
       if (err.code === 'auth/email-already-in-use') {
         setErrors({ form: `This email is already registered. To add the ${role} role to your account, enter your existing Lumora password. If you forgot it, use "Forgot password" on the login page.` });
       } else if (err.code === 'auth/weak-password') {
@@ -91,13 +115,16 @@ export default function Register() {
   return (
     <AuthBackground>
       <div className="auth-container">
-        <div className="auth-blob b1" />
-        <div className="auth-blob b2" />
-        <div className="auth-card">
+        <motion.div 
+          className="auth-card"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
           <div className="auth-card-border" />
 
           {/* Brand */}
-          <div className="card-brand">
+          <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
                 <path d="M9 1.5L15.5 5.25V12.75L9 16.5L2.5 12.75V5.25L9 1.5Z" fill="rgba(255,255,255,0.88)"/>
@@ -105,23 +132,23 @@ export default function Register() {
               </svg>
             </div>
             <span className="card-name">Lumora</span>
-          </div>
+          </motion.div>
 
           {/* Role badge */}
-          <div style={{ marginBottom: '10px', position: 'relative', zIndex: 2 }}>
+          <motion.div style={{ marginBottom: '10px', position: 'relative', zIndex: 2 }} variants={itemVariants}>
             <span className="role-badge">{meta.badge}</span>
-          </div>
+          </motion.div>
 
-          <h2 className="card-heading">{meta.heading}</h2>
-          <p className="card-subheading">{meta.sub}</p>
+          <motion.h2 className="card-heading" variants={itemVariants}>{meta.heading}</motion.h2>
+          <motion.p className="card-subheading" variants={itemVariants}>{meta.sub}</motion.p>
 
           {errors.form && (
-            <div className="auth-alert auth-alert-error" role="alert">
+            <motion.div className="auth-alert auth-alert-error" role="alert" variants={itemVariants}>
               <span>⚠</span><p>{errors.form}</p>
-            </div>
+            </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate>
+          <motion.form onSubmit={handleSubmit} noValidate variants={itemVariants}>
             {/* Name */}
             <div className="field">
               <label className="field-label" htmlFor="name">Full Name</label>
@@ -176,39 +203,47 @@ export default function Register() {
               {password && (
                 <div className="pw-strength">
                   {[0,1,2].map(i => (
-                    <div key={i} className={`pw-bar ${i < pwStrength ? (pwStrength === 3 ? 'strong' : 'active') : ''}`} />
+                    <motion.div 
+                      key={i} 
+                      className={`pw-bar ${i < pwStrength ? (pwStrength === 3 ? 'strong' : 'active') : ''}`}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.3, delay: i * 0.05 }}
+                      style={{ originX: 0 }}
+                    />
                   ))}
                 </div>
               )}
               {errors.password && <div className="field-error">{errors.password}</div>}
             </div>
 
-            <button className="btn-cta" type="submit" disabled={isLoading} style={{ marginTop: '8px' }}>
+            <motion.button 
+              className="btn-cta" 
+              type="submit" 
+              disabled={isLoading} 
+              style={{ marginTop: '8px' }}
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.985 }}
+            >
               {isLoading && <div className="shimmer" />}
               {isLoading ? 'Creating Account...' : meta.btnLabel}
-            </button>
-          </form>
+            </motion.button>
+          </motion.form>
 
-          <div className="signup-prompt">
+          <motion.div className="signup-prompt" variants={itemVariants}>
             Already have a {role} account?{' '}
             <a href="#" onClick={(e) => { e.preventDefault(); navigate(`/auth/login?role=${role}`); }}>
               Sign in →
             </a>
-          </div>
+          </motion.div>
 
-          <div className="signup-prompt" style={{ marginTop: '8px' }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/auth/register-selection'); }}
-              style={{ color: 'rgba(123,63,160,0.55)', fontSize: '12px' }}>
-              ← Choose a different account type
-            </a>
-          </div>
 
-          <div className="trust-strip">
+          <motion.div className="trust-strip" variants={itemVariants}>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#7B3FA0' }} />256-bit SSL</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#B886D0' }} />SOC 2 Type II</div>
             <div className="trust-item"><div className="trust-pip" style={{ background: '#D8BFE3' }} />GDPR Ready</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </AuthBackground>
   );

@@ -27,35 +27,6 @@
   overflow: hidden;
 }
 
-/* Animated blobs behind the card */
-.auth-blob {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  animation: blobFloat 20s ease-in-out infinite alternate;
-}
-.auth-blob.b1 {
-  width: 520px; height: 520px;
-  background: radial-gradient(circle, rgba(216,191,227,0.55) 0%, transparent 70%);
-  top: -120px; left: -80px;
-  animation-duration: 22s;
-}
-.auth-blob.b2 {
-  width: 420px; height: 420px;
-  background: radial-gradient(circle, rgba(184,134,208,0.45) 0%, transparent 70%);
-  bottom: -80px; right: -60px;
-  animation-duration: 18s;
-  animation-direction: alternate-reverse;
-}
-@keyframes blobFloat {
-  0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(4%, 8%) scale(1.06); }
-  66%  { transform: translate(-3%, 4%) scale(0.96); }
-  100% { transform: translate(2%, -6%) scale(1.02); }
-}
-
 /* ── Glass Card ── */
 .auth-card {
   width: 100%;

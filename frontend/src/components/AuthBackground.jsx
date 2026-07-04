@@ -7,31 +7,6 @@ export default function AuthBackground({ children }) {
 
   return (
     <div className="auth-bg-wrapper">
-      {/* Ambient orbs */}
-      <div className="blob blob-1" />
-      <div className="blob blob-2" />
-      <div className="blob blob-3" />
-      <div className="blob blob-4" />
-      <div className="blob blob-5" />
-      <div className="blob-centre" />
-      <div className="ring-pulse" />
-
-      {/* Floating glass tiles */}
-      <div className="glass-tile tile-1" />
-      <div className="glass-tile tile-2" />
-      <div className="glass-tile tile-3" />
-      <div className="glass-tile tile-4" />
-      <div className="glass-tile tile-5" />
-      <div className="glass-tile tile-6" />
-      <div className="glass-tile tile-7" />
-      <div className="glass-tile tile-8" />
-      <div className="glass-tile tile-9" />
-      <div className="glass-tile tile-10" />
-
-      {/* Atmosphere */}
-      <div className="particle-field" />
-      <div className="light-sweep" />
-
       {/* ── Back to Home button — top-left corner ── */}
       <button
         onClick={() => navigateTo('landing')}
