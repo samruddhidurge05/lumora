@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
-import CartItem from './cart/CartItem';
+import CartItem from './CartItem';
 
 const PROMO_CODES = {
   LUMORA20: { code: 'LUMORA20', discountPercent: 20 },
@@ -27,7 +27,7 @@ export default function CartDrawer() {
   const [promoError, setPromoError] = useState('');
 
   // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const discount = appliedPromo ? subtotal * (appliedPromo.discountPercent / 100) : 0;
   const platformFee = subtotal > 100 ? 0 : 5;
   const total = subtotal - discount + (subtotal > 0 ? platformFee : 0);
@@ -197,7 +197,7 @@ export default function CartDrawer() {
                       letterSpacing: '0.05em',
                     }}
                   >
-                    {cart.reduce((sum, i) => sum + i.quantity, 0)}
+                    {cart.reduce((sum, i) => sum + (i.quantity || 1), 0)}
                   </span>
                 )}
               </div>
@@ -518,6 +518,8 @@ export default function CartDrawer() {
                   background: 'rgba(255, 255, 255, 0.65)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
+                  padding: '16px 20px 20px',
+                  borderTop: '1px solid rgba(123,63,160,0.08)',
                 }}
               >
                 {/* Promo Code */}

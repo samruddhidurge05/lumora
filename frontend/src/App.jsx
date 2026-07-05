@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppContextProvider, useApp } from './context/AppContext';
 import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
+import CustomCursor from './components/CustomCursor';
 
 /* ── Error boundary ── */
 class ErrorBoundary extends React.Component {
@@ -164,6 +165,7 @@ function AppContent() {
 
   return (
     <>
+      <CustomCursor />
       {showDisabledBlocker && (
         <div style={{
           position: 'fixed',
@@ -356,7 +358,7 @@ function AppContent() {
             element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEditProduct /></ProtectedRoute>}
           />
           <Route path="/vendor/analytics"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute>}
+            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAnalytics /></ProtectedRoute>}
           />
           <Route path="/vendor/earnings"
             element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEarnings /></ProtectedRoute>}

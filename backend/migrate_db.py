@@ -10,7 +10,10 @@ Idempotent: running multiple times is safe.
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lumora.db")
+DB_PATHS = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "test.db"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "lumora.db")
+]
 
 # Each entry: (table_name, column_name, column_def)
 MIGRATIONS = [
@@ -34,6 +37,7 @@ MIGRATIONS = [
     ("vendors", "vacation_message", "TEXT"),
     ("vendors", "status", "VARCHAR(50) DEFAULT 'active'"),
     ("affiliate_profiles", "status", "VARCHAR(50) DEFAULT 'active'"),
+    ("users", "firebase_uid", "VARCHAR(128)"),
 ]
 
 
@@ -42,13 +46,14 @@ def get_existing_columns(cur, table: str) -> set:
     return {row[1] for row in cur.fetchall()}
 
 
-def run_migrations():
-    if not os.path.exists(DB_PATH):
-        print(f"[migrate] Database not found at {DB_PATH}. Skipping migration.")
+def run_migrations_for_db(db_path: str):
+    if not os.path.exists(db_path):
         return
 
-    conn = sqlite3.connect(DB_PATH)
+    print(f"\n[migrate] Migrating database: {os.path.basename(db_path)}")
+    conn = sqlite3.connect(db_path)
     cur  = conn.cursor()
+
 
     applied = 0
     skipped = 0
@@ -70,5 +75,11 @@ def run_migrations():
     print(f"\n[migrate] Done. Applied: {applied}, Skipped: {skipped}")
 
 
+def run_migrations():
+    for db_path in DB_PATHS:
+        run_migrations_for_db(db_path)
+
+
 if __name__ == "__main__":
     run_migrations()
+

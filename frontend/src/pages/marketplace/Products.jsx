@@ -70,10 +70,10 @@ export default function Products() {
   return (
     <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <Navbar />
-      <div style={{ background: 'transparent', minHeight: '100vh' }}>
+      <div style={{ background: 'transparent', minHeight: '100vh', paddingTop: '100px' }}>
 
         {/* ── Header band ── */}
-        <div style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(32px) saturate(200%)', borderBottom: '1px solid rgba(196,148,230,0.20)', padding: '28px clamp(1.5rem,5vw,5rem) 0', boxShadow: '0 4px 24px rgba(123,63,160,0.06)' }}>
+        <div style={{ background: 'transparent', borderBottom: '1px solid rgba(123,63,160,0.12)', padding: '28px clamp(1.5rem,5vw,5rem) 0' }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ marginBottom: '20px' }}>
               <p style={{ fontSize: '0.62rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Marketplace</p>
@@ -89,7 +89,7 @@ export default function Products() {
                 return (
                   <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                     style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '9px 15px', borderRadius: '10px 10px 0 0', border: active ? '1px solid rgba(123,63,160,0.20)' : '1px solid transparent', borderBottom: active ? '2px solid #7B3FA0' : '2px solid transparent', background: active ? 'rgba(123,63,160,0.07)' : 'transparent', color: active ? '#5A1E7E' : '#8B6B5B', fontSize: '0.78rem', fontWeight: active ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.18s', fontFamily: 'var(--font-sans)' }}>
-                    <span>{cat.icon}</span> {cat.id}
+                    {cat.id}
                     <span style={{ fontSize: '0.58rem', background: active ? '#7B3FA0' : 'rgba(123,63,160,0.10)', color: active ? '#fff' : '#7B3FA0', padding: '1px 5px', borderRadius: '8px', fontWeight: 800 }}>
                       {catCounts[cat.id] || 0}
                     </span>
