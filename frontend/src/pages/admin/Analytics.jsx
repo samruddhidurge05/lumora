@@ -41,6 +41,7 @@ import { getAnalyticsDashboard, subscribeToNewOrders, subscribeToNewReviews } fr
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePlatformSettings } from '../../hooks/usePlatformSettings.js';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard } from './components/AdminComponents';
+import { auth } from '../../services/firebase';
 
 // ─── TRANSFORM: Maps analyticsService output → UI data shape ─────────────────
 // The UI was designed around a specific data shape. This adapter maps the
@@ -282,6 +283,8 @@ export default function Analytics() {
 
   const [data, setData] = useState(null);         // null = loading / empty state
   const [liveEvents, setLiveEvents] = useState([]); // populated by real onSnapshot
+  const [analyticsError, setAnalyticsError] = useState(null); // error state — no mock fallback
+  const [selectedRange, setSelectedRange] = useState('all'); // date range: 7d | 30d | 90d | all
   const [timeframe, setTimeframe] = useState('weekly'); // 'daily' | 'weekly' | 'monthly'
   const [selectedProductCategory, setSelectedProductCategory] = useState('All');
   const [productSortBy, setProductSortBy] = useState('revenue'); // 'revenue' | 'orders'
@@ -317,25 +320,30 @@ export default function Analytics() {
   }, [isMuted]);
 
   // ─── REAL DATA LOAD: Firestore via analyticsService ──────────────────────
-  const loadAnalytics = useCallback(async () => {
+  const loadAnalytics = useCallback(async (range = selectedRange) => {
     setIsLoading(true);
+    setAnalyticsError(null);
     try {
-      const svcData = await getAnalyticsDashboard();
+      const svcData = await getAnalyticsDashboard(range);
       setData(transformToUIShape(svcData));
     } catch (err) {
       console.error('[Analytics] Failed to load dashboard:', err);
       setData(null);
+      setAnalyticsError(err.message || 'Failed to load analytics data');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedRange]);
 
   useEffect(() => {
-    loadAnalytics();
-  }, [loadAnalytics]);
+    loadAnalytics(selectedRange);
+  }, [selectedRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── REAL-TIME: Subscribe to new orders and reviews ───────────────────────
   useEffect(() => {
+    // Guard: only subscribe when Firebase auth is active
+    if (!auth.currentUser) return;
+
     const unsubOrders  = subscribeToNewOrders((order) => {
       const amt = order.total || order.price || 0;
       if (!amt) return;
@@ -385,7 +393,7 @@ export default function Analytics() {
   const handleRefresh = () => {
     setIsRefreshing(true);
     sysSound.playSwoosh();
-    loadAnalytics().finally(() => {
+    loadAnalytics(selectedRange).finally(() => {
       setIsRefreshing(false);
       sysSound.playSuccess();
     });
@@ -578,6 +586,48 @@ export default function Analytics() {
 
       {/* Main Core Container */}
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
+
+        {/* Date Range Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8E6AA8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Range:</span>
+          {[
+            { label: '7 Days', value: '7d' },
+            { label: '30 Days', value: '30d' },
+            { label: '90 Days', value: '90d' },
+            { label: 'All Time', value: 'all' },
+          ].map(({ label, value }) => (
+            <button
+              key={value}
+              onClick={() => setSelectedRange(value)}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '20px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                border: selectedRange === value ? 'none' : '1px solid rgba(142,106,168,0.2)',
+                background: selectedRange === value ? '#2D004D' : 'white',
+                color: selectedRange === value ? '#F8F3FB' : '#7B3FA0',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Error state banner */}
+        {analyticsError && (
+          <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: '12px', color: '#dc2626', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+            <span>⚠ Analytics failed to load: {analyticsError}</span>
+            <button
+              onClick={() => loadAnalytics(selectedRange)}
+              style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Global Controls & Mode Switchers (Stripe/Bloomberg Hybrid Control Center) */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
