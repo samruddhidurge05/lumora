@@ -3,6 +3,7 @@ from admin.routes.auth import router as admin_auth_router
 from admin.routes.analytics import router as analytics_router
 from admin.routes.reports import router as reports_router
 from admin.routes.reviews import router as reviews_router
+from admin.routes.referral_links import router as referral_links_router
 from app.admin_api.payments.routes import router as payments_router
 from admin.routes.customers import router as customers_router
 from admin.routes.orders import router as orders_router
@@ -17,6 +18,7 @@ router.include_router(admin_auth_router, prefix="/auth", tags=["Admin Auth"])
 router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
 router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 router.include_router(reviews_router, prefix="/reviews", tags=["Reviews"])
+router.include_router(referral_links_router, prefix="/referral-links", tags=["Admin Referral Links"])
 router.include_router(payments_router, prefix="/payments", tags=["Payments"])
 router.include_router(customers_router, prefix="/customers", tags=["Customers"])
 router.include_router(orders_router, prefix="/orders", tags=["Orders"])
