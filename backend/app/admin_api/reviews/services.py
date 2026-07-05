@@ -3,6 +3,73 @@ from fastapi import HTTPException
 from app.db.session import SessionLocal
 from app.models.review import Review as ReviewModel
 from app.models.user import User as UserModel
+from app.models.product import Product as ProductModel
+from sqlalchemy import or_, func
+
+
+def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, search: str | None):
+    """
+    Return a paginated list of reviews from SQLite with optional sentiment + search filters.
+    sentiment: "positive" | "neutral" | "negative" | None
+    search: ILIKE on comment, user.name, product.title
+    """
+    # Clamp
+    page = max(1, page)
+    page_size = max(1, min(200, page_size))
+
+    db_s = SessionLocal()
+    try:
+        q = db_s.query(ReviewModel).join(UserModel, ReviewModel.user_id == UserModel.id, isouter=True)\
+                                   .join(ProductModel, ReviewModel.product_id == ProductModel.id, isouter=True)
+
+        # Sentiment filter (rating-based)
+        if sentiment == "positive":
+            q = q.filter(ReviewModel.rating > 3)
+        elif sentiment == "neutral":
+            q = q.filter(ReviewModel.rating == 3)
+        elif sentiment == "negative":
+            q = q.filter(ReviewModel.rating < 3)
+
+        # Search filter
+        if search:
+            pattern = f"%{search}%"
+            q = q.filter(
+                or_(
+                    ReviewModel.comment.ilike(pattern),
+                    UserModel.name.ilike(pattern),
+                    ProductModel.title.ilike(pattern),
+                )
+            )
+
+        total = q.count()
+        offset = (page - 1) * page_size
+        rows = q.order_by(ReviewModel.created_at.desc()).offset(offset).limit(page_size).all()
+
+        items = []
+        for r in rows:
+            rating = int(r.rating or 5)
+            if rating > 3:
+                sent = "positive"
+            elif rating == 3:
+                sent = "neutral"
+            else:
+                sent = "negative"
+
+            items.append({
+                "id":        str(r.id),
+                "customer":  r.user.name if r.user else "Anonymous",
+                "comment":   r.comment or "",
+                "product":   r.product.title if r.product else "Product",
+                "sentiment": sent,
+                "rating":    rating,
+                "date":      r.created_at.isoformat() + "Z" if r.created_at else "recently",
+                "verified":  bool(r.verified),
+                "flagged":   False,
+            })
+
+        return {"total": total, "page": page, "page_size": page_size, "items": items}
+    finally:
+        db_s.close()
 
 def get_reviews_dashboard_data():
     if not firebase_connected or db is None:

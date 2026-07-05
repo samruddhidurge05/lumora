@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { getReviewAnalytics } from '../../services/reviewAnalyticsService.js';
+import { backendFetch } from '../../utils/api';
+
+const PAGE_SIZE = 50;
 
 // --- SYSTEM ICON UTILITY ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -189,6 +192,56 @@ export default function Reviews() {
   const [firestoreData, setFirestoreData] = useState(null);
   const [dataLoading,   setDataLoading]   = useState(true);
 
+  // ── BACKEND PAGINATED REVIEWS (moderation feed) ──────────────────────────
+  const [backendReviews, setBackendReviews]   = useState([]);
+  const [totalReviews,   setTotalReviews]     = useState(0);
+  const [currentPage,    setCurrentPage]      = useState(1);
+  const [loadError,      setLoadError]        = useState(null);
+  const [moderating,     setModerating]       = useState(false);
+
+  const loadBackendReviews = useCallback(async (page = 1, sentiment = "all", search = "") => {
+    setLoadError(null);
+    try {
+      const params = new URLSearchParams({ page, page_size: PAGE_SIZE });
+      if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
+      if (search) params.set("search", search);
+      const data = await backendFetch(`/admin/reviews/?${params.toString()}`);
+      setBackendReviews(data.items || []);
+      setTotalReviews(data.total || 0);
+      setCurrentPage(data.page || page);
+    } catch (err) {
+      console.error("[Reviews] Backend reviews load failed:", err);
+      setLoadError(err.message || "Failed to load reviews");
+    }
+  }, []);
+
+  const handleModerateReview = async (reviewId, action) => {
+    sysSound.playSwoosh();
+    setModerating(true);
+    try {
+      await backendFetch("/admin/reviews/moderate", {
+        method: "POST",
+        body: JSON.stringify({ review_id: String(reviewId), action }),
+      });
+      sysSound.playSuccess();
+      triggerNotification(
+        action === "delete" ? "Review deleted" :
+        action === "flag"   ? "Review flagged" : "Review unflagged",
+        "success"
+      );
+      // Refresh the current page
+      await loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+      setSelectedReview(null);
+    } catch (err) {
+      console.error("[Reviews] Moderate failed:", err);
+      triggerNotification(`Moderation failed: ${err.message || "Unknown error"}`, "error");
+    } finally {
+      setModerating(false);
+    }
+  };
+
+  const totalPages = Math.ceil(totalReviews / PAGE_SIZE);
+
   const loadFirestoreReviews = useCallback(async () => {
     setDataLoading(true);
     try {
@@ -205,6 +258,12 @@ export default function Reviews() {
   useEffect(() => {
     loadFirestoreReviews();
   }, [loadFirestoreReviews]);
+
+  // Load backend paginated reviews; reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    loadBackendReviews(1, sentimentFilter, searchQuery);
+  }, [sentimentFilter, searchQuery, loadBackendReviews]);
   
   useEffect(() => {
     sysSound.muted = audioMuted;
@@ -312,7 +371,10 @@ export default function Reviews() {
   const handleRegenerateReviews = () => {
     sysSound.playSwoosh();
     setIsGenerating(true);
-    loadFirestoreReviews().then(() => {
+    Promise.all([
+      loadFirestoreReviews(),
+      loadBackendReviews(currentPage, sentimentFilter, searchQuery),
+    ]).then(() => {
       setIsGenerating(false);
       sysSound.playSuccess();
       triggerNotification("Trust engine resynced from Firestore.");
@@ -323,8 +385,7 @@ export default function Reviews() {
   };
 
   const handleFlagReview = (id) => {
-    sysSound.playSwoosh();
-    triggerNotification(`Review ${id} submitted for manual trust review`, "info");
+    handleModerateReview(id, "flag");
   };
 
   return (
@@ -758,24 +819,33 @@ export default function Reviews() {
 
                   </div>
 
+                  {/* Error state */}
+                  {loadError && (
+                    <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: '12px', color: '#dc2626', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                      <span>⚠ {loadError}</span>
+                      <button onClick={() => loadBackendReviews(currentPage, sentimentFilter, searchQuery)} style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}>
+                        Retry
+                      </button>
+                    </div>
+                  )}
+
                   {/* List Feed */}
                   <div className="flex flex-col gap-4">
                     <AnimatePresence mode="popLayout">
-                      {filteredReviews.length > 0 ? (
-                        filteredReviews.map((rev, idx) => (
+                      {backendReviews.length > 0 ? (
+                        backendReviews.map((rev, idx) => (
                           <motion.div
                             key={rev.id}
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98 }}
-                            transition={{ duration: 0.3, delay: idx * 0.05 }}
+                            transition={{ duration: 0.3, delay: idx * 0.03 }}
                             onClick={() => { sysSound.playTap(); setSelectedReview(rev); }}
                             className={`p-5 rounded-2xl bg-white/40 hover:bg-white/80 border transition-all duration-300 cursor-pointer hover:shadow-[0_8px_20px_rgba(90,30,126,0.02)] flex flex-col gap-3 relative overflow-hidden ${
-                              rev.anomalyAlert ? 'border-amber-200/50 hover:border-amber-300' : 'border-[#F3EAF8] hover:border-[#D8BFE3]/30'
+                              rev.flagged ? 'border-amber-200/50 hover:border-amber-300' : 'border-[#F3EAF8] hover:border-[#D8BFE3]/30'
                             }`}
                           >
-                            {/* Anomaly highlight shadow banner */}
-                            {rev.anomalyAlert && (
+                            {rev.flagged && (
                               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-red-400" />
                             )}
 
@@ -788,7 +858,7 @@ export default function Reviews() {
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-xs font-serif font-black text-[#2D004D]">{rev.customer}</span>
                                     {rev.verified && (
-                                      <span className="w-3.5 h-3.5 rounded-full bg-[#B886D0]/30 text-emerald-600 flex items-center justify-center animate-pulse" title="Verified Customer">
+                                      <span className="w-3.5 h-3.5 rounded-full bg-[#B886D0]/30 text-emerald-600 flex items-center justify-center" title="Verified Customer">
                                         <Icon name="CheckCircle" size={10} />
                                       </span>
                                     )}
@@ -809,31 +879,67 @@ export default function Reviews() {
 
                             <div className="flex items-center justify-between border-t border-[#F5E9DD]/30 pt-3">
                               <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                                rev.sentiment === 'positive' 
-                                  ? 'bg-[#B886D0]/30 text-emerald-600' 
+                                rev.sentiment === 'positive'
+                                  ? 'bg-[#B886D0]/30 text-emerald-600'
                                   : (rev.sentiment === 'neutral' ? 'bg-amber-100/40 text-amber-600' : 'bg-red-100/30 text-red-400')
                               }`}>
                                 {rev.sentiment}
                               </span>
 
-                              {rev.anomalyAlert ? (
-                                <span className="text-[8px] font-black text-amber-500 flex items-center gap-1">
-                                  <Icon name="AlertTriangle" size={10} /> High Spam Probability
-                                </span>
-                              ) : (
-                                <span className="text-[8px] text-stone-400">Reputation Index stable</span>
-                              )}
+                              {/* Moderation action buttons */}
+                              <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                                <button
+                                  disabled={moderating}
+                                  onClick={() => handleModerateReview(rev.id, rev.flagged ? "unflag" : "flag")}
+                                  className="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-colors border"
+                                  style={{ background: rev.flagged ? 'rgba(245,158,11,0.08)' : 'rgba(90,30,126,0.04)', borderColor: rev.flagged ? 'rgba(245,158,11,0.3)' : 'rgba(142,106,168,0.2)', color: rev.flagged ? '#b45309' : '#7B3FA0', cursor: moderating ? 'not-allowed' : 'pointer' }}
+                                  title={rev.flagged ? "Unflag" : "Flag"}
+                                >
+                                  {rev.flagged ? "Unflag" : "Flag"}
+                                </button>
+                                <button
+                                  disabled={moderating}
+                                  onClick={() => { if (window.confirm("Delete this review permanently?")) handleModerateReview(rev.id, "delete"); }}
+                                  className="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-colors border"
+                                  style={{ background: 'rgba(220,38,38,0.05)', borderColor: 'rgba(220,38,38,0.2)', color: '#dc2626', cursor: moderating ? 'not-allowed' : 'pointer' }}
+                                  title="Delete"
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </div>
-
                           </motion.div>
                         ))
                       ) : (
                         <div className="py-20 text-center glass-surface rounded-2xl border border-[#F3EAF8]">
-                          <p className="text-xs text-[#7B3FA0]">No reviews match selected coordinates.</p>
+                          <p className="text-xs text-[#7B3FA0]">{loadError ? "Error loading reviews." : "No reviews match selected coordinates."}</p>
                         </div>
                       )}
                     </AnimatePresence>
                   </div>
+
+                  {/* Pagination controls */}
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', gap: '8px' }}>
+                      <button
+                        disabled={currentPage <= 1}
+                        onClick={() => { const p = currentPage - 1; setCurrentPage(p); loadBackendReviews(p, sentimentFilter, searchQuery); }}
+                        style={{ padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(142,106,168,0.2)', background: currentPage <= 1 ? 'rgba(0,0,0,0.03)' : 'white', color: currentPage <= 1 ? '#aaa' : '#7B3FA0', fontSize: '0.78rem', fontWeight: 700, cursor: currentPage <= 1 ? 'not-allowed' : 'pointer' }}
+                      >
+                        ← Prev
+                      </button>
+                      <span style={{ fontSize: '0.75rem', color: '#8E6AA8', fontWeight: 600 }}>
+                        Page {currentPage} of {totalPages} · {totalReviews} total
+                      </span>
+                      <button
+                        disabled={currentPage >= totalPages}
+                        onClick={() => { const p = currentPage + 1; setCurrentPage(p); loadBackendReviews(p, sentimentFilter, searchQuery); }}
+                        style={{ padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(142,106,168,0.2)', background: currentPage >= totalPages ? 'rgba(0,0,0,0.03)' : 'white', color: currentPage >= totalPages ? '#aaa' : '#7B3FA0', fontSize: '0.78rem', fontWeight: 700, cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  )}
 
                 </div>
 
@@ -1057,15 +1163,23 @@ export default function Reviews() {
                   </span>
 
                   <div className="flex gap-2">
-                    {selectedReview.anomalyAlert && (
-                      <button 
-                        onClick={() => handleFlagReview(selectedReview.id)}
-                        className="px-3 py-1.5 bg-[#FF8597]/15 hover:bg-[#FF8597]/25 text-[#FF8597] rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer flex items-center gap-1"
-                      >
-                        <Icon name="AlertTriangle" size={10} />
-                        Flag Suspicious
-                      </button>
-                    )}
+                    <button
+                      disabled={moderating}
+                      onClick={() => handleModerateReview(selectedReview.id, selectedReview.flagged ? "unflag" : "flag")}
+                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer flex items-center gap-1"
+                      style={{ background: selectedReview.flagged ? 'rgba(245,158,11,0.12)' : 'rgba(255,133,151,0.15)', color: selectedReview.flagged ? '#b45309' : '#FF8597', opacity: moderating ? 0.6 : 1 }}
+                    >
+                      <Icon name="AlertTriangle" size={10} />
+                      {selectedReview.flagged ? "Unflag" : "Flag"}
+                    </button>
+                    <button
+                      disabled={moderating}
+                      onClick={() => { if (window.confirm("Delete this review permanently?")) handleModerateReview(selectedReview.id, "delete"); }}
+                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer"
+                      style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', opacity: moderating ? 0.6 : 1 }}
+                    >
+                      Delete
+                    </button>
                     <button 
                       onClick={() => { sysSound.playTap(); setSelectedReview(null); }}
                       className="px-4 py-1.5 bg-[#2D004D] text-white hover:bg-[#7B3FA0] rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer"
