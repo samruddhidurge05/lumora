@@ -10,6 +10,12 @@ from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
 from app.dependencies import get_current_user_required
 from admin.validators.status_checks import verify_vendor_active, check_platform_paused
 from app.core.exceptions import LumoraException
+from jose import jwt, JWTError
+from datetime import datetime, timedelta
+import os
+from app.core.config import settings
+from app.services.product_service import ProductService
+from app.services.storage_service import storage_service
 
 router = APIRouter()
 
@@ -206,6 +212,30 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
     return [preview] + filtered_imgs[:4]
 
 
+def generate_download_token(user_id: int, product_id: int) -> str:
+    # Token valid for 15 minutes
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    payload = {
+        "sub": str(user_id),
+        "product_id": product_id,
+        "exp": expire,
+        "type": "download"
+    }
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def verify_download_token(token: str, product_id: int) -> int:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type") != "download":
+            raise ValueError("Invalid token type")
+        if int(payload.get("product_id")) != product_id:
+            raise ValueError("Token product mismatch")
+        return int(payload.get("sub"))
+    except JWTError:
+        raise ValueError("Invalid or expired download token")
+
+
 @router.get("/{product_id}/download")
 def download_product(
     product_id: int,
@@ -239,11 +269,68 @@ def download_product(
             detail="You must purchase this product to download it."
         )
         
+    token = generate_download_token(current_user.id, product_id)
     return {
-        "download_url": product.file_url or f"/downloads/product-{product.id}.zip",
+        "download_url": f"/api/products/{product_id}/download-file?token={token}",
         "file_size": product.file_size or "48 MB",
         "version": product.version or "v1.0.0"
     }
+
+
+@router.get("/{product_id}/download-file")
+def download_product_file(
+    product_id: int,
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Public proxy endpoint that verifies the 15-minute token query parameter.
+    If valid, streams the file using FastAPI's StreamingResponse.
+    """
+    try:
+        user_id = verify_download_token(token, product_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    storage_path = product.storage_path
+    if not storage_path:
+        # Fallback to file_url if storage_path not set
+        storage_path = product.file_url
+        if not storage_path:
+            raise HTTPException(status_code=404, detail="Product file has not been uploaded yet.")
+            
+    # Log download activity in SQLite!
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=user_id,
+        activity_type="download",
+        details=f"Downloaded product '{product.title}' (ID {product.id})."
+    )
+    db.commit()
+    
+    # Stream the file bytes using our StorageService!
+    from fastapi.responses import StreamingResponse
+    
+    filename = f"product-{product_id}.zip"
+    if product.file_url:
+        filename = os.path.basename(product.file_url.split("?")[0])
+        if not filename or not os.path.splitext(filename)[1]:
+            filename = f"product-{product_id}.zip"
+            
+    content_type = product.content_type or "application/octet-stream"
+    
+    return StreamingResponse(
+        storage_service.get_stream(storage_path),
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
 
 
 # ── Protected write endpoints (JWT required) ──────────────────────────────────
@@ -294,21 +381,26 @@ def create_product(
                     detail="Fixed commission cannot exceed the product price."
                 )
 
-    data = product_in.model_dump(exclude_none=True)
-    # Always link to the authenticated vendor
-    data["vendor_id"] = str(current_user.id)
-    if not data.get("seller"):
-        data["seller"] = current_user.name
-    # Remove any id key that may have slipped in
-    data.pop("id", None)
-
-    product = Product(**data)
-    db.add(product)
-    db.commit()
-    db.refresh(product)
-    from admin.firestore.admin_firestore import sync_product_to_firestore
-    sync_product_to_firestore(product)
-    return product
+    # Delegate to ProductService
+    vendor_id = str(current_user.id)
+    return ProductService.create_product(
+        db=db,
+        vendor_id=vendor_id,
+        title=product_in.title,
+        description=product_in.description or "",
+        category=product_in.category or "General",
+        price=product_in.price,
+        temp_file_url=product_in.file_url,
+        temp_preview_url=product_in.preview,
+        temp_thumbnail_url=product_in.thumbnail,
+        tags=product_in.tags,
+        highlights=product_in.highlights,
+        badge=product_in.badge,
+        seller=product_in.seller or current_user.name,
+        affiliate_enabled=product_in.affiliate_enabled,
+        commission_type=product_in.commission_type or "percentage",
+        commission_value=product_in.commission_value or 0.0
+    )
 
 
 @router.put("/{product_id}", response_model=ProductResponse)
@@ -371,16 +463,13 @@ def update_product(
                     detail="Fixed commission cannot exceed the product price."
                 )
 
-    # Only update fields that were actually provided
     update_data = product_in.model_dump(exclude_none=True)
-    for key, val in update_data.items():
-        setattr(product, key, val)
-    product.last_updated = "Recently"
-    db.commit()
-    db.refresh(product)
-    from admin.firestore.admin_firestore import sync_product_to_firestore
-    sync_product_to_firestore(product)
-    return product
+    return ProductService.update_product(
+        db=db,
+        product_id=product_id,
+        vendor_id=user_uid,
+        update_data=update_data
+    )
 
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -412,8 +501,9 @@ def delete_product(
             detail="Not authorized to delete this product.",
         )
 
-    db.delete(product)
-    db.commit()
-    from admin.firestore.admin_firestore import delete_product_from_firestore
-    delete_product_from_firestore(product_id)
+    ProductService.archive_product(
+        db=db,
+        product_id=product_id,
+        vendor_id=user_uid
+    )
     return None

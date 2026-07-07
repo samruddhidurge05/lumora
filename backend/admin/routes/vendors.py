@@ -106,6 +106,24 @@ def enable_vendor(
         target_id=str(id),
     )
     db.add(audit)
+
+    # Notify vendor and log activity
+    from app.services.notification_service import NotificationService
+    from app.services.activity_log_service import ActivityLogService
+    NotificationService.create_notification(
+        db=db,
+        user_id=id,
+        title="Account Re-activated! ✦",
+        message="Your vendor account has been re-activated by the administration.",
+        category="account"
+    )
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=id,
+        activity_type="vendor_status_change",
+        details="Vendor account status set to enabled by administrator."
+    )
+
     db.commit()
 
     if firebase_connected and fdb is not None and user.firebase_uid:
@@ -137,6 +155,24 @@ def disable_vendor(
         target_id=str(id),
     )
     db.add(audit)
+
+    # Notify vendor and log activity
+    from app.services.notification_service import NotificationService
+    from app.services.activity_log_service import ActivityLogService
+    NotificationService.create_notification(
+        db=db,
+        user_id=id,
+        title="Account Deactivated ✦",
+        message="Your vendor account has been deactivated by the administration.",
+        category="account"
+    )
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=id,
+        activity_type="vendor_status_change",
+        details="Vendor account status set to disabled by administrator."
+    )
+
     db.commit()
 
     if firebase_connected and fdb is not None and user.firebase_uid:
@@ -168,6 +204,24 @@ def restrict_vendor(
         target_id=str(id),
     )
     db.add(audit)
+
+    # Notify vendor and log activity
+    from app.services.notification_service import NotificationService
+    from app.services.activity_log_service import ActivityLogService
+    NotificationService.create_notification(
+        db=db,
+        user_id=id,
+        title="Account Restricted ✦",
+        message="Your vendor account has been restricted by the administration.",
+        category="account"
+    )
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=id,
+        activity_type="vendor_status_change",
+        details="Vendor account status set to restricted by administrator."
+    )
+
     db.commit()
 
     if firebase_connected and fdb is not None and user.firebase_uid:

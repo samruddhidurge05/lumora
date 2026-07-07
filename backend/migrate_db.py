@@ -38,12 +38,22 @@ MIGRATIONS = [
     ("vendors", "status", "VARCHAR(50) DEFAULT 'active'"),
     ("affiliate_profiles", "status", "VARCHAR(50) DEFAULT 'active'"),
     ("users", "firebase_uid", "VARCHAR(128)"),
+    ("products", "storage_path", "VARCHAR(512)"),
+    ("products", "thumbnail_path", "VARCHAR(512)"),
+    ("products", "preview_path", "VARCHAR(512)"),
+    ("products", "content_type", "VARCHAR(100)"),
+    ("products", "hash", "VARCHAR(128)"),
 ]
 
 
 def get_existing_columns(cur, table: str) -> set:
     cur.execute(f"PRAGMA table_info({table})")
     return {row[1] for row in cur.fetchall()}
+
+
+def table_exists(cur, table: str) -> bool:
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+    return cur.fetchone() is not None
 
 
 def run_migrations_for_db(db_path: str):
@@ -54,11 +64,14 @@ def run_migrations_for_db(db_path: str):
     conn = sqlite3.connect(db_path)
     cur  = conn.cursor()
 
-
     applied = 0
     skipped = 0
 
     for table, column, col_def in MIGRATIONS:
+        if not table_exists(cur, table):
+            print(f"[migrate] SKIP  — table '{table}' does not exist.")
+            skipped += 1
+            continue
         existing = get_existing_columns(cur, table)
         if column in existing:
             print(f"[migrate] SKIP  — {table}.{column} already exists.")

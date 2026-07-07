@@ -153,6 +153,30 @@ def create_withdrawal(data: dict) -> dict:
             eta          = eta,
         )
         db.add(w)
+
+        # Log vendor activity and notify admins
+        user = db.query(User).filter(User.firebase_uid == vendor_id).first()
+        if user:
+            from app.services.activity_log_service import ActivityLogService
+            ActivityLogService.log_user_activity(
+                db=db,
+                user_id=user.id,
+                activity_type="withdrawal_request",
+                details=f"Requested withdrawal of ₹{w.amount:.2f} via {w.method}."
+            )
+            
+            # Notify admins
+            admins = db.query(User).filter(User.role == "admin").all()
+            from app.services.notification_service import NotificationService
+            for admin in admins:
+                NotificationService.create_notification(
+                    db=db,
+                    user_id=admin.id,
+                    title="New Withdrawal Request ✦",
+                    message=f"Vendor '{user.name}' has requested a withdrawal of ₹{w.amount:.2f}.",
+                    category="withdrawal"
+                )
+
         db.commit()
         db.refresh(w)
         return _withdrawal_to_dict(w)
@@ -203,13 +227,32 @@ def get_vendor_stats(vendor_id: str) -> dict:
             Withdrawal.status == "completed"
         ).all())
 
+        # Calculate review count and affiliate sales
+        review_count = 0
+        affiliate_sales = 0
+        if prod_ids:
+            review_count = db.query(Review).filter(Review.product_id.in_(prod_ids)).count()
+            from app.models.affiliate import AffiliateCommission
+            affiliate_sales = db.query(AffiliateCommission).filter(AffiliateCommission.product_id.in_(prod_ids)).count()
+
+        net_revenue = total_revenue * 0.85
+        available_balance = max(0.0, net_revenue - withdrawn_sum)
+
         return {
-            "total_revenue":    round(total_revenue, 2),
-            "total_orders":     total_sales,
-            "active_products":  active_count,
-            "avg_rating":       avg_rating,
-            "product_count":    len(products),
-            "withdrawn":        round(withdrawn_sum, 2)
+            "total_revenue":      round(total_revenue, 2),
+            "total_orders":       total_sales,
+            "active_products":    active_count,
+            "avg_rating":         avg_rating,
+            "product_count":      len(products),
+            "withdrawn":          round(withdrawn_sum, 2),
+            "published_products": active_count,
+            "archived_products":  sum(1 for p in products if p.status == "archived"),
+            "sales":              total_sales,
+            "net_revenue":        round(net_revenue, 2),
+            "pending_revenue":    round(available_balance, 2),
+            "withdrawals":        round(withdrawn_sum, 2),
+            "review_count":       review_count,
+            "affiliate_sales":    affiliate_sales
         }
     finally:
         db.close()
@@ -462,6 +505,44 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         ratings      = [p.rating for p in products if p.rating]
         avg_rating   = round(sum(ratings) / len(ratings), 1) if ratings else 0.0
 
+        # Calculate completed withdrawals
+        withdrawn_sum = sum(w.amount for w in db.query(Withdrawal).filter(
+            Withdrawal.vendor_id == vendor_id,
+            Withdrawal.status == "completed"
+        ).all())
+
+        review_count = 0
+        affiliate_sales = 0
+        top_products = []
+        if prod_ids:
+            review_count = db.query(Review).filter(Review.product_id.in_(prod_ids)).count()
+            from app.models.affiliate import AffiliateCommission
+            affiliate_sales = db.query(AffiliateCommission).filter(AffiliateCommission.product_id.in_(prod_ids)).count()
+            
+            # Aggregate order items per product for top products
+            from sqlalchemy import func
+            sales_per_product = db.query(
+                OrderItem.product_id,
+                func.count(OrderItem.id).label("sales"),
+                func.sum(OrderItem.price_paid).label("revenue")
+            ).filter(OrderItem.product_id.in_(prod_ids)).group_by(OrderItem.product_id).all()
+            
+            for p_id, sales, revenue in sales_per_product:
+                prod_obj = prod_list_map.get(p_id)
+                if prod_obj:
+                    top_products.append({
+                        "id": str(p_id),
+                        "title": prod_obj.title,
+                        "sales": sales,
+                        "revenue": round(float(revenue or 0), 2),
+                        "rating": float(prod_obj.rating or 0)
+                    })
+            top_products.sort(key=lambda x: x["revenue"], reverse=True)
+            top_products = top_products[:5]
+
+        net_revenue = total_revenue * 0.85
+        available_balance = max(0.0, net_revenue - withdrawn_sum)
+
         # ── Reviews ───────────────────────────────────────────────────────────
         recent_reviews = []
         if prod_ids:
@@ -536,15 +617,24 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
 
         return {
             "stats": {
-                "total_revenue":   round(total_revenue, 2),
-                "total_orders":    total_sales,
-                "active_products": active_count,
-                "product_count":   len(products),
-                "avg_rating":      avg_rating,
+                "total_revenue":      round(total_revenue, 2),
+                "total_orders":       total_sales,
+                "active_products":    active_count,
+                "product_count":      len(products),
+                "avg_rating":         avg_rating,
+                "published_products": active_count,
+                "archived_products":  sum(1 for p in products if p.status == "archived"),
+                "sales":              total_sales,
+                "net_revenue":        round(net_revenue, 2),
+                "pending_revenue":    round(available_balance, 2),
+                "withdrawals":        round(withdrawn_sum, 2),
+                "review_count":       review_count,
+                "affiliate_sales":    affiliate_sales
             },
             "recent_orders":   recent_orders,
             "recent_products": recent_products,
             "recent_reviews":  recent_reviews,
+            "top_products":    top_products,
             "activity":        activity,
             "monthly_chart":   monthly_chart,
         }

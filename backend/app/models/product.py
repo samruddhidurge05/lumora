@@ -36,6 +36,13 @@ class Product(Base):
     affiliate_enabled = Column(Boolean, default=False)
     commission_type   = Column(String(20), default="percentage")  # "percentage" or "fixed"
     commission_value  = Column(Float, default=0.0)
+
+    # Storage Metadata
+    storage_path   = Column(String(512), nullable=True)
+    thumbnail_path = Column(String(512), nullable=True)
+    preview_path   = Column(String(512), nullable=True)
+    content_type   = Column(String(100), nullable=True)
+    hash           = Column(String(128), nullable=True)
     
     created_at   = Column(DateTime, default=datetime.utcnow)
     updated_at   = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

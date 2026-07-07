@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -142,6 +142,14 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
     check_user_active(user)
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=user.id,
+        activity_type="login",
+        details="Logged in via standard email/password."
+    )
+    db.commit()
     token_data = {"sub": str(user.id)}
     access_token = create_access_token(token_data)
     return TokenResponse(access_token=access_token, user=user)
@@ -271,6 +279,14 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
             db.refresh(user)
 
     check_user_active(user)
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=user.id,
+        activity_type="firebase_sync",
+        details=f"Synced Firebase account. Role: {user.role or 'customer'}."
+    )
+    db.commit()
     # Step 5 — issue backend JWT
     token_data = {"sub": str(user.id)}
     access_token = create_access_token(token_data)

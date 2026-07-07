@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.api.orders.schemas import OrderCreate, OrderResponse
+from app.services.purchase_service import PurchaseService
 
 router = APIRouter()
 
@@ -32,8 +33,8 @@ def create_new_order(
     if current_user.role != "admin":
         is_paused = False
         pause_msg = "Platform is temporarily paused."
-        from app.shared.firebase.connection import db, firebase_connected
-        if firebase_connected and db is not None:
+        from app.shared.firebase.connection import db as fs_db, firebase_connected
+        if firebase_connected and fs_db is not None:
             from admin.firestore.admin_firestore import get_platform_settings
             settings = get_platform_settings()
             if settings.get("isPlatformPaused", False):
@@ -53,39 +54,7 @@ def create_new_order(
                 message=pause_msg
             )
 
-    # Calculate and store affiliate commissions if referral code exists
-    affiliate_profile = None
-    if order_in.affiliate_code:
-        from app.models.affiliate import AffiliateProfile
-        from app.models.user import User as UserModel
-        from app.shared.firebase.connection import firebase_connected
-        
-        code_upper = order_in.affiliate_code.upper()
-        # Find profile
-        affiliate_profile = db.query(AffiliateProfile).filter(
-            AffiliateProfile.referral_code == code_upper
-        ).first()
-        
-        # Verify affiliate is active
-        if affiliate_profile:
-            if not affiliate_profile.is_active:
-                affiliate_profile = None
-            else:
-                # Check user account status
-                aff_user = db.query(UserModel).filter(UserModel.id == affiliate_profile.user_id).first()
-                if not aff_user or not aff_user.is_active:
-                    affiliate_profile = None
-                
-                if affiliate_profile and firebase_connected:
-                    try:
-                        from admin_controls.affiliate.firestore import get_affiliate_status_from_firestore
-                        fs_status = get_affiliate_status_from_firestore(str(affiliate_profile.user_id))
-                        if fs_status in ("suspended", "disabled", "rejected"):
-                            affiliate_profile = None
-                    except Exception:
-                        pass
-
-    # Validate items and vendors first
+    # 1. Validate items and vendor statuses
     from sqlalchemy import cast, String
     from app.core.exceptions import LumoraException
     
@@ -94,7 +63,7 @@ def create_new_order(
         if not prod:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product {item.product_id} not found")
             
-        # Verify vendor is active (if vendor exists as a User)
+        # Verify vendor is active
         vendor_user = db.query(User).filter(cast(User.id, String) == prod.vendor_id).first()
         if vendor_user and not vendor_user.is_active:
             raise LumoraException(
@@ -103,80 +72,35 @@ def create_new_order(
                 message=f"Purchasing products from suspended vendor '{prod.seller}' is prohibited."
             )
 
-    # Create the Order
-    order = Order(
-        user_id=current_user.id,
-        total_amount=order_in.total_amount,
-        payment_method=order_in.payment_method,
-        payment_id=order_in.payment_id,
-        promo_code=order_in.promo_code,
-        discount_amount=order_in.discount_amount,
-        notes=order_in.notes,
-        status="completed" # By default mock completes
-    )
-    db.add(order)
-    db.commit()
-    db.refresh(order)
-
-    # Create Order Items, calculate commissions, and update stats
-    for item in order_in.items:
-        if item.price_paid < 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Price paid for item {item.product_id} cannot be negative."
-            )
-        prod = db.query(Product).filter(Product.id == item.product_id).first()
-        if not prod:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product {item.product_id} not found")
-        
-        order_item = OrderItem(
-            order_id=order.id,
-            product_id=item.product_id,
-            price_paid=item.price_paid,
-            download_url=prod.file_url or f"/downloads/product-{prod.id}.zip"
+    # 2. Delegate purchase execution to PurchaseService (Atomically processes pay/orders/commission/notifications)
+    items_payload = [{"product_id": i.product_id, "price_paid": i.price_paid} for i in order_in.items]
+    try:
+        order = PurchaseService.process_purchase(
+            db=db,
+            user_id=current_user.id,
+            items_payload=items_payload,
+            total_amount=order_in.total_amount,
+            payment_method=order_in.payment_method or "upi",
+            payment_id=order_in.payment_id,
+            razorpay_order_id=order_in.razorpay_order_id,
+            razorpay_signature=order_in.razorpay_signature,
+            promo_code=order_in.promo_code,
+            discount_amount=order_in.discount_amount,
+            affiliate_code=order_in.affiliate_code,
+            notes=order_in.notes
         )
-        db.add(order_item)
-        
-        # Calculate commission if referral active
-        if affiliate_profile and prod.affiliate_enabled:
-            from app.models.affiliate import AffiliateCommission
-            
-            if prod.commission_type == "percentage":
-                rate = prod.commission_value if prod.commission_value is not None else affiliate_profile.commission_rate
-                commission_amt = round((item.price_paid * rate) / 100.0, 2)
-            elif prod.commission_type == "fixed":
-                commission_amt = round(prod.commission_value or 0.0, 2)
-            else:
-                rate = affiliate_profile.commission_rate or 10.0
-                commission_amt = round((item.price_paid * rate) / 100.0, 2)
-                
-            commission = AffiliateCommission(
-                affiliate_id=affiliate_profile.id,
-                order_id=order.id,
-                product_id=prod.id,
-                product_name=prod.title,
-                sale_amount=item.price_paid,
-                commission_amt=commission_amt,
-                status="pending"  # remains pending until order completed
-            )
-            db.add(commission)
-            
-            # Increment affiliate metrics
-            affiliate_profile.total_sales += 1
-            affiliate_profile.total_earnings = round((affiliate_profile.total_earnings or 0.0) + commission_amt, 2)
-            db.add(affiliate_profile)
+        # Commit SQLite transaction
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
 
-        # Update product downloads count
-        prod.downloads += 1
-        db.add(prod)
+    # 3. Dynamically set short-lived secure download links for the response
+    from app.api.products_router import generate_download_token
+    for item in order.items:
+        token = generate_download_token(current_user.id, item.product_id)
+        item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
 
-    db.commit()
-    db.refresh(order)
-    
-    # Sync to Firestore mirror
-    from admin.firestore.admin_firestore import sync_order_to_firestore
-    sync_order_to_firestore(order, db)
-    
     return order
 
 @router.get("/me", response_model=List[OrderResponse])
@@ -185,6 +109,15 @@ def get_my_orders(
     db: Session = Depends(get_db)
 ):
     orders = db.query(Order).filter(Order.user_id == current_user.id).order_by(Order.created_at.desc()).all()
+    
+    # Dynamically inject 15-minute token URLs for the user's vaults/downloads
+    from app.api.products_router import generate_download_token
+    for o in orders:
+        if o.status == "completed":
+            for item in o.items:
+                token = generate_download_token(current_user.id, item.product_id)
+                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+                
     return orders
 
 @router.get("/{order_id}", response_model=OrderResponse)
@@ -197,9 +130,6 @@ def get_order_by_id(
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
-    # Resource ownership & Role check:
-    # Customer can view own orders, Admin can view all.
-    # Vendor can view orders containing products they own.
     is_owner = (order.user_id == current_user.id)
     is_admin = (current_user.role == "admin")
     is_authorized_vendor = False
@@ -217,5 +147,12 @@ def get_order_by_id(
 
     if not (is_owner or is_admin or is_authorized_vendor):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this order")
+
+    # Inject 15-minute secure download token
+    if order.status == "completed":
+        from app.api.products_router import generate_download_token
+        for item in order.items:
+            token = generate_download_token(current_user.id, item.product_id)
+            item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
 
     return order

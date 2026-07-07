@@ -29,6 +29,16 @@ def add_to_wishlist(
 
     item = WishlistItem(user_id=current_user.id, product_id=product_id)
     db.add(item)
+
+    # Log user activity
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=current_user.id,
+        activity_type="wishlist_add",
+        details=f"Added product '{prod.title}' (ID {prod.id}) to wishlist."
+    )
+
     db.commit()
     return {"message": "Product added to wishlist"}
 
@@ -45,7 +55,20 @@ def remove_from_wishlist(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wishlist item not found")
     
+    prod = db.query(Product).filter(Product.id == product_id).first()
+    prod_title = prod.title if prod else f"Product ID {product_id}"
+
     db.delete(item)
+
+    # Log user activity
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=current_user.id,
+        activity_type="wishlist_remove",
+        details=f"Removed '{prod_title}' from wishlist."
+    )
+
     db.commit()
     return {"message": "Product removed from wishlist"}
 

@@ -25,6 +25,7 @@ from app.api.versions_router import router as versions_router
 from app.api.upload_router import router as upload_router
 from app.api.affiliate.routes import router as affiliate_router
 from app.admin_api.routes import router as admin_router
+from app.api.payments.routes import router as payments_router
 
 # Create Database tables
 Base.metadata.create_all(bind=engine)
@@ -104,6 +105,7 @@ app.include_router(versions_router, prefix="/api/versions", tags=["Product Versi
 app.include_router(upload_router, prefix="/api/uploads", tags=["File Uploads"])
 app.include_router(affiliate_router, prefix="/api/affiliate", tags=["Affiliate"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
+app.include_router(payments_router, prefix="/api/payments", tags=["Payments"])
 
 # ── Static file serving for uploaded product assets ──────────────────────────
 # Files uploaded via POST /api/uploads/ are stored at backend/uploads/

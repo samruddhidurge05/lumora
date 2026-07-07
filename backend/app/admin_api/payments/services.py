@@ -187,8 +187,13 @@ def process_vendor_payout(vendor_id: str, amount: float):
     db_s = SessionLocal()
     payee_role = "vendor"
     try:
-        # Check payee role in SQLite
-        payee_user = db_s.query(UserModel).filter(UserModel.id == int(vendor_id)).first() if vendor_id.isdigit() else None
+        # Check payee role in SQLite (supporting SQLite ID or Firebase UID)
+        payee_user = None
+        if vendor_id.isdigit():
+            payee_user = db_s.query(UserModel).filter(UserModel.id == int(vendor_id)).first()
+        if not payee_user:
+            payee_user = db_s.query(UserModel).filter(UserModel.firebase_uid == vendor_id).first()
+
         if payee_user and payee_user.role.lower() == "affiliate":
             payee_role = "affiliate"
             
@@ -259,6 +264,25 @@ def process_vendor_payout(vendor_id: str, amount: float):
                     status="completed"
                 )
                 db_s.add(withdrawal)
+
+        # Notify payee and log activity
+        if payee_user:
+            from app.services.notification_service import NotificationService
+            NotificationService.create_notification(
+                db=db_s,
+                user_id=payee_user.id,
+                title="Payout Completed ✦",
+                message=f"Your payout of ₹{amount * 80:.2f} has been processed successfully.",
+                category="payout"
+            )
+            from app.services.activity_log_service import ActivityLogService
+            ActivityLogService.log_user_activity(
+                db=db_s,
+                user_id=payee_user.id,
+                activity_type="payout_complete",
+                details=f"Received payout of ₹{amount * 80:.2f} via UPI/Bank."
+            )
+
         db_s.commit()
     except Exception as e:
         print(f"[payout-sync] Error processing SQLite payout data: {e}")

@@ -34,6 +34,8 @@ class OrderCreate(BaseModel):
     total_amount: float
     payment_method: Optional[str] = "upi"
     payment_id: Optional[str] = None
+    razorpay_order_id: Optional[str] = None
+    razorpay_signature: Optional[str] = None
     promo_code: Optional[str] = None
     discount_amount: float = 0.0
     notes: Optional[str] = None

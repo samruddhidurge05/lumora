@@ -1,0 +1,319 @@
+import os
+from typing import Optional, Dict, Any
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+
+from app.models.product import Product
+from app.services.storage_service import storage_service
+from app.services.activity_log_service import ActivityLogService
+from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
+
+class ProductService:
+    @staticmethod
+    def create_product(
+        db: Session,
+        vendor_id: str,
+        title: str,
+        description: str,
+        category: str,
+        price: float,
+        temp_file_url: Optional[str] = None,
+        temp_preview_url: Optional[str] = None,
+        temp_thumbnail_url: Optional[str] = None,
+        tags: Optional[str] = None,
+        highlights: Optional[str] = None,
+        badge: Optional[str] = None,
+        seller: Optional[str] = "Creator",
+        affiliate_enabled: bool = False,
+        commission_type: str = "percentage",
+        commission_value: float = 0.0
+    ) -> Product:
+        # We start an atomic transaction block
+        moved_files = []
+        try:
+            # Create product shell first to get product_id
+            product = Product(
+                vendor_id=vendor_id,
+                title=title,
+                description=description,
+                category=category,
+                price=price,
+                tags=tags,
+                highlights=highlights,
+                badge=badge,
+                seller=seller,
+                affiliate_enabled=affiliate_enabled,
+                commission_type=commission_type,
+                commission_value=commission_value,
+                status="published"
+            )
+            db.add(product)
+            db.flush() # Populate product.id
+
+            # Move temp uploaded assets to permanent hierarchical paths:
+            # vendors/{vendor_id}/products/{product_id}/...
+            if temp_file_url:
+                storage_path, perm_url = storage_service.move_to_permanent(
+                    source_path=temp_file_url,
+                    vendor_id=vendor_id,
+                    product_id=product.id,
+                    filename=f"product-{product.id}.zip",
+                    is_image=False
+                )
+                if storage_path:
+                    product.storage_path = storage_path
+                    product.file_url = perm_url
+                    moved_files.append(storage_path)
+
+            if temp_preview_url:
+                preview_path, perm_preview = storage_service.move_to_permanent(
+                    source_path=temp_preview_url,
+                    vendor_id=vendor_id,
+                    product_id=product.id,
+                    filename="preview.png",
+                    is_image=True
+                )
+                if preview_path:
+                    product.preview_path = preview_path
+                    product.preview = perm_preview
+                    moved_files.append(preview_path)
+
+            if temp_thumbnail_url:
+                thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
+                    source_path=temp_thumbnail_url,
+                    vendor_id=vendor_id,
+                    product_id=product.id,
+                    filename="thumbnail.png",
+                    is_image=True
+                )
+                if thumbnail_path:
+                    product.thumbnail_path = thumbnail_path
+                    product.thumbnail = perm_thumbnail
+                    moved_files.append(thumbnail_path)
+
+            # Log activity
+            # Try to get user_id from vendor_id string if possible (uid is user.firebase_uid)
+            from app.models.user import User
+            user = db.query(User).filter(User.firebase_uid == vendor_id).first()
+            if user:
+                ActivityLogService.log_user_activity(
+                    db=db,
+                    user_id=user.id,
+                    activity_type="upload_product",
+                    details=f"Uploaded product '{title}' (ID {product.id})."
+                )
+
+            # Commit to SQLite (Single Source of Truth)
+            db.commit()
+            
+            # Sync product details to Firestore for real-time customer catalogs
+            sync_product_to_firestore(product)
+            
+            return product
+
+        except Exception as e:
+            db.rollback()
+            # Rollback: Clean up any moved permanent files in GCS/disk
+            for path in moved_files:
+                try:
+                    storage_service.delete(path)
+                except Exception:
+                    pass
+            raise e
+
+    @staticmethod
+    def update_product(
+        db: Session,
+        product_id: int,
+        vendor_id: str,
+        update_data: Dict[str, Any]
+    ) -> Product:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        # Authorization check: only owner vendor can update
+        if product.vendor_id != vendor_id:
+            raise HTTPException(status_code=403, detail="Not authorized to edit this product")
+
+        # Keep track of old storage files to purge after commit, and new files to rollback on failure
+        old_files_to_delete = []
+        new_files_to_delete = []
+        
+        try:
+            # Handle digital file change
+            if "file_url" in update_data and update_data["file_url"] != product.file_url:
+                if product.storage_path:
+                    old_files_to_delete.append(product.storage_path)
+                
+                # Move new file to permanent storage
+                new_storage_path, perm_url = storage_service.move_to_permanent(
+                    source_path=update_data["file_url"],
+                    vendor_id=vendor_id,
+                    product_id=product_id,
+                    filename=f"product-{product_id}.zip",
+                    is_image=False
+                )
+                product.storage_path = new_storage_path
+                product.file_url = perm_url
+                new_files_to_delete.append(new_storage_path)
+
+            # Handle preview image change
+            if "preview" in update_data and update_data["preview"] != product.preview:
+                if product.preview_path:
+                    old_files_to_delete.append(product.preview_path)
+                
+                new_preview_path, perm_preview = storage_service.move_to_permanent(
+                    source_path=update_data["preview"],
+                    vendor_id=vendor_id,
+                    product_id=product_id,
+                    filename="preview.png",
+                    is_image=True
+                )
+                product.preview_path = new_preview_path
+                product.preview = perm_preview
+                new_files_to_delete.append(new_preview_path)
+
+            # Handle thumbnail image change
+            if "thumbnail" in update_data and update_data["thumbnail"] != product.thumbnail:
+                if product.thumbnail_path:
+                    old_files_to_delete.append(product.thumbnail_path)
+                
+                new_thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
+                    source_path=update_data["thumbnail"],
+                    vendor_id=vendor_id,
+                    product_id=product_id,
+                    filename="thumbnail.png",
+                    is_image=True
+                )
+                product.thumbnail_path = new_thumbnail_path
+                product.thumbnail = perm_thumbnail
+                new_files_to_delete.append(new_thumbnail_path)
+
+            # Price drop check
+            price_dropped = False
+            old_price = product.price
+            new_price = update_data.get("price")
+            if new_price is not None and new_price < old_price:
+                price_dropped = True
+
+            # Update core metadata columns
+            for field in ("title", "description", "category", "price", "tags", "highlights", "badge", "seller", "affiliate_enabled", "commission_type", "commission_value"):
+                if field in update_data:
+                    setattr(product, field, update_data[field])
+
+            if price_dropped:
+                # Trigger price alerts
+                discount_percent = int(((old_price - new_price) / old_price) * 100)
+                from app.models.price_alert import PriceAlert
+                from app.services.notification_service import NotificationService
+                
+                alerts = db.query(PriceAlert).filter(
+                    PriceAlert.product_id == product.id,
+                    PriceAlert.active == True
+                ).all()
+                
+                for alert in alerts:
+                    msg = f"'{product.title}' has dropped from ₹{int(old_price * 80)} to ₹{int(new_price * 80)} ({discount_percent}% OFF)."
+                    NotificationService.create_notification(
+                        db=db,
+                        user_id=alert.user_id,
+                        title="Price Drop Alert! ✦",
+                        message=msg,
+                        category="price_drop"
+                    )
+                    alert.original_price = new_price
+                    alert.target_price = new_price * 0.9
+                    db.add(alert)
+
+            from app.models.user import User
+            user = db.query(User).filter(User.firebase_uid == vendor_id).first()
+            if user:
+                ActivityLogService.log_user_activity(
+                    db=db,
+                    user_id=user.id,
+                    activity_type="edit_product",
+                    details=f"Edited product '{product.title}' (ID {product.id})."
+                )
+
+            # Commit changes
+            db.commit()
+
+            # Clean up old replaced files from storage
+            for path in old_files_to_delete:
+                try:
+                    storage_service.delete(path)
+                except Exception:
+                    pass
+
+            # Sync updated details to Firestore
+            sync_product_to_firestore(product)
+
+            return product
+
+        except Exception as e:
+            db.rollback()
+            # Clean up any new uploads since database transaction failed
+            for path in new_files_to_delete:
+                try:
+                    storage_service.delete(path)
+                except Exception:
+                    pass
+            raise e
+
+    @staticmethod
+    def archive_product(db: Session, product_id: int, vendor_id: str) -> Product:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        # Authorization check: owner or admin
+        if product.vendor_id != vendor_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this product")
+
+        try:
+            # Soft Delete / Archive product
+            product.status = "archived"
+            
+            # Safely delete GCS storage files (archives catalog, keeps metadata for historical orders)
+            files_to_delete = []
+            if product.storage_path:
+                files_to_delete.append(product.storage_path)
+                product.storage_path = None
+                product.file_url = None
+            if product.preview_path:
+                files_to_delete.append(product.preview_path)
+                product.preview_path = None
+                product.preview = None
+            if product.thumbnail_path:
+                files_to_delete.append(product.thumbnail_path)
+                product.thumbnail_path = None
+                product.thumbnail = None
+
+            from app.models.user import User
+            user = db.query(User).filter(User.firebase_uid == vendor_id).first()
+            if user:
+                ActivityLogService.log_user_activity(
+                    db=db,
+                    user_id=user.id,
+                    activity_type="archive_product",
+                    details=f"Archived/deleted product '{product.title}' (ID {product.id})."
+                )
+
+            db.commit()
+
+            # Safely delete actual binaries from storage
+            for path in files_to_delete:
+                try:
+                    storage_service.delete(path)
+                except Exception:
+                    pass
+
+            # Update/Delete from Firestore so it disappears from customer catalog
+            delete_product_from_firestore(product_id)
+
+            return product
+
+        except Exception as e:
+            db.rollback()
+            raise e

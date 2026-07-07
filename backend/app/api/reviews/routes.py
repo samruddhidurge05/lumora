@@ -13,6 +13,29 @@ from app.api.reviews.schemas import ReviewCreate, ReviewUpdate, ReviewResponse
 router = APIRouter()
 
 
+def update_vendor_rating(db: Session, vendor_id: str):
+    if not vendor_id:
+        return
+    from app.models.vendor import Vendor
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        return
+    # Find all reviews of all products belonging to this vendor
+    products = db.query(Product).filter(Product.vendor_id == vendor_id).all()
+    prod_ids = [p.id for p in products]
+    if not prod_ids:
+        vendor.rating = "5.0 ★"
+        db.add(vendor)
+        return
+    reviews = db.query(Review).filter(Review.product_id.in_(prod_ids)).all()
+    if not reviews:
+        vendor.rating = "5.0 ★"
+    else:
+        avg_rating = sum(r.rating for r in reviews) / len(reviews)
+        vendor.rating = f"{avg_rating:.1f} ★"
+    db.add(vendor)
+
+
 def _enrich(review: Review, db: Session) -> dict:
     """Return a dict matching ReviewResponse, adding reviewer_name from the User table."""
     reviewer = db.query(User).filter(User.id == review.user_id).first()
@@ -65,6 +88,12 @@ def create_review(
         OrderItem.product_id == review_in.product_id
     ).first() is not None
 
+    if not has_purchased:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only verified purchasers may review this product."
+        )
+
     review = Review(
         user_id=current_user.id,
         product_id=review_in.product_id,
@@ -80,6 +109,33 @@ def create_review(
     prod.rating = round(sum(all_ratings) / len(all_ratings), 1)
     prod.reviews = len(all_ratings)
     db.add(prod)
+
+    # Recalculate vendor rating
+    if prod.vendor_id:
+        update_vendor_rating(db, prod.vendor_id)
+
+    # Notify vendor
+    if prod.vendor_id:
+        from app.models.user import User as UserModel
+        vendor_user = db.query(UserModel).filter(UserModel.firebase_uid == prod.vendor_id).first()
+        if vendor_user:
+            from app.services.notification_service import NotificationService
+            NotificationService.create_notification(
+                db=db,
+                user_id=vendor_user.id,
+                title="New Review Received ✦",
+                message=f"Your product '{prod.title}' received a {review.rating}★ review from {current_user.name}.",
+                category="review"
+            )
+
+    # Log activity
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=current_user.id,
+        activity_type="review_create",
+        details=f"Submitted {review.rating}★ review for product '{prod.title}' (ID {prod.id})."
+    )
 
     db.commit()
     db.refresh(review)
@@ -135,7 +191,21 @@ def delete_review(
             prod.rating = 5.0
             prod.reviews = 0
         db.add(prod)
+
+        # Recalculate vendor rating
+        if prod.vendor_id:
+            update_vendor_rating(db, prod.vendor_id)
         db.commit()
+
+    # Log activity
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=current_user.id,
+        activity_type="review_delete",
+        details=f"Deleted review for product ID {prod_id}."
+    )
+    db.commit()
 
     return None
 
@@ -173,7 +243,21 @@ def update_review(
             prod.rating = round(sum(all_ratings) / len(all_ratings), 1)
             prod.reviews = len(all_ratings)
             db.add(prod)
+
+            # Recalculate vendor rating
+            if prod.vendor_id:
+                update_vendor_rating(db, prod.vendor_id)
             db.commit()
+
+    # Log activity
+    from app.services.activity_log_service import ActivityLogService
+    ActivityLogService.log_user_activity(
+        db=db,
+        user_id=current_user.id,
+        activity_type="review_update",
+        details=f"Updated review for product ID {review.product_id}."
+    )
+    db.commit()
 
     return _enrich(review, db)
 
