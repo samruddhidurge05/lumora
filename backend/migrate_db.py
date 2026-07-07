@@ -43,6 +43,18 @@ MIGRATIONS = [
     ("products", "preview_path", "VARCHAR(512)"),
     ("products", "content_type", "VARCHAR(100)"),
     ("products", "hash", "VARCHAR(128)"),
+    ("products", "short_desc", "VARCHAR(255)"),
+    ("products", "features", "TEXT"),
+    ("products", "system_requirements", "TEXT"),
+    ("products", "what_you_get", "TEXT"),
+    ("products", "installation_guide", "TEXT"),
+    ("products", "subcategory", "VARCHAR(100)"),
+    ("products", "discount", "FLOAT DEFAULT 0.0"),
+    ("products", "preview_images", "TEXT"),
+    ("products", "preview_video", "VARCHAR(512)"),
+    ("products", "seo_title", "VARCHAR(150)"),
+    ("products", "seo_description", "TEXT"),
+    ("products", "visibility", "VARCHAR(50) DEFAULT 'public'"),
 ]
 
 

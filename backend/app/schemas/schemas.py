@@ -26,6 +26,18 @@ class ProductCreate(BaseModel):
     affiliate_enabled: Optional[bool] = False
     commission_type: Optional[str] = "percentage"
     commission_value: Optional[float] = 0.0
+    short_desc: Optional[str] = None
+    features: Optional[list] = None
+    system_requirements: Optional[list] = None
+    what_you_get: Optional[list] = None
+    installation_guide: Optional[str] = None
+    subcategory: Optional[str] = None
+    discount: float = 0.0
+    preview_images: Optional[list] = None
+    preview_video: Optional[str] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    visibility: str = "public"
 
 
 class ProductUpdate(BaseModel):
@@ -50,6 +62,18 @@ class ProductUpdate(BaseModel):
     affiliate_enabled: Optional[bool] = None
     commission_type: Optional[str] = None
     commission_value: Optional[float] = None
+    short_desc: Optional[str] = None
+    features: Optional[list] = None
+    system_requirements: Optional[list] = None
+    what_you_get: Optional[list] = None
+    installation_guide: Optional[str] = None
+    subcategory: Optional[str] = None
+    discount: Optional[float] = None
+    preview_images: Optional[list] = None
+    preview_video: Optional[str] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    visibility: Optional[str] = None
 
 
 class ProductResponse(BaseModel):
@@ -79,6 +103,18 @@ class ProductResponse(BaseModel):
     affiliate_enabled: Optional[bool] = False
     commission_type: Optional[str] = "percentage"
     commission_value: Optional[float] = 0.0
+    short_desc: Optional[str] = None
+    features: Optional[list] = None
+    system_requirements: Optional[list] = None
+    what_you_get: Optional[list] = None
+    installation_guide: Optional[str] = None
+    subcategory: Optional[str] = None
+    discount: float = 0.0
+    preview_images: Optional[list] = None
+    preview_video: Optional[str] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    visibility: str = "public"
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

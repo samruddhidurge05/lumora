@@ -399,7 +399,19 @@ def create_product(
         seller=product_in.seller or current_user.name,
         affiliate_enabled=product_in.affiliate_enabled,
         commission_type=product_in.commission_type or "percentage",
-        commission_value=product_in.commission_value or 0.0
+        commission_value=product_in.commission_value or 0.0,
+        short_desc=product_in.short_desc,
+        features=product_in.features,
+        system_requirements=product_in.system_requirements,
+        what_you_get=product_in.what_you_get,
+        installation_guide=product_in.installation_guide,
+        subcategory=product_in.subcategory,
+        discount=product_in.discount,
+        preview_images=product_in.preview_images,
+        preview_video=product_in.preview_video,
+        seo_title=product_in.seo_title,
+        seo_description=product_in.seo_description,
+        visibility=product_in.visibility or "public"
     )
 
 

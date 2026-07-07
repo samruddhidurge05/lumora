@@ -13,7 +13,7 @@ def sync_product_to_firestore(product):
             "title": product.title,
             "name": product.title,
             "description": product.description or "",
-            "shortDesc": product.description[:150] if product.description else "Premium digital assets",
+            "shortDesc": product.short_desc or (product.description[:150] if product.description else "Premium digital assets"),
             "category": product.category or "General",
             "price": float(product.price or 0.0),
             "rating": float(product.rating or 5.0),
@@ -32,7 +32,22 @@ def sync_product_to_firestore(product):
             "fileSize": product.file_size or "48 MB",
             "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
             "updatedAt": datetime.now(timezone.utc).isoformat() + "Z",
-            "vendor_id": str(product.vendor_id) if product.vendor_id else None
+            "vendor_id": str(product.vendor_id) if product.vendor_id else None,
+            "features": product.features if isinstance(product.features, list) else [],
+            "systemRequirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
+            "whatYouGet": product.what_you_get if isinstance(product.what_you_get, list) else [],
+            "installationGuide": product.installation_guide or "",
+            "subcategory": product.subcategory or "",
+            "discount": float(product.discount or 0.0),
+            "previewImages": product.preview_images if isinstance(product.preview_images, list) else [],
+            "previewVideo": product.preview_video or "",
+            "seoTitle": product.seo_title or "",
+            "seoDescription": product.seo_description or "",
+            "visibility": product.visibility or "public",
+            "license": product.license or "Personal Use",
+            "affiliate_enabled": bool(product.affiliate_enabled),
+            "commission_type": product.commission_type or "percentage",
+            "commission_value": float(product.commission_value or 0.0)
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")

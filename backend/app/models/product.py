@@ -37,6 +37,20 @@ class Product(Base):
     commission_type   = Column(String(20), default="percentage")  # "percentage" or "fixed"
     commission_value  = Column(Float, default=0.0)
 
+    # Extended Metadata
+    short_desc          = Column(String(255), nullable=True)
+    features            = Column(JSON, default=list)
+    system_requirements = Column(JSON, default=list)
+    what_you_get        = Column(JSON, default=list)
+    installation_guide  = Column(Text, nullable=True)
+    subcategory         = Column(String(100), nullable=True)
+    discount            = Column(Float, default=0.0)
+    preview_images      = Column(JSON, default=list)
+    preview_video       = Column(String(512), nullable=True)
+    seo_title           = Column(String(150), nullable=True)
+    seo_description     = Column(Text, nullable=True)
+    visibility          = Column(String(50), default="public")
+
     # Storage Metadata
     storage_path   = Column(String(512), nullable=True)
     thumbnail_path = Column(String(512), nullable=True)

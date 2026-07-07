@@ -20,13 +20,25 @@ class ProductService:
         temp_file_url: Optional[str] = None,
         temp_preview_url: Optional[str] = None,
         temp_thumbnail_url: Optional[str] = None,
-        tags: Optional[str] = None,
-        highlights: Optional[str] = None,
+        tags: Optional[list] = None,
+        highlights: Optional[list] = None,
         badge: Optional[str] = None,
         seller: Optional[str] = "Creator",
         affiliate_enabled: bool = False,
         commission_type: str = "percentage",
-        commission_value: float = 0.0
+        commission_value: float = 0.0,
+        short_desc: Optional[str] = None,
+        features: Optional[list] = None,
+        system_requirements: Optional[list] = None,
+        what_you_get: Optional[list] = None,
+        installation_guide: Optional[str] = None,
+        subcategory: Optional[str] = None,
+        discount: float = 0.0,
+        preview_images: Optional[list] = None,
+        preview_video: Optional[str] = None,
+        seo_title: Optional[str] = None,
+        seo_description: Optional[str] = None,
+        visibility: str = "public"
     ) -> Product:
         # We start an atomic transaction block
         moved_files = []
@@ -45,7 +57,19 @@ class ProductService:
                 affiliate_enabled=affiliate_enabled,
                 commission_type=commission_type,
                 commission_value=commission_value,
-                status="published"
+                status="published",
+                short_desc=short_desc,
+                features=features,
+                system_requirements=system_requirements,
+                what_you_get=what_you_get,
+                installation_guide=installation_guide,
+                subcategory=subcategory,
+                discount=discount,
+                preview_images=preview_images,
+                preview_video=preview_video,
+                seo_title=seo_title,
+                seo_description=seo_description,
+                visibility=visibility
             )
             db.add(product)
             db.flush() # Populate product.id
@@ -198,7 +222,12 @@ class ProductService:
                 price_dropped = True
 
             # Update core metadata columns
-            for field in ("title", "description", "category", "price", "tags", "highlights", "badge", "seller", "affiliate_enabled", "commission_type", "commission_value"):
+            for field in (
+                "title", "description", "category", "price", "tags", "highlights", "badge", "seller",
+                "affiliate_enabled", "commission_type", "commission_value",
+                "short_desc", "features", "system_requirements", "what_you_get", "installation_guide",
+                "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status"
+            ):
                 if field in update_data:
                     setattr(product, field, update_data[field])
 
@@ -275,21 +304,6 @@ class ProductService:
             # Soft Delete / Archive product
             product.status = "archived"
             
-            # Safely delete GCS storage files (archives catalog, keeps metadata for historical orders)
-            files_to_delete = []
-            if product.storage_path:
-                files_to_delete.append(product.storage_path)
-                product.storage_path = None
-                product.file_url = None
-            if product.preview_path:
-                files_to_delete.append(product.preview_path)
-                product.preview_path = None
-                product.preview = None
-            if product.thumbnail_path:
-                files_to_delete.append(product.thumbnail_path)
-                product.thumbnail_path = None
-                product.thumbnail = None
-
             from app.models.user import User
             user = db.query(User).filter(User.firebase_uid == vendor_id).first()
             if user:
@@ -301,13 +315,6 @@ class ProductService:
                 )
 
             db.commit()
-
-            # Safely delete actual binaries from storage
-            for path in files_to_delete:
-                try:
-                    storage_service.delete(path)
-                except Exception:
-                    pass
 
             # Update/Delete from Firestore so it disappears from customer catalog
             delete_product_from_firestore(product_id)

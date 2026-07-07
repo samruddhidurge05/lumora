@@ -25,6 +25,12 @@ const CAT_GALLERY = {
 
 function getGallery(product) {
   const preview = product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
+  const extraImages = Array.isArray(product.previewImages || product.preview_images)
+    ? (product.previewImages || product.preview_images)
+    : [];
+  if (extraImages.length > 0) {
+    return [preview, ...extraImages];
+  }
   const catImgs = CAT_GALLERY[product.category] || CAT_GALLERY['Design Assets'];
   return [preview, ...catImgs.filter(img => img !== preview)].slice(0, 5);
 }
@@ -44,6 +50,22 @@ export default function ProductPage() {
   const [backendReviews, setBackendReviews] = useState(null); // null = not yet fetched
 
   useEffect(() => {
+    if (product) {
+      if (product.seoTitle || product.seo_title) {
+        document.title = `${product.seoTitle || product.seo_title} | Lumora`;
+      } else {
+        document.title = `${product.title} | Lumora`;
+      }
+      try {
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.name = 'description';
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute('content', product.seoDescription || product.seo_description || product.description || '');
+      } catch (_) {}
+    }
     if (product && user) trackProductViewing(user.uid, product);
     else if (product) trackProductViewing(null, product);
     setActiveImg(0);
@@ -84,8 +106,28 @@ export default function ProductPage() {
   if (!product) return null;
 
   const gallery = getGallery(product);
+  const videoUrl = product.previewVideo || product.preview_video;
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
+
+  // Features list parsing:
+  const featuresList = Array.isArray(product.features)
+    ? product.features
+    : (typeof product.features === 'string' && product.features.trim() !== '')
+      ? (product.features.startsWith('[') ? JSON.parse(product.features) : product.features.split(',').map(f => f.trim()))
+      : (product.highlights || ['Premium components included', 'Commercial license', 'Lifetime updates', 'Responsive design']);
+
+  const whatYouGetList = Array.isArray(product.whatYouGet || product.what_you_get)
+    ? (product.whatYouGet || product.what_you_get)
+    : (typeof (product.whatYouGet || product.what_you_get) === 'string' && (product.whatYouGet || product.what_you_get).trim() !== '')
+      ? ((product.whatYouGet || product.what_you_get).startsWith('[') ? JSON.parse(product.whatYouGet || product.what_you_get) : (product.whatYouGet || product.what_you_get).split(',').map(f => f.trim()))
+      : [];
+
+  const systemRequirementsList = Array.isArray(product.systemRequirements || product.system_requirements)
+    ? (product.systemRequirements || product.system_requirements)
+    : (typeof (product.systemRequirements || product.system_requirements) === 'string' && (product.systemRequirements || product.system_requirements).trim() !== '')
+      ? ((product.systemRequirements || product.system_requirements).startsWith('[') ? JSON.parse(product.systemRequirements || product.system_requirements) : (product.systemRequirements || product.system_requirements).split(',').map(f => f.trim()))
+      : [];
 
   // Related products: same category, excluding current, max 4
   const relatedProducts = (products || []).filter(
@@ -167,40 +209,53 @@ export default function ProductPage() {
             {/* Main Image */}
             <div style={{ borderRadius: '24px', overflow: 'hidden', marginBottom: '12px', position: 'relative', background: 'rgba(255, 255, 255, 0.48)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid rgba(255, 255, 255, 0.45)', boxShadow: '0 8px 40px rgba(123, 63, 160, 0.08)' }}>
               <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeImg}
-                  src={gallery[activeImg]}
-                  alt={`${product.title} preview ${activeImg + 1}`}
-                  initial={{ opacity: 0, scale: 1.03 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
-                />
+                {videoUrl && activeImg === gallery.length ? (
+                  <video
+                    key="video"
+                    src={videoUrl}
+                    controls
+                    style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <motion.img
+                    key={activeImg}
+                    src={gallery[activeImg]}
+                    alt={`${product.title} preview ${activeImg + 1}`}
+                    initial={{ opacity: 0, scale: 1.03 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                  />
+                )}
               </AnimatePresence>
               {/* Arrows */}
-              {gallery.length > 1 && (
-                <>
-                  <button onClick={() => setActiveImg(i => (i - 1 + gallery.length) % gallery.length)}
-                    style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(10px)', border: '1px solid rgba(220,198,255,0.40)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E', boxShadow: '0 2px 12px rgba(45,0,96,0.12)' }}>
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button onClick={() => setActiveImg(i => (i + 1) % gallery.length)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(10px)', border: '1px solid rgba(220,198,255,0.40)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E', boxShadow: '0 2px 12px rgba(45,0,96,0.12)' }}>
-                    <ChevronRight size={16} />
-                  </button>
-                  {/* Dot indicators */}
-                  <div style={{ position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px' }}>
-                    {gallery.map((_, i) => (
-                      <button key={i} onClick={() => setActiveImg(i)}
-                        style={{ width: i === activeImg ? '20px' : '7px', height: '7px', borderRadius: '4px', border: 'none', background: i === activeImg ? '#7B3FA0' : 'rgba(255,255,255,0.70)', cursor: 'pointer', padding: 0, transition: 'all 0.25s', boxShadow: '0 1px 4px rgba(45,0,96,0.20)' }} />
-                    ))}
-                  </div>
-                </>
-              )}
+              {(() => {
+                const totalSlides = videoUrl ? gallery.length + 1 : gallery.length;
+                if (totalSlides <= 1) return null;
+                return (
+                  <>
+                    <button onClick={() => setActiveImg(i => (i - 1 + totalSlides) % totalSlides)}
+                      style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(10px)', border: '1px solid rgba(220,198,255,0.40)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E', boxShadow: '0 2px 12px rgba(45,0,96,0.12)' }}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button onClick={() => setActiveImg(i => (i + 1) % totalSlides)}
+                      style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(10px)', border: '1px solid rgba(220,198,255,0.40)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E', boxShadow: '0 2px 12px rgba(45,0,96,0.12)' }}>
+                      <ChevronRight size={16} />
+                    </button>
+                    {/* Dot indicators */}
+                    <div style={{ position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px' }}>
+                      {[...Array(totalSlides)].map((_, i) => (
+                        <button key={i} onClick={() => setActiveImg(i)}
+                          style={{ width: i === activeImg ? '20px' : '7px', height: '7px', borderRadius: '4px', border: 'none', background: i === activeImg ? '#7B3FA0' : 'rgba(255,255,255,0.70)', cursor: 'pointer', padding: 0, transition: 'all 0.25s', boxShadow: '0 1px 4px rgba(45,0,96,0.20)' }} />
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
               {/* Image counter */}
               <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '0.65rem', fontWeight: 700, color: '#fff', background: 'rgba(45,0,77,0.55)', backdropFilter: 'blur(8px)', padding: '3px 9px', borderRadius: '12px' }}>
-                {activeImg + 1} / {gallery.length}
+                {activeImg + 1} / {videoUrl ? gallery.length + 1 : gallery.length}
               </div>
             </div>
 
@@ -212,6 +267,13 @@ export default function ProductPage() {
                   <img src={img} alt={`thumb ${i+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: i === activeImg ? 'none' : 'brightness(0.85)', transition: 'filter 0.2s' }} />
                 </button>
               ))}
+              {videoUrl && (
+                <button onClick={() => setActiveImg(gallery.length)}
+                  style={{ flex: 1, height: '68px', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${activeImg === gallery.length ? '#7B3FA0' : 'rgba(220,198,255,0.30)'}`, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', position: 'relative', boxShadow: activeImg === gallery.length ? '0 4px 16px rgba(123,63,160,0.18)' : 'none' }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '0.62rem', fontWeight: 'bold' }}>▶ VIDEO</div>
+                  <img src={gallery[0]} alt="video thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.6)' }} />
+                </button>
+              )}
             </div>
 
             {/* Tabs */}
@@ -230,6 +292,17 @@ export default function ProductPage() {
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '14px' }}>About this product</h2>
                   <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: '#6B4F7A', fontWeight: 400, marginBottom: '24px' }}>{product.description}</p>
+                  
+                  {/* Installation Guide */}
+                  {(product.installationGuide || product.installation_guide) && (
+                    <div style={{ marginBottom: '24px', padding: '18px', borderRadius: '16px', background: 'rgba(123, 63, 160, 0.04)', border: '1px solid rgba(220,198,255,0.22)' }}>
+                      <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '0.90rem', fontWeight: 700, color: '#2D004D', marginBottom: '8px' }}>🛠️ Installation Guide</h3>
+                      <p style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#6B4F7A', whiteSpace: 'pre-wrap', margin: 0 }}>
+                        {product.installationGuide || product.installation_guide}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Tags */}
                   {product.compatibility?.length > 0 && (
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -240,7 +313,12 @@ export default function ProductPage() {
                   )}
                   {/* Meta grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '10px' }}>
-                    {[['Version', product.version || 'v1.0.0'], ['File Size', product.fileSize || 'N/A'], ['Last Updated', product.lastUpdated || 'Recently'], ['Downloads', (product.downloads || 0).toLocaleString()]].map(([k, v]) => (
+                    {[
+                      ['Version', product.version || 'v1.0.0'],
+                      ['File Size', product.file_size || product.fileSize || 'N/A'],
+                      ['License', product.license || 'Personal Use'],
+                      ['Downloads', (product.downloads || 0).toLocaleString()]
+                    ].map(([k, v]) => (
                       <div key={k} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(220,198,255,0.12)', border: '1px solid rgba(220,198,255,0.22)' }}>
                         <div style={{ fontSize: '0.58rem', fontWeight: 700, color: '#8B6B5B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>{k}</div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#2D004D' }}>{v}</div>
@@ -250,18 +328,50 @@ export default function ProductPage() {
                 </div>
               )}
               {activeTab === 'features' && (
-                <div>
-                  <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '20px' }}>What's included</h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {(product.features || ['Premium components included', 'Commercial license', 'Lifetime updates', 'Responsive design']).map((f, i) => (
-                      <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
-                          <Check size={11} color="#fff" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                  {/* Features */}
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '16px' }}>Key Features</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {featuresList.map((f, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
+                            <Check size={11} color="#fff" />
+                          </div>
+                          <p style={{ fontSize: '0.87rem', color: '#4E3B31', fontWeight: 500, lineHeight: 1.5 }}>{f}</p>
                         </div>
-                        <p style={{ fontSize: '0.87rem', color: '#4E3B31', fontWeight: 500, lineHeight: 1.5 }}>{f}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+
+                  {/* What You'll Get */}
+                  {whatYouGetList.length > 0 && (
+                    <div>
+                      <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '16px' }}>What You'll Get</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {whatYouGetList.map((item, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <span style={{ color: '#7B3FA0', fontSize: '14px' }}>✦</span>
+                            <p style={{ fontSize: '0.87rem', color: '#4E3B31', fontWeight: 500 }}>{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* System Requirements */}
+                  {systemRequirementsList.length > 0 && (
+                    <div>
+                      <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '16px' }}>System Requirements</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {systemRequirementsList.map((req, i) => (
+                          <div key={i} style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(220,198,255,0.08)', border: '1px solid rgba(220,198,255,0.15)', fontSize: '0.83rem', color: '#6B4F7A' }}>
+                            {req}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {activeTab === 'reviews' && (
@@ -477,8 +587,22 @@ export default function ProductPage() {
           <div style={{ position: 'sticky', top: '100px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Main card */}
             <div style={{ background: 'rgba(255, 255, 255, 0.48)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255, 255, 255, 0.45)', borderRadius: '24px', padding: '28px', boxShadow: '0 8px 40px rgba(123, 63, 160, 0.08)' }}>
-              <span style={{ fontSize: '0.60rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.08em', background: 'rgba(123,63,160,0.08)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block', marginBottom: '10px' }}>{product.category}</span>
-              <h1 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.85rem', fontWeight: 400, color: '#2D004D', lineHeight: 1.2, marginBottom: '14px' }}>{product.title}</h1>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.60rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.08em', background: 'rgba(123,63,160,0.08)', padding: '2px 8px', borderRadius: '6px' }}>
+                  {product.category}{product.subcategory ? ` · ${product.subcategory}` : ''}
+                </span>
+                {product.discount ? (
+                  <span style={{ fontSize: '0.60rem', fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,0.10)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(34,197,94,0.20)' }}>
+                    {product.discount}% OFF
+                  </span>
+                ) : null}
+              </div>
+              <h1 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.85rem', fontWeight: 400, color: '#2D004D', lineHeight: 1.2, marginBottom: '10px' }}>{product.title}</h1>
+              {(product.shortDesc || product.short_desc) && (
+                <p style={{ fontSize: '0.82rem', color: '#8B6B5B', fontWeight: 500, marginBottom: '14px', lineHeight: 1.4 }}>
+                  {product.shortDesc || product.short_desc}
+                </p>
+              )}
 
               {/* Creator */}
               <button onClick={() => navigateTo('creator-profile', product.creator?.id)}
@@ -501,8 +625,15 @@ export default function ProductPage() {
               </div>
 
               {/* Price */}
-              <div style={{ fontFamily: 'var(--font-editorial)', fontSize: '2.8rem', fontWeight: 400, color: '#2D004D', marginBottom: '24px', lineHeight: 1 }}>
-                {formatPrice(product.price)}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '24px' }}>
+                <span style={{ fontFamily: 'var(--font-editorial)', fontSize: '2.8rem', fontWeight: 400, color: '#2D004D', lineHeight: 1 }}>
+                  {formatPrice(product.price)}
+                </span>
+                {product.discount ? (
+                  <span style={{ fontSize: '1.1rem', color: '#8B6B5B', textDecoration: 'line-through', fontWeight: 500 }}>
+                    {formatPrice(Math.round(product.price / (1 - product.discount / 100)))}
+                  </span>
+                ) : null}
               </div>
 
               {/* CTAs */}

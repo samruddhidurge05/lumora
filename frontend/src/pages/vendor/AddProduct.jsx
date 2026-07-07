@@ -96,28 +96,46 @@ export default function AddProduct() {
   const { createProduct } = useVendorProducts();
 
   const [form, setForm] = useState({
-    title: '', category: '', price: '', description: '',
-    tags: '', license: '', version: '1.0.0', status: 'published',
+    title: '', category: '', subcategory: '', price: '', discount: '0', description: '',
+    short_desc: '', tags: '', license: '', version: '1.0.0', status: 'published',
     featured: false, trending: false,
     preview: '', previewName: '',
-    file_url: '', fileName: '',
+    file_url: '', fileName: '', file_size: '',
     affiliate_enabled: false,
     commission_type: 'percentage',
     commission_value: '',
+    preview_images: [],
+    preview_video: '',
+    seo_title: '',
+    seo_description: '',
+    visibility: 'public',
   });
+
+  const [features, setFeatures] = useState(['']);
+  const [systemRequirements, setSystemRequirements] = useState(['']);
+  const [whatYouGet, setWhatYouGet] = useState(['']);
 
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
   const [saveError,  setSaveError]  = useState('');
   const [previewPct, setPreviewPct] = useState(0);
   const [filePct,    setFilePct]    = useState(0);
+  const [videoPct,   setVideoPct]   = useState(0);
   const [uploadingPrev, setUploadingPrev] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingAddPrev, setUploadingAddPrev] = useState(false);
 
   const previewRef = useRef(null);
   const fileRef    = useRef(null);
+  const videoRef   = useRef(null);
+  const addPrevRef = useRef(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleAddList = (setter) => setter(prev => [...prev, '']);
+  const handleRemoveList = (setter, idx) => setter(prev => prev.filter((_, i) => i !== idx));
+  const handleChangeList = (setter, idx, val) => setter(prev => prev.map((item, i) => i === idx ? val : item));
 
   /* ── Preview image: compress then upload to Firebase Storage ────── */
   const handlePreviewChange = async (e) => {
@@ -138,6 +156,45 @@ export default function AddProduct() {
       setSaveError(`Preview upload failed: ${err.message}`);
     } finally {
       setTimeout(() => setUploadingPrev(false), 300);
+    }
+  };
+
+  /* ── Additional preview images upload ────────────────────────────── */
+  const handleAddPrevChange = async (e) => {
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    setSaveError('');
+    setUploadingAddPrev(true);
+    try {
+      const compressed = await compressImageToBlob(raw, 800, 0.80);
+      const result = await uploadToFirebase(compressed, 'product-previews');
+      setForm(f => ({
+        ...f,
+        preview_images: [...(f.preview_images || []), result.url]
+      }));
+    } catch (err) {
+      setSaveError(`Additional preview upload failed: ${err.message}`);
+    } finally {
+      setUploadingAddPrev(false);
+    }
+  };
+
+  /* ── Preview Video upload ────────────────────────────────────────── */
+  const handleVideoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSaveError('');
+    setUploadingVideo(true); setVideoPct(10);
+    try {
+      const result = await uploadToFirebase(file, 'product-videos', (pct) => {
+        setVideoPct(10 + Math.round(pct * 0.90));
+      });
+      setVideoPct(100);
+      set('preview_video', result.url);
+    } catch (err) {
+      setSaveError(`Video upload failed: ${err.message}`);
+    } finally {
+      setTimeout(() => setUploadingVideo(false), 300);
     }
   };
 
@@ -168,6 +225,8 @@ export default function AddProduct() {
     if (!form.category)      return 'Please select a category.';
     if (form.price === '' || isNaN(Number(form.price)) || Number(form.price) < 0)
                              return 'Please enter a valid non-negative price.';
+    if (form.discount !== '' && (isNaN(Number(form.discount)) || Number(form.discount) < 0 || Number(form.discount) > 100))
+                             return 'Please enter a valid discount percentage (0 - 100).';
     if (!form.license)       return 'Please select a license type.';
 
     if (form.affiliate_enabled) {
@@ -199,7 +258,17 @@ export default function AddProduct() {
     if (err) { setSaveError(err); return false; }
     setSaving(true);
     try {
-      await createProduct({ ...form, status: statusVal });
+      await createProduct({
+        ...form,
+        status: statusVal,
+        price: Number(form.price) || 0.0,
+        discount: Number(form.discount) || 0.0,
+        commission_value: form.affiliate_enabled ? (Number(form.commission_value) || 0.0) : 0.0,
+        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        features: features.map(f => f.trim()).filter(Boolean),
+        system_requirements: systemRequirements.map(r => r.trim()).filter(Boolean),
+        what_you_get: whatYouGet.map(w => w.trim()).filter(Boolean)
+      });
       return true;
     } catch (e) {
       setSaveError(e.message || 'Failed to save product.');
@@ -259,7 +328,13 @@ export default function AddProduct() {
                   value={form.title} onChange={e => set('title', e.target.value)} />
               </div>
 
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div className="v-field">
+                <label className="v-label">Short Description</label>
+                <input className="v-input" placeholder="A brief, engaging 1-sentence summary of your product."
+                  value={form.short_desc} onChange={e => set('short_desc', e.target.value)} />
+              </div>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom: 14 }}>
                 <div className="v-field">
                   <label className="v-label">Category *</label>
                   <select className="v-select" value={form.category} onChange={e => set('category', e.target.value)}>
@@ -268,14 +343,27 @@ export default function AddProduct() {
                   </select>
                 </div>
                 <div className="v-field">
+                  <label className="v-label">Subcategory</label>
+                  <input className="v-input" placeholder="e.g. Dashboard, Landing Page"
+                    value={form.subcategory} onChange={e => set('subcategory', e.target.value)} />
+                </div>
+              </div>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div className="v-field">
                   <label className="v-label">Price (₹) *</label>
                   <input className="v-input" type="number" placeholder="499" min="0" step="1"
                     value={form.price} onChange={e => set('price', e.target.value)} />
                 </div>
+                <div className="v-field">
+                  <label className="v-label">Discount (%)</label>
+                  <input className="v-input" type="number" placeholder="0" min="0" max="100" step="1"
+                    value={form.discount} onChange={e => set('discount', e.target.value)} />
+                </div>
               </div>
 
               <div className="v-field">
-                <label className="v-label">Description</label>
+                <label className="v-label">Full Description</label>
                 <textarea className="v-textarea" rows={5}
                   placeholder="Describe your product — what's included, who it's for, and what makes it special."
                   value={form.description} onChange={e => set('description', e.target.value)} />
@@ -286,6 +374,75 @@ export default function AddProduct() {
                 <input className="v-input" placeholder="ui, design, figma (comma-separated)"
                   value={form.tags} onChange={e => set('tags', e.target.value)} />
                 <div className="v-field-hint">Up to 10 tags to improve search visibility</div>
+              </div>
+            </div>
+
+            {/* Specs & What You Get */}
+            <div className="v-card v-card-pad">
+              <div className="v-section-title" style={{ marginBottom:20 }}>Features & Specs</div>
+
+              {/* Features (dynamic list) */}
+              <div className="v-field" style={{ marginBottom: 18 }}>
+                <label className="v-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Key Features</span>
+                  <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleAddList(setFeatures)}>+ Add Feature</button>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {features.map((feat, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input className="v-input" placeholder="e.g. 50+ vector icons included" style={{ flex: 1 }}
+                        value={feat} onChange={e => handleChangeList(setFeatures, idx, e.target.value)} />
+                      {features.length > 1 && (
+                        <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color: '#dc2626', padding: '6px' }} onClick={() => handleRemoveList(setFeatures, idx)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* What You'll Get (dynamic list) */}
+              <div className="v-field" style={{ marginBottom: 18 }}>
+                <label className="v-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>What You'll Get</span>
+                  <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleAddList(setWhatYouGet)}>+ Add Item</button>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {whatYouGet.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input className="v-input" placeholder="e.g. Sketch, Figma, and Adobe XD source files" style={{ flex: 1 }}
+                        value={item} onChange={e => handleChangeList(setWhatYouGet, idx, e.target.value)} />
+                      {whatYouGet.length > 1 && (
+                        <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color: '#dc2626', padding: '6px' }} onClick={() => handleRemoveList(setWhatYouGet, idx)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* System Requirements (dynamic list) */}
+              <div className="v-field" style={{ marginBottom: 18 }}>
+                <label className="v-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>System Requirements</span>
+                  <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleAddList(setSystemRequirements)}>+ Add Requirement</button>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {systemRequirements.map((req, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input className="v-input" placeholder="e.g. Figma 2026.1 or later" style={{ flex: 1 }}
+                        value={req} onChange={e => handleChangeList(setSystemRequirements, idx, e.target.value)} />
+                      {systemRequirements.length > 1 && (
+                        <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color: '#dc2626', padding: '6px' }} onClick={() => handleRemoveList(setSystemRequirements, idx)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Installation Guide */}
+              <div className="v-field">
+                <label className="v-label">Installation Guide (Optional)</label>
+                <textarea className="v-textarea" rows={3} placeholder="Step-by-step instructions on how to install and setup this product."
+                  value={form.installation_guide} onChange={e => set('installation_guide', e.target.value)} />
               </div>
             </div>
 
@@ -464,6 +621,76 @@ export default function AddProduct() {
                   </div>
                 )}
               </div>
+
+              {/* Additional Previews */}
+              <div className="v-field" style={{ marginTop: 16 }}>
+                <label className="v-label">Additional Preview Images (Screenshots)</label>
+                <input type="file" accept="image/*" ref={addPrevRef} style={{ display:'none' }} onChange={handleAddPrevChange} />
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10, marginBottom: 10 }}>
+                  {(form.preview_images || []).map((imgUrl, index) => (
+                    <div key={index} style={{ position: 'relative', height: 60, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--v-border)' }}>
+                      <img src={imgUrl} alt={`extra preview ${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button type="button" 
+                        onClick={() => setForm(f => ({ ...f, preview_images: f.preview_images.filter((_, idx) => idx !== index) }))}
+                        style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(220,38,38,0.85)', color: '#fff', border: 'none', borderRadius: '50%', width: 16, height: 16, fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {uploadingAddPrev && (
+                    <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)', borderRadius: 8, border: '1px dashed var(--v-purple)' }}>
+                      <span style={{ fontSize: 10, color: 'var(--v-purple)', fontWeight: 600 }}>Loading…</span>
+                    </div>
+                  )}
+                </div>
+
+                <button type="button" className="v-btn v-btn-secondary v-btn-sm" style={{ width: '100%' }}
+                  onClick={() => addPrevRef.current?.click()} disabled={uploadingAddPrev}>
+                  📷 Add Screenshot
+                </button>
+              </div>
+
+              {/* Preview Video */}
+              <div className="v-field" style={{ marginTop: 16 }}>
+                <label className="v-label">Preview Video (Optional)</label>
+                <input type="file" accept="video/*" ref={videoRef} style={{ display:'none' }} onChange={handleVideoChange} />
+                
+                {form.preview_video ? (
+                  <div style={{ border:'1px solid rgba(196,148,230,0.30)', borderRadius:12, padding:12, background:'rgba(255,255,255,0.40)' }}>
+                    <div style={{ height:120, borderRadius:8, overflow:'hidden', marginBottom:10 }}>
+                      <video src={form.preview_video} controls style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    </div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button type="button" className="v-btn v-btn-secondary v-btn-sm" style={{ flex:1 }} onClick={() => videoRef.current?.click()}>
+                        Change Video
+                      </button>
+                      <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color:'#dc2626' }} onClick={() => set('preview_video', '')}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div onClick={() => !uploadingVideo && videoRef.current?.click()}
+                    style={{ border:'2px dashed rgba(184,134,208,0.40)', borderRadius:12, padding:'20px', textAlign:'center', cursor:'pointer', background:'rgba(255,255,255,0.40)', transition:'border-color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = '#B886D0'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(184,134,208,0.40)'}>
+                    {uploadingVideo ? (
+                      <>
+                        <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Uploading Video… {videoPct}%</div>
+                        <div className="v-progress-track" style={{ height:5, maxWidth:200, margin:'10px auto 0' }}>
+                          <div className="v-progress-fill" style={{ width:`${videoPct}%` }} />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize:13, color:'var(--v-text2)' }}>Upload a preview video</div>
+                        <div style={{ fontSize:11, color:'var(--v-text3)', marginTop:4 }}>MP4, WebM — stored in Firebase Storage</div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -529,6 +756,33 @@ export default function AddProduct() {
                   style={{ width:'100%' }} onClick={() => navigate('/vendor/products')}>
                   Cancel
                 </button>
+              </div>
+            </div>
+
+            {/* SEO & Visibility */}
+            <div className="v-card v-card-pad">
+              <div className="v-section-title" style={{ marginBottom:16 }}>SEO & Visibility</div>
+
+              <div className="v-field">
+                <label className="v-label">Visibility</label>
+                <select className="v-select" value={form.visibility} onChange={e => set('visibility', e.target.value)}>
+                  <option value="public">Public</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="private">Private</option>
+                </select>
+                <div className="v-field-hint">Control who can discover this listing.</div>
+              </div>
+
+              <div className="v-field">
+                <label className="v-label">SEO Title (Optional)</label>
+                <input className="v-input" placeholder="e.g. Premium UI Kit for SaaS | Lumora"
+                  value={form.seo_title} onChange={e => set('seo_title', e.target.value)} />
+              </div>
+
+              <div className="v-field">
+                <label className="v-label">SEO Description (Optional)</label>
+                <textarea className="v-textarea" rows={3} placeholder="A short description optimized for Google search results."
+                  value={form.seo_description} onChange={e => set('seo_description', e.target.value)} />
               </div>
             </div>
 
