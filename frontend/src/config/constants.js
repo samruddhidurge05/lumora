@@ -6,6 +6,7 @@ export const USD_TO_INR = 80;
 export const PRODUCT_CATEGORIES = [
   'All',
   'Website Templates',
+  'Landing Pages',
   'Mobile App Designs',
   'UI Kits',
   'AI Tools',

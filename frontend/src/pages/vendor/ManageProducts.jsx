@@ -13,7 +13,7 @@ import { useVendorProducts } from '../../hooks/useVendorData';
 const CATEGORIES = [
   'All','UI Kits','Icon Packs','Templates','Fonts','Illustrations',
   'Mockups','Plugins','3D Assets','Photography','Music',
-  'Website Templates','Mobile App Designs','Design Assets',
+  'Website Templates','Landing Pages','Mobile App Designs','Design Assets',
   'E-books','Notion Templates','Productivity Tools','Social Media Kits',
   'AI Tools','React Templates',
 ];

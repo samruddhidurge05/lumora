@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, ShoppingBag } from 'lucide-react';
+import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, Home } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -68,6 +68,8 @@ export default function Navbar() {
       navigate('/partnerships');
     } else if (item.href === '#categories') {
       navigateTo('categories');
+    } else if (item.href === '#home') {
+      navigateTo('landing');
     } else if (item.href.startsWith('#')) {
       const elementId = item.href.substring(1);
       if (elementId === 'products') {
@@ -156,7 +158,7 @@ export default function Navbar() {
           {[
             { label: 'Explore', icon: <Compass size={14} />, href: '#products' },
             { label: 'Categories', icon: <Sparkles size={14} />, href: '#categories' },
-            { label: 'Creators', icon: <Users size={14} />, href: '#creators' },
+            { label: 'Showcase', icon: <Home size={14} />, href: '#home' },
             { label: 'Partnership', icon: <Users size={14} />, href: '/partnerships' },
             ...(user ? [{ label: 'Dashboard', icon: <LayoutDashboard size={14} />, href: '#dashboard' }] : [])
           ].map((item, index) => (
