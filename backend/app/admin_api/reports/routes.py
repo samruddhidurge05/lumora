@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from app.admin_api.reports.services import (
     get_reports_analytics_data,
     get_reports_list,
@@ -8,12 +8,19 @@ from app.admin_api.reports.services import (
 )
 from admin.validators.admin_auth import require_admin_role
 from app.models.user import User
+from typing import Optional
 
 router = APIRouter()
 
 @router.get("/")
-def get_reports(admin_user: User = Depends(require_admin_role)):
-    return get_reports_list()
+def get_reports(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    admin_user: User = Depends(require_admin_role)
+):
+    return get_reports_list(page=page, page_size=page_size, status=status, search=search)
 
 @router.get("/analytics")
 def get_analytics(admin_user: User = Depends(require_admin_role)):
