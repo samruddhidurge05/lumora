@@ -103,14 +103,23 @@ def admin_login(
     # Only log the subject claim, never the raw token
     logger.info("Admin login attempt — firebase_uid=%s", firebase_uid)
 
+    # ── DEBUG: log token claims (step 4 of debug checklist) ───────────────
+    logger.info("[DEBUG] Token subject (uid)=%s | email=%s", firebase_uid, email)
+
     # ── Step 2: Look up user in SQLite ─────────────────────────────────────
     user: Optional[User] = None
 
     if firebase_uid:
+        logger.info("[DEBUG] Querying by firebase_uid=%s", firebase_uid)
         user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+        logger.info("[DEBUG] firebase_uid lookup result: %s", user)
 
     if user is None and email:
+        logger.info("[DEBUG] firebase_uid lookup found nothing — falling back to email=%s", email)
         user = db.query(User).filter(User.email == email).first()
+        logger.info("[DEBUG] email lookup result: %s | role=%s | is_active=%s | firebase_uid=%s",
+                    user, user.role if user else None, user.is_active if user else None,
+                    user.firebase_uid if user else None)
 
     if user is None:
         _insert_audit_log(
@@ -156,6 +165,8 @@ def admin_login(
     if user.firebase_uid is not None:
         # Subsequent login — uid must match
         if firebase_uid and user.firebase_uid != firebase_uid:
+            logger.warning("[DEBUG] firebase_uid mismatch — token uid=%s | db firebase_uid=%s",
+                           firebase_uid, user.firebase_uid)
             _insert_audit_log(
                 db,
                 action="admin_login_failure",
@@ -252,6 +263,7 @@ def admin_login(
 def get_audit_logs(
     page: int = 1,
     page_size: int = 50,
+    action: Optional[str] = None,
     db: Session = Depends(get_db),
     _current_user: User = Depends(require_admin_role),
 ):
@@ -260,16 +272,21 @@ def get_audit_logs(
 
     page      — minimum 1 (clamped)
     page_size — range [1, 200] (clamped)
+    action    — optional exact-match filter on AuditLog.action
     """
     # Clamp parameters
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
-    total: int = db.query(AuditLog).count()
+    query = db.query(AuditLog)
+    if action:
+        query = query.filter(AuditLog.action == action)
+
+    total: int = query.count()
     offset: int = (page - 1) * page_size
 
     rows = (
-        db.query(AuditLog)
+        query
         .order_by(AuditLog.created_at.desc())
         .offset(offset)
         .limit(page_size)
