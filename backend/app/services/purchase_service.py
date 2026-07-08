@@ -3,11 +3,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.order import Order, OrderItem
-from app.models.payment import Payment
 from app.models.product import Product
 from app.models.affiliate import AffiliateProfile, AffiliateCommission
 from app.models.user import User
-from app.services.payment_service import payment_service
 from app.services.notification_service import NotificationService
 from app.services.activity_log_service import ActivityLogService
 from admin.firestore.admin_firestore import sync_order_to_firestore
@@ -20,63 +18,39 @@ class PurchaseService:
         items_payload: List[Dict[str, Any]],
         total_amount: float,
         payment_method: str = "upi",
-        payment_id: Optional[str] = None,
-        razorpay_order_id: Optional[str] = None,
-        razorpay_signature: Optional[str] = None,
         promo_code: Optional[str] = None,
         discount_amount: float = 0.0,
         affiliate_code: Optional[str] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
     ) -> Order:
-        # 1. Verify payment if using Razorpay
-        if payment_method == "razorpay" or razorpay_order_id:
-            if not payment_id or not razorpay_order_id or not razorpay_signature:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Razorpay payments require payment_id, razorpay_order_id, and razorpay_signature."
-                )
-            verified = payment_service.verify_payment_signature(
-                payment_id=payment_id,
-                order_id=razorpay_order_id,
-                signature=razorpay_signature
-            )
-            if not verified:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid payment signature verification failed."
-                )
+        """
+        Create an order and fulfil everything atomically.
 
-        # Start atomic transaction
-        # The caller should commit or roll back, but we can manage nested/explicit transactions
+        Called by:
+            - PaymentService.confirm_payment()  (primary path — payment verified first)
+            - POST /api/orders/                 (legacy path — for backward compatibility)
+
+        Does NOT touch Payment records. Payment lifecycle is owned by PaymentService.
+        Does NOT verify gateway signatures. That is done before this call.
+
+        The caller is responsible for committing or rolling back the session.
+        """
         try:
-            # 2. Fetch customer details
+            # 1. Fetch customer details
             customer = db.query(User).filter(User.id == user_id).first()
             if not customer:
                 raise HTTPException(status_code=404, detail="Customer user not found")
 
-            # 3. Create the Order
+            # 2. Create the Order
             order = Order(
                 user_id=user_id,
                 total_amount=total_amount,
                 payment_method=payment_method,
-                status="completed", # Paid and verified order is complete
-                notes=notes
+                status="completed",  # Paid and verified — order is complete
+                notes=notes,
             )
             db.add(order)
-            db.flush() # Populate order.id
-
-            # 4. Create Payments log record
-            payment_log = Payment(
-                order_id=order.id,
-                gateway="razorpay" if razorpay_order_id else "mock",
-                gateway_ref=payment_id or f"mock_{uuid_generator()}",
-                amount=total_amount,
-                currency="INR",
-                status="success",
-                method=payment_method,
-                receipt=f"Order checkout receipt for ORD-{order.id}"
-            )
-            db.add(payment_log)
+            db.flush()  # Populate order.id
 
             # Track vendor notifications to process later
             vendors_to_notify = []
