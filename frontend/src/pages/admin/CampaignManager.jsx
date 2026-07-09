@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from './components/AdminLayout';
 import { 
   collection, 
-  addDoc, 
   getDocs, 
   query, 
   where, 
-  updateDoc, 
-  deleteDoc,
   doc, 
   onSnapshot 
 } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { backendFetch } from '../../utils/api';
 import { 
   Compass, 
   Plus, 
@@ -115,26 +113,23 @@ export default function CampaignManager() {
     const prodName = prod?.name || prod?.title || 'Product';
 
     try {
-      await addDoc(collection(db, 'adminReferralLinks'), {
-        affiliateId: '', // Empty represents template opportunity
-        affiliateCode: '',
-        campaignId: '', 
-        productId: form.productId,
-        productName: prodName,
-        referralName: form.referralName || `${prodName} Promo`,
-        commissionPct: Number(form.commissionPct) || 15,
-        code: form.code,
-        status: 'active',
-        clicks: 0,
-        conversions: 0,
-        earnings: 0,
-        createdAt: new Date().toISOString()
+      // Writes go through the backend — JWT-validated and audit-logged server-side
+      await backendFetch('/admin/referral-links', {
+        method: 'POST',
+        body: JSON.stringify({
+          productId: form.productId,
+          productName: prodName,
+          referralName: form.referralName || `${prodName} Promo`,
+          commissionPct: Number(form.commissionPct) || 15,
+          code: form.code,
+        }),
       });
+      // onSnapshot listener will update the UI automatically after Firestore write
       setShowForm(false);
       setForm({ productId: '', productName: '', referralName: '', commissionPct: 15, code: '' });
     } catch (err) {
-      console.error('Create admin referral link error:', err);
-      alert('Failed to create admin referral link');
+      console.error('Create referral link error:', err);
+      alert(`Failed to create referral link: ${err.message || 'Unknown error'}`);
     } finally {
       setCreating(false);
     }
@@ -143,20 +138,25 @@ export default function CampaignManager() {
   const handleToggleStatus = async (link) => {
     const nextStatus = link.status === 'active' ? 'paused' : 'active';
     try {
-      await updateDoc(doc(db, 'adminReferralLinks', link.id), {
-        status: nextStatus
+      await backendFetch(`/admin/referral-links/${link.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: nextStatus }),
       });
+      // onSnapshot will update the badge automatically
     } catch (err) {
       console.error('Error toggling referral link status:', err);
+      alert(`Failed to update status: ${err.message || 'Unknown error'}`);
     }
   };
 
   const handleDelete = async (linkId) => {
-    if (!window.confirm('Delete this admin referral? Affiliates will no longer be able to promote this code.')) return;
+    if (!window.confirm('Delete this referral link? Affiliates will no longer be able to promote this code.')) return;
     try {
-      await deleteDoc(doc(db, 'adminReferralLinks', linkId));
+      await backendFetch(`/admin/referral-links/${linkId}`, { method: 'DELETE' });
+      // onSnapshot will remove the row automatically
     } catch (err) {
       console.error('Error deleting referral link:', err);
+      alert(`Failed to delete referral link: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -184,10 +184,10 @@ export default function CampaignManager() {
           <div>
             <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8E6AA8' }}>Ecosystem Management</span>
             <h1 className="text-editorial" style={{ fontSize: '2rem', fontWeight: 400, marginTop: '2px', color: 'var(--color-espresso)' }}>
-              Admin Referrals Control
+              Referral Links
             </h1>
             <p style={{ color: 'rgba(45,0,77,0.6)', fontSize: '0.82rem', marginTop: '4px' }}>
-              Create public referral opportunities and track affiliate-driven revenue.
+              Referral Management
             </p>
           </div>
           <button 
@@ -195,7 +195,7 @@ export default function CampaignManager() {
             className="v-btn v-btn-primary" 
             style={{ borderRadius: '20px', gap: '6px' }}
           >
-            <Plus size={16} /> Create Referral
+            <Plus size={16} /> Create Referral Link
           </button>
         </div>
 
@@ -260,8 +260,8 @@ export default function CampaignManager() {
           {links.length === 0 ? (
             <div style={{ padding: '60px 24px', textAlign: 'center', color: '#8E6AA8' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔗</div>
-              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>No admin referrals created yet</div>
-              <p style={{ fontSize: '0.8rem', marginTop: '4px' }}>Click "Create Referral" to generate a campaign link.</p>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>No referral links created yet</div>
+              <p style={{ fontSize: '0.8rem', marginTop: '4px' }}>Click "Create Referral Link" to generate a referral link.</p>
             </div>
           ) : (
             <div className="v-table-wrap" style={{ border: 'none', borderRadius: 0 }}>
@@ -403,7 +403,7 @@ export default function CampaignManager() {
             <div className="modal" style={{ maxWidth: '420px', width: '100%', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', border: '1px solid rgba(255,255,255,0.4)', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Plus size={18} style={{ color: '#7B3FA0' }} /> Create Admin Referral
+                  <Plus size={18} style={{ color: '#7B3FA0' }} /> Create Admin Referral Link
                 </h3>
                 <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                   <X size={18} />
