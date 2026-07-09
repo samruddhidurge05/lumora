@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer } from './components/AdminComponents';
+import { backendFetch } from '../../utils/api';
 import {
   getReportAnalytics,
   subscribeToReports,
@@ -177,6 +178,16 @@ export default function Reports() {
   const [analytics, setAnalytics] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
+  // Paginated reports list state (M4)
+  const [reportError, setReportError] = useState(null);
+  const [reportListItems, setReportListItems] = useState([]);
+  const [reportListLoading, setReportListLoading] = useState(false);
+  const [reportPage, setReportPage] = useState(1);
+  const [reportTotalPages, setReportTotalPages] = useState(1);
+  const [reportTotal, setReportTotal] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('');
+  const REPORT_PAGE_SIZE = 50;
+
   // Real-time sequential insight entries tracking
   const [insightsStage, setInsightsStage] = useState(0);
 
@@ -205,11 +216,13 @@ export default function Reports() {
   // ─── REAL DATA LOAD: Firestore via reportsService ────────────────────────
   const loadReportAnalytics = useCallback(async () => {
     setIsLoadingData(true);
+    setReportError(null);
     try {
       const result = await getReportAnalytics();
       setAnalytics(result);
     } catch (err) {
       console.error('[Reports] Failed to load analytics:', err);
+      setReportError(err?.message || 'Failed to load report analytics. Please retry.');
     } finally {
       setIsLoadingData(false);
     }
@@ -219,6 +232,28 @@ export default function Reports() {
   useEffect(() => {
     loadReportAnalytics();
   }, []); // run once on mount — intentionally no deps
+
+  // ─── PAGINATED REPORTS LIST LOAD (M4) ─────────────────────────────────────
+  const loadReportsList = useCallback(async (page, status) => {
+    setReportListLoading(true);
+    try {
+      const params = new URLSearchParams({ page, page_size: REPORT_PAGE_SIZE });
+      if (status) params.append('status', status);
+      const data = await backendFetch(`/admin/reports/?${params}`);
+      setReportListItems(data.items || []);
+      setReportTotal(data.total || 0);
+      setReportTotalPages(Math.max(1, Math.ceil((data.total || 0) / REPORT_PAGE_SIZE)));
+    } catch (err) {
+      console.error('[Reports] Failed to load reports list:', err);
+      setReportListItems([]);
+    } finally {
+      setReportListLoading(false);
+    }
+  }, [REPORT_PAGE_SIZE]);
+
+  useEffect(() => {
+    loadReportsList(reportPage, statusFilter);
+  }, [reportPage, statusFilter]); // re-run when page or filter changes
 
   // Real-time subscription: update reports list only.
   // Analytics are recomputed from a debounced reload, not on every snapshot,
@@ -399,6 +434,7 @@ export default function Reports() {
   const handleRegenerateReport = () => {
     sysSound.playSwoosh();
     setIsGenerating(true);
+    setReportError(null);
     getReportAnalytics()
       .then(result => {
         setAnalytics(result);
@@ -409,6 +445,7 @@ export default function Reports() {
       .catch(err => {
         console.error('[Reports] Refresh error:', err);
         setIsGenerating(false);
+        setReportError(err?.message || 'Failed to sync report data.');
         triggerNotification("Failed to sync report data", "error");
       });
   };
@@ -1068,6 +1105,156 @@ export default function Reports() {
                   </div>
 
                 </div>
+
+              </section>
+
+              {/* --- 8. ANALYTICS ERROR STATE --- */}
+              {reportError && (
+                <section className="mb-8">
+                  <div className="glass-surface rounded-3xl p-6 border border-red-200/40 shadow-sm flex flex-col items-center justify-center gap-4 text-center py-10">
+                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                      <Icon name="AlertTriangle" size={22} className="text-red-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-serif font-black text-[#2D004D] mb-1">Failed to Load Report Data</h3>
+                      <p className="text-[10px] text-[#7B3FA0] max-w-xs">{reportError}</p>
+                    </div>
+                    <button
+                      onClick={loadReportAnalytics}
+                      className="mt-2 px-5 py-2.5 bg-[#2D004D] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors"
+                    >
+                      <Icon name="RefreshCw" size={12} className="inline mr-1.5" />
+                      Retry
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* --- 9. REPORTS LIST TABLE (Paginated, M4) --- */}
+              <section className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm mb-8">
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Live Incident Feed</h4>
+                    <h3 className="text-base font-serif font-black text-[#2D004D]">
+                      Reports Queue
+                      {reportTotal > 0 && (
+                        <span className="ml-2 text-[10px] font-bold text-[#7B3FA0] normal-case">({reportTotal} total)</span>
+                      )}
+                    </h3>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div className="relative">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => {
+                        sysSound.playTap();
+                        setStatusFilter(e.target.value);
+                        setReportPage(1);
+                      }}
+                      className="appearance-none bg-white hover:bg-[#F5E9DD]/50 border border-[#F5E9DD] rounded-xl pl-4 pr-8 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] focus:outline-none cursor-pointer transition-colors"
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
+                      <Icon name="ChevronDown" size={10} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table */}
+                {reportListLoading ? (
+                  <div className="flex flex-col gap-3">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-12 rounded-xl bg-[#F5E9DD]/40 animate-pulse" />
+                    ))}
+                  </div>
+                ) : reportListItems.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#F5E9DD]/60 flex items-center justify-center">
+                      <Icon name="FileText" size={18} className="text-[#7B3FA0]" />
+                    </div>
+                    <p className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">No reports found</p>
+                    <p className="text-[9px] text-[#8E6AA8]">
+                      {statusFilter ? `No reports with status "${statusFilter}"` : 'Customer reports will appear here.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#F5E9DD]">
+                          {['Reporter', 'Title', 'Category', 'Severity', 'Status', 'Created'].map(col => (
+                            <th key={col} className="pb-3 pr-4 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0]">{col}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportListItems.map((r) => (
+                          <tr key={r.id} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
+                            <td className="py-3 pr-4 text-[10px] font-semibold text-[#2D004D]">{r.reporter || '—'}</td>
+                            <td className="py-3 pr-4 text-[10px] text-[#2D004D] max-w-[180px] truncate" title={r.title}>{r.title || '—'}</td>
+                            <td className="py-3 pr-4 text-[9px] text-[#7B3FA0]">{r.category || '—'}</td>
+                            <td className="py-3 pr-4">
+                              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                                r.severity === 'high'
+                                  ? 'bg-red-100 text-red-600'
+                                  : r.severity === 'medium'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-[#F5E9DD] text-[#7B3FA0]'
+                              }`}>
+                                {r.severity || 'low'}
+                              </span>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                                r.status === 'Resolved'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : r.status === 'Rejected'
+                                  ? 'bg-red-100 text-red-600'
+                                  : 'bg-[#D8BFE3]/40 text-[#5A1E7E]'
+                              }`}>
+                                {r.status || 'Pending'}
+                              </span>
+                            </td>
+                            <td className="py-3 text-[9px] text-[#7B3FA0]">
+                              {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {reportTotalPages > 1 && (
+                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#F5E9DD]/60">
+                    <span className="text-[9px] text-[#7B3FA0] font-bold">
+                      Page {reportPage} of {reportTotalPages}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => { sysSound.playTap(); setReportPage(p => Math.max(1, p - 1)); }}
+                        disabled={reportPage === 1}
+                        className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => { sysSound.playTap(); setReportPage(p => Math.min(reportTotalPages, p + 1)); }}
+                        disabled={reportPage === reportTotalPages}
+                        className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
 
               </section>
 
