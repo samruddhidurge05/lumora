@@ -35,15 +35,28 @@ def _map_user_sqlite(user):
         "status":      "active" if user.is_active else "disabled",
     }
 
-def get_customers_list():
+def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
+    page = max(1, page)
+    page_size = max(1, min(200, page_size))
+
     if not firebase_connected or db is None:
         db_s = SessionLocal()
         try:
-            users = db_s.query(UserModel).filter(UserModel.role.in_(["customer", "Customer", "user", "User", ""])).all()
-            return [_map_user_sqlite(u) for u in users]
+            q = db_s.query(UserModel).filter(UserModel.role.in_(["customer", "Customer", "user", "User", ""]))
+            if search:
+                term = f"%{search.lower()}%"
+                from sqlalchemy import or_, func
+                q = q.filter(or_(
+                    func.lower(UserModel.email).like(term),
+                    func.lower(UserModel.name).like(term)
+                ))
+            total = q.count()
+            users = q.offset((page - 1) * page_size).limit(page_size).all()
+            return {"total": total, "page": page, "page_size": page_size, "items": [_map_user_sqlite(u) for u in users]}
         finally:
             db_s.close()
 
+    # Firestore path — fetch all matching customers, then filter + paginate in Python
     users_ref = db.collection("users")
     customers = []
     for role_value in ("customer", "user"):
@@ -54,22 +67,34 @@ def get_customers_list():
         except Exception:
             pass
 
-    if customers:
-        seen = set()
-        unique = []
-        for c in customers:
-            if c["id"] not in seen:
-                seen.add(c["id"])
-                unique.append(c)
-        return unique
+    if not customers:
+        docs = users_ref.stream()
+        customers = [
+            _map_user(d)
+            for d in docs
+            if (d.to_dict().get("role") or "user").lower() not in ("admin", "vendor", "affiliate")
+        ]
 
-    docs = users_ref.stream()
-    return [
-        _map_user(d)
-        for d in docs
-        if (d.to_dict().get("role") or "user").lower()
-        not in ("admin", "vendor", "affiliate")
-    ]
+    # Deduplicate
+    seen = set()
+    unique = []
+    for c in customers:
+        if c["id"] not in seen:
+            seen.add(c["id"])
+            unique.append(c)
+    customers = unique
+
+    # Search filter
+    if search:
+        term = search.lower()
+        customers = [
+            c for c in customers
+            if term in c["displayName"].lower() or term in c["email"].lower()
+        ]
+
+    total = len(customers)
+    items = customers[(page - 1) * page_size: page * page_size]
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_customer_by_id(customer_id: str):
     if not firebase_connected or db is None:

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer } from './components/AdminComponents';
+import { backendFetch } from '../../utils/api';
 import {
   fetchAllOrders,
   updateOrderStatus,
@@ -171,6 +172,12 @@ export default function OrdersManagement() {
   const [selectedProductType, setSelectedProductType] = useState("All");
   const [sortBy, setSortBy] = useState("newest"); // newest | value-desc | risk-desc
 
+  // Pagination state (M6)
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderTotalPages, setOrderTotalPages] = useState(1);
+  const [orderTotal, setOrderTotal] = useState(0);
+  const ORDER_PAGE_SIZE = 50;
+
   // App UI configuration
   const [audioMuted, setAudioMuted] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
@@ -193,23 +200,30 @@ export default function OrdersManagement() {
 
 
   // --- FIRESTORE DATA LOADER ---
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await fetchAllOrders();
-      setOrders(data);
-      if (data.length > 0) setSelectedOrderId(data[0].id);
+      const params = new URLSearchParams({ page, page_size: ORDER_PAGE_SIZE });
+      if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
+      const data = await backendFetch(`/admin/orders/?${params}`);
+      // Handle both paginated shape {total, items} and legacy bare array
+      const items = Array.isArray(data) ? data : (data.items || []);
+      setOrders(items);
+      setOrderTotal(Array.isArray(data) ? items.length : (data.total || items.length));
+      setOrderTotalPages(Array.isArray(data) ? 1 : Math.max(1, Math.ceil((data.total || items.length) / ORDER_PAGE_SIZE)));
+      setOrderPage(page);
+      if (items.length > 0) setSelectedOrderId(items[0].id);
     } catch (err) {
       console.error('Failed to load orders:', err);
       setLoadError('Failed to load orders. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [ORDER_PAGE_SIZE]);
 
   useEffect(() => {
-    loadOrders();
+    loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
   }, [loadOrders]);
 
 
@@ -610,13 +624,10 @@ export default function OrdersManagement() {
 
         {/* Loading / Error states */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-              className="w-10 h-10 rounded-full border-2 border-[#D8BFE3] border-t-[#7B3FA0]"
-            />
-            <p className="text-xs font-bold text-[#7B3FA0] uppercase tracking-widest">Loading order ledger...</p>
+          <div className="flex flex-col gap-3 mb-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-14 rounded-2xl bg-[#F5E9DD]/40 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+            ))}
           </div>
         )}
 
@@ -1016,6 +1027,31 @@ export default function OrdersManagement() {
               </div>
 
             </TableContainer>
+
+            {/* ── Pagination controls (M6) ── */}
+            {!loading && !loadError && orderTotalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 px-1">
+                <span className="text-[9px] text-[#7B3FA0] font-bold">
+                  Page {orderPage} of {orderTotalPages} &bull; {orderTotal} orders total
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => loadOrders(orderPage - 1, selectedStatus !== 'All' ? selectedStatus : null)}
+                    disabled={orderPage === 1}
+                    className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => loadOrders(orderPage + 1, selectedStatus !== 'All' ? selectedStatus : null)}
+                    disabled={orderPage === orderTotalPages}
+                    className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
 

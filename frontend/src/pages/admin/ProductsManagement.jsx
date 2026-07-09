@@ -306,6 +306,10 @@ export default function App() {
   // --- AUDIO MUTED STATE ---
   const [audioMuted, setAudioMuted] = useState(true);
 
+  // Pagination state (M6)
+  const [prodPage, setProdPage] = useState(1);
+  const PROD_PAGE_SIZE = 50;
+
   // --- UI STATES ---
   const [isNewProductOpen, setIsNewProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -590,6 +594,10 @@ export default function App() {
 
     return result;
   }, [products, searchQuery, selectedCategory, selectedStatus, creatorFilter, maxPrice, sortBy]);
+
+  // Pagination slice (M6)
+  const prodTotalPages = Math.max(1, Math.ceil(filteredProducts.length / PROD_PAGE_SIZE));
+  const pagedProducts = filteredProducts.slice((prodPage - 1) * PROD_PAGE_SIZE, prodPage * PROD_PAGE_SIZE);
 
   // --- PRODUCT MANAGEMENT ACTION CONTROLLERS ---
   // WHY call the API before updating state?
@@ -1216,6 +1224,16 @@ export default function App() {
             3. REAL PRODUCT INTERACTIVE GRID / CARD SYSTEM
             =================================================# */}
         <section className="mb-16">
+
+          {/* Error state (M6) */}
+          {!apiLoading && apiError && (
+            <div className="mb-6 glass-surface rounded-3xl p-6 border border-red-200/40 flex flex-col items-center gap-3 text-center py-10">
+              <p className="text-sm font-bold text-[#2D004D]">Failed to Load Products</p>
+              <p className="text-[10px] text-[#7B3FA0]">{apiError}</p>
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#2D004D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors">Retry</button>
+            </div>
+          )}
+
           <AnimatePresence mode="popLayout">
             {apiLoading && products.length === 0 ? (
               layoutMode === 'grid' ? (
@@ -1292,7 +1310,7 @@ export default function App() {
                 layout
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
               >
-                {filteredProducts.map((product) => (
+                {pagedProducts.map((product) => (
                   <ProductCard 
                     key={product.id}
                     product={product}
@@ -1321,7 +1339,7 @@ export default function App() {
               >
                 <TableContainer>
                   <div className="flex flex-col gap-4 p-4">
-                    {filteredProducts.map((product) => (
+                    {pagedProducts.map((product) => (
                       <ProductListRow 
                         key={product.id}
                         product={product}
@@ -1344,6 +1362,31 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Pagination controls (M6) */}
+          {!apiLoading && !apiError && prodTotalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 px-1">
+              <span className="text-[9px] text-[#7B3FA0] font-bold">
+                Page {prodPage} of {prodTotalPages} &bull; {filteredProducts.length} products
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setProdPage(p => Math.max(1, p - 1))}
+                  disabled={prodPage === 1}
+                  className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setProdPage(p => Math.min(prodTotalPages, p + 1))}
+                  disabled={prodPage === prodTotalPages}
+                  className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
       </main>

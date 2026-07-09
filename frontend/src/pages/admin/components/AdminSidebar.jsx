@@ -97,6 +97,7 @@ export default function AdminSidebar({ activePage }) {
         { id: 'admin-campaigns', label: 'Admin Referrals', icon: <Compass size={18} />, path: '/admin/campaign-manager' },
         { id: 'platform', label: 'Platform Status', icon: <ShieldAlert size={18} />, path: '/admin/platform' },
         { id: 'settings', label: 'Settings', icon: <Settings size={18} />, path: '/admin/settings' },
+        { id: 'audit-logs', label: 'Audit Logs', icon: <ShieldCheck size={18} />, path: '/admin/audit-logs' },
       ]
     }
   ];

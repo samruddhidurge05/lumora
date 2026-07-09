@@ -7,6 +7,18 @@ from app.models.product import Product as ProductModel
 from app.models.user import User as UserModel
 from app.models.review import Review as ReviewModel
 
+
+def _get_cutoff(date_range: str) -> datetime | None:
+    """Return a UTC cutoff datetime for the given range string, or None for 'all'."""
+    now = datetime.utcnow()
+    if date_range == "7d":
+        return now - timedelta(days=7)
+    elif date_range == "30d":
+        return now - timedelta(days=30)
+    elif date_range == "90d":
+        return now - timedelta(days=90)
+    return None  # "all" — no filter
+
 def calculate_kpis(orders, products_count, vendors_count, reviews):
     total_revenue = paid = completed = refunded = 0
 
@@ -44,11 +56,15 @@ def calculate_kpis(orders, products_count, vendors_count, reviews):
         "totalRevenue":         round(total_revenue, 2),
     }
 
-def get_analytics_dashboard_data():
+def get_analytics_dashboard_data(date_range: str = "all"):
     if not firebase_connected or db is None:
         db_s = SessionLocal()
         try:
-            sql_orders = db_s.query(OrderModel).all()
+            cutoff = _get_cutoff(date_range)
+            q = db_s.query(OrderModel)
+            if cutoff:
+                q = q.filter(OrderModel.created_at >= cutoff)
+            sql_orders = q.all()
             sql_products = db_s.query(ProductModel).all()
             sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
             sql_reviews = db_s.query(ReviewModel).all()
@@ -163,6 +179,21 @@ def get_analytics_dashboard_data():
     products = [doc.to_dict() for doc in db.collection("products").stream()]
     vendors  = [doc.to_dict() for doc in db.collection("vendors").stream()]
     reviews  = [doc.to_dict() for doc in db.collection("reviews").stream()]
+
+    # Apply date_range filter to Firestore orders
+    cutoff = _get_cutoff(date_range)
+    if cutoff:
+        filtered = []
+        for o in orders:
+            try:
+                created_str = o.get("createdAt", "")
+                if created_str:
+                    created_dt = datetime.fromisoformat(created_str.replace("Z", "+00:00")).replace(tzinfo=None)
+                    if created_dt >= cutoff:
+                        filtered.append(o)
+            except Exception:
+                filtered.append(o)  # include if unparseable
+        orders = filtered
 
     products_count = len(products)
     vendors_count  = len([

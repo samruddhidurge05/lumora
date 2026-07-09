@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer } from './components/AdminComponents';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { backendFetch } from '../../utils/api';
 import {
   subscribeToPlatformSettings,
   initPlatformSettings,
-  updatePlatformSetting,
   DEFAULT_PLATFORM_SETTINGS,
 } from '../../services/settingsService.js';
 
@@ -183,14 +183,18 @@ export default function Settings() {
     setTogglingKey(key);
     sysSound.playTap();
     try {
-      await updatePlatformSetting(key, newValue, user.uid, user.name || user.displayName || 'Admin');
+      // Use backend PUT /api/admin/settings/ — auth token injected by backendFetch
+      await backendFetch('/admin/settings/', {
+        method: 'PUT',
+        body: JSON.stringify({ [key]: newValue }),
+      });
       setLastSaved(new Date().toLocaleTimeString());
       const label = key.replace(/([A-Z])/g, ' $1').trim();
       triggerNotification(`${label} ${newValue ? 'enabled' : 'disabled'}.`);
       sysSound.playSuccess();
     } catch (err) {
       console.error('[Settings] platform toggle FAILED — reverting UI:', err.message);
-      // Revert to actual Firestore value by re-running init
+      // Revert to actual state by re-running init
       const current = await initPlatformSettings().catch(() => platformSettings);
       setPlatformSettings(current);
       triggerNotification(`Failed to save: ${err.message}`, 'error');

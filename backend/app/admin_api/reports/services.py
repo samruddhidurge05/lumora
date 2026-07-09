@@ -19,10 +19,32 @@ def _map_report(doc):
         "productTitle":r.get("productTitle", r.get("productName", "")),
     }
 
-def get_reports_list():
+def get_reports_list(page: int = 1, page_size: int = 50, status: str = None, search: str = None):
     if not firebase_connected or db is None:
-        return []
-    return [_map_report(d) for d in db.collection("reports").stream()]
+        return {"total": 0, "page": page, "page_size": page_size, "items": []}
+
+    all_reports = [_map_report(d) for d in db.collection("reports").stream()]
+
+    # Filter by status (case-insensitive)
+    if status:
+        all_reports = [r for r in all_reports if r["status"].lower() == status.lower()]
+
+    # Filter by search term (title, reporter, category, description)
+    if search:
+        term = search.lower()
+        all_reports = [
+            r for r in all_reports
+            if term in r["title"].lower()
+            or term in r["reporter"].lower()
+            or term in r["category"].lower()
+            or term in r["description"].lower()
+        ]
+
+    total = len(all_reports)
+    start = (page - 1) * page_size
+    items = all_reports[start: start + page_size]
+
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_reports_analytics_data():
     if not firebase_connected or db is None:
