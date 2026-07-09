@@ -437,6 +437,19 @@ export function useVendorProducts(opts) {
       affiliate_enabled: !!formData.affiliate_enabled,
       commission_type:   formData.commission_type  || 'percentage',
       commission_value:  Number(formData.commission_value) || 0,
+      // Extended fields
+      short_desc:          formData.short_desc          || null,
+      features:            formData.features            || [],
+      system_requirements: formData.system_requirements || [],
+      what_you_get:        formData.what_you_get        || [],
+      installation_guide:  formData.installation_guide  || null,
+      subcategory:         formData.subcategory         || null,
+      discount:            Number(formData.discount)    || 0,
+      preview_images:      formData.preview_images      || [],
+      preview_video:       formData.preview_video       || null,
+      seo_title:           formData.seo_title           || null,
+      seo_description:     formData.seo_description     || null,
+      visibility:          formData.visibility          || 'public'
     };
     return backendFetch('/products/', {
       method: 'POST',
@@ -466,6 +479,20 @@ export function useVendorProducts(opts) {
         ? formData.tags
         : (formData.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
     }
+    // Extended fields
+    if (formData.short_desc !== undefined)          payload.short_desc          = formData.short_desc;
+    if (formData.features !== undefined)            payload.features            = formData.features;
+    if (formData.system_requirements !== undefined) payload.system_requirements = formData.system_requirements;
+    if (formData.what_you_get !== undefined)        payload.what_you_get        = formData.what_you_get;
+    if (formData.installation_guide !== undefined)  payload.installation_guide  = formData.installation_guide;
+    if (formData.subcategory !== undefined)         payload.subcategory         = formData.subcategory;
+    if (formData.discount !== undefined)            payload.discount            = Number(formData.discount);
+    if (formData.preview_images !== undefined)      payload.preview_images      = formData.preview_images;
+    if (formData.preview_video !== undefined)       payload.preview_video       = formData.preview_video;
+    if (formData.seo_title !== undefined)           payload.seo_title           = formData.seo_title;
+    if (formData.seo_description !== undefined)     payload.seo_description     = formData.seo_description;
+    if (formData.visibility !== undefined)          payload.visibility          = formData.visibility;
+
     return backendFetch('/products/' + productId, {
       method: 'PUT',
       body:   JSON.stringify(payload),

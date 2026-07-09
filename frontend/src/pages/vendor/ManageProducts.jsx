@@ -8,6 +8,7 @@ import {
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts } from '../../hooks/useVendorData';
+import { useApp } from '../../context/AppContext';
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -98,6 +99,7 @@ export default function ManageProducts() {
 
   const { products, total, pages, currentPage, loading, error, refresh, deleteProduct } =
     useVendorProducts({ search, category, status, sort, page, limit: 15 });
+  const { refetchProducts } = useApp();
 
   /* ── handlers ─────────────────────────────────────────────────────── */
   const handleFilter = (field, val) => {
@@ -111,15 +113,23 @@ export default function ManageProducts() {
     if (!window.confirm('Delete this product? This cannot be undone.')) return;
     setDeleting(id);
     setDeleteError(null);
-    try { await deleteProduct(id); }
+    try {
+      await deleteProduct(id);
+      if (typeof refetchProducts === 'function') {
+        refetchProducts();
+      }
+    }
     catch (e) { setDeleteError(`Delete failed: ${e.message}`); }
     finally { setDeleting(null); }
-  }, [deleteProduct]);
+  }, [deleteProduct, refetchProducts]);
 
   const handleBulkDelete = async () => {
     if (!window.confirm(`Delete ${selected.length} product(s)?`)) return;
     for (const id of selected) await deleteProduct(id).catch(() => {});
     setSelected([]);
+    if (typeof refetchProducts === 'function') {
+      refetchProducts();
+    }
     refresh();
   };
 

@@ -402,9 +402,28 @@ def request_payout(
         bank_account=data.bank_account,
         status="pending",
     )
-    db.add(payout)
-    db.commit()
-    db.refresh(payout)
+    try:
+        db.add(payout)
+        db.commit()
+        db.refresh(payout)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to submit payout request. Please try again.",
+        ) from e
+
+    # Structured log
+    from app.utils.logger import log_structured_event
+    log_structured_event(
+        user_id=current_user.id,
+        role=current_user.role,
+        action="payout_requested",
+        module="affiliate",
+        status="success",
+        details=f"Affiliate payout requested: ₹{payout.amount:.2f} via {payout.method}",
+    )
+
     return payout
 
 

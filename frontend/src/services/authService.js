@@ -91,9 +91,18 @@ export const refreshBackendToken = async (firebaseUser, role = 'customer') => {
 };
 
 /**
- * Remove all backend auth tokens from localStorage on logout.
+ * Remove ALL backend auth tokens and user identity from localStorage on logout.
+ * This is the single authoritative function for clearing auth state.
+ * Called from: AuthContext.logout(), AuthContext.onAuthStateChanged (no-user branch),
+ *              adminAuthService, and any other sign-out path.
  */
 export const clearBackendToken = () => {
+  // Backend JWT and user ID
   localStorage.removeItem('lumora_backend_token');
   localStorage.removeItem('lumora_backend_uid');
+  // Role cache — CRITICAL: must be cleared to prevent stale role leaking to the next user session
+  localStorage.removeItem('lumora_active_role');
+  // Cached user profile
+  localStorage.removeItem('lumora_user');
 };
+

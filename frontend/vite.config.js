@@ -11,6 +11,18 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      // Forward /uploads/ requests to the backend (local storage files)
+      '/uploads': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      // Forward /api/ requests to the backend
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',

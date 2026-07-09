@@ -1,13 +1,41 @@
-from fastapi import FastAPI
+"""
+Lumora Digital Marketplace — FastAPI Application Entry Point
+============================================================
+Production-hardened startup with:
+  • Fail-fast startup configuration validation
+  • Centralized global exception handlers (no raw tracebacks exposed to client)
+  • Standardized JSON error response envelope
+  • Health-check endpoints  (/health  /ready  /live)
+  • Structured logging configuration
+"""
+import os
+import sys
+import logging
+from datetime import datetime
+
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+
+from sqlalchemy.exc import SQLAlchemyError
+from slowapi.errors import RateLimitExceeded
+
 from app.db.database import engine
 from app.models import Base
 from app.middleware.rate_limit import limiter, _rate_limit_handler
-from slowapi.errors import RateLimitExceeded
+from app.core.exceptions import LumoraException
 
-# Import Routers
+# ── Logging Configuration ─────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+_logger = logging.getLogger("lumora.main")
+
+# ── Import Routers ────────────────────────────────────────────────────────────
 from app.api.auth_router import router as auth_router
 from app.api.products_router import router as products_router
 from app.api.orders import router as orders_router
@@ -27,10 +55,68 @@ from app.api.affiliate.routes import router as affiliate_router
 from app.admin_api.routes import router as admin_router
 from app.api.payments.routes import router as payments_router
 
-# Create Database tables
+# ── Startup Configuration Validation ─────────────────────────────────────────
+def _validate_startup_config() -> None:
+    """
+    Fail-fast validation: checks critical environment variables and services.
+    Called once before the app starts serving requests.
+    Logs clearly and exits immediately if a required dependency is missing.
+    """
+    errors = []
+
+    # 1. JWT Secret Key
+    # The project uses JWT_SECRET_KEY (from app/core/config.py).
+    # Warn if it is still the insecure default value.
+    jwt_secret = os.getenv("JWT_SECRET_KEY", "secret")
+    if jwt_secret == "secret" or len(jwt_secret) < 16:
+        _logger.warning(
+            "[startup] JWT_SECRET_KEY is using the insecure default value 'secret'. "
+            "Set JWT_SECRET_KEY to a strong random value before going to production."
+        )
+
+    # 2. Database connection
+    try:
+        from app.db.database import engine as _engine
+        with _engine.connect() as conn:
+            conn.execute(__import__("sqlalchemy").text("SELECT 1"))
+    except Exception as db_err:
+        errors.append(f"Database connection failed: {db_err}")
+
+    # 3. Firebase credentials (non-fatal warning — Firebase connection is optional)
+    cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    if not cert_path:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cert_path = os.path.join(base_dir, "shared", "firebase", "serviceAccountKey.json")
+    if not os.path.exists(cert_path):
+        _logger.warning(
+            "[startup] Firebase service account key not found at '%s'. "
+            "Firebase-dependent features will be disabled.",
+            cert_path,
+        )
+    else:
+        _logger.info("[startup] Firebase credentials file found: %s", cert_path)
+
+    # 4. Storage configuration
+    storage_provider = os.getenv("STORAGE_PROVIDER", "local").lower()
+    _logger.info("[startup] Storage provider: %s", storage_provider)
+
+    # Fail fast if any critical errors found
+    if errors:
+        for err in errors:
+            _logger.critical("[startup] CONFIGURATION ERROR: %s", err)
+        _logger.critical("[startup] Application cannot start. Fix the above errors.")
+        sys.exit(1)
+
+    _logger.info("[startup] Configuration validation passed ✓")
+
+
+# Run validation before table creation so we catch DB issues early
+_validate_startup_config()
+
+# ── Database Table Creation ───────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
-# Seed Admin Users
+# ── Seed Admin Users ──────────────────────────────────────────────────────────
 from app.db.database import SessionLocal
 from app.models.user import User
 
@@ -49,75 +135,253 @@ try:
         )
         db_session.add(admin_user)
         db_session.commit()
-        print(f"[seed] Admin user created: {admin_email}")
-except Exception as e:
-    print(f"[seed] Error seeding admin user: {e}")
+        _logger.info("[seed] Admin user created: %s", admin_email)
+except Exception as seed_err:
+    _logger.error("[seed] Error seeding admin user: %s", seed_err)
 finally:
     db_session.close()
 
+# ── FastAPI App ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Lumora Digital Marketplace API",
-    description="Backend API for Lumora digital assets store",
-    version="1.0.0"
+    description="Backend API for Lumora digital assets marketplace.",
+    version="1.0.0",
 )
 
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 
-from fastapi.responses import JSONResponse
-from app.core.exceptions import LumoraException
+# ═════════════════════════════════════════════════════════════════════════════
+# GLOBAL EXCEPTION HANDLERS
+# All errors are returned in a consistent JSON envelope:
+#
+#   { "success": false, "error": { "code": "...", "message": "...", "details": null } }
+#
+# No raw Python tracebacks, SQLAlchemy errors, or Firebase errors are exposed.
+# ═════════════════════════════════════════════════════════════════════════════
 
 @app.exception_handler(LumoraException)
-async def lumora_exception_handler(request, exc: LumoraException):
+async def lumora_exception_handler(request: Request, exc: LumoraException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
-            "code": exc.code,
-            "message": exc.message
-        }
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+                "details": None,
+            },
+        },
     )
 
-# CORS Configuration
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Handle Pydantic validation errors — return field-level details without exposing internals."""
+    field_errors = []
+    for error in exc.errors():
+        loc = " → ".join(str(loc) for loc in error.get("loc", []) if loc != "body")
+        field_errors.append(f"{loc}: {error.get('msg', 'Invalid value')}" if loc else error.get("msg", "Validation error"))
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "One or more fields failed validation.",
+                "details": field_errors or None,
+            },
+        },
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def database_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    """Catch any unhandled SQLAlchemy database error and hide internals from the client."""
+    _logger.error("[db_error] Unhandled database error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error": {
+                "code": "DATABASE_ERROR",
+                "message": "A database error occurred. Please try again.",
+                "details": None,
+            },
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """
+    Catch-all handler — hides raw Python tracebacks from API consumers.
+    Logs the full traceback internally for debugging.
+    Does NOT intercept HTTPException (FastAPI handles those natively).
+    """
+    from fastapi import HTTPException as _HTTPEx
+    if isinstance(exc, _HTTPEx):
+        # Let FastAPI's own HTTPException handler deal with these
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "success": False,
+                "error": {
+                    "code": f"HTTP_{exc.status_code}",
+                    "message": exc.detail if isinstance(exc.detail, str) else "Request error.",
+                    "details": None,
+                },
+            },
+        )
+
+    _logger.error(
+        "[unhandled_error] %s %s → %s: %s",
+        request.method, request.url.path, type(exc).__name__, exc,
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+                "details": None,
+            },
+        },
+    )
+
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# NOTE: Restrict allow_origins to your production domain before going live.
+#   e.g. allow_origins=["https://lumora.app", "https://www.lumora.app"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For dev simplicity, allow all
+    allow_origins=["*"],  # ⚠ Replace with specific production domain(s) before go-live
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount Routers
-app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(products_router, prefix="/api/products", tags=["Products"])
-app.include_router(orders_router, prefix="/api/orders", tags=["Orders"])
-app.include_router(reviews_router, prefix="/api/reviews", tags=["Reviews"])
-app.include_router(vendors_router, prefix="/api/vendors", tags=["Vendors"])
-app.include_router(wishlist_router, prefix="/api/wishlist", tags=["Wishlist"])
-app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
-app.include_router(messages_router, prefix="/api/messages", tags=["Messages"])
-app.include_router(notifications_router, prefix="/api/notifications", tags=["Notifications"])
-app.include_router(price_alerts_router, prefix="/api/price-alerts", tags=["Price Alerts"])
-app.include_router(search_router, prefix="/api/search", tags=["Search"])
-app.include_router(activity_router, prefix="/api/activity", tags=["User Activity"])
-app.include_router(history_router, prefix="/api/history", tags=["Search History"])
-app.include_router(versions_router, prefix="/api/versions", tags=["Product Versions"])
-app.include_router(upload_router, prefix="/api/uploads", tags=["File Uploads"])
-app.include_router(affiliate_router, prefix="/api/affiliate", tags=["Affiliate"])
-app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
-app.include_router(payments_router, prefix="/api/payments", tags=["Payments"])
+# ── Mount API Routers ─────────────────────────────────────────────────────────
+app.include_router(auth_router,          prefix="/api/auth",         tags=["Auth"])
+app.include_router(products_router,      prefix="/api/products",     tags=["Products"])
+app.include_router(orders_router,        prefix="/api/orders",       tags=["Orders"])
+app.include_router(reviews_router,       prefix="/api/reviews",      tags=["Reviews"])
+app.include_router(vendors_router,       prefix="/api/vendors",      tags=["Vendors"])
+app.include_router(wishlist_router,      prefix="/api/wishlist",     tags=["Wishlist"])
+app.include_router(cart_router,          prefix="/api/cart",         tags=["Cart"])
+app.include_router(messages_router,      prefix="/api/messages",     tags=["Messages"])
+app.include_router(notifications_router, prefix="/api/notifications",tags=["Notifications"])
+app.include_router(price_alerts_router,  prefix="/api/price-alerts", tags=["Price Alerts"])
+app.include_router(search_router,        prefix="/api/search",       tags=["Search"])
+app.include_router(activity_router,      prefix="/api/activity",     tags=["User Activity"])
+app.include_router(history_router,       prefix="/api/history",      tags=["Search History"])
+app.include_router(versions_router,      prefix="/api/versions",     tags=["Product Versions"])
+app.include_router(upload_router,        prefix="/api/uploads",      tags=["File Uploads"])
+app.include_router(affiliate_router,     prefix="/api/affiliate",    tags=["Affiliate"])
+app.include_router(admin_router,         prefix="/api/admin",        tags=["Admin"])
+app.include_router(payments_router,      prefix="/api/payments",     tags=["Payments"])
 
-# ── Static file serving for uploaded product assets ──────────────────────────
-# Files uploaded via POST /api/uploads/ are stored at backend/uploads/
-# and served publicly at  http://localhost:8000/uploads/<filename>
+# ── Static files ──────────────────────────────────────────────────────────────
 _UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 os.makedirs(_UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
 
+
+# ═════════════════════════════════════════════════════════════════════════════
+# HEALTH CHECK ENDPOINTS
+# Designed for load-balancers, container orchestrators (K8s), and monitoring.
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.get("/health", tags=["Health"], summary="Full health check")
+def health_check():
+    """
+    Comprehensive health check.
+    Returns status of: database, firebase, storage, and application.
+    HTTP 200 = healthy.  HTTP 503 = unhealthy.
+    """
+    report = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "services": {},
+    }
+    overall_ok = True
+
+    # Database ping
+    try:
+        from app.db.database import engine as _engine
+        import sqlalchemy
+        with _engine.connect() as conn:
+            conn.execute(sqlalchemy.text("SELECT 1"))
+        report["services"]["database"] = {"status": "ok", "provider": "SQLite"}
+    except Exception as db_err:
+        report["services"]["database"] = {"status": "error", "detail": str(db_err)}
+        overall_ok = False
+
+    # Firebase connection
+    try:
+        from app.shared.firebase.connection import firebase_connected
+        report["services"]["firebase"] = {
+            "status": "ok" if firebase_connected else "unavailable",
+            "connected": firebase_connected,
+        }
+    except Exception:
+        report["services"]["firebase"] = {"status": "unavailable", "connected": False}
+
+    # Storage availability
+    try:
+        from app.services.storage_service import storage_service
+        provider_name = type(storage_service.provider).__name__
+        report["services"]["storage"] = {"status": "ok", "provider": provider_name}
+    except Exception as st_err:
+        report["services"]["storage"] = {"status": "error", "detail": str(st_err)}
+        overall_ok = False
+
+    if not overall_ok:
+        report["status"] = "unhealthy"
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=report)
+
+    return report
+
+
+@app.get("/ready", tags=["Health"], summary="Readiness probe")
+def readiness_probe():
+    """
+    Kubernetes readiness probe — indicates the pod is ready to receive traffic.
+    Checks that the database is reachable.
+    """
+    try:
+        from app.db.database import engine as _engine
+        import sqlalchemy
+        with _engine.connect() as conn:
+            conn.execute(sqlalchemy.text("SELECT 1"))
+        return {"status": "ready", "timestamp": datetime.utcnow().isoformat() + "Z"}
+    except Exception as err:
+        _logger.error("[readiness] Database not reachable: %s", err)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "not_ready", "reason": "Database unavailable"},
+        )
+
+
+@app.get("/live", tags=["Health"], summary="Liveness probe")
+def liveness_probe():
+    """
+    Kubernetes liveness probe — indicates the process is alive.
+    Always returns 200 as long as the Python process is running.
+    """
+    return {"status": "alive", "timestamp": datetime.utcnow().isoformat() + "Z"}
+
+
+# ── Platform Status (existing public endpoint) ────────────────────────────────
+
 @app.get("/api/public/platform/status")
 def get_public_platform_status():
     from app.shared.firebase.connection import db, firebase_connected
-    
+
     if firebase_connected and db is not None:
         try:
             from admin.firestore.admin_firestore import get_platform_settings
@@ -125,23 +389,23 @@ def get_public_platform_status():
             return {
                 "isPlatformPaused": settings.get("isPlatformPaused", False),
                 "maintenanceMessage": settings.get("pauseMessage") or "Platform maintenance is currently active.",
-                "updatedAt": settings.get("lastUpdated") or ""
+                "updatedAt": settings.get("lastUpdated") or "",
             }
         except Exception:
             pass
-            
+
     try:
         from admin.routes.settings import _local_platform_state
         return {
             "isPlatformPaused": _local_platform_state.get("isPlatformPaused", False),
             "maintenanceMessage": _local_platform_state.get("pauseMessage") or "Platform maintenance is currently active.",
-            "updatedAt": _local_platform_state.get("lastUpdated") or ""
+            "updatedAt": _local_platform_state.get("lastUpdated") or "",
         }
     except Exception:
         return {
             "isPlatformPaused": False,
             "maintenanceMessage": "Platform maintenance is currently active.",
-            "updatedAt": ""
+            "updatedAt": "",
         }
 
 

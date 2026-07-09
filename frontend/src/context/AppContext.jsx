@@ -635,13 +635,15 @@ function enrichRawProducts(raw) {
     // Support both camelCase (Firestore vendor docs) and snake_case (backend API)
     const sellerName = (typeof p.seller === 'object' ? p.seller?.name : p.seller) || p.vendor_id || 'Lumora Creator';
     const sellerId = String(sellerName).toLowerCase().replace(/\s+/g, '-');
-    const numReviews = Math.max(2, Math.min(4, Math.round((p.rating || 4.5) * 0.8)));
-    const reviewsList = p.reviewsList || Array.from({ length: numReviews }, (_, i) => ({
+    const isBackend = !isNaN(parseInt(p.id, 10));
+
+    const numReviews = isBackend ? 0 : Math.max(2, Math.min(4, Math.round((p.rating || 4.5) * 0.8)));
+    const reviewsList = p.reviewsList || (isBackend ? [] : Array.from({ length: numReviews }, (_, i) => ({
       user: SAMPLE_USERS[(idx + i) % SAMPLE_USERS.length],
       rating: Math.min(5, Math.max(3.5, (p.rating || 4.5) - (i * 0.2))),
       date: i === 0 ? '2 days ago' : i === 1 ? '1 week ago' : '3 weeks ago',
       comment: SAMPLE_COMMENTS[(idx + i) % SAMPLE_COMMENTS.length],
-    }));
+    })));
 
     return {
       ...p,
@@ -651,16 +653,16 @@ function enrichRawProducts(raw) {
       preview: p.preview || p.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
       badge: p.badge || (p.trending ? 'Trending' : (p.newArrival || p.new_arrival) ? 'New' : p.featured ? 'Featured' : null),
       compatibility: p.compatibility || p.tags || [],
-      features: p.features || p.highlights || [
+      features: p.features || p.highlights || (isBackend ? [] : [
         'Fully customizable layers & styles',
         'Commercial usage license included',
         'Lifetime updates & version revisions',
         'High-fidelity responsive components',
-      ],
+      ]),
       version: p.version || 'v1.0.0',
       fileSize: p.fileSize || p.file_size || '48 MB',
       lastUpdated: p.lastUpdated || p.last_updated || (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Recently'),
-      reviews: p.reviews || Math.floor((p.downloads || 100) * 0.08),
+      reviews: isBackend ? (p.reviews || 0) : (p.reviews || Math.floor((p.downloads || 100) * 0.08)),
       downloads: p.downloads || 0,
       reviewsList,
       seller: typeof p.seller === 'object' ? p.seller : { name: sellerName },
@@ -691,25 +693,55 @@ export function AppContextProvider({ children }) {
   const localFallback = PRODUCTS.filter(p => !jsonIds.has(String(p.id)));
   const [products, setProducts] = useState([...ENRICHED_JSON_PRODUCTS, ...localFallback]);
 
-  // Load products from Firestore with real-time listener
+  // Track which product IDs came from the SQLite backend (the authoritative source).
+  // This prevents the Firestore listener from overwriting backend-only products.
+  const backendProductIdsRef = useRef(new Set());
+
+  /**
+   * refetchProducts — force a fresh load from the FastAPI backend.
+   * Call this after a vendor successfully uploads a product so it appears
+   * in the marketplace immediately without waiting for the Firestore listener.
+   */
+  const refetchProducts = () => {
+    getProducts()
+      .then(fetched => {
+        if (fetched && fetched.length > 0) {
+          console.log('[Backend] Refreshed products from FastAPI:', fetched.length);
+          // Update the authoritative backend ID set
+          backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
+          const backendIds = backendProductIdsRef.current;
+          const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
+          const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
+          setProducts([...enrichRawProducts(fetched), ...jsonOnly, ...localOnly]);
+        }
+      })
+      .catch(err => console.warn('[Backend] Product refresh failed:', err.message));
+  };
+
+  // Load products: backend first (authoritative), Firestore real-time augmentation
   useEffect(() => {
-    // First do a one-time fetch from the FastAPI backend (SQLite)
+    // ── Step 1: One-time fetch from FastAPI backend (SQLite = Source of Truth) ──
     getProducts()
       .then(fetched => {
         if (fetched && fetched.length > 0) {
           console.log('[Backend] Loaded products from FastAPI:', fetched.length);
-          const backendIds = new Set(fetched.map(p => String(p.id)));
+          // Record which IDs came from the backend
+          backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
+          const backendIds = backendProductIdsRef.current;
           const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
           const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          setProducts([...fetched, ...jsonOnly, ...localOnly]);
+          setProducts([...enrichRawProducts(fetched), ...jsonOnly, ...localOnly]);
         }
       })
       .catch(err => console.warn('[Backend] Product fetch failed (non-fatal):', err.message));
 
-    // Firestore real-time listener: catches vendor-added products immediately
+    // ── Step 2: Firestore real-time listener ───────────────────────────────────
+    // Firestore SUPPLEMENTS the backend — it never replaces backend products.
+    // BUG FIX: Previously, onSnapshot overwrote all products with Firestore docs,
+    // dropping any product that hadn't synced to Firestore (e.g., when Firebase
+    // is offline). Now backend products are always preserved.
     let unsubscribe;
     try {
-      // Use the products collection — no ordering to avoid needing a composite index
       const q = query(collection(db, 'products'));
       unsubscribe = onSnapshot(q, (snapshot) => {
         if (snapshot.empty) return;
@@ -720,13 +752,24 @@ export function AppContextProvider({ children }) {
         if (firestoreDocs.length > 0) {
           console.log('[Firestore] Real-time products update:', firestoreDocs.length);
           setProducts(prev => {
+            // Always keep backend products (they are the authoritative source)
+            const currentBackendIds = backendProductIdsRef.current;
+            const backendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
+
+            // Only add Firestore products that do NOT already exist in the backend
             const firestoreIds = new Set(firestoreDocs.map(p => String(p.id)));
-            const nonFirestore = prev.filter(p => !firestoreIds.has(String(p.id)));
-            return [...firestoreDocs, ...nonFirestore];
+            const firestoreOnly = firestoreDocs.filter(p => !currentBackendIds.has(String(p.id)));
+
+            // Keep local JSON/mock products that are in neither backend nor Firestore
+            const localMock = prev.filter(
+              p => !currentBackendIds.has(String(p.id)) && !firestoreIds.has(String(p.id))
+            );
+
+            return [...backendProducts, ...firestoreOnly, ...localMock];
           });
         }
       }, (err) => {
-        // Firestore offline / rules issue — silent, we already have local data
+        // Firestore offline / rules issue — silent, we already have backend data
         console.warn('[Firestore] onSnapshot error (non-fatal):', err.message);
       });
     } catch (err) {
@@ -1355,18 +1398,18 @@ export function AppContextProvider({ children }) {
     return products.filter(p => p.creator.id === creatorId);
   };
 
-  const formatPrice = (priceUSD) => {
-    if (typeof priceUSD !== 'number') {
-      const parsed = parseFloat(String(priceUSD).replace(/[^0-9.]/g, ''));
-      if (isNaN(parsed)) return priceUSD;
-      priceUSD = parsed;
+  const formatPrice = (priceINR) => {
+    if (typeof priceINR !== 'number') {
+      const parsed = parseFloat(String(priceINR).replace(/[^0-9.]/g, ''));
+      if (isNaN(parsed)) return priceINR;
+      priceINR = parsed;
     }
-    const priceINR = Math.round(priceUSD * 80);
+    // Prices are stored and entered in INR (₹) by vendors — do NOT convert.
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(priceINR);
+    }).format(Math.round(priceINR));
   };
 
   return (
@@ -1417,6 +1460,7 @@ export function AppContextProvider({ children }) {
       getCreatorProducts,
       formatPrice,
       addReview,
+      refetchProducts,
     }}>
       {children}
     </AppContext.Provider>

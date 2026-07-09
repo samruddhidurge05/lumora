@@ -29,6 +29,21 @@ def create_new_order(
             detail="Order must contain at least one item."
         )
 
+    # ── IDEMPOTENCY: Deduplicate orders by payment_id ───────────────────────
+    # If the same payment_id is re-submitted (e.g., network retry, double-click),
+    # return the existing order instead of creating a duplicate.
+    if order_in.payment_id:
+        existing_order = db.query(Order).filter(
+            Order.payment_id == order_in.payment_id,
+            Order.user_id == current_user.id
+        ).first()
+        if existing_order:
+            from app.api.products_router import generate_download_token
+            for item in existing_order.items:
+                token = generate_download_token(current_user.id, item.product_id)
+                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+            return existing_order
+
     # ── Check Platform Pause State (Admin bypasses it) ─────────────────────
     if current_user.role != "admin":
         is_paused = False
@@ -100,6 +115,17 @@ def create_new_order(
     for item in order.items:
         token = generate_download_token(current_user.id, item.product_id)
         item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+
+    # Structured log
+    from app.utils.logger import log_structured_event
+    log_structured_event(
+        user_id=current_user.id,
+        role=current_user.role,
+        action="checkout_completed",
+        module="orders",
+        status="success",
+        details=f"Order ORD-{order.id} created with {len(order_in.items)} item(s) totalling ₹{order_in.total_amount:.2f}",
+    )
 
     return order
 

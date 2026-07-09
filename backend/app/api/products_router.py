@@ -25,14 +25,14 @@ router = APIRouter()
 def read_products(
     category: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000,
     db: Session = Depends(get_db)
 ):
     """List all published products. Public — no authentication required."""
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
-    )
+    ).order_by(Product.id.desc())
     if category and category != "All":
         query = query.filter(Product.category == category)
     return query.offset(skip).limit(limit).all()
@@ -46,14 +46,14 @@ def search_products(
     max_price: Optional[float] = None,
     sort: Optional[str] = "featured",
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000,
     db: Session = Depends(get_db)
 ):
     """Full-text search products. Public."""
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
-    )
+    ).order_by(Product.id.desc())
     if q:
         like_q = f"%{q.lower()}%"
         query = query.filter(
@@ -381,9 +381,22 @@ def create_product(
                     detail="Fixed commission cannot exceed the product price."
                 )
 
-    # Delegate to ProductService
+    # ── IDEMPOTENCY: Double-click / network-retry protection ──────────────────
+    # If the same vendor submits a product with the same title and price within
+    # a 15-second window, return the existing record to prevent duplicates.
     vendor_id = str(current_user.id)
-    return ProductService.create_product(
+    from datetime import datetime, timedelta
+    window_start = datetime.utcnow() - timedelta(seconds=15)
+    recent_duplicate = db.query(Product).filter(
+        Product.vendor_id == vendor_id,
+        Product.title == product_in.title.strip(),
+        Product.price == product_in.price,
+        Product.created_at >= window_start,
+    ).first()
+    if recent_duplicate:
+        return recent_duplicate
+
+    product = ProductService.create_product(
         db=db,
         vendor_id=vendor_id,
         title=product_in.title,
@@ -413,6 +426,19 @@ def create_product(
         seo_description=product_in.seo_description,
         visibility=product_in.visibility or "public"
     )
+
+    # Structured log
+    from app.utils.logger import log_structured_event
+    log_structured_event(
+        user_id=current_user.id,
+        role=current_user.role,
+        action="product_created",
+        module="products",
+        status="success",
+        details=f"Product '{product.title}' (ID {product.id}) created by vendor {vendor_id}",
+    )
+
+    return product
 
 
 @router.put("/{product_id}", response_model=ProductResponse)

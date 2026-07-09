@@ -1,10 +1,12 @@
-export const formatPrice = (priceUSD) => {
-  if (typeof priceUSD !== 'number') {
-    const parsed = parseFloat(String(priceUSD).replace(/[^0-9.]/g, ''));
-    if (isNaN(parsed)) return priceUSD;
-    priceUSD = parsed;
+export const formatPrice = (priceINR) => {
+  if (typeof priceINR !== 'number') {
+    const parsed = parseFloat(String(priceINR).replace(/[^0-9.]/g, ''));
+    if (isNaN(parsed)) return priceINR;
+    priceINR = parsed;
   }
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.round(priceUSD * 80));
+  // Prices in Lumora are stored and entered in INR (₹) by vendors.
+  // Do NOT multiply by any conversion factor — format directly as INR.
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.round(priceINR));
 };
 
 export const formatDate = (dateStr) => {

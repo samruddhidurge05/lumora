@@ -150,13 +150,55 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         details="Logged in via standard email/password."
     )
     db.commit()
-    token_data = {"sub": str(user.id)}
+    from app.utils.logger import log_structured_event
+    log_structured_event(
+        user_id=user.id,
+        role=user.role,
+        action="user_login",
+        module="auth",
+        status="success",
+        details=f"User '{user.email}' logged in via email/password",
+    )
+    # The active role for standard login is the database role
+    active_role = user.role or "customer"
+    token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)
-    return TokenResponse(access_token=access_token, user=user)
+
+    user_dict = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": active_role,
+        "is_active": user.is_active,
+        "is_verified": user.is_verified,
+        "firebase_uid": user.firebase_uid,
+        "sqlite_user_id": user.id,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+    }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_dict
+    }
 
 # ── /me ───────────────────────────────────────────────────────────────────────
 @router.get("/me")
-def read_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def read_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    # Decode token to extract the active_role claim
+    active_role = current_user.role or "customer"
+    if token:
+        try:
+            payload = decode_access_token(token)
+            if payload.get("active_role"):
+                active_role = payload.get("active_role")
+        except Exception:
+            pass
+
     is_paused = False
     from app.shared.firebase.connection import db as fs_db, firebase_connected
     if firebase_connected and fs_db is not None:
@@ -174,7 +216,7 @@ def read_me(current_user: User = Depends(get_current_user), db: Session = Depend
         "id":              current_user.id,
         "name":            current_user.name or "",
         "email":           current_user.email or "",
-        "role":            current_user.role or "customer",
+        "role":            active_role,  # Return the active role from token payload
         "is_active":       bool(current_user.is_active),
         "is_verified":     bool(current_user.is_verified),
         "platform_paused": bool(is_paused),
@@ -287,10 +329,37 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
         details=f"Synced Firebase account. Role: {user.role or 'customer'}."
     )
     db.commit()
-    # Step 5 — issue backend JWT
-    token_data = {"sub": str(user.id)}
+    from app.utils.logger import log_structured_event
+    log_structured_event(
+        user_id=user.id,
+        role=user.role,
+        action="firebase_login",
+        module="auth",
+        status="success",
+        details=f"User '{user.email}' authenticated via Firebase. Role: {user.role or 'customer'}",
+    )
+    # Step 5 — issue backend JWT with the active role requested by the frontend
+    active_role = role or "customer"
+    token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)
-    return TokenResponse(access_token=access_token, user=user)
+
+    user_dict = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": active_role,
+        "is_active": user.is_active,
+        "is_verified": user.is_verified,
+        "firebase_uid": user.firebase_uid,
+        "sqlite_user_id": user.id,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+    }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_dict
+    }
 
 # ── /forgot-password ──────────────────────────────────────────────────────────
 @router.post("/forgot-password", response_model=MsgResponse)

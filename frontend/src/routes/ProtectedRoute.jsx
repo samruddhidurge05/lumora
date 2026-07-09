@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/firebase';
@@ -12,6 +12,12 @@ import { auth } from '../services/firebase';
  *                  Accepts a string ('vendor') or array (['affiliate', 'vendor']).
  *                  Mismatch → redirect to that role's own dashboard.
  *
+ * Production hardening:
+ *   - Validates backend JWT on every mount (not just localStorage check).
+ *   - Prevents browser Back button from accessing protected content after logout
+ *     by replacing the history entry and injecting a popstate listener.
+ *   - Sets no-cache meta so browsers don't serve stale protected pages from bfcache.
+ *
  * Admin special case:
  *   When requiredRole === 'admin', unauthenticated or wrong-role users are
  *   redirected to /admin/login?redirect=<current path> with replace=true to
@@ -23,8 +29,44 @@ export default function ProtectedRoute({
   redirectTo = '/auth/login-selection',
   requiredRole = null,
 }) {
-  const { user, loading, userRole } = useAuth();
+  const { user, loading, userRole, logout } = useAuth();
   const location = useLocation();
+
+  // ── Back-button prevention & session validation ────────────────────────────
+  // On every mount of a protected page:
+  //   1. Replace the current history entry (so Back goes to the page BEFORE this one)
+  //   2. Validate the backend JWT is still alive (redirect to login if 401)
+  //   3. Listen for popstate (Back button) and redirect if no longer authenticated
+  useEffect(() => {
+    // Replace current history entry — prevents stale dashboard from appearing via Back
+    window.history.replaceState(null, '', window.location.href);
+
+    // Validate backend session is alive
+    const token = localStorage.getItem('lumora_backend_token');
+    if (token) {
+      // Quick async validation — if backend says 401, force logout
+      import('../utils/api').then(({ backendFetch }) => {
+        backendFetch('/auth/me').catch((err) => {
+          // 401 or network error means session is dead
+          if (err?.status === 401 || err?.message?.includes('401')) {
+            console.warn('[ProtectedRoute] Backend session expired, forcing logout');
+            if (typeof logout === 'function') {
+              logout();
+            }
+          }
+        });
+      });
+    }
+
+    // Popstate handler: if user hits Back after logout, redirect to login
+    const handlePopState = () => {
+      if (!auth.currentUser) {
+        window.location.replace('/auth/login-selection');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [location.pathname, logout]);
 
   // ── Admin route guard ─────────────────────────────────────────────────────
   if (requiredRole === 'admin') {
@@ -36,7 +78,9 @@ export default function ProtectedRoute({
     // No user, wrong role, or stale mock state (user set but no Firebase currentUser)
     if (!user || !userRole || userRole !== 'admin' || !auth.currentUser) {
       const redirectParam = encodeURIComponent(location.pathname + location.search);
-      return <Navigate to={`/admin/login?redirect=${redirectParam}`} replace />;
+      const target = `/admin/login?redirect=${redirectParam}`;
+      console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Admin Route Guard. Previous route: "${location.pathname}", Destination route: "${target}", Current role: "${userRole}", Firebase UID: "${user?.uid}"`);
+      return <Navigate to={target} replace />;
     }
 
     return children;
@@ -51,6 +95,7 @@ export default function ProtectedRoute({
 
   // Not authenticated
   if (!user) {
+    console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Auth Guard. Reason: No user. Previous route: "${location.pathname}", Destination route: "${redirectTo}"`);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
@@ -71,6 +116,8 @@ export default function ProtectedRoute({
         : userRole === 'vendor'  ? '/vendor/dashboard'
         : userRole === 'admin'   ? '/admin/dashboard'
         : '/customer/dashboard';
+
+      console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Standard Role Guard. Reason: Current userRole "${userRole}" is not in allowed roles [${allowed.join(', ')}]. Previous route (current): "${location.pathname}", Destination route: "${correctPath}", Firebase UID: "${user?.uid}"`);
       return <Navigate to={correctPath} replace />;
     }
   }

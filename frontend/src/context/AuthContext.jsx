@@ -110,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       backendFetch('/auth/me')
         .then(session => {
           if (session) {
+            console.log(`[DEBUG] [AuthContext-MountSync] [${new Date().toISOString()}] Mount sync fetched /auth/me. Backend role: "${session.role}". UID: ${user.uid}`);
             if (!session.is_active) {
               setIsAccountDisabled(true);
             }
@@ -118,6 +119,7 @@ export const AuthProvider = ({ children }) => {
               const backendRole = session.role;
               setUserRole(prev => {
                 if (backendRole !== prev) {
+                  console.log(`[DEBUG] [AuthContext-MountSync] [${new Date().toISOString()}] Role changed from "${prev}" to "${backendRole}" by backend SOT. UID: ${user.uid}`);
                   localStorage.setItem('lumora_active_role', backendRole);
                   return backendRole;
                 }
@@ -126,7 +128,9 @@ export const AuthProvider = ({ children }) => {
             }
           }
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('[AuthContext-MountSync] /auth/me fetch failed:', err.message);
+        });
     }
   }, [user]); // ← depends only on user, not userRole
 
@@ -177,6 +181,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const session = await backendFetch('/auth/me');
         if (!session) return;
+        console.log(`[DEBUG] [AuthContext-PollSync] [${new Date().toISOString()}] Polled /auth/me. Backend role SOT: "${session.role}". Current state ref: "${userRoleRef.current}". UID: ${user.uid}`);
         // Update suspension state
         setIsAccountDisabled(!session.is_active);
         // Update platform pause state
@@ -187,6 +192,7 @@ export const AuthProvider = ({ children }) => {
         if (session.role) {
           const normalized = session.role === 'user' ? 'customer' : session.role;
           if (normalized !== userRoleRef.current) {
+            console.log(`[DEBUG] [AuthContext-PollSync] [${new Date().toISOString()}] Role changed from "${userRoleRef.current}" to "${normalized}" by poll SOT. UID: ${user.uid}`);
             setUserRole(normalized);
             localStorage.setItem('lumora_active_role', normalized);
           }
@@ -240,45 +246,40 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // ── STEP 1: localStorage hint (temporary, will be overwritten) ──────
-        // Use only as a fast hint so the UI can pre-warm while backend syncs.
-        const localHint = localStorage.getItem('lumora_active_role');
-        if (localHint && localHint !== 'customer') {
-          // Only trust non-customer local hints to avoid stale 'customer' lock-in
-          setUserRole(localHint === 'user' ? 'customer' : localHint);
-        }
+        // ── Admin branch: check for existing admin token ─────────────────────
+        // Admin uses a separate JWT flow (Firebase ID token, not firebase-sync).
+        // We detect this by an existing backend token AND local admin hint.
+        const localHint = localStorage.getItem('lumora_active_role') || 'customer';
+        console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Auth state changed for UID: ${firebaseUser.uid}. Local active role hint: "${localHint}"`);
 
-        // ── STEP 2: syncWithBackend — backend is the authoritative role SOT ─
-        // setLoading(false) is deferred until AFTER this completes so
-        // ProtectedRoute never renders with a stale / wrong role.
-
-        // ── Admin branch: if hint is 'admin', use Firebase ID token flow ────
-        // Skip firebase-sync entirely for admin — call adminLogin instead.
         if (localHint === 'admin') {
           try {
             await adminLogin(firebaseUser);
+            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Setting admin userRole. UID: ${firebaseUser.uid}`);
             setUserRole('admin');
             localStorage.setItem('lumora_active_role', 'admin');
           } catch (adminErr) {
             console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+            clearBackendToken(); // clears all auth keys including lumora_active_role
             await signOut(auth);
-            clearBackendToken();
-            window.location.href = '/admin/login';
+            window.location.replace('/admin/login');
             return;
           }
           setLoading(false);
           return; // do NOT call syncWithBackend for admin
         }
 
+        // ── STEP 2: syncWithBackend — backend is the authoritative role SOT ─
+        // Pass localHint to backend so it knows our desired active role session.
         let backendRole = null;
         let backendIsActive = true;
         try {
-          const hintRole = localStorage.getItem('lumora_active_role') || 'customer';
-          const syncResult = await syncWithBackend(firebaseUser, hintRole);
+          const syncResult = await syncWithBackend(firebaseUser, localHint);
           if (syncResult?.user) {
             // Backend returned confirmed role + status — use them as SOT
             backendRole = syncResult.user.role === 'user' ? 'customer' : syncResult.user.role;
             backendIsActive = syncResult.user.is_active !== false; // default true if missing
+            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Backend sync successful. Requested hint: "${localHint}", Returned role SOT: "${backendRole}". Setting userRole. UID: ${firebaseUser.uid}`);
             setUserRole(backendRole);
             localStorage.setItem('lumora_active_role', backendRole);
             if (!backendIsActive) {
@@ -286,26 +287,35 @@ export const AuthProvider = ({ children }) => {
             } else {
               setIsAccountDisabled(false);
             }
+          } else {
+            console.warn('[AuthContext] syncWithBackend returned null. Falling back to local active role hint.');
+            backendRole = localHint;
+            setUserRole(backendRole);
+            localStorage.setItem('lumora_active_role', backendRole);
           }
         } catch (e) {
-          console.warn('[AuthContext] Backend sync failed — falling back to localStorage/Firestore:', e.message);
-          // Fallback: try Firestore, then localStorage
+          console.warn('[AuthContext] Backend sync failed — falling back to Firestore:', e.message);
+          // Fallback: try Firestore (NOT localStorage — stale role could be wrong user)
           try {
             const userRef = doc(db, 'users', firebaseUser.uid);
             const snap = await getDoc(userRef);
             if (snap.exists()) {
               const firestoreRole = snap.data().role || 'customer';
               backendRole = firestoreRole === 'user' ? 'customer' : firestoreRole;
+              console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback. Setting userRole: "${backendRole}". UID: ${firebaseUser.uid}`);
               setUserRole(backendRole);
               localStorage.setItem('lumora_active_role', backendRole);
-            } else if (localHint) {
-              setUserRole(localHint === 'user' ? 'customer' : localHint);
             } else {
+              // Unknown user — default to customer (safest)
+              console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback (user doc not found). Defaulting userRole: "customer". UID: ${firebaseUser.uid}`);
               setUserRole('customer');
+              localStorage.setItem('lumora_active_role', 'customer');
             }
           } catch (fsErr) {
             console.warn('[AuthContext] Firestore fallback failed:', fsErr.message);
-            setUserRole(localHint ? (localHint === 'user' ? 'customer' : localHint) : 'customer');
+            // Last resort: customer (never vendor/admin from stale storage)
+            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback exception. Defaulting userRole: "customer". UID: ${firebaseUser.uid}`);
+            setUserRole('customer');
           }
         }
 
@@ -322,12 +332,14 @@ export const AuthProvider = ({ children }) => {
         }
 
       } else {
-        // No Firebase user — clear all session state
+        // ── No Firebase user — clear ALL session state ────────────────────────
+        // BUG FIX: clearBackendToken() now also removes lumora_active_role and
+        // lumora_user, preventing stale role from persisting to the next login.
         setUser(null);
         setUserRole(null);
         setIsAccountDisabled(false);
-        localStorage.removeItem('lumora_user');
-        clearBackendToken();
+        clearBackendToken(); // clears: backend_token, backend_uid, active_role, user
+        try { sessionStorage.clear(); } catch (_) {}
       }
 
       // ── CRITICAL: setLoading(false) is ALWAYS called last ────────────────
@@ -450,6 +462,16 @@ export const AuthProvider = ({ children }) => {
   /** Login with optional Remember Me */
   const login = async (email, password, rememberMe = false, role = null) => {
     try {
+      // ── PRE-SET active role BEFORE Firebase sign-in ───────────────────────
+      // CRITICAL: onAuthStateChanged fires immediately after signInWithEmailAndPassword
+      // resolves. If lumora_active_role still holds a stale value from a previous
+      // session (e.g. 'vendor' when user is now logging in as 'customer'), the
+      // onAuthStateChanged handler will read 'vendor' and issue a JWT with the
+      // wrong active_role. Setting the hint FIRST eliminates this race condition.
+      const normalizedPreRole = (role && role !== 'user') ? role : 'customer';
+      console.log(`[DEBUG] [login] [${new Date().toISOString()}] Pre-setting lumora_active_role to "${normalizedPreRole}" before Firebase sign-in`);
+      localStorage.setItem('lumora_active_role', normalizedPreRole);
+
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
       const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -557,23 +579,46 @@ export const AuthProvider = ({ children }) => {
 
 
 
-  /** Logout */
+  /** Logout — production-level full session teardown */
   const logout = async () => {
     const wasAdmin = userRole === 'admin';
+
+    // 1. Log the event BEFORE signing out (token still valid)
+    if (auth.currentUser) {
+      try {
+        await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, 'logout', true);
+      } catch (_) {}
+    }
+
+    // 2. Clear React state immediately
     setIsAccountDisabled(false);
     setIsPlatformPaused(false);
-    if (auth.currentUser) {
-      await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, 'logout', true);
-    }
-    clearBackendToken();   // remove lumora_backend_token + lumora_backend_uid
-    await signOut(auth);
-    if (wasAdmin) {
-      window.location.href = '/admin/login';
-    }
+    setUser(null);
+    setUserRole(null);
+
+    // 3. Clear ALL auth-related storage in one call
+    //    clearBackendToken() now removes: backend_token, backend_uid, active_role, user
+    clearBackendToken();
+
+    // 4. Clear sessionStorage (catches any session-scoped auth state)
+    try { sessionStorage.clear(); } catch (_) {}
+
+    // 5. Sign out of Firebase
+    try { await signOut(auth); } catch (_) {}
+
+    // 6. Redirect using replace() — removes the current page from browser history
+    //    so pressing Back does NOT re-open the protected dashboard.
+    //    All roles are redirected (not just admin).
+    const target = wasAdmin ? '/admin/login' : '/auth/login-selection';
+    window.location.replace(target);
   };
 
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const googleSignIn = async (rememberMe = false, role = null) => {
+    // PRE-SET active role before Firebase sign-in to prevent race condition
+    const normalizedPreRole = (role && role !== 'user') ? role : 'customer';
+    localStorage.setItem('lumora_active_role', normalizedPreRole);
+
     const provider = new GoogleAuthProvider();
     const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
     await setPersistence(auth, persistence);
@@ -648,6 +693,10 @@ export const AuthProvider = ({ children }) => {
   /** GitHub sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const githubSignIn = async (rememberMe = false, role = null) => {
     try {
+      // PRE-SET active role before Firebase sign-in to prevent race condition
+      const normalizedPreRole = (role && role !== 'user') ? role : 'customer';
+      localStorage.setItem('lumora_active_role', normalizedPreRole);
+
       const provider = new GithubAuthProvider();
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);

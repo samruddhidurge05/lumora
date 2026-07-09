@@ -6,6 +6,7 @@ import '../styles/vendor.css';
 import { useVendorProducts } from '../../hooks/useVendorData';
 import { backendFetch } from '../../utils/api';
 import { uploadFile } from '../../services/storageService';
+import { useApp } from '../../context/AppContext';
 
 const CATEGORIES = [
   'UI Kits','Icon Packs','Templates','Fonts','Illustrations','Mockups',
@@ -63,6 +64,7 @@ export default function EditProduct() {
   const { state } = useLocation();
 
   const { updateProduct } = useVendorProducts();
+  const { refetchProducts } = useApp();
 
   const [product,   setProduct]   = useState(state?.product || null);
   const [loading,   setLoading]   = useState(!state?.product);
@@ -112,16 +114,11 @@ export default function EditProduct() {
   const handleRemoveList = (setter, idx) => setter(prev => prev.filter((_, i) => i !== idx));
   const handleChangeList = (setter, idx, val) => setter(prev => prev.map((item, i) => i === idx ? val : item));
 
-  /* ── Load product from backend if not passed via router state ──────── */
+  /* ── Always fetch product from backend to ensure complete data is loaded ── */
   useEffect(() => {
-    if (product) {
-      populateForm(product);
-      setLoading(false);
-      loadReviews(product.id);
-      return;
-    }
     if (!id) { setLoading(false); return; }
 
+    setLoading(true);
     backendFetch(`/products/${id}`)
       .then(p => {
         setProduct(p);
@@ -305,6 +302,9 @@ export default function EditProduct() {
         system_requirements: systemRequirements.map(r => r.trim()).filter(Boolean),
         what_you_get: whatYouGet.map(w => w.trim()).filter(Boolean),
       });
+      if (typeof refetchProducts === 'function') {
+        refetchProducts();
+      }
       setSaved(true);
       setTimeout(() => navigate('/vendor/products'), 1200);
     } catch (e) {

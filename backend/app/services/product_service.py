@@ -167,52 +167,66 @@ class ProductService:
         try:
             # Handle digital file change
             if "file_url" in update_data and update_data["file_url"] != product.file_url:
-                if product.storage_path:
-                    old_files_to_delete.append(product.storage_path)
-                
-                # Move new file to permanent storage
-                new_storage_path, perm_url = storage_service.move_to_permanent(
-                    source_path=update_data["file_url"],
-                    vendor_id=vendor_id,
-                    product_id=product_id,
-                    filename=f"product-{product_id}.zip",
-                    is_image=False
-                )
-                product.storage_path = new_storage_path
-                product.file_url = perm_url
-                new_files_to_delete.append(new_storage_path)
+                new_file = update_data["file_url"]
+                # Only move to permanent if it is a new temporary file (not already permanent)
+                if new_file and "/products/" not in new_file:
+                    if product.storage_path:
+                        old_files_to_delete.append(product.storage_path)
+                    
+                    new_storage_path, perm_url = storage_service.move_to_permanent(
+                        source_path=new_file,
+                        vendor_id=vendor_id,
+                        product_id=product_id,
+                        filename=f"product-{product_id}.zip",
+                        is_image=False
+                    )
+                    product.storage_path = new_storage_path
+                    product.file_url = perm_url
+                    new_files_to_delete.append(new_storage_path)
+                else:
+                    product.file_url = new_file
 
             # Handle preview image change
             if "preview" in update_data and update_data["preview"] != product.preview:
-                if product.preview_path:
-                    old_files_to_delete.append(product.preview_path)
-                
-                new_preview_path, perm_preview = storage_service.move_to_permanent(
-                    source_path=update_data["preview"],
-                    vendor_id=vendor_id,
-                    product_id=product_id,
-                    filename="preview.png",
-                    is_image=True
-                )
-                product.preview_path = new_preview_path
-                product.preview = perm_preview
-                new_files_to_delete.append(new_preview_path)
+                new_preview = update_data["preview"]
+                # Only move to permanent if it is a new temporary image (not already permanent)
+                if new_preview and "/products/" not in new_preview:
+                    if product.preview_path:
+                        old_files_to_delete.append(product.preview_path)
+                    
+                    new_preview_path, perm_preview = storage_service.move_to_permanent(
+                        source_path=new_preview,
+                        vendor_id=vendor_id,
+                        product_id=product_id,
+                        filename="preview.png",
+                        is_image=True
+                    )
+                    product.preview_path = new_preview_path
+                    product.preview = perm_preview
+                    new_files_to_delete.append(new_preview_path)
+                else:
+                    product.preview = new_preview
 
             # Handle thumbnail image change
             if "thumbnail" in update_data and update_data["thumbnail"] != product.thumbnail:
-                if product.thumbnail_path:
-                    old_files_to_delete.append(product.thumbnail_path)
-                
-                new_thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
-                    source_path=update_data["thumbnail"],
-                    vendor_id=vendor_id,
-                    product_id=product_id,
-                    filename="thumbnail.png",
-                    is_image=True
-                )
-                product.thumbnail_path = new_thumbnail_path
-                product.thumbnail = perm_thumbnail
-                new_files_to_delete.append(new_thumbnail_path)
+                new_thumb = update_data["thumbnail"]
+                # Only move to permanent if it is a new temporary image (not already permanent)
+                if new_thumb and "/products/" not in new_thumb:
+                    if product.thumbnail_path:
+                        old_files_to_delete.append(product.thumbnail_path)
+                    
+                    new_thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
+                        source_path=new_thumb,
+                        vendor_id=vendor_id,
+                        product_id=product_id,
+                        filename="thumbnail.png",
+                        is_image=True
+                    )
+                    product.thumbnail_path = new_thumbnail_path
+                    product.thumbnail = perm_thumbnail
+                    new_files_to_delete.append(new_thumbnail_path)
+                else:
+                    product.thumbnail = new_thumb
 
             # Price drop check
             price_dropped = False
@@ -278,6 +292,17 @@ class ProductService:
             # Sync updated details to Firestore
             sync_product_to_firestore(product)
 
+            # Structured log
+            from app.utils.logger import log_structured_event
+            log_structured_event(
+                user_id=user.id if user else None,
+                role="vendor",
+                action="product_updated",
+                module="products",
+                status="success",
+                details=f"Product '{product.title}' (ID {product.id}) updated by vendor {vendor_id}",
+            )
+
             return product
 
         except Exception as e:
@@ -315,6 +340,17 @@ class ProductService:
                 )
 
             db.commit()
+
+            # Structured log
+            from app.utils.logger import log_structured_event
+            log_structured_event(
+                user_id=user.id if user else None,
+                role="vendor",
+                action="product_archived",
+                module="products",
+                status="success",
+                details=f"Product '{product.title}' (ID {product.id}) archived by vendor {vendor_id}",
+            )
 
             # Update/Delete from Firestore so it disappears from customer catalog
             delete_product_from_firestore(product_id)

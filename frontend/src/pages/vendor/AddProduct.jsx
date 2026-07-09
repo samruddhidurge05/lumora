@@ -5,6 +5,7 @@ import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts } from '../../hooks/useVendorData';
 import { uploadFile } from '../../services/storageService';
+import { useApp } from '../../context/AppContext';
 
 const CATEGORIES = [
   'UI Kits','Icon Packs','Templates','Fonts','Illustrations','Mockups',
@@ -251,6 +252,8 @@ export default function AddProduct() {
     return null;
   };
 
+  const { refetchProducts } = useApp();
+
   /* ── Save to backend ──────────────────────────────────────────────── */
   const doSave = async (statusVal) => {
     setSaveError('');
@@ -269,6 +272,9 @@ export default function AddProduct() {
         system_requirements: systemRequirements.map(r => r.trim()).filter(Boolean),
         what_you_get: whatYouGet.map(w => w.trim()).filter(Boolean)
       });
+      if (typeof refetchProducts === 'function') {
+        refetchProducts();
+      }
       return true;
     } catch (e) {
       setSaveError(e.message || 'Failed to save product.');

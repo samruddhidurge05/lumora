@@ -24,15 +24,28 @@ const CAT_GALLERY = {
 };
 
 function getGallery(product) {
-  const preview = product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
+  // Use vendor-uploaded preview image first, then thumbnail, then category fallback
+  const vendorImage = product.preview || product.thumbnail || null;
+  const fallback = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
+  const primary = vendorImage || fallback;
+
   const extraImages = Array.isArray(product.previewImages || product.preview_images)
-    ? (product.previewImages || product.preview_images)
+    ? (product.previewImages || product.preview_images).filter(Boolean)
     : [];
+
+  // If vendor uploaded additional images, show them alongside primary
   if (extraImages.length > 0) {
-    return [preview, ...extraImages];
+    return [primary, ...extraImages.filter(img => img !== primary)];
   }
+
+  // If vendor uploaded a primary image, show only that (don't pad with Unsplash)
+  if (vendorImage) {
+    return [vendorImage];
+  }
+
+  // Pure fallback: category stock images
   const catImgs = CAT_GALLERY[product.category] || CAT_GALLERY['Design Assets'];
-  return [preview, ...catImgs.filter(img => img !== preview)].slice(0, 5);
+  return [primary, ...catImgs.filter(img => img !== primary)].slice(0, 5);
 }
 
 export default function ProductPage() {
@@ -111,11 +124,16 @@ export default function ProductPage() {
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
 
   // Features list parsing:
-  const featuresList = Array.isArray(product.features)
+  // For backend products (numeric IDs), never show hardcoded defaults.
+  // Only show vendor-entered features or a genuine empty state message.
+  const isBackendProduct = !isNaN(parseInt(product.id, 10));
+  const featuresList = Array.isArray(product.features) && product.features.length > 0
     ? product.features
     : (typeof product.features === 'string' && product.features.trim() !== '')
-      ? (product.features.startsWith('[') ? JSON.parse(product.features) : product.features.split(',').map(f => f.trim()))
-      : (product.highlights || ['Premium components included', 'Commercial license', 'Lifetime updates', 'Responsive design']);
+      ? (product.features.startsWith('[') ? JSON.parse(product.features) : product.features.split(',').map(f => f.trim()).filter(Boolean))
+      : isBackendProduct
+        ? [] // Backend product with no features entered — show empty state
+        : (product.highlights || ['Premium components included', 'Commercial license', 'Lifetime updates', 'Responsive design']);
 
   const whatYouGetList = Array.isArray(product.whatYouGet || product.what_you_get)
     ? (product.whatYouGet || product.what_you_get)
@@ -333,14 +351,18 @@ export default function ProductPage() {
                   <div>
                     <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '16px' }}>Key Features</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {featuresList.map((f, i) => (
+                      {featuresList.length > 0 ? featuresList.map((f, i) => (
                         <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                           <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
                             <Check size={11} color="#fff" />
                           </div>
                           <p style={{ fontSize: '0.87rem', color: '#4E3B31', fontWeight: 500, lineHeight: 1.5 }}>{f}</p>
                         </div>
-                      ))}
+                      )) : (
+                        <div style={{ padding: '18px', borderRadius: '14px', background: 'rgba(220,198,255,0.08)', border: '1px solid rgba(220,198,255,0.15)', color: '#8B6B5B', fontSize: '0.84rem', fontWeight: 500 }}>
+                          No features listed for this product.
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -378,7 +400,9 @@ export default function ProductPage() {
                 <div>
                   {/* Rating Summary + Distribution */}
                   {(() => {
-                    const displayReviews = backendReviews !== null ? backendReviews : (product.reviewsList || []);
+                    const displayReviews = isBackendProduct
+                      ? (backendReviews !== null ? backendReviews : [])
+                      : (backendReviews !== null ? backendReviews : (product.reviewsList || []));
                     const count = displayReviews.length;
                     const avg = count > 0
                       ? (displayReviews.reduce((s, r) => s + (r.rating || 0), 0) / count).toFixed(1)
@@ -466,10 +490,9 @@ export default function ProductPage() {
                           onChange={e => setReviewComment(e.target.value)}
                           placeholder={
                             !user ? 'Please sign in to leave a review'
-                            : (!isOwned && !isNaN(parseInt(product.id, 10))) ? 'Purchase this product to leave a verified review'
                             : 'Share your experience with this product...'
                           }
-                          disabled={!user || (!isOwned && !isNaN(parseInt(product.id, 10)))}
+                          disabled={!user}
                           maxLength={600}
                           rows={3}
                           style={{
@@ -495,7 +518,7 @@ export default function ProductPage() {
                         {/* Char count + submit */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: '0.68rem', color: '#8B6B5B' }}>{reviewComment.length}/600</span>
-                          {user && isOwned ? (
+                          {user ? (
                             <button
                               type="submit"
                               disabled={reviewSubmitting || !reviewComment.trim()}
@@ -532,10 +555,12 @@ export default function ProductPage() {
 
                   {/* ── Existing Reviews ── */}
                   {(() => {
-                    // Prefer live backend reviews; fall back to local product.reviewsList
-                    const displayReviews = backendReviews !== null
-                      ? backendReviews
-                      : (product.reviewsList || []);
+                    // For backend products (numeric IDs): ONLY use backendReviews (null = loading, [] = no reviews).
+                    // Never fall back to product.reviewsList for backend products — those are stale mock data.
+                    // For local mock products (string IDs): use product.reviewsList as before.
+                    const displayReviews = isBackendProduct
+                      ? (backendReviews !== null ? backendReviews : []) // null = still loading, show empty
+                      : (backendReviews !== null ? backendReviews : (product.reviewsList || []));
                     if (displayReviews.length === 0) return (
                       <div style={{ textAlign: 'center', padding: '40px 20px', color: '#8B6B5B', fontSize: '0.84rem', fontWeight: 500 }}>
                         No reviews yet — be the first to share your thoughts!

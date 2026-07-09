@@ -141,8 +141,25 @@ def create_withdrawal(data: dict) -> dict:
     db = _get_db()
     try:
         vendor_id = data["vendor_id"]
-        method    = data.get("method", "upi")
-        eta       = "Instant" if method == "upi" else "2-3 days"
+
+        # ── IDEMPOTENCY GUARD ─────────────────────────────────────────────
+        # Prevent duplicate pending withdrawal requests from the same vendor.
+        existing_pending = db.query(Withdrawal).filter(
+            Withdrawal.vendor_id == vendor_id,
+            Withdrawal.status == "pending"
+        ).first()
+        if existing_pending:
+            from fastapi import HTTPException as _HTTPException
+            raise _HTTPException(
+                status_code=409,
+                detail=(
+                    f"You already have a pending withdrawal of ₹{existing_pending.amount:.2f}. "
+                    "Please wait for it to be processed before submitting a new request."
+                )
+            )
+
+        method = data.get("method", "upi")
+        eta    = "Instant" if method == "upi" else "2-3 days"
         w = Withdrawal(
             vendor_id    = vendor_id,
             amount       = float(data["amount"]),
@@ -164,7 +181,7 @@ def create_withdrawal(data: dict) -> dict:
                 activity_type="withdrawal_request",
                 details=f"Requested withdrawal of ₹{w.amount:.2f} via {w.method}."
             )
-            
+
             # Notify admins
             admins = db.query(User).filter(User.role == "admin").all()
             from app.services.notification_service import NotificationService
@@ -177,9 +194,27 @@ def create_withdrawal(data: dict) -> dict:
                     category="withdrawal"
                 )
 
-        db.commit()
-        db.refresh(w)
+        try:
+            db.commit()
+            db.refresh(w)
+        except Exception as db_err:
+            db.rollback()
+            raise db_err
+
+        # Structured log
+        from app.utils.logger import log_structured_event
+        log_structured_event(
+            user_id=user.id if user else None,
+            role="vendor",
+            action="withdrawal_requested",
+            module="vendors",
+            status="success",
+            details=f"Withdrawal request submitted: ₹{w.amount:.2f} via {w.method}",
+        )
+
         return _withdrawal_to_dict(w)
+    except Exception:
+        raise
     finally:
         db.close()
 
@@ -713,6 +748,22 @@ def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
                     "healthScore": min(100, max(0, int((float(p.rating or 0) / 5) * 100))) if p.rating else 75,
                     "createdAt":   p.created_at.isoformat() if p.created_at else None,
                     "updatedAt":   p.updated_at.isoformat() if p.updated_at else None,
+                    # Extended metadata fields
+                    "features":            p.features if p.features else [],
+                    "system_requirements": p.system_requirements if p.system_requirements else [],
+                    "what_you_get":        p.what_you_get if p.what_you_get else [],
+                    "short_desc":          p.short_desc,
+                    "installation_guide":  p.installation_guide,
+                    "subcategory":         p.subcategory,
+                    "discount":            float(p.discount or 0),
+                    "preview_images":      p.preview_images if p.preview_images else [],
+                    "preview_video":       p.preview_video,
+                    "seo_title":           p.seo_title,
+                    "seo_description":     p.seo_description,
+                    "visibility":          p.visibility or "public",
+                    "affiliate_enabled":   p.affiliate_enabled or False,
+                    "commission_type":     p.commission_type or "percentage",
+                    "commission_value":    float(p.commission_value or 0),
                 }
                 for p in products
             ],
