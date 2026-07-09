@@ -26,10 +26,10 @@ export default function AffiliateProfile({
   error: parentError,
   refresh,
 }) {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
 
   /* ── Payment draft state (only editable fields) ───────────────────── */
-  const [draft, setDraft]       = useState({ upiId: '', bankName: '', accountNumber: '', ifscCode: '' });
+  const [draft, setDraft]       = useState({ upiId: '', bankName: '', accountNumber: '', ifscCode: '', fullName: '', phone: '' });
   const [editing, setEditing]   = useState(false);
   const [saved, setSaved]       = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -61,8 +61,10 @@ export default function AffiliateProfile({
       bankName:      parentProfile?.bank_name       || '',
       accountNumber: parentProfile?.account_number  || '',
       ifscCode:      parentProfile?.ifsc_code       || '',
+      fullName:      user?.displayName || user?.email?.split('@')[0] || '',
+      phone:         user?.phoneNumber || '',
     });
-  }, [parentProfile]);
+  }, [parentProfile, user]);
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
   const handleSave = async () => {
@@ -78,6 +80,15 @@ export default function AffiliateProfile({
           ifsc_code:      draft.ifscCode      || null,
         }),
       });
+      
+      // Update AuthContext / Firebase profile
+      if (updateProfile) {
+        await updateProfile({
+          displayName: draft.fullName,
+          phoneNumber: draft.phone
+        });
+      }
+
       setEditing(false);
       setSaved(true);
       if (refresh) refresh();
@@ -96,6 +107,8 @@ export default function AffiliateProfile({
       bankName:      parentProfile?.bank_name       || '',
       accountNumber: parentProfile?.account_number  || '',
       ifscCode:      parentProfile?.ifsc_code       || '',
+      fullName:      user?.displayName || user?.email?.split('@')[0] || '',
+      phone:         user?.phoneNumber || '',
     });
     setEditing(false);
     setSaveError(null);
@@ -121,6 +134,28 @@ export default function AffiliateProfile({
       <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', padding: '11px 16px', borderRadius: '12px', background: 'rgba(45,0,96,0.02)', border: '1px solid rgba(45,0,96,0.06)' }}>
         {value || <span style={{ color: 'var(--text-muted)' }}>—</span>}
       </div>
+    </div>
+  );
+  
+  /* ── Reusable editable personal field ──────────────────────────────── */
+  const personalField = (label, key, placeholder = '') => (
+    <div>
+      <label style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '7px' }}>{label}</label>
+      {editing ? (
+        <div className="glass-input" style={{ padding: '11px 16px' }}>
+          <input
+            type="text"
+            value={draft[key]}
+            placeholder={placeholder}
+            onChange={e => setDraft(prev => ({ ...prev, [key]: e.target.value }))}
+            style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.88rem', color: 'var(--text-primary)', width: '100%', fontWeight: 500 }}
+          />
+        </div>
+      ) : (
+        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', padding: '11px 16px', borderRadius: '12px', background: 'rgba(45,0,96,0.02)', border: '1px solid rgba(45,0,96,0.06)' }}>
+          {draft[key] || <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.82rem' }}>—</span>}
+        </div>
+      )}
     </div>
   );
 
@@ -344,7 +379,7 @@ export default function AffiliateProfile({
         ))}
       </div>
 
-      {/* ── PERSONAL INFORMATION (read-only) ─────────────────────────────── */}
+      {/* ── PERSONAL INFORMATION (editable) ─────────────────────────────── */}
       <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -356,13 +391,9 @@ export default function AffiliateProfile({
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
-          {readField('Full Name',     displayName)}
+          {personalField('Full Name', 'fullName', 'Your Full Name')}
           {readField('Email Address', displayEmail)}
-          {readField('Phone Number',  displayPhone)}
-        </div>
-        <div style={{ marginTop: '16px', padding: '10px 14px', borderRadius: '10px', background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.18)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Shield size={12} style={{ color: '#4338CA', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.7rem', color: '#4338CA', fontWeight: 500 }}>Personal information is managed through your main account settings.</span>
+          {personalField('Phone Number', 'phone', 'Your Phone Number')}
         </div>
       </div>
 

@@ -42,65 +42,73 @@ SITE_URL        = os.getenv("VITE_SITE_URL", "http://localhost:5173")
 MIN_PAYOUT_INR  = 500.0   # minimum withdrawal amount in INR
 
 
-# ── Private helper ─────────────────────────────────────────────────────────────
+from sqlalchemy.exc import IntegrityError
+from app.services.activity_log_service import ActivityLogService
+from app.models.notification import Notification
 
 def _get_affiliate_profile(user: User, db: Session) -> AffiliateProfile:
     """
     Return the AffiliateProfile for the authenticated user, creating one
-    on first access (lazy-create pattern with sample seed data).
+    on first access safely with concurrency protection.
     """
     profile = db.query(AffiliateProfile).filter(
         AffiliateProfile.user_id == user.id
     ).first()
 
-    if not profile:
-        profile = AffiliateProfile(
-            user_id=user.id,
-            referral_code=f"AFF{user.id:04d}",
-            commission_rate=20.0,
-        )
-        db.add(profile)
+    if profile:
+        return profile
+
+    # Only allow for vendors, affiliates, admins. Active check.
+    if user.role not in ("vendor", "affiliate", "admin") or not user.is_active:
+        raise HTTPException(status_code=403, detail="Not eligible for Affiliate profile")
+
+    # Use a nested transaction (savepoint) to handle potential race conditions
+    try:
+        with db.begin_nested():
+            profile = AffiliateProfile(
+                user_id=user.id,
+                referral_code=f"AFF{user.id:04d}",
+                commission_rate=20.0,
+                total_earnings=0.0,
+                total_clicks=0,
+                total_sales=0,
+                is_active=True,
+                status="active"
+            )
+            db.add(profile)
+            
+            # Activity Logging
+            ActivityLogService.log_user_activity(
+                db=db,
+                user_id=user.id,
+                activity_type="affiliate_enrollment",
+                details="Affiliate profile automatically created."
+            )
+            ActivityLogService.log_admin_audit(
+                db=db,
+                admin_user_id=1,  # System attribution
+                action="auto_affiliate_enrollment",
+                target_type="user",
+                target_id=str(user.id),
+                metadata_dict={"event": "Profile created automatically"}
+            )
+            
+            # Notification
+            notification = Notification(
+                user_id=user.id,
+                title="Welcome to Affiliate Program",
+                message="Welcome! Your Affiliate account has been created successfully.",
+                category="general"
+            )
+            db.add(notification)
         db.commit()
         db.refresh(profile)
-
-        # Seed a few sample records so the dashboard isn't blank on first login
-        seed_commissions = [
-            AffiliateCommission(
-                affiliate_id=profile.id,
-                product_name="Framer SaaS Master Kit",
-                sale_amount=11920, commission_amt=2384, status="paid",
-            ),
-            AffiliateCommission(
-                affiliate_id=profile.id,
-                product_name="Zephyr AI Creator Suite",
-                sale_amount=6320, commission_amt=1264, status="approved",
-            ),
-            AffiliateCommission(
-                affiliate_id=profile.id,
-                product_name="Aura Glassmorphic Web Kit",
-                sale_amount=3120, commission_amt=624, status="approved",
-            ),
-            AffiliateCommission(
-                affiliate_id=profile.id,
-                product_name="Branding Archetype Library",
-                sale_amount=3600, commission_amt=720, status="paid",
-            ),
-            AffiliateCommission(
-                affiliate_id=profile.id,
-                product_name="Cinematic Motion Vol. 2",
-                sale_amount=2940, commission_amt=588, status="pending",
-            ),
-        ]
-        db.add_all(seed_commissions)
-        db.add(AffiliatePayout(
-            affiliate_id=profile.id, amount=5000, method="upi", status="completed",
-        ))
-
-        profile.total_earnings = sum(c.commission_amt for c in seed_commissions)
-        profile.total_sales    = len(seed_commissions)
-        profile.total_clicks   = 3210
-        db.commit()
-        db.refresh(profile)
+    except IntegrityError:
+        db.rollback()
+        # Another request created it during the race window, fetch the existing one
+        profile = db.query(AffiliateProfile).filter(
+            AffiliateProfile.user_id == user.id
+        ).first()
 
     return profile
 

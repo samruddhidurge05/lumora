@@ -87,22 +87,6 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
             message="Affiliate role required."
         )
 
-    # For vendor-role users, verify they actually have an affiliate profile
-    if current_user.role == "vendor":
-        from app.models.affiliate import AffiliateProfile
-        db_s = SessionLocal()
-        try:
-            has_profile = db_s.query(AffiliateProfile).filter(
-                AffiliateProfile.user_id == current_user.id
-            ).first() is not None
-        finally:
-            db_s.close()
-        if not has_profile:
-            raise LumoraException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                code="ROLE_REQUIRED",
-                message="Affiliate role required."
-            )
 
     # SQLite active check
     if not current_user.is_active:

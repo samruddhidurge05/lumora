@@ -7,7 +7,7 @@ import { backendFetch } from '../../utils/api';
 
 export default function CustomerSettings() {
   const { accentTheme, setAccentTheme, glassMode, setGlassMode, borderGlow, setBorderGlow } = useApp();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,6 +57,11 @@ export default function CustomerSettings() {
         glassMode,
         borderGlow
       });
+      
+      // Update AuthContext and Firebase User
+      if (updateProfile) {
+        await updateProfile({ name });
+      }
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);

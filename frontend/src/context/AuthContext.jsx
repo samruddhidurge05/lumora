@@ -8,7 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile,
+  updateProfile as firebaseUpdateProfile,
   sendEmailVerification,
   onAuthStateChanged,
   reload,
@@ -769,17 +769,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /** Update user profile state locally and in localStorage */
+  /** Update user profile state locally, in Firebase Auth, and Backend */
   const updateProfile = async (profileData) => {
+    // 1. Update Firebase Auth Profile
+    if (auth.currentUser && (profileData.displayName || profileData.name || profileData.photoURL || profileData.avatar)) {
+      try {
+        await firebaseUpdateProfile(auth.currentUser, {
+          displayName: profileData.displayName || profileData.name || auth.currentUser.displayName,
+          photoURL: profileData.photoURL || profileData.avatar || auth.currentUser.photoURL
+        });
+      } catch (err) {
+        console.error('Failed to update Firebase profile', err);
+      }
+    }
+
+    // 2. Update Backend
+    if (profileData.displayName || profileData.name) {
+      try {
+        await backendFetch('/auth/me', {
+          method: 'PUT',
+          body: JSON.stringify({ name: profileData.displayName || profileData.name })
+        });
+      } catch (err) {
+        console.warn('Failed to update backend profile', err);
+      }
+    }
+
+    // 3. Update React State and localStorage
     setUser(prev => {
       if (!prev) return null;
       const updated = { ...prev, ...profileData };
+      updated.displayName = profileData.displayName || profileData.name || prev.displayName;
+      updated.photoURL = profileData.photoURL || profileData.avatar || prev.photoURL;
+      
       try {
         localStorage.setItem('lumora_user', JSON.stringify({
           uid: updated.uid,
           email: updated.email,
-          displayName: updated.displayName || updated.fullName,
-          photoURL: updated.photoURL || updated.avatar,
+          displayName: updated.displayName,
+          photoURL: updated.photoURL,
           ...profileData
         }));
       } catch (err) {
