@@ -108,6 +108,10 @@ export default function CustomersManagement() {
   // Details Modal Drawer
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
+  // Pagination state (M6)
+  const [custPage, setCustPage] = useState(1);
+  const CUST_PAGE_SIZE = 50;
+
   // ── Real-time synchronization ──────────────────────────────────────────────
   useEffect(() => {
     setLoadingUsers(true);
@@ -267,6 +271,10 @@ export default function CustomersManagement() {
     return result;
   }, [processedCustomers, search, statusFilter, dateSort, orderSort]);
 
+  // Paginated slice for display (M6)
+  const custTotalPages = Math.max(1, Math.ceil(filteredCustomers.length / CUST_PAGE_SIZE));
+  const pagedCustomers = filteredCustomers.slice((custPage - 1) * CUST_PAGE_SIZE, custPage * CUST_PAGE_SIZE);
+
   // Format Helper for joined dates
   const formatJoinedDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -371,11 +379,27 @@ export default function CustomersManagement() {
             </span>
           </div>
 
-          {/* Loading View */}
+          {/* Loading View — skeleton rows */}
           {isPageLoading && (
-            <div className="flex items-center justify-center py-24 gap-3 text-[#7B3FA0]">
-              <div className="w-5 h-5 border-2 border-[#B886D0] border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm">Fetching registry metrics…</span>
+            <div className="flex flex-col gap-2 p-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-12 rounded-xl bg-[#F5E9DD]/40 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+              ))}
+            </div>
+          )}
+
+          {/* Error View */}
+          {!isPageLoading && error && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <Icon name="AlertTriangle" size={22} className="text-red-400" />
+              <p className="text-sm font-bold text-[#2D004D]">Failed to Load Customers</p>
+              <p className="text-[10px] text-[#7B3FA0] max-w-xs">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-1 px-4 py-2 bg-[#2D004D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors"
+              >
+                Retry
+              </button>
             </div>
           )}
 
@@ -389,7 +413,7 @@ export default function CustomersManagement() {
           )}
 
           {/* Table Data */}
-          {!isPageLoading && filteredCustomers.length > 0 && (
+          {!isPageLoading && !error && filteredCustomers.length > 0 && (
             <div className="overflow-x-auto">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -409,12 +433,12 @@ export default function CustomersManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers.map((customer, idx) => (
+                  {pagedCustomers.map((customer, idx) => (
                     <tr
                       key={customer.uid}
                       onClick={() => setSelectedCustomer(customer)}
                       style={{
-                        borderBottom: idx < filteredCustomers.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
+                        borderBottom: idx < pagedCustomers.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
                         background: 'transparent',
                         transition: 'background 0.2s',
                         cursor: 'pointer'
@@ -492,6 +516,31 @@ export default function CustomersManagement() {
             </div>
           )}
         </TableContainer>
+
+        {/* Pagination controls (M6) */}
+        {!isPageLoading && !error && custTotalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 px-1">
+            <span className="text-[9px] text-[#7B3FA0] font-bold">
+              Page {custPage} of {custTotalPages} &bull; {filteredCustomers.length} customers
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCustPage(p => Math.max(1, p - 1))}
+                disabled={custPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setCustPage(p => Math.min(custTotalPages, p + 1))}
+                disabled={custPage === custTotalPages}
+                className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ── Details Side Drawer / Modal ── */}
