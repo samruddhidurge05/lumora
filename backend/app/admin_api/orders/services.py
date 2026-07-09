@@ -5,17 +5,23 @@ from app.db.session import SessionLocal
 from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
 
-def get_orders_list():
+def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
+    page = max(1, page)
+    page_size = max(1, min(200, page_size))
+
     if not firebase_connected or db is None:
         db_s = SessionLocal()
         try:
-            orders = db_s.query(OrderModel).order_by(OrderModel.created_at.desc()).all()
+            q = db_s.query(OrderModel).order_by(OrderModel.created_at.desc())
+            if status:
+                q = q.filter(OrderModel.status.ilike(status))
+            total = q.count()
+            orders = q.offset((page - 1) * page_size).limit(page_size).all()
             result = []
             for o in orders:
                 customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
                 cust_name = customer.name if customer else "Customer"
                 cust_email = customer.email if customer else ""
-                
                 items_data = []
                 for item in o.items:
                     items_data.append({
@@ -23,7 +29,6 @@ def get_orders_list():
                         "productName": item.product.title if item.product else "Product",
                         "price": float(item.price_paid or 0.0),
                     })
-                    
                 result.append({
                     "id": str(o.id),
                     "orderId": f"ORD-{o.id}",
@@ -38,13 +43,18 @@ def get_orders_list():
                     "paymentMethod": o.payment_method or "upi",
                     "createdAt": o.created_at.isoformat() + "Z" if o.created_at else ""
                 })
-            return result
+            return {"total": total, "page": page, "page_size": page_size, "items": result}
         finally:
             db_s.close()
-            
-    orders_ref = db.collection("orders")
-    docs = orders_ref.stream()
-    return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+
+    # Firestore path — fetch all then filter + paginate in Python
+    docs = list(db.collection("orders").stream())
+    all_orders = [{"id": doc.id, **doc.to_dict()} for doc in docs]
+    if status:
+        all_orders = [o for o in all_orders if (o.get("status") or "").lower() == status.lower()]
+    total = len(all_orders)
+    items = all_orders[(page - 1) * page_size: page * page_size]
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_order_by_id(order_id: str):
     clean_id = order_id.replace("ORD-", "")

@@ -169,12 +169,15 @@ def get_refund_monitor_list():
 
     return refunds
 
-def get_transactions_list():
+def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None):
+    page = max(1, page)
+    page_size = max(1, min(200, page_size))
     telemetry = get_payments_telemetry()
-    return [
+    all_txns = [
         {
             "id":      f"TXN-{o['id'][-4:]}" if len(o['id']) >= 4 else f"TXN-{o['id']}",
             "orderId": o["id"],
+            "customerName": o.get("customerName", ""),
             "amount":  o["price"],
             "method":  o["method"],
             "status":  "Success" if o["paymentStatus"] == "Paid" else "Failed",
@@ -182,6 +185,11 @@ def get_transactions_list():
         }
         for o in telemetry["orders"]
     ]
+    if status:
+        all_txns = [t for t in all_txns if t["status"].lower() == status.lower()]
+    total = len(all_txns)
+    items = all_txns[(page - 1) * page_size: page * page_size]
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def process_vendor_payout(vendor_id: str, amount: float):
     db_s = SessionLocal()

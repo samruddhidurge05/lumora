@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.db.session import get_db
 from app.models.product import Product
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
@@ -9,8 +10,22 @@ from admin.firestore.admin_firestore import sync_product_to_firestore, delete_pr
 router = APIRouter()
 
 @router.get("/")
-def get_products(db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):
-    return db.query(Product).all()
+def get_products(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    status: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    admin_user = Depends(require_admin_role)
+):
+    q = db.query(Product)
+    if status:
+        q = q.filter(Product.status.ilike(status))
+    if category:
+        q = q.filter(Product.category.ilike(f"%{category}%"))
+    total = q.count()
+    items = q.offset((page - 1) * page_size).limit(page_size).all()
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(product_in: ProductCreate, db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):

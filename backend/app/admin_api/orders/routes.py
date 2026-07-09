@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from app.admin_api.orders.services import (
     get_orders_list,
     get_order_by_id,
@@ -8,12 +8,18 @@ from app.admin_api.orders.services import (
 )
 from admin.validators.admin_auth import require_admin_role
 from app.models.user import User
+from typing import Optional
 
 router = APIRouter()
 
 @router.get("/")
-def get_orders(admin_user: User = Depends(require_admin_role)):
-    return get_orders_list()
+def get_orders(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    status: Optional[str] = Query(None),
+    admin_user: User = Depends(require_admin_role)
+):
+    return get_orders_list(page=page, page_size=page_size, status=status)
 
 @router.get("/{order_id}")
 def get_order(order_id: str, admin_user: User = Depends(require_admin_role)):

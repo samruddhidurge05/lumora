@@ -47,6 +47,10 @@ export default function Payments() {
   // ─── TAB STATE FOR REFUNDS ────────────────────────────────────────────────
   const [refundTab, setRefundTab] = useState('Pending'); // 'Pending' | 'Approved' | 'Rejected'
 
+  // ─── PAGINATION STATE (M6) ────────────────────────────────────────────────
+  const [txnPage, setTxnPage] = useState(1);
+  const TXN_PAGE_SIZE = 50;
+
   // ─── UI SYSTEM STATE ──────────────────────────────────────────────────────
 
 
@@ -57,6 +61,7 @@ export default function Payments() {
     const unsubscribe = subscribeToPaymentsTelemetry((data) => {
       setTelemetry(data);
       setLastRefreshed(new Date());
+      if (data && !data.loading) setError(null);
     });
     return () => unsubscribe();
   }, []);
@@ -128,6 +133,10 @@ export default function Payments() {
 
     return list;
   }, [telemetry.orders, searchQuery, statusFilter, dateFilter, customStartDate, customEndDate]);
+
+  // Pagination slice for transaction list (M6)
+  const txnTotalPages = Math.max(1, Math.ceil(filteredOrders.length / TXN_PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice((txnPage - 1) * TXN_PAGE_SIZE, txnPage * TXN_PAGE_SIZE);
 
   // Filter refund requests, approved, rejected
   const filteredRefunds = useMemo(() => {
@@ -358,8 +367,25 @@ export default function Payments() {
                     </span>
                   </div>
 
+                  {/* Loading skeleton */}
+                  {telemetry.loading && (
+                    <div className="p-4 flex flex-col gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-12 rounded-xl bg-[#F5E9DD]/40 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Error state */}
+                  {!telemetry.loading && error && (
+                    <div className="py-12 flex flex-col items-center gap-3 text-center">
+                      <p className="text-sm font-bold text-red-400">{error}</p>
+                      <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#2D004D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors">Retry</button>
+                    </div>
+                  )}
+
                   <div className="overflow-x-auto w-full">
-                    {filteredOrders.length > 0 ? (
+                    {!telemetry.loading && !error && pagedOrders.length > 0 ? (
                       <table className="w-full border-collapse text-left">
                         <thead>
                           <tr className="bg-stone-100/40 border-b border-stone-200/50">
@@ -371,7 +397,7 @@ export default function Payments() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredOrders.map((o) => {
+                          {pagedOrders.map((o) => {
                             const paymentStyles = {
                               Paid: 'bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]',
                               Unpaid: 'bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80',
@@ -428,13 +454,38 @@ export default function Payments() {
                           })}
                         </tbody>
                       </table>
-                    ) : (
+                    ) : !telemetry.loading && !error ? (
                       <div className="py-12 text-center text-[#7B3FA0]">
                         <p className="text-2xl mb-2">💸</p>
                         <p className="text-xs font-bold uppercase tracking-widest">No transactions found</p>
                       </div>
-                    )}
+                    ) : null}
                   </div>
+
+                  {/* Pagination controls */}
+                  {!telemetry.loading && !error && txnTotalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-[#F5E9DD]/60">
+                      <span className="text-[9px] text-[#7B3FA0] font-bold">
+                        Page {txnPage} of {txnTotalPages} &bull; {filteredOrders.length} transactions
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setTxnPage(p => Math.max(1, p - 1))}
+                          disabled={txnPage === 1}
+                          className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Prev
+                        </button>
+                        <button
+                          onClick={() => setTxnPage(p => Math.min(txnTotalPages, p + 1))}
+                          disabled={txnPage === txnTotalPages}
+                          className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </TableContainer>
 
               </div>
