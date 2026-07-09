@@ -67,6 +67,25 @@ class MockGateway(PaymentGateway):
             }
         )
 
+    def create_upi_qr(
+        self,
+        amount_inr: float,
+        currency: str,
+        receipt: str,
+    ) -> dict:
+        """
+        Create a mock UPI QR intent and details.
+        """
+        upi_id = "lumora@upi"
+        merchant_name = "Lumora Marketplace"
+        intent_url = f"upi://pay?pa={upi_id}&pn={merchant_name}&am={amount_inr:.2f}&tr={receipt}&cu={currency}"
+        
+        return {
+            "upi_id": upi_id,
+            "upi_intent_url": intent_url,
+            "qr_code_data": intent_url  # For QR generation on frontend
+        }
+
     def verify_signature(
         self,
         gateway_order_id: str,

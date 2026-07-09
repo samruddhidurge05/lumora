@@ -40,6 +40,7 @@ class InitiatePaymentRequest(BaseModel):
     items:          List[CartItem]   = Field(..., min_length=1)
     total_amount:   float            = Field(..., gt=0, description="Total in INR")
     currency:       str              = Field(default="INR")
+    payment_method: str              = Field(default="upi", description="The selected payment method, e.g. upi_qr")
     idempotency_key: Optional[str]   = Field(
         default=None,
         description="Client-generated UUID for this checkout session. Prevents duplicate payments.",
@@ -69,7 +70,7 @@ class ConfirmPaymentRequest(BaseModel):
         ...,
         description="HMAC signature from gateway. For mock mode, any non-empty string is accepted.",
     )
-    payment_method:     str   = Field(default="upi", description="upi | card | netbanking | wallet")
+    payment_method:     str   = Field(default="upi", description="upi | card | netbanking | wallet | upi_qr")
 
 
 class CancelPaymentRequest(BaseModel):
@@ -95,6 +96,10 @@ class InitiatePaymentResponse(BaseModel):
     gateway_key:      str            # Razorpay Key ID (for frontend Checkout JS)
     status:           str
     expires_at:       Optional[str]
+    # UPI QR Code extension fields
+    upi_id:           Optional[str] = None
+    upi_intent_url:   Optional[str] = None
+    qr_code_data:     Optional[str] = None
 
     class Config:
         from_attributes = True

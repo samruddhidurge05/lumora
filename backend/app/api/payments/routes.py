@@ -110,6 +110,7 @@ def initiate_payment(
         amount=body.total_amount,
         items=items_as_dicts,
         currency=body.currency,
+        payment_method=body.payment_method,
         idempotency_key=body.idempotency_key,
         promo_code=body.promo_code,
         affiliate_code=body.affiliate_code,

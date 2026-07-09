@@ -79,6 +79,7 @@ class PaymentService:
         amount: float,
         items: List[Dict[str, Any]],
         currency: str = "INR",
+        payment_method: str = "upi",
         idempotency_key: Optional[str] = None,
         promo_code: Optional[str] = None,
         affiliate_code: Optional[str] = None,
@@ -95,16 +96,6 @@ class PaymentService:
 
         Idempotent: if idempotency_key already exists, returns the
         existing payment data without creating a duplicate.
-
-        Returns:
-            {
-                "payment_ref":      "LUM-20260708-A1B2C3D4",
-                "gateway_order_id": "mock_order_abc123",
-                "amount":           999.0,
-                "currency":         "INR",
-                "gateway":          "mock",
-                "gateway_key":      "mock_key",   # Razorpay Key ID for frontend
-            }
         """
         repo = PaymentRepository(db)
 
@@ -128,6 +119,15 @@ class PaymentService:
                 currency=currency,
                 receipt=receipt,
             )
+            
+            # Extract UPI QR details if requested
+            upi_details = {}
+            if payment_method == "upi_qr" and hasattr(gateway, "create_upi_qr"):
+                upi_details = gateway.create_upi_qr(
+                    amount_inr=amount,
+                    currency=currency,
+                    receipt=receipt,
+                )
         except Exception as exc:
             logger.error("Gateway create_order failed: %s", exc)
             raise HTTPException(
@@ -150,6 +150,7 @@ class PaymentService:
         )
         # Store the gateway_order_id before flush so it persists
         payment.gateway_order_id = gateway_order.gateway_order_id
+        payment.payment_method = payment_method
         db.flush()  # Populate payment.id without committing
 
         # ── Audit log ────────────────────────────────────────────────────────
@@ -161,7 +162,12 @@ class PaymentService:
         )
 
         logger.info("Payment initiated: %s gateway_order=%s", payment.payment_ref, gateway_order.gateway_order_id)
-        return self._to_initiate_response(payment)
+        
+        response = self._to_initiate_response(payment)
+        if upi_details:
+            response.update(upi_details)
+            
+        return response
 
     # ─── Confirm ─────────────────────────────────────────────────────────────
 

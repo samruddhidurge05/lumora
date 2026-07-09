@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, CreditCard, Shield, Lock, Check, Smartphone, Landmark, CheckCircle2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CreditCard, Shield, Lock, Check, Smartphone, Landmark, CheckCircle2, RefreshCw, QrCode } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { backendFetch } from '../../utils/api';
+import UpiQrDisplay from '../../components/payment/UpiQrDisplay';
 
 export default function Payment() {
   const { cart, navigateTo, completePurchase, formatPrice, buyNowProduct, appliedPromo, checkoutForm, platformStatus } = useApp();
   const isPlatformPaused = platformStatus?.isPlatformPaused;
 
-  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi', 'credit_card', 'debit_card', 'netbanking'
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi', 'upi_qr', 'credit_card', 'debit_card', 'netbanking'
   const [selectedUpiApp, setSelectedUpiApp] = useState('gpay'); // 'gpay', 'phonepe', 'paytm', 'custom'
   const [upiId, setUpiId] = useState('samdurge@okaxis');
   const [selectedBank, setSelectedBank] = useState('hdfc');
@@ -15,6 +17,14 @@ export default function Payment() {
   // Loading overlay state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
+  
+  // UPI QR Session state
+  const [upiSessionData, setUpiSessionData] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('lumora_upi_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
   const checkoutItems = buyNowProduct ? [buyNowProduct] : cart;
   const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
@@ -24,9 +34,18 @@ export default function Payment() {
   const platformFee = subtotal > 100 ? 0 : 5;
   const total = subtotal - discount + (subtotal > 0 ? platformFee : 0);
 
-  // Cycle loading status text
+  // Persist UPI session to sessionStorage
   useEffect(() => {
-    if (!isProcessing) return;
+    if (upiSessionData) {
+      sessionStorage.setItem('lumora_upi_session', JSON.stringify(upiSessionData));
+    } else {
+      sessionStorage.removeItem('lumora_upi_session');
+    }
+  }, [upiSessionData]);
+
+  // Cycle loading status text for simulated payments
+  useEffect(() => {
+    if (!isProcessing || paymentMethod === 'upi_qr') return;
     const timers = [
       setTimeout(() => setProcessingStep(1), 500),
       setTimeout(() => setProcessingStep(2), 1000),
@@ -43,12 +62,11 @@ export default function Payment() {
       }, 1600)
     ];
     return () => timers.forEach(clearTimeout);
-  }, [isProcessing]);
+  }, [isProcessing, paymentMethod]);
 
   const handleCardChange = e => {
     let { name, value } = e.target;
     if (name === 'card') {
-      // Format: 1111 2222 3333 4444
       value = value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').trim();
     }
     if (name === 'expiry') {
@@ -63,13 +81,58 @@ export default function Payment() {
     setCardForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (paymentMethod === 'upi_qr') {
+      setIsProcessing(true);
+      setProcessingStep(0);
+      try {
+        const payload = {
+          items: checkoutItems.map(i => ({ product_id: parseInt(i.id), price_paid: (i.price || 0) * 80 })),
+          total_amount: Math.round(total * 80), // INR
+          currency: 'INR',
+          payment_method: 'upi_qr',
+          idempotency_key: 'idemp_' + Date.now(),
+          promo_code: appliedPromo?.code || null,
+          affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+          discount_amount: Math.round(discount * 80),
+          tax_amount: 0
+        };
+        const res = await backendFetch('/payments/initiate', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        if (res) {
+          setUpiSessionData(res);
+        }
+      } catch (err) {
+        console.error("Initiate failed", err);
+        alert("Failed to initiate UPI QR payment.");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
     setIsProcessing(true);
     setProcessingStep(0);
   };
 
+  const handleQrVerified = (confirmResponse) => {
+    // Clear persisted UPI session
+    sessionStorage.removeItem('lumora_upi_session');
+    setUpiSessionData(null);
+    // Complete checkout natively
+    completePurchase(
+      'upi_qr',
+      confirmResponse.payment_ref,
+      appliedPromo?.code || null,
+      discount
+    );
+  };
+
   const getProcessingText = () => {
+    if (paymentMethod === 'upi_qr') return 'Generating UPI QR Code...';
     switch (processingStep) {
       case 0: return 'Establishing PCI-DSS secure connection...';
       case 1: return 'Authorizing transaction with bank gateway...';
@@ -124,26 +187,33 @@ export default function Payment() {
             </div>
           </div>
 
+          {upiSessionData ? (
+            <UpiQrDisplay paymentData={upiSessionData} onVerified={handleQrVerified} />
+          ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Payment Tabs Selector */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-mocha)', letterSpacing: '0.05em' }}>SELECT PAYMENT METHOD</label>
-              <div className="glass-surface" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', padding: '4px', borderRadius: '14px', gap: '4px' }}>
+              <div className="glass-surface" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '4px', borderRadius: '14px', gap: '4px' }}>
+                <button type="button" onClick={() => setPaymentMethod('upi_qr')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'upi_qr' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'upi_qr' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
+                  <QrCode size={13} /> UPI QR
+                </button>
                 <button type="button" onClick={() => setPaymentMethod('upi')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'upi' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'upi' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
-                  <Smartphone size={13} /> UPI
+                  <Smartphone size={13} /> UPI App
                 </button>
                 <button type="button" onClick={() => setPaymentMethod('credit_card')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'credit_card' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'credit_card' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
-                  <CreditCard size={13} /> Credit Card
+                  <CreditCard size={13} /> Credit
                 </button>
                 <button type="button" onClick={() => setPaymentMethod('debit_card')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'debit_card' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'debit_card' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
-                  <CreditCard size={13} /> Debit Card
+                  <CreditCard size={13} /> Debit
                 </button>
                 <button type="button" onClick={() => setPaymentMethod('netbanking')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'netbanking' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'netbanking' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
-                  <Landmark size={13} /> Net Banking
+                  <Landmark size={13} /> Net Bank
                 </button>
               </div>
             </div>
@@ -151,6 +221,17 @@ export default function Payment() {
             {/* Payment Method Content */}
             <div className="payment-content" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(123, 63, 160, 0.03)', border: '1px solid rgba(123, 63, 160, 0.12)' }}>
               
+              {/* UPI QR Tab */}
+              {paymentMethod === 'upi_qr' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', textAlign: 'center' }}>
+                  <QrCode size={40} style={{ color: 'var(--purple-600)' }} />
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', color: 'var(--color-espresso)', marginBottom: '8px' }}>Pay with any UPI App</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--color-mocha)' }}>Click below to generate a secure QR code. You can scan it using Google Pay, PhonePe, Paytm, or any UPI app to complete your purchase.</p>
+                  </div>
+                </div>
+              )}
+
               {/* UPI Tab */}
               {paymentMethod === 'upi' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -280,10 +361,11 @@ export default function Payment() {
             ) : (
               <button type="submit" className="btn-premium btn-premium-solid buy-now-glow"
                 style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '0.9rem', borderRadius: '12px', marginTop: '8px', boxShadow: '0 8px 24px rgba(123,63,160,0.4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={16} /> Authorize & Pay · {formatPrice(total)}
+                <Shield size={16} /> {paymentMethod === 'upi_qr' ? `Generate QR · ${formatPrice(total)}` : `Authorize & Pay · ${formatPrice(total)}`}
               </button>
             )}
           </form>
+          )}
 
           {/* Secure simulated transaction loader overlay */}
           {isProcessing && (

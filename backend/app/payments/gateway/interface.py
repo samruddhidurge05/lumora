@@ -82,6 +82,19 @@ class PaymentGateway(ABC):
         """
         raise NotImplementedError
 
+    def create_upi_qr(
+        self,
+        amount_inr: float,
+        currency: str,
+        receipt: str,
+    ) -> dict:
+        """
+        Optional: Create a UPI QR code session.
+        Returns a dict with upi_id, upi_intent_url, and qr_code_data.
+        Gateways that don't support it can raise NotImplementedError or return None.
+        """
+        return {}
+
     @abstractmethod
     def verify_signature(
         self,
