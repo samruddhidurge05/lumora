@@ -93,7 +93,12 @@ export default function CustomerNotifications() {
     setContextNotifs(prev => prev.map(item => String(item.id) === String(n.id) ? { ...item, read: true } : item));
   };
 
-  const deleteNotif = (id) => {
+  const deleteNotif = async (id) => {
+    try {
+      await backendFetch(`/notifications/${id}`, { method: 'DELETE' }).catch(() => null);
+    } catch (err) {
+      console.warn('[Notifications] Error deleting notification:', err);
+    }
     setNotifications(prev => prev.filter(n => String(n.id) !== String(id)));
     setContextNotifs(prev => prev.filter(n => String(n.id) !== String(id)));
   };

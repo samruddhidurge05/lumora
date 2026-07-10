@@ -851,21 +851,9 @@ export function AppContextProvider({ children }) {
   });
 
   // E-commerce items state
-  const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem('lumora_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem('lumora_wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [ownedProducts, setOwnedProducts] = useState(() => {
-    const saved = localStorage.getItem('lumora_owned');
-    // Pre-populate with first 3 products from JSON as demo owned
-    return saved ? JSON.parse(saved) : ['1', '2', '3'];
-  });
+  const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [ownedProducts, setOwnedProducts] = useState([]);
 
   // Buy Now specific states
   const [buyNowProduct, setBuyNowProduct] = useState(null);
@@ -947,24 +935,71 @@ export function AppContextProvider({ children }) {
     city: 'Mumbai'
   });
 
-  // Sync state to localStorage
+  // Sync state to localStorage with user scope
   useEffect(() => {
-    localStorage.setItem('lumora_cart', JSON.stringify(cart));
+    const uid = localStorage.getItem('lumora_backend_uid');
+    const key = uid ? `lumora_cart_user_${uid}` : 'lumora_cart';
+    localStorage.setItem(key, JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem('lumora_wishlist', JSON.stringify(wishlist));
+    const uid = localStorage.getItem('lumora_backend_uid');
+    const key = uid ? `lumora_wishlist_user_${uid}` : 'lumora_wishlist';
+    localStorage.setItem(key, JSON.stringify(wishlist));
   }, [wishlist]);
 
   useEffect(() => {
-    localStorage.setItem('lumora_owned', JSON.stringify(ownedProducts));
+    const uid = localStorage.getItem('lumora_backend_uid');
+    const key = uid ? `lumora_owned_user_${uid}` : 'lumora_owned';
+    localStorage.setItem(key, JSON.stringify(ownedProducts));
   }, [ownedProducts]);
 
-  // ── Backend sync: load cart, wishlist, and owned product IDs when user logs in ──
-  // ⚠️ R1 FIX: The sync must wait for lumora_backend_token to be written by
-  // syncWithBackend. We poll the lumora_backend_ready event / localStorage key
-  // before making any protected API calls so we never hit a 401 at startup.
+  // Load user-scoped states on mount, user session change, or when backend credentials sync
+  useEffect(() => {
+    const loadScopedStates = () => {
+      const uid = localStorage.getItem('lumora_backend_uid');
+      const cartKey = uid ? `lumora_cart_user_${uid}` : 'lumora_cart';
+      const wishlistKey = uid ? `lumora_wishlist_user_${uid}` : 'lumora_wishlist';
+      const ownedKey = uid ? `lumora_owned_user_${uid}` : 'lumora_owned';
+
+      const savedCart = localStorage.getItem(cartKey);
+      setCart(savedCart ? JSON.parse(savedCart) : []);
+
+      const savedWishlist = localStorage.getItem(wishlistKey);
+      setWishlist(savedWishlist ? JSON.parse(savedWishlist) : []);
+
+      const savedOwned = localStorage.getItem(ownedKey);
+      setOwnedProducts(savedOwned ? JSON.parse(savedOwned) : []);
+    };
+
+    loadScopedStates();
+
+    window.addEventListener('lumora_backend_ready', loadScopedStates);
+    return () => {
+      window.removeEventListener('lumora_backend_ready', loadScopedStates);
+    };
+  }, [user]);
+
+  const lastUserUidRef = useRef(null);
   const syncedUserRef = useRef(null);
+  
+  useEffect(() => {
+    const currentUid = user?.uid || null;
+    if (lastUserUidRef.current !== currentUid) {
+      console.log(`[AppContext] User session changed from ${lastUserUidRef.current} to ${currentUid}. Wiping context state.`);
+      setCart([]);
+      setWishlist([]);
+      setOwnedProducts([]);
+      setNotifications([]);
+      setAppliedPromo(null);
+      setBuyNowProduct(null);
+      setLastPurchasedItems([]);
+      lastUserUidRef.current = currentUid;
+      syncedUserRef.current = null; // Allow backend sync to run again for the new user
+    }
+  }, [user]);
+
+  // ── Backend sync: load cart, wishlist, and owned product IDs when user logs in ──
   useEffect(() => {
     if (!user) return;
     // Guard: only sync for customer role — vendors/affiliates/admins don't
@@ -1274,11 +1309,10 @@ export function AppContextProvider({ children }) {
     setLastPurchasedItems(items);
 
     // ── Persist order to SQLite backend (non-blocking) ──────────────────
-    const totalUSD = items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
-    const totalINR = Math.round(totalUSD * 80);
+    const totalINR = Math.round(items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0));
     const orderPayload = {
       items: items
-        .map(i => ({ product_id: parseInt(i.id, 10), price_paid: (i.price || 0) * 80 }))
+        .map(i => ({ product_id: parseInt(i.id, 10), price_paid: (i.price || 0) }))
         .filter(i => !isNaN(i.product_id)),
       total_amount: totalINR,
       payment_method: paymentMethod || 'upi',

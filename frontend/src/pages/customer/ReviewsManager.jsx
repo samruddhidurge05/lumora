@@ -18,7 +18,7 @@ export default function ReviewsManager() {
   const [formData, setFormData] = useState({ productId: '', rating: 5, comment: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const ownedItems = products.filter(p => ownedProducts.includes(p.id));
+  const ownedItems = products.filter(p => ownedProducts.includes(String(p.id)));
 
   const resolveTitle = (productId, fallback) =>
     (products.find(p => String(p.id) === String(productId))?.title) || fallback || `Product #${productId}`;
@@ -58,7 +58,7 @@ export default function ReviewsManager() {
 
   const openCreateModal = () => {
     setEditingReview(null);
-    setFormData({ productId: ownedItems.length > 0 ? String(ownedItems[0].id) : '', rating: 5, comment: '' });
+    setFormData({ productId: ownedItems.length > 0 ? String(ownedItems[0].id) : '', rating: 5, comment: '' }); // productId stored as string, converted to int on submit
     setShowModal(true);
   };
 
@@ -85,8 +85,14 @@ export default function ReviewsManager() {
         });
       } else {
         // Create review
+        const pid = parseInt(formData.productId, 10);
+        if (!pid || isNaN(pid)) {
+          setFormError('Please select a valid owned product.');
+          setSubmitting(false);
+          return;
+        }
         await createReviewApi({
-          product_id: Number(formData.productId),
+          product_id: pid,
           rating: Number(formData.rating),
           comment: formData.comment
         });
@@ -107,10 +113,10 @@ export default function ReviewsManager() {
     if (window.confirm("Are you sure you want to delete this review?")) {
       try {
         await deleteReviewApi(id);
+        setReviews(prev => prev.filter(r => r.id !== id));
       } catch (err) {
         console.warn('[ReviewsManager] Delete failed on backend:', err);
       }
-      setReviews(prev => prev.filter(r => r.id !== id));
     }
   };
 

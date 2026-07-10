@@ -62,7 +62,7 @@ export default function PriceAlerts() {
       await backendFetch('/price-alerts/', {
         method: 'POST',
         body: JSON.stringify({
-          user_id: backendUser.id || user.uid,
+          user_id: parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1,
           product_id: prod.id,
           original_price: prod.price,
           target_price: targetVal,
@@ -91,7 +91,7 @@ export default function PriceAlerts() {
       await backendFetch(`/price-alerts/${alertId}`, {
         method: 'PUT',
         body: JSON.stringify({
-          user_id: user.uid,
+          user_id: parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1,
           product_id: 0,
           original_price: 0,
           target_price: Number(targetPriceVal),

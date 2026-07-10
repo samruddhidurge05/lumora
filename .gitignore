@@ -71,3 +71,7 @@ htmlcov/
 *.pem
 *.key
 serviceAccountKey.json
+
+# Firebase Admin SDK service account key (sensitive — never commit)
+*-firebase-adminsdk-*.json
+lumora-e6ddc-firebase-adminsdk-fbsvc-abcf2d8c21.json

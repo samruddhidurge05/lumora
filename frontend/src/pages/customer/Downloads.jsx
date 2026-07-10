@@ -30,18 +30,33 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl }) {
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId }) {
   const [state, setState] = useState('idle'); // idle | downloading | done
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (state !== 'idle') return;
     setState('downloading');
     
+    let activeUrl = downloadUrl;
+    const numericId = parseInt(productId, 10);
+
+    // Fetch a fresh tokenized download URL from backend
+    if (!isNaN(numericId)) {
+      try {
+        const res = await backendFetch(`/products/${numericId}/download`);
+        if (res && res.download_url) {
+          activeUrl = res.download_url;
+        }
+      } catch (err) {
+        console.warn('[DownloadButton] Failed to fetch fresh download token, falling back to cached URL:', err.message);
+      }
+    }
+    
     // Connect to backend download URL if provided
-    if (downloadUrl) {
+    if (activeUrl) {
       try {
         const link = document.createElement('a');
-        link.href = downloadUrl;
+        link.href = activeUrl;
         link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
         document.body.appendChild(link);
         link.click();
@@ -528,7 +543,7 @@ export default function CustomerDownloads() {
                   <p style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', marginTop: 3 }}>{product.updateNote}</p>
                   <p style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.7 }}>{product.version} → {product.newVersion}</p>
                 </div>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
               </div>
             ))}
           </div>
@@ -686,8 +701,8 @@ function VaultCard({ product, isHovered, onHover }) {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingTop: 4, borderTop: '1px solid rgba(78,59,49,0.06)' }}>
-          <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} />
-          <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} />
+          <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+          <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} />
           <button style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
             padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',

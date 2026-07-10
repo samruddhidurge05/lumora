@@ -123,7 +123,7 @@ def trigger_price_alerts(
         notif = Notification(
             user_id=alert.user_id,
             title="Price Drop Alert! ✦",
-            message=f"'{product.title}' has dropped from ₹{int(old_price * 80)} to ₹{int(new_price * 80)} ({discount_percent}% OFF).",
+            message=f"'{product.title}' has dropped from ₹{int(old_price)} to ₹{int(new_price)} ({discount_percent}% OFF).",
             category="price_drop",
             is_read=False
         )

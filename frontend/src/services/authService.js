@@ -57,6 +57,9 @@ export const syncWithBackend = async (firebaseUser, role = 'customer') => {
       if (data.user?.id != null) {
         localStorage.setItem('lumora_backend_uid', String(data.user.id));
       }
+      if (data.user) {
+        localStorage.setItem('lumora_backend_user', JSON.stringify(data.user));
+      }
       // Signal hooks that are waiting for the backend session to be ready
       window.dispatchEvent(new Event('lumora_backend_ready'));
     }
@@ -97,12 +100,32 @@ export const refreshBackendToken = async (firebaseUser, role = 'customer') => {
  *              adminAuthService, and any other sign-out path.
  */
 export const clearBackendToken = () => {
-  // Backend JWT and user ID
-  localStorage.removeItem('lumora_backend_token');
-  localStorage.removeItem('lumora_backend_uid');
-  // Role cache — CRITICAL: must be cleared to prevent stale role leaking to the next user session
-  localStorage.removeItem('lumora_active_role');
-  // Cached user profile
-  localStorage.removeItem('lumora_user');
+  const backendUid = localStorage.getItem('lumora_backend_uid');
+  const keysToClear = [
+    'lumora_backend_token',
+    'lumora_backend_uid',
+    'lumora_backend_user',
+    'lumora_active_role',
+    'lumora_user',
+    'lumora_cart',
+    'lumora_wishlist',
+    'lumora_owned',
+    'lumora_support_tickets',
+    'lumora_saved_addr',
+    'lumora_theme',
+    'lumora_glass',
+    'lumora_glow',
+    'lumora-settings',
+    'lumora_recently_viewed',
+    'admin-sidebar-collapsed',
+    'lumora_aff_cart',
+    'lumora_search_history'
+  ];
+  if (backendUid) {
+    keysToClear.push(`lumora_cart_user_${backendUid}`);
+    keysToClear.push(`lumora_wishlist_user_${backendUid}`);
+    keysToClear.push(`lumora_owned_user_${backendUid}`);
+  }
+  keysToClear.forEach(key => localStorage.removeItem(key));
 };
 
