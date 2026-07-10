@@ -51,6 +51,12 @@ def get_vendor_profile(vendor_id: str) -> Optional[dict]:
             "announcementActive": v.announcement_active,
             "vacationMode":       v.vacation_mode,
             "vacationMessage":    v.vacation_message,
+            # Payment information
+            "upiId":              v.upi_id,
+            "accountHolderName":  v.account_holder_name,
+            "bankName":           v.bank_name,
+            "accountNumber":      v.account_number,
+            "ifscCode":           v.ifsc_code,
         }
     finally:
         db.close()
@@ -64,17 +70,42 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
             v.name   = data.get("displayName", data.get("name", v.name))
             v.bio    = data.get("storeBio",    data.get("bio",  v.bio))
             v.avatar = data.get("avatar", v.avatar)
+            # Payment fields — only overwrite when the key is explicitly present
+            if "upiId" in data:
+                v.upi_id = data["upiId"] or None
+            if "accountHolderName" in data:
+                v.account_holder_name = data["accountHolderName"] or None
+            if "bankName" in data:
+                v.bank_name = data["bankName"] or None
+            if "accountNumber" in data:
+                v.account_number = data["accountNumber"] or None
+            if "ifscCode" in data:
+                v.ifsc_code = data["ifscCode"] or None
         else:
             v = Vendor(
                 id=vendor_id,
                 name=data.get("displayName", data.get("name", "Creator")),
                 bio=data.get("storeBio", ""),
                 avatar=data.get("avatar"),
+                upi_id=data.get("upiId"),
+                account_holder_name=data.get("accountHolderName"),
+                bank_name=data.get("bankName"),
+                account_number=data.get("accountNumber"),
+                ifsc_code=data.get("ifscCode"),
             )
             db.add(v)
         db.commit()
         db.refresh(v)
-        return {"id": v.id, "name": v.name, "bio": v.bio}
+        return {
+            "id":                v.id,
+            "name":              v.name,
+            "bio":               v.bio,
+            "upiId":             v.upi_id,
+            "accountHolderName": v.account_holder_name,
+            "bankName":          v.bank_name,
+            "accountNumber":     v.account_number,
+            "ifscCode":          v.ifsc_code,
+        }
     finally:
         db.close()
 

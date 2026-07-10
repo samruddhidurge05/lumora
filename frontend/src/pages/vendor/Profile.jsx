@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VendorLayout from './VendorLayout';
 import useAuth from '../../hooks/useAuth';
 import '../styles/vendor.css';
@@ -6,24 +6,73 @@ import { useVendorProfile } from '../../hooks/useVendorData';
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
-  const { save: saveToFirestore, saving } = useVendorProfile(user);
+  const { profile: backendProfile, loading: profileLoading, save: saveToBackend, saving } = useVendorProfile();
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
 
   const [formData, setFormData] = useState({
-    displayName: user?.displayName || '',
-    email:       user?.email       || '',
-    phone:       user?.phone       || '',
-    storeName:   user?.storeName   || '',
-    storeBio:    user?.storeBio    || '',
-    storeUrl:    user?.storeUrl    || '',
-    website:     user?.website     || '',
-    country:     user?.country     || '',
-    github:      user?.github      || '',
-    twitter:     user?.twitter     || '',
-    role:        user?.role        || 'vendor',
-    avatar:      user?.avatar      || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    displayName: '',
+    email:       '',
+    phone:       '',
+    storeName:   '',
+    storeBio:    '',
+    storeUrl:    '',
+    website:     '',
+    country:     '',
+    github:      '',
+    twitter:     '',
+    role:        'vendor',
+    avatar:      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    // Payment information
+    upiId:             '',
+    accountHolderName: '',
+    bankName:          '',
+    accountNumber:     '',
+    ifscCode:          '',
   });
+
+  // Populate form: prefer backend profile (persistent), fall back to user context
+  useEffect(() => {
+    if (backendProfile) {
+      setFormData(prev => ({
+        ...prev,
+        displayName: backendProfile.name        || user?.displayName || '',
+        email:       user?.email                || '',
+        phone:       user?.phone                || '',
+        storeName:   backendProfile.name        || user?.storeName   || '',
+        storeBio:    backendProfile.bio         || user?.storeBio    || '',
+        storeUrl:    backendProfile.storeUrl    || user?.storeUrl    || '',
+        website:     backendProfile.website     || user?.website     || '',
+        country:     user?.country              || '',
+        github:      user?.github               || '',
+        twitter:     backendProfile.twitter     || user?.twitter     || '',
+        role:        user?.role                 || 'vendor',
+        avatar:      backendProfile.avatar      || user?.avatar      || prev.avatar,
+        // Payment fields from backend
+        upiId:             backendProfile.upiId             || '',
+        accountHolderName: backendProfile.accountHolderName || '',
+        bankName:          backendProfile.bankName          || '',
+        accountNumber:     backendProfile.accountNumber     || '',
+        ifscCode:          backendProfile.ifscCode          || '',
+      }));
+    } else if (!profileLoading && user) {
+      // Backend not available — populate from auth context only
+      setFormData(prev => ({
+        ...prev,
+        displayName: user.displayName || '',
+        email:       user.email       || '',
+        phone:       user.phone       || '',
+        storeName:   user.storeName   || '',
+        storeBio:    user.storeBio    || '',
+        storeUrl:    user.storeUrl    || '',
+        website:     user.website     || '',
+        country:     user.country     || '',
+        github:      user.github      || '',
+        twitter:     user.twitter     || '',
+        role:        user.role        || 'vendor',
+        avatar:      user.avatar      || prev.avatar,
+      }));
+    }
+  }, [backendProfile, profileLoading, user?.uid]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,8 +81,10 @@ export default function Profile() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    // Update React state / Firebase display name
     updateProfile(formData);
-    await saveToFirestore(formData);
+    // Persist everything including payment fields through the backend API
+    await saveToBackend(formData);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -45,6 +96,16 @@ export default function Profile() {
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
     'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
   ];
+
+  // Derive payment completeness for inline status badge
+  const hasUpi  = !!(formData.upiId.trim());
+  const hasBank = !!(
+    formData.accountHolderName.trim() &&
+    formData.bankName.trim() &&
+    formData.accountNumber.trim() &&
+    formData.ifscCode.trim()
+  );
+  const paymentComplete = hasUpi || hasBank;
 
   return (
     <VendorLayout activePage="profile" title="My Profile" subtitle="Manage your personal vendor details and contact information">
@@ -59,6 +120,7 @@ export default function Profile() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 24 }}>
+        {/* ── Left sidebar ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="v-card v-card-pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ position: 'relative', width: 90, height: 90, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(168,85,247,0.2)', marginBottom: 12 }}>
@@ -66,7 +128,7 @@ export default function Profile() {
             </div>
             <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--v-dark)' }}>{formData.displayName || 'Vendor Name'}</div>
             <div style={{ fontSize: 12, color: 'var(--v-text3)', marginTop: 2 }}>{formData.email || 'vendor@email.com'}</div>
-            
+
             <div className="v-badge v-badge-purple" style={{ marginTop: 12 }}>
               🏅 {user?.level || 'Creator'}
             </div>
@@ -104,13 +166,22 @@ export default function Profile() {
               <span style={{ color: 'var(--v-text3)' }}>Status:</span>
               <span className="v-badge v-badge-green" style={{ padding: '1px 6px', fontSize: 10 }}>Active</span>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <span style={{ color: 'var(--v-text3)' }}>Payment:</span>
+              <span className={`v-badge ${paymentComplete ? 'v-badge-green' : 'v-badge-amber'}`} style={{ padding: '1px 6px', fontSize: 10 }}>
+                {paymentComplete ? 'Set ✓' : 'Required'}
+              </span>
+            </div>
           </div>
         </div>
 
+        {/* ── Main form ── */}
         <div className="v-card v-card-pad">
           <form onSubmit={handleSave}>
+
+            {/* Personal Information */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Personal & Profile Information</div>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="v-field">
                 <label className="v-label">Display Name</label>
@@ -135,6 +206,7 @@ export default function Profile() {
 
             <div className="v-divider" />
 
+            {/* Store Information */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Store Profile Information</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -155,6 +227,7 @@ export default function Profile() {
 
             <div className="v-divider" />
 
+            {/* Social Profiles */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Social Profiles & Web Presence</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -179,8 +252,80 @@ export default function Profile() {
               </div>
             </div>
 
-            <button type="submit" className="v-btn v-btn-primary" style={{ marginTop: 8 }}>
-              Save Profile Changes
+            <div className="v-divider" />
+
+            {/* ── Payment Information ─────────────────────────────────────── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <div className="v-section-title" style={{ marginBottom: 0 }}>Payment Information</div>
+              {paymentComplete
+                ? <span className="v-badge v-badge-green" style={{ fontSize: 10 }}>✓ Complete</span>
+                : <span className="v-badge v-badge-amber" style={{ fontSize: 10 }}>Required for product creation</span>
+              }
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--v-text3)', marginBottom: 20 }}>
+              Provide either a UPI ID or complete bank details. One is sufficient.
+            </div>
+
+            {/* UPI option */}
+            <div style={{
+              padding: '16px 18px', borderRadius: 14, marginBottom: 14,
+              background: hasUpi ? 'rgba(34,197,94,0.05)' : 'rgba(255,255,255,0.60)',
+              border: `1px solid ${hasUpi ? 'rgba(34,197,94,0.22)' : 'rgba(196,148,230,0.22)'}`,
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
+                Option 1 — UPI
+              </div>
+              <div className="v-field" style={{ marginBottom: 0 }}>
+                <label className="v-label">UPI ID</label>
+                <input
+                  type="text"
+                  name="upiId"
+                  className="v-input"
+                  value={formData.upiId}
+                  onChange={handleChange}
+                  placeholder="yourname@upi"
+                />
+              </div>
+            </div>
+
+            {/* Divider between options */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 14px' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(196,148,230,0.18)' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--v-text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>or</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(196,148,230,0.18)' }} />
+            </div>
+
+            {/* Bank option */}
+            <div style={{
+              padding: '16px 18px', borderRadius: 14, marginBottom: 20,
+              background: hasBank ? 'rgba(34,197,94,0.05)' : 'rgba(255,255,255,0.60)',
+              border: `1px solid ${hasBank ? 'rgba(34,197,94,0.22)' : 'rgba(196,148,230,0.22)'}`,
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
+                Option 2 — Bank Account
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="v-field">
+                  <label className="v-label">Account Holder Name</label>
+                  <input type="text" name="accountHolderName" className="v-input" value={formData.accountHolderName} onChange={handleChange} placeholder="Full name on account" />
+                </div>
+                <div className="v-field">
+                  <label className="v-label">Bank Name</label>
+                  <input type="text" name="bankName" className="v-input" value={formData.bankName} onChange={handleChange} placeholder="e.g. State Bank of India" />
+                </div>
+                <div className="v-field">
+                  <label className="v-label">Account Number</label>
+                  <input type="text" name="accountNumber" className="v-input" value={formData.accountNumber} onChange={handleChange} placeholder="XXXX XXXX XXXX" />
+                </div>
+                <div className="v-field">
+                  <label className="v-label">IFSC Code</label>
+                  <input type="text" name="ifscCode" className="v-input" value={formData.ifscCode} onChange={handleChange} placeholder="e.g. SBIN0001234" />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" className="v-btn v-btn-primary" style={{ marginTop: 8 }} disabled={saving}>
+              {saving ? 'Saving…' : 'Save Profile Changes'}
             </button>
           </form>
         </div>

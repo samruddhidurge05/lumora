@@ -14,6 +14,12 @@ class VendorProfileSchema(BaseModel):
     github:      Optional[str] = ""
     twitter:     Optional[str] = ""
     avatar:      Optional[str] = ""
+    # Payment information
+    upiId:             Optional[str] = None
+    accountHolderName: Optional[str] = None
+    bankName:          Optional[str] = None
+    accountNumber:     Optional[str] = None
+    ifscCode:          Optional[str] = None
 
 
 class StoreSettingsSchema(BaseModel):
