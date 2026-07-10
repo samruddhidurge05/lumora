@@ -314,6 +314,11 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
         # in through the customer tile from having their role silently reset.
         ELEVATED_ROLES = ("vendor", "affiliate", "admin")
         if role and role != "customer" and user.role not in ELEVATED_ROLES:
+            if role == "admin":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot elevate to admin role.",
+                )
             user.role = role
             changed = True
         if changed:
@@ -338,8 +343,19 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
         status="success",
         details=f"User '{user.email}' authenticated via Firebase. Role: {user.role or 'customer'}",
     )
-    # Step 5 — issue backend JWT with the active role requested by the frontend
+    # Step 5 — issue backend JWT with the active role, strictly validated against SQLite role (Source of Truth)
+    db_role = user.role or "customer"
     active_role = role or "customer"
+    
+    if db_role == "customer":
+        active_role = "customer"
+    elif db_role == "vendor":
+        if active_role not in ("vendor", "customer"):
+            active_role = "vendor"
+    elif db_role == "affiliate":
+        if active_role not in ("affiliate", "customer"):
+            active_role = "affiliate"
+            
     token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)
 

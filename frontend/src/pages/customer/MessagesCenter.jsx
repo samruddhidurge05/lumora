@@ -32,6 +32,15 @@ export default function MessagesCenter() {
         const backendConvs = await backendFetch('/messages/conversations').catch(() => null);
         if (Array.isArray(backendConvs) && backendConvs.length > 0 && isMounted) {
           setConversations(backendConvs);
+          const targetId = sessionStorage.getItem('lumora_active_conversation_id');
+          if (targetId) {
+            const found = backendConvs.find(c => String(c.id) === String(targetId));
+            if (found) {
+              setActiveConv(found);
+              sessionStorage.removeItem('lumora_active_conversation_id');
+              return;
+            }
+          }
           if (!activeConv) setActiveConv(backendConvs[0]);
           return;
         }
@@ -43,6 +52,15 @@ export default function MessagesCenter() {
       const data = await getUserConversations(userId);
       if (isMounted) {
         setConversations(data);
+        const targetId = sessionStorage.getItem('lumora_active_conversation_id');
+        if (targetId) {
+          const found = data.find(c => String(c.id) === String(targetId));
+          if (found) {
+            setActiveConv(found);
+            sessionStorage.removeItem('lumora_active_conversation_id');
+            return;
+          }
+        }
         if (data.length > 0 && !activeConv) {
           setActiveConv(data[0]);
         }
@@ -111,12 +129,16 @@ export default function MessagesCenter() {
 
     try {
       // Dispatch message to FastAPI backend
+      let sentToBackend = false;
       const res = await backendFetch(`/messages/conversations/${activeConv.id}/messages`, {
         method: 'POST',
         body: JSON.stringify({
           content: textToSend,
           attachment_url: attachToSend
         })
+      }).then(val => {
+        if (val) sentToBackend = true;
+        return val;
       }).catch(err => {
         console.warn('Backend send message notice:', err);
         return null;
@@ -135,24 +157,26 @@ export default function MessagesCenter() {
       };
       setMessages(prev => [...prev, newMsg]);
 
-      // Dynamic creator reply simulation
-      setTyping(true);
-      setTimeout(async () => {
-        setTyping(false);
-        const autoText = `Hello! Thanks for reaching out regarding this digital asset. I've received your request and will provide full technical assistance shortly.`;
-        const receiverId = role === 'customer' ? (activeConv.seller_id || 'vendor-1') : (activeConv.buyer_id || 'customer-1');
-        const receiverRole = role === 'customer' ? 'vendor' : 'customer';
-        
-        await sendMessage(activeConv.id, receiverId, receiverRole, autoText).catch(() => null);
-        
-        const autoMsg = {
-          id: (Date.now() + 1).toString(),
-          sender_id: receiverId,
-          content: autoText,
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, autoMsg]);
-      }, 2200);
+      // Only simulate creator reply if backend is NOT active (i.e. Firestore fallback mode)
+      if (!sentToBackend) {
+        setTyping(true);
+        setTimeout(async () => {
+          setTyping(false);
+          const autoText = `Hello! Thanks for reaching out regarding this digital asset. I've received your request and will provide full technical assistance shortly.`;
+          const receiverId = role === 'customer' ? (activeConv.seller_id || 'vendor-1') : (activeConv.buyer_id || 'customer-1');
+          const receiverRole = role === 'customer' ? 'vendor' : 'customer';
+          
+          await sendMessage(activeConv.id, receiverId, receiverRole, autoText).catch(() => null);
+          
+          const autoMsg = {
+            id: (Date.now() + 1).toString(),
+            sender_id: receiverId,
+            content: autoText,
+            created_at: new Date().toISOString()
+          };
+          setMessages(prev => [...prev, autoMsg]);
+        }, 2200);
+      }
 
     } catch (err) {
       console.error('Error sending message:', err);

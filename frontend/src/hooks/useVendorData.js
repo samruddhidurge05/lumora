@@ -86,6 +86,7 @@ export function useDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   const refresh = useCallback(() => {
     const id = getVendorId();
@@ -135,8 +136,14 @@ export function useDashboard() {
   }, []);
 
   useEffect(function() {
-    if (backendReady) refresh();
-  }, [refresh, backendReady]);
+    if (!backendReady || !vendorId) {
+      setData(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [refresh, backendReady, vendorId]);
 
   var stats = data ? data.stats : null;
   return { data: data, stats: stats, loading: loading, error: error, refresh: refresh };
@@ -150,6 +157,7 @@ export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -163,8 +171,14 @@ export function useOrders() {
   }, []);
 
   useEffect(function() {
-    if (backendReady) refresh();
-  }, [refresh, backendReady]);
+    if (!backendReady || !vendorId) {
+      setOrders([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [refresh, backendReady, vendorId]);
 
   const fulfill = useCallback(function(orderId) {
     const id = getVendorId();
@@ -186,17 +200,21 @@ export function useVendorProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saveOk, setSaveOk] = useState(false);
+  const vendorId = getVendorId();
 
   useEffect(function() {
-    if (!backendReady) return;
-    const id = getVendorId();
-    if (!id) { setLoading(false); return; }
-
-    backendFetch('/vendors/' + id + '/profile')
+    if (!backendReady || !vendorId) {
+      setProfile(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    backendFetch('/vendors/' + vendorId + '/profile')
       .then(function(data) { setProfile(data); })
       .catch(function(err) { setError(err.message); })
       .finally(function() { setLoading(false); });
-  }, [backendReady]);
+  }, [backendReady, vendorId]);
 
   const save = useCallback(function(formData) {
     const id = getVendorId();
@@ -230,17 +248,21 @@ export function useStoreSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saveOk, setSaveOk] = useState(false);
+  const vendorId = getVendorId();
 
   useEffect(function() {
-    if (!backendReady) return;
-    const id = getVendorId();
-    if (!id) { setLoading(false); return; }
-
-    backendFetch('/vendors/' + id + '/profile')
+    if (!backendReady || !vendorId) {
+      setSettings(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    backendFetch('/vendors/' + vendorId + '/profile')
       .then(function(data) { setSettings(data); })
       .catch(function(err) { setError(err.message); })
       .finally(function() { setLoading(false); });
-  }, [backendReady]);
+  }, [backendReady, vendorId]);
 
   const save = useCallback(function(formData) {
     const id = getVendorId();
@@ -273,6 +295,7 @@ export function useWithdrawals() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmit] = useState(false);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -286,8 +309,14 @@ export function useWithdrawals() {
   }, []);
 
   useEffect(function() {
-    if (backendReady) refresh();
-  }, [refresh, backendReady]);
+    if (!backendReady || !vendorId) {
+      setHistory([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [refresh, backendReady, vendorId]);
 
   const submit = useCallback(function(opts) {
     const id = getVendorId();
@@ -325,6 +354,7 @@ export function useReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -339,8 +369,14 @@ export function useReviews() {
   }, []);
 
   useEffect(function() {
-    if (backendReady) refresh();
-  }, [refresh, backendReady]);
+    if (!backendReady || !vendorId) {
+      setReviews([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [refresh, backendReady, vendorId]);
 
   const reply = useCallback(function(reviewId, text) {
     const id = getVendorId();
@@ -381,6 +417,7 @@ export function useVendorProducts(opts) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -410,8 +447,14 @@ export function useVendorProducts(opts) {
   }, [search, category, status, sort, page, limit]);
 
   useEffect(function() {
-    if (backendReady) refresh();
-  }, [refresh, backendReady]);
+    if (!backendReady || !vendorId) {
+      setData({ items: [], total: 0, page: 1, pages: 1 });
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [refresh, backendReady, vendorId]);
 
   const createProduct = useCallback(function(formData) {
     var tags = Array.isArray(formData.tags)
@@ -542,13 +585,17 @@ export function useEarnings() {
   const [earnings, setEarnings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const vendorId = getVendorId();
 
   useEffect(function() {
-    if (!backendReady) return;
-    const id = getVendorId();
-    if (!id) { setLoading(false); return; }
-
-    backendFetch('/vendors/' + id + '/stats')
+    if (!backendReady || !vendorId) {
+      setEarnings(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    backendFetch('/vendors/' + vendorId + '/stats')
       .then(function(data) {
         setEarnings({
           gross:     data.total_revenue != null ? data.total_revenue : 0,
@@ -559,7 +606,81 @@ export function useEarnings() {
       })
       .catch(function(err) { setError(err.message); })
       .finally(function() { setLoading(false); });
-  }, [backendReady]);
+  }, [backendReady, vendorId]);
 
   return { earnings: earnings, loading: loading, error: error };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// useVendorProfileComplete
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Single source of truth for the vendor onboarding gate.
+ *
+ * Fetches the vendor profile from the backend so the check survives
+ * refresh, logout/login, and backend restarts.
+ *
+ * A profile is considered complete when ALL three conditions pass:
+ *   1. Store Name    — profile.storeName (mapped from vendor.name) is non-empty
+ *   2. Store Desc    — profile.storeBio  (mapped from vendor.bio)  is non-empty
+ *   3. Payment Info  — profile.upiId OR
+ *                      all four bank fields (accountHolderName, bankName,
+ *                      accountNumber, ifscCode) are non-empty
+ *
+ * Store Logo and Government ID are intentionally excluded until their
+ * upload infrastructure is production-ready.
+ *
+ * Returns:
+ *   isProfileComplete {boolean}   — true when all checks pass
+ *   profileChecks     {Array}     — [{ key, label, done }] for rendering the checklist
+ *   loading           {boolean}   — true while the backend fetch is in-flight
+ */
+export function useVendorProfileComplete() {
+  const backendReady = useBackendReady();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const vendorId = getVendorId();
+
+  useEffect(function () {
+    if (!backendReady || !vendorId) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    backendFetch('/vendors/' + vendorId + '/profile')
+      .then(function (data) { setProfile(data); })
+      .catch(function () { setProfile(null); })
+      .finally(function () { setLoading(false); });
+  }, [backendReady, vendorId]);
+
+  // ── Derive individual checks from backend profile ─────────────────────────
+  const storeName = (profile?.name || profile?.storeName || '').trim();
+  const storeBio  = (profile?.bio  || profile?.storeBio  || '').trim();
+
+  const hasStoreName = !!storeName;
+  const hasStoreDesc = !!storeBio;
+
+  // UPI: single field sufficient
+  const hasUpi  = !!(profile?.upiId?.trim());
+  // Bank: all four fields required together
+  const hasBank = !!(
+    profile?.accountHolderName?.trim() &&
+    profile?.bankName?.trim() &&
+    profile?.accountNumber?.trim() &&
+    profile?.ifscCode?.trim()
+  );
+  const hasPayment = hasUpi || hasBank;
+
+  const profileChecks = [
+    { key: 'storeName', label: 'Store Name',                 done: hasStoreName },
+    { key: 'storeDesc', label: 'Store Description',          done: hasStoreDesc },
+    { key: 'payment',   label: 'Payment Info (UPI or Bank)', done: hasPayment   },
+  ];
+
+  return {
+    isProfileComplete: !loading && profileChecks.every(function (c) { return c.done; }),
+    profileChecks,
+    loading,
+  };
 }

@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, SlidersHorizontal, Grid3X3, List, Plus, Trash2,
   Edit3, Star, Download, Eye, RefreshCw, ChevronLeft,
-  ChevronRight, AlertCircle, Package,
+  ChevronRight, AlertCircle, Package, X, CheckCircle, Circle,
 } from 'lucide-react';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
-import { useVendorProducts } from '../../hooks/useVendorData';
+import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
 import { useApp } from '../../context/AppContext';
 
 /* ── constants ─────────────────────────────────────────────────────────── */
@@ -77,6 +77,10 @@ function statusBadgeClass(s) {
 ═══════════════════════════════════════════════════════════════════════ */
 export default function ManageProducts() {
   const navigate = useNavigate();
+  const { isProfileComplete, profileChecks } = useVendorProfileComplete();
+
+  /* Profile incomplete modal state */
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
 
   /* Filter state */
   const [search,   setSearch]   = useState('');
@@ -102,6 +106,14 @@ export default function ManageProducts() {
   const { refetchProducts } = useApp();
 
   /* ── handlers ─────────────────────────────────────────────────────── */
+  /* Guard: only navigate to Add Product if profile is complete */
+  const handleAddProduct = () => {
+    if (!isProfileComplete) {
+      setShowIncompleteModal(true);
+    } else {
+      navigate('/vendor/add-product');
+    }
+  };
   const handleFilter = (field, val) => {
     if (field === 'category') setCategory(val === 'All' ? '' : val);
     if (field === 'status')   setStatus(val);
@@ -151,7 +163,7 @@ export default function ManageProducts() {
             <RefreshCw size={13} style={{ animation: loading ? 'spin 1.2s linear infinite' : 'none' }} />
             Refresh
           </button>
-          <button className="v-btn v-btn-primary v-btn-sm" onClick={() => navigate('/vendor/add-product')}
+          <button className="v-btn v-btn-primary v-btn-sm" onClick={handleAddProduct}
             style={{ display:'flex', alignItems:'center', gap:6 }}>
             <Plus size={14} /> Add Product
           </button>
@@ -253,7 +265,7 @@ export default function ManageProducts() {
             </div>
             {!search && !category && !status && (
               <button className="v-btn v-btn-primary" style={{ marginTop:16, display:'inline-flex', alignItems:'center', gap:6 }}
-                onClick={() => navigate('/vendor/add-product')}>
+                onClick={handleAddProduct}>
                 <Plus size={14} /> Add First Product
               </button>
             )}
@@ -402,6 +414,106 @@ export default function ManageProducts() {
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* ── Incomplete Profile Modal ──────────────────────────────────── */}
+      {showIncompleteModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(15,10,22,0.55)',
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px',
+        }} onClick={() => setShowIncompleteModal(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'rgba(255,255,255,0.97)',
+            borderRadius: 24,
+            padding: '32px 28px',
+            maxWidth: 460,
+            width: '100%',
+            boxShadow: '0 32px 80px rgba(90,30,126,0.22)',
+            border: '1px solid rgba(196,148,230,0.28)',
+            fontFamily: 'var(--v-sans)',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                  background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.06))',
+                  border: '1px solid rgba(239,68,68,0.20)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <AlertCircle size={22} style={{ color: '#dc2626' }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 15.5, color: 'var(--v-dark)', lineHeight: 1.2 }}>
+                    Profile Incomplete
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--v-text3)', marginTop: 3 }}>
+                    Complete your Vendor Profile before adding products.
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setShowIncompleteModal(false)} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--v-text3)', padding: 4, borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'color 0.2s',
+              }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Checklist */}
+            <div style={{
+              background: 'rgba(216,191,227,0.10)',
+              border: '1px solid rgba(196,148,230,0.20)',
+              borderRadius: 14, padding: '14px 16px',
+              marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10,
+            }}>
+              {profileChecks.map(item => (
+                <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {item.done
+                    ? <CheckCircle size={16} style={{ color: '#16a34a', flexShrink: 0 }} />
+                    : <Circle     size={16} style={{ color: '#dc2626', flexShrink: 0 }} />
+                  }
+                  <span style={{
+                    fontSize: 13.5, fontWeight: 500,
+                    color: item.done ? 'var(--v-text2)' : 'var(--v-dark)',
+                    textDecoration: item.done ? 'none' : 'none',
+                  }}>
+                    {item.label}
+                  </span>
+                  {item.done && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: '#16a34a', fontWeight: 700 }}>Done</span>
+                  )}
+                  {!item.done && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: '#dc2626', fontWeight: 700 }}>Required</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                className="v-btn v-btn-primary"
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => { setShowIncompleteModal(false); navigate('/vendor/profile'); }}
+              >
+                Complete Profile
+              </button>
+              <button
+                className="v-btn v-btn-ghost"
+                style={{ padding: '0 20px' }}
+                onClick={() => setShowIncompleteModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </VendorLayout>
   );
 }

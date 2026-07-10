@@ -9,6 +9,7 @@ import { createConversation } from '../../services/messageService';
 import { togglePriceAlertSubscription } from '../../services/priceAlertService';
 import { trackProductViewing } from '../../services/historyService';
 import { getReviewsApi, createReviewApi } from '../../api/reviewApi';
+import { backendFetch } from '../../utils/api';
 
 // Same gallery images as Products page
 const CAT_GALLERY = {
@@ -163,9 +164,46 @@ export default function ProductPage() {
   const handleContactCreator = async () => {
     if (!user) { navigateTo('login-selection'); return; }
     try {
-      await createConversation(user.uid, user.displayName || user.email, product.creator?.id || 'creator', product.creator?.name || 'Creator');
-      navigateTo('dashboard', 'Messages');
-    } catch (err) { console.error(err); }
+      // Resolve buyer_id (integer from backend UID)
+      const buyerId = parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1;
+      
+      // Resolve seller_id (integer from product.vendor_id)
+      let sellerId = parseInt(product.vendor_id, 10);
+      if (isNaN(sellerId)) {
+        // Fallback to vendor user 5 if product vendor is not a valid integer ID
+        sellerId = 5; 
+      }
+
+      // Try creating conversation on backend first
+      let backendConvId = null;
+      try {
+        const res = await backendFetch('/messages/conversations', {
+          method: 'POST',
+          body: JSON.stringify({
+            buyer_id: buyerId,
+            seller_id: sellerId
+          })
+        });
+        if (res && res.id) {
+          backendConvId = res.id;
+          sessionStorage.setItem('lumora_active_conversation_id', String(backendConvId));
+        }
+      } catch (err) {
+        console.warn('Failed to create backend conversation:', err);
+      }
+
+      // Also sync / fallback to Firestore
+      await createConversation(
+        user.uid,
+        user.displayName || user.email,
+        product.creator?.id || 'creator',
+        product.creator?.name || 'Creator'
+      ).catch(() => null);
+
+      navigateTo('dashboard', 'Messages Center');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // ── Report handlers (isolated — no interaction with cart/purchase) ────────

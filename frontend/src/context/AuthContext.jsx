@@ -358,7 +358,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       firebaseUser = cred.user;
-      await updateProfile(firebaseUser, { displayName: fullName });
+      await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
       try {
         await sendEmailVerification(firebaseUser);
       } catch (verifyError) {
@@ -461,6 +461,14 @@ export const AuthProvider = ({ children }) => {
 
   /** Login with optional Remember Me */
   const login = async (email, password, rememberMe = false, role = null) => {
+    // Destroy any previous session & clear local caches before authenticating new user
+    clearBackendToken();
+    try { sessionStorage.clear(); } catch (_) {}
+    setUser(null);
+    setUserRole(null);
+    setIsAccountDisabled(false);
+    setIsPlatformPaused(false);
+
     try {
       // ── PRE-SET active role BEFORE Firebase sign-in ───────────────────────
       // CRITICAL: onAuthStateChanged fires immediately after signInWithEmailAndPassword
@@ -609,12 +617,20 @@ export const AuthProvider = ({ children }) => {
     // 6. Redirect using replace() — removes the current page from browser history
     //    so pressing Back does NOT re-open the protected dashboard.
     //    All roles are redirected (not just admin).
-    const target = wasAdmin ? '/admin/login' : '/auth/login-selection';
+    const target = wasAdmin ? '/admin/login' : '/';
     window.location.replace(target);
   };
 
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const googleSignIn = async (rememberMe = false, role = null) => {
+    // Destroy any previous session & clear local caches before authenticating new user
+    clearBackendToken();
+    try { sessionStorage.clear(); } catch (_) {}
+    setUser(null);
+    setUserRole(null);
+    setIsAccountDisabled(false);
+    setIsPlatformPaused(false);
+
     // PRE-SET active role before Firebase sign-in to prevent race condition
     const normalizedPreRole = (role && role !== 'user') ? role : 'customer';
     localStorage.setItem('lumora_active_role', normalizedPreRole);
@@ -692,6 +708,14 @@ export const AuthProvider = ({ children }) => {
 
   /** GitHub sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const githubSignIn = async (rememberMe = false, role = null) => {
+    // Destroy any previous session & clear local caches before authenticating new user
+    clearBackendToken();
+    try { sessionStorage.clear(); } catch (_) {}
+    setUser(null);
+    setUserRole(null);
+    setIsAccountDisabled(false);
+    setIsPlatformPaused(false);
+
     try {
       // PRE-SET active role before Firebase sign-in to prevent race condition
       const normalizedPreRole = (role && role !== 'user') ? role : 'customer';

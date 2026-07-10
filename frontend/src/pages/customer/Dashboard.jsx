@@ -75,6 +75,16 @@ export default function Dashboard() {
   const [notifsSummary, setNotifsSummary] = useState([]);
 
   useEffect(() => {
+    setProfile(null);
+    setRecentOrders([]);
+    setNotifsSummary([]);
+    setActivities([]);
+    setStats({ productsOwned: 0, downloadsCount: 0, wishlistCount: 0, ordersCount: 0 });
+    setLoading(true);
+    setApiError(null);
+  }, [user]);
+
+  useEffect(() => {
     let isMounted = true;
     async function loadBackendData() {
       try {
@@ -112,10 +122,10 @@ export default function Dashboard() {
         });
 
         setStats({
-          productsOwned: totalProductsOwned || (fetchedOrders.length ? fetchedOrders.length : 12),
-          downloadsCount: totalDownloads || (fetchedOrders.length ? fetchedOrders.length * 4 : 48),
-          wishlistCount: fetchedWishlist.length || wishlist.length || 7,
-          ordersCount: fetchedOrders.length || 4,
+          productsOwned: totalProductsOwned,
+          downloadsCount: totalDownloads,
+          wishlistCount: fetchedWishlist.length,
+          ordersCount: fetchedOrders.length,
         });
 
         // Only show "unreachable" banner when the failure is a network error
@@ -643,7 +653,7 @@ function DashboardHome({
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount || 49.99)}</div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount != null ? ord.total_amount : 0)}</div>
                     <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.10)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{ord.status || 'Completed'}</span>
                   </div>
                 </div>

@@ -37,11 +37,40 @@ export default function CreatorProfile() {
       return;
     }
     try {
+      // Resolve buyer_id (integer from backend UID)
+      const buyerIdInt = parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1;
+      
+      // Resolve seller_id (integer from creator.id)
+      let sellerIdInt = parseInt(creator.id, 10);
+      if (isNaN(sellerIdInt)) {
+        sellerIdInt = 5; // Fallback to vendor user 5 if creator.id is not a valid integer
+      }
+
+      // Try creating conversation on backend first
+      let backendConvId = null;
+      try {
+        const res = await backendFetch('/messages/conversations', {
+          method: 'POST',
+          body: JSON.stringify({
+            buyer_id: buyerIdInt,
+            seller_id: sellerIdInt
+          })
+        });
+        if (res && res.id) {
+          backendConvId = res.id;
+          sessionStorage.setItem('lumora_active_conversation_id', String(backendConvId));
+        }
+      } catch (err) {
+        console.warn('Failed to create backend conversation:', err);
+      }
+
+      // Also sync / fallback to Firestore
       const buyerId    = user.uid;
       const buyerName  = user.displayName || user.email || 'Customer';
       const sellerId   = creator.id || 'sophia-vance';
       const sellerName = creator.name || 'Sophia Vance';
-      await createConversation(buyerId, buyerName, sellerId, sellerName);
+      await createConversation(buyerId, buyerName, sellerId, sellerName).catch(() => null);
+
       navigateTo('dashboard', 'Messages Center');
     } catch (err) {
       console.error("Failed to start conversation:", err);
