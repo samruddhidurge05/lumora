@@ -137,7 +137,7 @@ export default function CustomersManagement() {
         console.error('[CustomersManagement] Error loading users, falling back to REST:', err);
         try {
           const res = await backendFetch('/admin/customers/');
-          setUsers(Array.isArray(res) ? res : []);
+          setUsers(Array.isArray(res) ? res : (res?.items ?? []));
         } catch (fetchErr) {
           setError('Failed to fetch customer records.');
         } finally {
@@ -167,7 +167,7 @@ export default function CustomersManagement() {
         console.error('[CustomersManagement] Error loading orders, falling back to REST:', err);
         try {
           const res = await backendFetch('/admin/orders/');
-          setOrders(Array.isArray(res) ? res : []);
+          setOrders(Array.isArray(res) ? res : (res?.items ?? []));
         } catch (fetchErr) {
           console.error(fetchErr);
         } finally {

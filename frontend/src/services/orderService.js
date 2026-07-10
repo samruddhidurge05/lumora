@@ -40,7 +40,9 @@ export const updateOrderStatus = async (orderId, status) => {
 
 export const getOrders = async () => {
   try {
-    return await backendFetch('/admin/orders/');
+    const data = await backendFetch('/admin/orders/');
+    // Normalize: handle both legacy bare array and M6 paginated wrapper {total, page, page_size, items:[]}
+    return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {
     console.error('[orderService] Error fetching orders:', error);
     return [];
@@ -49,7 +51,9 @@ export const getOrders = async () => {
 
 export const fetchAllOrders = async () => {
   try {
-    return await backendFetch('/admin/orders/');
+    const data = await backendFetch('/admin/orders/');
+    // Normalize: handle both legacy bare array and M6 paginated wrapper {total, page, page_size, items:[]}
+    return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {
     console.error('[orderService] Error fetching all orders:', error);
     return [];
