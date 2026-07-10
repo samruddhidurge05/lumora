@@ -45,10 +45,16 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
   const [copiedCustomId, setCopiedCustomId] = useState(null);
 
   const fetchCustomLinks = async () => {
+    // product_id must be a valid integer for the backend
+    const productIdNum = parseInt(product?.id, 10);
+    if (isNaN(productIdNum)) {
+      setCustomLinks([]);
+      return;
+    }
     try {
       setLoadingLinks(true);
       setLinkError(null);
-      const res = await backendFetch(`/affiliate/referral-links?product_id=${product?.id}`);
+      const res = await backendFetch(`/affiliate/referral-links?product_id=${productIdNum}`);
       setCustomLinks(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error("Error fetching custom links:", err);
@@ -61,6 +67,12 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
   const handleGenerateCustomLink = async (e) => {
     e.preventDefault();
     if (!customName.trim()) return;
+    // product_id must be a valid integer for the backend
+    const productIdNum = parseInt(product?.id, 10);
+    if (isNaN(productIdNum)) {
+      setLinkError("Custom referral links are only available for products listed in the Lumora store.");
+      return;
+    }
     try {
       setLoadingLinks(true);
       setLinkError(null);
@@ -68,7 +80,7 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          product_id: product.id,
+          product_id: productIdNum,
           name: customName.trim(),
         }),
       });

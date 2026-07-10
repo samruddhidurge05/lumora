@@ -358,7 +358,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       firebaseUser = cred.user;
-      await updateProfile(firebaseUser, { displayName: fullName });
+      await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
       try {
         await sendEmailVerification(firebaseUser);
       } catch (verifyError) {
