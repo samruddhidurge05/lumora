@@ -146,9 +146,10 @@ export default function SupportCenter() {
     try {
       let createdConvId = null;
       // Try backend conversation creation
+      const buyerId = parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1;
       const backendConv = await backendFetch('/messages/conversations', {
         method: 'POST',
-        body: JSON.stringify({ buyer_id: Number(user?.uid || 1), seller_id: 2 })
+        body: JSON.stringify({ buyer_id: buyerId, seller_id: 2 })
       }).catch(() => null);
 
       if (backendConv && backendConv.id) {

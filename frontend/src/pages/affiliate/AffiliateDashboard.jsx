@@ -78,6 +78,13 @@ function AffiliateDashboardInner() {
   };
 
   useEffect(() => {
+    setProfile(null);
+    setStats(null);
+    setCommissions([]);
+    setPayouts([]);
+    setApiLoading(true);
+    setApiError(null);
+
     if (user) {
       loadAffiliateData();
     }
