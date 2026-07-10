@@ -1,6 +1,7 @@
 import os
 from pydantic_settings import BaseSettings
 from pydantic import Field
+from typing import Optional
 
 class Settings(BaseSettings):
     DATABASE_URL: str = Field("sqlite:///./test.db", env='DATABASE_URL')
@@ -10,6 +11,9 @@ class Settings(BaseSettings):
 
     # Firebase project — used for verifying Firebase ID tokens
     FIREBASE_PROJECT_ID: str = Field("", env="FIREBASE_PROJECT_ID")
+
+    # Firebase Admin SDK service account key path (optional — enables Firestore admin features)
+    FIREBASE_SERVICE_ACCOUNT_JSON: Optional[str] = Field(None, env="FIREBASE_SERVICE_ACCOUNT_JSON")
 
     # Cloudflare R2 connection
     R2_ACCOUNT_ID: str | None = os.getenv("R2_ACCOUNT_ID")
