@@ -95,6 +95,19 @@ function AffiliateDashboardInner() {
     window.location.hash = `#affiliate/${activeTab}`;
   }, [activeTab]);
 
+  // Listen for tab-change events dispatched by Dashboard home buttons (via navigateTo)
+  useEffect(() => {
+    const handleTabChange = (e) => {
+      const tab = e.detail;
+      const valid = ['dashboard', 'products', 'earnings', 'profile'];
+      if (valid.includes(tab)) {
+        setActiveTab(tab);
+      }
+    };
+    window.addEventListener('affiliate-tab-change', handleTabChange);
+    return () => window.removeEventListener('affiliate-tab-change', handleTabChange);
+  }, []);
+
   // Scroll tracking for navbar shrink
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);

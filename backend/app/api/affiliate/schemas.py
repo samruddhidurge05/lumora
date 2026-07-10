@@ -191,7 +191,7 @@ class ReferralLinkResponse(BaseModel):
     clicks_count: int
     is_active: bool
     created_at: datetime
-    referral_url: str
+    referral_url: Optional[str] = None
 
     class Config:
         from_attributes = True

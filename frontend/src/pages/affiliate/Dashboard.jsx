@@ -90,6 +90,23 @@ export default function AffiliateDashboardHome({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef(null);
 
+  /* ── Sync active tab when hash changes (e.g. from navigateTo buttons) ── */
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const parts = hash.split('/');
+      const sub = parts[1];
+      const valid = ['dashboard', 'products', 'earnings', 'profile'];
+      // Only propagate if AffiliateDashboard is still mounted and tab exists
+      if (valid.includes(sub)) {
+        // Bubble up by dispatching a custom event that AffiliateDashboard listens to
+        window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: sub }));
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const loading = parentLoading !== undefined ? parentLoading : localLoading;
 
   /* Referral link from live stats, then profile, then fallback */
