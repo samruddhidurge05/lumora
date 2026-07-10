@@ -8,7 +8,17 @@ Production-hardened startup with:
   • Health-check endpoints  (/health  /ready  /live)
   • Structured logging configuration
 """
+# Load .env variables FIRST — before any module that reads os.getenv() at import time
 import os
+from pathlib import Path
+_env_file = Path(__file__).resolve().parent.parent / ".env"
+if _env_file.exists():
+    try:
+        from dotenv import load_dotenv as _load_dotenv
+        _load_dotenv(dotenv_path=str(_env_file), override=False)
+    except ImportError:
+        pass  # python-dotenv not installed — env vars must be set externally
+
 import sys
 import logging
 from datetime import datetime
