@@ -609,7 +609,7 @@ export const AuthProvider = ({ children }) => {
     // 6. Redirect using replace() — removes the current page from browser history
     //    so pressing Back does NOT re-open the protected dashboard.
     //    All roles are redirected (not just admin).
-    const target = wasAdmin ? '/admin/login' : '/auth/login-selection';
+    const target = wasAdmin ? '/admin/login' : '/';
     window.location.replace(target);
   };
 
