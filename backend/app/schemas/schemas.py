@@ -255,3 +255,35 @@ class UserActivityResponse(UserActivityBase):
 
     class Config:
         from_attributes = True
+
+
+# Support Ticket Schemas (P3-M5)
+class SupportTicketCreate(BaseModel):
+    title: str
+    category: str
+    description: str
+
+
+class SupportTicketResponse(BaseModel):
+    id: int
+    title: Optional[str] = None
+    category: Optional[str] = None
+    status: str
+    type: str
+    created_at: Optional[datetime] = None
+    buyer_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SupportMessageResponse(BaseModel):
+    id: int
+    conversation_id: int
+    sender_id: int
+    content: str
+    created_at: Optional[datetime] = None
+    is_read: bool = False
+
+    class Config:
+        from_attributes = True

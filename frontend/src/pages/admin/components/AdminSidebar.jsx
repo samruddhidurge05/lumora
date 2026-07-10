@@ -90,6 +90,12 @@ export default function AdminSidebar({ activePage }) {
       ]
     },
     {
+      title: 'Support',
+      items: [
+        { id: 'support', label: 'Support Inbox', icon: <MessageSquare size={18} />, path: '/admin/support' },
+      ]
+    },
+    {
       title: 'Platform',
       items: [
         { id: 'reviews', label: 'Reviews', icon: <MessageSquare size={18} />, path: '/admin/reviews' },

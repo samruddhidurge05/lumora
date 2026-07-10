@@ -97,6 +97,7 @@ const AdminCampaignManager = lazy(() => import('./pages/admin/CampaignManager'))
 const PlatformSettings = lazy(() => import('./pages/admin/platform/PlatformSettings'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminAuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
+const AdminSupportInbox = lazy(() => import('./pages/admin/AdminSupportInbox'));
 
 // ── Loading spinner ───────────────────────────────────────────────
 function PageLoader() {
@@ -424,6 +425,9 @@ function AppContent() {
           />
           <Route path="/admin/audit-logs"
             element={<ProtectedRoute requiredRole="admin"><AdminAuditLogs /></ProtectedRoute>}
+          />
+          <Route path="/admin/support"
+            element={<ProtectedRoute requiredRole="admin"><AdminSupportInbox /></ProtectedRoute>}
           />
 
           {/* ── SPA fallback ── */}

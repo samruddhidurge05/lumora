@@ -63,7 +63,10 @@ from app.api.versions_router import router as versions_router
 from app.api.upload_router import router as upload_router
 from app.api.affiliate.routes import router as affiliate_router
 from app.admin_api.routes import router as admin_router
+from app.admin_api.support.routes import router as admin_support_router
 from app.api.payments.routes import router as payments_router
+from app.api.reports.routes import router as reports_router
+from app.api.support.routes import router as support_router
 
 # ── Startup Configuration Validation ─────────────────────────────────────────
 def _validate_startup_config() -> None:
@@ -293,7 +296,10 @@ app.include_router(versions_router,      prefix="/api/versions",     tags=["Prod
 app.include_router(upload_router,        prefix="/api/uploads",      tags=["File Uploads"])
 app.include_router(affiliate_router,     prefix="/api/affiliate",    tags=["Affiliate"])
 app.include_router(admin_router,         prefix="/api/admin",        tags=["Admin"])
+app.include_router(admin_support_router, prefix="/admin/support",    tags=["Admin Support"])
 app.include_router(payments_router,      prefix="/api/payments",     tags=["Payments"])
+app.include_router(reports_router,       prefix="/api/reports",      tags=["Reports"])
+app.include_router(support_router,       prefix="/api/support",      tags=["Support"])
 
 # ── Static files ──────────────────────────────────────────────────────────────
 _UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")

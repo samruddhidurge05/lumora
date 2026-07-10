@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShoppingBag, Zap, Download, Shield, Heart, MessageSquare, Package, ChevronLeft, ChevronRight, Check, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingBag, Zap, Download, Shield, Heart, MessageSquare, Package, ChevronLeft, ChevronRight, Check, BadgeCheck, Flag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -61,6 +61,14 @@ export default function ProductPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   // Backend-loaded reviews
   const [backendReviews, setBackendReviews] = useState(null); // null = not yet fetched
+
+  // ── Report modal state (fully isolated from purchase/cart flow) ──────────
+  const [reportModalOpen, setReportModalOpen]       = useState(false);
+  const [reportCategory, setReportCategory]         = useState('');
+  const [reportDescription, setReportDescription]   = useState('');
+  const [reportSubmitting, setReportSubmitting]      = useState(false);
+  const [reportSubmitted, setReportSubmitted]        = useState(false);
+  const [reportError, setReportError]               = useState('');
 
   useEffect(() => {
     if (product) {
@@ -158,6 +166,73 @@ export default function ProductPage() {
       await createConversation(user.uid, user.displayName || user.email, product.creator?.id || 'creator', product.creator?.name || 'Creator');
       navigateTo('dashboard', 'Messages');
     } catch (err) { console.error(err); }
+  };
+
+  // ── Report handlers (isolated — no interaction with cart/purchase) ────────
+  const handleOpenReportModal = () => {
+    if (!user) { navigateTo('login-selection'); return; }
+    setReportCategory('');
+    setReportDescription('');
+    setReportError('');
+    setReportSubmitted(false);
+    setReportModalOpen(true);
+  };
+
+  const handleCloseReportModal = () => {
+    setReportModalOpen(false);
+    setReportCategory('');
+    setReportDescription('');
+    setReportError('');
+    setReportSubmitted(false);
+  };
+
+  const handleSubmitReport = async (e) => {
+    e.preventDefault();
+    if (!reportCategory) { setReportError('Please select a category.'); return; }
+    if (!reportDescription.trim() || reportDescription.trim().length < 10) {
+      setReportError('Description must be at least 10 characters.'); return;
+    }
+    setReportError('');
+    setReportSubmitting(true);
+    try {
+      const token =
+        (typeof window !== 'undefined' &&
+          (localStorage.getItem('lumora_token') || sessionStorage.getItem('lumora_token'))) || '';
+      const BASE =
+        (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
+          ? import.meta.env.VITE_API_URL
+          : 'http://localhost:8000';
+      const res = await fetch(`${BASE}/api/reports/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          product_id: String(product.id),
+          category: reportCategory,
+          description: reportDescription.trim(),
+        }),
+      });
+      if (res.status === 429) {
+        setReportError('You have already submitted 3 reports for this product in the last 24 hours.');
+        return;
+      }
+      if (res.status === 503) {
+        setReportError('Report service is temporarily unavailable. Please try again later.');
+        return;
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setReportError(data?.detail || data?.error?.message || 'Failed to submit report. Please try again.');
+        return;
+      }
+      setReportSubmitted(true);
+    } catch (err) {
+      setReportError('Network error. Please check your connection and try again.');
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   const handleSubmitReview = async (e) => {
@@ -726,9 +801,56 @@ export default function ProductPage() {
                 </div>
               ))}
             </div>
+
+            {/* ── Report this product (isolated — outside purchase/cart flow) ── */}
+            <button
+              onClick={handleOpenReportModal}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                width: '100%', padding: '9px 14px',
+                fontSize: '0.72rem', fontWeight: 600,
+                color: '#8B6B5B',
+                background: 'rgba(255,255,255,0.40)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(220,198,255,0.28)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sans)',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = '#E11D48';
+                e.currentTarget.style.borderColor = 'rgba(225,29,72,0.30)';
+                e.currentTarget.style.background = 'rgba(225,29,72,0.05)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = '#8B6B5B';
+                e.currentTarget.style.borderColor = 'rgba(220,198,255,0.28)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.40)';
+              }}
+            >
+              <Flag size={12} /> Report this product
+            </button>
           </div>
         </div>
       </div>
+
+      {/* ── REPORT MODAL (fully isolated — state does not affect purchase/cart) ── */}
+      {reportModalOpen && (
+        <ReportModal
+          product={product}
+          user={user}
+          reportCategory={reportCategory}
+          setReportCategory={setReportCategory}
+          reportDescription={reportDescription}
+          setReportDescription={setReportDescription}
+          reportSubmitting={reportSubmitting}
+          reportSubmitted={reportSubmitted}
+          reportError={reportError}
+          onSubmit={handleSubmitReport}
+          onClose={handleCloseReportModal}
+        />
+      )}
 
       {/* ── RELATED PRODUCTS ─────────────────────────────────────────────── */}
       {relatedProducts.length > 0 && (
@@ -878,6 +1000,214 @@ function RelatedCard({ product, thumb, isWished, formatPrice, onView, onCart, on
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ReportModal ───────────────────────────────────────────────────────────────
+// Fully isolated component — its open/close state is managed in ProductPage
+// and has no connection to the purchase, cart, or checkout flows.
+const REPORT_CATEGORIES = [
+  { value: 'spam',         label: 'Spam' },
+  { value: 'inappropriate',label: 'Inappropriate Content' },
+  { value: 'counterfeit',  label: 'Counterfeit / IP Violation' },
+  { value: 'misleading',   label: 'Misleading Description' },
+  { value: 'other',        label: 'Other' },
+];
+
+function ReportModal({
+  product,
+  user,
+  reportCategory,
+  setReportCategory,
+  reportDescription,
+  setReportDescription,
+  reportSubmitting,
+  reportSubmitted,
+  reportError,
+  onSubmit,
+  onClose,
+}) {
+  // Close on backdrop click
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  return (
+    <div
+      onClick={handleBackdropClick}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(45,0,77,0.45)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(40px)',
+          borderRadius: '24px',
+          padding: '32px',
+          width: '100%',
+          maxWidth: '480px',
+          boxShadow: '0 24px 80px rgba(45,0,77,0.22)',
+          border: '1px solid rgba(220,198,255,0.45)',
+          position: 'relative',
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(225,29,72,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E11D48', flexShrink: 0 }}>
+              <Flag size={16} />
+            </div>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 700, color: '#2D004D', margin: 0 }}>
+                Report this product
+              </h2>
+              <p style={{ fontSize: '0.70rem', color: '#8B6B5B', fontWeight: 500, margin: '2px 0 0' }}>
+                {product?.title ? `"${product.title}"` : ''}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close report modal"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6B5B', padding: '4px', lineHeight: 1, fontSize: '1.2rem', fontWeight: 700 }}
+          >
+            ×
+          </button>
+        </div>
+
+        {reportSubmitted ? (
+          /* ── Success state ── */
+          <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(34,197,94,0.10)', border: '2px solid rgba(34,197,94,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Check size={22} color="#16a34a" />
+            </div>
+            <h3 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#15803d', marginBottom: '8px' }}>
+              Report submitted
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: '#6B4F7A', lineHeight: 1.6, marginBottom: '20px' }}>
+              Thank you for helping keep Lumora safe. Our moderation team will review your report.
+            </p>
+            <button
+              onClick={onClose}
+              style={{ padding: '10px 28px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          /* ── Form ── */
+          <form onSubmit={onSubmit}>
+            {/* Category selector */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#4E3B31', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Category <span style={{ color: '#E11D48' }}>*</span>
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {REPORT_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setReportCategory(cat.value)}
+                    style={{
+                      padding: '9px 12px',
+                      borderRadius: '10px',
+                      border: `1.5px solid ${reportCategory === cat.value ? 'rgba(225,29,72,0.55)' : 'rgba(220,198,255,0.38)'}`,
+                      background: reportCategory === cat.value ? 'rgba(225,29,72,0.08)' : 'rgba(255,255,255,0.55)',
+                      color: reportCategory === cat.value ? '#C01340' : '#6B4F7A',
+                      fontSize: '0.74rem',
+                      fontWeight: reportCategory === cat.value ? 700 : 500,
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-sans)',
+                      textAlign: 'left',
+                      transition: 'all 0.18s',
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#4E3B31', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Description <span style={{ color: '#E11D48' }}>*</span>
+              </label>
+              <textarea
+                value={reportDescription}
+                onChange={e => setReportDescription(e.target.value)}
+                placeholder="Please describe the issue in detail (minimum 10 characters)…"
+                maxLength={2000}
+                rows={4}
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: '1.5px solid rgba(196,181,253,0.35)',
+                  background: 'rgba(255,255,255,0.65)',
+                  outline: 'none',
+                  resize: 'vertical',
+                  fontSize: '0.84rem',
+                  color: '#2D004D',
+                  fontFamily: 'var(--font-sans)',
+                  lineHeight: 1.55,
+                }}
+                onFocus={e => { e.target.style.borderColor = 'rgba(225,29,72,0.45)'; }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(196,181,253,0.35)'; }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                <span style={{ fontSize: '0.66rem', color: '#8B6B5B' }}>{reportDescription.length}/2000</span>
+              </div>
+            </div>
+
+            {/* Error message */}
+            {reportError && (
+              <div style={{ marginBottom: '14px', padding: '10px 14px', borderRadius: '10px', background: 'rgba(225,29,72,0.07)', border: '1px solid rgba(225,29,72,0.25)', fontSize: '0.78rem', color: '#C01340', fontWeight: 500 }}>
+                {reportError}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{ padding: '10px 20px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: '1.5px solid rgba(220,198,255,0.38)', background: 'transparent', color: '#6B4F7A', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.18s' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={reportSubmitting || !reportCategory || reportDescription.trim().length < 10}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: '0.82rem', fontWeight: 700,
+                  borderRadius: '12px', border: 'none',
+                  background: (reportSubmitting || !reportCategory || reportDescription.trim().length < 10)
+                    ? 'rgba(225,29,72,0.35)'
+                    : 'linear-gradient(135deg,#E11D48,#C01340)',
+                  color: '#fff',
+                  cursor: (reportSubmitting || !reportCategory || reportDescription.trim().length < 10) ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  boxShadow: 'none',
+                  transition: 'all 0.18s',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                <Flag size={12} />
+                {reportSubmitting ? 'Submitting…' : 'Submit Report'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

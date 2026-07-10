@@ -1,4 +1,5 @@
 from app.shared.firebase.connection import db, firebase_connected
+from firebase_admin import firestore
 from datetime import datetime, timezone
 
 def sync_product_to_firestore(product):
