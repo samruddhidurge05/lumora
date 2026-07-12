@@ -12,16 +12,7 @@
 import { backendFetch } from '../../utils/api';
 
 function getVendorId() {
-  try {
-    const raw = localStorage.getItem('lumora_user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      if (u?.uid || u?.id) return u.uid || u.id;
-    }
-    return 'vendor-mock-001';
-  } catch {
-    return 'vendor-mock-001';
-  }
+  return localStorage.getItem('lumora_backend_uid') || 'vendor-mock-001';
 }
 
 /**

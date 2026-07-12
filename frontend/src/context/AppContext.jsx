@@ -935,50 +935,7 @@ export function AppContextProvider({ children }) {
     city: 'Mumbai'
   });
 
-  // Sync state to localStorage with user scope
-  useEffect(() => {
-    const uid = localStorage.getItem('lumora_backend_uid');
-    const key = uid ? `lumora_cart_user_${uid}` : 'lumora_cart';
-    localStorage.setItem(key, JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    const uid = localStorage.getItem('lumora_backend_uid');
-    const key = uid ? `lumora_wishlist_user_${uid}` : 'lumora_wishlist';
-    localStorage.setItem(key, JSON.stringify(wishlist));
-  }, [wishlist]);
-
-  useEffect(() => {
-    const uid = localStorage.getItem('lumora_backend_uid');
-    const key = uid ? `lumora_owned_user_${uid}` : 'lumora_owned';
-    localStorage.setItem(key, JSON.stringify(ownedProducts));
-  }, [ownedProducts]);
-
-  // Load user-scoped states on mount, user session change, or when backend credentials sync
-  useEffect(() => {
-    const loadScopedStates = () => {
-      const uid = localStorage.getItem('lumora_backend_uid');
-      const cartKey = uid ? `lumora_cart_user_${uid}` : 'lumora_cart';
-      const wishlistKey = uid ? `lumora_wishlist_user_${uid}` : 'lumora_wishlist';
-      const ownedKey = uid ? `lumora_owned_user_${uid}` : 'lumora_owned';
-
-      const savedCart = localStorage.getItem(cartKey);
-      setCart(savedCart ? JSON.parse(savedCart) : []);
-
-      const savedWishlist = localStorage.getItem(wishlistKey);
-      setWishlist(savedWishlist ? JSON.parse(savedWishlist) : []);
-
-      const savedOwned = localStorage.getItem(ownedKey);
-      setOwnedProducts(savedOwned ? JSON.parse(savedOwned) : []);
-    };
-
-    loadScopedStates();
-
-    window.addEventListener('lumora_backend_ready', loadScopedStates);
-    return () => {
-      window.removeEventListener('lumora_backend_ready', loadScopedStates);
-    };
-  }, [user]);
+  // State is managed in React memory context and fetched directly from the backend SQLite DB
 
   const lastUserUidRef = useRef(null);
   const syncedUserRef = useRef(null);

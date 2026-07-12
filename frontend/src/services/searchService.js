@@ -43,12 +43,11 @@ export const isTypoMatch = (queryStr, targetStr) => {
   return false;
 };
 
-// Manage local search history
-const HISTORY_KEY = "lumora_search_history";
+// Manage local search history in memory
+let memorySearchHistory = [];
 
 export const getSearchHistory = () => {
-  const saved = localStorage.getItem(HISTORY_KEY);
-  return saved ? JSON.parse(saved) : [];
+  return memorySearchHistory;
 };
 
 export const addSearchHistory = (queryStr) => {
@@ -57,11 +56,11 @@ export const addSearchHistory = (queryStr) => {
   let history = getSearchHistory();
   // Filter out existing and keep top 8
   history = [q, ...history.filter(item => item.toLowerCase() !== q.toLowerCase())].slice(0, 8);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  memorySearchHistory = history;
 };
 
 export const clearSearchHistory = () => {
-  localStorage.removeItem(HISTORY_KEY);
+  memorySearchHistory = [];
 };
 
 // Generate autocomplete and category/creator suggestions

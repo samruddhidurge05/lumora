@@ -56,7 +56,6 @@ export default function PriceAlerts() {
 
     setSubmitting(true);
     try {
-      const backendUser = JSON.parse(localStorage.getItem('lumora_backend_user') || '{}');
       const targetVal = customTargetPrice ? Number(customTargetPrice) : Math.round(prod.price * 0.9 * 100) / 100;
 
       await backendFetch('/price-alerts/', {

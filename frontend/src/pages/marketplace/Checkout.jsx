@@ -129,7 +129,7 @@ export default function Checkout() {
   const handleContinue = () => {
     if (!validate()) return;
     if (saveAddr) {
-      try { localStorage.setItem('lumora_saved_addr', JSON.stringify(checkoutForm)); } catch (_) {}
+      try { sessionStorage.setItem('lumora_saved_addr', JSON.stringify(checkoutForm)); } catch (_) {}
     }
     navigateTo('payment');
   };
@@ -137,7 +137,7 @@ export default function Checkout() {
   // Load saved address
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('lumora_saved_addr') || 'null');
+      const saved = JSON.parse(sessionStorage.getItem('lumora_saved_addr') || 'null');
       if (saved) {
         setCheckoutForm(prev => ({
           ...prev,

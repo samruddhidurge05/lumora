@@ -44,8 +44,8 @@ export const getPriceAlerts = async (userId) => {
 export const togglePriceAlertSubscription = async (userId, product, active) => {
   // Try backend first
   try {
-    const backendUser = JSON.parse(localStorage.getItem('lumora_backend_user') || '{}');
-    if (backendUser.id) {
+    const backendUid = localStorage.getItem('lumora_backend_uid');
+    if (backendUid) {
       if (!active) {
         // Delete by querying alerts and deleting matching
         const alerts = await backendFetch(`/price-alerts/`);
@@ -57,7 +57,7 @@ export const togglePriceAlertSubscription = async (userId, product, active) => {
         await backendFetch(`/price-alerts/`, {
           method: "POST",
           body: JSON.stringify({
-            user_id: backendUser.id,
+            user_id: parseInt(backendUid, 10),
             product_id: product.id,
             original_price: product.price,
             target_price: Math.round(product.price * 0.9 * 100) / 100,
