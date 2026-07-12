@@ -26,9 +26,9 @@ import { Download, Link2, Check, QrCode, X } from 'lucide-react';
 /* ── Build the product URL ─────────────────────────────────────── */
 function buildProductUrl(product) {
   const base = window.location.origin;
-  // The SPA uses hash-based routing with ?product=<id>
-  // Also works as a direct URL for sharing
-  return `${base}/#marketplace?product=${product.id}`;
+  // The SPA uses hash-based routing: /#product/<id>
+  // AppContext.jsx parses hash.startsWith('#product/') → 'product-detail' view
+  return `${base}/#product/${product.id}`;
 }
 
 /* ── Build QR image URL via free public API (no key needed) ──── */
