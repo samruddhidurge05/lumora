@@ -189,6 +189,7 @@ def sync_order_to_firestore(order, db_session):
             "paymentStatus": "Paid" if (order.status or "").lower() == "completed" else "Pending",
             "paymentMethod": order.payment_method or "upi",
             "vendorId": first_vendor_id,
+            "region": getattr(order, 'billing_region', None) or "India",
             "created_at": created_at_str,
             "createdAt": created_at_str
         }, merge=True)

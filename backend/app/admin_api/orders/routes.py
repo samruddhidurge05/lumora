@@ -7,7 +7,10 @@ from app.admin_api.orders.services import (
     process_order_dispute
 )
 from admin.validators.admin_auth import require_admin_role
+from app.db.session import get_db
 from app.models.user import User
+from app.services.audit_log_service import log_admin_action
+from sqlalchemy.orm import Session
 from typing import Optional
 
 router = APIRouter()
@@ -32,23 +35,66 @@ def get_order(order_id: str, admin_user: User = Depends(require_admin_role)):
 def put_status(
     order_id: str,
     status: str = Body(..., embed=True),
-    admin_user: User = Depends(require_admin_role)
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
 ):
     try:
-        return modify_order_status(order_id, status)
+        result = modify_order_status(order_id, status)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="order_status_change",
+            target_type="order",
+            target_id=str(order_id),
+            metadata={"new_status": status},
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
+    return result
 
 @router.post("/{order_id}/refund")
-def post_refund(order_id: str, admin_user: User = Depends(require_admin_role)):
+def post_refund(
+    order_id: str,
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
+):
     try:
-        return process_order_refund(order_id)
+        result = process_order_refund(order_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="order_refund",
+            target_type="order",
+            target_id=str(order_id),
+        )
+    except Exception:
+        pass  # Non-blocking
+    return result
 
 @router.post("/{order_id}/dispute")
-def post_dispute(order_id: str, admin_user: User = Depends(require_admin_role)):
+def post_dispute(
+    order_id: str,
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
+):
     try:
-        return process_order_dispute(order_id)
+        result = process_order_dispute(order_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="order_dispute",
+            target_type="order",
+            target_id=str(order_id),
+        )
+    except Exception:
+        pass  # Non-blocking
+    return result

@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import useAuth from '../../../hooks/useAuth';
+import { backendFetch } from '../../../utils/api';
 
 export default function AdminSidebar({ activePage }) {
   const navigate = useNavigate();
@@ -30,6 +31,14 @@ export default function AdminSidebar({ activePage }) {
     return localStorage.getItem('admin-sidebar-collapsed') === 'true';
   });
 
+  const [notifCounts, setNotifCounts] = useState({
+    support_tickets: 0,
+    reports: 0,
+    contact_requests: 0,
+    pending_orders: 0,
+    total: 0,
+  });
+
   const toggleCollapse = () => {
     setIsCollapsed(prev => {
       const next = !prev;
@@ -37,6 +46,18 @@ export default function AdminSidebar({ activePage }) {
       return next;
     });
   };
+
+  // Poll notification counts every 60 seconds
+  useEffect(() => {
+    const fetchCounts = () => {
+      backendFetch('/admin/notifications/counts')
+        .then(data => setNotifCounts(data))
+        .catch(() => {}); // Graceful degradation — hide badges on error
+    };
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleNavigate = (path, e) => {
     if (e) e.preventDefault();
@@ -104,6 +125,7 @@ export default function AdminSidebar({ activePage }) {
         { id: 'platform', label: 'Platform Status', icon: <ShieldAlert size={18} />, path: '/admin/platform' },
         { id: 'settings', label: 'Settings', icon: <Settings size={18} />, path: '/admin/settings' },
         { id: 'audit-logs', label: 'Audit Logs', icon: <ShieldCheck size={18} />, path: '/admin/audit-logs' },
+        { id: 'team', label: 'Team Management', icon: <Users size={18} />, path: '/admin/team' },
       ]
     }
   ];
@@ -167,6 +189,15 @@ export default function AdminSidebar({ activePage }) {
             }}>
               Admin Console
             </div>
+            {notifCounts.total > 0 && (
+              <span style={{
+                background: '#DC2626', color: '#fff', borderRadius: '999px',
+                fontSize: '0.55rem', fontWeight: 800, padding: '1px 5px',
+                lineHeight: 1.4, marginTop: '2px'
+              }}>
+                {notifCounts.total}
+              </span>
+            )}
           </div>
         )}
         <button
@@ -286,7 +317,25 @@ export default function AdminSidebar({ activePage }) {
                     }}>
                       {item.icon}
                     </span>
-                    <span>{item.label}</span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.id === 'support' && notifCounts.support_tickets > 0 && (
+                      <span style={{
+                        background: '#7B3FA0', color: '#fff', borderRadius: '10px',
+                        fontSize: '0.6rem', fontWeight: 800, padding: '1px 6px', minWidth: '18px',
+                        textAlign: 'center', lineHeight: 1.5
+                      }}>
+                        {notifCounts.support_tickets}
+                      </span>
+                    )}
+                    {item.id === 'reports' && (notifCounts.reports + (notifCounts.contact_requests || 0)) > 0 && (
+                      <span style={{
+                        background: '#DC2626', color: '#fff', borderRadius: '10px',
+                        fontSize: '0.6rem', fontWeight: 800, padding: '1px 6px', minWidth: '18px',
+                        textAlign: 'center', lineHeight: 1.5
+                      }}>
+                        {notifCounts.reports + (notifCounts.contact_requests || 0)}
+                      </span>
+                    )}
                   </a>
                 );
               })}

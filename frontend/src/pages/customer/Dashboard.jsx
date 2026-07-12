@@ -41,6 +41,7 @@ const MORE_NAV = [
   { name: 'Product Updates', icon: <RefreshCw size={14} /> },
   { name: 'Reviews Manager', icon: <Star size={14} /> },
   { name: 'Support Center',  icon: <HelpCircle size={14} /> },
+  { name: 'My Reports',      icon: <AlertCircle size={14} /> },
 ];
 
 export default function Dashboard() {
@@ -205,6 +206,7 @@ export default function Dashboard() {
       case 'Reviews Manager':  return <ReviewsManager />;
       case 'Messages Center':  return <MessagesCenter />;
       case 'Support Center':   return <SupportCenter />;
+      case 'My Reports':       return <MyReports />;
       default:
         return (
           <DashboardHome
@@ -823,6 +825,89 @@ function DashboardHome({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─── My Reports tab ─────────────────────────────────────────────── */
+function MyReports() {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    backendFetch('/reports/me')
+      .then(data => {
+        const items = Array.isArray(data) ? data : (data.items || data.reports || []);
+        setReports(items);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to load your reports.');
+        setLoading(false);
+      });
+  }, []);
+
+  const STATUS_COLORS = {
+    Pending:       { bg: '#FEF3C7', text: '#D97706' },
+    Investigating: { bg: '#DBEAFE', text: '#2563EB' },
+    Resolved:      { bg: '#D1FAE5', text: '#059669' },
+    Rejected:      { bg: '#FEE2E2', text: '#DC2626' },
+  };
+
+  if (loading) return (
+    <div style={{ padding: '40px', textAlign: 'center', color: '#7B3FA0', fontSize: '0.85rem' }}>
+      Loading your reports…
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ padding: '20px', background: 'rgba(239,68,68,0.08)', borderRadius: '12px', color: '#DC2626', fontSize: '0.85rem' }}>
+      {error}
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: '800px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: 500, color: '#2D004D', margin: 0 }}>My Reports</h3>
+        <p style={{ color: '#7B3FA0', fontSize: '0.85rem', marginTop: '6px' }}>Track the status of product reports you have submitted.</p>
+      </div>
+      {reports.length === 0 ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: '#7B3FA0', background: 'rgba(123,63,160,0.04)', borderRadius: '16px' }}>
+          <AlertCircle size={32} style={{ marginBottom: '12px', opacity: 0.4 }} />
+          <p style={{ margin: 0 }}>You have not submitted any reports yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {reports.map((report, i) => {
+            const colors = STATUS_COLORS[report.status] || { bg: '#F3F4F6', text: '#6B7280' };
+            return (
+              <div key={report.id || i} style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.80)', border: '1px solid rgba(196,148,230,0.18)', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{report.category}</span>
+                    <p style={{ margin: '4px 0 8px', fontSize: '0.92rem', fontWeight: 700, color: '#2D004D' }}>{report.title}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#7B3FA0' }}>
+                      Submitted: {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : '—'}
+                    </p>
+                    {report.resolution_note && (
+                      <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.18)', borderRadius: '10px' }}>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#065F46', fontWeight: 600 }}>
+                          Resolution: {report.resolution_note}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700, background: colors.bg, color: colors.text, flexShrink: 0 }}>
+                    {report.status}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
