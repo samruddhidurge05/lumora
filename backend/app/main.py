@@ -165,6 +165,25 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.on_event("startup")
+def restore_products():
+    from app.db.database import SessionLocal
+    from app.models.product import Product as ProductModel
+    from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
+    
+    db = SessionLocal()
+    try:
+        count = db.query(ProductModel).count()
+        if count == 0:
+            _logger.info("[startup] SQLite product table is empty. Initiating safe recovery sync from Firestore...")
+            restore_sqlite_products_from_firestore(db)
+        else:
+            _logger.info("[startup] SQLite product table contains %d products. Skipping recovery.", count)
+    except Exception as e:
+        _logger.error("[startup] Error running startup products recovery: %s", e)
+    finally:
+        db.close()
+
 # ── Rate Limiting ─────────────────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
@@ -304,6 +323,7 @@ app.include_router(upload_router,        prefix="/api/uploads",      tags=["File
 app.include_router(affiliate_router,     prefix="/api/affiliate",    tags=["Affiliate"])
 app.include_router(admin_router,         prefix="/api/admin",        tags=["Admin"])
 app.include_router(admin_support_router, prefix="/admin/support",    tags=["Admin Support"])
+app.include_router(admin_support_router, prefix="/api/admin/support",    tags=["Admin Support"])
 app.include_router(payments_router,      prefix="/api/payments",     tags=["Payments"])
 app.include_router(reports_router,       prefix="/api/reports",      tags=["Reports"])
 app.include_router(support_router,       prefix="/api/support",      tags=["Support"])

@@ -394,26 +394,10 @@ export const affiliateService = {
       throw new Error('Insufficient approved commission balance to cover this withdrawal request.');
     }
 
-    const payoutRequestData = {
-      affiliateId,
-      amount,
-      status: 'pending',
-      requestedAt: new Date().toISOString(),
-      processedAt: null
-    };
-
-    await addDoc(collection(db, 'affiliatePayoutRequests'), payoutRequestData);
-
-    // Record activity entry
-    await addDoc(collection(db, 'affiliateActivity'), {
-      affiliateId,
-      type: 'withdrawal_request',
-      title: 'Withdrawal requested',
-      description: `Requested payout of ₹${amount}`,
-      createdAt: new Date().toISOString()
+    return await backendFetch('/api/affiliate/payouts', {
+      method: 'POST',
+      body: JSON.stringify({ affiliate_id: affiliateId, amount })
     });
-
-    return { success: true };
   },
 
   // Update affiliate details in profile settings

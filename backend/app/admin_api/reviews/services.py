@@ -8,14 +8,63 @@ from sqlalchemy import or_, func
 
 
 def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, search: str | None):
-    """
-    Return a paginated list of reviews from SQLite with optional sentiment + search filters.
-    sentiment: "positive" | "neutral" | "negative" | None
-    search: ILIKE on comment, user.name, product.title
-    """
     # Clamp
     page = max(1, page)
     page_size = max(1, min(200, page_size))
+
+    if firebase_connected and db is not None:
+        from firebase_admin import firestore
+        try:
+            query_ref = db.collection("reviews")
+            if sentiment == "positive":
+                query_ref = query_ref.where("rating", ">", 3)
+            elif sentiment == "neutral":
+                query_ref = query_ref.where("rating", "==", 3)
+            elif sentiment == "negative":
+                query_ref = query_ref.where("rating", "<", 3)
+
+            try:
+                total = query_ref.count().get()[0][0].value
+            except Exception:
+                total = len(list(query_ref.stream()))
+
+            # Order by createdAt or date descending and offset/limit
+            paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+            docs = list(paginated_query.stream())
+            items = []
+            for doc in docs:
+                r = doc.to_dict()
+                rating = int(r.get("rating", 5))
+                if rating > 3:
+                    sent = "positive"
+                elif rating == 3:
+                    sent = "neutral"
+                else:
+                    sent = "negative"
+
+                items.append({
+                    "id":        doc.id,
+                    "customer":  r.get("customer", "Anonymous"),
+                    "comment":   r.get("comment", ""),
+                    "product":   r.get("product", "General Product"),
+                    "sentiment": sent,
+                    "rating":    rating,
+                    "date":      r.get("date") or r.get("createdAt") or "recently",
+                    "verified":  bool(r.get("verified", True)),
+                    "flagged":   bool(r.get("flagged", False)),
+                })
+
+            if search:
+                term = search.lower()
+                items = [
+                    it for it in items
+                    if term in it["comment"].lower() or term in it["customer"].lower() or term in it["product"].lower()
+                ]
+                total = len(items)
+
+            return {"total": total, "page": page, "page_size": page_size, "items": items}
+        except Exception as e:
+            print(f"[firestore-reviews] Paginated query failed ({e}), falling back to SQLite query")
 
     db_s = SessionLocal()
     try:

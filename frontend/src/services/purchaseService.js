@@ -1,17 +1,11 @@
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
-// Add a purchase record in Firestore
+// Purchase recording is handled by the backend — no direct Firestore write here
 export const recordPurchase = async (userId, productId) => {
   try {
-    const purchasesRef = collection(db, "purchases");
-    const docRef = await addDoc(purchasesRef, {
-      userId,
-      productId,
-      purchaseDate: new Date().toISOString(),
-      accessStatus: "active"
-    });
-    return docRef.id;
+    // Purchase is recorded via the backend API; nothing to write directly here
+    return null;
   } catch (error) {
     console.error("[purchaseService] Error recording purchase:", error);
     throw error;

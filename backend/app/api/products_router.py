@@ -396,6 +396,9 @@ def create_product(
     if recent_duplicate:
         return recent_duplicate
 
+    role = (current_user.role or "").lower()
+    initial_status = "published" if role == "admin" else "pending_review"
+
     product = ProductService.create_product(
         db=db,
         vendor_id=vendor_id,
@@ -424,30 +427,9 @@ def create_product(
         preview_video=product_in.preview_video,
         seo_title=product_in.seo_title,
         seo_description=product_in.seo_description,
-        visibility=product_in.visibility or "public"
+        visibility=product_in.visibility or "public",
+        status=initial_status
     )
-
-    # ── M4-M7: Override initial status based on creator role ─────────────────
-    # Vendors: pending_review (requires admin approval before going live)
-    # Admins:  published immediately (admins self-publish)
-    role = (current_user.role or "").lower()
-    if role == "admin":
-        initial_status = "published"
-    else:
-        # vendor or any other role — require approval
-        initial_status = "pending_review"
-
-    if product.status != initial_status:
-        product.status = initial_status
-        db.commit()
-        db.refresh(product)
-        # Re-sync to Firestore with the correct status so marketplace is accurate
-        try:
-            from admin.firestore.admin_firestore import sync_product_to_firestore
-            sync_product_to_firestore(product)
-        except Exception as _sync_err:
-            pass  # Non-fatal — SQLite is source of truth
-    # ─────────────────────────────────────────────────────────────────────────
 
     # Structured log
     from app.utils.logger import log_structured_event

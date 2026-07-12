@@ -56,44 +56,47 @@ def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
         finally:
             db_s.close()
 
-    # Firestore path — fetch all matching customers, then filter + paginate in Python
-    users_ref = db.collection("users")
-    customers = []
-    for role_value in ("customer", "user"):
-        try:
-            docs = users_ref.where("role", "==", role_value).stream()
-            for d in docs:
-                customers.append(_map_user(d))
-        except Exception:
-            pass
-
-    if not customers:
-        docs = users_ref.stream()
-        customers = [
-            _map_user(d)
-            for d in docs
-            if (d.to_dict().get("role") or "user").lower() not in ("admin", "vendor", "affiliate")
-        ]
-
-    # Deduplicate
-    seen = set()
-    unique = []
-    for c in customers:
-        if c["id"] not in seen:
-            seen.add(c["id"])
-            unique.append(c)
-    customers = unique
-
-    # Search filter
+    # Firestore path — native paginated database queries with robust fallback
+    from firebase_admin import firestore
+    query_ref = db.collection("users").where("role", "in", ["customer", "user", ""])
     if search:
-        term = search.lower()
-        customers = [
-            c for c in customers
-            if term in c["displayName"].lower() or term in c["email"].lower()
-        ]
+        # If searching, query all docs first to do text matching in memory (or standard index search)
+        query_ref = db.collection("users")
 
-    total = len(customers)
-    items = customers[(page - 1) * page_size: page * page_size]
+    try:
+        try:
+            total = query_ref.count().get()[0][0].value
+        except Exception:
+            total = len(list(query_ref.stream()))
+            
+        paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+        docs = list(paginated_query.stream())
+        items = []
+        for d in docs:
+            role_val = (d.to_dict().get("role") or "customer").lower()
+            if role_val in ("customer", "user", ""):
+                items.append(_map_user(d))
+    except Exception as e:
+        print(f"[firestore-customers] Query failed ({e}), falling back to in-memory sorting & pagination")
+        docs = list(db.collection("users").stream())
+        customers = []
+        for d in docs:
+            role_val = (d.to_dict().get("role") or "customer").lower()
+            if role_val in ("customer", "user", ""):
+                customers.append(_map_user(d))
+        
+        # Search filter
+        if search:
+            term = search.lower()
+            customers = [
+                c for c in customers
+                if term in c["displayName"].lower() or term in c["email"].lower()
+            ]
+            
+        total = len(customers)
+        customers = sorted(customers, key=lambda x: x.get("createdAt", ""), reverse=True)
+        items = customers[(page - 1) * page_size: page * page_size]
+
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_customer_by_id(customer_id: str):

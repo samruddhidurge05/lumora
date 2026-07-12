@@ -6,6 +6,7 @@ from app.models.product import Product
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
 from admin.validators.admin_auth import require_admin_role
 from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
+from app.services.audit_log_service import log_admin_action
 
 router = APIRouter()
 
@@ -38,6 +39,10 @@ def create_product(product_in: ProductCreate, db: Session = Depends(get_db), adm
     db.commit()
     db.refresh(product)
     sync_product_to_firestore(product)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_created", target_type="product", target_id=str(product.id))
+    except Exception:
+        pass
     return product
 
 @router.put("/{product_id}", response_model=ProductResponse)
@@ -51,6 +56,10 @@ def update_product(product_id: int, product_in: ProductUpdate, db: Session = Dep
     db.commit()
     db.refresh(product)
     sync_product_to_firestore(product)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_updated", target_type="product", target_id=str(product_id))
+    except Exception:
+        pass
     return product
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -61,4 +70,8 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
     db.delete(product)
     db.commit()
     delete_product_from_firestore(product_id)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_deleted", target_type="product", target_id=str(product_id))
+    except Exception:
+        pass
     return None

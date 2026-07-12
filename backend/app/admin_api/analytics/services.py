@@ -633,6 +633,7 @@ def get_full_dashboard_data():
             "growthVelocity": [10, 12, 14, 15, 16, 17, fs_growth_velocity],
         },
     }
+    sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
     live_feed = [
         {"id": f"sale-{o['id']}", "type": "sale", "user": o.get("customerName", "Customer"),
          "item": o.get("productName", "Product"), "time": "Recently", "value": float(o.get("price", o.get("total", 0)))}

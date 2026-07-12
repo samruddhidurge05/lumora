@@ -1,4 +1,5 @@
 from app.shared.firebase.connection import db, firebase_connected
+from firebase_admin import firestore
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.db.session import SessionLocal
@@ -47,13 +48,32 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
         finally:
             db_s.close()
 
-    # Firestore path — fetch all then filter + paginate in Python
-    docs = list(db.collection("orders").stream())
-    all_orders = [{"id": doc.id, **doc.to_dict()} for doc in docs]
+    # Firestore path — native paginated database queries with robust fallback
+    query_ref = db.collection("orders")
     if status:
-        all_orders = [o for o in all_orders if (o.get("status") or "").lower() == status.lower()]
-    total = len(all_orders)
-    items = all_orders[(page - 1) * page_size: page * page_size]
+        # Standardize matching case
+        query_ref = query_ref.where("status", "==", status)
+    
+    try:
+        # Try native Firestore count query
+        try:
+            total = query_ref.count().get()[0][0].value
+        except Exception:
+            total = len(list(query_ref.stream()))
+            
+        paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+        docs = list(paginated_query.stream())
+        items = [{"id": doc.id, **doc.to_dict()} for doc in docs]
+    except Exception as e:
+        print(f"[firestore-orders] Query failed ({e}), falling back to in-memory sorting & pagination")
+        docs = list(db.collection("orders").stream())
+        all_orders = [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        if status:
+            all_orders = [o for o in all_orders if (o.get("status") or "").lower() == status.lower()]
+        total = len(all_orders)
+        all_orders = sorted(all_orders, key=lambda x: x.get("createdAt", ""), reverse=True)
+        items = all_orders[(page - 1) * page_size: page * page_size]
+
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_order_by_id(order_id: str):

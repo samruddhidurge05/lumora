@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from app.admin_api.orders.services import (
     get_orders_list,
@@ -8,10 +10,13 @@ from app.admin_api.orders.services import (
 )
 from admin.validators.admin_auth import require_admin_role
 from app.db.session import get_db
+from app.models.order import Order
 from app.models.user import User
 from app.services.audit_log_service import log_admin_action
 from sqlalchemy.orm import Session
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -38,10 +43,43 @@ def put_status(
     admin_user: User = Depends(require_admin_role),
     db: Session = Depends(get_db),
 ):
+    # 1. Capture old status from SQLite for audit log
+    order = None
+    old_status = None
+    try:
+        order = db.query(Order).filter(Order.id == int(order_id)).first()
+        old_status = order.status if order else None
+    except (ValueError, TypeError):
+        # order_id is non-numeric — Firestore may still accept it; proceed without SQLite lookup
+        pass
+
+    # 2. Update Firestore (existing behaviour)
     try:
         result = modify_order_status(order_id, status)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # 3. Update SQLite to match (bidirectional sync — Req 3.1, 3.2)
+    if order is not None:
+        order.status = status
+        try:
+            db.commit()
+        except Exception as sqlite_err:
+            db.rollback()
+            logger.error(
+                "SQLite order status update failed after Firestore succeeded "
+                "(order %s, new_status %s): %s",
+                order_id, status, sqlite_err,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Order status updated in Firestore but SQLite sync failed. "
+                    "Inconsistency logged for reconciliation."
+                ),
+            )
+
+    # 4. Write audit log with old + new status (non-blocking)
     try:
         log_admin_action(
             db=db,
@@ -49,10 +87,11 @@ def put_status(
             action="order_status_change",
             target_type="order",
             target_id=str(order_id),
-            metadata={"new_status": status},
+            metadata={"old_status": old_status, "new_status": status},
         )
     except Exception:
         pass  # Non-blocking — audit log failure never breaks the main operation
+
     return result
 
 @router.post("/{order_id}/refund")

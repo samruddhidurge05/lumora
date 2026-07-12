@@ -81,6 +81,22 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Sync profile to Firestore users collection
+    from app.shared.firebase.connection import db as fs_db, firebase_connected
+    from datetime import datetime
+    if firebase_connected and fs_db is not None:
+        try:
+            fs_db.collection("users").document(str(user.id)).set({
+                "displayName": user.name,
+                "email": user.email,
+                "role": "customer",
+                "createdAt": datetime.utcnow().isoformat() + "Z",
+                "status": "active"
+            }, merge=True)
+        except Exception as _sync_err:
+            pass  # Non-blocking
+
     return user
 
 def check_user_active(user):
