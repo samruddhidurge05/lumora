@@ -160,7 +160,7 @@ export default function Navbar() {
             { label: 'Explore', icon: <Compass size={14} />, href: '#products' },
             { label: 'Categories', icon: <Sparkles size={14} />, href: '#categories' },
             { label: 'Showcase', icon: <Home size={14} />, href: '#home' },
-            { label: 'Partnership', icon: <Users size={14} />, href: '/partnerships' },
+            ...(!user ? [{ label: 'Partnership', icon: <Users size={14} />, href: '/partnerships' }] : []),
             ...(user ? [{ label: 'Dashboard', icon: <LayoutDashboard size={14} />, href: '#dashboard' }] : [])
           ].map((item, index) => (
             <a
