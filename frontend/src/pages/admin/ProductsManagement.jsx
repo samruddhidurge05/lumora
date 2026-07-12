@@ -238,12 +238,6 @@ function mapAdminProductToApi(uiForm) {
     commission_value:  Number(uiForm.commission_value) || 0.0,
   };
 
-  // Development guard — log both sides so mismatches are visible instantly
-  if (import.meta.env.DEV) {
-    console.log('[mapAdminProductToApi] UI form  →', uiForm);
-    console.log('[mapAdminProductToApi] API payload →', apiPayload);
-  }
-
   return apiPayload;
 }
 
