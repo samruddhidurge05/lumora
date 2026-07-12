@@ -77,6 +77,15 @@ const ACTION_COLORS = {
   admin_referral_link_created:           { bg: 'bg-[#D8BFE3]/50', text: 'text-[#5A1E7E]' },
   admin_referral_link_deleted:           { bg: 'bg-red-100',     text: 'text-red-600'     },
   admin_referral_link_status_changed:    { bg: 'bg-[#D8BFE3]/50', text: 'text-[#5A1E7E]' },
+  order_status_change:                   { bg: 'bg-blue-100',    text: 'text-blue-700'    },
+  order_refund:                          { bg: 'bg-orange-100',  text: 'text-orange-700'  },
+  order_dispute:                         { bg: 'bg-red-100',     text: 'text-red-600'     },
+  review_moderated:                      { bg: 'bg-purple-100',  text: 'text-purple-700'  },
+  support_ticket_replied:                { bg: 'bg-teal-100',    text: 'text-teal-700'    },
+  support_ticket_status_changed:         { bg: 'bg-cyan-100',    text: 'text-cyan-700'    },
+  report_resolved:                       { bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  report_rejected:                       { bg: 'bg-red-100',     text: 'text-red-600'     },
+  report_assigned:                       { bg: 'bg-yellow-100',  text: 'text-yellow-700'  },
 };
 
 const ACTION_OPTIONS = [
@@ -93,6 +102,15 @@ const ACTION_OPTIONS = [
   'admin_referral_link_created',
   'admin_referral_link_deleted',
   'admin_referral_link_status_changed',
+  'order_status_change',
+  'order_refund',
+  'order_dispute',
+  'review_moderated',
+  'support_ticket_replied',
+  'support_ticket_status_changed',
+  'report_resolved',
+  'report_rejected',
+  'report_assigned',
 ];
 
 const PAGE_SIZE = 50;

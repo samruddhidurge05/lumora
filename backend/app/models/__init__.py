@@ -19,6 +19,8 @@ from app.models.wishlist import WishlistItem, CartItem
 from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick
 from app.models.withdrawal import Withdrawal
 from app.models.verification import Verification
+from app.models.admin_role import AdminRole
+from app.models.admin_invitation import AdminInvitation
 
 __all__ = [
     "Base",
@@ -49,4 +51,6 @@ __all__ = [
     "ReferralClick",
     "Withdrawal",
     "Verification",
+    "AdminRole",
+    "AdminInvitation",
 ]

@@ -610,3 +610,77 @@ export function useEarnings() {
 
   return { earnings: earnings, loading: loading, error: error };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// useVendorProfileComplete
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Single source of truth for the vendor onboarding gate.
+ *
+ * Fetches the vendor profile from the backend so the check survives
+ * refresh, logout/login, and backend restarts.
+ *
+ * A profile is considered complete when ALL three conditions pass:
+ *   1. Store Name    — profile.storeName (mapped from vendor.name) is non-empty
+ *   2. Store Desc    — profile.storeBio  (mapped from vendor.bio)  is non-empty
+ *   3. Payment Info  — profile.upiId OR
+ *                      all four bank fields (accountHolderName, bankName,
+ *                      accountNumber, ifscCode) are non-empty
+ *
+ * Store Logo and Government ID are intentionally excluded until their
+ * upload infrastructure is production-ready.
+ *
+ * Returns:
+ *   isProfileComplete {boolean}   — true when all checks pass
+ *   profileChecks     {Array}     — [{ key, label, done }] for rendering the checklist
+ *   loading           {boolean}   — true while the backend fetch is in-flight
+ */
+export function useVendorProfileComplete() {
+  const backendReady = useBackendReady();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const vendorId = getVendorId();
+
+  useEffect(function () {
+    if (!backendReady || !vendorId) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    backendFetch('/vendors/' + vendorId + '/profile')
+      .then(function (data) { setProfile(data); })
+      .catch(function () { setProfile(null); })
+      .finally(function () { setLoading(false); });
+  }, [backendReady, vendorId]);
+
+  // ── Derive individual checks from backend profile ─────────────────────────
+  const storeName = (profile?.name || profile?.storeName || '').trim();
+  const storeBio  = (profile?.bio  || profile?.storeBio  || '').trim();
+
+  const hasStoreName = !!storeName;
+  const hasStoreDesc = !!storeBio;
+
+  // UPI: single field sufficient
+  const hasUpi  = !!(profile?.upiId?.trim());
+  // Bank: all four fields required together
+  const hasBank = !!(
+    profile?.accountHolderName?.trim() &&
+    profile?.bankName?.trim() &&
+    profile?.accountNumber?.trim() &&
+    profile?.ifscCode?.trim()
+  );
+  const hasPayment = hasUpi || hasBank;
+
+  const profileChecks = [
+    { key: 'storeName', label: 'Store Name',                 done: hasStoreName },
+    { key: 'storeDesc', label: 'Store Description',          done: hasStoreDesc },
+    { key: 'payment',   label: 'Payment Info (UPI or Bank)', done: hasPayment   },
+  ];
+
+  return {
+    isProfileComplete: !loading && profileChecks.every(function (c) { return c.done; }),
+    profileChecks,
+    loading,
+  };
+}

@@ -10,7 +10,7 @@ import { getCartApi, addCartItemApi, removeCartItemApi, clearCartApi } from '../
 import { backendFetch } from '../utils/api';
 import { getMyOrdersApi, createOrderApi } from '../api/ordersApi';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, where } from 'firebase/firestore';
 
 // Mock Databases of 10 Ultra-Premium Products
 const PRODUCTS = [
@@ -742,7 +742,7 @@ export function AppContextProvider({ children }) {
     // is offline). Now backend products are always preserved.
     let unsubscribe;
     try {
-      const q = query(collection(db, 'products'));
+      const q = query(collection(db, 'products'), where('status', '==', 'published'));
       unsubscribe = onSnapshot(q, (snapshot) => {
         if (snapshot.empty) return;
         const firestoreDocs = snapshot.docs.map(d => {

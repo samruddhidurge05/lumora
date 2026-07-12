@@ -31,5 +31,12 @@ class Vendor(Base):
     announcement_active = Column(Boolean, default=False)
     vacation_mode       = Column(Boolean, default=False)
     vacation_message    = Column(Text, nullable=True)
-    
+
+    # Payment information — required for onboarding before product creation
+    upi_id              = Column(String(255), nullable=True)   # UPI option
+    account_holder_name = Column(String(255), nullable=True)   # Bank option
+    bank_name           = Column(String(255), nullable=True)
+    account_number      = Column(String(100), nullable=True)
+    ifsc_code           = Column(String(20),  nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)

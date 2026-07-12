@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timezone
 
 from app.db.session import get_db
 from app.dependencies import get_current_user_required
@@ -11,6 +12,32 @@ from app.models.product import Product
 from app.api.reviews.schemas import ReviewCreate, ReviewUpdate, ReviewResponse
 
 router = APIRouter()
+
+
+def sync_review_to_firestore(review) -> None:
+    """
+    Sync a review record to Firestore reviews/{id}.
+    Non-blocking: all errors are caught and logged; a Firestore failure
+    must NEVER cause the HTTP response to fail.
+    """
+    try:
+        from app.shared.firebase.connection import db, firebase_connected
+        if not firebase_connected or db is None:
+            return
+        doc_ref = db.collection("reviews").document(str(review.id))
+        doc_ref.set({
+            "id": review.id,
+            "user_id": review.user_id,
+            "product_id": review.product_id,
+            "rating": float(review.rating),
+            "comment": review.comment or "",
+            "reply": review.reply or "",
+            "verified": bool(review.verified),
+            "createdAt": review.created_at.isoformat() + "Z" if review.created_at else datetime.now(timezone.utc).isoformat() + "Z",
+            "updatedAt": datetime.now(timezone.utc).isoformat() + "Z",
+        }, merge=True)
+    except Exception as e:
+        print(f"[firestore-sync] Error syncing review {review.id} to Firestore: {e}")
 
 
 def update_vendor_rating(db: Session, vendor_id: str):
@@ -139,6 +166,7 @@ def create_review(
 
     db.commit()
     db.refresh(review)
+    sync_review_to_firestore(review)
     return _enrich(review, db)
 
 

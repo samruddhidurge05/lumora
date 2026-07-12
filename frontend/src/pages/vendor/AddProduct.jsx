@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Upload, Image, FileText } from 'lucide-react';
+import { AlertCircle, CheckCircle, Circle, X, CheckCircle2, Upload, Image, FileText } from 'lucide-react';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
-import { useVendorProducts } from '../../hooks/useVendorData';
+import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
 import { uploadFile } from '../../services/storageService';
 import { useApp } from '../../context/AppContext';
 import ProductQrCode from '../../components/product/ProductQrCode';
@@ -96,7 +96,9 @@ function CompletionScore({ fields }) {
 export default function AddProduct() {
   const navigate = useNavigate();
   const { createProduct } = useVendorProducts();
+  const { isProfileComplete, profileChecks, loading: profileLoading } = useVendorProfileComplete();
 
+  // ── ALL hooks must be declared unconditionally before any early return ──
   const [form, setForm] = useState({
     title: '', category: '', subcategory: '', price: '', discount: '0', description: '',
     short_desc: '', tags: '', license: '', version: '1.0.0', status: 'published',
@@ -117,22 +119,99 @@ export default function AddProduct() {
   const [systemRequirements, setSystemRequirements] = useState(['']);
   const [whatYouGet, setWhatYouGet] = useState(['']);
 
-  const [saving,     setSaving]     = useState(false);
-  const [saved,      setSaved]      = useState(false);
-  const [savedProduct, setSavedProduct] = useState(null); // holds newly created product for QR display
-  const [saveError,  setSaveError]  = useState('');
-  const [previewPct, setPreviewPct] = useState(0);
-  const [filePct,    setFilePct]    = useState(0);
-  const [videoPct,   setVideoPct]   = useState(0);
-  const [uploadingPrev, setUploadingPrev] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [uploadingAddPrev, setUploadingAddPrev] = useState(false);
+  const [saving,          setSaving]          = useState(false);
+  const [saved,           setSaved]           = useState(false);
+  const [savedProduct,    setSavedProduct]    = useState(null); // holds newly created product for QR display
+  const [saveError,       setSaveError]       = useState('');
+  const [previewPct,      setPreviewPct]      = useState(0);
+  const [filePct,         setFilePct]         = useState(0);
+  const [videoPct,        setVideoPct]        = useState(0);
+  const [uploadingPrev,   setUploadingPrev]   = useState(false);
+  const [uploadingFile,   setUploadingFile]   = useState(false);
+  const [uploadingVideo,  setUploadingVideo]  = useState(false);
+  const [uploadingAddPrev,setUploadingAddPrev]= useState(false);
 
   const previewRef = useRef(null);
   const fileRef    = useRef(null);
   const videoRef   = useRef(null);
   const addPrevRef = useRef(null);
+
+  /* ── Onboarding gate — blocks direct URL access ────────────────────
+     All hooks are declared above. This conditional return is now safe
+     because it never changes the number of hooks that execute.
+  ─────────────────────────────────────────────────────────────────── */
+  if (!profileLoading && !isProfileComplete) {
+    return (
+      <VendorLayout activePage="products" title="Add Product" subtitle="Complete your profile to start listing products">
+        <div style={{
+          maxWidth: 480, margin: '48px auto', padding: '0 16px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+        }}>
+          {/* Icon */}
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, marginBottom: 20,
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.10), rgba(239,68,68,0.06))',
+            border: '1px solid rgba(239,68,68,0.20)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <AlertCircle size={30} style={{ color: '#dc2626' }} />
+          </div>
+
+          {/* Heading */}
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--v-dark)', marginBottom: 8 }}>
+            Complete your Vendor Profile first
+          </div>
+          <div style={{ fontSize: 13.5, color: 'var(--v-text3)', marginBottom: 24, lineHeight: 1.6 }}>
+            Before adding products, please fill in the required profile information below.
+          </div>
+
+          {/* Checklist */}
+          <div style={{
+            width: '100%', background: 'rgba(216,191,227,0.10)',
+            border: '1px solid rgba(196,148,230,0.22)',
+            borderRadius: 14, padding: '14px 18px',
+            marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 11,
+          }}>
+            {profileChecks.map(item => (
+              <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {item.done
+                  ? <CheckCircle size={16} style={{ color: '#16a34a', flexShrink: 0 }} />
+                  : <Circle      size={16} style={{ color: '#dc2626', flexShrink: 0 }} />
+                }
+                <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--v-dark)', flex: 1, textAlign: 'left' }}>
+                  {item.label}
+                </span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: item.done ? '#16a34a' : '#dc2626',
+                }}>
+                  {item.done ? 'Done' : 'Required'}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+            <button
+              className="v-btn v-btn-primary"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => navigate('/vendor/profile')}
+            >
+              Complete Profile
+            </button>
+            <button
+              className="v-btn v-btn-ghost"
+              style={{ padding: '0 20px' }}
+              onClick={() => navigate('/vendor/products')}
+            >
+              Back
+            </button>
+          </div>
+        </div>
+      </VendorLayout>
+    );
+  }
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 

@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer } from './components/AdminComponents';
 import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } from 'lucide-react';
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
+import { backendFetch } from '../../utils/api';
 import { uploadProductFile, uploadThumbnail } from '../../services/storageService.js';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
@@ -311,6 +312,10 @@ export default function App() {
   const [prodPage, setProdPage] = useState(1);
   const PROD_PAGE_SIZE = 50;
 
+  // --- M4-M7: Pending Review state ---
+  const [pendingProducts, setPendingProducts] = useState([]);
+  const [rejectModal, setRejectModal] = useState(null); // { productId, reason }
+
   // --- UI STATES ---
   const [isNewProductOpen, setIsNewProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -330,6 +335,15 @@ export default function App() {
   useEffect(() => {
     sysSound.muted = audioMuted;
   }, [audioMuted]);
+
+  // --- M4-M7: Fetch pending products when "Pending Review" tab is active ---
+  useEffect(() => {
+    if (selectedStatus === 'Pending Review') {
+      backendFetch('/admin/products/pending')
+        .then(data => setPendingProducts(data.products || []))
+        .catch(err => console.error('Pending products load failed:', err));
+    }
+  }, [selectedStatus]);
 
 
   const handleMouseMove = (e) => {
@@ -810,6 +824,33 @@ export default function App() {
     }
   };
 
+  // --- M4-M7: Approve / Reject handlers ---
+  const handleApproveProduct = async (productId) => {
+    try {
+      await backendFetch(`/admin/products/${productId}/approve`, { method: 'POST' });
+      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      triggerNotification('Product approved!');
+    } catch (err) {
+      triggerNotification('Approve failed: ' + err.message, 'error');
+    }
+  };
+
+  const handleRejectProduct = async () => {
+    if (!rejectModal) return;
+    try {
+      await backendFetch(`/admin/products/${rejectModal.productId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: rejectModal.reason || '' }),
+      });
+      setPendingProducts(prev => prev.filter(p => p.id !== rejectModal.productId));
+      setRejectModal(null);
+      triggerNotification('Product rejected.');
+    } catch (err) {
+      triggerNotification('Reject failed: ' + err.message, 'error');
+    }
+  };
+
   return (
     <AdminLayout activePage="products">
 
@@ -1150,6 +1191,7 @@ export default function App() {
                 <option value="All">All Statuses</option>
                 <option value="Published">Published</option>
                 <option value="Draft">Draft</option>
+                <option value="Pending Review">Pending Review</option>
               </select>
             </div>,
             // Creator Dropdown
@@ -1235,8 +1277,45 @@ export default function App() {
             </div>
           )}
 
+          {/* M4-M7: Pending Review panel */}
+          {selectedStatus === 'Pending Review' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '16px' }}>
+              {pendingProducts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px', color: '#7B3FA0', opacity: 0.6 }}>
+                  No products pending review.
+                </div>
+              ) : pendingProducts.map(product => (
+                <div key={product.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                  padding: '16px 20px', background: 'rgba(255,255,255,0.80)',
+                  border: '1px solid rgba(196,148,230,0.20)', borderRadius: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                    {product.thumbnail && <img src={product.thumbnail} alt="" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />}
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700, color: '#2D004D', fontSize: '0.92rem' }}>{product.title}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#7B3FA0' }}>
+                        {product.category} &bull; ₹{product.price} &bull; by {product.seller || 'Vendor'}
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => handleApproveProduct(product.id)}
+                      style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: 'rgba(5,150,105,0.10)', color: '#059669', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      ✓ Approve
+                    </button>
+                    <button onClick={() => setRejectModal({ productId: product.id, reason: '' })}
+                      style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: 'rgba(220,38,38,0.08)', color: '#DC2626', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}>
+                      ✕ Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence mode="popLayout">
-            {apiLoading && products.length === 0 ? (
+            {selectedStatus !== 'Pending Review' && apiLoading && products.length === 0 ? (
               layoutMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-pulse">
                   {Array.from({ length: 6 }).map((_, i) => (

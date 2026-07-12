@@ -8,6 +8,26 @@ from app.models.user import User as UserModel
 from app.models.review import Review as ReviewModel
 
 
+def compute_growth(current_period_orders, previous_period_orders):
+    """Compute period-over-period revenue growth as a percentage."""
+    current_rev = sum(float(o.get('total', 0)) for o in current_period_orders)
+    previous_rev = sum(float(o.get('total', 0)) for o in previous_period_orders)
+    if previous_rev == 0:
+        return 0
+    return round(((current_rev - previous_rev) / previous_rev) * 100, 1)
+
+
+def _parse_order_dt(order_dict: dict) -> datetime:
+    """Parse a createdAt string from an order dict; returns epoch on failure."""
+    try:
+        raw = order_dict.get("createdAt", "")
+        if raw:
+            return datetime.fromisoformat(raw.replace("Z", "+00:00")).replace(tzinfo=None)
+    except Exception:
+        pass
+    return datetime(1970, 1, 1)
+
+
 def _get_cutoff(date_range: str) -> datetime | None:
     """Return a UTC cutoff datetime for the given range string, or None for 'all'."""
     now = datetime.utcnow()
@@ -69,6 +89,25 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
             sql_reviews = db_s.query(ReviewModel).all()
 
+            # Fetch previous period orders for growth computation
+            prev_sql_orders = []
+            if cutoff:
+                window_days = (datetime.utcnow() - cutoff).days or 30
+                prev_start = cutoff - timedelta(days=window_days)
+                prev_q = db_s.query(OrderModel).filter(
+                    OrderModel.created_at >= prev_start,
+                    OrderModel.created_at < cutoff,
+                )
+                prev_sql_orders = prev_q.all()
+
+            def _to_order_dict(o):
+                return {
+                    "price": float(o.total_amount or 0.0),
+                    "total": float(o.total_amount or 0.0),
+                    "status": o.status or "completed",
+                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                }
+
             orders = []
             for o in sql_orders:
                 customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
@@ -93,6 +132,8 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                     "productName": p_name
                 })
 
+            prev_orders_dicts = [_to_order_dict(o) for o in prev_sql_orders]
+
             products = [{"status": p.status, "category": p.category, "title": p.title} for p in sql_products]
             vendors = [{"isApproved": v.is_verified or v.is_active, "status": "active" if v.is_active else "disabled", "role": v.role} for v in sql_vendors]
             reviews = [{"rating": r.rating} for r in sql_reviews]
@@ -100,6 +141,26 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             products_count = len(products)
             vendors_count = len(vendors)
             kpis = calculate_kpis(orders, products_count, vendors_count, reviews)
+
+            # Compute growth metrics
+            try:
+                revenue_growth = compute_growth(orders, prev_orders_dicts)
+                current_count = len(orders)
+                prev_count = len(prev_orders_dicts)
+                growth_velocity = round(((current_count - prev_count) / max(prev_count, 1)) * 100, 1)
+                paid_orders = kpis["paidOrdersCount"]
+                total_orders_count = kpis["totalOrders"]
+                conversion_rate = round((paid_orders / max(total_orders_count, 1)) * 100, 1)
+                current_aov = kpis["aov"]
+                prev_paid = sum(1 for o in prev_orders_dicts if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+                prev_rev = sum(float(o.get("total", 0)) for o in prev_orders_dicts if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+                prev_aov = round(prev_rev / prev_paid, 2) if prev_paid > 0 else 0
+                aov_growth = round((current_aov - prev_aov) / max(prev_aov, 1) * 100, 1)
+            except Exception:
+                revenue_growth = 0
+                growth_velocity = 0
+                conversion_rate = 0
+                aov_growth = 0
 
             # Product performance
             prod_sales = {}
@@ -154,10 +215,10 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                 },
                 "geoAnalytics": geo_analytics,
                 "growth": {
-                    "revenueGrowth":   12,
-                    "aovGrowth":       4,
+                    "revenueGrowth":   revenue_growth,
+                    "aovGrowth":       aov_growth,
                     "refundRateGrowth":-1,
-                    "customerGrowth":  8,
+                    "customerGrowth":  growth_velocity,
                     "reviewGrowth":    5,
                 },
                 "forecast": {
@@ -184,6 +245,9 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     cutoff = _get_cutoff(date_range)
     if cutoff:
         filtered = []
+        prev_filtered = []
+        window_days = (datetime.utcnow() - cutoff).days or 30
+        prev_start = cutoff - timedelta(days=window_days)
         for o in orders:
             try:
                 created_str = o.get("createdAt", "")
@@ -191,9 +255,14 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                     created_dt = datetime.fromisoformat(created_str.replace("Z", "+00:00")).replace(tzinfo=None)
                     if created_dt >= cutoff:
                         filtered.append(o)
+                    elif created_dt >= prev_start:
+                        prev_filtered.append(o)
             except Exception:
                 filtered.append(o)  # include if unparseable
+        prev_orders = prev_filtered
         orders = filtered
+    else:
+        prev_orders = []
 
     products_count = len(products)
     vendors_count  = len([
@@ -206,6 +275,26 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     ])
 
     kpis = calculate_kpis(orders, products_count, vendors_count, reviews)
+
+    # Compute growth metrics
+    try:
+        revenue_growth = compute_growth(orders, prev_orders)
+        current_count = len(orders)
+        prev_count = len(prev_orders)
+        growth_velocity = round(((current_count - prev_count) / max(prev_count, 1)) * 100, 1)
+        paid_orders = kpis["paidOrdersCount"]
+        total_orders_count = kpis["totalOrders"]
+        conversion_rate = round((paid_orders / max(total_orders_count, 1)) * 100, 1)
+        current_aov = kpis["aov"]
+        prev_paid = sum(1 for o in prev_orders if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+        prev_rev_sum = sum(float(o.get("total", o.get("price", 0))) for o in prev_orders if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+        prev_aov = round(prev_rev_sum / prev_paid, 2) if prev_paid > 0 else 0
+        aov_growth = round((current_aov - prev_aov) / max(prev_aov, 1) * 100, 1)
+    except Exception:
+        revenue_growth = 0
+        growth_velocity = 0
+        conversion_rate = 0
+        aov_growth = 0
 
     prod_sales = {}
     for o in orders:
@@ -274,10 +363,10 @@ def get_analytics_dashboard_data(date_range: str = "all"):
         },
         "geoAnalytics": geo_analytics,
         "growth": {
-            "revenueGrowth":   12,
-            "aovGrowth":       4,
+            "revenueGrowth":   revenue_growth,
+            "aovGrowth":       aov_growth,
             "refundRateGrowth":-1,
-            "customerGrowth":  8,
+            "customerGrowth":  growth_velocity,
             "reviewGrowth":    5,
         },
         "forecast": {
@@ -355,23 +444,40 @@ def get_full_dashboard_data():
             total_orders = len(orders)
             refund_rate  = round(refunded / total_orders * 100, 2) if total_orders > 0 else 0.0
 
+            # Compute real KPI metrics for SQL branch of get_full_dashboard_data
+            try:
+                now_sql = datetime.utcnow()
+                cutoff_30d = now_sql - timedelta(days=30)
+                prev_30d_start = cutoff_30d - timedelta(days=30)
+                curr_30d = [o for o in orders if _parse_order_dt(o) >= cutoff_30d]
+                prev_30d = [o for o in orders if prev_30d_start <= _parse_order_dt(o) < cutoff_30d]
+                sql_revenue_change = compute_growth(curr_30d, prev_30d)
+                curr_count_30d = len(curr_30d)
+                prev_count_30d = len(prev_30d)
+                sql_growth_velocity = round(((curr_count_30d - prev_count_30d) / max(prev_count_30d, 1)) * 100, 1)
+                sql_conversion_rate = round((successful / max(total_orders, 1)) * 100, 1)
+            except Exception:
+                sql_revenue_change = 0
+                sql_growth_velocity = 0
+                sql_conversion_rate = 0
+
             kpis = {
                 "totalRevenue":        round(total_revenue, 2),
                 "ordersToday":         orders_today,
-                "conversionRate":      3.2,
+                "conversionRate":      sql_conversion_rate,
                 "activeProducts":      active_products or len(products),
                 "refundRate":          refund_rate,
-                "growthVelocity":      18,
-                "revenueChange":       12,
+                "growthVelocity":      sql_growth_velocity,
+                "revenueChange":       sql_revenue_change,
                 "ordersChange":        8,
                 "activeProductsChange":4,
                 "modalData": {
                     "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
                     "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
-                    "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, 3.2],
+                    "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, sql_conversion_rate],
                     "activeProducts": [0, 0, 0, 0, 0, 0, active_products or len(products)],
                     "refundRate":     [0, 0, 0, 0, 0, 0, refund_rate],
-                    "growthVelocity": [10, 12, 14, 15, 16, 17, 18],
+                    "growthVelocity": [10, 12, 14, 15, 16, 17, sql_growth_velocity],
                 },
             }
 
@@ -491,27 +597,42 @@ def get_full_dashboard_data():
     total_orders = len(orders)
     refund_rate  = round(refunded / total_orders * 100, 2) if total_orders > 0 else 0.0
 
+    # Compute real KPI metrics for Firestore branch of get_full_dashboard_data
+    try:
+        now_fs = datetime.utcnow()
+        cutoff_30d_fs = now_fs - timedelta(days=30)
+        prev_30d_start_fs = cutoff_30d_fs - timedelta(days=30)
+        curr_30d_fs = [o for o in orders if _parse_order_dt(o) >= cutoff_30d_fs]
+        prev_30d_fs = [o for o in orders if prev_30d_start_fs <= _parse_order_dt(o) < cutoff_30d_fs]
+        fs_revenue_change = compute_growth(curr_30d_fs, prev_30d_fs)
+        curr_cnt_fs = len(curr_30d_fs)
+        prev_cnt_fs = len(prev_30d_fs)
+        fs_growth_velocity = round(((curr_cnt_fs - prev_cnt_fs) / max(prev_cnt_fs, 1)) * 100, 1)
+        fs_conversion_rate = round((successful / max(total_orders, 1)) * 100, 1)
+    except Exception:
+        fs_revenue_change = 0
+        fs_growth_velocity = 0
+        fs_conversion_rate = 0
+
     kpis = {
         "totalRevenue":        round(total_revenue, 2),
         "ordersToday":         orders_today,
-        "conversionRate":      3.2,
+        "conversionRate":      fs_conversion_rate,
         "activeProducts":      active_products or len(products),
         "refundRate":          refund_rate,
-        "growthVelocity":      18,
-        "revenueChange":       12,
+        "growthVelocity":      fs_growth_velocity,
+        "revenueChange":       fs_revenue_change,
         "ordersChange":        8,
         "activeProductsChange":4,
         "modalData": {
             "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
             "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
-            "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, 3.2],
+            "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, fs_conversion_rate],
             "activeProducts": [0, 0, 0, 0, 0, 0, active_products or len(products)],
             "refundRate":     [0, 0, 0, 0, 0, 0, refund_rate],
-            "growthVelocity": [10, 12, 14, 15, 16, 17, 18],
+            "growthVelocity": [10, 12, 14, 15, 16, 17, fs_growth_velocity],
         },
     }
-
-    sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
     live_feed = [
         {"id": f"sale-{o['id']}", "type": "sale", "user": o.get("customerName", "Customer"),
          "item": o.get("productName", "Product"), "time": "Recently", "value": float(o.get("price", o.get("total", 0)))}

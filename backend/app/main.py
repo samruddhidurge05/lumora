@@ -63,7 +63,14 @@ from app.api.versions_router import router as versions_router
 from app.api.upload_router import router as upload_router
 from app.api.affiliate.routes import router as affiliate_router
 from app.admin_api.routes import router as admin_router
+from app.admin_api.support.routes import router as admin_support_router
 from app.api.payments.routes import router as payments_router
+from app.api.reports.routes import router as reports_router
+from app.api.support.routes import router as support_router
+from app.api.contact_router import router as contact_router
+from app.admin_api.notifications.routes import router as admin_notifications_router
+from app.admin_api.products.routes import router as admin_products_router
+from app.admin_api.admin_users.routes import router as admin_users_router
 
 # ── Startup Configuration Validation ─────────────────────────────────────────
 def _validate_startup_config() -> None:
@@ -74,13 +81,14 @@ def _validate_startup_config() -> None:
     """
     errors = []
 
-    # 1. JWT Secret Key
+    # 1. JWT Secret Key — hard-fail if weak or default
     # The project uses JWT_SECRET_KEY (from app/core/config.py).
-    # Critical fail if missing, insecure, or too short.
+    # Exit immediately if the secret is the insecure default or shorter than 32 chars.
     jwt_secret = os.getenv("JWT_SECRET_KEY", "secret")
-    if not jwt_secret or jwt_secret == "secret" or len(jwt_secret) < 16:
+    if not jwt_secret or jwt_secret == "secret" or len(jwt_secret) < 32:
         errors.append(
-            "JWT_SECRET_KEY is missing, using the default 'secret' value, or is too short (min 16 chars)."
+            "JWT_SECRET_KEY is too weak. Must be at least 32 random characters "
+            "(current length: %d). Set a strong value before starting the server." % (len(jwt_secret) if jwt_secret else 0)
         )
 
     # 2. Firebase Project ID
@@ -280,11 +288,14 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# NOTE: Restrict allow_origins to your production domain before going live.
-#   e.g. allow_origins=["https://lumora.app", "https://www.lumora.app"]
+# Read allowed origins from the CORS_ORIGINS env var (comma-separated).
+# Falls back to local dev origins when the variable is not set.
+_cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174")
+origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠ Replace with specific production domain(s) before go-live
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -308,7 +319,14 @@ app.include_router(versions_router,      prefix="/api/versions",     tags=["Prod
 app.include_router(upload_router,        prefix="/api/uploads",      tags=["File Uploads"])
 app.include_router(affiliate_router,     prefix="/api/affiliate",    tags=["Affiliate"])
 app.include_router(admin_router,         prefix="/api/admin",        tags=["Admin"])
+app.include_router(admin_support_router, prefix="/api/admin/support",    tags=["Admin Support"])
 app.include_router(payments_router,      prefix="/api/payments",     tags=["Payments"])
+app.include_router(reports_router,       prefix="/api/reports",      tags=["Reports"])
+app.include_router(support_router,       prefix="/api/support",      tags=["Support"])
+app.include_router(contact_router,       prefix="/api/contact",      tags=["Contact"])
+app.include_router(admin_notifications_router, prefix="/api/admin/notifications", tags=["Admin Notifications"])
+app.include_router(admin_products_router,      prefix="/api/admin/products",       tags=["Admin Products"])
+app.include_router(admin_users_router,         prefix="/api/admin",                tags=["Admin Team"])
 
 # ── Static files ──────────────────────────────────────────────────────────────
 _UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
