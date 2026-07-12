@@ -75,3 +75,7 @@ serviceAccountKey.json
 # Firebase Admin SDK service account key (sensitive — never commit)
 *-firebase-adminsdk-*.json
 lumora-e6ddc-firebase-adminsdk-fbsvc-abcf2d8c21.json
+serviceAccount.json
+firebase-credentials.json
+firebase-adminsdk*.json
+*firebase-adminsdk*.json

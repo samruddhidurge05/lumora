@@ -8,6 +8,7 @@ import { uploadProductFile, uploadThumbnail } from '../../services/storageServic
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { ProductQrButton } from '../../components/product/ProductQrCode';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -1695,6 +1696,11 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
               <Icon name="Edit2" size={14} />
             </button>
 
+            {/* QR Code */}
+            <div className="col-span-1 flex items-center justify-center">
+              <ProductQrButton product={{ id: product.id, title: product.name || product.title, price: product.price }} />
+            </div>
+
             {/* Toggle Publication State */}
             <button 
               onClick={() => { sysSound.playTap(); onTogglePublish(); }}
@@ -1800,6 +1806,7 @@ function ProductListRow({ product, onPreview, onEdit, onTogglePublish, onDuplica
           >
             <Icon name="Edit2" size={14} />
           </button>
+          <ProductQrButton product={{ id: product.id, title: product.name || product.title, price: product.price }} />
           <button 
             onClick={onTogglePublish}
             className={`p-2 rounded-lg transition-colors ${product.status === 'Published' ? 'text-emerald-500 hover:bg-emerald-50' : 'text-[#7B3FA0] hover:bg-white'}`}

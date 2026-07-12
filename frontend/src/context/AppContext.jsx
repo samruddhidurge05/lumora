@@ -1305,7 +1305,7 @@ export function AppContextProvider({ children }) {
 
     setNotifications(prev => [...newAlerts, ...prev]);
     
-    // Save purchased items for success download
+    // Save purchased items for download popup
     setLastPurchasedItems(items);
 
     // ── Persist order to SQLite backend (non-blocking) ──────────────────
@@ -1321,16 +1321,92 @@ export function AppContextProvider({ children }) {
       discount_amount: discountAmount || 0,
       affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
     };
-    if (orderPayload.items.length > 0) {
-      createOrderApi(orderPayload).catch(err =>
-        console.warn('[AppContext] Backend order creation failed (non-fatal):', err.message)
+    
+    const fetchDownloadTokens = async (items) => {
+      const itemsWithTokens = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const response = await backendFetch(`/products/${item.id}/download`);
+            return {
+              ...item,
+              download_url: response?.download_url || `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
+            };
+          } catch (err) {
+            console.warn(`[AppContext] Failed to get download token for product ${item.id}:`, err.message);
+            return {
+              ...item,
+              download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
+            };
+          }
+        })
       );
+      return itemsWithTokens;
+    };
+    
+    if (orderPayload.items.length > 0) {
+      createOrderApi(orderPayload)
+        .then(async (order) => {
+          if (order?.id) {
+            // Fetch real download tokens for all purchased items
+            const itemsWithTokens = await fetchDownloadTokens(items);
+            
+            // Trigger download popup after order is created successfully
+            window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
+              detail: {
+                orderDetails: {
+                  id: order.id,
+                  order_id: order.id,
+                  total_amount: orderPayload.total_amount,
+                  payment_method: paymentMethod,
+                  payment_id: paymentId,
+                },
+                purchasedItems: itemsWithTokens,
+              }
+            }));
+          }
+        })
+        .catch(async (err) => {
+          console.warn('[AppContext] Backend order creation failed (non-fatal):', err.message);
+          // Still show popup even if backend order fails, but with fallback tokens
+          const itemsWithFallbackTokens = items.map(item => ({
+            ...item,
+            download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
+          }));
+          
+          window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
+            detail: {
+              orderDetails: {
+                id: Date.now(),
+                order_id: Date.now(),
+                total_amount: totalINR,
+                payment_method: paymentMethod,
+                payment_id: paymentId,
+              },
+              purchasedItems: itemsWithFallbackTokens,
+            }
+          }));
+        });
+    } else {
+      // Fallback if no valid items
+      const fallbackItems = items.map(item => ({
+        ...item,
+        download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
+      }));
+      
+      window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
+        detail: {
+          orderDetails: {
+            id: Date.now(),
+            order_id: Date.now(),
+            total_amount: totalINR,
+            payment_method: paymentMethod,
+            payment_id: paymentId,
+          },
+          purchasedItems: fallbackItems,
+        }
+      }));
     }
     // ────────────────────────────────────────────────────────────────────
-
-    // ── Cross-module propagation (non-blocking) ──────────────────
-    // Direct Firestore writes on checkout are now handled backend-side in sync_order_to_firestore.
-    // ─────────────────────────────────────────────────────────────
 
     if (buyNowProduct) {
       setBuyNowProduct(null);
@@ -1339,9 +1415,38 @@ export function AppContextProvider({ children }) {
     }
     setAppliedPromo(null);
 
-    // Route to success view
-    window.location.hash = '#checkout/success';
-    setCurrentView('checkout/success');
+    // Clear checkout form and session data
+    sessionStorage.removeItem('lumora_idempotency_key');
+    sessionStorage.removeItem('lumora_pending_payment_ref');
+    sessionStorage.removeItem('lumora_upi_session');
+
+    // Disable back navigation to checkout/payment by replacing history
+    if (window.history.length > 1) {
+      window.history.pushState(null, '', '/');
+      window.history.pushState(null, '', '/');
+    }
+    
+    // Add popstate listener to prevent going back to checkout
+    const preventBack = (e) => {
+      const currentPath = window.location.pathname;
+      const currentHash = window.location.hash;
+      
+      if (currentPath.includes('checkout') || currentPath.includes('payment') || 
+          currentHash.includes('checkout') || currentHash.includes('payment')) {
+        window.history.pushState(null, '', '/');
+      }
+    };
+    
+    window.addEventListener('popstate', preventBack);
+    
+    // Clean up listener after 30 seconds
+    setTimeout(() => {
+      window.removeEventListener('popstate', preventBack);
+    }, 30000);
+    
+    // Navigate to marketplace instead of success page
+    // The download popup will be handled by App.jsx listening to the custom event
+    navigateTo('marketplace');
   };
 
   const navigateTo = (view, payload = '') => {

@@ -14,7 +14,7 @@ const formatINR = (v) =>
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(Math.round(v * 80));
+  }).format(Math.round(v));
 
 export default function AffiliateCartDrawer() {
   const {
@@ -33,7 +33,8 @@ export default function AffiliateCartDrawer() {
 
   const discount    = appliedPromo ? affCartTotal * (appliedPromo.discountPercent / 100) : 0;
   const platformFee = affCartTotal > 100 ? 0 : 5;
-  const total       = affCartTotal - discount + (affCartTotal > 0 ? platformFee : 0);
+  const gst         = Math.round((affCartTotal - discount + platformFee) * 0.18);
+  const total       = Math.round(affCartTotal - discount + (affCartTotal > 0 ? platformFee : 0) + gst);
 
   const handleApplyPromo = () => {
     const code = promoInput.trim().toUpperCase();
@@ -249,7 +250,10 @@ export default function AffiliateCartDrawer() {
                     </div>
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Platform Fee</span><span>{platformFee === 0 ? 'Free' : `₹${platformFee * 80}`}</span>
+                    <span>Platform Fee</span><span>{platformFee === 0 ? 'Free' : `₹${platformFee}`}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    <span>GST (18%)</span><span>{formatINR(gst)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', paddingTop: '8px', borderTop: '1px solid rgba(196,181,253,0.20)', marginTop: '4px' }}>
                     <span>Total</span><span>{formatINR(total)}</span>

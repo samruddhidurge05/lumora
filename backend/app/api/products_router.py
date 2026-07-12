@@ -242,16 +242,22 @@ def download_product(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """Securely download a product. Verifies ownership first."""
+    """Securely download a product. Returns detailed product info for popup display."""
     check_platform_paused()
     
-    # Check if vendor is active
-    product = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    # Check if vendor is active and get vendor details
+    product_with_vendor = db.query(Product, User.name.label("vendor_name")).outerjoin(
+        User, Product.vendor_id == cast(User.id, String)
+    ).filter(
         Product.id == product_id,
         or_(User.id == None, User.is_active == True)
     ).first()
-    if not product:
+    
+    if not product_with_vendor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found or vendor is disabled")
+    
+    product = product_with_vendor[0]
+    vendor_name = product_with_vendor[1] or product.seller or "Unknown Vendor"
 
     # Check if the user has purchased this product
     owned = db.query(OrderItem).join(Order).filter(
@@ -268,12 +274,104 @@ def download_product(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must purchase this product to download it."
         )
+    
+    # Get user's download history for this product
+    user_downloads = db.query(OrderItem).join(Order).filter(
+        Order.user_id == current_user.id,
+        OrderItem.product_id == product_id,
+        Order.status == "completed"
+    ).count()
+    
+    # Get last download time from downloads collection if exists
+    from datetime import datetime
+    last_downloaded = None
+    if owned:
+        last_downloaded = owned.created_at.isoformat() if owned.created_at else None
         
     token = generate_download_token(current_user.id, product_id)
+    
     return {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
-        "file_size": product.file_size or "48 MB",
-        "version": product.version or "v1.0.0"
+        "product_details": {
+            "id": product.id,
+            "name": product.name,
+            "category": product.category or "Uncategorized",
+            "file_size": product.file_size or "Unknown size",
+            "version": product.version or "v1.0.0",
+            "thumbnail": product.thumbnail or product.preview,
+            "vendor": vendor_name,
+            "price": float(product.price or 0),
+            "description": product.description[:200] + "..." if product.description and len(product.description) > 200 else product.description
+        },
+        "download_stats": {
+            "total_downloads": product.downloads or 0,
+            "your_downloads": user_downloads,
+            "last_downloaded": last_downloaded
+        },
+        "token_expires_in": "15 minutes"
+    }
+
+
+@router.get("/downloads/center")
+def get_download_center(
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get user's download center with all purchased products."""
+    check_platform_paused()
+    
+    # Get all products the user has purchased
+    purchased_items = db.query(
+        OrderItem, Product, Order, User.name.label("vendor_name")
+    ).join(
+        Product, OrderItem.product_id == Product.id
+    ).join(
+        Order, OrderItem.order_id == Order.id
+    ).outerjoin(
+        User, Product.vendor_id == cast(User.id, String)
+    ).filter(
+        Order.user_id == current_user.id,
+        Order.status == "completed"
+    ).order_by(Order.created_at.desc()).all()
+    
+    downloads = []
+    for order_item, product, order, vendor_name in purchased_items:
+        # Generate download token for each product
+        token = generate_download_token(current_user.id, product.id)
+        
+        downloads.append({
+            "order_id": order.id,
+            "purchase_date": order.created_at.isoformat() if order.created_at else None,
+            "product_details": {
+                "id": product.id,
+                "name": product.name,
+                "category": product.category or "Uncategorized",
+                "file_size": product.file_size or "Unknown size",
+                "version": product.version or "v1.0.0",
+                "thumbnail": product.thumbnail or product.preview,
+                "vendor": vendor_name or product.seller or "Unknown Vendor",
+                "price_paid": float(order_item.price_paid or 0),
+                "description": product.description[:150] + "..." if product.description and len(product.description) > 150 else product.description
+            },
+            "download_url": f"/api/products/{product.id}/download-file?token={token}",
+            "can_download": True,
+            "token_expires_in": "15 minutes"
+        })
+    
+    # Get download statistics
+    total_purchases = len(downloads)
+    categories = list(set(d["product_details"]["category"] for d in downloads))
+    total_value = sum(d["product_details"]["price_paid"] for d in downloads)
+    
+    return {
+        "downloads": downloads,
+        "statistics": {
+            "total_purchases": total_purchases,
+            "categories": categories,
+            "total_value_purchased": total_value,
+            "user_id": current_user.id,
+            "user_name": current_user.name
+        }
     }
 
 
@@ -545,3 +643,89 @@ def delete_product(
         vendor_id=user_uid
     )
     return None
+
+
+@router.get("/purchase-complete/{order_id}")
+def get_purchase_complete_popup(
+    order_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Get post-purchase download popup data for immediate download and navigation to downloads section.
+    Called after successful payment to show download popup with product details.
+    """
+    check_platform_paused()
+    
+    # Verify the order belongs to the current user
+    order = db.query(Order).filter(
+        Order.id == order_id,
+        Order.user_id == current_user.id,
+        Order.status == "completed"
+    ).first()
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found or not accessible"
+        )
+    
+    # Get all order items with product and vendor details
+    order_items_with_details = db.query(
+        OrderItem, Product, User.name.label("vendor_name")
+    ).join(
+        Product, OrderItem.product_id == Product.id
+    ).outerjoin(
+        User, Product.vendor_id == cast(User.id, String)
+    ).filter(
+        OrderItem.order_id == order_id
+    ).all()
+    
+    popup_products = []
+    total_value = 0
+    
+    for order_item, product, vendor_name in order_items_with_details:
+        # Generate download token for immediate download
+        token = generate_download_token(current_user.id, product.id)
+        download_url = f"/api/products/{product.id}/download-file?token={token}"
+        
+        popup_products.append({
+            "product_id": product.id,
+            "name": product.name or product.title,
+            "category": product.category or "Uncategorized",
+            "file_size": product.file_size or "Unknown size",
+            "version": product.version or "v1.0.0",
+            "thumbnail": product.thumbnail or product.preview,
+            "vendor": vendor_name or product.seller or "Unknown Vendor",
+            "price_paid": float(order_item.price_paid or 0),
+            "description": product.description[:100] + "..." if product.description and len(product.description) > 100 else product.description,
+            "download_url": download_url,
+            "auto_download": True,  # Trigger automatic download
+            "token_expires_in": "15 minutes"
+        })
+        total_value += float(order_item.price_paid or 0)
+    
+    return {
+        "success": True,
+        "popup_type": "post_purchase_download",
+        "order_details": {
+            "order_id": order.id,
+            "order_reference": f"ORD-{order.id}",
+            "purchase_date": order.created_at.isoformat() if order.created_at else None,
+            "total_items": len(popup_products),
+            "total_value": total_value,
+            "customer_name": current_user.name
+        },
+        "products": popup_products,
+        "popup_actions": {
+            "download_all": True,  # Enable bulk download
+            "go_to_downloads": "/downloads",  # Navigation URL
+            "continue_shopping": "/products"  # Continue shopping URL
+        },
+        "messages": {
+            "title": "🎉 Purchase Complete!",
+            "subtitle": f"Your {len(popup_products)} product{'s' if len(popup_products) > 1 else ''} {'are' if len(popup_products) > 1 else 'is'} ready for download",
+            "download_message": "Your download will start automatically. You can also access all your purchases in the Downloads section.",
+            "thank_you": "Thank you for your purchase!"
+        }
+    }

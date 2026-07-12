@@ -76,15 +76,30 @@ def _validate_startup_config() -> None:
 
     # 1. JWT Secret Key
     # The project uses JWT_SECRET_KEY (from app/core/config.py).
-    # Warn if it is still the insecure default value.
+    # Critical fail if missing, insecure, or too short.
     jwt_secret = os.getenv("JWT_SECRET_KEY", "secret")
-    if jwt_secret == "secret" or len(jwt_secret) < 16:
-        _logger.warning(
-            "[startup] JWT_SECRET_KEY is using the insecure default value 'secret'. "
-            "Set JWT_SECRET_KEY to a strong random value before going to production."
+    if not jwt_secret or jwt_secret == "secret" or len(jwt_secret) < 16:
+        errors.append(
+            "JWT_SECRET_KEY is missing, using the default 'secret' value, or is too short (min 16 chars)."
         )
 
-    # 2. Database connection
+    # 2. Firebase Project ID
+    firebase_project = os.getenv("FIREBASE_PROJECT_ID")
+    if not firebase_project:
+        errors.append("FIREBASE_PROJECT_ID environment variable is missing or empty.")
+
+    # 3. Payment Gateway Configuration
+    payment_gateway = os.getenv("PAYMENT_GATEWAY", "mock").lower()
+    if payment_gateway == "razorpay":
+        rzp_key = os.getenv("RAZORPAY_KEY_ID")
+        rzp_secret = os.getenv("RAZORPAY_KEY_SECRET")
+        if not rzp_key or not rzp_secret:
+            errors.append(
+                "PAYMENT_GATEWAY is set to 'razorpay' but RAZORPAY_KEY_ID or "
+                "RAZORPAY_KEY_SECRET is missing."
+            )
+
+    # 4. Database connection
     try:
         from app.db.database import engine as _engine
         with _engine.connect() as conn:
@@ -92,7 +107,7 @@ def _validate_startup_config() -> None:
     except Exception as db_err:
         errors.append(f"Database connection failed: {db_err}")
 
-    # 3. Firebase credentials (non-fatal warning — Firebase connection is optional)
+    # 5. Firebase credentials (non-fatal warning — Firebase connection is optional)
     cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if not cert_path:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -106,7 +121,7 @@ def _validate_startup_config() -> None:
     else:
         _logger.info("[startup] Firebase credentials file found: %s", cert_path)
 
-    # 4. Storage configuration
+    # 6. Storage configuration
     storage_provider = os.getenv("STORAGE_PROVIDER", "local").lower()
     _logger.info("[startup] Storage provider: %s", storage_provider)
 
@@ -117,7 +132,7 @@ def _validate_startup_config() -> None:
         _logger.critical("[startup] Application cannot start. Fix the above errors.")
         sys.exit(1)
 
-    _logger.info("[startup] Configuration validation passed ✓")
+    _logger.info("[startup] Configuration validation passed OK")
 
 
 # Run validation before table creation so we catch DB issues early
@@ -327,8 +342,8 @@ def health_check():
         with _engine.connect() as conn:
             conn.execute(sqlalchemy.text("SELECT 1"))
         report["services"]["database"] = {"status": "ok", "provider": "SQLite"}
-    except Exception as db_err:
-        report["services"]["database"] = {"status": "error", "detail": str(db_err)}
+    except Exception:
+        report["services"]["database"] = {"status": "error", "detail": "Database connection verification failed"}
         overall_ok = False
 
     # Firebase connection
@@ -346,8 +361,8 @@ def health_check():
         from app.services.storage_service import storage_service
         provider_name = type(storage_service.provider).__name__
         report["services"]["storage"] = {"status": "ok", "provider": provider_name}
-    except Exception as st_err:
-        report["services"]["storage"] = {"status": "error", "detail": str(st_err)}
+    except Exception:
+        report["services"]["storage"] = {"status": "error", "detail": "Storage connectivity check failed"}
         overall_ok = False
 
     if not overall_ok:

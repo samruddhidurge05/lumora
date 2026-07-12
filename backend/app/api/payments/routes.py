@@ -206,6 +206,23 @@ def confirm_payment(
         "order_id": order.id,
         "payment_ref": body.payment_ref,
         "message": f"Payment confirmed. Order ORD-{order.id} is ready. Your downloads are available in the vault.",
+        "show_download_popup": True,
+        "download_popup_data": {
+            "order_details": {
+                "order_id": order.id,
+                "total_items": len(order.items if hasattr(order, "items") else []),
+                "purchase_date": order.created_at.isoformat() if hasattr(order, "created_at") and order.created_at else None
+            },
+            "products": [
+                {
+                    "product_id": item.product_id,
+                    "download_url": item.download_url,
+                    "product_name": getattr(item, 'product_name', f'Product {item.product_id}'),
+                    "auto_download": True
+                }
+                for item in (order.items if hasattr(order, "items") else [])
+            ]
+        },
         "items": [
             {
                 "product_id": item.product_id,
@@ -412,15 +429,16 @@ def admin_refund_payment(
     return payment
 
 
-# ─── 10. Webhook (Stub) ───────────────────────────────────────────────────────
+# ─── 10. Webhook (Production) ─────────────────────────────────────────────────
 
 @router.post(
     "/webhook/razorpay",
     status_code=status.HTTP_200_OK,
-    summary="Razorpay webhook receiver (stub)",
+    summary="Razorpay webhook receiver",
     description=(
-        "Receives Razorpay webhook events. Currently logs the payload and returns 200 "
-        "so Razorpay does not retry. Full implementation pending credentials."
+        "Receives Razorpay webhook events. Verifies HMAC-SHA256 signature "
+        "against RAZORPAY_WEBHOOK_SECRET. Processes payment.captured, "
+        "payment.failed, payment.refunded, and refund.processed events."
     ),
 )
 async def razorpay_webhook(
@@ -429,38 +447,114 @@ async def razorpay_webhook(
     db: Session = Depends(get_db),
 ):
     """
-    Webhook endpoint for Razorpay events.
+    Production webhook endpoint for Razorpay events.
 
-    STATUS: STUB — accepts all requests, logs payload, returns 200.
+    Security:
+        - Reads raw body bytes BEFORE parsing JSON (signature is over raw bytes)
+        - Verifies HMAC-SHA256 of body with RAZORPAY_WEBHOOK_SECRET
+        - Rejects requests with invalid or missing signature (400)
+        - Always returns 200 after processing so Razorpay does not retry
 
-    When Razorpay account is available:
-    1. Verify X-Razorpay-Signature against RAZORPAY_WEBHOOK_SECRET
-    2. Parse event type (payment.captured, payment.failed, etc.)
-    3. Dispatch to RazorpayWebhookHandler
-    4. RazorpayWebhookHandler calls PaymentService to update state
-
-    The full handler is in app/payments/webhooks/razorpay_webhook.py
+    Event handling:
+        payment.captured  → If payment still PENDING, complete the order
+        payment.failed    → Mark payment FAILED in database
+        payment.refunded  → Update payment status to REFUNDED
+        refund.processed  → Confirm refund settled by bank
+        payment.authorized → No-op (captured event follows with auto-capture)
     """
+    # Step 1: Read raw bytes BEFORE any JSON parsing
+    raw_body = await request.body()
+
+    # Step 2: Initialize webhook handler
+    from app.payments.webhooks.razorpay_webhook import RazorpayWebhookHandler
+    handler = RazorpayWebhookHandler()
+
+    # Step 3: Verify HMAC-SHA256 signature
+    if not handler.verify_webhook_signature(raw_body, x_razorpay_signature or ""):
+        logger.warning(
+            "[webhook/razorpay] Rejected — invalid signature. "
+            "signature_header=%r",
+            x_razorpay_signature,
+        )
+        # Return 400 so Razorpay knows we rejected it (it will retry with correct secret)
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=400,
+            content={"received": False, "error": "Invalid webhook signature"},
+        )
+
+    # Step 4: Parse JSON payload
     try:
         payload = await request.json()
-        event_type = payload.get("event", "unknown")
-        logger.info(
-            "[webhook/razorpay] Received event='%s' signature_present=%s",
-            event_type,
-            bool(x_razorpay_signature),
-        )
-        # TODO: When credentials available, uncomment:
-        # from app.payments.webhooks.razorpay_webhook import RazorpayWebhookHandler
-        # handler = RazorpayWebhookHandler()
-        # raw_body = await request.body()
-        # if not handler.verify_webhook_signature(raw_body, x_razorpay_signature or ""):
-        #     raise HTTPException(status_code=400, detail="Invalid webhook signature")
-        # event = handler.parse_event(payload)
-        # handler.dispatch(event)
-    except Exception as exc:
-        logger.error("[webhook/razorpay] Error processing webhook: %s", exc)
+    except Exception:
+        import json as _json
+        try:
+            payload = _json.loads(raw_body)
+        except Exception as exc:
+            logger.error("[webhook/razorpay] Failed to parse payload: %s", exc)
+            return {"received": True}  # Still return 200 to stop retries
 
-    # Always return 200 so Razorpay doesn't retry
+    event_type = payload.get("event", "unknown")
+    logger.info(
+        "[webhook/razorpay] Received event='%s' signature_ok=True",
+        event_type,
+    )
+
+    # Step 5: Parse and dispatch event
+    try:
+        event = handler.parse_event(payload)
+        handler.dispatch(event)
+
+        # Step 6: Database-level actions based on event type
+        if event_type == "payment.captured" and event.gateway_order_id:
+            # If browser closed before /confirm was called, fulfill here
+            from app.repositories.payment_repo import PaymentRepository
+            repo = PaymentRepository(db)
+            payment = repo.find_by_gateway_order_id(event.gateway_order_id)
+
+            if payment and payment.status == "PENDING":
+                logger.info(
+                    "[webhook/razorpay] payment.captured — fulfilling PENDING payment %s",
+                    payment.payment_ref,
+                )
+                try:
+                    payment_service.confirm_payment(
+                        db=db,
+                        payment_ref=payment.payment_ref,
+                        customer_id=payment.customer_id,
+                        gateway_payment_id=event.gateway_payment_id or "",
+                        gateway_signature="",  # Already verified via webhook sig
+                        items_payload=[],
+                        payment_method=payment.payment_method or "razorpay",
+                        skip_signature_verify=True,  # Webhook already authenticated
+                    )
+                    logger.info(
+                        "[webhook/razorpay] Successfully fulfilled order for payment %s",
+                        payment.payment_ref,
+                    )
+                except Exception as fulfill_exc:
+                    logger.error(
+                        "[webhook/razorpay] Order fulfillment failed for %s: %s",
+                        payment.payment_ref,
+                        fulfill_exc,
+                    )
+
+        elif event_type == "payment.failed" and event.gateway_order_id:
+            from app.repositories.payment_repo import PaymentRepository
+            repo = PaymentRepository(db)
+            payment = repo.find_by_gateway_order_id(event.gateway_order_id)
+            if payment and payment.status == "PENDING":
+                repo.transition_status(payment, "FAILED")
+                db.commit()
+                logger.info(
+                    "[webhook/razorpay] Marked payment %s as FAILED via webhook",
+                    payment.payment_ref,
+                )
+
+    except Exception as exc:
+        logger.error("[webhook/razorpay] Error processing event '%s': %s", event_type, exc)
+
+    # Always return 200 so Razorpay does not retry successful deliveries
     return {"received": True}
 
 

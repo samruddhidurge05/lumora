@@ -33,8 +33,8 @@ export default function Checkout() {
   const subtotal = items.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
   const discount = appliedPromo ? subtotal * (appliedPromo.discountPercent / 100) : 0;
   const platformFee = subtotal > 100 ? 0 : 5;
-  const gst = Math.round(subtotal * 0.18 * 80);     // 18% GST in INR
-  const totalINR = Math.round((subtotal - discount + platformFee) * 80) + gst;
+  const gst = Math.round((subtotal - discount + platformFee) * 0.18);  // 18% GST on taxable amount
+  const totalINR = Math.round(subtotal - discount + platformFee + gst);
 
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError]  = useState('');

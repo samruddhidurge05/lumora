@@ -27,8 +27,13 @@ from app.models.user import User
 from app.core.security import get_password_hash
 
 ADMIN_EMAIL    = os.getenv("ADMIN_EMAIL",    "admin@lumora.co")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin1234")   # kept under 72 bytes for bcrypt
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 ADMIN_NAME     = os.getenv("ADMIN_NAME",     "Lumora Admin")
+
+if not ADMIN_PASSWORD:
+    print("[seed_admin] ERROR: ADMIN_PASSWORD environment variable is not set.")
+    print("[seed_admin] For security compliance, a password must be provided via the environment.")
+    sys.exit(1)
 
 
 def seed_admin():
