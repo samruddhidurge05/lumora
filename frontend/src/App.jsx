@@ -98,6 +98,8 @@ const PlatformSettings = lazy(() => import('./pages/admin/platform/PlatformSetti
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminAuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
 const AdminSupportInbox = lazy(() => import('./pages/admin/AdminSupportInbox'));
+const AdminUserManagement = lazy(() => import('./pages/admin/AdminUserManagement'));
+const AcceptInvite = lazy(() => import('./pages/admin/AcceptInvite'));
 
 // ── Loading spinner ───────────────────────────────────────────────
 function PageLoader() {
@@ -428,6 +430,12 @@ function AppContent() {
           />
           <Route path="/admin/support"
             element={<ProtectedRoute requiredRole="admin"><AdminSupportInbox /></ProtectedRoute>}
+          />
+          <Route path="/admin/team"
+            element={<ProtectedRoute requiredRole="admin"><AdminUserManagement /></ProtectedRoute>}
+          />
+          <Route path="/admin/accept-invite"
+            element={<AcceptInvite />}
           />
 
           {/* ── SPA fallback ── */}

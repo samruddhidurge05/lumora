@@ -7,7 +7,10 @@ from app.admin_api.reports.services import (
     remove_report
 )
 from admin.validators.admin_auth import require_admin_role
+from app.db.session import get_db
 from app.models.user import User
+from app.services.audit_log_service import log_admin_action
+from sqlalchemy.orm import Session
 from typing import Optional
 
 router = APIRouter()
@@ -33,33 +36,72 @@ def get_dashboard(admin_user: User = Depends(require_admin_role)):
 @router.post("/resolve")
 def resolve_report_endpoint(
     report_id: str = Body(..., embed=True),
-    admin_user: User = Depends(require_admin_role)
+    note: Optional[str] = Body(None),
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
 ):
     try:
-        return update_report_status(report_id, "Resolved")
+        result = update_report_status(report_id, "Resolved", note=note)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="report_resolved",
+            target_type="report",
+            target_id=str(report_id),
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
+    return result
 
 @router.post("/reject")
 def reject_report_endpoint(
     report_id: str = Body(..., embed=True),
-    admin_user: User = Depends(require_admin_role)
+    note: Optional[str] = Body(None),
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
 ):
     try:
-        return update_report_status(report_id, "Rejected")
+        result = update_report_status(report_id, "Rejected", note=note)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="report_rejected",
+            target_type="report",
+            target_id=str(report_id),
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
+    return result
 
 @router.post("/assign")
 def assign_report_endpoint(
     report_id: str = Body(..., embed=True),
     assignee: str = Body(..., embed=True),
-    admin_user: User = Depends(require_admin_role)
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
 ):
     try:
-        return assign_report_moderator(report_id, assignee)
+        result = assign_report_moderator(report_id, assignee)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="report_assigned",
+            target_type="report",
+            target_id=str(report_id),
+            metadata={"assignee": assignee},
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
+    return result
 
 @router.post("/delete")
 def delete_report_endpoint(

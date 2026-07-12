@@ -17,6 +17,7 @@ from app.db.session import get_db
 from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.user import User
+from app.services.audit_log_service import log_admin_action
 
 router = APIRouter()
 
@@ -176,6 +177,17 @@ def reply_to_ticket(
     db.commit()
     db.refresh(new_message)
 
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="support_ticket_replied",
+            target_type="support_ticket",
+            target_id=str(ticket_id),
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
+
     return {
         "message_id": new_message.id,
         "ticket_id": ticket_id,
@@ -220,6 +232,18 @@ def update_ticket_status(
 
     db.commit()
     db.refresh(ticket)
+
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="support_ticket_status_changed",
+            target_type="support_ticket",
+            target_id=str(ticket_id),
+            metadata={"new_status": body.status},
+        )
+    except Exception:
+        pass  # Non-blocking — audit log failure never breaks the main operation
 
     return {
         "ticket_id": ticket_id,

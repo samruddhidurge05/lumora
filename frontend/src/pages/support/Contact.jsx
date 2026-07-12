@@ -4,15 +4,34 @@ import { Send, Mail, MessageSquare } from 'lucide-react';
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
   const inputStyle = { padding: '11px 16px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.3)', background: '#fff', fontSize: '0.85rem', fontFamily: 'var(--font-sans)', fontWeight: 500, color: 'var(--color-espresso)', outline: 'none', width: '100%', boxSizing: 'border-box' };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
-    setForm({ name: '', email: '', subject: '', message: '' });
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/contact/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok || res.status === 201) {
+        setSent(true);
+        setTimeout(() => setSent(false), 4000);
+        setForm({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setError('Failed to send. Please try again.');
+      }
+    } catch {
+      setError('Failed to send. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

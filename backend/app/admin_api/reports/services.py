@@ -155,13 +155,15 @@ def get_reports_analytics_data():
         "reports": reports_list,
     }
 
-def update_report_status(report_id: str, status: str):
+def update_report_status(report_id: str, status: str, note: str = None):
     if not firebase_connected or db is None:
         return {"success": True, "id": report_id, "status": status}
-    update = {"status": status, "updatedAt": datetime.utcnow().isoformat() + "Z"}
-    if status == "Resolved":
-        update["resolvedAt"] = datetime.utcnow().isoformat() + "Z"
-    db.collection("reports").document(report_id).update(update)
+    update_data = {"status": status, "updatedAt": datetime.now(timezone.utc).isoformat() + "Z"}
+    if status in ("Resolved", "Rejected"):
+        update_data["resolvedAt"] = datetime.now(timezone.utc).isoformat() + "Z"
+    if note:
+        update_data["resolution_note"] = note
+    db.collection("reports").document(report_id).update(update_data)
     return {"success": True, "id": report_id, "status": status}
 
 def assign_report_moderator(report_id: str, assignee: str):
