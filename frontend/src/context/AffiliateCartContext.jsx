@@ -5,19 +5,8 @@ const AffiliateCartContext = createContext(null);
 const STORAGE_KEY = 'lumora_aff_cart';
 
 export function AffiliateCartProvider({ children }) {
-  const [affCart, setAffCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [affCart, setAffCart] = useState([]);
   const [isAffCartOpen, setIsAffCartOpen] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(affCart));
-  }, [affCart]);
 
   const addToAffCart = (product) => {
     setAffCart(prev => {

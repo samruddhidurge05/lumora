@@ -12,19 +12,7 @@ import { backendFetch } from '../utils/api';
 
 // ── helper: get current vendor id from localStorage ────────────────────────
 function getVendorId() {
-  try {
-    const backendUid = localStorage.getItem('lumora_backend_uid');
-    if (backendUid) return backendUid;
-
-    const raw = localStorage.getItem('lumora_user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      if (u && (u.uid || u.id)) return u.uid || u.id;
-    }
-    return null;
-  } catch (_) {
-    return null;
-  }
+  return localStorage.getItem('lumora_backend_uid') || null;
 }
 
 /**

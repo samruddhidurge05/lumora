@@ -2,17 +2,16 @@ import { collection, getDocs, doc, query, where, deleteDoc, setDoc } from "fireb
 import { db } from "../firebase";
 import { backendFetch } from "../utils/api";
 
-const RECENTLY_VIEWED_KEY = "lumora_recently_viewed";
+let memoryRecentlyViewed = [];
 
 // Get local history
 export const getLocalRecentlyViewed = () => {
-  const saved = localStorage.getItem(RECENTLY_VIEWED_KEY);
-  return saved ? JSON.parse(saved) : [];
+  return memoryRecentlyViewed;
 };
 
 // Clear local & Firestore/backend history
 export const clearRecentlyViewedHistory = async (userId) => {
-  localStorage.removeItem(RECENTLY_VIEWED_KEY);
+  memoryRecentlyViewed = [];
 
   // Try backend first
   try {
@@ -41,19 +40,19 @@ export const clearRecentlyViewedHistory = async (userId) => {
 export const trackProductViewing = async (userId, product) => {
   if (!product) return;
 
-  // 1. Update localStorage always (instant, reliable)
+  // 1. Update memory always (instant, reliable)
   let localList = getLocalRecentlyViewed();
   localList = [product, ...localList.filter(p => p.id !== product.id)].slice(0, 10);
-  localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(localList));
+  memoryRecentlyViewed = localList;
 
   // 2. Try backend
   try {
-    const backendUser = JSON.parse(localStorage.getItem('lumora_backend_user') || '{}');
-    if (backendUser.id) {
+    const backendUid = localStorage.getItem('lumora_backend_uid');
+    if (backendUid) {
       await backendFetch(`/history/`, {
         method: "POST",
         body: JSON.stringify({
-          user_id: backendUser.id,
+          user_id: parseInt(backendUid, 10),
           product_id: product.id
         })
       });

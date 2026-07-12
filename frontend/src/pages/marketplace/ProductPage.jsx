@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingBag, Zap, Download, Shield, Heart, MessageSquare, Package, ChevronLeft, ChevronRight, Check, BadgeCheck, Flag } from 'lucide-react';
+import ProductQrCode from '../../components/product/ProductQrCode';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -838,6 +839,11 @@ export default function ProductPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Product QR Code — share & scan to purchase */}
+            <div style={{ marginBottom: '16px' }}>
+              <ProductQrCode product={product} size={160} showDownload showShare />
             </div>
 
             {/* ── Report this product (isolated — outside purchase/cart flow) ── */}

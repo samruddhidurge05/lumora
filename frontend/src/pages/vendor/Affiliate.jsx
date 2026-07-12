@@ -8,18 +8,7 @@ import {
 import { db } from '../../config/firebase';
 
 function getVendorId() {
-  try {
-    const backendUid = localStorage.getItem('lumora_backend_uid');
-    if (backendUid) return backendUid;
-    const raw = localStorage.getItem('lumora_user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      if (u?.uid || u?.id) return u.uid || u.id;
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  return localStorage.getItem('lumora_backend_uid') || null;
 }
 
 const BASE_URL = window.location.origin;

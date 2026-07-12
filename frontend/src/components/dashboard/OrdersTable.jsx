@@ -17,7 +17,7 @@ export default function OrdersTable({ orders = [] }) {
             <tr key={o.id} style={{ borderBottom: '1px solid rgba(45,0,96,0.04)' }}>
               <td style={{ padding: '12px', fontWeight: 700, color: 'var(--color-espresso)' }}>#{o.id.slice(-8).toUpperCase()}</td>
               <td style={{ padding: '12px', color: 'var(--color-mocha)' }}>{(o.items || []).length} item(s)</td>
-              <td style={{ padding: '12px', fontWeight: 700, color: 'var(--color-espresso)' }}>₹{Math.round((o.total || 0) * 80)}</td>
+              <td style={{ padding: '12px', fontWeight: 700, color: 'var(--color-espresso)' }}>₹{Math.round(o.total || 0).toLocaleString('en-IN')}</td>
               <td style={{ padding: '12px' }}><span style={{ fontSize: '0.68rem', padding: '3px 8px', borderRadius: '10px', background: 'rgba(34,197,94,0.08)', color: '#16a34a', fontWeight: 700 }}>{o.status}</span></td>
               <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{new Date(o.created_at).toLocaleDateString()}</td>
             </tr>

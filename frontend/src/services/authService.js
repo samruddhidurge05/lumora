@@ -57,9 +57,6 @@ export const syncWithBackend = async (firebaseUser, role = 'customer') => {
       if (data.user?.id != null) {
         localStorage.setItem('lumora_backend_uid', String(data.user.id));
       }
-      if (data.user) {
-        localStorage.setItem('lumora_backend_user', JSON.stringify(data.user));
-      }
       // Signal hooks that are waiting for the backend session to be ready
       window.dispatchEvent(new Event('lumora_backend_ready'));
     }
@@ -126,6 +123,9 @@ export const clearBackendToken = () => {
     keysToClear.push(`lumora_wishlist_user_${backendUid}`);
     keysToClear.push(`lumora_owned_user_${backendUid}`);
   }
-  keysToClear.forEach(key => localStorage.removeItem(key));
+  keysToClear.forEach(key => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
 };
 

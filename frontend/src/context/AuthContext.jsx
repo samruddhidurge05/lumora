@@ -319,17 +319,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
-        // Sync minimal user info to localStorage for non-context consumers
-        try {
-          localStorage.setItem('lumora_user', JSON.stringify({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          }));
-        } catch (e) {
-          console.warn('[AuthContext] localStorage user sync failed:', e.message);
-        }
+        // User synced successfully
 
       } else {
         // ── No Firebase user — clear ALL session state ────────────────────────
@@ -875,17 +865,6 @@ export const AuthProvider = ({ children }) => {
       updated.displayName = profileData.displayName || profileData.name || prev.displayName;
       updated.photoURL = profileData.photoURL || profileData.avatar || prev.photoURL;
       
-      try {
-        localStorage.setItem('lumora_user', JSON.stringify({
-          uid: updated.uid,
-          email: updated.email,
-          displayName: updated.displayName,
-          photoURL: updated.photoURL,
-          ...profileData
-        }));
-      } catch (err) {
-        console.error('updateProfile local sync failed', err);
-      }
       return updated;
     });
   };

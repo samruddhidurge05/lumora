@@ -15,6 +15,15 @@ class Settings(BaseSettings):
     # Firebase Admin SDK service account key path (optional — enables Firestore admin features)
     FIREBASE_SERVICE_ACCOUNT_JSON: Optional[str] = Field(None, env="FIREBASE_SERVICE_ACCOUNT_JSON")
 
+    # Payment Gateway
+    PAYMENT_GATEWAY: str = Field("mock", env="PAYMENT_GATEWAY")  # "mock" | "razorpay"
+    PAYMENT_CURRENCY: str = Field("INR", env="PAYMENT_CURRENCY")
+
+    # Razorpay — only required when PAYMENT_GATEWAY=razorpay
+    RAZORPAY_KEY_ID: Optional[str] = Field(None, env="RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET: Optional[str] = Field(None, env="RAZORPAY_KEY_SECRET")
+    RAZORPAY_WEBHOOK_SECRET: Optional[str] = Field(None, env="RAZORPAY_WEBHOOK_SECRET")
+
     # Cloudflare R2 connection
     R2_ACCOUNT_ID: str | None = os.getenv("R2_ACCOUNT_ID")
     R2_ACCESS_KEY: str | None = os.getenv("R2_ACCESS_KEY")

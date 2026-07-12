@@ -37,7 +37,13 @@ class LocalStorageProvider(BaseStorageProvider):
     def _get_absolute_path(self, relative_path: str) -> str:
         # Strip local:// scheme
         clean_path = relative_path.replace("local://", "")
-        return os.path.abspath(os.path.join(self.upload_dir, "..", clean_path))
+        # Prevent path traversal characters
+        clean_path = clean_path.replace("\\", "/").replace("..", "")
+        root_dir = os.path.abspath(os.path.join(self.upload_dir, ".."))
+        abs_path = os.path.abspath(os.path.join(root_dir, clean_path))
+        if not abs_path.startswith(root_dir):
+            raise HTTPException(status_code=400, detail="Invalid path traversal detected.")
+        return abs_path
 
     def upload_file(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
         ext = os.path.splitext(filename.lower())[1]
@@ -223,6 +229,13 @@ class StorageService:
             }
             max_size = int(os.getenv("MAX_UPLOAD_SIZE", 100 * 1024 * 1024)) # 100MB
             
+        blocked_exts = {".exe", ".bat", ".sh", ".cmd", ".com", ".scr", ".msi", ".dll", ".pif", ".application", ".gadget", ".wsf", ".vbs", ".asp", ".aspx", ".php", ".jsp", ".cgi"}
+        if ext in blocked_exts:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Executable files are strictly blocked for security."
+            )
+
         if ext not in allowed_exts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

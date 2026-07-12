@@ -85,13 +85,29 @@ def _validate_startup_config() -> None:
     # The project uses JWT_SECRET_KEY (from app/core/config.py).
     # Exit immediately if the secret is the insecure default or shorter than 32 chars.
     jwt_secret = os.getenv("JWT_SECRET_KEY", "secret")
-    if jwt_secret == "secret" or len(jwt_secret) < 32:
+    if not jwt_secret or jwt_secret == "secret" or len(jwt_secret) < 32:
         errors.append(
             "JWT_SECRET_KEY is too weak. Must be at least 32 random characters "
-            "(current length: %d). Set a strong value before starting the server." % len(jwt_secret)
+            "(current length: %d). Set a strong value before starting the server." % (len(jwt_secret) if jwt_secret else 0)
         )
 
-    # 2. Database connection
+    # 2. Firebase Project ID
+    firebase_project = os.getenv("FIREBASE_PROJECT_ID")
+    if not firebase_project:
+        errors.append("FIREBASE_PROJECT_ID environment variable is missing or empty.")
+
+    # 3. Payment Gateway Configuration
+    payment_gateway = os.getenv("PAYMENT_GATEWAY", "mock").lower()
+    if payment_gateway == "razorpay":
+        rzp_key = os.getenv("RAZORPAY_KEY_ID")
+        rzp_secret = os.getenv("RAZORPAY_KEY_SECRET")
+        if not rzp_key or not rzp_secret:
+            errors.append(
+                "PAYMENT_GATEWAY is set to 'razorpay' but RAZORPAY_KEY_ID or "
+                "RAZORPAY_KEY_SECRET is missing."
+            )
+
+    # 4. Database connection
     try:
         from app.db.database import engine as _engine
         with _engine.connect() as conn:
@@ -99,7 +115,7 @@ def _validate_startup_config() -> None:
     except Exception as db_err:
         errors.append(f"Database connection failed: {db_err}")
 
-    # 3. Firebase credentials (non-fatal warning — Firebase connection is optional)
+    # 5. Firebase credentials (non-fatal warning — Firebase connection is optional)
     cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if not cert_path:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -113,9 +129,16 @@ def _validate_startup_config() -> None:
     else:
         _logger.info("[startup] Firebase credentials file found: %s", cert_path)
 
-    # 4. Storage configuration
+    # 6. Storage configuration
     storage_provider = os.getenv("STORAGE_PROVIDER", "local").lower()
     _logger.info("[startup] Storage provider: %s", storage_provider)
+    if storage_provider == "firebase":
+        from app.services.storage_service import storage_service
+        if not storage_service.firebase_provider.is_available():
+            errors.append(
+                "STORAGE_PROVIDER is set to 'firebase' but Firebase Storage could not "
+                "be initialized. Check your credentials and FIREBASE_PROJECT_ID."
+            )
 
     # Fail fast if any critical errors found
     if errors:
@@ -124,7 +147,7 @@ def _validate_startup_config() -> None:
         _logger.critical("[startup] Application cannot start. Fix the above errors.")
         sys.exit(1)
 
-    _logger.info("[startup] Configuration validation passed ✓")
+    _logger.info("[startup] Configuration validation passed OK")
 
 
 # Run validation before table creation so we catch DB issues early
@@ -159,10 +182,13 @@ finally:
     db_session.close()
 
 # ── FastAPI App ───────────────────────────────────────────────────────────────
+_is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1")
 app = FastAPI(
     title="Lumora Digital Marketplace API",
     description="Backend API for Lumora digital assets marketplace.",
     version="1.0.0",
+    docs_url="/docs" if _is_debug else None,
+    redoc_url="/redoc" if _is_debug else None,
 )
 
 @app.on_event("startup")
@@ -290,6 +316,20 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
+# ── Security Headers ──────────────────────────────────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Read allowed origins from the CORS_ORIGINS env var (comma-separated).
 # Falls back to local dev origins when the variable is not set.
@@ -322,7 +362,6 @@ app.include_router(versions_router,      prefix="/api/versions",     tags=["Prod
 app.include_router(upload_router,        prefix="/api/uploads",      tags=["File Uploads"])
 app.include_router(affiliate_router,     prefix="/api/affiliate",    tags=["Affiliate"])
 app.include_router(admin_router,         prefix="/api/admin",        tags=["Admin"])
-app.include_router(admin_support_router, prefix="/admin/support",    tags=["Admin Support"])
 app.include_router(admin_support_router, prefix="/api/admin/support",    tags=["Admin Support"])
 app.include_router(payments_router,      prefix="/api/payments",     tags=["Payments"])
 app.include_router(reports_router,       prefix="/api/reports",      tags=["Reports"])
@@ -364,8 +403,8 @@ def health_check():
         with _engine.connect() as conn:
             conn.execute(sqlalchemy.text("SELECT 1"))
         report["services"]["database"] = {"status": "ok", "provider": "SQLite"}
-    except Exception as db_err:
-        report["services"]["database"] = {"status": "error", "detail": str(db_err)}
+    except Exception:
+        report["services"]["database"] = {"status": "error", "detail": "Database connection verification failed"}
         overall_ok = False
 
     # Firebase connection
@@ -383,8 +422,8 @@ def health_check():
         from app.services.storage_service import storage_service
         provider_name = type(storage_service.provider).__name__
         report["services"]["storage"] = {"status": "ok", "provider": provider_name}
-    except Exception as st_err:
-        report["services"]["storage"] = {"status": "error", "detail": str(st_err)}
+    except Exception:
+        report["services"]["storage"] = {"status": "error", "detail": "Storage connectivity check failed"}
         overall_ok = False
 
     if not overall_ok:

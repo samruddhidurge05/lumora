@@ -9,16 +9,19 @@ Endpoints
 POST /api/uploads/          Upload any file (JWT required)
 POST /api/uploads/image     Upload + compress preview image (JWT required)
 """
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status, Request
 from app.dependencies import get_current_user_required
 from app.models.user import User
 from admin.validators.status_checks import verify_upload_allowed
 from app.services.storage_service import storage_service
+from app.middleware.rate_limit import limiter
 
 router = APIRouter()
 
 @router.post("/")
+@limiter.limit("10/minute")
 async def upload_product_file(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_required),
     _allowed = Depends(verify_upload_allowed),
@@ -57,7 +60,9 @@ async def upload_product_file(
 
 
 @router.post("/image")
+@limiter.limit("10/minute")
 async def upload_product_image(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_required),
     _allowed = Depends(verify_upload_allowed),

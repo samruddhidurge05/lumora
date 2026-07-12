@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -6,6 +6,7 @@ import { AppContextProvider, useApp } from './context/AppContext';
 import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
 import CustomCursor from './components/CustomCursor';
+import DownloadReadyPopup from './components/download/DownloadReadyPopup';
 
 /* ── Error boundary ── */
 class ErrorBoundary extends React.Component {
@@ -158,6 +159,50 @@ function SPARouter() {
 
 function AppContent() {
   const { isAccountDisabled, isPlatformPaused, user, userRole, logout } = useAuth();
+  const { navigateTo } = useApp();
+  
+  // Download popup state
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
+  const [popupData, setPopupData] = useState(null);
+  
+  // Listen for purchase completion events
+  useEffect(() => {
+    const handlePurchaseComplete = (event) => {
+      const { orderDetails, purchasedItems } = event.detail;
+      setPopupData({ orderDetails, purchasedItems });
+      setShowDownloadPopup(true);
+      
+      // Refresh user data after purchase
+      setTimeout(() => {
+        // Trigger a refresh of orders, downloads, and notifications
+        window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+      }, 2000);
+    };
+
+    window.addEventListener('lumora_purchase_complete', handlePurchaseComplete);
+    return () => {
+      window.removeEventListener('lumora_purchase_complete', handlePurchaseComplete);
+    };
+  }, []);
+
+  const handleGoToDownloads = () => {
+    setShowDownloadPopup(false);
+    setPopupData(null);
+    
+    // Prevent returning to checkout/payment by pushing a clean state
+    window.history.pushState({ page: 'downloads' }, '', '/');
+    
+    // Navigate to downloads section
+    navigateTo('dashboard', 'Downloads');
+  };
+
+  const handleClosePopup = () => {
+    setShowDownloadPopup(false);
+    setPopupData(null);
+    
+    // Prevent returning to checkout/payment
+    window.history.pushState({ page: 'marketplace' }, '', '/');
+  };
   
   // Exclude vendor and affiliate roles from the global full-screen blocker
   // since they display the suspension card inside their custom layout (sidebar remains visible).
@@ -170,6 +215,18 @@ function AppContent() {
   return (
     <>
       <CustomCursor />
+      
+      {/* Download Ready Popup */}
+      {showDownloadPopup && popupData && (
+        <DownloadReadyPopup
+          isOpen={showDownloadPopup}
+          onClose={handleClosePopup}
+          onGoToDownloads={handleGoToDownloads}
+          purchasedItems={popupData.purchasedItems || []}
+          orderDetails={popupData.orderDetails}
+        />
+      )}
+      
       {showDisabledBlocker && (
         <div style={{
           position: 'fixed',

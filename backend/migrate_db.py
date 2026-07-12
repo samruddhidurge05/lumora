@@ -55,6 +55,33 @@ MIGRATIONS = [
     ("products", "seo_title", "VARCHAR(150)"),
     ("products", "seo_description", "TEXT"),
     ("products", "visibility", "VARCHAR(50) DEFAULT 'public'"),
+
+    # ── payments table — full production schema ──────────────────────────────
+    # These columns are required by the Payment model and payment flow.
+    # NOTE: SQLite does not allow ADD COLUMN ... UNIQUE — indexes added separately below.
+    ("payments", "payment_ref",        "VARCHAR(64)"),
+    ("payments", "customer_id",        "INTEGER"),
+    ("payments", "vendor_ids",         "TEXT"),
+    ("payments", "gateway",            "VARCHAR(30) DEFAULT 'mock'"),
+    ("payments", "gateway_order_id",   "VARCHAR(120)"),
+    ("payments", "gateway_payment_id", "VARCHAR(120)"),
+    ("payments", "gateway_signature",  "VARCHAR(256)"),
+    ("payments", "currency",           "VARCHAR(10) DEFAULT 'INR'"),
+    ("payments", "amount",             "FLOAT"),
+    ("payments", "discount_amount",    "FLOAT DEFAULT 0.0"),
+    ("payments", "tax_amount",         "FLOAT DEFAULT 0.0"),
+    ("payments", "payment_method",     "VARCHAR(30)"),
+    ("payments", "status",             "VARCHAR(30) DEFAULT 'PENDING'"),
+    ("payments", "failure_reason",     "TEXT"),
+    ("payments", "retry_count",        "INTEGER DEFAULT 0"),
+    ("payments", "idempotency_key",    "VARCHAR(128)"),
+    ("payments", "promo_code",         "VARCHAR(50)"),
+    ("payments", "affiliate_code",     "VARCHAR(50)"),
+    ("payments", "updated_at",         "DATETIME"),
+    ("payments", "verified_at",        "DATETIME"),
+    ("payments", "completed_at",       "DATETIME"),
+    ("payments", "refunded_at",        "DATETIME"),
+    ("payments", "expires_at",         "DATETIME"),
 ]
 
 
@@ -95,6 +122,25 @@ def run_migrations_for_db(db_path: str):
             applied += 1
 
     conn.commit()
+
+    # ── Post-column index creation (SQLite can't do ADD COLUMN ... UNIQUE) ──
+    INDEX_SQL = [
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_payment_ref    ON payments (payment_ref)     WHERE payment_ref    IS NOT NULL",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_idempotency_key ON payments (idempotency_key) WHERE idempotency_key IS NOT NULL",
+        "CREATE        INDEX IF NOT EXISTS ix_payments_gateway_order_id ON payments (gateway_order_id)",
+        "CREATE        INDEX IF NOT EXISTS ix_payments_customer_id      ON payments (customer_id)",
+        "CREATE        INDEX IF NOT EXISTS ix_payments_status           ON payments (status)",
+    ]
+    if table_exists(cur, "payments"):
+        for idx_sql in INDEX_SQL:
+            try:
+                cur.execute(idx_sql)
+                idx_name = idx_sql.split("INDEX")[1].split(" ")[2] if "INDEX" in idx_sql else "?"
+                print(f"[migrate] INDEX — {idx_name.strip()} OK")
+            except Exception as idx_exc:
+                print(f"[migrate] INDEX skip — {idx_exc}")
+        conn.commit()
+
     conn.close()
 
     print(f"\n[migrate] Done. Applied: {applied}, Skipped: {skipped}")

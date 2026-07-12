@@ -33,8 +33,8 @@ export default function Checkout() {
   const subtotal = items.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
   const discount = appliedPromo ? subtotal * (appliedPromo.discountPercent / 100) : 0;
   const platformFee = subtotal > 100 ? 0 : 5;
-  const gst = Math.round(subtotal * 0.18 * 80);     // 18% GST in INR
-  const totalINR = Math.round((subtotal - discount + platformFee) * 80) + gst;
+  const gst = Math.round((subtotal - discount + platformFee) * 0.18);  // 18% GST on taxable amount
+  const totalINR = Math.round(subtotal - discount + platformFee + gst);
 
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError]  = useState('');
@@ -129,7 +129,7 @@ export default function Checkout() {
   const handleContinue = () => {
     if (!validate()) return;
     if (saveAddr) {
-      try { localStorage.setItem('lumora_saved_addr', JSON.stringify(checkoutForm)); } catch (_) {}
+      try { sessionStorage.setItem('lumora_saved_addr', JSON.stringify(checkoutForm)); } catch (_) {}
     }
     navigateTo('payment');
   };
@@ -137,7 +137,7 @@ export default function Checkout() {
   // Load saved address
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('lumora_saved_addr') || 'null');
+      const saved = JSON.parse(sessionStorage.getItem('lumora_saved_addr') || 'null');
       if (saved) {
         setCheckoutForm(prev => ({
           ...prev,

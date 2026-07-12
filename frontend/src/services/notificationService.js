@@ -44,12 +44,12 @@ export const getUserNotifications = async (userId) => {
 export const createNotification = async (userId, title, message, category = "general") => {
   // Try backend first
   try {
-    const backendUser = JSON.parse(localStorage.getItem('lumora_backend_user') || '{}');
-    if (backendUser.id) {
+    const backendUid = localStorage.getItem('lumora_backend_uid');
+    if (backendUid) {
       const res = await backendFetch(`/notifications/`, {
         method: "POST",
         body: JSON.stringify({
-          user_id: backendUser.id,
+          user_id: parseInt(backendUid, 10),
           title,
           message,
           category
