@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from app.middleware.rate_limit import limiter
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -69,15 +70,16 @@ def get_current_user(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    email = request.email.lower()
+@limiter.limit("10/minute")
+def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
+    email = body.email.lower()
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
         )
-    hashed_password = get_password_hash(request.password)
-    user = User(name=request.name, email=email, password_hash=hashed_password)
+    hashed_password = get_password_hash(body.password)
+    user = User(name=body.name, email=email, password_hash=hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -117,8 +119,9 @@ def check_user_active(user):
 
 # ── /login ────────────────────────────────────────────────────────────────────
 @router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email.lower()).first()
+@limiter.limit("10/minute")
+def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == body.email.lower()).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
@@ -131,7 +134,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="This account uses Firebase sign-in. Please use the Firebase login flow."
         )
     try:
-        password_valid = verify_password(request.password, user.password_hash)
+        password_valid = verify_password(body.password, user.password_hash)
     except Exception:
         # Malformed hash — never crash as 500
         raise HTTPException(
@@ -243,7 +246,8 @@ def update_me(
 
 # ── /firebase-sync ────────────────────────────────────────────────────────────
 @router.post("/firebase-sync", response_model=TokenResponse)
-def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Depends(get_db)):
     """
     Exchange a Firebase ID Token for a Lumora backend JWT.
 
@@ -256,7 +260,7 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
     """
     # Step 1 — verify Firebase token
     try:
-        claims = verify_firebase_id_token(request.idToken, settings.FIREBASE_PROJECT_ID)
+        claims = verify_firebase_id_token(body.idToken, settings.FIREBASE_PROJECT_ID)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -379,8 +383,9 @@ def firebase_sync(request: FirebaseSyncRequest, db: Session = Depends(get_db)):
 
 # ── /forgot-password ──────────────────────────────────────────────────────────
 @router.post("/forgot-password", response_model=MsgResponse)
-def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email.lower()).first()
+@limiter.limit("10/minute")
+def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == body.email.lower()).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -389,10 +394,12 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
 
 # ── /verify-email ─────────────────────────────────────────────────────────────
 @router.post("/verify-email", response_model=MsgResponse)
-def verify_email():
+@limiter.limit("10/minute")
+def verify_email(request: Request):
     return MsgResponse(message="Email verified successfully.")
 
 # ── /resend-verification ──────────────────────────────────────────────────────
 @router.post("/resend-verification", response_model=MsgResponse)
-def resend_verification():
+@limiter.limit("10/minute")
+def resend_verification(request: Request):
     return MsgResponse(message="Verification email resent.")

@@ -32,6 +32,7 @@ from app.dependencies import get_current_user_required, get_current_vendor
 from app.models.user import User
 from app.models.product import Product
 from app.services.payment_service import payment_service
+from app.middleware.rate_limit import limiter
 
 from app.api.payments.schemas import (
     InitiatePaymentRequest,
@@ -82,7 +83,9 @@ def _build_vendor_ids(db: Session, items) -> str:
         "Idempotent: supplying the same idempotency_key returns the existing payment."
     ),
 )
+@limiter.limit("5/minute")
 def initiate_payment(
+    request: Request,
     body: InitiatePaymentRequest,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db),
@@ -100,6 +103,58 @@ def initiate_payment(
     # Platform pause check (non-admin)
     if current_user.role != "admin":
         _check_platform_not_paused()
+
+    subtotal = 0.0
+    for item in body.items:
+        prod = db.query(Product).filter(Product.id == item.product_id).first()
+        if not prod:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Product with ID {item.product_id} not found."
+            )
+        if prod.status != "published":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Product '{prod.title}' is not available for purchase."
+            )
+        # Override client price_paid with actual server price from DB
+        item.price_paid = float(prod.price)
+        subtotal += float(prod.price)
+
+    discount_pct = 0.0
+    if body.promo_code:
+        code_upper = body.promo_code.strip().upper()
+        if code_upper == 'LUMORA20':
+            discount_pct = 20.0
+        elif code_upper == 'SAVE10':
+            discount_pct = 10.0
+        elif code_upper == 'FIRST15':
+            discount_pct = 15.0
+        else:
+            # Check affiliate referral code
+            from app.models.affiliate import AffiliateProfile
+            aff = db.query(AffiliateProfile).filter(
+                AffiliateProfile.referral_code == code_upper,
+                AffiliateProfile.is_active == True
+            ).first()
+            if aff:
+                discount_pct = 10.0
+            else:
+                discount_pct = 0.0
+
+    expected_discount = round(subtotal * (discount_pct / 100.0), 2)
+    if body.discount_amount > expected_discount + 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Manipulated discount amount detected."
+        )
+
+    expected_total = round(subtotal - body.discount_amount + body.tax_amount, 2)
+    if abs(body.total_amount - expected_total) > 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Manipulated payment total detected."
+        )
 
     vendor_ids = _build_vendor_ids(db, body.items)
     items_as_dicts = [{"product_id": i.product_id, "price_paid": i.price_paid} for i in body.items]
@@ -133,7 +188,9 @@ def initiate_payment(
         "transaction, and returns the completed Order. Idempotent on SUCCESS."
     ),
 )
+@limiter.limit("5/minute")
 def confirm_payment(
+    request: Request,
     body: ConfirmPaymentRequest,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db),

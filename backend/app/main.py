@@ -132,6 +132,13 @@ def _validate_startup_config() -> None:
     # 6. Storage configuration
     storage_provider = os.getenv("STORAGE_PROVIDER", "local").lower()
     _logger.info("[startup] Storage provider: %s", storage_provider)
+    if storage_provider == "firebase":
+        from app.services.storage_service import storage_service
+        if not storage_service.firebase_provider.is_available():
+            errors.append(
+                "STORAGE_PROVIDER is set to 'firebase' but Firebase Storage could not "
+                "be initialized. Check your credentials and FIREBASE_PROJECT_ID."
+            )
 
     # Fail fast if any critical errors found
     if errors:
@@ -175,10 +182,13 @@ finally:
     db_session.close()
 
 # ── FastAPI App ───────────────────────────────────────────────────────────────
+_is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1")
 app = FastAPI(
     title="Lumora Digital Marketplace API",
     description="Backend API for Lumora digital assets marketplace.",
     version="1.0.0",
+    docs_url="/docs" if _is_debug else None,
+    redoc_url="/redoc" if _is_debug else None,
 )
 
 # ── Rate Limiting ─────────────────────────────────────────────────────────────
@@ -285,6 +295,20 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             },
         },
     )
+
+
+# ── Security Headers ──────────────────────────────────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 
 # ── CORS ──────────────────────────────────────────────────────────────────────

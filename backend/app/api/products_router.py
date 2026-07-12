@@ -393,6 +393,25 @@ def download_product_file(
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
+
+    owned = db.query(OrderItem).join(Order).filter(
+        Order.user_id == user_id,
+        OrderItem.product_id == product_id,
+        Order.status == "completed"
+    ).first()
+
+    is_owner = (str(product.vendor_id) == str(user_id)) or (product.seller == user.name)
+    is_admin = (user.role == "admin")
+
+    if not owned and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to download this product."
+        )
         
     storage_path = product.storage_path
     if not storage_path:

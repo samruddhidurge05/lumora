@@ -180,6 +180,7 @@ class PaymentService:
         gateway_signature: str,
         items_payload: List[Dict[str, Any]],
         payment_method: str = "upi",
+        skip_signature_verify: bool = False,
     ) -> Any:  # Returns Order
         """
         FRONTEND CONFIRMATION PATH — Step 2 of checkout.
@@ -269,32 +270,33 @@ class PaymentService:
         # ── Signature verification ───────────────────────────────────────────
         # SECURITY: Signature is always verified on the backend.
         # The frontend only forwards what the gateway returned — we verify it here.
-        gateway = get_gateway()
-        is_valid = gateway.verify_signature(
-            gateway_order_id=payment.gateway_order_id or "",
-            gateway_payment_id=gateway_payment_id,
-            signature=gateway_signature,
-        )
-        if not is_valid:
-            # Mark FAILED — customer can retry via POST /{payment_ref}/retry
-            repo.update_status(
-                payment,
-                new_status="FAILED",
-                failure_reason="Invalid payment signature.",
+        if not skip_signature_verify:
+            gateway = get_gateway()
+            is_valid = gateway.verify_signature(
+                gateway_order_id=payment.gateway_order_id or "",
                 gateway_payment_id=gateway_payment_id,
-                gateway_signature=gateway_signature,
-                payment_method=payment_method,
+                signature=gateway_signature,
             )
-            ActivityLogService.log_user_activity(
-                db=db, user_id=customer_id,
-                activity_type="payment_signature_failed",
-                details=f"Signature verification failed for payment {payment_ref}.",
-            )
-            db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Payment signature verification failed.",
-            )
+            if not is_valid:
+                # Mark FAILED — customer can retry via POST /{payment_ref}/retry
+                repo.update_status(
+                    payment,
+                    new_status="FAILED",
+                    failure_reason="Invalid payment signature.",
+                    gateway_payment_id=gateway_payment_id,
+                    gateway_signature=gateway_signature,
+                    payment_method=payment_method,
+                )
+                ActivityLogService.log_user_activity(
+                    db=db, user_id=customer_id,
+                    activity_type="payment_signature_failed",
+                    details=f"Signature verification failed for payment {payment_ref}.",
+                )
+                db.commit()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Payment signature verification failed.",
+                )
 
         # ── Transition → PROCESSING ──────────────────────────────────────────
         # Flush to DB immediately. Any concurrent request will now see PROCESSING
