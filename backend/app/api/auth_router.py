@@ -98,24 +98,30 @@ def check_user_active(user):
         return
         
     role = (user.role or "customer").lower()
-    if role == "vendor":
-        from admin_controls.vendor.firestore import get_vendor_status_from_firestore
-        status_val = get_vendor_status_from_firestore(str(user.id))
-        if status_val in ("suspended", "disabled", "rejected"):
-            raise LumoraException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                code="ACCOUNT_DISABLED",
-                message="Your account has been disabled by the administrator."
-            )
-    elif role == "affiliate":
-        from admin_controls.affiliate.firestore import get_affiliate_status_from_firestore
-        status_val = get_affiliate_status_from_firestore(str(user.id))
-        if status_val in ("suspended", "disabled", "rejected"):
-            raise LumoraException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                code="ACCOUNT_DISABLED",
-                message="Your account has been disabled by the administrator."
-            )
+    try:
+        if role == "vendor":
+            from admin_controls.vendor.firestore import get_vendor_status_from_firestore
+            status_val = get_vendor_status_from_firestore(user.firebase_uid or str(user.id))
+            if status_val in ("suspended", "disabled", "rejected"):
+                raise LumoraException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    code="ACCOUNT_DISABLED",
+                    message="Your account has been disabled by the administrator."
+                )
+        elif role == "affiliate":
+            from admin_controls.affiliate.firestore import get_affiliate_status_from_firestore
+            status_val = get_affiliate_status_from_firestore(user.firebase_uid or str(user.id))
+            if status_val in ("suspended", "disabled", "rejected"):
+                raise LumoraException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    code="ACCOUNT_DISABLED",
+                    message="Your account has been disabled by the administrator."
+                )
+    except LumoraException:
+        raise
+    except Exception as e:
+        import logging
+        logging.warning(f"Firestore check failed for user {user.id}, falling back to SQLite: {e}")
 
 # ── /login ────────────────────────────────────────────────────────────────────
 @router.post("/login", response_model=TokenResponse)

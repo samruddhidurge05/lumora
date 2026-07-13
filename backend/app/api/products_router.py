@@ -415,11 +415,40 @@ def download_product_file(
         
     storage_path = product.storage_path
     if not storage_path:
-        # Fallback to file_url if storage_path not set
         storage_path = product.file_url
-        if not storage_path:
-            raise HTTPException(status_code=404, detail="Product file has not been uploaded yet.")
-            
+        
+    if storage_path and storage_path.startswith("http"):
+        storage_path = None
+        
+    if not storage_path:
+        # Generate a dynamic dummy zip in memory
+        import io
+        import zipfile
+        
+        mem_zip = io.BytesIO()
+        with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("readme.txt", f"Thank you for purchasing {product.title}!\n\nThis is a placeholder file since the vendor hasn't uploaded the actual product yet.\n\nProduct Data:\n- Title: {product.title}\n- Category: {product.category}\n- Vendor: {product.seller or 'Lumora Vendor'}\n- Price: ${product.price}\n- Description: {product.description}")
+        mem_zip.seek(0)
+        
+        # Increment download count on actual file download
+        product.downloads = (product.downloads or 0) + 1
+        
+        # Log download activity in SQLite!
+        from app.services.activity_log_service import ActivityLogService
+        ActivityLogService.log_user_activity(
+            db=db,
+            user_id=user_id,
+            activity_type="download",
+            details=f"Downloaded product '{product.title}' (ID {product.id}). Total downloads: {product.downloads}."
+        )
+        db.commit()
+        
+        return StreamingResponse(
+            mem_zip,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=product-{product_id}.zip"}
+        )
+
     # Increment download count on actual file download
     product.downloads = (product.downloads or 0) + 1
     
@@ -433,11 +462,9 @@ def download_product_file(
     )
     db.commit()
     
-    # Stream the file bytes using our StorageService!
-    from fastapi.responses import StreamingResponse
-    
     filename = f"product-{product_id}.zip"
     if product.file_url:
+        import os
         filename = os.path.basename(product.file_url.split("?")[0])
         if not filename or not os.path.splitext(filename)[1]:
             filename = f"product-{product_id}.zip"

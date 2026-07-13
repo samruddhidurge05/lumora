@@ -19,6 +19,22 @@ export default function Downloads() {
     if (!user) { setBackendOrders([]); return; }
     setLoading(true);
     setError(null);
+    
+    // Wait for backend token to be ready if user is logged in but token is not yet written (race condition on refresh)
+    if (user && !localStorage.getItem('lumora_backend_token')) {
+      await new Promise((resolve) => {
+        const onReady = () => {
+          window.removeEventListener('lumora_backend_ready', onReady);
+          resolve();
+        };
+        window.addEventListener('lumora_backend_ready', onReady);
+        setTimeout(() => {
+          window.removeEventListener('lumora_backend_ready', onReady);
+          resolve();
+        }, 3000);
+      });
+    }
+
     try {
       const orders = await backendFetch('/orders/me');
       if (Array.isArray(orders)) {
@@ -57,7 +73,28 @@ export default function Downloads() {
   const localOwnedIds = new Set(ownedProducts.map(String));
   const allOwnedIds = new Set([...backendOwnedIds, ...localOwnedIds]);
 
-  const owned = products.filter(p => allOwnedIds.has(String(p.id)));
+  const uniqueOwnedIds = Array.from(allOwnedIds);
+  const owned = uniqueOwnedIds.map(id => {
+    const prod = products.find(p => String(p.id) === String(id));
+    const orderItem = (backendOrders || []).find(i => i.product_id === String(id));
+    return {
+      id: String(id),
+      title: prod?.title || `Digital Asset #${id}`,
+      name: prod?.title || `Digital Asset #${id}`,
+      category: prod?.category || 'Digital Asset',
+      price: prod?.price || orderItem?.price_paid || 0,
+      preview: prod?.preview || prod?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70',
+      thumbnail: prod?.preview || prod?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70',
+      rating: prod?.rating || 5.0,
+      reviews: prod?.reviews || 0,
+      downloads: prod?.downloads || 0,
+      version: prod?.version || 'v1.0.0',
+      fileSize: prod?.fileSize || prod?.file_size || '48 MB',
+      lastUpdated: prod?.lastUpdated || 'Recently',
+      compatibility: prod?.compatibility || ['Web', 'Design'],
+      downloadUrl: orderItem?.download_url || `/downloads/product-${id}.zip`,
+    };
+  });
 
   // Get download URL for a product (prefer backend order URL)
   const getDownloadUrl = (productId) => {
@@ -74,26 +111,29 @@ export default function Downloads() {
     try {
       await new Promise(r => setTimeout(r, 600)); // brief "preparing" delay
 
-      if (directUrl && directUrl.startsWith('http')) {
-        // Already have a direct URL from the order item
-        window.open(directUrl, '_blank');
-        setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
-        window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
-      } else {
-        // Call the secure download endpoint (requires JWT + verified purchase)
+      let activeUrl = directUrl;
+      if (!activeUrl) {
         const numericId = parseInt(product.id, 10);
         if (!isNaN(numericId)) {
           const resp = await backendFetch(`/products/${numericId}/download`);
-          if (resp?.download_url && resp.download_url.startsWith('http')) {
-            window.open(resp.download_url, '_blank');
-            setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
-            window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
-          } else {
-            setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
+          if (resp && resp.download_url) {
+            activeUrl = resp.download_url;
           }
-        } else {
-          setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
         }
+      }
+
+      if (activeUrl) {
+        const link = document.createElement('a');
+        link.href = activeUrl;
+        link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+        window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+      } else {
+        setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
       }
     } catch (err) {
       const msg = err?.message?.includes('403') || err?.message?.includes('401')

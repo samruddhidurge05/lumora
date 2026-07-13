@@ -303,6 +303,20 @@ export default function Payment() {
         // Mock mode — complete without Razorpay modal
         await new Promise(resolve => setTimeout(resolve, 800));
         
+        try {
+          await backendFetch('/payments/confirm', {
+            method: 'POST',
+            body: JSON.stringify({
+              payment_ref:        res.payment_ref,
+              gateway_payment_id: 'mock_pay_' + Date.now(),
+              gateway_signature:  'mock_sig',
+              payment_method:     paymentMethod,
+            }),
+          });
+        } catch (confirmErr) {
+          console.warn('[Payment] Mock confirmation backend call failed:', confirmErr.message);
+        }
+
         // Clear session data before completing purchase
         setPendingPaymentRef(null);
         sessionStorage.removeItem('lumora_idempotency_key');

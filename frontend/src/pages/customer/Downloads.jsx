@@ -144,6 +144,21 @@ export default function CustomerDownloads() {
       setLoading(true);
       setError(null);
       
+      // Wait for backend token to be ready if user is logged in but token is not yet written (race condition on refresh)
+      if (user && !localStorage.getItem('lumora_backend_token')) {
+        await new Promise((resolve) => {
+          const onReady = () => {
+            window.removeEventListener('lumora_backend_ready', onReady);
+            resolve();
+          };
+          window.addEventListener('lumora_backend_ready', onReady);
+          setTimeout(() => {
+            window.removeEventListener('lumora_backend_ready', onReady);
+            resolve();
+          }, 3000);
+        });
+      }
+
       // CRITICAL: Fetch ONLY from backend APIs - SQLite is source of truth
       const [orders, freshProducts] = await Promise.all([
         backendFetch('/orders/me').catch(err => {
@@ -244,10 +259,10 @@ export default function CustomerDownloads() {
 
   const updatesCount = allProducts.filter(p => p.hasUpdate).length;
 
-  // Recently downloaded: last 5 purchases from backend (newest first by purchaseDate)
+  // Recently downloaded: last 5 purchases from backend (newest first by orderDate)
   const recentItems = [...allProducts]
-    .filter(p => p.purchaseDate && p.purchaseDate !== '—')
-    .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))
+    .filter(p => p.orderDate)
+    .sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))
     .slice(0, 5);
 
   // Cursor-reactive glow

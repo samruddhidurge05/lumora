@@ -93,6 +93,21 @@ export default function Dashboard() {
         setLoading(true);
         setApiError(null);
 
+        // Wait for backend token to be ready if user is logged in but token is not yet written (race condition on refresh)
+        if (user && !localStorage.getItem('lumora_backend_token')) {
+          await new Promise((resolve) => {
+            const onReady = () => {
+              window.removeEventListener('lumora_backend_ready', onReady);
+              resolve();
+            };
+            window.addEventListener('lumora_backend_ready', onReady);
+            setTimeout(() => {
+              window.removeEventListener('lumora_backend_ready', onReady);
+              resolve();
+            }, 3000);
+          });
+        }
+
         const [profileRes, ordersRes, wishlistRes, notifsRes, activityRes] = await Promise.allSettled([
           backendFetch('/auth/me'),
           backendFetch('/orders/me'),
