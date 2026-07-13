@@ -56,13 +56,16 @@ class PaymentRepository(BaseRepository[Payment]):
         tax_amount: float = 0.0,
         vendor_ids: Optional[str] = None,
         expires_minutes: int = 30,
+        items: Optional[list] = None,
     ) -> Payment:
         """
         Create a new PENDING payment record.
 
         Called by PaymentService.initiate_payment() BEFORE calling the gateway.
         The payment_ref is a human-readable Lumora reference: LUM-YYYYMMDD-{hex8}
+        items is stored as JSON so confirm can rebuild the order without the cart.
         """
+        import json as _json
         today = datetime.utcnow()
         payment_ref = f"LUM-{today.strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
 
@@ -80,6 +83,7 @@ class PaymentRepository(BaseRepository[Payment]):
             tax_amount=tax_amount,
             vendor_ids=vendor_ids,
             expires_at=today + timedelta(minutes=expires_minutes),
+            items_json=_json.dumps(items) if items else None,
         )
         self.db.add(payment)
         return payment

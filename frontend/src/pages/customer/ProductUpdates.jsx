@@ -14,7 +14,7 @@ export default function ProductUpdates() {
   const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(false);
 
-  const ownedItems = products.filter(p => ownedProducts.includes(p.id));
+  const ownedItems = products.filter(p => ownedProducts.map(String).includes(String(p.id)));
 
   useEffect(() => {
     if (ownedItems.length > 0 && !selectedProduct) {

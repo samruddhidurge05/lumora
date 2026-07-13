@@ -45,6 +45,13 @@ export default function Downloads() {
 
   useEffect(() => { loadBackendDownloads(); }, [loadBackendDownloads]);
 
+  // Auto-refresh when a purchase or other download event fires
+  useEffect(() => {
+    const handler = () => loadBackendDownloads();
+    window.addEventListener('lumora_refresh_user_data', handler);
+    return () => window.removeEventListener('lumora_refresh_user_data', handler);
+  }, [loadBackendDownloads]);
+
   // Build the final list of owned products to display
   const backendOwnedIds = new Set((backendOrders || []).map(i => i.product_id));
   const localOwnedIds = new Set(ownedProducts.map(String));
@@ -71,6 +78,7 @@ export default function Downloads() {
         // Already have a direct URL from the order item
         window.open(directUrl, '_blank');
         setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+        window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
       } else {
         // Call the secure download endpoint (requires JWT + verified purchase)
         const numericId = parseInt(product.id, 10);
@@ -79,6 +87,7 @@ export default function Downloads() {
           if (resp?.download_url && resp.download_url.startsWith('http')) {
             window.open(resp.download_url, '_blank');
             setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+            window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
           } else {
             setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
           }

@@ -66,6 +66,13 @@ export default function CustomerPurchases() {
     fetchPurchases();
   }, [user, ownedProducts.length]);
 
+  // Reload when a purchase event fires from anywhere in the app
+  useEffect(() => {
+    const handler = () => fetchPurchases();
+    window.addEventListener('lumora_refresh_user_data', handler);
+    return () => window.removeEventListener('lumora_refresh_user_data', handler);
+  }, [user]);
+
   // Filter orders by search query across order ID, payment method, status, or contained product titles
   const filteredOrders = orders.filter(ord => {
     const q = search.toLowerCase();
