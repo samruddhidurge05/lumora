@@ -147,6 +147,7 @@ class PaymentService:
             discount_amount=discount_amount,
             tax_amount=tax_amount,
             vendor_ids=vendor_ids,
+            items=items,  # Store items so confirm can rebuild order without cart
         )
         # Store the gateway_order_id before flush so it persists
         payment.gateway_order_id = gateway_order.gateway_order_id

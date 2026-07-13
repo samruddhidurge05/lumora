@@ -294,7 +294,7 @@ def download_product(
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
         "product_details": {
             "id": product.id,
-            "name": product.name,
+            "name": product.title,
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",
@@ -344,7 +344,7 @@ def get_download_center(
             "purchase_date": order.created_at.isoformat() if order.created_at else None,
             "product_details": {
                 "id": product.id,
-                "name": product.name,
+                "name": product.title,
                 "category": product.category or "Uncategorized",
                 "file_size": product.file_size or "Unknown size",
                 "version": product.version or "v1.0.0",
@@ -420,13 +420,16 @@ def download_product_file(
         if not storage_path:
             raise HTTPException(status_code=404, detail="Product file has not been uploaded yet.")
             
+    # Increment download count on actual file download
+    product.downloads = (product.downloads or 0) + 1
+    
     # Log download activity in SQLite!
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
         user_id=user_id,
         activity_type="download",
-        details=f"Downloaded product '{product.title}' (ID {product.id})."
+        details=f"Downloaded product '{product.title}' (ID {product.id}). Total downloads: {product.downloads}."
     )
     db.commit()
     
@@ -732,7 +735,7 @@ def get_purchase_complete_popup(
         
         popup_products.append({
             "product_id": product.id,
-            "name": product.name or product.title,
+            "name": product.title,
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",

@@ -221,25 +221,23 @@ def confirm_payment(
     if payment.customer_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your payment.")
 
-    # Rebuild items from the linked order_id if already SUCCESS (idempotent path)
-    # For PENDING payments, the frontend must re-supply items via cart context.
-    # We store items embedded in the confirm request to keep it self-contained.
-    # The actual product validation is done inside PurchaseService.
+    # Rebuild items from the payment record's stored items_json snapshot.
+    # This is set at initiate time and contains the exact cart the customer paid for.
+    # Using CartItem table is wrong — the frontend never writes to it during checkout.
+    import json as _json
 
-    # Fetch cart items from the CartItem table for this customer
-    from app.models.wishlist import CartItem
-    cart_items = db.query(CartItem).filter(CartItem.user_id == current_user.id).all()
+    items_payload = []
+    if payment.items_json:
+        try:
+            items_payload = _json.loads(payment.items_json)
+        except Exception:
+            items_payload = []
 
-    if not cart_items and payment.status != "SUCCESS":
+    if not items_payload and payment.status != "SUCCESS":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cart is empty. Cannot confirm payment without items.",
+            detail="Payment has no associated items. Please restart checkout.",
         )
-
-    items_payload = [
-        {"product_id": ci.product_id, "price_paid": ci.product.price}
-        for ci in cart_items
-    ] if cart_items else []
 
     order = payment_service.confirm_payment(
         db=db,

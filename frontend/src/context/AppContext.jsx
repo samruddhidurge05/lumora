@@ -957,44 +957,24 @@ export function AppContextProvider({ children }) {
   }, [user]);
 
   // ── Backend sync: load cart, wishlist, and owned product IDs when user logs in ──
+  //
+  // syncBackend is defined at this scope so it can be called both on login
+  // and from the 'lumora_refresh_user_data' global event listener below.
+  const syncBackend = useRef(null);
+
   useEffect(() => {
-    if (!user) return;
-    // Guard: only sync for customer role — vendors/affiliates/admins don't
-    // need cart/wishlist/orders merged from the backend on mount.
-    const role = localStorage.getItem('lumora_active_role') || 'customer';
-    if (role !== 'customer') return;
-    if (syncedUserRef.current === user.uid) return;
-    syncedUserRef.current = user.uid;
-
-    const runSync = async () => {
-      // Wait for the backend JWT to be written (set by syncWithBackend in AuthContext).
-      // We check up to 5 seconds. If unavailable, we skip silently — the sync
-      // will be retried the next time the user navigates or refreshes.
+    // Build the sync function with access to the current products list
+    syncBackend.current = async () => {
       const hasToken = () => !!localStorage.getItem('lumora_backend_token');
-      if (!hasToken()) {
-        await new Promise((resolve) => {
-          const onReady = () => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); };
-          window.addEventListener('lumora_backend_ready', onReady);
-          // Fallback timeout: give up after 5s
-          setTimeout(() => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); }, 5000);
-        });
-      }
-      if (!hasToken()) {
-        console.warn('[AppContext] Backend token unavailable after 5s — skipping cart/wishlist sync');
-        return;
-      }
-      await syncBackend();
-    };
+      if (!hasToken()) return;
 
-    const syncBackend = async () => {
-      // 1. Sync cart: fetch product IDs from backend, merge with local cart
+      // 1. Sync cart
       try {
         const serverCartIds = await getCartApi();
         if (Array.isArray(serverCartIds) && serverCartIds.length > 0) {
           setCart(prev => {
             const localIds = new Set(prev.map(i => String(i.id)));
             const serverOnlyIds = serverCartIds.filter(id => !localIds.has(String(id)));
-            // Find full product objects for server-only IDs
             const serverOnlyProducts = serverOnlyIds
               .map(id => {
                 const found = products.find(p => String(p.id) === String(id));
@@ -1008,7 +988,7 @@ export function AppContextProvider({ children }) {
         console.warn('[AppContext] Cart sync failed (backend may be offline):', err.message);
       }
 
-      // 2. Sync wishlist: fetch product IDs from backend, merge with local wishlist
+      // 2. Sync wishlist
       try {
         const serverWishIds = await backendFetch('/wishlist/me');
         if (Array.isArray(serverWishIds) && serverWishIds.length > 0) {
@@ -1025,27 +1005,72 @@ export function AppContextProvider({ children }) {
         console.warn('[AppContext] Wishlist sync failed (backend may be offline):', err.message);
       }
 
-      // 3. Sync owned products: derive from completed backend orders
+      // 3. Sync owned products — ALWAYS OVERWRITE from SQLite (source of truth)
+      //    Never merge with stale in-memory state: what the backend says IS the complete list.
       try {
         const orders = await getMyOrdersApi();
-        if (Array.isArray(orders) && orders.length > 0) {
+        if (Array.isArray(orders)) {
+          // Only count products from completed/paid orders to ensure user actually owns them
           const purchasedIds = orders
-            .filter(o => o.status === 'completed')
-            .flatMap(o => (o.items || []).map(item => String(item.product_id)));
-          if (purchasedIds.length > 0) {
-            setOwnedProducts(prev => {
-              const merged = new Set([...prev, ...purchasedIds]);
-              return Array.from(merged);
-            });
-          }
+            .filter(o => o.status === 'completed' || o.status === 'paid')
+            .flatMap(o => (o.items || []).map(item => String(item.product_id)))
+            .filter(id => id && !isNaN(parseInt(id, 10))); // Ensure valid product IDs
+          
+          // CRITICAL: Always overwrite so stale/mock IDs from previous sessions are cleared
+          // This ensures the UI reflects exactly what's in the SQLite database
+          setOwnedProducts([...new Set(purchasedIds)]); // Remove duplicates
+          console.log(`[AppContext] Owned products synced from SQLite: ${purchasedIds.length} unique items from ${orders.length} orders`);
+        } else {
+          // If no orders returned, user owns no products
+          setOwnedProducts([]);
+          console.log('[AppContext] No orders found, cleared owned products');
         }
       } catch (err) {
         console.warn('[AppContext] Owned products sync failed (backend may be offline):', err.message);
+        // Don't clear owned products on network error to avoid data loss during temporary outages
       }
+    };
+  }, [products]); // rebuild whenever the product catalogue updates
+
+  useEffect(() => {
+    if (!user) return;
+    // NOTE: Removed the customer-only role guard — users with any role may own
+    // purchased products and should have their vault synced on login.
+    if (syncedUserRef.current === user.uid) return;
+    syncedUserRef.current = user.uid;
+
+    const runSync = async () => {
+      // Wait for the backend JWT to be written (set by syncWithBackend in AuthContext).
+      const hasToken = () => !!localStorage.getItem('lumora_backend_token');
+      if (!hasToken()) {
+        await new Promise((resolve) => {
+          const onReady = () => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); };
+          window.addEventListener('lumora_backend_ready', onReady);
+          setTimeout(() => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); }, 5000);
+        });
+      }
+      if (!hasToken()) {
+        console.warn('[AppContext] Backend token unavailable after 5s — skipping sync');
+        return;
+      }
+      if (syncBackend.current) await syncBackend.current();
     };
 
     runSync();
   }, [user, products]);
+
+  // ── Global refresh listener ────────────────────────────────────────────────
+  // Any module (purchase, download, etc.) can dispatch 'lumora_refresh_user_data'
+  // to immediately re-sync all backend-driven state without a full page reload.
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (!user || !syncBackend.current) return;
+      console.log('[AppContext] lumora_refresh_user_data received — re-syncing with backend');
+      syncBackend.current();
+    };
+    window.addEventListener('lumora_refresh_user_data', handleRefresh);
+    return () => window.removeEventListener('lumora_refresh_user_data', handleRefresh);
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('lumora_theme', accentTheme);
@@ -1244,166 +1269,76 @@ export function AppContextProvider({ children }) {
   // Complete checkout purchase
   const completePurchase = (paymentMethod = 'upi', paymentId = null, promoCode = null, discountAmount = 0) => {
     const items = buyNowProduct ? [buyNowProduct] : cart;
-    const newOwnedIds = items.map(item => item.id);
-    
-    setOwnedProducts(prev => {
-      const updated = new Set([...prev, ...newOwnedIds]);
-      return Array.from(updated);
-    });
 
-    // Add alert
-    const newAlerts = items.map((item, idx) => ({
-      id: Date.now() + idx,
-      title: "Assets Decrypted",
-      text: `License successfully compiled for '${item.title}'. Deployed to your secure library.`,
-      date: "Just now",
-      read: false
-    }));
-
-    setNotifications(prev => [...newAlerts, ...prev]);
-    
-    // Save purchased items for download popup
-    setLastPurchasedItems(items);
-
-    // ── Persist order to SQLite backend (non-blocking) ──────────────────
-    const totalINR = Math.round(items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0));
-    const orderPayload = {
-      items: items
-        .map(i => ({ product_id: parseInt(i.id, 10), price_paid: (i.price || 0) }))
-        .filter(i => !isNaN(i.product_id)),
-      total_amount: totalINR,
-      payment_method: paymentMethod || 'upi',
-      payment_id: paymentId || null,
-      promo_code: promoCode || null,
-      discount_amount: discountAmount || 0,
-      affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
-    };
-    
-    const fetchDownloadTokens = async (items) => {
+    // Show download popup immediately with purchased items
+    const fetchTokensAndDispatch = async () => {
       const itemsWithTokens = await Promise.all(
         items.map(async (item) => {
           try {
             const response = await backendFetch(`/products/${item.id}/download`);
-            return {
-              ...item,
-              download_url: response?.download_url || `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
-            };
-          } catch (err) {
-            console.warn(`[AppContext] Failed to get download token for product ${item.id}:`, err.message);
-            return {
-              ...item,
-              download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
-            };
+            return { ...item, download_url: response?.download_url || null };
+          } catch {
+            return { ...item, download_url: null };
           }
         })
       );
-      return itemsWithTokens;
-    };
-    
-    if (orderPayload.items.length > 0) {
-      createOrderApi(orderPayload)
-        .then(async (order) => {
-          if (order?.id) {
-            // Fetch real download tokens for all purchased items
-            const itemsWithTokens = await fetchDownloadTokens(items);
-            
-            // Trigger download popup after order is created successfully
-            window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
-              detail: {
-                orderDetails: {
-                  id: order.id,
-                  order_id: order.id,
-                  total_amount: orderPayload.total_amount,
-                  payment_method: paymentMethod,
-                  payment_id: paymentId,
-                },
-                purchasedItems: itemsWithTokens,
-              }
-            }));
-          }
-        })
-        .catch(async (err) => {
-          console.warn('[AppContext] Backend order creation failed (non-fatal):', err.message);
-          // Still show popup even if backend order fails, but with fallback tokens
-          const itemsWithFallbackTokens = items.map(item => ({
-            ...item,
-            download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
-          }));
-          
-          window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
-            detail: {
-              orderDetails: {
-                id: Date.now(),
-                order_id: Date.now(),
-                total_amount: totalINR,
-                payment_method: paymentMethod,
-                payment_id: paymentId,
-              },
-              purchasedItems: itemsWithFallbackTokens,
-            }
-          }));
-        });
-    } else {
-      // Fallback if no valid items
-      const fallbackItems = items.map(item => ({
-        ...item,
-        download_url: `/api/products/${item.id}/download-file?token=temp_${Date.now()}`,
-      }));
-      
       window.dispatchEvent(new CustomEvent('lumora_purchase_complete', {
         detail: {
           orderDetails: {
-            id: Date.now(),
-            order_id: Date.now(),
-            total_amount: totalINR,
+            id: paymentId || Date.now(),
+            order_id: paymentId || Date.now(),
+            total_amount: Math.round(items.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0)),
             payment_method: paymentMethod,
             payment_id: paymentId,
           },
-          purchasedItems: fallbackItems,
+          purchasedItems: itemsWithTokens,
         }
       }));
-    }
-    // ────────────────────────────────────────────────────────────────────
+    };
+    fetchTokensAndDispatch();
 
+    // Show in-app notification
+    setNotifications(prev => [
+      ...items.map((item, idx) => ({
+        id: Date.now() + idx,
+        title: "Purchase Confirmed ✦",
+        text: `'${item.title}' is now in your Downloads vault.`,
+        date: "Just now",
+        read: false,
+      })),
+      ...prev,
+    ]);
+    setLastPurchasedItems(items);
+
+    // Clear cart / buy-now
     if (buyNowProduct) {
       setBuyNowProduct(null);
     } else {
-      clearCart();
+      setCart([]);
+      clearCartApi().catch(() => {});
     }
     setAppliedPromo(null);
 
-    // Clear checkout form and session data
+    // Clear session payment data
     sessionStorage.removeItem('lumora_idempotency_key');
     sessionStorage.removeItem('lumora_pending_payment_ref');
     sessionStorage.removeItem('lumora_upi_session');
 
-    // Disable back navigation to checkout/payment by replacing history
-    if (window.history.length > 1) {
-      window.history.pushState(null, '', '/');
-      window.history.pushState(null, '', '/');
-    }
-    
-    // Add popstate listener to prevent going back to checkout
-    const preventBack = (e) => {
-      const currentPath = window.location.pathname;
-      const currentHash = window.location.hash;
-      
-      if (currentPath.includes('checkout') || currentPath.includes('payment') || 
-          currentHash.includes('checkout') || currentHash.includes('payment')) {
-        window.history.pushState(null, '', '/');
-      }
-    };
-    
+    // ── CRITICAL: sync owned products from SQLite immediately ─────────────────
+    // Payment was already confirmed server-side before completePurchase is called.
+    // We fire two syncs: one immediate (catches fast backends) and one after 2s.
+    const doSync = () => window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+    doSync();                              // immediate
+    setTimeout(doSync, 2000);             // retry in case backend needs a moment
+
+    // Disable back-navigation to checkout/payment
+    window.history.pushState(null, '', window.location.href);
+    const preventBack = () => window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', preventBack);
-    
-    // Clean up listener after 30 seconds
-    setTimeout(() => {
-      window.removeEventListener('popstate', preventBack);
-    }, 30000);
-    
-    // Navigate to marketplace instead of success page
-    // The download popup will be handled by App.jsx listening to the custom event
-    navigateTo('marketplace');
+    setTimeout(() => window.removeEventListener('popstate', preventBack), 30000);
+
+    // Navigate to dashboard Downloads tab
+    navigateTo('downloads');
   };
 
   const navigateTo = (view, payload = '') => {

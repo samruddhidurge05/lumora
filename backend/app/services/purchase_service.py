@@ -84,8 +84,8 @@ class PurchaseService:
                 )
                 db.add(order_item)
 
-                # Update product downloads count
-                prod.downloads = (prod.downloads or 0) + 1
+                # NOTE: Download count will be incremented when user actually downloads the file
+                # via the /download-file endpoint to track real usage, not just purchases
 
                 # Update vendor sales count dynamically
                 if prod.vendor_id:

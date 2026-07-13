@@ -66,7 +66,11 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
       }
     }
 
-    setTimeout(() => setState('done'), 1800);
+    setTimeout(() => {
+      setState('done');
+      // Notify the rest of the app that a download occurred so stats update
+      window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+    }, 1800);
     setTimeout(() => setState('idle'), 4500);
   };
 
@@ -133,45 +137,71 @@ export default function CustomerDownloads() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [backendOwnedProducts, setBackendOwnedProducts] = useState([]);
+  const [openProduct, setOpenProduct] = useState(null);
 
   const fetchBackendDownloads = async () => {
     try {
       setLoading(true);
       setError(null);
-      const orders = await backendFetch('/orders/me').catch(err => {
-        console.warn('Backend orders fetch notice:', err);
-        return null;
-      });
+      
+      // CRITICAL: Fetch ONLY from backend APIs - SQLite is source of truth
+      const [orders, freshProducts] = await Promise.all([
+        backendFetch('/orders/me').catch(err => {
+          console.warn('Backend orders fetch failed:', err);
+          return null;
+        }),
+        backendFetch('/products/').catch(err => {
+          console.warn('Backend products fetch failed:', err);
+          return null;
+        })
+      ]);
 
       if (Array.isArray(orders)) {
         const itemsList = [];
         orders.forEach(ord => {
-          (ord.items || []).forEach(item => {
-            const prod = products.find(p => String(p.id) === String(item.product_id));
-            itemsList.push({
-              id: String(item.product_id),
-              name: prod?.title || `Digital Asset #${item.product_id}`,
-              category: prod?.category || 'Digital Asset',
-              version: prod?.version || 'v1.0.0',
-              fileSize: prod?.fileSize || '142 MB',
-              lastUpdated: 'Recently',
-              purchaseDate: ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent',
-              thumbnail: prod?.preview || prod?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70',
-              compatibility: prod?.compatibility || ['Web', 'Design'],
-              hasUpdate: false,
-              rating: prod?.rating || 4.9,
-              gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
-              accentColor: '#4E3B31',
-              downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
-              verified: true,
+          // Only include completed orders to ensure user actually owns these products
+          if (ord.status === 'completed' || ord.status === 'paid') {
+            (ord.items || []).forEach(item => {
+              // Use fresh product data with current download counts
+              const prod = Array.isArray(freshProducts) 
+                ? freshProducts.find(p => String(p.id) === String(item.product_id))
+                : products.find(p => String(p.id) === String(item.product_id));
+                
+              itemsList.push({
+                id: String(item.product_id),
+                name: prod?.title || `Digital Asset #${item.product_id}`,
+                category: prod?.category || 'Digital Asset',
+                version: prod?.version || 'v1.0.0',
+                fileSize: prod?.fileSize || prod?.file_size || '142 MB',
+                lastUpdated: 'Recently',
+                purchaseDate: ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent',
+                thumbnail: prod?.preview || prod?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70',
+                compatibility: prod?.compatibility || ['Web', 'Design'],
+                installationGuide: prod?.installationGuide || prod?.installation_guide || null,
+                hasUpdate: false,
+                rating: prod?.rating || 4.9,
+                downloads: prod?.downloads || 0, // Current download count from backend
+                gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
+                accentColor: '#4E3B31',
+                downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
+                verified: true,
+                orderId: ord.id, // Track which order this came from
+                orderDate: ord.created_at,
+              });
             });
-          });
+          }
         });
         setBackendOwnedProducts(itemsList);
+        
+        console.log(`[Downloads] Loaded ${itemsList.length} products from ${orders.length} completed orders`);
+      } else {
+        console.warn('[Downloads] No valid orders returned from backend');
+        setBackendOwnedProducts([]);
       }
     } catch (err) {
       console.error('Error fetching backend downloads:', err);
-      setError('Could not verify live backend license downloads.');
+      setError('Could not load purchase history from backend database.');
+      setBackendOwnedProducts([]);
     } finally {
       setLoading(false);
     }
@@ -181,28 +211,16 @@ export default function CustomerDownloads() {
     fetchBackendDownloads();
   }, [user, ownedProducts.length]);
 
-  // Build real product list from ONLY backend order items + context ownedProducts
-  const ownedReal = products.filter(p => ownedProducts.includes(p.id)).map(p => ({
-    id: String(p.id), name: p.title, category: p.category,
-    version: p.version || 'v1.0.0', fileSize: p.fileSize || '—',
-    lastUpdated: p.lastUpdated || '—', purchaseDate: 'Recent',
-    thumbnail: p.preview || p.thumbnail,
-    compatibility: p.compatibility || [],
-    hasUpdate: false, rating: p.rating || 4.8,
-    gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
-    accentColor: '#4E3B31',
-    downloadUrl: `/downloads/product-${p.id}.zip`,
-    verified: true,
-  }));
+  // Auto-refresh when a purchase/download event fires from anywhere in the app
+  useEffect(() => {
+    const handler = () => fetchBackendDownloads();
+    window.addEventListener('lumora_refresh_user_data', handler);
+    return () => window.removeEventListener('lumora_refresh_user_data', handler);
+  }, [user]);
 
-  // Merge: backend orders take precedence over context-only items
-  const allProductsMap = new Map();
-  backendOwnedProducts.forEach(b => allProductsMap.set(String(b.id), b));
-  ownedReal.forEach(r => {
-    if (!allProductsMap.has(String(r.id))) allProductsMap.set(String(r.id), r);
-  });
-
-  const allProducts = Array.from(allProductsMap.values());
+  // IMPORTANT: Use ONLY backend data - ignore React context ownedProducts
+  // SQLite database is the single source of truth for purchases
+  const allProducts = Array.from(new Map(backendOwnedProducts.map(p => [String(p.id), p])).values());
 
   // Dynamic filter tabs: base tabs + unique categories from real library
   const uniqueCategories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
@@ -454,6 +472,7 @@ export default function CustomerDownloads() {
                 product={product}
                 isHovered={hoveredCard === product.id}
                 onHover={setHoveredCard}
+                onOpenClick={setOpenProduct}
               />
             ))}
           </div>
@@ -581,12 +600,16 @@ export default function CustomerDownloads() {
           50% { box-shadow: 0 0 0 6px rgba(155,121,255,0); }
         }
       `}</style>
+
+      {openProduct && (
+        <OpenAssetModal product={openProduct} onClose={() => setOpenProduct(null)} />
+      )}
     </div>
   );
 }
 
 /* ─── VAULT PRODUCT CARD ─────────────────────────────────────── */
-function VaultCard({ product, isHovered, onHover }) {
+function VaultCard({ product, isHovered, onHover, onOpenClick }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const cardRef = useRef(null);
 
@@ -685,6 +708,11 @@ function VaultCard({ product, isHovered, onHover }) {
             <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
               <Clock size={9} /> {product.lastUpdated}
             </span>
+            {product.downloads !== undefined && (
+              <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Download size={9} /> {product.downloads} downloads
+              </span>
+            )}
           </div>
         </div>
 
@@ -703,17 +731,157 @@ function VaultCard({ product, isHovered, onHover }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingTop: 4, borderTop: '1px solid rgba(78,59,49,0.06)' }}>
           <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
           <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} />
-          <button style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
-            background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
-            color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
-          }}>
+          <button 
+            onClick={() => onOpenClick(product)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
+              background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
+              color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
+            }}
+          >
             <ExternalLink size={11} /> Open
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── OPEN ASSET MODAL ───────────────────────────────────────── */
+function OpenAssetModal({ product, onClose }) {
+  const isNotion = (product.category || '').toLowerCase().includes('notion') || 
+                   (product.compatibility || []).some(c => c.toLowerCase().includes('notion'));
+  const isFigma = (product.compatibility || []).some(c => c.toLowerCase().includes('figma'));
+  
+  // Custom mock links if none exist in the database
+  const getActionUrl = () => {
+    if (isNotion) return "https://www.notion.so/templates";
+    if (isFigma) return "https://figma.new";
+    return null;
+  };
+
+  const actionUrl = getActionUrl();
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px', background: 'rgba(45,0,77,0.30)',
+      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+      animation: 'modal-fadein 0.3s ease',
+    }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: '480px',
+        background: 'rgba(255, 253, 249, 0.90)',
+        border: '1px solid rgba(255, 255, 255, 0.70)',
+        boxShadow: '0 24px 60px rgba(90, 30, 126, 0.15)',
+        borderRadius: '24px', padding: '32px',
+        fontFamily: 'var(--font-sans)', color: 'var(--color-espresso)',
+      }}>
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 20, right: 20,
+            border: 'none', background: 'rgba(78,59,49,0.05)',
+            width: 28, height: 28, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: 'var(--color-mocha)',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(78,59,49,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(78,59,49,0.05)'}
+        >
+          <X size={14} />
+        </button>
+
+        {/* Header */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px' }}>
+          <img src={product.thumbnail} alt={product.name} style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover' }} />
+          <div>
+            <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#7B3FA0', letterSpacing: '0.05em' }}>
+              {product.category}
+            </span>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '2px 0 0', lineHeight: 1.3 }}>
+              {product.name}
+            </h3>
+          </div>
+        </div>
+
+        {/* Content / Instructions */}
+        <div style={{ marginBottom: '28px' }}>
+          <h4 style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-mocha)', letterSpacing: '0.05em', marginBottom: '10px' }}>
+            Getting Started
+          </h4>
+          
+          <div style={{
+            fontSize: '0.82rem', color: 'var(--color-mocha)', lineHeight: 1.6,
+            background: 'rgba(78,59,49,0.03)', border: '1px solid rgba(78,59,49,0.05)',
+            borderRadius: '16px', padding: '16px 18px',
+          }}>
+            {isNotion ? (
+              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                <li style={{ marginBottom: 8 }}>Click the <strong>Launch Notion Template</strong> button below.</li>
+                <li style={{ marginBottom: 8 }}>In the top-right corner of the Notion page, click <strong>Duplicate</strong>.</li>
+                <li>The planner will copy directly into your workspace.</li>
+              </ul>
+            ) : isFigma ? (
+              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                <li style={{ marginBottom: 8 }}>Use the <strong>Download</strong> button to save the <code>.fig</code> archive locally.</li>
+                <li style={{ marginBottom: 8 }}>Click <strong>Open Figma</strong> below to launch your Figma workspace.</li>
+                <li>Drag and drop the downloaded <code>.fig</code> file to import it.</li>
+              </ul>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                <li style={{ marginBottom: 8 }}>Download the asset pack using the <strong>Download</strong> button.</li>
+                <li style={{ marginBottom: 8 }}>Extract the ZIP file containing your assets.</li>
+                <li>Refer to the installation details inside for usage guides.</li>
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Action Button */}
+        {actionUrl ? (
+          <a
+            href={actionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              width: '100%', padding: '14px', borderRadius: '14px', border: 'none',
+              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+              color: '#FFFDF9', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none',
+              textAlign: 'center', cursor: 'pointer', boxShadow: '0 6px 20px rgba(90, 30, 126, 0.20)',
+              transition: 'transform 0.2s',
+            }}
+            onClick={onClose}
+          >
+            <ExternalLink size={14} />
+            {isNotion ? 'Launch Notion Template' : 'Open Figma Workspace'}
+          </a>
+        ) : (
+          <button
+            onClick={onClose}
+            style={{
+              width: '100%', padding: '14px', borderRadius: '14px', border: 'none',
+              background: 'var(--color-espresso)',
+              color: '#FFFDF9', fontSize: '0.85rem', fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Got it
+          </button>
+        )}
+      </div>
+      <style>{`
+        @keyframes modal-fadein {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

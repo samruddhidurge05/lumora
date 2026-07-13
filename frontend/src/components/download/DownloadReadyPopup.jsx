@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 
 export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, purchasedItems = [], orderDetails = null }) {
   const [countdown, setCountdown] = useState(3);
-  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(true);
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -59,22 +59,24 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
       left: 0,
       width: '100%',
       height: '100%',
-      background: 'rgba(0, 0, 0, 0.8)',
+      background: 'rgba(0, 0, 0, 0.35)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      backdropFilter: 'blur(10px)',
+      backdropFilter: 'blur(12px)',
     }}>
-      <div className="glass-card" style={{
+      <div style={{
         maxWidth: '520px',
         width: '90%',
         padding: '32px',
         textAlign: 'center',
         position: 'relative',
-        border: '2px solid rgba(34,197,94,0.30)',
-        background: 'linear-gradient(135deg,rgba(34,197,94,0.08),rgba(34,197,94,0.03))',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.2)',
+        borderRadius: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.7)',
+        background: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 24px 64px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
       }}>
         {/* Close button */}
         <button
@@ -83,7 +85,7 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
             position: 'absolute',
             top: '16px',
             right: '16px',
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(0, 0, 0, 0.05)',
             border: 'none',
             borderRadius: '50%',
             width: '32px',

@@ -74,6 +74,7 @@ export default function Dashboard() {
   const [recentOrders, setRecentOrders]   = useState([]);
   const [activities, setActivities]       = useState([]);
   const [notifsSummary, setNotifsSummary] = useState([]);
+  const loadBackendDataRef = useRef(null); // exposed so global event listener can trigger it
 
   useEffect(() => {
     setProfile(null);
@@ -120,14 +121,18 @@ export default function Dashboard() {
         setNotifsSummary(fetchedNotifs);
         setActivities(fetchedActivities);
 
-        let totalDownloads = 0;
         let totalProductsOwned = 0;
+        let totalDownloads = 0;
+        
+        // Calculate stats from backend orders (SQLite source of truth)
         fetchedOrders.forEach(order => {
-          if (order.items) {
+          if (order.items && (order.status === 'completed' || order.status === 'paid')) {
             totalProductsOwned += order.items.length;
-            totalDownloads += order.items.length;
           }
         });
+
+        // Count downloads from activity logs (actual downloads, not just purchases)
+        totalDownloads = fetchedActivities.filter(a => a.activity_type === 'download').length;
 
         setStats({
           productsOwned: totalProductsOwned,
@@ -155,9 +160,20 @@ export default function Dashboard() {
       }
     }
 
+    loadBackendDataRef.current = loadBackendData;
     loadBackendData();
     return () => { isMounted = false; };
-  }, [user, wishlist.length]);
+  }, [user, wishlist.length, dashboardTab]);
+
+  // Re-fetch dashboard data whenever a purchase or download completes
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (loadBackendDataRef.current) loadBackendDataRef.current();
+    };
+    window.addEventListener('lumora_refresh_user_data', handleRefresh);
+    return () => window.removeEventListener('lumora_refresh_user_data', handleRefresh);
+  }, []);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);

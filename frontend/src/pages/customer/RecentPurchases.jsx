@@ -204,6 +204,13 @@ export default function RecentPurchases() {
 
   useEffect(() => { fetchRecent(); }, [fetchRecent]);
 
+  // Reload immediately when any purchase or download event fires
+  useEffect(() => {
+    const handler = () => fetchRecent();
+    window.addEventListener('lumora_refresh_user_data', handler);
+    return () => window.removeEventListener('lumora_refresh_user_data', handler);
+  }, [fetchRecent]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>

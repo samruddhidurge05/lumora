@@ -22,7 +22,18 @@ export default function Payment() {
   const [upiSessionData, setUpiSessionData] = useState(() => {
     try {
       const saved = sessionStorage.getItem('lumora_upi_session');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Discard expired sessions so the user never sees "Payment Session Expired" on load
+      if (parsed?.expires_at) {
+        const expiresAt = new Date(parsed.expires_at).getTime();
+        if (Date.now() >= expiresAt) {
+          sessionStorage.removeItem('lumora_upi_session');
+          sessionStorage.removeItem('lumora_idempotency_key');
+          return null;
+        }
+      }
+      return parsed;
     } catch { return null; }
   });
 
@@ -62,16 +73,29 @@ export default function Payment() {
   useEffect(() => {
     const ref = sessionStorage.getItem('lumora_pending_payment_ref');
     if (!ref) return;
+    
     backendFetch(`/payments/${ref}`).then(p => {
       if (p?.status === 'SUCCESS') {
         // Already fulfilled — clear and redirect to success
         sessionStorage.removeItem('lumora_pending_payment_ref');
+        sessionStorage.removeItem('lumora_idempotency_key');
+        sessionStorage.removeItem('lumora_upi_session');
         completePurchase('razorpay', ref, appliedPromo?.code || null, discount);
       } else if (p?.status === 'FAILED' || p?.status === 'CANCELLED') {
+        // Failed/cancelled — clear stale session data
         sessionStorage.removeItem('lumora_pending_payment_ref');
+        sessionStorage.removeItem('lumora_idempotency_key');
+        sessionStorage.removeItem('lumora_upi_session');
+        setPendingPaymentRef(null);
       }
-      // PENDING/PROCESSING — leave it for the user to retry
-    }).catch(() => {});
+      // PENDING/PROCESSING — leave it for the user to retry with fresh session
+    }).catch(() => {
+      // Network error — clear stale data to prevent indefinite recovery attempts
+      sessionStorage.removeItem('lumora_pending_payment_ref');
+      sessionStorage.removeItem('lumora_idempotency_key');
+      sessionStorage.removeItem('lumora_upi_session');
+      setPendingPaymentRef(null);
+    });
   }, []);
 
   /**
@@ -124,7 +148,11 @@ export default function Payment() {
             }),
           });
           if (confirmRes?.success) {
+            // Clear all session data on successful confirmation
             setPendingPaymentRef(null);
+            sessionStorage.removeItem('lumora_pending_payment_ref');
+            sessionStorage.removeItem('lumora_idempotency_key');
+            sessionStorage.removeItem('lumora_upi_session');
             completePurchase(
               'razorpay',
               confirmRes.payment_ref || initResponse.payment_ref,
@@ -169,9 +197,72 @@ export default function Payment() {
     setCardForm(prev => ({ ...prev, [name]: value }));
   };
 
+  // ── generateUpiQr: defined FIRST so handleSubmit and handleQrVerified can call it ──
+  const generateUpiQr = async () => {
+    const freshIdempotencyKey = 'idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    sessionStorage.setItem('lumora_idempotency_key', freshIdempotencyKey);
+
+    setIsProcessing(true);
+    setProcessingStep(0);
+
+    const upiPayeeId = 'lumora@upi';
+    const merchantName = 'Lumora Marketplace';
+    const intentUrl = `upi://pay?pa=${upiPayeeId}&pn=${encodeURIComponent(merchantName)}&am=${total.toFixed(2)}&tr=${freshIdempotencyKey}&cu=INR`;
+    const freshExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    const localSessionData = {
+      payment_ref: 'LUM-' + Date.now(),
+      upi_id: upiPayeeId,
+      upi_intent_url: intentUrl,
+      qr_code_data: intentUrl,
+      amount: total,
+      currency: 'INR',
+      status: 'PENDING',
+      expires_at: freshExpiry,
+    };
+
+    try {
+      const res = await backendFetch('/payments/initiate', {
+        method: 'POST',
+        body: JSON.stringify({
+          items: checkoutItems.map(i => ({ product_id: parseInt(i.id), price_paid: parseFloat(i.price) || 0 })),
+          total_amount: parseFloat(total.toFixed(2)),
+          currency: 'INR',
+          payment_method: 'upi_qr',
+          idempotency_key: freshIdempotencyKey,
+          promo_code: appliedPromo?.code || null,
+          affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+          discount_amount: parseFloat(discount.toFixed(2)),
+          tax_amount: parseFloat((platformFee + gst).toFixed(2)),
+        }),
+      });
+      setUpiSessionData({
+        ...localSessionData,
+        ...(res?.payment_ref ? { payment_ref: res.payment_ref } : {}),
+        ...(res?.upi_id ? { upi_id: res.upi_id } : {}),
+        ...(res?.upi_intent_url ? { upi_intent_url: res.upi_intent_url, qr_code_data: res.upi_intent_url } : {}),
+        ...(res?.expires_at ? { expires_at: res.expires_at } : {}),
+      });
+      if (res?.payment_ref) setPendingPaymentRef(res.payment_ref);
+    } catch (err) {
+      console.warn('[Payment] Backend unavailable, using local UPI QR:', err.message);
+      setUpiSessionData(localSessionData);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (paymentMethod === 'upi_qr') {
+      await generateUpiQr();
+      return;
+    }
+
+    // Generate a fresh idempotency key for each new payment attempt to prevent reuse
+    const freshIdempotencyKey = 'idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
     // Build shared payload — amounts are in INR (no * 80 conversion)
     const basePayload = {
       items: checkoutItems.map(i => ({
@@ -181,69 +272,15 @@ export default function Payment() {
       total_amount: parseFloat(total.toFixed(2)),
       currency: 'INR',
       payment_method: paymentMethod,
-      idempotency_key: sessionStorage.getItem('lumora_idempotency_key') || ('idemp_' + Date.now()),
+      idempotency_key: freshIdempotencyKey,
       promo_code:     appliedPromo?.code || null,
       affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
       discount_amount: parseFloat(discount.toFixed(2)),
-      tax_amount: 0,
+      tax_amount: parseFloat((platformFee + gst).toFixed(2)),
     };
 
-    // Store idempotency key so browser refresh doesn't create duplicates
+    // Store the fresh idempotency key
     sessionStorage.setItem('lumora_idempotency_key', basePayload.idempotency_key);
-
-    if (paymentMethod === 'upi_qr') {
-      // ── UPI QR Flow ────────────────────────────────────────────────────────
-      // Generate QR data locally — no backend dependency for the QR itself
-      setIsProcessing(true);
-      setProcessingStep(0);
-
-      const paymentRef = 'LUM-' + Date.now();
-      const upiPayeeId = 'lumora@upi';
-      const merchantName = 'Lumora Marketplace';
-      const receipt = basePayload.idempotency_key;
-      const intentUrl = `upi://pay?pa=${upiPayeeId}&pn=${encodeURIComponent(merchantName)}&am=${total.toFixed(2)}&tr=${receipt}&cu=INR`;
-
-      // Build session data locally first so QR shows immediately
-      const localSessionData = {
-        payment_ref: paymentRef,
-        upi_id: upiPayeeId,
-        upi_intent_url: intentUrl,
-        qr_code_data: intentUrl,
-        amount: total,
-        currency: 'INR',
-        status: 'PENDING',
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      };
-
-      // Try to register the payment with backend (for order tracking) — non-blocking
-      try {
-        const res = await backendFetch('/payments/initiate', {
-          method: 'POST',
-          body: JSON.stringify(basePayload),
-        });
-        if (res?.payment_ref) {
-          // Merge backend data into local session
-          setUpiSessionData({
-            ...localSessionData,
-            payment_ref: res.payment_ref,
-            ...(res.upi_id ? { upi_id: res.upi_id } : {}),
-            ...(res.upi_intent_url ? { upi_intent_url: res.upi_intent_url, qr_code_data: res.upi_intent_url } : {}),
-            ...(res.expires_at ? { expires_at: res.expires_at } : {}),
-          });
-          setPendingPaymentRef(res.payment_ref);
-        } else {
-          // Backend responded but no payment_ref — use local
-          setUpiSessionData(localSessionData);
-        }
-      } catch (err) {
-        console.warn('[Payment] Backend unavailable, using local UPI QR:', err.message);
-        // Use locally generated QR — works fine for mock/demo environment
-        setUpiSessionData(localSessionData);
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
 
     // ── Razorpay Checkout Flow (card, UPI, netbanking, wallet) ──────────────
     setIsProcessing(true);
@@ -265,8 +302,13 @@ export default function Payment() {
       if (!res.gateway_order_id || res.gateway_order_id.startsWith('mock_')) {
         // Mock mode — complete without Razorpay modal
         await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Clear session data before completing purchase
         setPendingPaymentRef(null);
         sessionStorage.removeItem('lumora_idempotency_key');
+        sessionStorage.removeItem('lumora_pending_payment_ref');
+        sessionStorage.removeItem('lumora_upi_session');
+        
         completePurchase(paymentMethod, res.payment_ref, appliedPromo?.code || null, discount);
         setIsProcessing(false);
         return;
@@ -283,12 +325,22 @@ export default function Payment() {
     }
   };
 
-  const handleQrVerified = (confirmResponse) => {
-    // Clear persisted UPI session
+  const handleQrVerified = async (confirmResponse) => {
+    // Clear persisted UPI session completely
     sessionStorage.removeItem('lumora_upi_session');
+    sessionStorage.removeItem('lumora_idempotency_key');
+    sessionStorage.removeItem('lumora_pending_payment_ref');
     setUpiSessionData(null);
+    setPendingPaymentRef(null);
+
+    if (!confirmResponse) {
+      // Session expired — automatically generate a brand new QR with a fresh 15-minute timer
+      await generateUpiQr();
+      return;
+    }
+
     // Complete checkout — use confirmed payment_ref or fallback to session data ref
-    const ref = confirmResponse?.payment_ref || pendingPaymentRef || ('LUM-' + Date.now());
+    const ref = confirmResponse?.payment_ref || ('LUM-' + Date.now());
     completePurchase(
       'upi_qr',
       ref,
@@ -354,7 +406,11 @@ export default function Payment() {
           </div>
 
           {upiSessionData ? (
-            <UpiQrDisplay paymentData={upiSessionData} onVerified={handleQrVerified} />
+            <UpiQrDisplay
+              key={upiSessionData.payment_ref}
+              paymentData={upiSessionData}
+              onVerified={handleQrVerified}
+            />
           ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Payment Tabs Selector */}

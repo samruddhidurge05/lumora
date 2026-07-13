@@ -1,156 +1,51 @@
 """
-migrate_db.py
--------------
-Safe one-time migration for lumora.db.
-Adds only columns that are missing — never drops or recreates tables.
-Run once:  python migrate_db.py
-
-Idempotent: running multiple times is safe.
+One-time migration: add any missing columns to vendors and other tables.
+Safe to run multiple times — skips columns that already exist.
 """
-import sqlite3
-import os
+from app.db.database import engine
+from sqlalchemy import text, inspect
 
-DB_PATHS = [
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "test.db"),
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "lumora.db")
+inspector = inspect(engine)
+
+def add_column_if_missing(table, col_name, col_def):
+    cols = [c['name'] for c in inspector.get_columns(table)]
+    if col_name not in cols:
+        with engine.connect() as conn:
+            conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {col_name} {col_def}'))
+            conn.commit()
+        print(f'  Added {table}.{col_name}')
+    else:
+        print(f'  OK {table}.{col_name} already exists')
+
+print('=== Migrating vendors table ===')
+vendor_cols = [
+    ('upi_id',              'TEXT'),
+    ('account_holder_name', 'TEXT'),
+    ('bank_name',           'TEXT'),
+    ('account_number',      'TEXT'),
+    ('ifsc_code',           'TEXT'),
+    ('refund_policy',       'TEXT'),
+    ('support_email',       'TEXT'),
+    ('response_time',       'TEXT DEFAULT "24 hours"'),
+    ('announcement',        'TEXT'),
+    ('announcement_active', 'INTEGER DEFAULT 0'),
+    ('vacation_mode',       'INTEGER DEFAULT 0'),
+    ('vacation_message',    'TEXT'),
+    ('tagline',             'TEXT'),
+    ('instagram',           'TEXT'),
+    ('website',             'TEXT'),
+    ('twitter',             'TEXT'),
+    ('github',              'TEXT'),
+    ('store_url',           'TEXT'),
+    ('country',             'TEXT'),
+    ('phone',               'TEXT'),
 ]
+for col_name, col_def in vendor_cols:
+    add_column_if_missing('vendors', col_name, col_def)
 
-# Each entry: (table_name, column_name, column_def)
-MIGRATIONS = [
-    ("products", "license", "VARCHAR(50)"),
-    ("reviews", "reply", "TEXT"),
-    ("vendors", "email", "VARCHAR(255)"),
-    ("vendors", "phone", "VARCHAR(50)"),
-    ("vendors", "store_url", "VARCHAR(255)"),
-    ("vendors", "country", "VARCHAR(100)"),
-    ("vendors", "github", "VARCHAR(255)"),
-    ("vendors", "tagline", "VARCHAR(255)"),
-    ("vendors", "instagram", "VARCHAR(255)"),
-    ("vendors", "website", "VARCHAR(255)"),
-    ("vendors", "twitter", "VARCHAR(255)"),
-    ("vendors", "refund_policy", "TEXT"),
-    ("vendors", "support_email", "VARCHAR(255)"),
-    ("vendors", "response_time", "VARCHAR(50)"),
-    ("vendors", "announcement", "TEXT"),
-    ("vendors", "announcement_active", "BOOLEAN DEFAULT 0"),
-    ("vendors", "vacation_mode", "BOOLEAN DEFAULT 0"),
-    ("vendors", "vacation_message", "TEXT"),
-    ("vendors", "status", "VARCHAR(50) DEFAULT 'active'"),
-    ("affiliate_profiles", "status", "VARCHAR(50) DEFAULT 'active'"),
-    ("users", "firebase_uid", "VARCHAR(128)"),
-    ("products", "storage_path", "VARCHAR(512)"),
-    ("products", "thumbnail_path", "VARCHAR(512)"),
-    ("products", "preview_path", "VARCHAR(512)"),
-    ("products", "content_type", "VARCHAR(100)"),
-    ("products", "hash", "VARCHAR(128)"),
-    ("products", "short_desc", "VARCHAR(255)"),
-    ("products", "features", "TEXT"),
-    ("products", "system_requirements", "TEXT"),
-    ("products", "what_you_get", "TEXT"),
-    ("products", "installation_guide", "TEXT"),
-    ("products", "subcategory", "VARCHAR(100)"),
-    ("products", "discount", "FLOAT DEFAULT 0.0"),
-    ("products", "preview_images", "TEXT"),
-    ("products", "preview_video", "VARCHAR(512)"),
-    ("products", "seo_title", "VARCHAR(150)"),
-    ("products", "seo_description", "TEXT"),
-    ("products", "visibility", "VARCHAR(50) DEFAULT 'public'"),
+print('=== Migrating payments table ===')
+add_column_if_missing('payments', 'items_json', 'TEXT')
+add_column_if_missing('payments', 'updated_at', 'DATETIME')
+add_column_if_missing('payments', 'customer_id', 'INTEGER')
 
-    # ── payments table — full production schema ──────────────────────────────
-    # These columns are required by the Payment model and payment flow.
-    # NOTE: SQLite does not allow ADD COLUMN ... UNIQUE — indexes added separately below.
-    ("payments", "payment_ref",        "VARCHAR(64)"),
-    ("payments", "customer_id",        "INTEGER"),
-    ("payments", "vendor_ids",         "TEXT"),
-    ("payments", "gateway",            "VARCHAR(30) DEFAULT 'mock'"),
-    ("payments", "gateway_order_id",   "VARCHAR(120)"),
-    ("payments", "gateway_payment_id", "VARCHAR(120)"),
-    ("payments", "gateway_signature",  "VARCHAR(256)"),
-    ("payments", "currency",           "VARCHAR(10) DEFAULT 'INR'"),
-    ("payments", "amount",             "FLOAT"),
-    ("payments", "discount_amount",    "FLOAT DEFAULT 0.0"),
-    ("payments", "tax_amount",         "FLOAT DEFAULT 0.0"),
-    ("payments", "payment_method",     "VARCHAR(30)"),
-    ("payments", "status",             "VARCHAR(30) DEFAULT 'PENDING'"),
-    ("payments", "failure_reason",     "TEXT"),
-    ("payments", "retry_count",        "INTEGER DEFAULT 0"),
-    ("payments", "idempotency_key",    "VARCHAR(128)"),
-    ("payments", "promo_code",         "VARCHAR(50)"),
-    ("payments", "affiliate_code",     "VARCHAR(50)"),
-    ("payments", "updated_at",         "DATETIME"),
-    ("payments", "verified_at",        "DATETIME"),
-    ("payments", "completed_at",       "DATETIME"),
-    ("payments", "refunded_at",        "DATETIME"),
-    ("payments", "expires_at",         "DATETIME"),
-]
-
-
-def get_existing_columns(cur, table: str) -> set:
-    cur.execute(f"PRAGMA table_info({table})")
-    return {row[1] for row in cur.fetchall()}
-
-
-def table_exists(cur, table: str) -> bool:
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
-    return cur.fetchone() is not None
-
-
-def run_migrations_for_db(db_path: str):
-    if not os.path.exists(db_path):
-        return
-
-    print(f"\n[migrate] Migrating database: {os.path.basename(db_path)}")
-    conn = sqlite3.connect(db_path)
-    cur  = conn.cursor()
-
-    applied = 0
-    skipped = 0
-
-    for table, column, col_def in MIGRATIONS:
-        if not table_exists(cur, table):
-            print(f"[migrate] SKIP  — table '{table}' does not exist.")
-            skipped += 1
-            continue
-        existing = get_existing_columns(cur, table)
-        if column in existing:
-            print(f"[migrate] SKIP  — {table}.{column} already exists.")
-            skipped += 1
-        else:
-            sql = f"ALTER TABLE {table} ADD COLUMN {column} {col_def}"
-            cur.execute(sql)
-            print(f"[migrate] ADDED — {table}.{column} {col_def}")
-            applied += 1
-
-    conn.commit()
-
-    # ── Post-column index creation (SQLite can't do ADD COLUMN ... UNIQUE) ──
-    INDEX_SQL = [
-        "CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_payment_ref    ON payments (payment_ref)     WHERE payment_ref    IS NOT NULL",
-        "CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_idempotency_key ON payments (idempotency_key) WHERE idempotency_key IS NOT NULL",
-        "CREATE        INDEX IF NOT EXISTS ix_payments_gateway_order_id ON payments (gateway_order_id)",
-        "CREATE        INDEX IF NOT EXISTS ix_payments_customer_id      ON payments (customer_id)",
-        "CREATE        INDEX IF NOT EXISTS ix_payments_status           ON payments (status)",
-    ]
-    if table_exists(cur, "payments"):
-        for idx_sql in INDEX_SQL:
-            try:
-                cur.execute(idx_sql)
-                idx_name = idx_sql.split("INDEX")[1].split(" ")[2] if "INDEX" in idx_sql else "?"
-                print(f"[migrate] INDEX — {idx_name.strip()} OK")
-            except Exception as idx_exc:
-                print(f"[migrate] INDEX skip — {idx_exc}")
-        conn.commit()
-
-    conn.close()
-
-    print(f"\n[migrate] Done. Applied: {applied}, Skipped: {skipped}")
-
-
-def run_migrations():
-    for db_path in DB_PATHS:
-        run_migrations_for_db(db_path)
-
-
-if __name__ == "__main__":
-    run_migrations()
-
+print('=== Migration complete ===')

@@ -66,6 +66,11 @@ class Payment(Base):
     # Backend rejects duplicate payment initiation for the same key.
     idempotency_key     = Column(String(128), unique=True, index=True, nullable=True)
 
+    # ── Items snapshot ────────────────────────────────────────────────────────
+    # JSON-encoded list of {"product_id": int, "price_paid": float}
+    # Stored at initiate time so confirm can rebuild the order without the cart.
+    items_json          = Column(Text, nullable=True)
+
     # ── Promo / Affiliate ─────────────────────────────────────────────────────
     promo_code          = Column(String(50),  nullable=True)
     affiliate_code      = Column(String(50),  nullable=True)

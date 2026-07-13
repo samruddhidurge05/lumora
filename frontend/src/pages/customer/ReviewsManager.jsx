@@ -18,7 +18,7 @@ export default function ReviewsManager() {
   const [formData, setFormData] = useState({ productId: '', rating: 5, comment: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const ownedItems = products.filter(p => ownedProducts.includes(String(p.id)));
+  const ownedItems = products.filter(p => ownedProducts.map(String).includes(String(p.id)));
 
   const resolveTitle = (productId, fallback) =>
     (products.find(p => String(p.id) === String(productId))?.title) || fallback || `Product #${productId}`;
