@@ -62,12 +62,63 @@ def get_vendor_profile(vendor_id: str) -> Optional[dict]:
         db.close()
 
 
+def get_or_create_vendor_profile(vendor_id: str, vendor_info: dict = None) -> dict:
+    """
+    Get the vendor profile, auto-creating the Vendor row if it doesn't exist.
+    Called on GET /vendors/{id}/profile so the profile is always available
+    after first login — no explicit save required to unblock the module.
+    """
+    db = _get_db()
+    try:
+        v = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+        if not v:
+            name = (vendor_info or {}).get("name") or "My Store"
+            email = (vendor_info or {}).get("email") or ""
+            v = Vendor(
+                id=vendor_id,
+                name=name,
+                email=email,
+                bio="",
+            )
+            db.add(v)
+            db.commit()
+            db.refresh(v)
+        return {
+            "id":                 v.id,
+            "name":               v.name,
+            "avatar":             v.avatar,
+            "bio":                v.bio,
+            "banner":             v.banner,
+            "sales":              v.sales,
+            "rating":             v.rating,
+            "createdAt":          v.created_at.isoformat() if v.created_at else None,
+            "tagline":            v.tagline,
+            "instagram":          v.instagram,
+            "website":            v.website,
+            "twitter":            v.twitter,
+            "refundPolicy":       v.refund_policy,
+            "supportEmail":       v.support_email,
+            "responseTime":       v.response_time,
+            "announcement":       v.announcement,
+            "announcementActive": v.announcement_active,
+            "vacationMode":       v.vacation_mode,
+            "vacationMessage":    v.vacation_message,
+            "upiId":              v.upi_id,
+            "accountHolderName":  v.account_holder_name,
+            "bankName":           v.bank_name,
+            "accountNumber":      v.account_number,
+            "ifscCode":           v.ifsc_code,
+        }
+    finally:
+        db.close()
+
+
 def save_vendor_profile(vendor_id: str, data: dict) -> dict:
     db = _get_db()
     try:
         v = db.query(Vendor).filter(Vendor.id == vendor_id).first()
         if v:
-            v.name   = data.get("displayName", data.get("name", v.name))
+            v.name   = data.get("storeName", data.get("displayName", data.get("name", v.name)))
             v.bio    = data.get("storeBio",    data.get("bio",  v.bio))
             v.avatar = data.get("avatar", v.avatar)
             # Payment fields — only overwrite when the key is explicitly present
@@ -84,8 +135,8 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
         else:
             v = Vendor(
                 id=vendor_id,
-                name=data.get("displayName", data.get("name", "Creator")),
-                bio=data.get("storeBio", ""),
+                name=data.get("storeName", data.get("displayName", data.get("name", "Creator"))),
+                bio=data.get("storeBio", data.get("bio", "")),
                 avatar=data.get("avatar"),
                 upi_id=data.get("upiId"),
                 account_holder_name=data.get("accountHolderName"),
@@ -100,6 +151,19 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
             "id":                v.id,
             "name":              v.name,
             "bio":               v.bio,
+            "avatar":            v.avatar,
+            "banner":            v.banner,
+            "tagline":           v.tagline,
+            "instagram":         v.instagram,
+            "website":           v.website,
+            "twitter":           v.twitter,
+            "refundPolicy":      v.refund_policy,
+            "supportEmail":      v.support_email,
+            "responseTime":      v.response_time,
+            "announcement":      v.announcement,
+            "announcementActive":v.announcement_active,
+            "vacationMode":      v.vacation_mode,
+            "vacationMessage":   v.vacation_message,
             "upiId":             v.upi_id,
             "accountHolderName": v.account_holder_name,
             "bankName":          v.bank_name,
@@ -283,7 +347,7 @@ def get_vendor_stats(vendor_id: str) -> dict:
             total_sales   = len(items)
             total_revenue = sum(float(i.price_paid or 0) for i in items)
 
-        active_count = sum(1 for p in products if (p.status or "published") in ("published", "active"))
+        active_count = sum(1 for p in products if (p.status or "published") in {"published", "active", "pending_review", "draft"})
         ratings      = [p.rating for p in products if p.rating]
         avg_rating   = round(sum(ratings) / len(ratings), 1) if ratings else 0.0
         
@@ -567,7 +631,10 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             })
 
         # ── Stats ─────────────────────────────────────────────────────────────
-        active_count = sum(1 for p in products if (p.status or "published") in ("published", "active"))
+        # Count all vendor products that are not archived — includes pending_review,
+        # draft, published, and active so the count always matches Manage Products.
+        ACTIVE_STATUSES = {"published", "active", "pending_review", "draft"}
+        active_count = sum(1 for p in products if (p.status or "published") in ACTIVE_STATUSES)
         ratings      = [p.rating for p in products if p.rating]
         avg_rating   = round(sum(ratings) / len(ratings), 1) if ratings else 0.0
 

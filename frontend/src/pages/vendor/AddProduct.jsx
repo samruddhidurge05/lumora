@@ -6,7 +6,6 @@ import '../styles/vendor.css';
 import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
 import { uploadFile } from '../../services/storageService';
 import { useApp } from '../../context/AppContext';
-import ProductQrCode from '../../components/product/ProductQrCode';
 
 const CATEGORIES = [
   'UI Kits','Icon Packs','Templates','Fonts','Illustrations','Mockups',
@@ -121,7 +120,6 @@ export default function AddProduct() {
 
   const [saving,          setSaving]          = useState(false);
   const [saved,           setSaved]           = useState(false);
-  const [savedProduct,    setSavedProduct]    = useState(null); // holds newly created product for QR display
   const [saveError,       setSaveError]       = useState('');
   const [previewPct,      setPreviewPct]      = useState(0);
   const [filePct,         setFilePct]         = useState(0);
@@ -353,10 +351,6 @@ export default function AddProduct() {
         system_requirements: systemRequirements.map(r => r.trim()).filter(Boolean),
         what_you_get: whatYouGet.map(w => w.trim()).filter(Boolean)
       });
-      // Capture the newly created product so we can display its QR code
-      if (result && result.id) {
-        setSavedProduct({ id: result.id, title: result.title || form.title, price: result.price ?? Number(form.price) });
-      }
       if (typeof refetchProducts === 'function') {
         refetchProducts();
       }
@@ -372,7 +366,7 @@ export default function AddProduct() {
   const handlePublish = async (e) => {
     e.preventDefault();
     const ok = await doSave('published');
-    if (ok) { setSaved(true); }  // Stay on page to show QR — redirect handled by user clicking "Go to Products"
+    if (ok) { setSaved(true); }
   };
 
   const handleDraft = async () => {
@@ -389,7 +383,7 @@ export default function AddProduct() {
         File: form.file_url, Preview: form.preview, License: form.license,
       }} />
 
-      {/* Success banner with QR code */}
+      {/* Success banner */}
       {saved && (
         <div style={{ borderRadius: 16, marginBottom: 20, overflow: 'hidden', border: '1px solid rgba(34,197,94,0.25)', background: 'rgba(34,197,94,0.06)' }}>
           <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -403,19 +397,6 @@ export default function AddProduct() {
               Go to My Products →
             </button>
           </div>
-          {savedProduct && (
-            <div style={{ padding: '16px 18px', borderTop: '1px solid rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
-                  Your Product QR Code
-                </p>
-                <p style={{ fontSize: 12, color: '#4B5563', lineHeight: 1.5 }}>
-                  Share this QR so customers can scan and purchase <strong>{savedProduct.title}</strong> directly.
-                </p>
-              </div>
-              <ProductQrCode product={savedProduct} size={120} showDownload showShare />
-            </div>
-          )}
         </div>
       )}
 

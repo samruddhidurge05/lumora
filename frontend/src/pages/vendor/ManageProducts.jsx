@@ -9,7 +9,6 @@ import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
 import { useApp } from '../../context/AppContext';
-import { ProductQrButton } from '../../components/product/ProductQrCode';
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -335,7 +334,6 @@ export default function ManageProducts() {
                           style={{ display:'flex', alignItems:'center', gap:4 }}>
                           <Edit3 size={12} /> Edit
                         </button>
-                        <ProductQrButton product={p} />
                         <button className="v-btn v-btn-ghost v-btn-sm"
                           style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4 }}
                           onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
@@ -388,7 +386,6 @@ export default function ManageProducts() {
                     onClick={() => goEdit(p)}>
                     <Edit3 size={12} /> Edit
                   </button>
-                  <ProductQrButton product={p} />
                   <button className="v-btn v-btn-ghost v-btn-sm" style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4 }}
                     onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
                     <Trash2 size={12} />

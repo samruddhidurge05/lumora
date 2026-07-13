@@ -17,6 +17,7 @@ from app.dependencies import get_current_vendor
 from admin.validators.status_checks import verify_vendor_active
 from .services import (
     get_vendor_profile,
+    get_or_create_vendor_profile,
     save_vendor_profile,
     save_store_settings,
     get_vendor_stats,
@@ -108,9 +109,9 @@ def vendor_profile(vendor_id: str, vendor: dict = Depends(get_current_vendor), _
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized to access this vendor profile")
     profile = get_vendor_profile(vendor_id)
-    # Return empty profile shell instead of 404 — frontend handles empty gracefully
+    # Auto-create Vendor row on first access so profile is always available
     if not profile:
-        return {"id": vendor_id, "displayName": "", "email": "", "storeName": ""}
+        profile = get_or_create_vendor_profile(vendor_id, vendor)
     return profile
 
 
