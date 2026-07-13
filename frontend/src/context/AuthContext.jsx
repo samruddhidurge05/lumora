@@ -443,9 +443,9 @@ export const AuthProvider = ({ children }) => {
       await setDoc(doc(db, 'customers', firebaseUser.uid), specificData);
     }
 
-    localStorage.setItem('lumora_active_role', normalizedRole);
-    setUserRole(normalizedRole);
+    await syncWithBackend(firebaseUser, normalizedRole);
     await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'registration', true);
+    await signOut(auth);
     return firebaseUser;
   };
 

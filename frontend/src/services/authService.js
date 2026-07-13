@@ -28,45 +28,54 @@ const BACKEND_URL =
  * @param {string} role  'customer' | 'vendor' | 'affiliate'
  * @returns {Promise<object|null>}
  */
+let activeSyncPromise = null;
+
 export const syncWithBackend = async (firebaseUser, role = 'customer') => {
   if (!firebaseUser) return null;
 
-  try {
-    // Get (possibly cached) Firebase ID Token — 1-hour expiry
-    const idToken = await firebaseUser.getIdToken(false);
-
-    const res = await fetch(`${BACKEND_URL}/auth/firebase-sync`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken, role }),
-    });
-
-    if (!res.ok) {
-      // Backend may be offline — this is non-fatal
-      console.warn('[authService] firebase-sync responded:', res.status);
-      return null;
-    }
-
-    const data = await res.json();
-
-    if (data.access_token) {
-      localStorage.setItem('lumora_backend_token', data.access_token);
-      // Store backend integer user ID so vendor API calls use the correct ID
-      // The backend vendor routes compare vendor.uid (str(user.id)) with the
-      // vendor_id path param — both must be the SQLite integer cast to string.
-      if (data.user?.id != null) {
-        localStorage.setItem('lumora_backend_uid', String(data.user.id));
-      }
-      // Signal hooks that are waiting for the backend session to be ready
-      window.dispatchEvent(new Event('lumora_backend_ready'));
-    }
-
-    return data;
-  } catch (err) {
-    // Network error (backend offline) — non-fatal
-    console.warn('[authService] firebase-sync error (non-fatal):', err.message);
-    return null;
+  if (activeSyncPromise) {
+    return activeSyncPromise;
   }
+
+  activeSyncPromise = (async () => {
+    try {
+      // Get (possibly cached) Firebase ID Token — 1-hour expiry
+      const idToken = await firebaseUser.getIdToken(false);
+
+      const res = await fetch(`${BACKEND_URL}/auth/firebase-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken, role }),
+      });
+
+      if (!res.ok) {
+        // Backend may be offline — this is non-fatal
+        console.warn('[authService] firebase-sync responded:', res.status);
+        return null;
+      }
+
+      const data = await res.json();
+
+      if (data.access_token) {
+        localStorage.setItem('lumora_backend_token', data.access_token);
+        // Store backend integer user ID so vendor API calls use the correct ID
+        if (data.user?.id != null) {
+          localStorage.setItem('lumora_backend_uid', String(data.user.id));
+        }
+        // Signal hooks that are waiting for the backend session to be ready
+        window.dispatchEvent(new Event('lumora_backend_ready'));
+      }
+      return data;
+    } catch (err) {
+      // Network error (backend offline) — non-fatal
+      console.warn('[authService] firebase-sync error (non-fatal):', err.message);
+      return null;
+    } finally {
+      activeSyncPromise = null;
+    }
+  })();
+
+  return activeSyncPromise;
 };
 
 /**
