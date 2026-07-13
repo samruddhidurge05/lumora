@@ -452,6 +452,7 @@ export const AuthProvider = ({ children }) => {
   /** Login with optional Remember Me */
   const login = async (email, password, rememberMe = false, role = null) => {
     // Destroy any previous session & clear local caches before authenticating new user
+    try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
     try { sessionStorage.clear(); } catch (_) {}
     setUser(null);
@@ -614,6 +615,7 @@ export const AuthProvider = ({ children }) => {
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const googleSignIn = async (rememberMe = false, role = null) => {
     // Destroy any previous session & clear local caches before authenticating new user
+    try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
     try { sessionStorage.clear(); } catch (_) {}
     setUser(null);
@@ -699,6 +701,7 @@ export const AuthProvider = ({ children }) => {
   /** GitHub sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
   const githubSignIn = async (rememberMe = false, role = null) => {
     // Destroy any previous session & clear local caches before authenticating new user
+    try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
     try { sessionStorage.clear(); } catch (_) {}
     setUser(null);
