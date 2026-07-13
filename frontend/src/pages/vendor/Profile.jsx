@@ -35,16 +35,18 @@ export default function Profile() {
     if (backendProfile) {
       setFormData(prev => ({
         ...prev,
-        displayName: backendProfile.name        || user?.displayName || '',
+        // Display Name comes from Firebase user — NEVER from backend store profile
+        displayName: user?.displayName || user?.email?.split('@')[0] || '',
         email:       user?.email                || '',
         phone:       user?.phone                || '',
-        storeName:   backendProfile.name        || user?.storeName   || '',
-        storeBio:    backendProfile.bio         || user?.storeBio    || '',
-        storeUrl:    backendProfile.storeUrl    || user?.storeUrl    || '',
-        website:     backendProfile.website     || user?.website     || '',
+        // Store Name comes exclusively from the backend vendor profile
+        storeName:   backendProfile.name        || '',
+        storeBio:    backendProfile.bio         || backendProfile.storeBio || '',
+        storeUrl:    backendProfile.storeUrl    || '',
+        website:     backendProfile.website     || '',
         country:     user?.country              || '',
         github:      user?.github               || '',
-        twitter:     backendProfile.twitter     || user?.twitter     || '',
+        twitter:     backendProfile.twitter     || '',
         role:        user?.role                 || 'vendor',
         avatar:      backendProfile.avatar      || user?.avatar      || prev.avatar,
         // Payment fields from backend
@@ -61,13 +63,13 @@ export default function Profile() {
         displayName: user.displayName || '',
         email:       user.email       || '',
         phone:       user.phone       || '',
-        storeName:   user.storeName   || '',
-        storeBio:    user.storeBio    || '',
-        storeUrl:    user.storeUrl    || '',
-        website:     user.website     || '',
+        storeName:   '',
+        storeBio:    '',
+        storeUrl:    '',
+        website:     '',
         country:     user.country     || '',
         github:      user.github      || '',
-        twitter:     user.twitter     || '',
+        twitter:     '',
         role:        user.role        || 'vendor',
         avatar:      user.avatar      || prev.avatar,
       }));
@@ -81,10 +83,31 @@ export default function Profile() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    // Update React state / Firebase display name
-    updateProfile(formData);
-    // Persist everything including payment fields through the backend API
-    await saveToBackend(formData);
+    // Only update Firebase display name if user explicitly changed it
+    // (never push storeName into Firebase profile)
+    if (formData.displayName && formData.displayName !== user?.displayName) {
+      updateProfile({ displayName: formData.displayName, avatar: formData.avatar });
+    }
+    // Persist store fields + payment fields through the backend API
+    // displayName is intentionally excluded so Store Name never overwrites user identity
+    await saveToBackend({
+      displayName: formData.displayName,
+      email:       formData.email,
+      phone:       formData.phone,
+      storeName:   formData.storeName,
+      storeBio:    formData.storeBio,
+      storeUrl:    formData.storeUrl,
+      website:     formData.website,
+      country:     formData.country,
+      github:      formData.github,
+      twitter:     formData.twitter,
+      avatar:      formData.avatar,
+      upiId:             formData.upiId,
+      accountHolderName: formData.accountHolderName,
+      bankName:          formData.bankName,
+      accountNumber:     formData.accountNumber,
+      ifscCode:          formData.ifscCode,
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

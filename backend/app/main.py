@@ -15,7 +15,7 @@ _env_file = Path(__file__).resolve().parent.parent / ".env"
 if _env_file.exists():
     try:
         from dotenv import load_dotenv as _load_dotenv
-        _load_dotenv(dotenv_path=str(_env_file), override=False)
+        _load_dotenv(dotenv_path=str(_env_file), override=True)
     except ImportError:
         pass  # python-dotenv not installed — env vars must be set externally
 
@@ -189,13 +189,27 @@ finally:
     db_session.close()
 
 # ── FastAPI App ───────────────────────────────────────────────────────────────
-_is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1")
+# Re-read DEBUG from .env directly to ensure it's picked up regardless of
+# environment variable inheritance order in the uvicorn worker process.
+_debug_raw = os.getenv("DEBUG", "False")
+if not _debug_raw or _debug_raw == "False":
+    # Fall back to reading directly from .env file
+    try:
+        _env_content = _env_file.read_text(encoding="utf-8") if _env_file.exists() else ""
+        for _line in _env_content.splitlines():
+            _line = _line.strip()
+            if _line.startswith("DEBUG="):
+                _debug_raw = _line.split("=", 1)[1].strip()
+                break
+    except Exception:
+        pass
+_is_debug = _debug_raw.lower() in ("true", "1")
 app = FastAPI(
     title="Lumora Digital Marketplace API",
     description="Backend API for Lumora digital assets marketplace.",
     version="1.0.0",
-    docs_url="/docs" if _is_debug else None,
-    redoc_url="/redoc" if _is_debug else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # ── Rate Limiting ─────────────────────────────────────────────────────────────

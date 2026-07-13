@@ -7,12 +7,58 @@
  * Backend base:  http://localhost:8000/api
  * Auth token:    localStorage.getItem('lumora_backend_token')
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { backendFetch } from '../utils/api';
 
 // ── helper: get current vendor id from localStorage ────────────────────────
+// NOTE: used only inside useVendorId() and in callbacks/actions that run
+// AFTER the session is guaranteed to be present (e.g. save(), refresh()).
 function getVendorId() {
   return localStorage.getItem('lumora_backend_uid') || null;
+}
+
+/**
+ * useVendorId
+ * -----------
+ * Reactive version of getVendorId().
+ *
+ * Returns lumora_backend_uid as React state so that every hook which depends
+ * on vendorId will automatically re-run its useEffect the moment
+ * syncWithBackend writes the value — eliminating the race condition where
+ * the hooks captured null at mount time and never retried.
+ *
+ * Listens for:
+ *   • 'lumora_backend_ready'  — custom event fired by authService.syncWithBackend
+ *   • 'storage'               — cross-tab localStorage changes
+ *
+ * Both events are dispatched by authService.js immediately after writing
+ * lumora_backend_uid, so this hook re-renders with the real ID in the same
+ * microtask cycle without any polling.
+ */
+function useVendorId() {
+  const [vendorId, setVendorId] = useState(() => getVendorId());
+
+  useEffect(() => {
+    const sync = () => {
+      const id = getVendorId();
+      setVendorId(prev => (prev === id ? prev : id));
+    };
+
+    // lumora_backend_ready fires in authService.js right after writing the uid
+    window.addEventListener('lumora_backend_ready', sync);
+    // storage fires for cross-tab updates
+    window.addEventListener('storage', sync);
+
+    // Re-check immediately in case the event already fired before this effect ran
+    sync();
+
+    return () => {
+      window.removeEventListener('lumora_backend_ready', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  return vendorId;
 }
 
 /**
@@ -20,8 +66,9 @@ function getVendorId() {
  * ---------------
  * Returns true once lumora_backend_token AND lumora_backend_uid are both
  * written to localStorage (set by authService.syncWithBackend).
- * Polls every 300 ms for up to 10 s so hooks that mount before firebase-sync
- * completes will still fire when the session becomes available.
+ *
+ * Listens to the same events as useVendorId so it becomes true in the same
+ * render cycle — no polling required.
  */
 function useBackendReady() {
   const isReady = () =>
@@ -29,37 +76,23 @@ function useBackendReady() {
     !!localStorage.getItem('lumora_backend_uid');
 
   const [ready, setReady] = useState(isReady);
-  const attemptsRef = useRef(0);
-  const MAX_ATTEMPTS = 34; // 34 × 300 ms ≈ 10 s
 
   useEffect(() => {
     if (ready) return;
 
-    const onReady = () => {
+    const check = () => {
       if (isReady()) setReady(true);
     };
 
-    window.addEventListener('lumora_backend_ready', onReady);
-    window.addEventListener('storage', onReady);
+    window.addEventListener('lumora_backend_ready', check);
+    window.addEventListener('storage', check);
 
-    const tick = () => {
-      attemptsRef.current += 1;
-      if (isReady()) {
-        setReady(true);
-        return;
-      }
-      if (attemptsRef.current < MAX_ATTEMPTS) {
-        setTimeout(tick, 300);
-      } else {
-        setReady(true); // give up — let hooks render their error state
-      }
-    };
-
-    setTimeout(tick, 300);
+    // Re-check immediately in case the event already fired before this effect ran
+    check();
 
     return () => {
-      window.removeEventListener('lumora_backend_ready', onReady);
-      window.removeEventListener('storage', onReady);
+      window.removeEventListener('lumora_backend_ready', check);
+      window.removeEventListener('storage', check);
     };
   }, [ready]);
 
@@ -74,7 +107,7 @@ export function useDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   const refresh = useCallback(() => {
     const id = getVendorId();
@@ -133,6 +166,14 @@ export function useDashboard() {
     refresh();
   }, [refresh, backendReady, vendorId]);
 
+  // Re-fetch dashboard whenever a product is created/deleted so the
+  // Active Products count updates immediately without a manual refresh.
+  useEffect(function() {
+    const handler = function() { refresh(); };
+    window.addEventListener('lumora_products_changed', handler);
+    return function() { window.removeEventListener('lumora_products_changed', handler); };
+  }, [refresh]);
+
   var stats = data ? data.stats : null;
   return { data: data, stats: stats, loading: loading, error: error, refresh: refresh };
 }
@@ -145,7 +186,7 @@ export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -188,7 +229,7 @@ export function useVendorProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saveOk, setSaveOk] = useState(false);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   useEffect(function() {
     if (!backendReady || !vendorId) {
@@ -236,7 +277,7 @@ export function useStoreSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saveOk, setSaveOk] = useState(false);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   useEffect(function() {
     if (!backendReady || !vendorId) {
@@ -283,7 +324,7 @@ export function useWithdrawals() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmit] = useState(false);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -342,7 +383,7 @@ export function useReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -405,7 +446,7 @@ export function useVendorProducts(opts) {
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   const refresh = useCallback(function() {
     const id = getVendorId();
@@ -485,7 +526,12 @@ export function useVendorProducts(opts) {
     return backendFetch('/products/', {
       method: 'POST',
       body:   JSON.stringify(payload),
-    }).then(function(result) { refresh(); return result; });
+    }).then(function(result) {
+      refresh();
+      // Notify dashboard hook so Active Products count updates immediately
+      window.dispatchEvent(new Event('lumora_products_changed'));
+      return result;
+    });
   }, [refresh]);
 
   const updateProduct = useCallback(function(productId, formData) {
@@ -548,6 +594,7 @@ export function useVendorProducts(opts) {
             total: Math.max(0, prev.total - 1),
           });
         });
+        window.dispatchEvent(new Event('lumora_products_changed'));
       });
   }, []);
 
@@ -573,7 +620,7 @@ export function useEarnings() {
   const [earnings, setEarnings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   useEffect(function() {
     if (!backendReady || !vendorId) {
@@ -627,12 +674,13 @@ export function useVendorProfileComplete() {
   const backendReady = useBackendReady();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const vendorId = getVendorId();
+  const vendorId = useVendorId();
 
   useEffect(function () {
     if (!backendReady || !vendorId) {
+      // Not ready yet — keep loading=true so gate does NOT flash
       setProfile(null);
-      setLoading(false);
+      setLoading(true);
       return;
     }
     setLoading(true);
@@ -666,8 +714,13 @@ export function useVendorProfileComplete() {
     { key: 'payment',   label: 'Payment Info (UPI or Bank)', done: hasPayment   },
   ];
 
+  // While loading OR while backend session not yet ready: treat as complete
+  // so the AddProduct form shows immediately — the gate only triggers after
+  // the profile fetch completes AND the profile is genuinely incomplete.
+  const isReady = !loading && !!vendorId && backendReady;
+
   return {
-    isProfileComplete: !loading && profileChecks.every(function (c) { return c.done; }),
+    isProfileComplete: !isReady || profileChecks.every(function (c) { return c.done; }),
     profileChecks,
     loading,
   };
