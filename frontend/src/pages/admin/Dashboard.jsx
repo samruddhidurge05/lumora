@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard } from './components/AdminComponents';
 import {
@@ -119,6 +120,7 @@ const sysSound = new AudioController();
 // All data comes from dashboardService.js via Firestore — no mock data here.
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   // ─── REAL DATA STATE ──────────────────────────────────────────────────────
   const [dashData, setDashData]     = useState(null);   // full dashboard payload
   const [isLoading, setIsLoading]   = useState(true);
@@ -731,19 +733,32 @@ export default function Dashboard() {
                 ))
               ) : (
                 <AnimatePresence initial={false}>
-                  {liveFeed.map((evt) => (
-                    <motion.div 
-                      key={evt.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex justify-between items-center p-3 bg-white/80 border border-[#F3EAF8] rounded-2xl text-[10px]"
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-bold text-[#2D004D]">{evt.text}</span>
-                        <span className="text-[8px] text-[#7B3FA0]">{evt.time}</span>
-                      </div>
+                  {liveFeed.map((evt) => {
+                    const isReport = evt.text.toLowerCase().includes('report') || evt.category === 'refund';
+                    return (
+                      <motion.div 
+                        key={evt.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => {
+                          if (isReport) {
+                            sysSound.playTap();
+                            navigate('/admin/reports');
+                          }
+                        }}
+                        style={{
+                          cursor: isReport ? 'pointer' : 'default',
+                        }}
+                        className={`flex justify-between items-center p-3 bg-white/80 border border-[#F3EAF8] rounded-2xl text-[10px] transition-all duration-300 ${
+                          isReport ? 'hover:bg-[#7B3FA0]/5 hover:border-[#7B3FA0]/20' : ''
+                        }`}
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold text-[#2D004D]">{evt.text}</span>
+                          <span className="text-[8px] text-[#7B3FA0]">{evt.time}</span>
+                        </div>
                       {evt.value && (
                         <span className={`font-mono font-bold px-2 py-0.5 rounded ${
                           evt.category === 'purchase' ? 'text-[#5A1E7E] bg-[#B886D0]/10' :
@@ -754,7 +769,8 @@ export default function Dashboard() {
                         </span>
                       )}
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </AnimatePresence>
               )}
             </div>

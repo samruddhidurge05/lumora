@@ -118,8 +118,15 @@ def _validate_startup_config() -> None:
     # 5. Firebase credentials (non-fatal warning — Firebase connection is optional)
     cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if not cert_path:
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        cert_path = os.path.join(base_dir, "shared", "firebase", "serviceAccountKey.json")
+        base_dir = os.path.dirname(os.path.abspath(__file__)) # backend/app
+        path1 = os.path.join(base_dir, "shared", "firebase", "serviceAccountKey.json")
+        path2 = os.path.join(os.path.dirname(base_dir), "shared", "firebase", "serviceAccountKey.json")
+        if os.path.exists(path1):
+            cert_path = path1
+        elif os.path.exists(path2):
+            cert_path = path2
+        else:
+            cert_path = path1
     if not os.path.exists(cert_path):
         _logger.warning(
             "[startup] Firebase service account key not found at '%s'. "

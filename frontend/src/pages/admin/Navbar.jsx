@@ -87,15 +87,15 @@ export default function Navbar() {
           className="nav-menu"
         >
           {[
-            { label: 'Dashboard', icon: <LayoutDashboard size={14} />, to: '/dashboard' },
-            { label: 'Products', icon: <Compass size={14} />, to: '/products' },
-            { label: 'Orders', icon: <ShoppingBag size={14} />, to: '/orders' },
-            { label: 'Vendors', icon: <Users size={14} />, to: '/vendors' },
-            { label: 'Payments', icon: <CreditCard size={14} />, to: '/payments' },
-            { label: 'Analytics', icon: <BarChart3 size={14} />, to: '/analytics' },
-            { label: 'Reports', icon: <FileText size={14} />, to: '/reports' },
-            { label: 'Reviews', icon: <MessageSquare size={14} />, to: '/reviews' },
-            { label: 'Settings', icon: <Settings size={14} />, to: '/settings' }
+            { label: 'Dashboard', icon: <LayoutDashboard size={14} />, to: '/admin/dashboard' },
+            { label: 'Products', icon: <Compass size={14} />, to: '/admin/products' },
+            { label: 'Orders', icon: <ShoppingBag size={14} />, to: '/admin/orders' },
+            { label: 'Vendors', icon: <Users size={14} />, to: '/admin/vendors' },
+            { label: 'Payments', icon: <CreditCard size={14} />, to: '/admin/payments' },
+            { label: 'Analytics', icon: <BarChart3 size={14} />, to: '/admin/analytics' },
+            { label: 'Reports', icon: <FileText size={14} />, to: '/admin/reports' },
+            { label: 'Reviews', icon: <MessageSquare size={14} />, to: '/admin/reviews' },
+            { label: 'Settings', icon: <Settings size={14} />, to: '/admin/settings' }
           ].map((item, index) => {
             const isActive = location.pathname === item.to;
             return (
@@ -154,7 +154,7 @@ export default function Navbar() {
         {/* Action Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Link 
-            to="/dashboard"
+            to="/admin/dashboard"
             className="btn-premium"
             style={{
               padding: scrolled ? '10px 22px' : '14px 28px',
