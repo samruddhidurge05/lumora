@@ -18,9 +18,7 @@ import {
   Pause, 
   DollarSign, 
   ShoppingBag, 
-  TrendingUp, 
   X, 
-  CheckCircle,
   Link2
 } from 'lucide-react';
 
@@ -379,10 +377,10 @@ export default function CampaignManager() {
                         {order.customerName || 'Customer'}
                       </td>
                       <td style={{ padding: '16px 20px', fontWeight: 700 }}>
-                        ₹{order.price.toLocaleString()}
+                        ₹{(order.price || 0).toLocaleString()}
                       </td>
                       <td style={{ padding: '16px 20px', fontWeight: 800, color: '#16a34a' }}>
-                        ₹{order.commissionAmount.toLocaleString()}
+                        ₹{(order.commissionAmount || 0).toLocaleString()}
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <span className="v-badge v-badge-green">

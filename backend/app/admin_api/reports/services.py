@@ -11,12 +11,13 @@ def _map_report(doc):
         "status":      r.get("status", "Pending"),
         "severity":    r.get("severity", "medium"),
         "category":    r.get("category", "General"),
-        "createdAt":   r.get("createdAt") or datetime.utcnow().isoformat() + "Z",
+        "createdAt":   r.get("createdAt") or r.get("created_at") or datetime.utcnow().isoformat() + "Z",
         "resolvedAt":  r.get("resolvedAt"),
         "assignee":    r.get("assignee", "Unassigned"),
         "description": r.get("description", ""),
-        "productId":   r.get("productId", ""),
+        "productId":   r.get("productId", r.get("product_id", "")),
         "productTitle":r.get("productTitle", r.get("productName", "")),
+        "user_id":     r.get("user_id", ""),
     }
 
 def get_reports_list(page: int = 1, page_size: int = 50, status: str = None, search: str = None):

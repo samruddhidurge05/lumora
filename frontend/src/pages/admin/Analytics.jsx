@@ -750,7 +750,9 @@ export default function Analytics() {
                       <div className="flex flex-col text-right border-l border-stone-200/50 pl-4">
                         <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Active Users</span>
                         <span className="text-base font-serif font-black text-[#2D004D] mt-1.5 flex items-baseline gap-1">
-                          1,424
+                          {data.customerAnalytics.newCustomers + data.customerAnalytics.returningCustomers > 0
+                            ? (data.customerAnalytics.newCustomers + data.customerAnalytics.returningCustomers).toLocaleString()
+                            : '—'}
                           <span className="w-1.5 h-1.5 rounded-full bg-[#B886D0] inline-block animate-ping" />
                         </span>
                       </div>
@@ -1227,7 +1229,9 @@ export default function Analytics() {
                       <Sparkles size={14} className="text-[#B886D0] animate-pulse" />
                     </h4>
                     <p className="text-[9px] text-[#7B3FA0] mt-1 leading-relaxed">
-                      92% confidence based on current volume acceleration curves.
+                      {data.forecastAnalytics.confidenceScore > 0
+                        ? `${data.forecastAnalytics.confidenceScore}% confidence based on revenue trend data.`
+                        : 'Confidence score will appear once order data is available.'}
                     </p>
                   </div>
 
@@ -1569,7 +1573,9 @@ export default function Analytics() {
 
                   {/* Summary note */}
                   <div className="text-[10px] text-[#7B3FA0] leading-relaxed border-t border-[#F3EAF8] pt-4">
-                    Optimization vector detected. Cart abandonment decreases by <strong>4.8%</strong> on weekdays. Advise keeping email automated outreach templates active.
+                    {data.conversionAnalytics.funnel[0]?.count > 0
+                      ? `${data.conversionAnalytics.funnel[1]?.percent ?? 0}% of orders were paid. ${data.conversionAnalytics.funnel[2]?.percent ?? 0}% completed successfully.`
+                      : 'Conversion funnel data will appear once orders are recorded.'}
                   </div>
 
                 </div>

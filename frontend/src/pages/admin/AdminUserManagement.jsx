@@ -259,10 +259,23 @@ export default function AdminUserManagement() {
               </div>
               {inviteResult && inviteResult.type === 'success' && (
                 <div style={{ padding: '14px', background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: '10px', fontSize: '0.78rem', color: '#065F46' }}>
-                  <p style={{ margin: '0 0 8px', fontWeight: 700 }}>Invitation created for {inviteResult.email}</p>
-                  <p style={{ margin: '0 0 4px' }}>Share this invite token:</p>
-                  <code style={{ background: 'rgba(0,0,0,0.06)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.72rem', wordBreak: 'break-all' }}>{inviteResult.token}</code>
-                  <p style={{ margin: '8px 0 0' }}>Accept URL: <code style={{ fontSize: '0.7rem' }}>/admin/accept-invite?token={inviteResult.token}</code></p>
+                  <p style={{ margin: '0 0 8px', fontWeight: 700 }}>✓ Invitation created for {inviteResult.email}</p>
+                  <p style={{ margin: '0 0 6px' }}>Share this link with them:</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <code style={{ flex: 1, background: 'rgba(0,0,0,0.06)', padding: '6px 10px', borderRadius: '6px', fontSize: '0.70rem', wordBreak: 'break-all', display: 'block' }}>
+                      {inviteResult.acceptUrl}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(inviteResult.acceptUrl)}
+                      style={{ flexShrink: 0, padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(5,150,105,0.3)', background: 'rgba(5,150,105,0.08)', color: '#065F46', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p style={{ margin: '8px 0 0', fontSize: '0.70rem', opacity: 0.8 }}>
+                    Link expires in 48 hours. Single-use only.
+                  </p>
                 </div>
               )}
               {inviteResult && inviteResult.type === 'error' && (

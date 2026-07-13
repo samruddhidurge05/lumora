@@ -542,18 +542,25 @@ export default function Reviews() {
                   </div>
                 </div>
 
-                {/* Card 4: Verified purchased ratio */}
+                {/* Card 4: Verified purchased ratio — driven by real firestoreData */}
                 <div className="glass-surface rounded-2xl p-5 hover:shadow-[0_10px_25px_rgba(216,191,227,0.12)] border border-white/50 transition-all duration-300 group hover:-translate-y-1">
                   <div className="flex items-center justify-between mb-3 text-[#7B3FA0]">
                     <span className="text-[8px] font-black uppercase tracking-widest">Verified Ratio</span>
                     <Icon name="Shield" size={13} className="text-[#B886D0]" />
                   </div>
                   <h3 className="text-xl font-serif font-black text-[#2D004D] mb-1">
-                    <CountUp value={94} suffix="%" />
+                    {initialData.summary.totalReviews > 0
+                      ? <CountUp value={Math.round((initialData.summary.positive))} suffix="%" />
+                      : <span>—</span>}
                   </h3>
-                  <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Certified transaction paths</p>
+                  <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Positive verified reviews</p>
                   <div className="w-full bg-[#B886D0]/20 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div className="bg-[#B886D0] h-full" initial={{ width: 0 }} animate={{ width: "94%" }} transition={{ duration: 1 }} />
+                    <motion.div
+                      className="bg-[#B886D0] h-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
+                      transition={{ duration: 1 }}
+                    />
                   </div>
                 </div>
 
@@ -704,21 +711,30 @@ export default function Reviews() {
 
                       <div className="flex flex-col gap-3">
                         <div className="p-3 bg-white/60 rounded-xl border border-[#F3EAF8] text-[10px] text-[#7B3FA0] leading-relaxed">
-                          "Customer satisfaction score rose <strong>+12%</strong> this cycle. Digital assets maintain solid reputation values."
+                          {initialData.summary.positive > 0
+                            ? `${initialData.summary.positive}% of reviews are positive. Average rating: ${initialData.summary.avgRating}/5.`
+                            : 'Review sentiment data will appear once customers submit reviews.'}
                         </div>
                         <div className="p-3 bg-white/60 rounded-xl border border-[#F3EAF8] text-[10px] text-[#7B3FA0] leading-relaxed">
-                          "Onboarding flow notes minor friction regarding installation steps for learning templates."
+                          {initialData.summary.negative > 0
+                            ? `${initialData.summary.negative}% of reviews flagged as negative — review these for action.`
+                            : 'No negative reviews detected yet.'}
                         </div>
                       </div>
                     </div>
 
                     <div className="border-t border-[#F5E9DD]/50 pt-4 flex flex-col gap-3">
                       <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-[#7B3FA0]">
-                        <span>Review Authenticity</span>
-                        <span className="text-emerald-500 font-black">98.2% secure</span>
+                        <span>Positive Sentiment</span>
+                        <span className={`font-black ${initialData.summary.positive >= 70 ? 'text-emerald-500' : 'text-[#C4A4D8]'}`}>
+                          {initialData.summary.totalReviews > 0 ? `${initialData.summary.positive}%` : '—'}
+                        </span>
                       </div>
                       <div className="w-full bg-white h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-[#B886D0] h-full w-[98%]" />
+                        <div
+                          className="bg-[#B886D0] h-full transition-all duration-700"
+                          style={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -737,26 +753,32 @@ export default function Reviews() {
                         </defs>
                         {/* Background track circle */}
                         <circle cx="64" cy="64" r="52" stroke="rgba(90, 30, 126, 0.03)" strokeWidth="8" fill="transparent" />
-                        {/* Interactive gauge fill */}
-                        <motion.circle 
+                        {/* Gauge fill — driven by real positive sentiment percentage */}
+                        <motion.circle
                           cx="64" cy="64" r="52" stroke="url(#gaugeGrad)" strokeWidth="9" fill="transparent"
                           strokeDasharray={326.7}
                           initial={{ strokeDashoffset: 326.7 }}
-                          animate={{ strokeDashoffset: 326.7 * (1 - 0.96) }} // 96%
+                          animate={{ strokeDashoffset: 326.7 * (1 - (initialData.summary.positive / 100)) }}
                           transition={{ duration: 1.5, ease: "easeOut" }}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute flex flex-col items-center">
                         <span className="text-3xl font-serif font-black text-[#2D004D] leading-none">
-                          <CountUp value={96} />
+                          {initialData.summary.totalReviews > 0
+                            ? <CountUp value={initialData.summary.positive} />
+                            : <span style={{ fontSize: '1.5rem' }}>—</span>}
                         </span>
-                        <span className="text-[7px] font-black uppercase text-[#8E6AA8] tracking-widest mt-1">Excellent</span>
+                        <span className="text-[7px] font-black uppercase text-[#8E6AA8] tracking-widest mt-1">
+                          {initialData.summary.totalReviews > 0 ? 'Positive %' : 'No data'}
+                        </span>
                       </div>
                     </div>
 
                     <p className="text-[9px] text-[#7B3FA0] leading-relaxed mt-4">
-                      Compounded index matching verified ratio, high reviews, and low disputes.
+                      {initialData.summary.totalReviews > 0
+                        ? `Based on ${initialData.summary.totalReviews} reviews across all products.`
+                        : 'Trust index will calculate once reviews are submitted.'}
                     </p>
                   </div>
 
@@ -993,25 +1015,44 @@ export default function Reviews() {
                     <div className="flex flex-col gap-4 mt-2">
                       <div className="bg-white/50 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2">
                         <div className="flex justify-between text-[9px] font-bold text-[#7B3FA0] uppercase">
-                          <span>Suspicious Review Density</span>
-                          <span className="text-amber-500 font-extrabold">0.8% alert</span>
+                          <span>Negative Review Density</span>
+                          <span className={`font-extrabold ${initialData.summary.negative > 10 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {initialData.summary.totalReviews > 0 ? `${initialData.summary.negative}%` : '—'}
+                          </span>
                         </div>
                         <div className="w-full bg-[#F5E9DD]/50 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-amber-400 h-full w-[8%]" />
+                          <div
+                            className={`h-full ${initialData.summary.negative > 10 ? 'bg-red-400' : 'bg-emerald-400'}`}
+                            style={{ width: `${Math.min(100, initialData.summary.negative)}%` }}
+                          />
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 bg-red-50/40 p-3 rounded-2xl border border-red-100/50">
-                        <div className="w-5 h-5 rounded-lg bg-[#D8BFE3] text-[#FF8597] flex items-center justify-center shrink-0 text-[10px] font-bold">
-                          !
+                      {initialData.summary.negative > 10 ? (
+                        <div className="flex items-center gap-3 bg-red-50/40 p-3 rounded-2xl border border-red-100/50">
+                          <div className="w-5 h-5 rounded-lg bg-[#D8BFE3] text-[#FF8597] flex items-center justify-center shrink-0 text-[10px] font-bold">!</div>
+                          <div>
+                            <h6 className="text-[10px] font-bold text-[#2D004D]">High Negative Rate</h6>
+                            <p className="text-[8px] text-red-400/80 mt-0.5 leading-relaxed">
+                              {initialData.summary.negative}% negative reviews detected. Review flagged submissions for moderation.
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h6 className="text-[10px] font-bold text-[#2D004D]">1 Anomaly Flagged</h6>
-                          <p className="text-[8px] text-red-400/80 mt-0.5 leading-relaxed">
-                            Anonymous user review R-1005 was blocked from organic score aggregation due to pattern matches.
-                          </p>
+                      ) : (
+                        <div className="flex items-center gap-3 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/50">
+                          <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-[10px] font-bold">✓</div>
+                          <div>
+                            <h6 className="text-[10px] font-bold text-[#2D004D]">
+                              {initialData.summary.totalReviews > 0 ? 'Sentiment Healthy' : 'No Reviews Yet'}
+                            </h6>
+                            <p className="text-[8px] text-emerald-600/80 mt-0.5 leading-relaxed">
+                              {initialData.summary.totalReviews > 0
+                                ? 'Negative rate is within acceptable range.'
+                                : 'Review data will appear once customers submit feedback.'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                   </div>

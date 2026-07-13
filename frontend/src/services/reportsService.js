@@ -25,11 +25,12 @@ export const subscribeToReports = (callback) => {
   }
 };
 
-export const resolveReport = async (reportId) => {
+export const resolveReport = async (reportId, note = '') => {
   try {
     return await backendFetch('/admin/reports/resolve', {
       method: 'POST',
-      body: JSON.stringify({ report_id: reportId })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: reportId, note }),
     });
   } catch (error) {
     console.error('[reportsService] Error resolving report:', error);
@@ -37,11 +38,12 @@ export const resolveReport = async (reportId) => {
   }
 };
 
-export const rejectReport = async (reportId) => {
+export const rejectReport = async (reportId, note = '') => {
   try {
     return await backendFetch('/admin/reports/reject', {
       method: 'POST',
-      body: JSON.stringify({ report_id: reportId })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: reportId, note }),
     });
   } catch (error) {
     console.error('[reportsService] Error rejecting report:', error);
@@ -53,7 +55,8 @@ export const assignReport = async (reportId, adminId) => {
   try {
     return await backendFetch('/admin/reports/assign', {
       method: 'POST',
-      body: JSON.stringify({ report_id: reportId, assignee: adminId })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: reportId, assignee: adminId }),
     });
   } catch (error) {
     console.error('[reportsService] Error assigning report:', error);
@@ -65,7 +68,8 @@ export const deleteReport = async (reportId) => {
   try {
     return await backendFetch('/admin/reports/delete', {
       method: 'POST',
-      body: JSON.stringify({ report_id: reportId })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: reportId }),
     });
   } catch (error) {
     console.error('[reportsService] Error deleting report:', error);

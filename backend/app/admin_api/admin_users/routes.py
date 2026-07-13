@@ -18,6 +18,7 @@ from app.models.admin_role import AdminRole
 from app.models.admin_invitation import AdminInvitation
 from app.models.user import User
 from app.services.audit_log_service import log_admin_action
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -125,7 +126,7 @@ def invite_admin(
         "role_level": invitation.role_level,
         "invite_token": token,
         "expires_at": expires_at.isoformat(),
-        "accept_url": f"/admin/accept-invite?token={token}",
+        "accept_url": f"{settings.FRONTEND_URL}/admin/accept-invite?token={token}",
     }
 
 
