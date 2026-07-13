@@ -38,7 +38,8 @@ class ProductService:
         preview_video: Optional[str] = None,
         seo_title: Optional[str] = None,
         seo_description: Optional[str] = None,
-        visibility: str = "public"
+        visibility: str = "public",
+        status: str = "published"
     ) -> Product:
         # We start an atomic transaction block
         moved_files = []
@@ -57,7 +58,7 @@ class ProductService:
                 affiliate_enabled=affiliate_enabled,
                 commission_type=commission_type,
                 commission_value=commission_value,
-                status="published",
+                status=status,
                 short_desc=short_desc,
                 features=features,
                 system_requirements=system_requirements,

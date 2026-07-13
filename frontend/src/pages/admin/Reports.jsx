@@ -1194,8 +1194,8 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportListItems.map((r) => (
-                          <tr key={r.id} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
+                        {reportListItems.map((r, idx) => (
+                          <tr key={r.id || `report-${idx}`} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
                             <td className="py-3 pr-4 text-[10px] font-semibold text-[#2D004D]">{r.reporter || '—'}</td>
                             <td className="py-3 pr-4 text-[10px] text-[#2D004D] max-w-[180px] truncate" title={r.title}>{r.title || '—'}</td>
                             <td className="py-3 pr-4 text-[9px] text-[#7B3FA0]">{r.category || '—'}</td>

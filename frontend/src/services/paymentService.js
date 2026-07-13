@@ -39,14 +39,64 @@ import { backendFetch } from '../utils/api';
 export const subscribeToPaymentsTelemetry = (callback) => {
   let ordersList = [];
   let vendorsList = [];
+  let paymentsList = [];
 
   const handleUpdate = () => {
+    // If we have actual SQL payments, map them to order stats expected by Payments.jsx
+    const mappedOrders = paymentsList.map(p => {
+      let statusVal = 'Pending';
+      let payStatusVal = 'Unpaid';
+      const s = (p.status || '').toUpperCase();
+      if (s === 'SUCCESS') {
+        statusVal = 'Completed';
+        payStatusVal = 'Paid';
+      } else if (s === 'REFUNDED') {
+        statusVal = 'Refunded';
+        payStatusVal = 'Refunded';
+      } else if (s === 'FAILED') {
+        statusVal = 'Failed';
+        payStatusVal = 'Failed';
+      } else if (s === 'REFUND_PENDING') {
+        statusVal = 'Disputed';
+        payStatusVal = 'Paid';
+      }
+
+      return {
+        id: p.payment_ref || `pay-${p.id}`,
+        orderId: p.order_id ? `ORD-${p.order_id}` : (p.gateway_order_id || '—'),
+        price: p.amount || 0.0,
+        status: statusVal,
+        customerName: p.customer_name || `Customer #${p.customer_id}`,
+        customerEmail: p.customer_email || '',
+        vendorId: p.vendor_ids ? p.vendor_ids.split(',')[0] : 'v1',
+        paymentStatus: payStatusVal,
+        refundReason: p.refund_reason || '',
+        paymentMethod: p.gateway || 'razorpay',
+        createdAt: p.created_at || new Date().toISOString()
+      };
+    });
+
     callback({
-      orders: ordersList,
+      orders: mappedOrders.length > 0 ? mappedOrders : ordersList,
       vendors: vendorsList,
       loading: false
     });
   };
+
+  const fetchPayments = async () => {
+    try {
+      const data = await backendFetch('/payments/admin/all?limit=200');
+      if (data && data.payments) {
+        paymentsList = data.payments;
+        handleUpdate();
+      }
+    } catch (e) {
+      console.warn('[paymentService] Failed to fetch SQL payments, falling back to Firestore orders:', e);
+    }
+  };
+
+  fetchPayments();
+  const pollInterval = setInterval(fetchPayments, 5000);
 
   const unsubOrders = onSnapshot(collection(db, 'orders'), (snap) => {
     ordersList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -80,6 +130,7 @@ export const subscribeToPaymentsTelemetry = (callback) => {
   return () => {
     unsubOrders();
     unsubVendors();
+    clearInterval(pollInterval);
   };
 };
 

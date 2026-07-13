@@ -236,6 +236,12 @@ function mapAdminProductToApi(uiForm) {
     affiliate_enabled: Boolean(uiForm.affiliate_enabled || false),
     commission_type:   uiForm.commission_type  || 'percentage',
     commission_value:  Number(uiForm.commission_value) || 0.0,
+
+    // ── Features & Specs (Section 5) ──────────────────────────────────────
+    features:             Array.isArray(uiForm.keyFeatures)        ? uiForm.keyFeatures        : [],
+    what_you_get:         Array.isArray(uiForm.whatsIncluded)       ? uiForm.whatsIncluded       : [],
+    system_requirements:  Array.isArray(uiForm.systemRequirements)  ? uiForm.systemRequirements  : [],
+    installation_guide:   typeof uiForm.installationGuide === 'string' ? uiForm.installationGuide : '',
   };
 
   return apiPayload;
@@ -1937,10 +1943,21 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     downloadUrl:  product?.downloadUrl  || null,   // permanent HTTPS URL
     fileSize:     product?.fileSize     || null,   // bytes
     fileName:     product?.fileName     || null,   // original filename
+
+    // ── Section 5: Features & Specs ──────────────────────────────────────────
+    keyFeatures:         Array.isArray(product?.features)            ? product.features            : [],
+    whatsIncluded:       Array.isArray(product?.whatYouGet)          ? product.whatYouGet          : [],
+    systemRequirements:  Array.isArray(product?.systemRequirements)  ? product.systemRequirements  : [],
+    installationGuide:   product?.installationGuide                  || product?.installation_guide || '',
   });
 
   const [thumbPreview, setThumbPreview] = useState(form.thumbnail);
   const [demoVideoPreview, setDemoVideoPreview] = useState(form.videoUrl);
+
+  // ── Section 5: Features & Specs — scoped input state for DynamicListEditor instances ──
+  const [keyFeaturesInput,        setKeyFeaturesInput]        = useState('');
+  const [whatsIncludedInput,       setWhatsIncludedInput]      = useState('');
+  const [systemRequirementsInput,  setSystemRequirementsInput] = useState('');
 
   const [isDragging, setIsDragging] = useState({
     thumbnail: false,
@@ -2624,6 +2641,192 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* ── Section 5: Features & Specs ─────────────────────────────────────────── */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
+              5. Features &amp; Specs
+            </h3>
+            <div className="space-y-5">
+
+              {/* ── 5.1 Key Features ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  Key Features
+                </label>
+                {form.keyFeatures.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.keyFeatures.map((entry, idx) => (
+                      <li key={idx} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('keyFeatures', form.keyFeatures.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove key feature"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={keyFeaturesInput}
+                    onChange={(e) => setKeyFeaturesInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = keyFeaturesInput.trim();
+                        if (!v) return;
+                        handleChange('keyFeatures', [...form.keyFeatures, v]);
+                        setKeyFeaturesInput('');
+                      }
+                    }}
+                    placeholder="e.g. 100+ premium UI components"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = keyFeaturesInput.trim();
+                      if (!v) return;
+                      handleChange('keyFeatures', [...form.keyFeatures, v]);
+                      setKeyFeaturesInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.2 What's Included ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  What&apos;s Included
+                </label>
+                {form.whatsIncluded.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.whatsIncluded.map((entry, idx) => (
+                      <li key={idx} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('whatsIncluded', form.whatsIncluded.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove item"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={whatsIncludedInput}
+                    onChange={(e) => setWhatsIncludedInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = whatsIncludedInput.trim();
+                        if (!v) return;
+                        handleChange('whatsIncluded', [...form.whatsIncluded, v]);
+                        setWhatsIncludedInput('');
+                      }
+                    }}
+                    placeholder="e.g. Figma source file"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = whatsIncludedInput.trim();
+                      if (!v) return;
+                      handleChange('whatsIncluded', [...form.whatsIncluded, v]);
+                      setWhatsIncludedInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.3 System Requirements ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  System Requirements
+                </label>
+                {form.systemRequirements.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.systemRequirements.map((entry, idx) => (
+                      <li key={idx} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('systemRequirements', form.systemRequirements.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove requirement"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={systemRequirementsInput}
+                    onChange={(e) => setSystemRequirementsInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = systemRequirementsInput.trim();
+                        if (!v) return;
+                        handleChange('systemRequirements', [...form.systemRequirements, v]);
+                        setSystemRequirementsInput('');
+                      }
+                    }}
+                    placeholder="e.g. Figma 2024 or later"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = systemRequirementsInput.trim();
+                      if (!v) return;
+                      handleChange('systemRequirements', [...form.systemRequirements, v]);
+                      setSystemRequirementsInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.4 Installation Guide ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  Installation Guide
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder="Step-by-step setup and installation instructions (plain text or markdown)..."
+                  value={form.installationGuide}
+                  onChange={(e) => handleChange('installationGuide', e.target.value)}
+                  className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                />
+              </div>
+
             </div>
           </div>
 
