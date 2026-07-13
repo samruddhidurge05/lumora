@@ -270,7 +270,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     email: Optional[str] = claims.get("email")
     name: str = claims.get("name") or (email.split("@")[0] if email else "User")
     email_verified: bool = claims.get("email_verified", False)
-    role: str = request.role or "customer"
+    role: str = body.role or "customer"
     # Normalise role value
     if role == "user":
         role = "customer"
