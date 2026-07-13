@@ -353,12 +353,9 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     
     if db_role == "customer":
         active_role = "customer"
-    elif db_role == "vendor":
-        if active_role not in ("vendor", "customer"):
-            active_role = "vendor"
-    elif db_role == "affiliate":
-        if active_role not in ("affiliate", "customer"):
-            active_role = "affiliate"
+    elif db_role in ("vendor", "affiliate"):
+        if active_role not in ("vendor", "affiliate", "customer"):
+            active_role = db_role
             
     token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)

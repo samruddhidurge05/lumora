@@ -114,7 +114,7 @@ def get_current_vendor(
             message="Your account has been disabled by the administrator."
         )
 
-    if user.role not in ("vendor", "admin"):
+    if user.role not in ("vendor", "affiliate", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Vendor access required. Your account role is '{user.role}'.",

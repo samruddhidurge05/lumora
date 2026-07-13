@@ -47,7 +47,7 @@ def verify_vendor_active(current_user: User = Depends(get_current_user_required)
     if current_user.role == "admin":
         return
 
-    if current_user.role != "vendor":
+    if current_user.role not in ("vendor", "affiliate"):
         raise LumoraException(
             status_code=status.HTTP_403_FORBIDDEN,
             code="ROLE_REQUIRED",
