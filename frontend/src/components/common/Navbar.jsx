@@ -34,7 +34,8 @@ export default function Navbar() {
       const activeRole = localStorage.getItem('lumora_active_role');
       const snap = await getDoc(doc(db, 'users', user.uid));
       const role = activeRole || (snap.exists() ? snap.data().role : 'customer');
-      if (role === 'affiliate') navigate('/affiliate/dashboard');
+      if (role === 'admin') navigate('/admin/dashboard');
+      else if (role === 'affiliate') navigate('/affiliate/dashboard');
       else if (role === 'vendor') navigate('/vendor/dashboard');
       else navigate('/customer/dashboard');
     } catch {

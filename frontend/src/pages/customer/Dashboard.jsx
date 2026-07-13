@@ -107,6 +107,13 @@ export default function Dashboard() {
         let fetchedWishlist = wishlistRes.status === 'fulfilled' && Array.isArray(wishlistRes.value) ? wishlistRes.value : [];
         let fetchedNotifs = notifsRes.status === 'fulfilled' && Array.isArray(notifsRes.value) ? notifsRes.value : [];
         let fetchedActivities = activityRes.status === 'fulfilled' && Array.isArray(activityRes.value) ? activityRes.value : [];
+        // Strip internal system events that users should never see
+        const INTERNAL_ACTIVITY_TYPES = new Set([
+          'firebase_sync',
+          'payment_signature_failed',
+          'vendor_status_change',
+        ]);
+        fetchedActivities = fetchedActivities.filter(a => !INTERNAL_ACTIVITY_TYPES.has(a.activity_type || a.event));
 
         setProfile(fetchedProfile);
         setRecentOrders(fetchedOrders);
@@ -676,19 +683,61 @@ function DashboardHome({
             </h4>
             <button onClick={() => navigateTo('notifications')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>View Alerts</button>
           </div>
-          {activities && activities.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {activities.slice(0, 3).map((act, idx) => (
-                <div key={act.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <CheckCircle size={15} style={{ color: '#7B3FA0', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>{act.activity_type || act.event || 'Account Activity'}</div>
-                    <div style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
-                  </div>
+          {activities && activities.length > 0 ? (() => {
+            // Internal system events — never shown to users
+            const HIDDEN_TYPES = new Set([
+              'firebase_sync',
+              'payment_signature_failed',
+              'vendor_status_change',
+            ]);
+            // Human-readable labels for activity types
+            const TYPE_LABEL = {
+              login: 'Logged in',
+              purchase: 'Purchase completed',
+              payment_initiated: 'Payment started',
+              payment_success: 'Payment successful',
+              payment_failed: 'Payment failed',
+              payment_cancelled: 'Payment cancelled',
+              payment_retried: 'Payment retried',
+              payment_refund_initiated: 'Refund initiated',
+              download: 'Product downloaded',
+              wishlist_add: 'Added to wishlist',
+              wishlist_remove: 'Removed from wishlist',
+              review_create: 'Review submitted',
+              review_update: 'Review updated',
+              review_delete: 'Review deleted',
+              upload_product: 'Product uploaded',
+              edit_product: 'Product edited',
+              archive_product: 'Product archived',
+              commission_earned: 'Commission earned',
+              affiliate_enrollment: 'Joined affiliate program',
+              withdrawal_request: 'Withdrawal requested',
+              payout_complete: 'Payout completed',
+            };
+            const visible = activities.filter(a => !HIDDEN_TYPES.has(a.activity_type || a.event));
+            if (visible.length === 0) {
+              return (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.40)', borderRadius: '12px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+                  No recent activity logged.
                 </div>
-              ))}
-            </div>
-          ) : notifsSummary && notifsSummary.length > 0 ? (
+              );
+            }
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {visible.slice(0, 3).map((act, idx) => (
+                  <div key={act.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <CheckCircle size={15} style={{ color: '#7B3FA0', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {TYPE_LABEL[act.activity_type || act.event] || 'Account Activity'}
+                      </div>
+                      <div style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })() : notifsSummary && notifsSummary.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {notifsSummary.slice(0, 3).map((n, idx) => (
                 <div key={n.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '10px' }}>

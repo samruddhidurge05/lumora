@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingBag, Zap, Download, Shield, Heart, MessageSquare, Package, ChevronLeft, ChevronRight, Check, BadgeCheck, Flag } from 'lucide-react';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
@@ -52,7 +53,7 @@ function getGallery(product) {
 
 export default function ProductPage() {
   const { getActiveProduct, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview } = useApp();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const product = getActiveProduct();
   const [activeTab, setActiveTab] = useState('overview');
   const [activeImg, setActiveImg] = useState(0);
@@ -236,7 +237,7 @@ export default function ProductPage() {
     try {
       const token =
         (typeof window !== 'undefined' &&
-          (localStorage.getItem('lumora_token') || sessionStorage.getItem('lumora_token'))) || '';
+          (localStorage.getItem('lumora_backend_token') || sessionStorage.getItem('lumora_backend_token'))) || '';
       const BASE =
         (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
           ? import.meta.env.VITE_API_URL
@@ -884,6 +885,7 @@ export default function ProductPage() {
         <ReportModal
           product={product}
           user={user}
+          userRole={userRole}
           reportCategory={reportCategory}
           setReportCategory={setReportCategory}
           reportDescription={reportDescription}
@@ -1063,6 +1065,7 @@ const REPORT_CATEGORIES = [
 function ReportModal({
   product,
   user,
+  userRole,
   reportCategory,
   setReportCategory,
   reportDescription,
@@ -1148,6 +1151,14 @@ function ReportModal({
         ) : (
           /* ── Form ── */
           <form onSubmit={onSubmit}>
+            {userRole === 'admin' && (
+              <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(123,63,160,0.08)', border: '1.5px solid rgba(123,63,160,0.18)', fontSize: '0.8rem', color: '#7B3FA0', fontWeight: 600 }}>
+                You are logged in as an Admin. To view submitted reports, visit the{' '}
+                <Link to="/admin/reports" style={{ color: '#5A1E7E', textDecoration: 'underline', fontWeight: 700 }}>
+                  Admin Reports Section
+                </Link>.
+              </div>
+            )}
             {/* Category selector */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#4E3B31', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
