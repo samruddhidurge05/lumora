@@ -28,16 +28,16 @@ const BACKEND_URL =
  * @param {string} role  'customer' | 'vendor' | 'affiliate'
  * @returns {Promise<object|null>}
  */
-let syncPromise = null;
+let activeSyncPromise = null;
 
 export const syncWithBackend = async (firebaseUser, role = 'customer') => {
   if (!firebaseUser) return null;
 
-  if (syncPromise) {
-    return syncPromise;
+  if (activeSyncPromise) {
+    return activeSyncPromise;
   }
 
-  syncPromise = (async () => {
+  activeSyncPromise = (async () => {
     try {
       // Get (possibly cached) Firebase ID Token — 1-hour expiry
       const idToken = await firebaseUser.getIdToken(false);
@@ -67,18 +67,17 @@ export const syncWithBackend = async (firebaseUser, role = 'customer') => {
         // Signal hooks that are waiting for the backend session to be ready
         window.dispatchEvent(new Event('lumora_backend_ready'));
       }
-
       return data;
     } catch (err) {
       // Network error (backend offline) — non-fatal
       console.warn('[authService] firebase-sync error (non-fatal):', err.message);
       return null;
     } finally {
-      syncPromise = null;
+      activeSyncPromise = null;
     }
   })();
 
-  return syncPromise;
+  return activeSyncPromise;
 };
 
 /**

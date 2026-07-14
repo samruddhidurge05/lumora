@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from app.middleware.rate_limit import limiter
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from app.core.exceptions import LumoraException
@@ -305,8 +306,17 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
             firebase_uid=claims.get("uid"),
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            db.commit()
+            db.refresh(user)
+        except IntegrityError:
+            db.rollback()
+            user = db.query(User).filter(User.email == email.lower()).first()
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to sync user with database."
+                )
     else:
         # Step 4 — update verification status; only set role if not already assigned
         # (never downgrade vendor/affiliate → customer on re-login from the wrong tile)
@@ -359,12 +369,9 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     
     if db_role == "customer":
         active_role = "customer"
-    elif db_role == "vendor":
-        if active_role not in ("vendor", "customer"):
-            active_role = "vendor"
-    elif db_role == "affiliate":
-        if active_role not in ("affiliate", "customer"):
-            active_role = "affiliate"
+    elif db_role in ("vendor", "affiliate"):
+        if active_role not in ("vendor", "affiliate", "customer"):
+            active_role = db_role
             
     token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)
