@@ -44,6 +44,26 @@ def update_vendor_status(uid: str, status_val: str):
             if vendor:
                 vendor.status = status_val.lower()
             
+            # Cascade to products in SQLite & Firestore
+            from app.models.product import Product
+            products = db_s.query(Product).filter(Product.vendor_id == user.id).all()
+            for p in products:
+                p.is_active = is_active
+                if not is_active:
+                    p.status = "inactive"
+                db_s.add(p)
+
             db_s.commit()
+
+            # Sync products status cascade to Firestore
+            if firebase_connected and db is not None:
+                try:
+                    for p in products:
+                        db.collection("products").document(str(p.id)).update({
+                            "status": "active" if is_active else "inactive",
+                            "isActive": is_active
+                        })
+                except Exception:
+                    pass
     finally:
         db_s.close()

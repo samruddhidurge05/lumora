@@ -1,8 +1,10 @@
-export const generateDownloadLink = (productId) => {
-  // Simple cryptographic simulation key or mock link generator
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  return `${window.location.origin}/downloads?product=${productId}&token=${token}`;
-};
+/**
+ * Download link utilities.
+ * Secure download tokens are issued by the backend via
+ * GET /api/products/{productId}/download-file?token=...
+ * This service provides only error message helpers.
+ * Never generate tokens client-side — they must come from the backend.
+ */
 
 export const getDownloadErrorMessage = (code) => {
   switch (code) {

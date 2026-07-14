@@ -15,6 +15,7 @@ import {
   calculateVendorPayouts,
   getRefundMonitorList
 } from '../../services/paymentService';
+import { backendFetch } from '../../utils/api';
 import { 
   DollarSign, 
   Clock, 
@@ -36,6 +37,21 @@ export default function Payments() {
   const [telemetry, setTelemetry] = useState({ orders: [], vendors: [], loading: true });
   const [error, setError] = useState(null);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
+
+  const handleApproveRefund = async (orderId) => {
+    try {
+      const res = await backendFetch(`/api/admin/orders/${orderId}/refund`, {
+        method: 'POST'
+      });
+      if (res && res.success) {
+        alert("Refund approved successfully!");
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("[Payments] Refund error:", err);
+      alert("Failed to process refund: " + (err.message || err));
+    }
+  };
 
   // ─── FILTER / SEARCH STATE ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -592,6 +608,14 @@ export default function Payments() {
                             <div className="bg-stone-100/50 p-2 rounded-lg text-[9px] text-stone-600 font-light italic leading-relaxed">
                               "{ref.refundReason}"
                             </div>
+                            {ref.status === 'Pending' && (
+                              <button
+                                onClick={() => handleApproveRefund(ref.orderId)}
+                                className="mt-2 w-full py-1.5 bg-[#2D004D] hover:bg-[#7B3FA0] text-white text-[8px] font-black uppercase tracking-widest rounded-xl transition-colors"
+                              >
+                                Process Refund
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>

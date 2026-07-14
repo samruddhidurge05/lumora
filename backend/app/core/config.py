@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Public URL for signed downloads
     PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
+    # Frontend URL — used to generate shareable links (invitations, etc.)
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'

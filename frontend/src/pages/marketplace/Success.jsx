@@ -153,18 +153,10 @@ export default function Success() {
                         <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>{category}</p>
                       )}
                       {downloadUrl && (
-                        <a
-                          href={downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '4px',
-                            marginTop: '4px', fontSize: '0.70rem', fontWeight: 700,
-                            color: '#16a34a', textDecoration: 'none',
-                          }}
-                        >
-                          <Download size={10} /> Download now
-                        </a>
+                        <SuccessDownloadLink
+                          downloadUrl={downloadUrl}
+                          title={title}
+                        />
                       )}
                     </div>
                     {priceVal && (
@@ -239,5 +231,74 @@ export default function Success() {
         }
       `}</style>
     </div>
+  );
+}
+
+/* ─── SuccessDownloadLink ────────────────────────────────────────────────────
+   Replaces the plain <a> tag on the purchase success page.
+   - If the backend responds with { type: "pending" }, shows a friendly message.
+   - If external (pCloud), opens in new tab.
+   - Otherwise falls through to the token-based file stream.
+   Never exposes a 404 or technical error to the customer.
+────────────────────────────────────────────────────────────────────────────── */
+function SuccessDownloadLink({ downloadUrl, title }) {
+  const [state, setState] = useState('idle'); // idle | pending
+
+  const handleClick = async (e) => {
+    e.preventDefault();
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${apiBase}${downloadUrl}`;
+
+    try {
+      const resp = await backendFetch(downloadUrl.replace(/^\/api/, ''));
+      if (resp?.type === 'pending') {
+        setState('pending');
+        return;
+      }
+      if (resp?.type === 'external' && resp?.redirect_url) {
+        window.open(resp.redirect_url, '_blank');
+        return;
+      }
+    } catch (_) {
+      // Not JSON — it's a real file stream; open directly
+    }
+
+    window.open(fullUrl, '_blank');
+  };
+
+  if (state === 'pending') {
+    return (
+      <div style={{
+        marginTop: '6px',
+        padding: '8px 12px',
+        borderRadius: '10px',
+        background: 'rgba(123,63,160,0.06)',
+        border: '1px solid rgba(123,63,160,0.18)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+      }}>
+        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5A1E7E' }}>
+          ⏳ Download Pending
+        </span>
+        <span style={{ fontSize: '0.66rem', color: '#7B3FA0', lineHeight: 1.5 }}>
+          Your purchase is confirmed. The creator has not yet uploaded the file — it will appear in your Downloads automatically once available.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={downloadUrl}
+      onClick={handleClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '4px',
+        marginTop: '4px', fontSize: '0.70rem', fontWeight: 700,
+        color: '#16a34a', textDecoration: 'none',
+      }}
+    >
+      <Download size={10} /> Download now
+    </a>
   );
 }

@@ -122,6 +122,25 @@ def create_new_order(
             detail=f"Payment status is '{payment.status}'. Orders can only be completed for successful payments."
         )
 
+    # ── Best-effort Firestore sync ───────────────────────────────────────────
+    # Platform Pause policy (Option A / Requirement 13): checkout is blocked
+    # when `isPlatformPaused` is true (see check above); only orders that pass
+    # that gate reach this point.  We mirror every committed order to Firestore
+    # so the admin RC console (Dashboard, Analytics, Orders, Payments) sees it
+    # in real time.  SQLite is the canonical source of truth — a sync failure
+    # must never roll back the committed order (Requirements 2.1, 2.3, 12.2).
+    try:
+        from admin.firestore.admin_firestore import sync_order_to_firestore
+        sync_order_to_firestore(order)
+    except Exception as fs_err:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(
+            "Firestore order sync failed for order %s: %s — order preserved in SQLite",
+            order.id,
+            fs_err,
+        )
+
     # 3. Dynamically set short-lived secure download links for the response
     from app.api.products_router import generate_download_token
     for item in order.items:

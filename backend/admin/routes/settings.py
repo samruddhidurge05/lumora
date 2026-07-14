@@ -9,8 +9,8 @@ from admin.validators.admin_auth import require_admin_role
 from admin.firestore.admin_firestore import get_platform_settings
 from app.shared.firebase.connection import db as fdb, firebase_connected
 from app.models.platform_setting import PlatformSetting
-from app.models.audit_log import AuditLog
 from app.db.session import get_db
+from app.services.audit_log_service import log_admin_action
 
 logger = logging.getLogger(__name__)
 
@@ -110,14 +110,39 @@ def get_settings(
 @router.put("/")
 def update_settings(
     data: dict = Body(...),
+    db: Session = Depends(get_db),
     admin_user=Depends(require_admin_role),
 ):
     if not firebase_connected or fdb is None:
         _local_platform_state.update(data)
+        try:
+            log_admin_action(
+                db=db,
+                admin_user_id=admin_user.id,
+                action="settings_updated",
+                target_type=None,
+                target_id=None,
+                metadata={"keys": list(data.keys())},
+            )
+        except Exception as exc:
+            logger.error("[settings] audit_log insert failed on update_settings: %s", exc)
+            # Requirements 10.14: audit failure must not prevent the primary action.
         return {"success": True, "settings": _local_platform_state}
     try:
         doc_ref = fdb.collection("platformSettings").document("global")
         doc_ref.set(data, merge=True)
+        try:
+            log_admin_action(
+                db=db,
+                admin_user_id=admin_user.id,
+                action="settings_updated",
+                target_type=None,
+                target_id=None,
+                metadata={"keys": list(data.keys())},
+            )
+        except Exception as exc:
+            logger.error("[settings] audit_log insert failed on update_settings: %s", exc)
+            # Requirements 10.14: audit failure must not prevent the primary action.
         return {"success": True, "settings": get_platform_settings()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -137,21 +162,19 @@ def pause_platform(
     _set_platform_setting(db, "isPlatformPaused", True, admin_user.id)
     _set_platform_setting(db, "pauseMessage", message, admin_user.id)
 
-    # ── Audit log ─────────────────────────────────────────────────────────────
+    # ── Audit log (non-blocking — failure must not prevent the primary action) ─
     try:
-        audit = AuditLog(
+        log_admin_action(
+            db=db,
             admin_user_id=admin_user.id,
             action="platform_pause",
             target_type=None,
             target_id=None,
-            metadata_json=json.dumps({"message": message}),
-            ip_address=None,
+            metadata={"message": message},
         )
-        db.add(audit)
-        db.commit()
     except Exception as exc:
         logger.error("[settings] audit_log insert failed on pause: %s", exc)
-        # Requirement 7.6: audit failure must not roll back the authoritative write.
+        # Requirements 10.6, 10.14: audit failure must not roll back the authoritative write.
 
     # ── Best-effort Firestore sync ────────────────────────────────────────────
     if firebase_connected and fdb is not None:
@@ -186,21 +209,19 @@ def resume_platform(
     # ── SQLite is authoritative — write and commit first ─────────────────────
     _set_platform_setting(db, "isPlatformPaused", False, admin_user.id)
 
-    # ── Audit log ─────────────────────────────────────────────────────────────
+    # ── Audit log (non-blocking — failure must not prevent the primary action) ─
     try:
-        audit = AuditLog(
+        log_admin_action(
+            db=db,
             admin_user_id=admin_user.id,
             action="platform_resume",
             target_type=None,
             target_id=None,
-            metadata_json=None,
-            ip_address=None,
+            metadata=None,
         )
-        db.add(audit)
-        db.commit()
     except Exception as exc:
         logger.error("[settings] audit_log insert failed on resume: %s", exc)
-        # Same policy: audit failure must not roll back the authoritative write.
+        # Requirements 10.7, 10.14: audit failure must not roll back the authoritative write.
 
     # ── Best-effort Firestore sync ────────────────────────────────────────────
     if firebase_connected and fdb is not None:

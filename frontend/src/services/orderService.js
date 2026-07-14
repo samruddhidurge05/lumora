@@ -30,8 +30,10 @@ export const getUserOrders = async (userId) => {
 
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    // If needed in frontend, update order status via API
-    console.log('[orderService] updating order status locally/via API', orderId, status);
+    return await backendFetch(`/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
   } catch (error) {
     console.error('[orderService] Error updating order status:', error);
     throw error;

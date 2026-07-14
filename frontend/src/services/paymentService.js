@@ -39,28 +39,71 @@ import { backendFetch } from '../utils/api';
 export const subscribeToPaymentsTelemetry = (callback) => {
   let ordersList = [];
   let vendorsList = [];
+  let paymentsList = [];
 
   const handleUpdate = () => {
+    // If we have actual SQL payments, map them to order stats expected by Payments.jsx
+    const mappedOrders = paymentsList.map(p => {
+      let statusVal = 'Pending';
+      let payStatusVal = 'Unpaid';
+      const s = (p.status || '').toUpperCase();
+      if (s === 'SUCCESS') {
+        statusVal = 'Completed';
+        payStatusVal = 'Paid';
+      } else if (s === 'REFUNDED') {
+        statusVal = 'Refunded';
+        payStatusVal = 'Refunded';
+      } else if (s === 'FAILED') {
+        statusVal = 'Failed';
+        payStatusVal = 'Failed';
+      } else if (s === 'REFUND_PENDING') {
+        statusVal = 'Disputed';
+        payStatusVal = 'Paid';
+      }
+
+      return {
+        id: p.payment_ref || `pay-${p.id}`,
+        orderId: p.order_id ? `ORD-${p.order_id}` : (p.gateway_order_id || '—'),
+        price: p.amount || 0.0,
+        status: statusVal,
+        customerName: p.customer_name || `Customer #${p.customer_id}`,
+        customerEmail: p.customer_email || '',
+        vendorId: p.vendor_ids ? p.vendor_ids.split(',')[0] : 'v1',
+        paymentStatus: payStatusVal,
+        refundReason: p.refund_reason || '',
+        paymentMethod: p.gateway || 'razorpay',
+        createdAt: p.created_at || new Date().toISOString()
+      };
+    });
+
     callback({
-      orders: ordersList,
+      orders: mappedOrders.length > 0 ? mappedOrders : ordersList,
       vendors: vendorsList,
       loading: false
     });
   };
 
+  const fetchPayments = async () => {
+    try {
+      const data = await backendFetch('/payments/admin/all?limit=200');
+      if (data && data.payments) {
+        paymentsList = data.payments;
+        handleUpdate();
+      }
+    } catch (e) {
+      console.warn('[paymentService] Failed to fetch SQL payments, falling back to Firestore orders:', e);
+    }
+  };
+
+  fetchPayments();
+  const pollInterval = setInterval(fetchPayments, 5000);
+
   const unsubOrders = onSnapshot(collection(db, 'orders'), (snap) => {
     ordersList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     handleUpdate();
   }, () => {
-    // Fallback if permission/offline
-    if (ordersList.length === 0) {
-      ordersList = [
-        { id: 'o1', orderId: 'ord1092', price: 2499, status: 'Completed', customerName: 'John Doe', vendorId: 'v1', paymentStatus: 'Paid' },
-        { id: 'o2', orderId: 'ord1074', price: 1200, status: 'Refunded', customerName: 'Alice Green', vendorId: 'v2', refundReason: 'Defective Product', paymentStatus: 'Refunded' },
-        { id: 'o3', orderId: 'ord1051', price: 4999, status: 'Pending', customerName: 'Bob White', vendorId: 'v1', paymentStatus: 'Pending' }
-      ];
-      handleUpdate();
-    }
+    // Firestore unavailable — rely on SQL payments already fetched above
+    handleUpdate();
   });
 
   const unsubVendors = onSnapshot(collection(db, 'users'), (snap) => {
@@ -68,18 +111,14 @@ export const subscribeToPaymentsTelemetry = (callback) => {
     vendorsList = allUsers.filter(u => u.role === 'vendor');
     handleUpdate();
   }, () => {
-    if (vendorsList.length === 0) {
-      vendorsList = [
-        { id: 'v1', uid: 'v1', fullName: 'Alex Rivers', role: 'vendor' },
-        { id: 'v2', uid: 'v2', fullName: 'Marta Diaz', role: 'vendor' }
-      ];
-      handleUpdate();
-    }
+    // Firestore unavailable — vendor list stays empty, SQL payments drive the view
+    handleUpdate();
   });
 
   return () => {
     unsubOrders();
     unsubVendors();
+    clearInterval(pollInterval);
   };
 };
 
@@ -154,13 +193,6 @@ export const calculateVendorPayouts = (orders, vendors) => {
     };
   });
 
-  if (payouts.length === 0) {
-    return [
-      { vendorId: 'v1', vendorName: 'Alex Rivers', totalSales: 154000, commission: 15400, paidPayout: 107800, pendingPayout: 30800 },
-      { vendorId: 'v2', vendorName: 'Marta Diaz', totalSales: 123000, commission: 12300, paidPayout: 86100, pendingPayout: 24600 }
-    ];
-  }
-
   return payouts;
 };
 
@@ -172,22 +204,15 @@ export const getRefundMonitorList = (orders) => {
     const status = (o.status || '').toLowerCase();
     if (status === 'refunded' || o.refundReason || status === 'disputed') {
       refunds.push({
-        id: o.id || Math.random().toString(),
+        id: o.id || `ref-${refunds.length}`,
         orderId: o.orderId || o.id || 'N/A',
         amount: parseFloat(o.price || o.total || 0),
         customerName: o.customerName || o.customerEmail || 'Customer',
         status: o.status === 'Refunded' ? 'Approved' : (o.status === 'Disputed' ? 'Pending' : 'Approved'),
-        refundReason: o.refundReason || 'Accidental purchase'
+        refundReason: o.refundReason || 'Customer refund request'
       });
     }
   });
-
-  if (refunds.length === 0) {
-    return [
-      { id: 'ref1', orderId: 'ord1092', amount: 2499, customerName: 'John Doe', status: 'Approved', refundReason: 'Accidental Purchase' },
-      { id: 'ref2', orderId: 'ord1074', amount: 1200, customerName: 'Alice Green', status: 'Pending', refundReason: 'Defective Product' }
-    ];
-  }
 
   return refunds;
 };

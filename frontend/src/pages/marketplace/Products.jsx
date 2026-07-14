@@ -375,7 +375,18 @@ const CAT_IMAGES = {
 };
 
 function getExtraImages(product) {
-  const preview = product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
+  const preview = product.preview || product.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
+
+  // Prefer explicitly stored pCloud/external image URLs (image_urls column)
+  const pcloudImages = Array.isArray(product.image_urls || product.imageUrls)
+    ? (product.image_urls || product.imageUrls).filter(Boolean)
+    : [];
+
+  if (pcloudImages.length > 0) {
+    return [preview, ...pcloudImages.filter(img => img !== preview)];
+  }
+
+  // Fallback: category stock images
   const catImgs = CAT_IMAGES[product.category] || CAT_IMAGES['Design Assets'];
   return [preview, ...catImgs.filter(img => img !== preview)];
 }

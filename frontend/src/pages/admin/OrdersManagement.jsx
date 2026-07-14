@@ -10,7 +10,6 @@ import {
   disputeOrder as firestoreDisputeOrder,
 } from '../../services/orderService.js';
 import {
-  generateDownloadLink,
   getDownloadErrorMessage,
 } from '../../services/downloadService.js';
 
@@ -458,8 +457,9 @@ export default function OrdersManagement() {
     setDownloadLoading(prev => ({ ...prev, [orderId]: true }));
 
     try {
-      // Admin context: pass null for userId to skip ownership check
-      const result = await generateDownloadLink(orderId, null);
+      // Admin context: request a signed download URL from the backend
+      // Uses GET /api/orders/{orderId}/download-info which returns { downloadUrl, fileName }
+      const result = await backendFetch(`/orders/${orderId}/download-info`);
 
       // Trigger browser download via a temporary anchor element
       const a      = document.createElement('a');
@@ -655,7 +655,7 @@ export default function OrdersManagement() {
             title="Total Revenue"
             value={`₹${statistics.totalRevenue.toLocaleString()}`}
             icon={<Icon name="DollarSign" size={14} />}
-            trend="+8.2%"
+            trend={statistics.totalOrders > 0 ? `${statistics.totalOrders} orders` : 'No orders yet'}
             trendLabel=""
             chart={
               <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
@@ -1010,7 +1010,7 @@ export default function OrdersManagement() {
                       </div>
                     </motion.div>
                     <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">Your order universe is quiet... for now</h4>
-                    <p className="text-[10px] text-[#7B3FA0] max-w-sm mb-6 leading-relaxed">No matching transactions detected within this dimension. Clear filters or inject mock records to revive telemetry.</p>
+                    <p className="text-[10px] text-[#7B3FA0] max-w-sm mb-6 leading-relaxed">No matching transactions detected. Clear your filters or reload orders.</p>
                     <button 
                       onClick={() => {
                         sysSound.playSuccess();
@@ -1233,10 +1233,12 @@ export default function OrdersManagement() {
                     <div className="relative flex justify-between items-start">
                       <div className="absolute -left-5 top-1 w-2.5 h-2.5 rounded-full bg-[#B886D0] shadow-[0_0_6px_#B886D0] border-2 border-white" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Client checkout initialization</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Authorization request passed to gateway.</span>
+                        <span className="text-[10px] font-bold text-[#2D004D]">Order placed</span>
+                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Customer checkout completed.</span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">10:00:00</span>
+                      <span className="text-[8px] font-mono text-[#7B3FA0]">
+                        {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      </span>
                     </div>
 
                     {/* Node 2: Paid */}
@@ -1245,10 +1247,16 @@ export default function OrdersManagement() {
                         selectedOrder.paymentStatus === "Paid" ? 'bg-[#B886D0] shadow-[0_0_6px_#B886D0]' : 'bg-stone-200'
                       }`} />
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Invoice verification & receipt</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Gateway confirmed payment status.</span>
+                        <span className="text-[10px] font-bold text-[#2D004D]">Payment confirmed</span>
+                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">
+                          {selectedOrder.paymentStatus === "Paid" ? "Payment verified and settled." : "Awaiting payment confirmation."}
+                        </span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">10:00:02</span>
+                      <span className="text-[8px] font-mono text-[#7B3FA0]">
+                        {selectedOrder.paymentStatus === "Paid" && selectedOrder.createdAt
+                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : '—'}
+                      </span>
                     </div>
 
                     {/* Node 3: Processing */}
@@ -1257,13 +1265,17 @@ export default function OrdersManagement() {
                         selectedOrder.status === "Processing" || selectedOrder.status === "Completed" ? 'bg-[#D8BFE3] shadow-[0_0_6px_#D8BFE3]' : 'bg-stone-200'
                       }`} />
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Asset serialization pipeline</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">License key mapped to customer ID.</span>
+                        <span className="text-[10px] font-bold text-[#2D004D]">Order processing</span>
+                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Digital asset prepared for delivery.</span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">10:00:04</span>
+                      <span className="text-[8px] font-mono text-[#7B3FA0]">
+                        {(selectedOrder.status === "Processing" || selectedOrder.status === "Completed") && selectedOrder.createdAt
+                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : '—'}
+                      </span>
                     </div>
 
-                    {/* Node 4: Completed */}
+                    {/* Node 4: Completed / Refunded / Disputed */}
                     <div className="relative flex justify-between items-start">
                       <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${
                         selectedOrder.status === "Completed" ? 'bg-[#B886D0] shadow-[0_0_8px_#B886D0]' : 
@@ -1273,17 +1285,23 @@ export default function OrdersManagement() {
                       }`} />
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-[#2D004D]">
-                          {selectedOrder.status === "Refunded" ? "Transaction refunded by creator" :
-                           selectedOrder.status === "Disputed" ? "Dispute action initiated by customer" :
-                           "Fulfillment and lock release"}
+                          {selectedOrder.status === "Refunded" ? "Order refunded" :
+                           selectedOrder.status === "Disputed" ? "Dispute raised" :
+                           selectedOrder.status === "Completed" ? "Delivery complete" :
+                           "Pending completion"}
                         </span>
                         <span className="text-[8px] text-[#7B3FA0] mt-0.5">
-                          {selectedOrder.status === "Refunded" ? "Fund return map completed." :
-                           selectedOrder.status === "Disputed" ? "Awaiting financial institution review." :
-                           "All package assets delivered successfully."}
+                          {selectedOrder.status === "Refunded" ? "Funds returned to customer." :
+                           selectedOrder.status === "Disputed" ? "Awaiting dispute resolution." :
+                           selectedOrder.status === "Completed" ? "All assets delivered successfully." :
+                           "Order has not yet completed."}
                         </span>
                       </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">10:00:05</span>
+                      <span className="text-[8px] font-mono text-[#7B3FA0]">
+                        {selectedOrder.status === "Completed" && selectedOrder.createdAt
+                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : '—'}
+                      </span>
                     </div>
 
                   </div>

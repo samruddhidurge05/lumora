@@ -1,4 +1,5 @@
 import json
+import logging
 from fastapi import Depends, status
 from app.dependencies import get_current_user_required
 from app.models.user import User
@@ -7,6 +8,8 @@ from app.db.database import SessionLocal
 from admin.firestore.admin_firestore import get_platform_settings
 from app.shared.firebase.connection import db, firebase_connected
 from app.core.exceptions import LumoraException
+
+logger = logging.getLogger(__name__)
 
 def check_platform_paused():
     is_paused = False
@@ -64,7 +67,14 @@ def verify_vendor_active(current_user: User = Depends(get_current_user_required)
 
     if firebase_connected and db is not None:
         from admin_controls.vendor.firestore import get_vendor_status_from_firestore
-        status_val = get_vendor_status_from_firestore(str(current_user.id))
+        if not current_user.firebase_uid:
+            logger.warning(
+                "verify_vendor_active: user %s has no firebase_uid — skipping Firestore status check",
+                current_user.id,
+            )
+            status_val = None
+        else:
+            status_val = get_vendor_status_from_firestore(current_user.firebase_uid)
         if status_val in ("suspended", "disabled", "rejected"):
             raise LumoraException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -98,7 +108,14 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
 
     if firebase_connected and db is not None:
         from admin_controls.affiliate.firestore import get_affiliate_status_from_firestore
-        status_val = get_affiliate_status_from_firestore(str(current_user.id))
+        if not current_user.firebase_uid:
+            logger.warning(
+                "verify_affiliate_active: user %s has no firebase_uid — skipping Firestore status check",
+                current_user.id,
+            )
+            status_val = None
+        else:
+            status_val = get_affiliate_status_from_firestore(current_user.firebase_uid)
         if status_val in ("suspended", "disabled", "rejected"):
             raise LumoraException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -107,3 +124,25 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
             )
 
     check_platform_paused()
+
+
+def verify_upload_allowed(current_user: User = Depends(get_current_user_required)):
+    """
+    Upload authorization:
+    - Admins are always allowed (skip vendor-specific Firestore check).
+    - Vendors must pass the full verify_vendor_active check.
+    - All other roles are rejected.
+    """
+    if current_user.role == "admin":
+        return  # admin bypass — no vendor status check needed
+
+    if current_user.role == "vendor":
+        # Delegate to full vendor active check (SQLite + Firestore + platform pause)
+        verify_vendor_active(current_user)
+        return
+
+    raise LumoraException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="ROLE_REQUIRED",
+        message="Only vendors and admins may upload product files.",
+    )

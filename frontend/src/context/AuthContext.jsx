@@ -34,8 +34,10 @@ const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
-/** Helper to log auth events to Firestore */
+/** Helper to log auth events to Firestore (best-effort, non-blocking) */
 const logAuthEvent = async (uid, email, eventType, success, failureReason = null) => {
+  // Best-effort only — never block the auth flow on a logging failure.
+  // Silently swallow errors (quota exhausted, rules, offline) to avoid console noise.
   try {
     const logRef = doc(db, 'auth_logs', `${eventType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
     await setDoc(logRef, {
@@ -52,8 +54,9 @@ const logAuthEvent = async (uid, email, eventType, success, failureReason = null
       success,
       failureReason,
     });
-  } catch (e) {
-    console.error('Failed to log auth event', e);
+  } catch (_) {
+    // Intentionally silent — auth log failure must never surface to the user
+    // or pollute the production console (quota exceeded, offline, rules denied).
   }
 };
 
@@ -110,7 +113,6 @@ export const AuthProvider = ({ children }) => {
       backendFetch('/auth/me')
         .then(session => {
           if (session) {
-            console.log(`[DEBUG] [AuthContext-MountSync] [${new Date().toISOString()}] Mount sync fetched /auth/me. Backend role: "${session.role}". UID: ${user.uid}`);
             if (!session.is_active) {
               setIsAccountDisabled(true);
             }
@@ -119,7 +121,6 @@ export const AuthProvider = ({ children }) => {
               const backendRole = session.role;
               setUserRole(prev => {
                 if (backendRole !== prev) {
-                  console.log(`[DEBUG] [AuthContext-MountSync] [${new Date().toISOString()}] Role changed from "${prev}" to "${backendRole}" by backend SOT. UID: ${user.uid}`);
                   localStorage.setItem('lumora_active_role', backendRole);
                   return backendRole;
                 }
@@ -181,7 +182,6 @@ export const AuthProvider = ({ children }) => {
       try {
         const session = await backendFetch('/auth/me');
         if (!session) return;
-        console.log(`[DEBUG] [AuthContext-PollSync] [${new Date().toISOString()}] Polled /auth/me. Backend role SOT: "${session.role}". Current state ref: "${userRoleRef.current}". UID: ${user.uid}`);
         // Update suspension state
         setIsAccountDisabled(!session.is_active);
         // Update platform pause state
@@ -192,7 +192,6 @@ export const AuthProvider = ({ children }) => {
         if (session.role) {
           const normalized = session.role === 'user' ? 'customer' : session.role;
           if (normalized !== userRoleRef.current) {
-            console.log(`[DEBUG] [AuthContext-PollSync] [${new Date().toISOString()}] Role changed from "${userRoleRef.current}" to "${normalized}" by poll SOT. UID: ${user.uid}`);
             setUserRole(normalized);
             localStorage.setItem('lumora_active_role', normalized);
           }
@@ -250,12 +249,10 @@ export const AuthProvider = ({ children }) => {
         // Admin uses a separate JWT flow (Firebase ID token, not firebase-sync).
         // We detect this by an existing backend token AND local admin hint.
         const localHint = localStorage.getItem('lumora_active_role') || 'customer';
-        console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Auth state changed for UID: ${firebaseUser.uid}. Local active role hint: "${localHint}"`);
 
         if (localHint === 'admin') {
           try {
             await adminLogin(firebaseUser);
-            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Setting admin userRole. UID: ${firebaseUser.uid}`);
             setUserRole('admin');
             localStorage.setItem('lumora_active_role', 'admin');
           } catch (adminErr) {
@@ -279,7 +276,6 @@ export const AuthProvider = ({ children }) => {
             // Backend returned confirmed role + status — use them as SOT
             backendRole = syncResult.user.role === 'user' ? 'customer' : syncResult.user.role;
             backendIsActive = syncResult.user.is_active !== false; // default true if missing
-            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Backend sync successful. Requested hint: "${localHint}", Returned role SOT: "${backendRole}". Setting userRole. UID: ${firebaseUser.uid}`);
             setUserRole(backendRole);
             localStorage.setItem('lumora_active_role', backendRole);
             if (!backendIsActive) {
@@ -302,19 +298,16 @@ export const AuthProvider = ({ children }) => {
             if (snap.exists()) {
               const firestoreRole = snap.data().role || 'customer';
               backendRole = firestoreRole === 'user' ? 'customer' : firestoreRole;
-              console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback. Setting userRole: "${backendRole}". UID: ${firebaseUser.uid}`);
               setUserRole(backendRole);
               localStorage.setItem('lumora_active_role', backendRole);
             } else {
               // Unknown user — default to customer (safest)
-              console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback (user doc not found). Defaulting userRole: "customer". UID: ${firebaseUser.uid}`);
               setUserRole('customer');
               localStorage.setItem('lumora_active_role', 'customer');
             }
           } catch (fsErr) {
             console.warn('[AuthContext] Firestore fallback failed:', fsErr.message);
             // Last resort: customer (never vendor/admin from stale storage)
-            console.log(`[DEBUG] [AuthContext] [${new Date().toISOString()}] Firestore fallback exception. Defaulting userRole: "customer". UID: ${firebaseUser.uid}`);
             setUserRole('customer');
           }
         }
@@ -468,7 +461,6 @@ export const AuthProvider = ({ children }) => {
       // onAuthStateChanged handler will read 'vendor' and issue a JWT with the
       // wrong active_role. Setting the hint FIRST eliminates this race condition.
       const normalizedPreRole = (role && role !== 'user') ? role : 'customer';
-      console.log(`[DEBUG] [login] [${new Date().toISOString()}] Pre-setting lumora_active_role to "${normalizedPreRole}" before Firebase sign-in`);
       localStorage.setItem('lumora_active_role', normalizedPreRole);
 
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;

@@ -10,8 +10,12 @@ from admin.validators.admin_auth import require_admin_role
 from app.db.session import get_db
 from app.models.user import User
 from app.services.audit_log_service import log_admin_action
+from app.services.notification_service import NotificationService
 from sqlalchemy.orm import Session
 from typing import Optional
+import logging
+
+_logger = logging.getLogger("lumora.admin.reports")
 
 router = APIRouter()
 
@@ -44,6 +48,8 @@ def resolve_report_endpoint(
         result = update_report_status(report_id, "Resolved", note=note)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # ── Audit log ────────────────────────────────────────────────────────────
     try:
         log_admin_action(
             db=db,
@@ -53,8 +59,36 @@ def resolve_report_endpoint(
             target_id=str(report_id),
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking
+
+    # ── Customer notification ─────────────────────────────────────────────────
+    # Fetch the report doc from Firestore to get user_id and product title
+    try:
+        from app.shared.firebase.connection import db as fdb, firebase_connected
+        if firebase_connected and fdb is not None:
+            doc = fdb.collection("reports").document(report_id).get()
+            if doc.exists:
+                data = doc.to_dict()
+                customer_id_str = data.get("user_id")
+                product_title   = data.get("productTitle") or data.get("productName") or data.get("product_id") or "your product"
+                if customer_id_str:
+                    try:
+                        customer_id = int(customer_id_str)
+                        NotificationService.create_notification(
+                            db=db,
+                            user_id=customer_id,
+                            title="Report Resolved ✓",
+                            message=f'Your report regarding "{product_title}" has been resolved. Thank you for helping improve Lumora.',
+                            category="report",
+                        )
+                        db.commit()
+                    except (ValueError, TypeError):
+                        _logger.warning("[reports] Could not parse customer_id '%s' for notification", customer_id_str)
+    except Exception as notif_err:
+        _logger.warning("[reports] Customer notification failed (non-blocking): %s", notif_err)
+
     return result
+
 
 @router.post("/reject")
 def reject_report_endpoint(
@@ -67,6 +101,8 @@ def reject_report_endpoint(
         result = update_report_status(report_id, "Rejected", note=note)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # ── Audit log ────────────────────────────────────────────────────────────
     try:
         log_admin_action(
             db=db,
@@ -76,8 +112,35 @@ def reject_report_endpoint(
             target_id=str(report_id),
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking
+
+    # ── Customer notification ─────────────────────────────────────────────────
+    try:
+        from app.shared.firebase.connection import db as fdb, firebase_connected
+        if firebase_connected and fdb is not None:
+            doc = fdb.collection("reports").document(report_id).get()
+            if doc.exists:
+                data = doc.to_dict()
+                customer_id_str = data.get("user_id")
+                product_title   = data.get("productTitle") or data.get("productName") or data.get("product_id") or "your product"
+                if customer_id_str:
+                    try:
+                        customer_id = int(customer_id_str)
+                        NotificationService.create_notification(
+                            db=db,
+                            user_id=customer_id,
+                            title="Report Update",
+                            message=f'Your report regarding "{product_title}" has been reviewed and closed.',
+                            category="report",
+                        )
+                        db.commit()
+                    except (ValueError, TypeError):
+                        _logger.warning("[reports] Could not parse customer_id '%s' for notification", customer_id_str)
+    except Exception as notif_err:
+        _logger.warning("[reports] Customer notification failed (non-blocking): %s", notif_err)
+
     return result
+
 
 @router.post("/assign")
 def assign_report_endpoint(
@@ -100,7 +163,7 @@ def assign_report_endpoint(
             metadata={"assignee": assignee},
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking
     return result
 
 @router.post("/delete")

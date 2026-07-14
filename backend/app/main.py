@@ -212,6 +212,25 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+@app.on_event("startup")
+def restore_products():
+    from app.db.database import SessionLocal
+    from app.models.product import Product as ProductModel
+    from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
+    
+    db = SessionLocal()
+    try:
+        count = db.query(ProductModel).count()
+        if count == 0:
+            _logger.info("[startup] SQLite product table is empty. Initiating safe recovery sync from Firestore...")
+            restore_sqlite_products_from_firestore(db)
+        else:
+            _logger.info("[startup] SQLite product table contains %d products. Skipping recovery.", count)
+    except Exception as e:
+        _logger.error("[startup] Error running startup products recovery: %s", e)
+    finally:
+        db.close()
+
 # ── Rate Limiting ─────────────────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
@@ -334,8 +353,12 @@ async def add_security_headers(request: Request, call_next):
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Read allowed origins from the CORS_ORIGINS env var (comma-separated).
-# Falls back to local dev origins when the variable is not set.
-_cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174")
+# Falls back to all standard Vite dev ports (5173–5176) when the variable is not set.
+# Vite auto-increments ports when one is busy, so we cover the common range.
+_cors_origins_raw = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
+)
 origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
 
 app.add_middleware(

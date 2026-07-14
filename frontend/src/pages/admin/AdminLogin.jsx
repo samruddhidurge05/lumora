@@ -148,6 +148,13 @@ export default function AdminLogin() {
       // Exchange Firebase ID token for a Lumora admin backend JWT
       await adminLogin(firebaseUser);
 
+      // ── Pending invite token: redirect back to AcceptInvite to complete activation
+      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+      if (pendingInviteToken) {
+        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
+        return;
+      }
+
       // Navigate to the intended destination (or dashboard)
       navigate(redirectTarget, { replace: true });
     } catch (err) {

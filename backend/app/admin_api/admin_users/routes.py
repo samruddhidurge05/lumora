@@ -18,6 +18,7 @@ from app.models.admin_role import AdminRole
 from app.models.admin_invitation import AdminInvitation
 from app.models.user import User
 from app.services.audit_log_service import log_admin_action
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -125,7 +126,7 @@ def invite_admin(
         "role_level": invitation.role_level,
         "invite_token": token,
         "expires_at": expires_at.isoformat(),
-        "accept_url": f"/admin/accept-invite?token={token}",
+        "accept_url": f"{settings.FRONTEND_URL}/admin/accept-invite?token={token}",
     }
 
 
@@ -249,24 +250,49 @@ def change_admin_role(
 
 @router.get("/team/invitations")
 def list_invitations(
+    include_history: bool = Query(False, description="Include accepted and expired invitations"),
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin_role),
 ):
-    """List all pending (not yet accepted) invitations."""
+    """List invitations.  By default only active (pending, not expired) ones.
+    Pass ?include_history=true to include accepted and expired invitations."""
     now = datetime.now(timezone.utc)
-    invitations = db.query(AdminInvitation).filter(
-        AdminInvitation.accepted_at == None,
-        AdminInvitation.expires_at > now,
-    ).order_by(AdminInvitation.created_at.desc()).all()
+
+    if include_history:
+        invitations = (
+            db.query(AdminInvitation)
+            .order_by(AdminInvitation.created_at.desc())
+            .limit(200)
+            .all()
+        )
+    else:
+        invitations = (
+            db.query(AdminInvitation)
+            .filter(
+                AdminInvitation.accepted_at == None,
+                AdminInvitation.expires_at > now,
+            )
+            .order_by(AdminInvitation.created_at.desc())
+            .all()
+        )
+
+    def _status(inv):
+        if inv.accepted_at:
+            return "accepted"
+        if inv.expires_at.replace(tzinfo=timezone.utc) < now:
+            return "expired"
+        return "pending"
 
     return [
         {
-            "id": inv.id,
-            "email": inv.email,
-            "role_level": inv.role_level,
+            "id":           inv.id,
+            "email":        inv.email,
+            "role_level":   inv.role_level,
             "invite_token": inv.invite_token,
-            "expires_at": inv.expires_at.isoformat() if inv.expires_at else None,
-            "created_at": inv.created_at.isoformat() if inv.created_at else None,
+            "status":       _status(inv),
+            "accepted_at":  inv.accepted_at.isoformat() if inv.accepted_at else None,
+            "expires_at":   inv.expires_at.isoformat() if inv.expires_at else None,
+            "created_at":   inv.created_at.isoformat() if inv.created_at else None,
         }
         for inv in invitations
     ]
