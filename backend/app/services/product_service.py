@@ -8,6 +8,31 @@ from app.services.storage_service import storage_service
 from app.services.activity_log_service import ActivityLogService
 from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
 
+
+def _is_external_url(url: Optional[str]) -> bool:
+    """
+    Returns True if the URL is an external/permanent link (pCloud, Cloudflare R2,
+    AWS S3, Firebase Storage, Unsplash, etc.) that should be stored as-is and
+    NOT passed through move_to_permanent().
+
+    FUTURE MIGRATION: When switching to a different storage provider, only the
+    stored URLs need to change. This detection logic keeps the service layer clean.
+    """
+    if not url:
+        return False
+    external_markers = (
+        'pcloud.link',     # pCloud public links
+        'filedn.com',      # pCloud CDN
+        'u.pcloud.link',   # pCloud share links
+        'cloudflare',      # Cloudflare R2
+        's3.amazonaws.com',# AWS S3
+        'firebasestorage.googleapis.com',  # Firebase Storage
+        'https://images.unsplash.com',     # Unsplash
+        'https://source.unsplash.com',     # Unsplash source
+    )
+    return any(marker in url for marker in external_markers)
+
+
 class ProductService:
     @staticmethod
     def create_product(
@@ -38,7 +63,11 @@ class ProductService:
         preview_video: Optional[str] = None,
         seo_title: Optional[str] = None,
         seo_description: Optional[str] = None,
-        visibility: str = "public"
+        visibility: str = "public",
+        status: str = "published",
+        # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
+        pcloud_download_link: Optional[str] = None,
+        image_urls: Optional[list] = None,
     ) -> Product:
         # We start an atomic transaction block
         moved_files = []
@@ -57,7 +86,7 @@ class ProductService:
                 affiliate_enabled=affiliate_enabled,
                 commission_type=commission_type,
                 commission_value=commission_value,
-                status="published",
+                status=status,
                 short_desc=short_desc,
                 features=features,
                 system_requirements=system_requirements,
@@ -69,51 +98,64 @@ class ProductService:
                 preview_video=preview_video,
                 seo_title=seo_title,
                 seo_description=seo_description,
-                visibility=visibility
+                visibility=visibility,
+                pcloud_download_link=pcloud_download_link,
+                image_urls=image_urls or [],
             )
             db.add(product)
             db.flush() # Populate product.id
 
             # Move temp uploaded assets to permanent hierarchical paths:
             # vendors/{vendor_id}/products/{product_id}/...
+            # External URLs (pCloud, S3, Firebase Storage, etc.) are stored as-is.
             if temp_file_url:
-                storage_path, perm_url = storage_service.move_to_permanent(
-                    source_path=temp_file_url,
-                    vendor_id=vendor_id,
-                    product_id=product.id,
-                    filename=f"product-{product.id}.zip",
-                    is_image=False
-                )
-                if storage_path:
-                    product.storage_path = storage_path
-                    product.file_url = perm_url
-                    moved_files.append(storage_path)
+                if _is_external_url(temp_file_url):
+                    # External URL — store directly; no local file movement needed
+                    product.file_url = temp_file_url
+                else:
+                    storage_path, perm_url = storage_service.move_to_permanent(
+                        source_path=temp_file_url,
+                        vendor_id=vendor_id,
+                        product_id=product.id,
+                        filename=f"product-{product.id}.zip",
+                        is_image=False
+                    )
+                    if storage_path:
+                        product.storage_path = storage_path
+                        product.file_url = perm_url
+                        moved_files.append(storage_path)
 
             if temp_preview_url:
-                preview_path, perm_preview = storage_service.move_to_permanent(
-                    source_path=temp_preview_url,
-                    vendor_id=vendor_id,
-                    product_id=product.id,
-                    filename="preview.png",
-                    is_image=True
-                )
-                if preview_path:
-                    product.preview_path = preview_path
-                    product.preview = perm_preview
-                    moved_files.append(preview_path)
+                if _is_external_url(temp_preview_url):
+                    product.preview = temp_preview_url
+                else:
+                    preview_path, perm_preview = storage_service.move_to_permanent(
+                        source_path=temp_preview_url,
+                        vendor_id=vendor_id,
+                        product_id=product.id,
+                        filename="preview.png",
+                        is_image=True
+                    )
+                    if preview_path:
+                        product.preview_path = preview_path
+                        product.preview = perm_preview
+                        moved_files.append(preview_path)
 
             if temp_thumbnail_url:
-                thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
-                    source_path=temp_thumbnail_url,
-                    vendor_id=vendor_id,
-                    product_id=product.id,
-                    filename="thumbnail.png",
-                    is_image=True
-                )
-                if thumbnail_path:
-                    product.thumbnail_path = thumbnail_path
-                    product.thumbnail = perm_thumbnail
-                    moved_files.append(thumbnail_path)
+                if _is_external_url(temp_thumbnail_url):
+                    product.thumbnail = temp_thumbnail_url
+                else:
+                    thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
+                        source_path=temp_thumbnail_url,
+                        vendor_id=vendor_id,
+                        product_id=product.id,
+                        filename="thumbnail.png",
+                        is_image=True
+                    )
+                    if thumbnail_path:
+                        product.thumbnail_path = thumbnail_path
+                        product.thumbnail = perm_thumbnail
+                        moved_files.append(thumbnail_path)
 
             # Log activity
             # Try to get user_id from vendor_id string if possible (uid is user.firebase_uid)
@@ -168,65 +210,71 @@ class ProductService:
             # Handle digital file change
             if "file_url" in update_data and update_data["file_url"] != product.file_url:
                 new_file = update_data["file_url"]
-                # Only move to permanent if it is a new temporary file (not already permanent)
-                if new_file and "/products/" not in new_file:
-                    if product.storage_path:
-                        old_files_to_delete.append(product.storage_path)
-                    
-                    new_storage_path, perm_url = storage_service.move_to_permanent(
-                        source_path=new_file,
-                        vendor_id=vendor_id,
-                        product_id=product_id,
-                        filename=f"product-{product_id}.zip",
-                        is_image=False
-                    )
-                    product.storage_path = new_storage_path
-                    product.file_url = perm_url
-                    new_files_to_delete.append(new_storage_path)
-                else:
-                    product.file_url = new_file
+                if new_file:
+                    if _is_external_url(new_file):
+                        # External URL (pCloud, S3, etc.) — store directly
+                        product.file_url = new_file
+                    elif "/products/" not in new_file:
+                        # New temporary local upload — move to permanent storage
+                        if product.storage_path:
+                            old_files_to_delete.append(product.storage_path)
+                        new_storage_path, perm_url = storage_service.move_to_permanent(
+                            source_path=new_file,
+                            vendor_id=vendor_id,
+                            product_id=product_id,
+                            filename=f"product-{product_id}.zip",
+                            is_image=False
+                        )
+                        product.storage_path = new_storage_path
+                        product.file_url = perm_url
+                        new_files_to_delete.append(new_storage_path)
+                    else:
+                        # Already-permanent local path
+                        product.file_url = new_file
 
             # Handle preview image change
             if "preview" in update_data and update_data["preview"] != product.preview:
                 new_preview = update_data["preview"]
-                # Only move to permanent if it is a new temporary image (not already permanent)
-                if new_preview and "/products/" not in new_preview:
-                    if product.preview_path:
-                        old_files_to_delete.append(product.preview_path)
-                    
-                    new_preview_path, perm_preview = storage_service.move_to_permanent(
-                        source_path=new_preview,
-                        vendor_id=vendor_id,
-                        product_id=product_id,
-                        filename="preview.png",
-                        is_image=True
-                    )
-                    product.preview_path = new_preview_path
-                    product.preview = perm_preview
-                    new_files_to_delete.append(new_preview_path)
-                else:
-                    product.preview = new_preview
+                if new_preview:
+                    if _is_external_url(new_preview):
+                        product.preview = new_preview
+                    elif "/products/" not in new_preview:
+                        if product.preview_path:
+                            old_files_to_delete.append(product.preview_path)
+                        new_preview_path, perm_preview = storage_service.move_to_permanent(
+                            source_path=new_preview,
+                            vendor_id=vendor_id,
+                            product_id=product_id,
+                            filename="preview.png",
+                            is_image=True
+                        )
+                        product.preview_path = new_preview_path
+                        product.preview = perm_preview
+                        new_files_to_delete.append(new_preview_path)
+                    else:
+                        product.preview = new_preview
 
             # Handle thumbnail image change
             if "thumbnail" in update_data and update_data["thumbnail"] != product.thumbnail:
                 new_thumb = update_data["thumbnail"]
-                # Only move to permanent if it is a new temporary image (not already permanent)
-                if new_thumb and "/products/" not in new_thumb:
-                    if product.thumbnail_path:
-                        old_files_to_delete.append(product.thumbnail_path)
-                    
-                    new_thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
-                        source_path=new_thumb,
-                        vendor_id=vendor_id,
-                        product_id=product_id,
-                        filename="thumbnail.png",
-                        is_image=True
-                    )
-                    product.thumbnail_path = new_thumbnail_path
-                    product.thumbnail = perm_thumbnail
-                    new_files_to_delete.append(new_thumbnail_path)
-                else:
-                    product.thumbnail = new_thumb
+                if new_thumb:
+                    if _is_external_url(new_thumb):
+                        product.thumbnail = new_thumb
+                    elif "/products/" not in new_thumb:
+                        if product.thumbnail_path:
+                            old_files_to_delete.append(product.thumbnail_path)
+                        new_thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
+                            source_path=new_thumb,
+                            vendor_id=vendor_id,
+                            product_id=product_id,
+                            filename="thumbnail.png",
+                            is_image=True
+                        )
+                        product.thumbnail_path = new_thumbnail_path
+                        product.thumbnail = perm_thumbnail
+                        new_files_to_delete.append(new_thumbnail_path)
+                    else:
+                        product.thumbnail = new_thumb
 
             # Price drop check
             price_dropped = False
@@ -240,7 +288,9 @@ class ProductService:
                 "title", "description", "category", "price", "tags", "highlights", "badge", "seller",
                 "affiliate_enabled", "commission_type", "commission_value",
                 "short_desc", "features", "system_requirements", "what_you_get", "installation_guide",
-                "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status"
+                "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status",
+                # ── pCloud / External URL Delivery (temporary) ──
+                "pcloud_download_link", "image_urls",
             ):
                 if field in update_data:
                     setattr(product, field, update_data[field])

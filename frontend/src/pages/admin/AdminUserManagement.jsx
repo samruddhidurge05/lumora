@@ -39,7 +39,7 @@ export default function AdminUserManagement() {
     try {
       const [teamData, invData] = await Promise.allSettled([
         backendFetch('/admin/team'),
-        backendFetch('/admin/team/invitations'),
+        backendFetch('/admin/team/invitations?include_history=true'),
       ]);
       setTeam(teamData.status === 'fulfilled' ? (teamData.value || []) : []);
       setInvitations(invData.status === 'fulfilled' ? (invData.value || []) : []);
@@ -206,32 +206,71 @@ export default function AdminUserManagement() {
           )}
         </section>
 
-        {/* Pending invitations */}
-        {invitations.length > 0 && (
-          <section className="glass-surface rounded-3xl border border-white/50 shadow-sm overflow-hidden mb-8">
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(196,148,230,0.15)' }}>
-              <h2 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: '#2D004D' }}>Pending Invitations</h2>
+        {/* Invitation history */}
+        <section className="glass-surface rounded-3xl border border-white/50 shadow-sm overflow-hidden mb-8">
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(196,148,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: '#2D004D' }}>Invitation History</h2>
+            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {invitations.length} total
+            </span>
+          </div>
+          {invitations.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#7B3FA0', opacity: 0.6, fontSize: '0.85rem' }}>No invitations sent yet.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
+                    {['Email', 'Role', 'Status', 'Sent', 'Expires / Accepted', 'Actions'].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitations.map(inv => {
+                    const statusColors = {
+                      pending:  { bg: 'rgba(245,158,11,0.12)',  text: '#B45309' },
+                      accepted: { bg: 'rgba(5,150,105,0.12)',   text: '#065F46' },
+                      expired:  { bg: 'rgba(107,114,128,0.12)', text: '#374151' },
+                    };
+                    const sc = statusColors[inv.status] || statusColors.pending;
+                    return (
+                      <tr key={inv.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.08)', opacity: inv.status === 'expired' ? 0.65 : 1 }}>
+                        <td style={{ padding: '12px 16px', fontSize: '0.82rem', fontWeight: 600, color: '#2D004D' }}>{inv.email}</td>
+                        <td style={{ padding: '12px 16px' }}>{roleBadge(inv.role_level)}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{ padding: '2px 10px', borderRadius: '999px', fontSize: '0.62rem', fontWeight: 800, background: sc.bg, color: sc.text, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            {inv.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                          {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                          {inv.status === 'accepted' && inv.accepted_at
+                            ? new Date(inv.accepted_at).toLocaleDateString()
+                            : inv.expires_at
+                            ? new Date(inv.expires_at).toLocaleDateString()
+                            : '—'}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {inv.status === 'pending' && (
+                            <button
+                              onClick={() => handleCancelInvitation(inv.id)}
+                              style={{ padding: '4px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {invitations.map(inv => (
-                <div key={inv.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(196,148,230,0.08)' }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: '#2D004D' }}>{inv.email}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#7B3FA0' }}>
-                      Role: {inv.role_level?.replace(/_/g, ' ')} &bull; Expires: {inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleCancelInvitation(inv.id)}
-                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+          )}
+        </section>
 
       </main>
 
@@ -259,10 +298,23 @@ export default function AdminUserManagement() {
               </div>
               {inviteResult && inviteResult.type === 'success' && (
                 <div style={{ padding: '14px', background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: '10px', fontSize: '0.78rem', color: '#065F46' }}>
-                  <p style={{ margin: '0 0 8px', fontWeight: 700 }}>Invitation created for {inviteResult.email}</p>
-                  <p style={{ margin: '0 0 4px' }}>Share this invite token:</p>
-                  <code style={{ background: 'rgba(0,0,0,0.06)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.72rem', wordBreak: 'break-all' }}>{inviteResult.token}</code>
-                  <p style={{ margin: '8px 0 0' }}>Accept URL: <code style={{ fontSize: '0.7rem' }}>/admin/accept-invite?token={inviteResult.token}</code></p>
+                  <p style={{ margin: '0 0 8px', fontWeight: 700 }}>✓ Invitation created for {inviteResult.email}</p>
+                  <p style={{ margin: '0 0 6px' }}>Share this link with them:</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <code style={{ flex: 1, background: 'rgba(0,0,0,0.06)', padding: '6px 10px', borderRadius: '6px', fontSize: '0.70rem', wordBreak: 'break-all', display: 'block' }}>
+                      {inviteResult.acceptUrl}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(inviteResult.acceptUrl)}
+                      style={{ flexShrink: 0, padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(5,150,105,0.3)', background: 'rgba(5,150,105,0.08)', color: '#065F46', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p style={{ margin: '8px 0 0', fontSize: '0.70rem', opacity: 0.8 }}>
+                    Link expires in 48 hours. Single-use only.
+                  </p>
                 </div>
               )}
               {inviteResult && inviteResult.type === 'error' && (

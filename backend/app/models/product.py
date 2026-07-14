@@ -51,6 +51,12 @@ class Product(Base):
     seo_description     = Column(Text, nullable=True)
     visibility          = Column(String(50), default="public")
 
+    # ── pCloud / External URL Delivery (TEMPORARY — dev/testing only, ~2-3 weeks) ──
+    # When migrating to Cloudflare R2, AWS S3, or Firebase Storage, only update
+    # these stored URLs. No frontend or schema redesign required.
+    pcloud_download_link = Column(String(512), nullable=True)  # pCloud public download link
+    image_urls           = Column(JSON, default=list)          # pCloud / external image URL list
+
     # Storage Metadata
     storage_path   = Column(String(512), nullable=True)
     thumbnail_path = Column(String(512), nullable=True)

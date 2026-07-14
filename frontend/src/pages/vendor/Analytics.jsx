@@ -88,9 +88,9 @@ export default function Analytics() {
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
   const totalOrders = filteredOrders.length;
   
-  // Simulated views based on sales and product count to compute conversion rate
-  const storeViews = Math.round(totalOrders * 32.5 + products.length * 18.2 + 85);
-  const avgConv = storeViews > 0 ? ((totalOrders / storeViews) * 100) : 0;
+  // Real view tracking not yet implemented
+  const storeViews = null; // Real view tracking not yet implemented
+  const avgConv = null;
   
   const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
 
@@ -115,12 +115,10 @@ export default function Analytics() {
       });
       const rev = dayOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
       const oCount = dayOrders.length;
-      const dayViews = Math.round(oCount * 28.5 + 12);
-      const conv = dayViews > 0 ? ((oCount / dayViews) * 100) : 0;
 
       revenueSeries.push(rev);
       ordersSeries.push(oCount);
-      convSeries.push(conv);
+      convSeries.push(0);
     }
   } else if (period === '30d') {
     // 4 weeks buckets
@@ -135,12 +133,10 @@ export default function Analytics() {
       });
       const rev = weekOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
       const oCount = weekOrders.length;
-      const wViews = Math.round(oCount * 31.2 + 45);
-      const conv = wViews > 0 ? ((oCount / wViews) * 100) : 0;
 
       revenueSeries.push(rev);
       ordersSeries.push(oCount);
-      convSeries.push(conv);
+      convSeries.push(0);
     }
   } else if (period === '3m') {
     for (let i = 2; i >= 0; i--) {
@@ -155,12 +151,10 @@ export default function Analytics() {
       });
       const rev = monthOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
       const oCount = monthOrders.length;
-      const mViews = Math.round(oCount * 33.4 + 110);
-      const conv = mViews > 0 ? ((oCount / mViews) * 100) : 0;
 
       revenueSeries.push(rev);
       ordersSeries.push(oCount);
-      convSeries.push(conv);
+      convSeries.push(0);
     }
   } else {
     // 12m
@@ -176,12 +170,10 @@ export default function Analytics() {
       });
       const rev = monthOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
       const oCount = monthOrders.length;
-      const mViews = Math.round(oCount * 34.5 + 130);
-      const conv = mViews > 0 ? ((oCount / mViews) * 100) : 0;
 
       revenueSeries.push(rev);
       ordersSeries.push(oCount);
-      convSeries.push(conv);
+      convSeries.push(0);
     }
   }
 
@@ -321,7 +313,7 @@ export default function Analytics() {
           {[
             { label: 'Total Revenue',    value: formatRevenue(totalRevenue), delta: '+18.4%', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
             { label: 'Total Orders',     value: totalOrders,                 delta: '+12.1%', up: true, icon: <Package size={18} style={{ color: '#7B3FA0' }} /> },
-            { label: 'Avg Conversion',   value: `${avgConv.toFixed(1)}%`,    delta: '+0.8pp', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Avg Conversion',   value: avgConv !== null ? `${avgConv.toFixed(1)}%` : '—', delta: '+0.8pp', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
             { label: 'Avg Order Value',  value: `₹${avgOrderValue.toLocaleString()}`, delta: '+5.2%', up: true, icon: <CreditCard size={18} style={{ color: '#7B3FA0' }} /> },
           ].map((s, i) => (
             <div key={i} className="v-card v-stat-card">
@@ -440,7 +432,7 @@ export default function Analytics() {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--v-serif)', fontSize: 20, color: 'var(--v-dark)', fontWeight: 600 }}>{avgConv.toFixed(1)}%</div>
+                <div style={{ fontFamily: 'var(--v-serif)', fontSize: 20, color: 'var(--v-dark)', fontWeight: 600 }}>{avgConv !== null ? `${avgConv.toFixed(1)}%` : '—'}</div>
                 <div style={{ fontSize: 11, color: 'var(--v-text3)' }}>Average</div>
               </div>
               <div style={{ textAlign: 'center' }}>
@@ -507,7 +499,7 @@ export default function Analytics() {
               { label: 'New Customers',    value: newCustomersCount,  delta: '+22%', sub: 'this month', icon: <Users size={16} style={{ color: '#7B3FA0' }} />  },
               { label: 'Repeat Buyers',    value: `${repeatRate}%`,   delta: '+4pp', sub: 'retention rate', icon: <Target size={16} style={{ color: '#16a34a' }} />   },
               { label: 'Avg Review Score', value: avgReviewScore,     delta: '+0.2', sub: 'out of 5 stars', icon: <Star size={16} style={{ color: '#eab308' }} />    },
-              { label: 'Estimated Views',  value: storeViews,         delta: '+31%', sub: 'store listings', icon: <Eye size={16} style={{ color: '#9ca3af' }} />  },
+              { label: 'Estimated Views',  value: storeViews !== null ? storeViews : '—', delta: '+31%', sub: 'Not yet tracked', icon: <Eye size={16} style={{ color: '#9ca3af' }} />  },
             ].map(m => (
               <div key={m.label} style={{ textAlign: 'center', padding: '16px', borderRadius: 12, background: 'rgba(216,191,227,0.12)', border: '1px solid rgba(184,134,208,0.15)' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>

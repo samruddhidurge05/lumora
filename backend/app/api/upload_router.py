@@ -12,7 +12,7 @@ POST /api/uploads/image     Upload + compress preview image (JWT required)
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status, Request
 from app.dependencies import get_current_user_required
 from app.models.user import User
-from admin.validators.status_checks import verify_vendor_active
+from admin.validators.status_checks import verify_upload_allowed
 from app.services.storage_service import storage_service
 from app.middleware.rate_limit import limiter
 
@@ -24,7 +24,7 @@ async def upload_product_file(
     request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_required),
-    _active = Depends(verify_vendor_active),
+    _allowed = Depends(verify_upload_allowed),
 ):
     """
     Upload a vendor product file (ZIP, PDF, Figma, etc.).
@@ -65,7 +65,7 @@ async def upload_product_image(
     request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_required),
-    _active = Depends(verify_vendor_active),
+    _allowed = Depends(verify_upload_allowed),
 ):
     """
     Upload a product preview image (PNG, JPG, WEBP, etc.).

@@ -1,5 +1,6 @@
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { backendFetch } from '../utils/api';
 
 export const DEFAULT_PLATFORM_SETTINGS = {
   vendorSellingEnabled: true,
@@ -57,9 +58,9 @@ export const initPlatformSettings = async () => {
 
 export const updatePlatformSetting = async (key, val) => {
   try {
-    await setDoc(docRef, { [key]: val }, { merge: true });
+    await backendFetch('/admin/settings/', { method: 'PUT', body: JSON.stringify({ [key]: val }) });
   } catch (error) {
-    console.error('[settingsService] Error updating setting:', error);
+    console.error('[settingsService] Error updating setting via backend:', error);
     throw error;
   }
 };

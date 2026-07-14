@@ -195,7 +195,18 @@ export default function Dashboard() {
     getDashboardData()
       .then(data => { if (mounted) { applyDashData(data); setIsLoading(false); } })
       .catch(err  => { console.error('[Dashboard] Load error:', err); if (mounted) setIsLoading(false); });
-    return () => { mounted = false; };
+
+    // Auto-update stats and charts every 10 seconds to keep analytics real-time without manual reload
+    const pollInterval = setInterval(() => {
+      getDashboardData()
+        .then(data => { if (mounted) applyDashData(data); })
+        .catch(err => console.error('[Dashboard] Auto-refresh failed:', err));
+    }, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(pollInterval);
+    };
   }, [applyDashData]);
 
   // ─── REAL-TIME LISTENERS ──────────────────────────────────────────────────
@@ -734,7 +745,7 @@ export default function Dashboard() {
               ) : (
                 <AnimatePresence initial={false}>
                   {liveFeed.map((evt) => {
-                    const isReport = evt.text.toLowerCase().includes('report') || evt.category === 'refund';
+                    const isReport = (evt.text || '').toLowerCase().includes('report') || evt.category === 'refund';
                     return (
                       <motion.div 
                         key={evt.id}

@@ -139,6 +139,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Reports — admin read/write, authenticated users can create ──────────────
+    match /reports/{reportId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+      allow create: if isSignedIn();   // customers can submit reports
+      allow list:   if isAdmin();
+    }
+
     // ── Admin-only collections ─────────────────────────────────────────────────
     match /adminReferralLinks/{docId} {
       allow read, write: if isAdmin();
@@ -150,6 +158,13 @@ service cloud.firestore {
 
     match /adminPromotions/{docId} {
       allow read, write: if isAdmin();
+    }
+
+    // ── Affiliate orders ledger — admin read/write ───────────────────────────
+    match /adminAffiliateOrders/{orderId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+      allow list:  if isAdmin();
     }
 
     // ── Cart — own cart only ──────────────────────────────────────────────────

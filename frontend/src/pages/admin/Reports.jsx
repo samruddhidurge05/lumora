@@ -38,7 +38,8 @@ const Icon = ({ name, size = 16, className = "" }) => {
     Search: <g><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></g>,
     Users: <g><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g>,
     Eye: <g><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></g>,
-    Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></g>
+    Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></g>,
+    Package: <g><line x1="16.5" y1="9.4" x2="7.5" y2="4.21" /><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08" /><polygon points="12 22.08 21 17.08 21 6.92 12 12 12 22.08" /><polygon points="12 12 21 6.92 12 1.84 3 6.92 12 12" /></g>
   };
 
   return (
@@ -175,6 +176,9 @@ export default function Reports() {
 
   // Real data from Firestore via reportsService
   const [reports, setReports] = useState([]);
+  const reportsSyncKey = useMemo(() => {
+    return reports.map(r => `${r.id}-${r.status}`).join(',');
+  }, [reports]);
   const [analytics, setAnalytics] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -187,6 +191,9 @@ export default function Reports() {
   const [reportTotal, setReportTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const REPORT_PAGE_SIZE = 50;
+
+  // Report action state — tracks which report ID is being actioned
+  const [actionLoading, setActionLoading] = useState(null); // reportId | null
 
   // Real-time sequential insight entries tracking
   const [insightsStage, setInsightsStage] = useState(0);
@@ -253,7 +260,7 @@ export default function Reports() {
 
   useEffect(() => {
     loadReportsList(reportPage, statusFilter);
-  }, [reportPage, statusFilter]); // re-run when page or filter changes
+  }, [reportPage, statusFilter, reportsSyncKey]); // re-run when page, filter, or Firestore updates change
 
   // Real-time subscription: update reports list only.
   // Analytics are recomputed from a debounced reload, not on every snapshot,
@@ -264,13 +271,13 @@ export default function Reports() {
     const unsub = subscribeToReports((updatedReports) => {
       setReports(updatedReports);
 
-      // Debounce analytics reload — only recompute after 2s of no new changes
+      // Debounce analytics reload — only recompute after 200ms of no new changes
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         getReportAnalytics()
           .then(result => setAnalytics(result))
           .catch(err => console.error('[Reports] Realtime analytics error:', err));
-      }, 2000);
+      }, 200); // 200ms instead of 2000ms for real-time counts
     });
 
     return () => {
@@ -364,6 +371,45 @@ export default function Reports() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // ── Report action handlers ────────────────────────────────────────────────
+  const handleResolveReport = async (reportId) => {
+    setActionLoading(reportId);
+    try {
+      await resolveReport(reportId);
+      sysSound.playSuccess();
+      triggerNotification('Report marked as resolved. Customer notified.', 'success');
+      // Optimistically update the local list immediately
+      setReportListItems(prev =>
+        prev.map(r => r.id === reportId ? { ...r, status: 'Resolved', resolvedAt: new Date().toISOString() } : r)
+      );
+      // Reload analytics to update counts
+      getReportAnalytics().then(result => setAnalytics(result)).catch(() => {});
+    } catch (err) {
+      console.error('[Reports] Resolve failed:', err);
+      triggerNotification(`Resolve failed: ${err.message || 'Unknown error'}`, 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRejectReport = async (reportId) => {
+    setActionLoading(reportId);
+    try {
+      await rejectReport(reportId);
+      sysSound.playTap();
+      triggerNotification('Report rejected.', 'success');
+      setReportListItems(prev =>
+        prev.map(r => r.id === reportId ? { ...r, status: 'Rejected', resolvedAt: new Date().toISOString() } : r)
+      );
+      getReportAnalytics().then(result => setAnalytics(result)).catch(() => {});
+    } catch (err) {
+      console.error('[Reports] Reject failed:', err);
+      triggerNotification(`Reject failed: ${err.message || 'Unknown error'}`, 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Simulated PDF compiling
   const handleExportPDF = () => {
     sysSound.playSwoosh();
@@ -425,8 +471,8 @@ export default function Reports() {
 
   const handleShareReport = () => {
     sysSound.playTap();
-    const mockUrl = `${window.location.origin}${window.location.pathname}#/reports?secure_token=LUM_PUB_88421xT`;
-    navigator.clipboard.writeText(mockUrl);
+    const shareUrl = window.location.origin + '/admin/reports';
+    navigator.clipboard.writeText(shareUrl);
     setShowShareModal(true);
   };
 
@@ -717,39 +763,35 @@ export default function Reports() {
                         transition={{ duration: 1.4, ease: "easeOut" }}
                       />
 
-                      {/* Coordinate Nodes */}
-                      {[
-                        { x: 40, y: 160, label: "Mon", val: 4200 },
-                        { x: 175, y: 121, label: "Tue", val: 6100 },
-                        { x: 310, y: 125, label: "Wed", val: 5800 },
-                        { x: 445, y: 55, label: "Thu", val: 7300 },
-                        { x: 580, y: 20, label: "Fri", val: 9100 }
-                      ].map((node, i) => (
-                        <g key={i}>
-                          <circle 
-                            cx={node.x} 
-                            cy={node.y} 
-                            r="5" 
-                            fill="#D8BFE3" 
-                            stroke="white" 
-                            strokeWidth="2" 
-                            className="cursor-pointer hover:r-7 transition-all"
-                            onMouseEnter={(e) => {
-                              const rect = e.target.getBoundingClientRect();
-                              setActiveTooltip({
-                                x: rect.left + window.scrollX,
-                                y: rect.top + window.scrollY - 38,
-                                title: `${node.label} Yield`,
-                                value: `₹${node.val.toLocaleString()}`
-                              });
-                            }}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                          />
-                          <text x={node.x} y="200" fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            {node.label}
-                          </text>
-                        </g>
-                      ))}
+                      {/* Coordinate Nodes — use real reportData.revenueTrend */}
+                      {reportData.revenueTrend.map((pt, i) => {
+                        const n = reportData.revenueTrend.length;
+                        const maxVal = Math.max(...reportData.revenueTrend.map(d => d.value), 1);
+                        const x = 40 + i * (540 / Math.max(n - 1, 1));
+                        const y = 20 + (1 - pt.value / maxVal) * 160;
+                        return (
+                          <g key={i}>
+                            <circle
+                              cx={x} cy={y} r="5"
+                              fill="#D8BFE3" stroke="white" strokeWidth="2"
+                              className="cursor-pointer hover:r-7 transition-all"
+                              onMouseEnter={(e) => {
+                                const rect = e.target.getBoundingClientRect();
+                                setActiveTooltip({
+                                  x: rect.left + window.scrollX,
+                                  y: rect.top + window.scrollY - 38,
+                                  title: `${pt.date}`,
+                                  value: `${pt.value} reports`
+                                });
+                              }}
+                              onMouseLeave={() => setActiveTooltip(null)}
+                            />
+                            <text x={x} y="200" fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
+                              {pt.date}
+                            </text>
+                          </g>
+                        );
+                      })}
 
                     </svg>
 
@@ -784,14 +826,16 @@ export default function Reports() {
                       {/* Growth Meter */}
                       <div className="bg-white/50 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-1 shadow-sm">
                         <div className="flex justify-between items-center text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">
-                          <span>Ecosystem Health</span>
-                          <span className="text-emerald-500 font-black">+18% growth</span>
+                          <span>Resolution Rate</span>
+                          <span className={`font-black ${reportData.summary.conversionRate > 0 ? 'text-emerald-500' : 'text-[#C4A4D8]'}`}>
+                            {reportData.summary.conversionRate > 0 ? `${reportData.summary.conversionRate}% resolved` : 'No data yet'}
+                          </span>
                         </div>
                         <div className="w-full bg-[#F5E9DD]/60 h-2 rounded-full overflow-hidden mt-1.5">
-                          <motion.div 
+                          <motion.div
                             className="bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] h-full"
                             initial={{ width: 0 }}
-                            animate={{ width: "82%" }}
+                            animate={{ width: `${Math.min(100, reportData.summary.conversionRate)}%` }}
                             transition={{ duration: 1.2 }}
                           />
                         </div>
@@ -814,19 +858,29 @@ export default function Reports() {
                               strokeLinecap="round"
                             />
                           </svg>
-                          <span className="absolute text-[10px] font-mono font-black">94%</span>
+                          <span className="absolute text-[10px] font-mono font-black">
+                            {reportData.summary.conversionRate > 0 ? `${reportData.summary.conversionRate}%` : '—'}
+                          </span>
                         </div>
                         <div>
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">Yield Efficiency</h5>
-                          <p className="text-[8px] text-[#7B3FA0] leading-relaxed mt-0.5">Overall transactional node validation rate stands near peak parameters.</p>
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">Resolution Rate</h5>
+                          <p className="text-[8px] text-[#7B3FA0] leading-relaxed mt-0.5">
+                            {reportData.summary.totalRevenue > 0
+                              ? `${reportData.summary.netRevenue} of ${reportData.summary.totalRevenue} reports resolved.`
+                              : 'No reports submitted yet.'}
+                          </p>
                         </div>
                       </div>
 
                       {/* Risk Alert Indicator */}
                       <div className="flex items-center justify-between border-t border-[#F5E9DD]/40 pt-4">
-                        <span className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">Anomaly Risk Scan</span>
-                        <span className="text-[8px] font-black text-[#5A1E7E] bg-[#B886D0]/30 border border-[#B886D0]/40 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                          LOW RISK
+                        <span className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">Critical Reports</span>
+                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                          (analytics?.criticalCount ?? 0) > 0
+                            ? 'text-red-600 bg-red-100 border border-red-200'
+                            : 'text-[#5A1E7E] bg-[#B886D0]/30 border border-[#B886D0]/40'
+                        }`}>
+                          {(analytics?.criticalCount ?? 0) > 0 ? `${analytics.criticalCount} critical` : 'None'}
                         </span>
                       </div>
 
@@ -900,42 +954,36 @@ export default function Reports() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1">
                     
-                    {/* SVG Segmented Circular Rings */}
+                    {/* SVG Segmented Circular Rings — driven by real reportData.regionData */}
                     <div className="relative w-44 h-44 mx-auto flex items-center justify-center">
                       <svg className="w-full h-full transform -rotate-90">
-                        {/* Segment 1: North America (42%) */}
-                        <circle cx="88" cy="88" r="65" stroke="rgba(90, 30, 126, 0.02)" strokeWidth="8" fill="transparent" />
-                        <motion.circle 
-                          cx="88" cy="88" r="65" stroke="#B886D0" strokeWidth="8" fill="transparent"
-                          strokeDasharray={408.4}
-                          strokeDashoffset={408.4 * (1 - 0.42)}
-                          strokeLinecap="round"
-                          initial={{ strokeDashoffset: 408.4 }}
-                          animate={{ strokeDashoffset: 408.4 * (1 - 0.42) }}
-                          transition={{ duration: 1.2 }}
-                        />
-
-                        {/* Segment 2: Europe (28%) */}
-                        <motion.circle 
-                          cx="88" cy="88" r="50" stroke="#D8BFE3" strokeWidth="8" fill="transparent"
-                          strokeDasharray={314.1}
-                          strokeDashoffset={314.1}
-                          animate={{ strokeDashoffset: 314.1 * (1 - 0.28) }}
-                          transition={{ duration: 1.2, delay: 0.2 }}
-                        />
-
-                        {/* Segment 3: Asia (22%) */}
-                        <motion.circle 
-                          cx="88" cy="88" r="35" stroke="#D8BFE3" strokeWidth="8" fill="transparent"
-                          strokeDasharray={219.9}
-                          strokeDashoffset={219.9}
-                          animate={{ strokeDashoffset: 219.9 * (1 - 0.22) }}
-                          transition={{ duration: 1.2, delay: 0.4 }}
-                        />
+                        {reportData.regionData.slice(0, 3).map((seg, i) => {
+                          const radii = [65, 50, 35];
+                          const circumferences = [408.4, 314.1, 219.9];
+                          const r = radii[i];
+                          const circ = circumferences[i];
+                          const pct = Math.min(100, seg.share) / 100;
+                          return (
+                            <motion.circle
+                              key={i}
+                              cx="88" cy="88" r={r}
+                              stroke={seg.color}
+                              strokeWidth="8"
+                              fill="transparent"
+                              strokeDasharray={circ}
+                              strokeDashoffset={circ}
+                              animate={{ strokeDashoffset: circ * (1 - pct) }}
+                              transition={{ duration: 1.2, delay: i * 0.2 }}
+                              strokeLinecap="round"
+                            />
+                          );
+                        })}
                       </svg>
                       <div className="absolute flex flex-col items-center">
-                        <span className="text-xl font-serif font-black text-[#2D004D]">₹1.2L</span>
-                        <span className="text-[7px] font-black uppercase tracking-widest text-[#7B3FA0] mt-0.5">Gross Share</span>
+                        <span className="text-xl font-serif font-black text-[#2D004D]">
+                          {reportData.regionData.length > 0 ? `${reportData.regionData[0].share}%` : '—'}
+                        </span>
+                        <span className="text-[7px] font-black uppercase tracking-widest text-[#7B3FA0] mt-0.5">Top Category</span>
                       </div>
                     </div>
 
@@ -1188,44 +1236,122 @@ export default function Reports() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#F5E9DD]">
-                          {['Reporter', 'Title', 'Category', 'Severity', 'Status', 'Created'].map(col => (
-                            <th key={col} className="pb-3 pr-4 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0]">{col}</th>
+                          {['Product', 'Reporter', 'Title', 'Category', 'Severity', 'Status', 'Date', 'Actions'].map(col => (
+                            <th key={col} className="pb-3 pr-3 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0] whitespace-nowrap">{col}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {reportListItems.map((r) => (
-                          <tr key={r.id} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
-                            <td className="py-3 pr-4 text-[10px] font-semibold text-[#2D004D]">{r.reporter || '—'}</td>
-                            <td className="py-3 pr-4 text-[10px] text-[#2D004D] max-w-[180px] truncate" title={r.title}>{r.title || '—'}</td>
-                            <td className="py-3 pr-4 text-[9px] text-[#7B3FA0]">{r.category || '—'}</td>
-                            <td className="py-3 pr-4">
-                              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                                r.severity === 'high'
-                                  ? 'bg-red-100 text-red-600'
-                                  : r.severity === 'medium'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-[#F5E9DD] text-[#7B3FA0]'
-                              }`}>
-                                {r.severity || 'low'}
-                              </span>
-                            </td>
-                            <td className="py-3 pr-4">
-                              <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                                r.status === 'Resolved'
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : r.status === 'Rejected'
-                                  ? 'bg-red-100 text-red-600'
-                                  : 'bg-[#D8BFE3]/40 text-[#5A1E7E]'
-                              }`}>
-                                {r.status || 'Pending'}
-                              </span>
-                            </td>
-                            <td className="py-3 text-[9px] text-[#7B3FA0]">
-                              {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}
-                            </td>
-                          </tr>
-                        ))}
+                        {reportListItems.map((r, idx) => {
+                          const isPending = !r.status || r.status.toLowerCase() === 'pending';
+                          const isActioning = actionLoading === r.id;
+                          return (
+                            <tr key={r.id || `report-${idx}`} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
+                              {/* Product */}
+                              <td className="py-3 pr-3">
+                                {r.productTitle || r.productId ? (
+                                  <div className="flex items-center gap-2">
+                                    {r.productThumbnail ? (
+                                      <img
+                                        src={r.productThumbnail}
+                                        alt={r.productTitle || 'Product'}
+                                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-[#F5E9DD]"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-lg bg-[#F5E9DD]/60 flex items-center justify-center flex-shrink-0">
+                                        <Icon name="Package" size={12} className="text-[#7B3FA0]" />
+                                      </div>
+                                    )}
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-[10px] font-bold text-[#2D004D] max-w-[110px] truncate" title={r.productTitle}>
+                                        {r.productTitle || '—'}
+                                      </span>
+                                      {r.productId && (
+                                        <span className="text-[8px] text-[#8E6AA8] font-mono">#{r.productId.toString().slice(0, 8)}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-[9px] text-[#C4A4D8]">—</span>
+                                )}
+                              </td>
+                              {/* Reporter */}
+                              <td className="py-3 pr-3 text-[10px] font-semibold text-[#2D004D] whitespace-nowrap">{r.reporter || '—'}</td>
+                              {/* Title */}
+                              <td className="py-3 pr-3 text-[10px] text-[#2D004D] max-w-[160px] truncate" title={r.title}>{r.title || '—'}</td>
+                              {/* Category */}
+                              <td className="py-3 pr-3 text-[9px] text-[#7B3FA0] whitespace-nowrap">{r.category || '—'}</td>
+                              {/* Severity */}
+                              <td className="py-3 pr-3">
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
+                                  r.severity === 'high'
+                                    ? 'bg-red-100 text-red-600'
+                                    : r.severity === 'medium'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-[#F5E9DD] text-[#7B3FA0]'
+                                }`}>
+                                  {r.severity || 'low'}
+                                </span>
+                              </td>
+                              {/* Status */}
+                              <td className="py-3 pr-3">
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
+                                  r.status?.toLowerCase() === 'resolved'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : r.status?.toLowerCase() === 'rejected'
+                                    ? 'bg-red-100 text-red-600'
+                                    : 'bg-[#D8BFE3]/40 text-[#5A1E7E]'
+                                }`}>
+                                  {r.status || 'Pending'}
+                                </span>
+                              </td>
+                              {/* Date */}
+                              <td className="py-3 pr-3 text-[9px] text-[#7B3FA0] whitespace-nowrap">
+                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : '—'}
+                              </td>
+                              {/* Actions */}
+                              <td className="py-3">
+                                {isPending ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      disabled={isActioning}
+                                      onClick={() => handleResolveReport(r.id)}
+                                      style={{
+                                        padding: '4px 10px', borderRadius: '8px', border: 'none',
+                                        background: isActioning ? 'rgba(5,150,105,0.05)' : 'rgba(5,150,105,0.10)',
+                                        color: '#059669', fontSize: '0.68rem', fontWeight: 800,
+                                        cursor: isActioning ? 'not-allowed' : 'pointer',
+                                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                                        opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      {isActioning ? '…' : '✓ Mark as Resolved'}
+                                    </button>
+                                    <button
+                                      disabled={isActioning}
+                                      onClick={() => handleRejectReport(r.id)}
+                                      style={{
+                                        padding: '4px 10px', borderRadius: '8px', border: 'none',
+                                        background: isActioning ? 'rgba(220,38,38,0.04)' : 'rgba(220,38,38,0.08)',
+                                        color: '#DC2626', fontSize: '0.68rem', fontWeight: 800,
+                                        cursor: isActioning ? 'not-allowed' : 'pointer',
+                                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                                        opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      ✕ Reject
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[9px] text-[#C4A4D8] italic">
+                                    {r.resolvedAt ? new Date(r.resolvedAt).toLocaleDateString('en-IN') : 'Actioned'}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1326,14 +1452,14 @@ export default function Reports() {
                 <div className="w-12 h-12 rounded-full bg-[#B886D0] text-emerald-600 flex items-center justify-center mb-4">
                   <Icon name="CheckCircle" size={20} />
                 </div>
-                <h4 className="text-sm font-serif font-black text-[#2D004D] mb-2">Secure Share Link Copied!</h4>
+                <h4 className="text-sm font-serif font-black text-[#2D004D] mb-2">Reports Link Copied!</h4>
                 <p className="text-[10px] text-[#7B3FA0] mb-5 leading-relaxed">
-                  The cryptographic dashboard link has been saved to your clipboard. External viewers can inspect the ledger using verified API coordinates.
+                  The Admin Reports page link has been copied to your clipboard.
                 </p>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={`${window.location.origin}${window.location.pathname}#/reports?secure_token=LUM_PUB_88421xT`}
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/admin/reports`}
                   className="w-full bg-stone-50 border border-stone-200/50 rounded-xl px-3.5 py-2 text-[8px] text-[#7B3FA0] font-mono text-center mb-5 focus:outline-none"
                 />
                 <button 
@@ -1391,7 +1517,7 @@ export default function Reports() {
                     <label className="text-[8px] font-black uppercase text-[#7B3FA0] block mb-1">Recipient Channel</label>
                     <input 
                       type="text" 
-                      placeholder="finance@lumora.io" 
+                      placeholder="admin@yourdomain.com" 
                       className="w-full bg-white border border-[#F5E9DD] rounded-xl px-3 py-2 text-[10px] text-[#2D004D] placeholder-stone-400 focus:outline-none"
                     />
                   </div>

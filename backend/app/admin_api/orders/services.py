@@ -1,4 +1,5 @@
 from app.shared.firebase.connection import db, firebase_connected
+from firebase_admin import firestore
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.db.session import SessionLocal
@@ -9,58 +10,54 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
-    if not firebase_connected or db is None:
-        db_s = SessionLocal()
-        try:
-            q = db_s.query(OrderModel).order_by(OrderModel.created_at.desc())
-            if status:
-                q = q.filter(OrderModel.status.ilike(status))
-            total = q.count()
-            orders = q.offset((page - 1) * page_size).limit(page_size).all()
-            result = []
-            for o in orders:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
-                cust_name = customer.name if customer else "Customer"
-                cust_email = customer.email if customer else ""
-                items_data = []
-                for item in o.items:
-                    items_data.append({
-                        "productId": str(item.product_id),
-                        "productName": item.product.title if item.product else "Product",
-                        "price": float(item.price_paid or 0.0),
-                    })
-                result.append({
-                    "id": str(o.id),
-                    "orderId": f"ORD-{o.id}",
-                    "customerId": str(o.user_id),
-                    "customerName": cust_name,
-                    "customerEmail": cust_email,
-                    "items": items_data,
-                    "totalUSD": float(o.total_amount or 0.0),
-                    "price": float(o.total_amount or 0.0),
-                    "status": o.status or "completed",
-                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
-                    "paymentMethod": o.payment_method or "upi",
-                    "createdAt": o.created_at.isoformat() + "Z" if o.created_at else ""
+    # Always use SQLite as the primary source for the admin orders list.
+    # Firestore is the real-time mirror for customers — SQLite is the
+    # source of truth for admin operations and is always available locally.
+    db_s = SessionLocal()
+    try:
+        q = db_s.query(OrderModel).order_by(OrderModel.created_at.desc())
+        if status:
+            q = q.filter(OrderModel.status.ilike(status))
+        total = q.count()
+        orders = q.offset((page - 1) * page_size).limit(page_size).all()
+        result = []
+        for o in orders:
+            customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
+            cust_name = customer.name if customer else "Customer"
+            cust_email = customer.email if customer else ""
+            items_data = []
+            for item in o.items:
+                items_data.append({
+                    "productId": str(item.product_id),
+                    "productName": item.product.title if item.product else "Product",
+                    "price": float(item.price_paid or 0.0),
                 })
-            return {"total": total, "page": page, "page_size": page_size, "items": result}
-        finally:
-            db_s.close()
+            result.append({
+                "id": str(o.id),
+                "orderId": f"ORD-{o.id}",
+                "customerId": str(o.user_id),
+                "customerName": cust_name,
+                "customerEmail": cust_email,
+                "items": items_data,
+                "totalUSD": float(o.total_amount or 0.0),
+                "price": float(o.total_amount or 0.0),
+                "status": o.status or "completed",
+                "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                "paymentMethod": o.payment_method or "upi",
+                "createdAt": o.created_at.isoformat() + "Z" if o.created_at else ""
+            })
+        return {"total": total, "page": page, "page_size": page_size, "items": result}
+    finally:
+        db_s.close()
 
-    # Firestore path — fetch all then filter + paginate in Python
-    docs = list(db.collection("orders").stream())
-    all_orders = [{"id": doc.id, **doc.to_dict()} for doc in docs]
-    if status:
-        all_orders = [o for o in all_orders if (o.get("status") or "").lower() == status.lower()]
-    total = len(all_orders)
-    items = all_orders[(page - 1) * page_size: page * page_size]
-    return {"total": total, "page": page, "page_size": page_size, "items": items}
+_firestore_broken = False
 
 def get_order_by_id(order_id: str):
+    global _firestore_broken
     clean_id = order_id.replace("ORD-", "")
     if not clean_id.isdigit():
         raise HTTPException(status_code=400, detail="Invalid order ID format.")
-    if not firebase_connected or db is None:
+    if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             order = db_s.query(OrderModel).filter(OrderModel.id == int(clean_id)).first()
@@ -94,10 +91,15 @@ def get_order_by_id(order_id: str):
         finally:
             db_s.close()
 
-    doc_snap = db.collection("orders").document(clean_id).get()
-    if not doc_snap.exists:
-        raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
-    return {"id": doc_snap.id, **doc_snap.to_dict()}
+    try:
+        doc_snap = db.collection("orders").document(clean_id).get()
+        if not doc_snap.exists:
+            raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
+        return {"id": doc_snap.id, **doc_snap.to_dict()}
+    except Exception as e:
+        print(f"[orders] Firestore order get failed: {e}. Falling back to SQLite.")
+        _firestore_broken = True
+        return get_order_by_id(order_id)
 
 def modify_order_status(order_id: str, status: str):
     clean_id = order_id.replace("ORD-", "")

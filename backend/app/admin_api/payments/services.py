@@ -33,8 +33,11 @@ def _map_vendor(doc):
         "totalEarnings": float(d.get("totalEarnings", 0)),
     }
 
+_firestore_broken = False
+
 def get_payments_telemetry():
-    if not firebase_connected or db is None:
+    global _firestore_broken
+    if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             sql_orders = db_s.query(OrderModel).all()
@@ -82,9 +85,14 @@ def get_payments_telemetry():
         finally:
             db_s.close()
 
-    orders  = [_map_order(d)  for d in db.collection("orders").stream()]
-    vendors = [_map_vendor(d) for d in db.collection("vendors").stream()]
-    return {"orders": orders, "vendors": vendors}
+    try:
+        orders  = [_map_order(d)  for d in db.collection("orders").stream()]
+        vendors = [_map_vendor(d) for d in db.collection("vendors").stream()]
+        return {"orders": orders, "vendors": vendors}
+    except Exception as e:
+        print(f"[payments] Firestore error: {e}. Falling back to SQLite.")
+        _firestore_broken = True
+        return get_payments_telemetry()
 
 def get_payments_overview():
     telemetry = get_payments_telemetry()

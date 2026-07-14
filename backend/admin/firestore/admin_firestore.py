@@ -48,7 +48,9 @@ def sync_product_to_firestore(product):
             "license": product.license or "Personal Use",
             "affiliate_enabled": bool(product.affiliate_enabled),
             "commission_type": product.commission_type or "percentage",
-            "commission_value": float(product.commission_value or 0.0)
+            "commission_value": float(product.commission_value or 0.0),
+            # pCloud / external image URLs — for gallery display
+            "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")
@@ -69,154 +71,148 @@ def get_platform_settings():
         snap = doc_ref.get()
         if snap.exists:
             return snap.to_dict()
-    except Exception as e:
-        print(f"[firestore-sync] Error getting platform settings: {e}")
+    except Exception:
+        # Silently swallow quota/offline errors — platform settings are non-critical.
+        # Caller falls back to local state or defaults.
+        pass
     return {}
 
-def sync_order_to_firestore(order, db_session):
+def sync_order_to_firestore(order):
+    """
+    Sync a SQLite order to the Firestore ``orders`` collection.
+
+    The document shape matches what every admin page (Dashboard, Analytics,
+    Orders Management, Payments) expects.  Uses ``set(..., merge=True)`` keyed
+    on ``orderId`` so calling this function multiple times with the same order
+    is idempotent — subsequent calls update the existing document rather than
+    creating duplicates (Property 4: Order sync is idempotent).
+
+    This sync is **best-effort**: callers must wrap the call in try/except and
+    must NOT roll back the SQLite order if the sync fails.  SQLite is the
+    canonical source of truth.
+
+    Requirements: 2.1, 2.2, 2.5, 15.1, 15.2
+    """
     if not firebase_connected or db is None:
         return
     try:
-        from app.models.user import User as UserModel
-        from app.models.product import Product as ProductModel
-        from app.models.affiliate import AffiliateCommission as AffiliateCommissionModel, AffiliateProfile
-        
-        # 1. Fetch customer info
-        customer = db_session.query(UserModel).filter(UserModel.id == order.user_id).first()
-        customer_name = customer.name if customer else "Customer"
-        customer_email = customer.email if customer else ""
-        
-        # 2. Map items
+        # Build the items list from the order's eagerly-loaded relationship.
+        # ``item.product`` may be None if the product was deleted; fall back
+        # gracefully so the order document is still written.
+        items = order.items if hasattr(order, "items") and order.items else []
+
         firestore_items = []
-        vendor_ids = []
-        created_at_str = order.created_at.isoformat() + "Z" if order.created_at else datetime.now(timezone.utc).isoformat() + "Z"
-        
-        for item in order.items:
-            prod = db_session.query(ProductModel).filter(ProductModel.id == item.product_id).first()
-            if prod:
-                p_name = prod.title
-                p_preview = prod.preview or prod.thumbnail or ""
-                v_id = str(prod.vendor_id) if prod.vendor_id else ""
-                file_url = prod.file_url or ""
-            else:
-                p_name = "Product"
-                p_preview = ""
-                v_id = ""
-                file_url = ""
-                
-            if v_id and v_id not in vendor_ids:
-                vendor_ids.append(v_id)
-                
+        for item in items:
+            product = getattr(item, "product", None)
+            product_name = product.title if product else ""
             firestore_items.append({
-                "productId": str(item.product_id),
-                "productName": p_name,
-                "preview": p_preview,
-                "vendorId": v_id,
-                "price": float(item.price_paid or 0.0),
-                "snapshot": {"title": p_name, "price": float(item.price_paid or 0.0), "preview": p_preview}
+                "productId":   str(item.product_id),
+                "productName": product_name,
+                "price":       float(item.price_paid or 0.0),
             })
-            
-            # --- Write to purchases collection ---
-            purchase_ref = db.collection("purchases").document()
-            purchase_ref.set({
-                "userId": str(order.user_id),
-                "productId": str(item.product_id),
-                "productName": p_name,
-                "preview": p_preview,
-                "price": float(item.price_paid or 0.0),
-                "purchaseDate": created_at_str,
-                "createdAt": created_at_str,
-                "accessStatus": "active"
-            })
-            
-            # --- Write to downloads collection ---
-            download_id = f"{order.user_id}_{item.product_id}"
-            db.collection("downloads").document(download_id).set({
-                "userId": str(order.user_id),
-                "productId": str(item.product_id),
-                "productName": p_name,
-                "downloadCount": 0,
-                "file_url": file_url,
-                "downloadedAt": ""
-            })
-            
-            # --- Write to vendorNotifications ---
-            if v_id:
-                notif_ref = db.collection("vendorNotifications").document()
-                notif_ref.set({
-                    "vendorId": v_id,
-                    "orderId": f"ORD-{order.id}",
-                    "buyerId": str(order.user_id),
-                    "buyerName": customer_name,
-                    "productId": str(item.product_id),
-                    "productName": p_name,
-                    "amount": float(item.price_paid or 0.0),
-                    "type": "sale",
-                    "read": False,
-                    "createdAt": created_at_str
-                })
-                
-                # --- Update vendorStats ---
-                stats_ref = db.collection("vendorStats").document(v_id)
-                stats_doc = stats_ref.get()
-                if stats_doc.exists:
-                    stats_ref.update({
-                        "totalSales": firestore.Increment(1),
-                        "totalRevenue": firestore.Increment(float(item.price_paid or 0.0)),
-                        "lastUpdated": created_at_str
-                    })
-                else:
-                    stats_ref.set({
-                        "totalSales": 1,
-                        "totalRevenue": float(item.price_paid or 0.0),
-                        "lastUpdated": created_at_str
-                    })
-            
-        first_vendor_id = vendor_ids[0] if vendor_ids else ""
-        
-        # 3. Write document to Firestore orders
-        doc_ref = db.collection("orders").document(str(order.id))
-        doc_ref.set({
-            "orderId": f"ORD-{order.id}",
-            "customerId": str(order.user_id),
-            "customerName": customer_name,
-            "customerEmail": customer_email,
-            "items": firestore_items,
-            "totalUSD": float(order.total_amount or 0.0),
-            "totalINR": float(order.total_amount or 0.0) * 83.0,
-            "price": float(order.total_amount or 0.0),
-            "status": order.status or "completed",
-            "paymentStatus": "Paid" if (order.status or "").lower() == "completed" else "Pending",
-            "paymentMethod": order.payment_method or "upi",
-            "vendorId": first_vendor_id,
-            "region": getattr(order, 'billing_region', None) or "India",
-            "created_at": created_at_str,
-            "createdAt": created_at_str
-        }, merge=True)
-        
-        # 4. Sync affiliate conversions from SQLite AffiliateCommissions
-        commissions = db_session.query(AffiliateCommissionModel).filter(
-            AffiliateCommissionModel.order_id == order.id
-        ).all()
-        
-        for comm in commissions:
-            aff_profile = db_session.query(AffiliateProfile).filter(
-                AffiliateProfile.id == comm.affiliate_id
-            ).first()
-            if aff_profile:
-                conv_id = f"COMM-{comm.id}"
-                db.collection("affiliateConversions").document(conv_id).set({
-                    "affiliateId": str(aff_profile.user_id),
-                    "affiliateCode": aff_profile.referral_code,
-                    "orderId": f"ORD-{order.id}",
-                    "productId": str(comm.product_id),
-                    "productName": comm.product_name,
-                    "saleAmount": float(comm.sale_amount),
-                    "commissionAmount": float(comm.commission_amt),
-                    "status": comm.status or "pending",
-                    "createdAt": created_at_str,
-                    "buyerName": customer_name
-                })
-                
+
+        # vendorId: use the vendor from the first item's product (if available)
+        first_vendor_id = ""
+        if items:
+            first_product = getattr(items[0], "product", None)
+            if first_product and first_product.vendor_id:
+                first_vendor_id = str(first_product.vendor_id)
+
+        created_at_str = (
+            order.created_at.isoformat()
+            if order.created_at
+            else datetime.now(timezone.utc).isoformat()
+        )
+
+        # Upsert the orders document.  ``merge=True`` ensures idempotency:
+        # re-syncing the same order never creates a duplicate document.
+        order_id_str = f"ORD-{order.id}"
+        doc_ref = db.collection("orders").document(order_id_str)
+        doc_ref.set(
+            {
+                "orderId":       order_id_str,
+                "userId":        str(order.user_id),
+                "vendorId":      first_vendor_id,
+                "items":         firestore_items,
+                "totalAmount":   float(order.total_amount or 0.0),
+                "status":        order.status or "completed",
+                "paymentMethod": order.payment_method or "",
+                "createdAt":     created_at_str,
+            },
+            merge=True,
+        )
+
     except Exception as e:
         print(f"[firestore-sync] Error syncing order {order.id} to Firestore: {e}")
+
+def restore_sqlite_products_from_firestore(db_session):
+    """
+    Safe recovery logic: Restore published products from Firestore to SQLite
+    in case the SQLite database was reset.
+    Rules: Only restore active, published products (status == 'published').
+    Avoid duplicates by checking if the product ID already exists in SQLite.
+    """
+    if not firebase_connected or db is None:
+        return
+    try:
+        from app.models.product import Product as ProductModel
+        docs = db.collection("products").where("status", "==", "published").stream()
+        count = 0
+        for doc in docs:
+            data = doc.to_dict()
+            try:
+                prod_id = int(doc.id)
+            except ValueError:
+                continue
+            # Check for existing product to prevent duplicate key constraint failure
+            exists = db_session.query(ProductModel).filter(ProductModel.id == prod_id).first()
+            if not exists:
+                product = ProductModel(
+                    id=prod_id,
+                    title=data.get("title", data.get("name", "Product")),
+                    description=data.get("description", ""),
+                    category=data.get("category", "General"),
+                    price=float(data.get("price", 0.0)),
+                    rating=float(data.get("rating", 5.0)),
+                    reviews=int(data.get("reviews", 0)),
+                    downloads=int(data.get("downloads", 0)),
+                    thumbnail=data.get("thumbnail"),
+                    preview=data.get("preview"),
+                    file_url=data.get("file_url", data.get("fileUrl")),
+                    seller=data.get("creatorName", data.get("seller", "Creator")),
+                    vendor_id=data.get("vendor_id"),
+                    featured=bool(data.get("featured", data.get("isFeatured", False))),
+                    trending=bool(data.get("trending", False)),
+                    new_arrival=bool(data.get("new_arrival", False)),
+                    badge=data.get("badge"),
+                    status=data.get("status", "published"),
+                    tags=data.get("tags", []),
+                    highlights=data.get("highlights", []),
+                    version=data.get("version", "v1.0.0"),
+                    file_size=data.get("fileSize", "48 MB"),
+                    last_updated=data.get("last_updated", "Recently"),
+                    license=data.get("license", "Personal Use"),
+                    affiliate_enabled=bool(data.get("affiliate_enabled", False)),
+                    commission_type=data.get("commission_type", "percentage"),
+                    commission_value=float(data.get("commission_value", 0.0)),
+                    short_desc=data.get("shortDesc", data.get("short_desc")),
+                    features=data.get("features", []),
+                    system_requirements=data.get("systemRequirements", data.get("system_requirements", [])),
+                    what_you_get=data.get("whatYouGet", data.get("what_you_get", [])),
+                    installation_guide=data.get("installationGuide", data.get("installation_guide")),
+                    subcategory=data.get("subcategory"),
+                    discount=float(data.get("discount", 0.0)),
+                    preview_images=data.get("previewImages", data.get("preview_images", [])),
+                    preview_video=data.get("previewVideo", data.get("preview_video")),
+                    seo_title=data.get("seoTitle", data.get("seo_title")),
+                    seo_description=data.get("seoDescription", data.get("seo_description")),
+                    visibility=data.get("visibility", "public"),
+                )
+                db_session.add(product)
+                count += 1
+        db_session.commit()
+        print(f"[firestore-sync] Successfully restored {count} products from Firestore to SQLite.")
+    except Exception as e:
+        db_session.rollback()
+        print(f"[firestore-sync] Error recovering products from Firestore: {e}")
+

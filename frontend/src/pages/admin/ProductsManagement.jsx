@@ -5,7 +5,7 @@ import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContai
 import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } from 'lucide-react';
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
 import { backendFetch } from '../../utils/api';
-import { uploadProductFile, uploadThumbnail } from '../../services/storageService.js';
+import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -133,6 +133,21 @@ const sysSound = new AudioController();
 const INITIAL_PRODUCTS = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// resolveImageUrl
+// Converts relative /uploads/... backend paths to full http://localhost:8000/...
+// URLs so <img> tags load from the backend, not the Vite dev server.
+// ─────────────────────────────────────────────────────────────────────────────
+const BACKEND_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api')
+  .replace(/\/api\/?$/, '');
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
+  return url;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // mapAdminProductToApi
 // ─────────────────────────────────────────────────────────────────────────────
 // Translates the Admin UI form model into the FastAPI ProductCreate / ProductUpdate
@@ -236,6 +251,26 @@ function mapAdminProductToApi(uiForm) {
     affiliate_enabled: Boolean(uiForm.affiliate_enabled || false),
     commission_type:   uiForm.commission_type  || 'percentage',
     commission_value:  Number(uiForm.commission_value) || 0.0,
+
+    // ── Features & Specs (Section 5) ──────────────────────────────────────
+    features:             Array.isArray(uiForm.keyFeatures)        ? uiForm.keyFeatures        : [],
+    what_you_get:         Array.isArray(uiForm.whatsIncluded)       ? uiForm.whatsIncluded       : [],
+    system_requirements:  Array.isArray(uiForm.systemRequirements)  ? uiForm.systemRequirements  : [],
+    installation_guide:   typeof uiForm.installationGuide === 'string' ? uiForm.installationGuide : '',
+
+    // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
+    // Future migration: only the stored URLs need to change. No frontend redesign.
+    pcloud_download_link: uiForm.pcloudDownloadLink || null,
+    image_urls:           Array.isArray(uiForm.pcloudImageUrls)
+                            ? uiForm.pcloudImageUrls.filter(Boolean)
+                            : [],
+
+    // Also populate preview_images with the same gallery URLs for backward compat
+    preview_images:       Array.isArray(uiForm.pcloudImageUrls) && uiForm.pcloudImageUrls.length > 0
+                            ? uiForm.pcloudImageUrls.filter(Boolean)
+                            : (uiForm.galleryInput
+                                ? uiForm.galleryInput.split(',').map(s => s.trim()).filter(Boolean)
+                                : []),
   };
 
   return apiPayload;
@@ -257,19 +292,86 @@ export default function App() {
   const [apiError, setApiError]     = useState(null);   // Store error message if fetch fails
 
   useEffect(() => {
-    // 1. Subscribe to products in real-time
-    const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-      const items = snapshot.docs.map(docSnap => mapDocToProduct(docSnap));
-      setProducts(items);
-      setProductsLoading(false);
-    }, (err) => {
-      console.error('ProductsManagement Firestore products subscription failed:', err);
-      setApiError(err.message);
-      setProductsLoading(false);
-    });
+    // Load products from the FastAPI backend (SQLite source of truth for admin).
+    // Fall back to Firestore onSnapshot only if the backend is unreachable.
+    let mounted = true;
+    let unsubFirestore = null;
+
+    const loadFromBackend = () => {
+      backendFetch('/products/?limit=1000')
+        .then(items => {
+          if (!mounted) return;
+          if (Array.isArray(items) && items.length > 0) {
+            // Normalise backend ProductResponse → UI shape expected by this component
+            const uiItems = items.map(p => ({
+              id:          p.id,
+              name:        p.title || '',
+              title:       p.title || '',
+              creatorName: p.seller || p.vendor_id || 'Creator',
+              creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
+              category:    p.category || 'Uncategorized',
+              shortDesc:   p.short_desc || p.description || '',
+              description: p.description || '',
+              price:       parseFloat(p.price) || 0,
+              // Convert backend lowercase status → display-capitalised status
+              status:      p.status === 'published' ? 'Published'
+                         : p.status === 'archived'  ? 'Archived'
+                         : p.status === 'pending_review' ? 'Pending Review'
+                         : 'Draft',
+              isFeatured:  Boolean(p.featured),
+              featured:    Boolean(p.featured),
+              // Resolve relative image URLs to full backend URLs.
+              // Use preview as primary when both exist — on some products the
+              // thumbnail path may have been lost while preview is still on disk.
+              thumbnail:   resolveImageUrl(p.preview || p.thumbnail),
+              preview:     resolveImageUrl(p.preview || p.thumbnail),
+              image_urls:  Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : [],
+              downloadUrl: p.file_url || null,
+              file_url:    p.file_url || null,
+              pcloud_download_link: p.pcloud_download_link || null,
+              tags:        Array.isArray(p.tags) ? p.tags : [],
+              downloads:   p.downloads || 0,
+              revenue:     0,
+              dateAdded:   p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+              // ── Issue 3 fix: carry Features & Specs fields so Edit form loads correctly ──
+              features:             Array.isArray(p.features)            ? p.features            : [],
+              whatYouGet:           Array.isArray(p.what_you_get)        ? p.what_you_get        : [],
+              systemRequirements:   Array.isArray(p.system_requirements) ? p.system_requirements : [],
+              installation_guide:   p.installation_guide || '',
+            }));
+            setProducts(uiItems);
+          }
+          setProductsLoading(false);
+        })
+        .catch(err => {
+          if (!mounted) return;
+          console.warn('[ProductsManagement] Backend fetch failed, falling back to Firestore:', err.message);
+          // Firestore fallback
+          unsubFirestore = onSnapshot(collection(db, 'products'), (snapshot) => {
+            if (!mounted) return;
+            const items = snapshot.docs.map(docSnap => {
+              const mapped = mapDocToProduct(docSnap);
+              // Resolve relative image URLs from Firestore docs too
+              return {
+                ...mapped,
+                thumbnail: resolveImageUrl(mapped.thumbnail),
+                price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
+              };
+            });
+            setProducts(items);
+            setProductsLoading(false);
+          }, (fsErr) => {
+            if (!mounted) return;
+            console.error('Firestore fallback also failed:', fsErr);
+            setApiError(fsErr.message);
+            setProductsLoading(false);
+          });
+        });
+    };
+
+    loadFromBackend();
 
     // 2. Fetch orders from secure backend
-    let mounted = true;
     getOrders()
       .then(items => {
         if (mounted) {
@@ -279,17 +381,16 @@ export default function App() {
       })
       .catch(err => {
         console.error('ProductsManagement backend orders load failed:', err);
-        // Do not block UI with an error message since products loaded successfully
         if (mounted) {
           setOrdersLoading(false);
         }
       });
 
     return () => {
-      unsubProducts();
       mounted = false;
+      if (unsubFirestore) unsubFirestore();
     };
-  }, []); // Empty deps: fetch once on mount — user can manually refresh if needed
+  }, []); // Empty deps: fetch once on mount
   
   // --- FILTERING AND SORTING STATES ---
   const [searchQuery, setSearchQuery] = useState('');
@@ -530,12 +631,8 @@ export default function App() {
     }));
 
     if (list.length === 0) {
-      return [
-        { name: "Elysian Studio", revenue: 0, downloads: 0, avatar: null },
-        { name: "Nova Studio", revenue: 0, downloads: 0, avatar: null },
-        { name: "Apex Labs", revenue: 0, downloads: 0, avatar: null },
-        { name: "Kira Designs", revenue: 0, downloads: 0, avatar: null }
-      ];
+      // No order data yet — return empty state, no fake placeholder names
+      return [];
     }
 
     return list.sort((a, b) => b.revenue - a.revenue).slice(0, 5);
@@ -631,12 +728,17 @@ export default function App() {
         shortDesc:   saved.description || '',
         description: saved.description || '',
         price:       parseFloat(saved.price) || 0,
-        status:      saved.status === 'published' ? 'Published' : 'Draft',
+        status:      saved.status === 'published' ? 'Published'
+                   : saved.status === 'pending_review' ? 'Pending Review'
+                   : 'Draft',
         isFeatured:  saved.featured    || false,
         featured:    saved.featured    || false,
-        thumbnail:   saved.thumbnail   || null,
+        thumbnail:   resolveImageUrl(saved.thumbnail || saved.preview || null),
+        preview:     resolveImageUrl(saved.preview || saved.thumbnail || null),
+        image_urls:  Array.isArray(saved.image_urls) ? saved.image_urls.map(resolveImageUrl) : [],
         downloadUrl: saved.file_url    || null,
         file_url:    saved.file_url    || null,
+        pcloud_download_link: saved.pcloud_download_link || null,
         tags:        saved.tags        || [],
         downloads:   saved.downloads   || 0,
         dateAdded:   saved.created_at  ? saved.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -645,6 +747,8 @@ export default function App() {
       setProducts([uiProduct, ...products]);
       setIsNewProductOpen(false);
       triggerNotification(`Created product "${uiProduct.name}" successfully!`);
+      // Signal customer AppContext to re-fetch products from the backend immediately.
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
       console.error('Create product failed:', err);
       triggerNotification(`Failed to create product: ${err.message}`, 'error');
@@ -672,14 +776,18 @@ export default function App() {
           shortDesc:    saved.description || '',
           description:  saved.description || '',
           price:        parseFloat(saved.price) || 0,
-          status:       saved.status === 'published' ? 'Published'
-                      : saved.status === 'archived'  ? 'Archived'
+          status:       saved.status === 'published'       ? 'Published'
+                      : saved.status === 'archived'        ? 'Archived'
+                      : saved.status === 'pending_review'  ? 'Pending Review'
                       : 'Draft',
           isFeatured:   saved.featured     || false,
           featured:     saved.featured     || false,
-          thumbnail:    saved.thumbnail    || updatedProductData.thumbnail || null,
+          thumbnail:    resolveImageUrl(saved.thumbnail || saved.preview || updatedProductData.thumbnail || null),
+          preview:      resolveImageUrl(saved.preview || saved.thumbnail || null),
+          image_urls:   Array.isArray(saved.image_urls) ? saved.image_urls.map(resolveImageUrl) : [],
           downloadUrl:  saved.file_url     || updatedProductData.file_url  || null,
           file_url:     saved.file_url     || null,
+          pcloud_download_link: saved.pcloud_download_link || null,
           fileSize:     saved.file_size    || updatedProductData.file_size  || null,
           dateAdded:    saved.updated_at   ? saved.updated_at.split('T')[0] : updatedProductData.dateAdded,
         };
@@ -689,6 +797,9 @@ export default function App() {
       // updatedProductData.title comes from the mapper; fall back to name for display
       const displayName = updatedProductData.title || updatedProductData.name || 'product';
       triggerNotification(`Updated product details for "${displayName}"`);
+      // Always notify customer AppContext to re-fetch after any product update,
+      // so image changes, feature edits, and metadata updates appear immediately.
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
       console.error('Update product failed:', err);
       triggerNotification(`Failed to update product: ${err.message}`, 'error');
@@ -731,6 +842,10 @@ export default function App() {
         }
         return p;
       }));
+      // When a product is published, notify customer AppContext to re-fetch immediately.
+      if (nextStatusUI === 'Published') {
+        window.dispatchEvent(new CustomEvent('lumora:product:created'));
+      }
     } catch (err) {
       console.error('Toggle publish failed:', err);
       triggerNotification(`Failed to update status: ${err.message}`, 'error');
@@ -1082,6 +1197,14 @@ export default function App() {
 
             <div className="relative min-h-[180px] flex items-end justify-around gap-2 pt-8">
               {(() => {
+                if (creatorData.length === 0) {
+                  return (
+                    <div className="w-full flex flex-col items-center justify-center gap-2 text-center py-8">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#C4A4D8]">No order data yet</span>
+                      <span className="text-[9px] text-[#D8BFE3]">Creator performance will appear once orders are placed.</span>
+                    </div>
+                  );
+                }
                 const maxVal = Math.max(...creatorData.map(c => c.revenue), 1);
                 return creatorData.map((c, i) => {
                   const percent = (c.revenue / maxVal) * 100;
@@ -1094,7 +1217,7 @@ export default function App() {
                   const colorGradient = colorsList[i % colorsList.length];
                   
                   return (
-                    <div key={i} className="flex flex-col items-center flex-1 max-w-[80px] group/bar cursor-pointer">
+                    <div key={c.name} className="flex flex-col items-center flex-1 max-w-[80px] group/bar cursor-pointer">
                       <div className="relative w-full flex items-end justify-center h-28">
                         <div 
                           style={{ height: `${percent}%` }}
@@ -1548,8 +1671,15 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
   }, [visualMode]);
 
   // Combine primary thumbnail and optional extra gallery angles for carousel navigation
+  // Support both 'gallery' (Firestore) and 'image_urls' (SQLite backend)
   const mediaList = useMemo(() => {
-    return [product.thumbnail, ...(product.gallery || [])].filter(Boolean);
+    const primary = product.thumbnail || product.preview || null;
+    const extra = (product.image_urls || product.gallery || []).filter(Boolean);
+    const allImages = [primary, ...extra].filter(Boolean);
+    // Resolve any relative /uploads/... paths to full backend URLs
+    return allImages.map(url =>
+      (url && url.startsWith('/')) ? `${BACKEND_ORIGIN}${url}` : url
+    );
   }, [product]);
 
   const handleNextMedia = (e) => {
@@ -1610,13 +1740,26 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
             muted
             onEnded={() => setIsPlayingVideo(false)}
           />
-        ) : (
+        ) : mediaList.length > 0 ? (
           // Visual Image Slide Carousel
           <img 
             src={mediaList[activeMediaIndex]} 
             alt={product.name} 
             className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
+            onError={(e) => {
+              // Current carousel image 404 — try the next available URL or show placeholder
+              const next = mediaList.find((url, i) => i !== activeMediaIndex && url);
+              if (next) {
+                e.target.src = next;
+              } else {
+                e.target.style.display = 'none';
+              }
+            }}
           />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-[#F8F3FB]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#C4A4D8] opacity-60">No Image</span>
+          </div>
         )}
 
         {/* Dynamic Dark Gradient Shading */}
@@ -1663,9 +1806,9 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
         {/* Mini dot carousel markers */}
         {mediaList.length > 1 && !isPlayingVideo && (
           <div className="absolute bottom-4 right-4 flex gap-1 z-20">
-            {mediaList.map((_, idx) => (
+            {mediaList.map((url, idx) => (
               <span 
-                key={idx}
+                key={url}
                 className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === activeMediaIndex ? 'bg-white w-3' : 'bg-white/50'}`}
               />
             ))}
@@ -1702,8 +1845,8 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
 
           {/* Tags cloud */}
           <div className="flex flex-wrap gap-1.5 mb-6">
-            {product.tags.map((tag, i) => (
-              <span key={i} className="text-[9px] font-semibold text-[#7B3FA0] bg-white border border-[#F5E9DD]/60 px-2 py-0.5 rounded">
+            {product.tags.map((tag) => (
+              <span key={tag} className="text-[9px] font-semibold text-[#7B3FA0] bg-white border border-[#F5E9DD]/60 px-2 py-0.5 rounded">
                 #{tag}
               </span>
             ))}
@@ -1916,7 +2059,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
   const [form, setForm] = useState({
     name: product?.name || '',
-    creatorName: product?.creatorName || 'Elysian Studio',
+    creatorName: product?.creatorName || '',
     creatorAvatar: product?.creatorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
     category: product?.category || 'Graphics & UI',
     shortDesc: product?.shortDesc || '',
@@ -1924,7 +2067,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     price: product?.price || 45,
     discountPrice: product?.discountPrice || '',
     status: product?.status || 'Draft',
-    tagsInput: product?.tags?.join(', ') || 'UI, Minimal, Premium',
+    tagsInput: product?.tags?.join(', ') || '',
     thumbnail: product?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
     galleryInput: product?.gallery?.join(', ') || '',
     videoUrl: product?.videoUrl || '',
@@ -1937,10 +2080,29 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     downloadUrl:  product?.downloadUrl  || null,   // permanent HTTPS URL
     fileSize:     product?.fileSize     || null,   // bytes
     fileName:     product?.fileName     || null,   // original filename
+
+    // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
+    pcloudDownloadLink: product?.pcloud_download_link || product?.pcloudDownloadLink || '',
+    pcloudImageUrls:    Array.isArray(product?.image_urls)
+      ? product.image_urls
+      : Array.isArray(product?.imageUrls)
+        ? product.imageUrls
+        : [],
+
+    // ── Section 5: Features & Specs ──────────────────────────────────────────
+    keyFeatures:         Array.isArray(product?.features)            ? product.features            : [],
+    whatsIncluded:       Array.isArray(product?.whatYouGet)          ? product.whatYouGet          : [],
+    systemRequirements:  Array.isArray(product?.systemRequirements)  ? product.systemRequirements  : [],
+    installationGuide:   product?.installationGuide                  || product?.installation_guide || '',
   });
 
   const [thumbPreview, setThumbPreview] = useState(form.thumbnail);
   const [demoVideoPreview, setDemoVideoPreview] = useState(form.videoUrl);
+
+  // ── Section 5: Features & Specs — scoped input state for DynamicListEditor instances ──
+  const [keyFeaturesInput,        setKeyFeaturesInput]        = useState('');
+  const [whatsIncludedInput,       setWhatsIncludedInput]      = useState('');
+  const [systemRequirementsInput,  setSystemRequirementsInput] = useState('');
 
   const [isDragging, setIsDragging] = useState({
     thumbnail: false,
@@ -1952,6 +2114,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   const [galleryPreviews, setGalleryPreviews] = useState(
     product?.gallery || []
   );
+
+  // ── pCloud Image URLs — dynamic list input ───────────────────────────────
+  const [pcloudImageInput, setPcloudImageInput] = useState('');
 
   const [uploadProgress, setUploadProgress] = useState({
     thumbnail: null,
@@ -1970,6 +2135,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   const [uploadError, setUploadError] = useState({
     thumbnail: null,
     zip: null,
+    gallery: null,
   });
 
   const simulateUpload = (file, field, onComplete) => {
@@ -2112,24 +2278,87 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   };
 
   const handleGalleryFiles = (files) => {
-    simulateUpload(files[0], 'gallery', () => {
-      const urls = files.map(file => URL.createObjectURL(file));
-      setGalleryPreviews(prev => [...prev, ...urls]);
-      setForm(prev => {
-        const currentGallery = prev.galleryInput ? prev.galleryInput.split(',').map(g => g.trim()) : [];
-        const updated = [...currentGallery, ...urls].filter(Boolean).join(', ');
-        return { ...prev, galleryInput: updated };
+    // Upload each gallery image to the backend and add its URL to image_urls
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+
+    // Show a preview immediately for UX (local blob URLs while uploading)
+    const localPreviews = imageFiles.map(f => URL.createObjectURL(f));
+    setGalleryPreviews(prev => [...prev, ...localPreviews]);
+    sysSound.playTap();
+
+    // Upload each file in parallel
+    Promise.allSettled(
+      imageFiles.map((f, i) =>
+        uploadGalleryImage(f, (pct) => {
+          // Use gallery progress for the first image as a general indicator
+          if (i === 0) setUploadProgress(prev => ({ ...prev, gallery: pct }));
+        })
+      )
+    ).then((results) => {
+      setUploadProgress(prev => ({ ...prev, gallery: null }));
+      sysSound.playSuccess();
+
+      const uploadedUrls = [];
+      const failedCount = [];
+
+      results.forEach((res, i) => {
+        if (res.status === 'fulfilled') {
+          uploadedUrls.push(res.value.downloadUrl);
+          // Replace the local blob preview with the real backend URL
+          setGalleryPreviews(prev => {
+            const updated = [...prev];
+            // find the blob URL for this file and replace it
+            const blobIdx = updated.indexOf(localPreviews[i]);
+            if (blobIdx !== -1) updated[blobIdx] = res.value.downloadUrl;
+            return updated;
+          });
+        } else {
+          failedCount.push(i);
+          console.error('[Gallery] Upload failed for image', i, res.reason);
+          // Remove the local preview for the failed upload
+          setGalleryPreviews(prev => prev.filter(u => u !== localPreviews[i]));
+        }
       });
+
+      if (uploadedUrls.length > 0) {
+        // Add backend URLs to image_urls (pcloudImageUrls) so they persist
+        handleChange('pcloudImageUrls', [
+          ...form.pcloudImageUrls,
+          ...uploadedUrls.filter(u => !form.pcloudImageUrls.includes(u)),
+        ]);
+
+        // Also keep galleryInput in sync (legacy field)
+        setForm(prev => {
+          const existing = prev.galleryInput
+            ? prev.galleryInput.split(',').map(g => g.trim()).filter(Boolean)
+            : [];
+          return {
+            ...prev,
+            galleryInput: [...existing, ...uploadedUrls].filter(Boolean).join(', '),
+          };
+        });
+      }
+
+      if (failedCount.length > 0) {
+        setUploadError(prev => ({
+          ...prev,
+          gallery: `${failedCount.length} image${failedCount.length > 1 ? 's' : ''} failed to upload.`,
+        }));
+      }
     });
   };
 
   const handleRemoveGalleryItem = (indexToRemove) => {
     sysSound.playTap();
+    const removedUrl = galleryPreviews[indexToRemove];
     const updatedPreviews = galleryPreviews.filter((_, idx) => idx !== indexToRemove);
     setGalleryPreviews(updatedPreviews);
     setForm(prev => ({
       ...prev,
-      galleryInput: updatedPreviews.join(', ')
+      galleryInput: updatedPreviews.join(', '),
+      // Also remove from pcloudImageUrls if it's there
+      pcloudImageUrls: prev.pcloudImageUrls.filter(u => u !== removedUrl),
     }));
   };
 
@@ -2411,7 +2640,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 {galleryPreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-3 mt-3">
                     {galleryPreviews.map((preview, idx) => (
-                      <div key={idx} className="relative group/thumb aspect-video rounded-xl border border-[#F3EAF8] overflow-hidden bg-white shadow-sm hover:border-[#D8BFE3] transition-all">
+                      <div key={preview} className="relative group/thumb aspect-video rounded-xl border border-[#F3EAF8] overflow-hidden bg-white shadow-sm hover:border-[#D8BFE3] transition-all">
                         <img src={preview} alt={`Gallery preview ${idx+1}`} className="w-full h-full object-cover" />
                         <button 
                           type="button"
@@ -2586,6 +2815,118 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             </div>
           </div>
 
+          {/* ── Section 3b: pCloud Download Link (Temporary — Dev/Testing Only) ─── */}
+          <div style={{ border: '1px solid #F0E6FA', borderRadius: 16, padding: '16px 20px', background: 'rgba(248,243,251,0.6)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1 flex items-center gap-2">
+              <Icon name="Download" size={13} className="text-[#7B3FA0]" />
+              Product Download Link
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#B97FD6', background: '#F3EAF8', borderRadius: 6, padding: '1px 7px', marginLeft: 4, textTransform: 'uppercase' }}>
+                Temporary · pCloud
+              </span>
+            </h3>
+            <p className="text-[9px] text-[#8E6AA8] mb-3 leading-relaxed">
+              Paste a public pCloud link to the downloadable product file. This is stored in SQLite and returned securely after purchase verification. Migration-ready — only the URL needs to change when moving to R2 / S3.
+            </p>
+            <input
+              type="url"
+              placeholder="https://u.pcloud.link/publink/show?code=XXXXXXXX"
+              value={form.pcloudDownloadLink}
+              onChange={(e) => handleChange('pcloudDownloadLink', e.target.value)}
+              className="w-full bg-white border border-[#F5E9DD]/80 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+            />
+            {form.pcloudDownloadLink && (
+              <p className="text-[9px] text-emerald-600 mt-1.5 flex items-center gap-1">
+                <span>✓</span> Download link stored — returned to customer only after purchase.
+              </p>
+            )}
+          </div>
+
+          {/* ── Section 3c: pCloud Image Links (Temporary — Dev/Testing Only) ──── */}
+          <div style={{ border: '1px solid #F0E6FA', borderRadius: 16, padding: '16px 20px', background: 'rgba(248,243,251,0.6)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1 flex items-center gap-2">
+              <Icon name="Layers" size={13} className="text-[#7B3FA0]" />
+              Product Image Links
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#B97FD6', background: '#F3EAF8', borderRadius: 6, padding: '1px 7px', marginLeft: 4, textTransform: 'uppercase' }}>
+                Temporary · pCloud
+              </span>
+            </h3>
+            <p className="text-[9px] text-[#8E6AA8] mb-3 leading-relaxed">
+              Add multiple image URLs. These are displayed in the marketplace gallery and product detail page. Supports unlimited URLs.
+            </p>
+
+            {/* Existing image URLs list */}
+            {form.pcloudImageUrls.length > 0 && (
+              <ul className="mb-3 space-y-1.5">
+                {form.pcloudImageUrls.map((url, idx) => (
+                  <li key={url} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#F3EAF8] group">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-[#F8F3FB]">
+                      <img
+                        src={url}
+                        alt={`Image ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                    <span className="flex-1 text-[10px] text-[#2D004D] truncate font-medium">
+                      Image {idx + 1}
+                    </span>
+                    <span className="text-[9px] text-[#8E6AA8] truncate max-w-[140px] hidden sm:block">
+                      {url.length > 40 ? url.slice(0, 40) + '…' : url}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleChange('pcloudImageUrls', form.pcloudImageUrls.filter((_, i) => i !== idx))}
+                      className="text-[#C4A4D8] hover:text-red-500 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                      aria-label="Remove image link"
+                    >
+                      <Icon name="X" size={13} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add new image URL input */}
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="https://u.pcloud.link/publink/show?code=… or any image URL"
+                value={pcloudImageInput}
+                onChange={(e) => setPcloudImageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const trimmed = pcloudImageInput.trim();
+                    if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {
+                      handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);
+                      setPcloudImageInput('');
+                    }
+                  }
+                }}
+                className="flex-1 bg-white border border-[#F5E9DD]/80 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const trimmed = pcloudImageInput.trim();
+                  if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {
+                    handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);
+                    setPcloudImageInput('');
+                  }
+                }}
+                className="px-4 py-2.5 bg-[#F3EAF8] hover:bg-[#E9D8F4] text-[#7B3FA0] text-[10px] font-bold uppercase tracking-widest rounded-xl transition-colors flex-shrink-0"
+              >
+                Add Image
+              </button>
+            </div>
+            {form.pcloudImageUrls.length === 0 && (
+              <p className="text-[9px] text-[#C4A4D8] mt-2">No image links added yet. Press Enter or click Add Image.</p>
+            )}
+            {form.pcloudImageUrls.length > 0 && (
+              <p className="text-[9px] text-[#8E6AA8] mt-2">{form.pcloudImageUrls.length} image{form.pcloudImageUrls.length > 1 ? 's' : ''} added — displayed in marketplace gallery.</p>
+            )}
+          </div>
+
           {/* Section: Search Engine Optimizations & Tags */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
@@ -2624,6 +2965,192 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* ── Section 5: Features & Specs ─────────────────────────────────────────── */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
+              5. Features &amp; Specs
+            </h3>
+            <div className="space-y-5">
+
+              {/* ── 5.1 Key Features ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  Key Features
+                </label>
+                {form.keyFeatures.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.keyFeatures.map((entry, idx) => (
+                      <li key={entry} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('keyFeatures', form.keyFeatures.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove key feature"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={keyFeaturesInput}
+                    onChange={(e) => setKeyFeaturesInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = keyFeaturesInput.trim();
+                        if (!v) return;
+                        handleChange('keyFeatures', [...form.keyFeatures, v]);
+                        setKeyFeaturesInput('');
+                      }
+                    }}
+                    placeholder="e.g. 100+ premium UI components"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = keyFeaturesInput.trim();
+                      if (!v) return;
+                      handleChange('keyFeatures', [...form.keyFeatures, v]);
+                      setKeyFeaturesInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.2 What's Included ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  What&apos;s Included
+                </label>
+                {form.whatsIncluded.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.whatsIncluded.map((entry, idx) => (
+                      <li key={entry} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('whatsIncluded', form.whatsIncluded.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove item"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={whatsIncludedInput}
+                    onChange={(e) => setWhatsIncludedInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = whatsIncludedInput.trim();
+                        if (!v) return;
+                        handleChange('whatsIncluded', [...form.whatsIncluded, v]);
+                        setWhatsIncludedInput('');
+                      }
+                    }}
+                    placeholder="e.g. Figma source file"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = whatsIncludedInput.trim();
+                      if (!v) return;
+                      handleChange('whatsIncluded', [...form.whatsIncluded, v]);
+                      setWhatsIncludedInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.3 System Requirements ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  System Requirements
+                </label>
+                {form.systemRequirements.length > 0 && (
+                  <ul className="mb-2 space-y-1">
+                    {form.systemRequirements.map((entry, idx) => (
+                      <li key={idx} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
+                        <span className="flex-1 truncate">{entry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('systemRequirements', form.systemRequirements.filter((_, i) => i !== idx))}
+                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
+                          aria-label="Remove requirement"
+                        >
+                          <Icon name="X" size={12} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={systemRequirementsInput}
+                    onChange={(e) => setSystemRequirementsInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const v = systemRequirementsInput.trim();
+                        if (!v) return;
+                        handleChange('systemRequirements', [...form.systemRequirements, v]);
+                        setSystemRequirementsInput('');
+                      }
+                    }}
+                    placeholder="e.g. Figma 2024 or later"
+                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = systemRequirementsInput.trim();
+                      if (!v) return;
+                      handleChange('systemRequirements', [...form.systemRequirements, v]);
+                      setSystemRequirementsInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* ── 5.4 Installation Guide ── */}
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                  Installation Guide
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder="Step-by-step setup and installation instructions (plain text or markdown)..."
+                  value={form.installationGuide}
+                  onChange={(e) => handleChange('installationGuide', e.target.value)}
+                  className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                />
+              </div>
+
             </div>
           </div>
 
@@ -2675,7 +3202,7 @@ function ProductPreviewModal({ product, onClose }) {
       >
         
         {/* Left Side: Cinematic Media Block */}
-        <div className="w-full md:w-1/2 bg-black relative flex flex-col justify-center min-h-[300px] md:min-h-[500px]">
+        <div className="w-full md:w-1/2 bg-[#1a0a2e] relative flex flex-col justify-center min-h-[300px] md:min-h-[500px]">
           {product.videoUrl ? (
             <video 
               src={product.videoUrl} 
@@ -2685,12 +3212,24 @@ function ProductPreviewModal({ product, onClose }) {
               muted
               controls
             />
-          ) : (
+          ) : (product.thumbnail || product.preview) ? (
             <img 
-              src={product.thumbnail} 
+              src={product.thumbnail || product.preview}
               alt={product.name} 
               className="w-full h-full object-cover absolute inset-0"
+              onError={(e) => {
+                // thumbnail path missing on disk — fall through to preview, then placeholder
+                if (e.target.src !== (product.preview || '') && product.preview && e.target.src !== product.preview) {
+                  e.target.src = product.preview;
+                } else {
+                  e.target.style.display = 'none';
+                }
+              }}
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[#4a2060] text-xs font-bold uppercase tracking-widest opacity-40">No Image</span>
+            </div>
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
@@ -2748,18 +3287,71 @@ function ProductPreviewModal({ product, onClose }) {
 
             {/* Tab content screens */}
             {activeTab === 'features' && (
-              <div className="space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0]">ARCHITECTURAL DESCRIPTION</p>
+              <div className="space-y-4 overflow-y-auto max-h-[320px] pr-1">
+                {/* Description */}
+                <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0]">Description</p>
                 <p className="text-xs text-[#2D004D] leading-relaxed font-medium">
-                  {product.description || "No deep parameters have been designed for this item catalog profile node."}
+                  {product.description || product.shortDesc || "No description available."}
                 </p>
-                <div className="pt-2 flex flex-wrap gap-1.5">
-                  {product.tags.map((t, idx) => (
-                    <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-[#F5E9DD] text-[#7B3FA0]">
-                      #{t}
-                    </span>
-                  ))}
-                </div>
+
+                {/* Key Features */}
+                {Array.isArray(product.features) && product.features.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1.5">Key Features</p>
+                    <ul className="space-y-1">
+                      {product.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2 text-xs text-[#2D004D]">
+                          <span className="text-[#B886D0] mt-0.5 flex-shrink-0">✓</span>{f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* What's Included */}
+                {Array.isArray(product.whatYouGet) && product.whatYouGet.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1.5">What's Included</p>
+                    <ul className="space-y-1">
+                      {product.whatYouGet.map((w) => (
+                        <li key={w} className="flex items-start gap-2 text-xs text-[#2D004D]">
+                          <span className="text-[#7B3FA0] mt-0.5 flex-shrink-0">→</span>{w}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* System Requirements */}
+                {Array.isArray(product.systemRequirements) && product.systemRequirements.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1.5">System Requirements</p>
+                    <ul className="space-y-1">
+                      {product.systemRequirements.map((s) => (
+                        <li key={s} className="text-xs text-[#2D004D]">• {s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Installation Guide */}
+                {product.installation_guide && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1.5">Installation Guide</p>
+                    <p className="text-xs text-[#2D004D] leading-relaxed whitespace-pre-wrap">{product.installation_guide}</p>
+                  </div>
+                )}
+
+                {/* Tags */}
+                {Array.isArray(product.tags) && product.tags.length > 0 && (
+                  <div className="pt-1 flex flex-wrap gap-1.5">
+                    {product.tags.map((t) => (
+                      <span key={t} className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-[#F5E9DD] text-[#7B3FA0]">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

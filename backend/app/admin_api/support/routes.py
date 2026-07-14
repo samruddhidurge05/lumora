@@ -101,11 +101,13 @@ def list_tickets(
 @router.get("/{ticket_id}/messages")
 def get_ticket_messages(
     ticket_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin_role),
 ):
     """
-    Return the full message thread for a support ticket.
+    Return the message thread for a support ticket (paginated).
     Marks all customer messages (sender_id != admin.id) as is_read=True.
     """
     ticket = _get_ticket_or_404(ticket_id, db)
@@ -118,15 +120,19 @@ def get_ticket_messages(
     ).update({"is_read": True}, synchronize_session=False)
     db.commit()
 
-    messages = (
+    messages_query = (
         db.query(Message)
         .filter(Message.conversation_id == ticket_id)
         .order_by(Message.created_at.asc())
-        .all()
     )
+    total = messages_query.count()
+    messages = messages_query.offset(skip).limit(limit).all()
 
     return {
         "ticket_id": ticket_id,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
         "messages": [
             {
                 "id": m.id,

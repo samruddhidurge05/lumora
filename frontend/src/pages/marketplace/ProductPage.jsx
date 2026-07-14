@@ -32,6 +32,17 @@ function getGallery(product) {
   const fallback = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
   const primary = vendorImage || fallback;
 
+  // Prefer explicitly stored pCloud/external image URLs (image_urls column)
+  const pcloudImages = Array.isArray(product.image_urls || product.imageUrls)
+    ? (product.image_urls || product.imageUrls).filter(Boolean)
+    : [];
+
+  if (pcloudImages.length > 0) {
+    // Use pCloud images as the gallery; primary vendor image is the first entry
+    const combined = [primary, ...pcloudImages.filter(img => img !== primary)];
+    return combined;
+  }
+
   const extraImages = Array.isArray(product.previewImages || product.preview_images)
     ? (product.previewImages || product.preview_images).filter(Boolean)
     : [];

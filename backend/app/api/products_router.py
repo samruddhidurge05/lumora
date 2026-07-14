@@ -207,6 +207,18 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
         ]
     }
     preview = product.preview or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85'
+
+    # Prefer explicitly stored pCloud/external image URLs list
+    extra_images = []
+    if product.image_urls:
+        extra_images = [url for url in product.image_urls if url]
+    elif product.preview_images:
+        extra_images = [url for url in product.preview_images if url]
+
+    if extra_images:
+        all_images = [preview] + [img for img in extra_images if img != preview]
+        return all_images[:10]
+
     cat_imgs = cat_gallery.get(product.category) or cat_gallery.get('Design Assets')
     filtered_imgs = [img for img in cat_imgs if img != preview]
     return [preview] + filtered_imgs[:4]
@@ -290,8 +302,15 @@ def download_product(
         
     token = generate_download_token(current_user.id, product_id)
     
+    # Determine if the download asset is actually available
+    from app.services.product_service import _is_external_url
+    has_pcloud = bool(product.pcloud_download_link and _is_external_url(product.pcloud_download_link))
+    has_file = bool(product.storage_path or product.file_url)
+    download_available = has_pcloud or has_file
+    
     return {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
+        "download_available": download_available,
         "product_details": {
             "id": product.id,
             "name": product.title,
@@ -339,6 +358,12 @@ def get_download_center(
         # Generate download token for each product
         token = generate_download_token(current_user.id, product.id)
         
+        # Determine if the download asset is actually available
+        from app.services.product_service import _is_external_url
+        has_pcloud = bool(product.pcloud_download_link and _is_external_url(product.pcloud_download_link))
+        has_file = bool(product.storage_path or product.file_url)
+        download_available = has_pcloud or has_file
+        
         downloads.append({
             "order_id": order.id,
             "purchase_date": order.created_at.isoformat() if order.created_at else None,
@@ -354,6 +379,7 @@ def get_download_center(
                 "description": product.description[:150] + "..." if product.description and len(product.description) > 150 else product.description
             },
             "download_url": f"/api/products/{product.id}/download-file?token={token}",
+            "download_available": download_available,
             "can_download": True,
             "token_expires_in": "15 minutes"
         })
@@ -412,30 +438,57 @@ def download_product_file(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not authorized to download this product."
         )
-        
-    storage_path = product.storage_path
-    if not storage_path:
-        # Fallback to file_url if storage_path not set
-        storage_path = product.file_url
-        if not storage_path:
-            raise HTTPException(status_code=404, detail="Product file has not been uploaded yet.")
-            
-    # Increment download count on actual file download
-    product.downloads = (product.downloads or 0) + 1
-    
+
     # Log download activity in SQLite!
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
         user_id=user_id,
         activity_type="download",
-        details=f"Downloaded product '{product.title}' (ID {product.id}). Total downloads: {product.downloads}."
+        details=f"Downloaded product '{product.title}' (ID {product.id})."
     )
     db.commit()
-    
+
+    # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
+    # If a pCloud download link is stored, return it directly so the browser
+    # can open it.  Future migration: just update the stored URL, no code change.
+    from app.services.product_service import _is_external_url
+    pcloud_link = product.pcloud_download_link
+    if pcloud_link and _is_external_url(pcloud_link):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(content={
+            "redirect_url": pcloud_link,
+            "type": "external",
+            "product_title": product.title,
+        })
+
+    storage_path = product.storage_path
+    if not storage_path:
+        # Fallback to file_url if storage_path not set
+        storage_path = product.file_url
+        if not storage_path:
+            # ── Download Pending state ────────────────────────────────────────────
+            # The customer owns this product but the creator has not yet uploaded
+            # the downloadable asset.  Return a structured "pending" response so
+            # the frontend can display a professional message instead of an error.
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "type": "pending",
+                    "product_title": product.title,
+                    "message": (
+                        "The creator has not uploaded the downloadable asset yet. "
+                        "Your purchase is secure and your ownership has been verified. "
+                        "Once the creator uploads the file, it will automatically become "
+                        "available in your Downloads. Thank you for your patience."
+                    ),
+                }
+            )
+
     # Stream the file bytes using our StorageService!
     from fastapi.responses import StreamingResponse
-    
+
     filename = f"product-{product_id}.zip"
     if product.file_url:
         filename = os.path.basename(product.file_url.split("?")[0])
@@ -502,19 +555,31 @@ def create_product(
                 )
 
     # ── IDEMPOTENCY: Double-click / network-retry protection ──────────────────
-    # If the same vendor submits a product with the same title and price within
-    # a 15-second window, return the existing record to prevent duplicates.
+    # Only deduplicate if same vendor, title, AND price > 0 within 10 seconds.
+    # Zero-price products are excluded to avoid blocking legitimate re-submissions
+    # after a failed form save.
     vendor_id = str(current_user.id)
     from datetime import datetime, timedelta
-    window_start = datetime.utcnow() - timedelta(seconds=15)
-    recent_duplicate = db.query(Product).filter(
-        Product.vendor_id == vendor_id,
-        Product.title == product_in.title.strip(),
-        Product.price == product_in.price,
-        Product.created_at >= window_start,
-    ).first()
+    window_start = datetime.utcnow() - timedelta(seconds=10)
+    recent_duplicate = None
+    if product_in.price > 0:
+        recent_duplicate = db.query(Product).filter(
+            Product.vendor_id == vendor_id,
+            Product.title == product_in.title.strip(),
+            Product.price == product_in.price,
+            Product.created_at >= window_start,
+        ).first()
     if recent_duplicate:
         return recent_duplicate
+
+    role = (current_user.role or "").lower()
+    # For admins: respect the submitted status (published / draft).
+    # For vendors: always start at pending_review regardless of submitted value.
+    if role == "admin":
+        submitted_status = (product_in.status or "published").lower()
+        initial_status = submitted_status if submitted_status in ("published", "draft") else "published"
+    else:
+        initial_status = "pending_review"
 
     product = ProductService.create_product(
         db=db,
@@ -544,30 +609,12 @@ def create_product(
         preview_video=product_in.preview_video,
         seo_title=product_in.seo_title,
         seo_description=product_in.seo_description,
-        visibility=product_in.visibility or "public"
+        visibility=product_in.visibility or "public",
+        status=initial_status,
+        # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
+        pcloud_download_link=product_in.pcloud_download_link,
+        image_urls=product_in.image_urls,
     )
-
-    # ── M4-M7: Override initial status based on creator role ─────────────────
-    # Vendors: pending_review (requires admin approval before going live)
-    # Admins:  published immediately (admins self-publish)
-    role = (current_user.role or "").lower()
-    if role == "admin":
-        initial_status = "published"
-    else:
-        # vendor or any other role — require approval
-        initial_status = "pending_review"
-
-    if product.status != initial_status:
-        product.status = initial_status
-        db.commit()
-        db.refresh(product)
-        # Re-sync to Firestore with the correct status so marketplace is accurate
-        try:
-            from admin.firestore.admin_firestore import sync_product_to_firestore
-            sync_product_to_firestore(product)
-        except Exception as _sync_err:
-            pass  # Non-fatal — SQLite is source of truth
-    # ─────────────────────────────────────────────────────────────────────────
 
     # Structured log
     from app.utils.logger import log_structured_event
@@ -735,7 +782,7 @@ def get_purchase_complete_popup(
         
         popup_products.append({
             "product_id": product.id,
-            "name": product.title,
+            "name": product.name or product.title,
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",

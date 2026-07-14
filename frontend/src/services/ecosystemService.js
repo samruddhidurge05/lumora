@@ -13,12 +13,12 @@
 
 import { db } from '../firebase';
 import {
-  collection, addDoc, doc, setDoc, getDoc, updateDoc
+  collection, addDoc, doc, getDocs, query, where
 } from 'firebase/firestore';
 import { recordPurchase } from './purchaseService';
 import { recordDownload } from './downloadsService';
 import { createNotification } from './notificationService';
-import { affiliateService } from './affiliateService';
+import { backendFetch } from '../utils/api';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,34 +85,7 @@ export const onPurchaseComplete = async (uid, items, totalUSD, affCode) => {
       recordDownload(uid, String(item.id), fileUrl)
     );
 
-    // ── 3. Update vendor product stats (increment sales + revenue counters)
-    await safeRun(`vendorStats(${item.id})`, async () => {
-      const vendorId = item.seller?.id || item.vendor_id;
-      if (!vendorId) return;
-
-      const statsRef  = doc(db, 'vendorStats', vendorId);
-      const statsSnap = await getDoc(statsRef);
-      const priceINR  = Math.round((item.price || 0) * INR_RATE);
-
-      if (statsSnap.exists()) {
-        const d = statsSnap.data();
-        await updateDoc(statsRef, {
-          totalRevenue: (d.totalRevenue || 0) + priceINR,
-          totalSales:   (d.totalSales   || 0) + 1,
-          updatedAt:    now,
-        });
-      } else {
-        await setDoc(statsRef, {
-          vendorId,
-          totalRevenue: priceINR,
-          totalSales:   1,
-          createdAt:    now,
-          updatedAt:    now,
-        });
-      }
-    });
-
-    // ── 4. Write a vendor notification (new order alert)
+    // ── 3. Write a vendor notification (new order alert)
     await safeRun(`vendorNotif(${item.id})`, async () => {
       const vendorId = item.seller?.id || item.vendor_id;
       if (!vendorId) return;
@@ -130,7 +103,7 @@ export const onPurchaseComplete = async (uid, items, totalUSD, affCode) => {
     });
   }
 
-  // ── 5. Send customer purchase notification (Firestore → Customer/Notifications)
+  // ── 4. Send customer purchase notification (Firestore → Customer/Notifications)
   await safeRun('customerNotification', () =>
     createNotification(
       uid,
@@ -140,25 +113,43 @@ export const onPurchaseComplete = async (uid, items, totalUSD, affCode) => {
     )
   );
 
-  // ── 6. Affiliate conversions (if customer arrived via referral link)
+  // ── 5. Affiliate commissions (if customer arrived via referral link)
   if (affCode) {
-    await safeRun('affiliateConversions', () =>
-      affiliateService.createConversionsForOrder(
-        {
-          orderId,
-          customerId: uid,
-          items: items.map(item => ({
+    await safeRun('affiliateCommissions', () =>
+      backendFetch('/api/affiliate/commissions', {
+        method: 'POST',
+        body: JSON.stringify({
+          affiliate_code: affCode,
+          order_id:       orderId,
+          customer_id:    uid,
+          items:          items.map(item => ({
             productId: String(item.id),
             vendorId:  item.seller?.id || item.vendor_id || '',
-            snapshot:  { title: item.title, price: item.price },
           })),
-        },
-        { affiliateCode: affCode }
-      )
+        }),
+      })
     );
+
+    // ── 5b. Admin referral link conversion tracking
+    await safeRun('adminReferralConversion', async () => {
+      const refLinksSnap = await getDocs(
+        query(collection(db, 'adminReferralLinks'), where('code', '==', affCode))
+      );
+      if (!refLinksSnap.empty) {
+        const campaignId = refLinksSnap.docs[0].id;
+        await addDoc(collection(db, 'adminAffiliateOrders'), {
+          campaignId,
+          code:        affCode,
+          orderId,
+          customerId:  uid,
+          totalAmount: totalUSD,
+          createdAt:   now,
+        });
+      }
+    });
   }
 
-  // ── 7. Clear the stored affiliate referral code after use
+  // ── 6. Clear the stored affiliate referral code after use
   sessionStorage.removeItem('lumora_aff_ref');
 
   console.log('[ecosystemService] Purchase propagation complete for order:', orderId);

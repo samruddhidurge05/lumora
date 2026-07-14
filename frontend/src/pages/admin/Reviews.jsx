@@ -542,18 +542,25 @@ export default function Reviews() {
                   </div>
                 </div>
 
-                {/* Card 4: Verified purchased ratio */}
+                {/* Card 4: Verified purchased ratio — driven by real firestoreData */}
                 <div className="glass-surface rounded-2xl p-5 hover:shadow-[0_10px_25px_rgba(216,191,227,0.12)] border border-white/50 transition-all duration-300 group hover:-translate-y-1">
                   <div className="flex items-center justify-between mb-3 text-[#7B3FA0]">
                     <span className="text-[8px] font-black uppercase tracking-widest">Verified Ratio</span>
                     <Icon name="Shield" size={13} className="text-[#B886D0]" />
                   </div>
                   <h3 className="text-xl font-serif font-black text-[#2D004D] mb-1">
-                    <CountUp value={94} suffix="%" />
+                    {initialData.summary.totalReviews > 0
+                      ? <CountUp value={Math.round((initialData.summary.positive))} suffix="%" />
+                      : <span>—</span>}
                   </h3>
-                  <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Certified transaction paths</p>
+                  <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Positive verified reviews</p>
                   <div className="w-full bg-[#B886D0]/20 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div className="bg-[#B886D0] h-full" initial={{ width: 0 }} animate={{ width: "94%" }} transition={{ duration: 1 }} />
+                    <motion.div
+                      className="bg-[#B886D0] h-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
+                      transition={{ duration: 1 }}
+                    />
                   </div>
                 </div>
 
@@ -580,99 +587,102 @@ export default function Reviews() {
                     </div>
                   </div>
 
-                  {/* SVG Double lines */}
+                  {/* SVG Double lines — driven by real sentimentTrend data from backend */}
                   <div className="h-[250px] w-full relative pt-4">
-                    <svg viewBox="0 0 600 220" className="w-full h-full overflow-visible">
-                      <defs>
-                        <linearGradient id="posGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#B886D0" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#B886D0" stopOpacity="0" />
-                        </linearGradient>
-                        <linearGradient id="negGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.15" />
-                          <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
+                    {(() => {
+                      // sentimentTrend is an array of positivePercentage values (one per data point)
+                      // Backend returns [pos_pct] * 6 — we map each to a positive/negative pair.
+                      const trend = initialData.sentimentTrend && initialData.sentimentTrend.length > 0
+                        ? initialData.sentimentTrend
+                        : null;
 
-                      {/* Grid guidelines */}
-                      {[0, 1, 2, 3, 4].map(idx => (
-                        <line 
-                          key={idx}
-                          x1="40" y1={20 + idx * 40}
-                          x2="580" y2={20 + idx * 40}
-                          stroke="rgba(90, 30, 126, 0.05)"
-                          strokeDasharray="4"
-                        />
-                      ))}
+                      // No data yet — show empty state
+                      if (!trend) {
+                        return (
+                          <div className="flex items-center justify-center h-full text-[11px] text-[#7B3FA0]">
+                            No sentiment data yet.
+                          </div>
+                        );
+                      }
 
-                      {/* Area positive curve */}
-                      <path d="M40,110 C120,90 180,120 280,60 T480,45 L580,30 L580,180 L40,180 Z" fill="url(#posGrad)" />
-                      <motion.path 
-                        d="M40,110 C120,90 180,120 280,60 T480,45 L580,30" 
-                        fill="none" stroke="#B886D0" strokeWidth="2.5" strokeLinecap="round"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1.2 }}
-                      />
+                      const n = trend.length;
+                      const W = 540; // usable width between padL and padR
+                      const H = 160; // chart height
+                      const padL = 40; const padT = 20; const padB = 30;
+                      const totalW = W + padL + 20;
+                      const totalH = H + padT + padB;
 
-                      {/* Area negative curve */}
-                      <path d="M40,170 C120,150 180,165 280,140 T480,160 L580,175 L580,180 L40,180 Z" fill="url(#negGrad)" />
-                      <motion.path 
-                        d="M40,170 C120,150 180,165 280,140 T480,160 L580,175" 
-                        fill="none" stroke="#D8BFE3" strokeWidth="2" strokeLinecap="round" strokeDasharray="3"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1.2, delay: 0.2 }}
-                      />
+                      // Map positive% to Y (inverted — higher % = lower Y = higher on chart)
+                      const posY = (pct) => padT + (1 - Math.min(100, Math.max(0, pct)) / 100) * H;
+                      // Negative line is 100 - positive
+                      const negY = (pct) => posY(100 - pct);
 
-                      {/* Coordinate Nodes */}
-                      {[
-                        { x: 40, py: 110, ny: 170, label: "Mon", val: { p: 78, n: 22 } },
-                        { x: 175, py: 92, ny: 154, label: "Tue", val: { p: 82, n: 18 } },
-                        { x: 310, py: 104, ny: 161, label: "Wed", val: { p: 75, n: 25 } },
-                        { x: 445, py: 50, ny: 145, label: "Thu", val: { p: 88, n: 12 } },
-                        { x: 580, py: 30, ny: 175, label: "Fri", val: { p: 91, n: 9 } }
-                      ].map((node, i) => (
-                        <g key={i}>
-                          {/* Positive trigger node */}
-                          <circle 
-                            cx={node.x} cy={node.py} r="4.5" fill="#B886D0" stroke="white" strokeWidth="1.5"
-                            className="cursor-pointer hover:r-6 transition-all"
-                            onMouseEnter={(e) => {
-                              const rect = e.target.getBoundingClientRect();
-                              setActiveTooltip({
-                                x: rect.left + window.scrollX,
-                                y: rect.top + window.scrollY - 38,
-                                title: `${node.label} positive`,
-                                value: `${node.val.p}%`
-                              });
-                            }}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                          />
+                      const xOf = (i) => padL + (i / Math.max(n - 1, 1)) * W;
 
-                          {/* Negative trigger node */}
-                          <circle 
-                            cx={node.x} cy={node.ny} r="4" fill="#D8BFE3" stroke="white" strokeWidth="1.5"
-                            className="cursor-pointer hover:r-6 transition-all"
-                            onMouseEnter={(e) => {
-                              const rect = e.target.getBoundingClientRect();
-                              setActiveTooltip({
-                                x: rect.left + window.scrollX,
-                                y: rect.top + window.scrollY - 38,
-                                title: `${node.label} negative`,
-                                value: `${node.val.n}%`
-                              });
-                            }}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                          />
+                      const posPoints = trend.map((v, i) => `${xOf(i)},${posY(v)}`).join(' ');
+                      const negPoints = trend.map((v, i) => `${xOf(i)},${negY(v)}`).join(' ');
+                      const areaClose = `${xOf(n - 1)},${padT + H} ${padL},${padT + H}`;
+                      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].slice(0, n);
 
-                          <text x={node.x} y="200" fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            {node.label}
-                          </text>
-                        </g>
-                      ))}
+                      return (
+                        <svg viewBox={`0 0 ${totalW} ${totalH}`} className="w-full h-full overflow-visible">
+                          <defs>
+                            <linearGradient id="posGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#B886D0" stopOpacity="0.25" />
+                              <stop offset="100%" stopColor="#B886D0" stopOpacity="0" />
+                            </linearGradient>
+                            <linearGradient id="negGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.15" />
+                              <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
 
-                    </svg>
+                          {/* Grid guidelines */}
+                          {[0, 1, 2, 3, 4].map(idx => (
+                            <line key={idx} x1={padL} y1={padT + idx * (H / 4)} x2={W + padL} y2={padT + idx * (H / 4)}
+                              stroke="rgba(90,30,126,0.05)" strokeDasharray="4" />
+                          ))}
+
+                          {/* Positive area fill */}
+                          <polygon points={`${posPoints} ${areaClose}`} fill="url(#posGrad)" />
+                          {/* Positive line */}
+                          <polyline points={posPoints} fill="none" stroke="#B886D0" strokeWidth="2.5"
+                            strokeLinecap="round" strokeLinejoin="round" />
+
+                          {/* Negative line */}
+                          <polyline points={negPoints} fill="none" stroke="#D8BFE3" strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3" />
+
+                          {/* Data nodes */}
+                          {trend.map((v, i) => {
+                            const px = xOf(i); const py = posY(v);
+                            const nx = xOf(i); const ny = negY(v);
+                            const label = labels[i] || `P${i + 1}`;
+                            return (
+                              <g key={i}>
+                                <circle cx={px} cy={py} r="4.5" fill="#B886D0" stroke="white" strokeWidth="1.5"
+                                  className="cursor-pointer"
+                                  onMouseEnter={(e) => {
+                                    const r = e.target.getBoundingClientRect();
+                                    setActiveTooltip({ x: r.left + window.scrollX, y: r.top + window.scrollY - 38, title: `${label} positive`, value: `${Math.round(v)}%` });
+                                  }}
+                                  onMouseLeave={() => setActiveTooltip(null)} />
+                                <circle cx={nx} cy={ny} r="4" fill="#D8BFE3" stroke="white" strokeWidth="1.5"
+                                  className="cursor-pointer"
+                                  onMouseEnter={(e) => {
+                                    const r = e.target.getBoundingClientRect();
+                                    setActiveTooltip({ x: r.left + window.scrollX, y: r.top + window.scrollY - 38, title: `${label} negative`, value: `${Math.round(100 - v)}%` });
+                                  }}
+                                  onMouseLeave={() => setActiveTooltip(null)} />
+                                <text x={px} y={padT + H + 16} fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      );
+                    })()}
 
                     {/* Chart Tooltip */}
                     {activeTooltip && (
@@ -704,21 +714,30 @@ export default function Reviews() {
 
                       <div className="flex flex-col gap-3">
                         <div className="p-3 bg-white/60 rounded-xl border border-[#F3EAF8] text-[10px] text-[#7B3FA0] leading-relaxed">
-                          "Customer satisfaction score rose <strong>+12%</strong> this cycle. Digital assets maintain solid reputation values."
+                          {initialData.summary.positive > 0
+                            ? `${initialData.summary.positive}% of reviews are positive. Average rating: ${initialData.summary.avgRating}/5.`
+                            : 'Review sentiment data will appear once customers submit reviews.'}
                         </div>
                         <div className="p-3 bg-white/60 rounded-xl border border-[#F3EAF8] text-[10px] text-[#7B3FA0] leading-relaxed">
-                          "Onboarding flow notes minor friction regarding installation steps for learning templates."
+                          {initialData.summary.negative > 0
+                            ? `${initialData.summary.negative}% of reviews flagged as negative — review these for action.`
+                            : 'No negative reviews detected yet.'}
                         </div>
                       </div>
                     </div>
 
                     <div className="border-t border-[#F5E9DD]/50 pt-4 flex flex-col gap-3">
                       <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-[#7B3FA0]">
-                        <span>Review Authenticity</span>
-                        <span className="text-emerald-500 font-black">98.2% secure</span>
+                        <span>Positive Sentiment</span>
+                        <span className={`font-black ${initialData.summary.positive >= 70 ? 'text-emerald-500' : 'text-[#C4A4D8]'}`}>
+                          {initialData.summary.totalReviews > 0 ? `${initialData.summary.positive}%` : '—'}
+                        </span>
                       </div>
                       <div className="w-full bg-white h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-[#B886D0] h-full w-[98%]" />
+                        <div
+                          className="bg-[#B886D0] h-full transition-all duration-700"
+                          style={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -737,26 +756,32 @@ export default function Reviews() {
                         </defs>
                         {/* Background track circle */}
                         <circle cx="64" cy="64" r="52" stroke="rgba(90, 30, 126, 0.03)" strokeWidth="8" fill="transparent" />
-                        {/* Interactive gauge fill */}
-                        <motion.circle 
+                        {/* Gauge fill — driven by real positive sentiment percentage */}
+                        <motion.circle
                           cx="64" cy="64" r="52" stroke="url(#gaugeGrad)" strokeWidth="9" fill="transparent"
                           strokeDasharray={326.7}
                           initial={{ strokeDashoffset: 326.7 }}
-                          animate={{ strokeDashoffset: 326.7 * (1 - 0.96) }} // 96%
+                          animate={{ strokeDashoffset: 326.7 * (1 - (initialData.summary.positive / 100)) }}
                           transition={{ duration: 1.5, ease: "easeOut" }}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute flex flex-col items-center">
                         <span className="text-3xl font-serif font-black text-[#2D004D] leading-none">
-                          <CountUp value={96} />
+                          {initialData.summary.totalReviews > 0
+                            ? <CountUp value={initialData.summary.positive} />
+                            : <span style={{ fontSize: '1.5rem' }}>—</span>}
                         </span>
-                        <span className="text-[7px] font-black uppercase text-[#8E6AA8] tracking-widest mt-1">Excellent</span>
+                        <span className="text-[7px] font-black uppercase text-[#8E6AA8] tracking-widest mt-1">
+                          {initialData.summary.totalReviews > 0 ? 'Positive %' : 'No data'}
+                        </span>
                       </div>
                     </div>
 
                     <p className="text-[9px] text-[#7B3FA0] leading-relaxed mt-4">
-                      Compounded index matching verified ratio, high reviews, and low disputes.
+                      {initialData.summary.totalReviews > 0
+                        ? `Based on ${initialData.summary.totalReviews} reviews across all products.`
+                        : 'Trust index will calculate once reviews are submitted.'}
                     </p>
                   </div>
 
@@ -993,25 +1018,44 @@ export default function Reviews() {
                     <div className="flex flex-col gap-4 mt-2">
                       <div className="bg-white/50 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2">
                         <div className="flex justify-between text-[9px] font-bold text-[#7B3FA0] uppercase">
-                          <span>Suspicious Review Density</span>
-                          <span className="text-amber-500 font-extrabold">0.8% alert</span>
+                          <span>Negative Review Density</span>
+                          <span className={`font-extrabold ${initialData.summary.negative > 10 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {initialData.summary.totalReviews > 0 ? `${initialData.summary.negative}%` : '—'}
+                          </span>
                         </div>
                         <div className="w-full bg-[#F5E9DD]/50 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-amber-400 h-full w-[8%]" />
+                          <div
+                            className={`h-full ${initialData.summary.negative > 10 ? 'bg-red-400' : 'bg-emerald-400'}`}
+                            style={{ width: `${Math.min(100, initialData.summary.negative)}%` }}
+                          />
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 bg-red-50/40 p-3 rounded-2xl border border-red-100/50">
-                        <div className="w-5 h-5 rounded-lg bg-[#D8BFE3] text-[#FF8597] flex items-center justify-center shrink-0 text-[10px] font-bold">
-                          !
+                      {initialData.summary.negative > 10 ? (
+                        <div className="flex items-center gap-3 bg-red-50/40 p-3 rounded-2xl border border-red-100/50">
+                          <div className="w-5 h-5 rounded-lg bg-[#D8BFE3] text-[#FF8597] flex items-center justify-center shrink-0 text-[10px] font-bold">!</div>
+                          <div>
+                            <h6 className="text-[10px] font-bold text-[#2D004D]">High Negative Rate</h6>
+                            <p className="text-[8px] text-red-400/80 mt-0.5 leading-relaxed">
+                              {initialData.summary.negative}% negative reviews detected. Review flagged submissions for moderation.
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h6 className="text-[10px] font-bold text-[#2D004D]">1 Anomaly Flagged</h6>
-                          <p className="text-[8px] text-red-400/80 mt-0.5 leading-relaxed">
-                            Anonymous user review R-1005 was blocked from organic score aggregation due to pattern matches.
-                          </p>
+                      ) : (
+                        <div className="flex items-center gap-3 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/50">
+                          <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-[10px] font-bold">✓</div>
+                          <div>
+                            <h6 className="text-[10px] font-bold text-[#2D004D]">
+                              {initialData.summary.totalReviews > 0 ? 'Sentiment Healthy' : 'No Reviews Yet'}
+                            </h6>
+                            <p className="text-[8px] text-emerald-600/80 mt-0.5 leading-relaxed">
+                              {initialData.summary.totalReviews > 0
+                                ? 'Negative rate is within acceptable range.'
+                                : 'Review data will appear once customers submit feedback.'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                   </div>

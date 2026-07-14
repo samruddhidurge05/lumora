@@ -296,15 +296,6 @@ export default function CustomersManagement() {
         <PageHeader
           title="Customer Registry"
           subtitle="View platform customers, trace order histories, verify spending metrics, and monitor account access logs."
-          actions={
-            <button
-              onClick={() => {}}
-              className="btn-admin-secondary flex items-center gap-2"
-            >
-              <Icon name="RefreshCw" size={13} />
-              Sync Live
-            </button>
-          }
         />
 
         {/* ── Statistics Summary Grid ── */}
