@@ -370,7 +370,7 @@ class PaymentService:
                 details=f"Payment {payment_ref} failed: {failure_reason}",
             )
             db.commit()  # Persist FAILED status in the outer transaction
-            logger.warning("Payment %s → FAILED (business rule): %s", payment_ref, failure_reason)
+            logger.warning("Payment %s -> FAILED (business rule): %s", payment_ref, failure_reason)
             raise  # Re-raise the original HTTPException to the router
 
         except Exception as exc:
@@ -388,7 +388,7 @@ class PaymentService:
             )
             db.commit()  # Persist FAILED status cleanly in the outer transaction
             logger.error(
-                "Payment %s → FAILED (unexpected): %s",
+                "Payment %s -> FAILED (unexpected): %s",
                 payment_ref, exc, exc_info=True,
             )
             raise HTTPException(
@@ -413,7 +413,7 @@ class PaymentService:
         )
 
         db.commit()  # Final commit — payment=SUCCESS, order fully persisted
-        logger.info("Payment %s → SUCCESS, Order ORD-%s", payment_ref, order.id)
+        logger.info("Payment %s -> SUCCESS, Order ORD-%s", payment_ref, order.id)
         return order
 
     # ─── Cancel ──────────────────────────────────────────────────────────────
@@ -816,7 +816,7 @@ class PaymentService:
             "gateway":          payment.gateway,
             "gateway_key":      os.getenv("RAZORPAY_KEY_ID", "mock_key"),
             "status":           payment.status,
-            "expires_at":       payment.expires_at.isoformat() if payment.expires_at else None,
+            "expires_at":       f"{payment.expires_at.isoformat()}Z" if payment.expires_at else None,
         }
 
 

@@ -245,7 +245,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """Handle Pydantic validation errors — return field-level details without exposing internals."""
     field_errors = []
     for error in exc.errors():
-        loc = " → ".join(str(loc) for loc in error.get("loc", []) if loc != "body")
+        loc = " -> ".join(str(loc) for loc in error.get("loc", []) if loc != "body")
         field_errors.append(f"{loc}: {error.get('msg', 'Invalid value')}" if loc else error.get("msg", "Validation error"))
 
     return JSONResponse(

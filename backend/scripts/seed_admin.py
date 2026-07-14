@@ -47,7 +47,7 @@ def seed_admin():
             if existing.role != "admin":
                 existing.role = "admin"
                 db.commit()
-                print(f"[seed_admin] Updated existing user {ADMIN_EMAIL} → role=admin")
+                print(f"[seed_admin] Updated existing user {ADMIN_EMAIL} -> role=admin")
             else:
                 print(f"[seed_admin] Admin user already exists: {ADMIN_EMAIL} (id={existing.id})")
             return existing.id
