@@ -83,7 +83,7 @@ def _build_vendor_ids(db: Session, items) -> str:
         "Idempotent: supplying the same idempotency_key returns the existing payment."
     ),
 )
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 def initiate_payment(
     request: Request,
     body: InitiatePaymentRequest,
@@ -101,25 +101,34 @@ def initiate_payment(
         5. Customer pays → frontend calls POST /api/payments/confirm
     """
     # Platform pause check (non-admin)
-    if current_user.role != "admin":
-        _check_platform_not_paused()
+    import traceback
+    print("DEBUG INITIATE - User:", current_user.id, current_user.email, "Body:", body.model_dump())
+    try:
+        if current_user.role != "admin":
+            _check_platform_not_paused()
 
-    subtotal = 0.0
-    for item in body.items:
-        prod = db.query(Product).filter(Product.id == item.product_id).first()
-        if not prod:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product with ID {item.product_id} not found."
-            )
-        if prod.status != "published":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Product '{prod.title}' is not available for purchase."
-            )
-        # Override client price_paid with actual server price from DB
-        item.price_paid = float(prod.price)
-        subtotal += float(prod.price)
+        subtotal = 0.0
+        for item in body.items:
+            prod = db.query(Product).filter(Product.id == item.product_id).first()
+            if not prod:
+                print(f"DEBUG INITIATE - Product {item.product_id} not found in database!")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Product with ID {item.product_id} not found."
+                )
+            if prod.status != "published":
+                print(f"DEBUG INITIATE - Product {item.product_id} is not published! Status: {prod.status}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Product '{prod.title}' is not available for purchase."
+                )
+            # Override client price_paid with actual server price from DB
+            item.price_paid = float(prod.price)
+            subtotal += float(prod.price)
+    except Exception as e:
+        print("DEBUG INITIATE - Exception caught:")
+        traceback.print_exc()
+        raise e
 
     discount_pct = 0.0
     if body.promo_code:
@@ -188,7 +197,7 @@ def initiate_payment(
         "transaction, and returns the completed Order. Idempotent on SUCCESS."
     ),
 )
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 def confirm_payment(
     request: Request,
     body: ConfirmPaymentRequest,

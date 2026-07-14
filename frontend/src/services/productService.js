@@ -82,7 +82,9 @@ export const mapDocToProduct = (docSnap) => {
       tags: data.tags || [],
       downloads: data.downloads || 0,
       revenue: data.revenue || 0,
-      createdAt: data.createdAt || null
+      createdAt: data.createdAt || null,
+      pcloud_download_link: data.pcloud_download_link || data.pcloudDownloadLink || null,
+      pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null
     };
   }
 
@@ -106,7 +108,9 @@ export const mapDocToProduct = (docSnap) => {
     tags: data.tags || [],
     downloads: data.downloads || 0,
     revenue: data.revenue || 0,
-    createdAt: data.createdAt || null
+    createdAt: data.createdAt || null,
+    pcloud_download_link: data.pcloud_download_link || data.pcloudDownloadLink || null,
+    pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null
   };
 };
 

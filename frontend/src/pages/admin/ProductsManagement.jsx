@@ -222,8 +222,16 @@ function mapAdminProductToApi(uiForm) {
     price:             Number(uiForm.price) || 0,
 
     // Media
-    thumbnail:         uiForm.thumbnail   || null,
-    preview:           uiForm.thumbnail   || null,  // Admin uses thumbnail for both
+    thumbnail:         (uiForm.thumbnail && !uiForm.thumbnail.includes('unsplash.com') && !uiForm.thumbnail.includes('temp/'))
+                         ? uiForm.thumbnail
+                         : (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)
+                           ? uiForm.pcloudImageUrls[0]
+                           : uiForm.thumbnail || null,
+    preview:           (uiForm.thumbnail && !uiForm.thumbnail.includes('unsplash.com') && !uiForm.thumbnail.includes('temp/'))
+                         ? uiForm.thumbnail
+                         : (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)
+                           ? uiForm.pcloudImageUrls[0]
+                           : uiForm.thumbnail || null,
 
     // File delivery
     file_url:          uiForm.downloadUrl || uiForm.file_url || null,  // downloadUrl → file_url

@@ -182,6 +182,29 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // ── Conversations & Messages — buyer, seller or admin ──────────────────────
+    match /conversations/{conversationId} {
+      allow read, write: if isSignedIn() && (
+        request.auth.uid == resource.data.buyer_id ||
+        request.auth.uid == resource.data.seller_id ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.auth.uid == request.resource.data.buyer_id ||
+        request.auth.uid == request.resource.data.seller_id ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      match /messages/{messageId} {
+        allow read, write: if isSignedIn() && (
+          request.auth.uid == get(/databases/$(database)/documents/conversations/$(conversationId)).data.buyer_id ||
+          request.auth.uid == get(/databases/$(database)/documents/conversations/$(conversationId)).data.seller_id ||
+          isAdmin()
+        );
+      }
+    }
+
     // ── Deny everything else by default ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

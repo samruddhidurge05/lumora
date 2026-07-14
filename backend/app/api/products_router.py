@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import cast, String, or_
@@ -19,6 +20,98 @@ from app.services.storage_service import storage_service
 
 router = APIRouter()
 
+import urllib.parse as urlparse
+import requests
+
+_PCLOUD_URL_CACHE = {}
+
+def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
+    if not url or "pcloud" not in url:
+        return url
+    if url in _PCLOUD_URL_CACHE:
+        return _PCLOUD_URL_CACHE[url]
+    
+    try:
+        parsed = urlparse.urlparse(url)
+        params = urlparse.parse_qs(parsed.query)
+        code = params.get("code")
+        if not code:
+            return url
+        code_str = code[0]
+        
+        # Call pCloud API
+        res = requests.get(f"https://api.pcloud.com/getpublinkdownload?code={code_str}", timeout=2)
+        data = res.json()
+        if data.get("result") == 0 and data.get("hosts") and data.get("path"):
+            host = data["hosts"][0]
+            path = data["path"]
+            resolved = f"https://{host}{path}"
+            _PCLOUD_URL_CACHE[url] = resolved
+            return resolved
+    except Exception as e:
+        print(f"[pCloud-Resolve] Error: {e}")
+    return url
+
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Optional[str]:
+    if not url:
+        return url
+        
+    # 1. Handle pCloud / external URLs
+    if "pcloud" in url or "publink" in url:
+        return resolve_pcloud_direct_url(url)
+        
+    # 2. Check if it's a local upload URL
+    url_lower = url.lower()
+    if "/uploads/" in url_lower:
+        try:
+            path_part = url.split("/uploads/", 1)[1]
+            relative_filepath = os.path.join("uploads", path_part)
+            absolute_filepath = os.path.abspath(os.path.join(_BACKEND_DIR, relative_filepath))
+            
+            if not os.path.exists(absolute_filepath):
+                # File is missing! Return a beautiful Unsplash placeholder based on category
+                placeholders = {
+                    "templates": "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80",
+                    "graphics & ui": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+                    "productivity tools": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
+                    "notion templates": "https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=800&q=80",
+                    "productivity systems": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
+                    "design assets": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=800&q=80",
+                }
+                cat_key = (category or "").lower().strip()
+                return placeholders.get(cat_key, "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80")
+        except Exception:
+            pass
+            
+    return url
+
+def resolve_product_media(product, db):
+    from sqlalchemy.orm import make_transient
+    try:
+        db.expunge(product)
+        make_transient(product)
+    except Exception:
+        pass
+        
+    product.thumbnail = resolve_media_url(product.thumbnail, product.category)
+    product.preview = resolve_media_url(product.preview, product.category)
+    
+    if product.image_urls:
+        product.image_urls = [resolve_media_url(url, product.category) for url in product.image_urls]
+    if product.preview_images:
+        product.preview_images = [resolve_media_url(url, product.category) for url in product.preview_images]
+        
+    return product
+
+def resolve_products_media(products, db):
+    if isinstance(products, list):
+        return [resolve_product_media(p, db) for p in products]
+    elif products:
+        return resolve_product_media(products, db)
+    return products
+
 # ── Public read endpoints (no auth) ──────────────────────────────────────────
 
 @router.get("/", response_model=List[ProductResponse])
@@ -35,7 +128,8 @@ def read_products(
     ).order_by(Product.id.desc())
     if category and category != "All":
         query = query.filter(Product.category == category)
-    return query.offset(skip).limit(limit).all()
+    results = query.offset(skip).limit(limit).all()
+    return resolve_products_media(results, db)
 
 
 @router.get("/search")
@@ -84,27 +178,30 @@ def search_products(
     else:  # featured
         products = sorted(products, key=lambda p: (p.featured or False), reverse=True)
 
-    return products[skip : skip + limit]
+    results = products[skip : skip + limit]
+    return resolve_products_media(results, db)
 
 
 @router.get("/featured", response_model=List[ProductResponse])
 def get_featured_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return featured products."""
-    return db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    results = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.featured == True,
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
     ).limit(limit).all()
+    return resolve_products_media(results, db)
 
 
 @router.get("/trending", response_model=List[ProductResponse])
 def get_trending_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return trending products sorted by downloads."""
-    return db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    results = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.trending == True,
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
     ).order_by(Product.downloads.desc()).limit(limit).all()
+    return resolve_products_media(results, db)
 
 
 @router.get("/categories", response_model=List[str])
@@ -126,7 +223,7 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
     ).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    return product
+    return resolve_products_media(product, db)
 
 
 @router.get("/{product_id}/related", response_model=List[ProductResponse])
@@ -135,11 +232,12 @@ def get_related_products(product_id: int, limit: int = 4, db: Session = Depends(
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    return db.query(Product).filter(
+    results = db.query(Product).filter(
         Product.category == product.category,
         Product.id != product_id,
         Product.status == "published"
     ).limit(limit).all()
+    return resolve_products_media(results, db)
 
 
 @router.get("/{product_id}/images", response_model=List[str])
@@ -206,14 +304,14 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
             'https://images.unsplash.com/photo-1695654395926-68cefd20b6cc?w=800&q=85'
         ]
     }
-    preview = product.preview or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85'
+    preview = resolve_media_url(product.preview or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85', product.category)
 
     # Prefer explicitly stored pCloud/external image URLs list
     extra_images = []
     if product.image_urls:
-        extra_images = [url for url in product.image_urls if url]
+        extra_images = [resolve_media_url(url, product.category) for url in product.image_urls if url]
     elif product.preview_images:
-        extra_images = [url for url in product.preview_images if url]
+        extra_images = [resolve_media_url(url, product.category) for url in product.preview_images if url]
 
     if extra_images:
         all_images = [preview] + [img for img in extra_images if img != preview]
@@ -308,7 +406,7 @@ def download_product(
     has_file = bool(product.storage_path or product.file_url)
     download_available = has_pcloud or has_file
     
-    return {
+    response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
         "download_available": download_available,
         "product_details": {
@@ -329,6 +427,12 @@ def download_product(
         },
         "token_expires_in": "15 minutes"
     }
+
+    if has_pcloud:
+        response_data["type"] = "external"
+        response_data["redirect_url"] = product.pcloud_download_link
+
+    return response_data
 
 
 @router.get("/downloads/center")

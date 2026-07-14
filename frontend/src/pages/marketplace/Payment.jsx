@@ -104,11 +104,8 @@ export default function Payment() {
    */
   const openRazorpayCheckout = (initResponse) => {
     if (!window.Razorpay) {
-      console.error('[Payment] Razorpay SDK not loaded. Falling back to mock flow.');
-      // Fallback: complete as mock if SDK unavailable
+      alert('Payment SDK failed to load. Please check your network connection.');
       setIsProcessing(false);
-      const mockId = `MOCK-${Date.now()}`;
-      completePurchase(paymentMethod, mockId, appliedPromo?.code || null, discount);
       return;
     }
 
@@ -124,6 +121,10 @@ export default function Payment() {
         name:    checkoutForm?.name  || '',
         email:   checkoutForm?.email || '',
         contact: checkoutForm?.phone || '',
+        method:  paymentMethod === 'credit_card' || paymentMethod === 'debit_card' ? 'card' :
+                 paymentMethod === 'netbanking' ? 'netbanking' : 'upi',
+        ...(paymentMethod === 'netbanking' ? { bank: selectedBank.toUpperCase() } : {}),
+        ...(paymentMethod === 'upi' && upiId ? { vpa: upiId.trim() } : {}),
       },
       theme: { color: '#7B3FA0' },
       modal: {
@@ -236,6 +237,17 @@ export default function Payment() {
           tax_amount: parseFloat((platformFee + gst).toFixed(2)),
         }),
       });
+      if (res?.gateway_order_id && !res.gateway_order_id.startsWith('mock_')) {
+        // Live Razorpay - open Checkout modal instead of UpiQrDisplay
+        if (!window.Razorpay) {
+          alert('Payment gateway SDK (Razorpay) failed to load. Please check your internet connection or disable ad blockers.');
+          setIsProcessing(false);
+          return;
+        }
+        setIsProcessing(false);
+        openRazorpayCheckout(res);
+        return;
+      }
       setUpiSessionData({
         ...localSessionData,
         ...(res?.payment_ref ? { payment_ref: res.payment_ref } : {}),
@@ -245,8 +257,13 @@ export default function Payment() {
       });
       if (res?.payment_ref) setPendingPaymentRef(res.payment_ref);
     } catch (err) {
-      console.warn('[Payment] Backend unavailable, using local UPI QR:', err.message);
-      setUpiSessionData(localSessionData);
+      console.error('[Payment] Generate QR failed:', err);
+      // 429 Rate Limit — show a friendly cooldown message instead of crashing
+      if (err.message && err.message.includes('429')) {
+        alert('Too many payment requests. Please wait 30 seconds before trying again.');
+      } else {
+        alert('Failed to generate QR code: ' + (err.message || 'Please try again.'));
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -258,6 +275,46 @@ export default function Payment() {
     if (paymentMethod === 'upi_qr') {
       await generateUpiQr();
       return;
+    }
+
+    // 1. Validate payment-method specific inputs
+    if (paymentMethod === 'upi') {
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!upiId || !upiRegex.test(upiId.trim())) {
+        alert('Please enter a valid UPI ID (e.g., username@bank).');
+        return;
+      }
+    } else if (paymentMethod === 'credit_card' || paymentMethod === 'debit_card') {
+      const digitsOnlyCard = cardForm.card.replace(/\s/g, '');
+      if (!digitsOnlyCard || digitsOnlyCard.length < 12 || digitsOnlyCard.length > 19 || !/^\d+$/.test(digitsOnlyCard)) {
+        alert('Please enter a valid card number (12-19 digits).');
+        return;
+      }
+
+      const expiryRegex = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
+      if (!cardForm.expiry || !expiryRegex.test(cardForm.expiry)) {
+        alert('Please enter a valid expiry date in MM/YY format.');
+        return;
+      }
+
+      const [expMonth, expYear] = cardForm.expiry.split('/').map(num => parseInt(num, 10));
+      const currentYear = parseInt(new Date().getFullYear().toString().slice(-2), 10);
+      const currentMonth = new Date().getMonth() + 1;
+
+      if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+        alert('The card has expired. Please use a different card.');
+        return;
+      }
+
+      if (!cardForm.cvv || cardForm.cvv.length < 3 || cardForm.cvv.length > 4 || !/^\d+$/.test(cardForm.cvv)) {
+        alert('Please enter a valid CVV (3-4 digits).');
+        return;
+      }
+    } else if (paymentMethod === 'netbanking') {
+      if (!selectedBank) {
+        alert('Please select a bank for net banking.');
+        return;
+      }
     }
 
     // Generate a fresh idempotency key for each new payment attempt to prevent reuse
@@ -329,12 +386,22 @@ export default function Payment() {
       }
 
       // Live Razorpay — open checkout modal
+      if (!window.Razorpay) {
+        alert('Payment gateway SDK (Razorpay) failed to load. Please check your internet connection or disable ad blockers.');
+        setIsProcessing(false);
+        return;
+      }
+
       setIsProcessing(false);
       openRazorpayCheckout(res);
 
     } catch (err) {
       console.error('[Payment] Initiate failed:', err);
-      alert('Failed to start payment. Please try again.');
+      if (err.message && err.message.includes('429')) {
+        alert('Too many payment requests. Please wait 30 seconds before trying again.');
+      } else {
+        alert('Failed to start payment: ' + (err.message || 'Please try again.'));
+      }
       setIsProcessing(false);
     }
   };
@@ -348,8 +415,10 @@ export default function Payment() {
     setPendingPaymentRef(null);
 
     if (!confirmResponse) {
-      // Session expired — automatically generate a brand new QR with a fresh 15-minute timer
-      await generateUpiQr();
+      // Session expired — regenerate QR only if not already processing (prevents 429 loop)
+      if (!isProcessing) {
+        await generateUpiQr();
+      }
       return;
     }
 

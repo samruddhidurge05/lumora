@@ -1124,6 +1124,43 @@ export function AppContextProvider({ children }) {
     localStorage.setItem('lumora_glow', String(borderGlow));
   }, [accentTheme, glassMode, borderGlow]);
 
+  // Clean up invalid/deleted products from cart, wishlist, and buyNowProduct
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const validProductIds = new Set(products.map(p => String(p.id)));
+
+      if (cart && cart.length > 0) {
+        const filteredCart = cart.filter(item => validProductIds.has(String(item.id)));
+        if (filteredCart.length !== cart.length) {
+          console.log('[AppContext] Cleaning up invalid/deleted products from cart');
+          setCart(filteredCart);
+          // Sync deletion to backend
+          const invalidItems = cart.filter(item => !validProductIds.has(String(item.id)));
+          invalidItems.forEach(item => {
+            const numericId = parseInt(item.id, 10);
+            if (!isNaN(numericId)) {
+              removeCartItemApi(numericId).catch(() => {});
+            }
+          });
+        }
+      }
+
+      if (wishlist && wishlist.length > 0) {
+        const filteredWishlist = wishlist.filter(item => validProductIds.has(String(item.id)));
+        if (filteredWishlist.length !== wishlist.length) {
+          console.log('[AppContext] Cleaning up invalid/deleted products from wishlist');
+          setWishlist(filteredWishlist);
+        }
+      }
+
+      if (buyNowProduct && !validProductIds.has(String(buyNowProduct.id))) {
+        console.log('[AppContext] Clearing invalid buyNowProduct');
+        setBuyNowProduct(null);
+      }
+    }
+  }, [products, cart, wishlist, buyNowProduct]);
+
+
   // Handle navigation changes globally (popstate and hashchange)
   useEffect(() => {
     const handleNavigation = () => {
@@ -1499,6 +1536,7 @@ export function AppContextProvider({ children }) {
       setDashboardTab,
       cart,
       wishlist,
+      setWishlist,
       ownedProducts,
       buyNowProduct,
       setBuyNowProduct,

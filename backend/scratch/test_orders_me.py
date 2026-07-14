@@ -8,7 +8,7 @@ from app.api.orders.routes import get_my_orders
 
 def test():
     db = SessionLocal()
-    user = db.query(User).filter(User.id == 5).first()
+    user = db.query(User).filter(User.email == "sara@gmail.com").first()
     orders = get_my_orders(current_user=user, db=db)
     print("Orders returned:")
     for o in orders:

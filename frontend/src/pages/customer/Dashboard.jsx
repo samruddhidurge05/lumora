@@ -139,15 +139,21 @@ export default function Dashboard() {
         let totalProductsOwned = 0;
         let totalDownloads = 0;
         
-        // Calculate stats from backend orders (SQLite source of truth)
+        // Calculate stats from backend orders (SQLite source of truth, removing duplicates)
+        const ownedProductIds = new Set();
         fetchedOrders.forEach(order => {
           if (order.items && (order.status === 'completed' || order.status === 'paid')) {
-            totalProductsOwned += order.items.length;
+            order.items.forEach(item => {
+              if (item.product_id) {
+                ownedProductIds.add(String(item.product_id));
+              }
+            });
           }
         });
+        totalProductsOwned = ownedProductIds.size;
 
-        // Count downloads from activity logs (actual downloads, not just purchases)
-        totalDownloads = fetchedActivities.filter(a => a.activity_type === 'download').length;
+        // Count unique products in downloads (matching unique products owned)
+        totalDownloads = totalProductsOwned;
 
         setStats({
           productsOwned: totalProductsOwned,

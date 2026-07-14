@@ -30,11 +30,17 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, pcloudDownloadLink }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
 
   const handleDownload = async () => {
     if (state !== 'idle') return;
+
+    if (pcloudDownloadLink) {
+      window.location.href = pcloudDownloadLink;
+      return;
+    }
+
     setState('downloading');
     
     let activeUrl = downloadUrl;
@@ -53,7 +59,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
 
         // Handle pCloud / external redirect (temporary dev/testing implementation)
         if (res?.type === 'external' && res?.redirect_url) {
-          window.open(res.redirect_url, '_blank');
+          window.location.href = res.redirect_url;
           setTimeout(() => setState('done'), 400);
           setTimeout(() => setState('idle'), 4500);
           return;
@@ -93,7 +99,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
             return;
           }
           if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-            window.open(fileRespJson.redirect_url, '_blank');
+            window.location.href = fileRespJson.redirect_url;
             setTimeout(() => setState('done'), 400);
             setTimeout(() => setState('idle'), 4500);
             return;
@@ -238,16 +244,21 @@ export default function CustomerDownloads() {
 
       if (Array.isArray(orders)) {
         const itemsList = [];
+        const seenPids = new Set();
         orders.forEach(ord => {
           (ord.items || []).forEach(item => {
-            const prod = products.find(p => String(p.id) === String(item.product_id));
+            const pid = String(item.product_id);
+            if (seenPids.has(pid)) return;
+            seenPids.add(pid);
+            
+            const prod = products.find(p => String(p.id) === pid);
             // Determine download availability from the order item's download_url
             // and from any backend download_available flag if present.
             // A product with a real download_url path (not just the /download endpoint)
             // will be treated as available; the actual pending check happens server-side.
             const downloadAvailable = item.download_available !== false; // default true unless explicitly false
             itemsList.push({
-              id: String(item.product_id),
+              id: pid,
               name: prod?.title || `Digital Asset #${item.product_id}`,
               category: prod?.category || 'Digital Asset',
               version: prod?.version || 'v1.0.0',
@@ -262,6 +273,7 @@ export default function CustomerDownloads() {
               accentColor: '#4E3B31',
               downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
               downloadAvailable,
+              pcloud_download_link: prod?.pcloud_download_link || null,
               verified: true,
             });
           });
@@ -291,6 +303,7 @@ export default function CustomerDownloads() {
     gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
     accentColor: '#4E3B31',
     downloadUrl: `/downloads/product-${p.id}.zip`,
+    pcloud_download_link: p.pcloud_download_link || null,
     verified: true,
   }));
 
@@ -642,7 +655,7 @@ export default function CustomerDownloads() {
                   <p style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', marginTop: 3 }}>{product.updateNote}</p>
                   <p style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.7 }}>{product.version} → {product.newVersion}</p>
                 </div>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
               </div>
             ))}
           </div>
@@ -700,6 +713,63 @@ function VaultCard({ product, isHovered, onHover }) {
   const handleMouseLeave = () => {
     setTilt({ x: 0, y: 0 });
     onHover(null);
+  };
+
+  const handleOpen = async () => {
+    if (product.pcloud_download_link) {
+      window.open(product.pcloud_download_link, '_blank');
+      return;
+    }
+
+    const numericId = parseInt(product.id, 10);
+    if (isNaN(numericId)) return;
+
+    try {
+      const res = await backendFetch(`/products/${numericId}/download`);
+      if (res?.download_available === false) {
+        alert("The creator has not yet uploaded the downloadable asset.");
+        return;
+      }
+
+      let activeUrl = res?.download_url || product.downloadUrl;
+      if (res?.type === 'external' && res?.redirect_url) {
+        window.open(res.redirect_url, '_blank');
+        return;
+      }
+
+      if (activeUrl) {
+        const fileCheckUrl = activeUrl.startsWith('/api')
+          ? activeUrl.replace('/api', '')
+          : activeUrl;
+        const token = localStorage.getItem('lumora_backend_token');
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+
+        if (fileResp.ok) {
+          const contentType = fileResp.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const fileRespJson = await fileResp.json();
+            if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
+              window.open(fileRespJson.redirect_url, '_blank');
+              return;
+            }
+          }
+        }
+        
+        // Fallback for direct ZIP/PDF files: open download URL in a new tab
+        const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+        window.open(fullUrl, '_blank');
+      }
+    } catch (err) {
+      console.warn('[OpenButton] Failed to resolve download link:', err);
+      const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+      const fallbackUrl = product.downloadUrl.startsWith('http')
+        ? product.downloadUrl
+        : `${BACKEND_URL}${product.downloadUrl.startsWith('/') ? product.downloadUrl : '/' + product.downloadUrl}`;
+      window.open(fallbackUrl, '_blank');
+    }
   };
 
   return (
@@ -826,15 +896,18 @@ function VaultCard({ product, isHovered, onHover }) {
             </div>
           ) : (
             <>
-              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
-              <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} />
-              <button style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
-                background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
-                color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
-              }}>
+              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
+              <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
+              <button 
+                onClick={handleOpen}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
+                  background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
+                  color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
+                }}
+              >
                 <ExternalLink size={11} /> Open
               </button>
             </>

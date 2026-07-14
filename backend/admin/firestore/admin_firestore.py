@@ -51,6 +51,7 @@ def sync_product_to_firestore(product):
             "commission_value": float(product.commission_value or 0.0),
             # pCloud / external image URLs — for gallery display
             "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
+            "pcloud_download_link": product.pcloud_download_link,
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")
@@ -207,6 +208,8 @@ def restore_sqlite_products_from_firestore(db_session):
                     seo_title=data.get("seoTitle", data.get("seo_title")),
                     seo_description=data.get("seoDescription", data.get("seo_description")),
                     visibility=data.get("visibility", "public"),
+                    pcloud_download_link=data.get("pcloud_download_link", data.get("pcloudDownloadLink")),
+                    image_urls=data.get("image_urls", data.get("imageUrls", [])),
                 )
                 db_session.add(product)
                 count += 1

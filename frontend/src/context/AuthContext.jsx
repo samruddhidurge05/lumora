@@ -175,6 +175,11 @@ export const AuthProvider = ({ children }) => {
     userRoleRef.current = userRole;
   }, [userRole]);
 
+  const logoutRef = useRef(null);
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -196,8 +201,11 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('lumora_active_role', normalized);
           }
         }
-      } catch (_) {
+      } catch (err) {
         // Non-fatal — backend may be temporarily unreachable
+        if (err?.status === 401) {
+          logoutRef.current();
+        }
       }
     };
 
@@ -571,7 +579,7 @@ export const AuthProvider = ({ children }) => {
 
 
   /** Logout — production-level full session teardown */
-  const logout = async () => {
+  async function logout() {
     const wasAdmin = userRole === 'admin';
 
     // 1. Log the event BEFORE signing out (token still valid)

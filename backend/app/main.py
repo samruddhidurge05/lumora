@@ -220,12 +220,8 @@ def restore_products():
     
     db = SessionLocal()
     try:
-        count = db.query(ProductModel).count()
-        if count == 0:
-            _logger.info("[startup] SQLite product table is empty. Initiating safe recovery sync from Firestore...")
-            restore_sqlite_products_from_firestore(db)
-        else:
-            _logger.info("[startup] SQLite product table contains %d products. Skipping recovery.", count)
+        _logger.info("[startup] Syncing and restoring any missing published products from Firestore to SQLite...")
+        restore_sqlite_products_from_firestore(db)
     except Exception as e:
         _logger.error("[startup] Error running startup products recovery: %s", e)
     finally:

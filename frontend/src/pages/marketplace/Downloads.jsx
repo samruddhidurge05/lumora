@@ -126,7 +126,7 @@ export default function Downloads() {
 
           // Handle pCloud / external redirect (temporary dev/testing implementation)
           if (resp?.type === 'external' && resp?.redirect_url) {
-            window.open(resp.redirect_url, '_blank');
+            window.location.href = resp.redirect_url;
             setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
             return;
           } else if (resp?.download_url) {
@@ -150,7 +150,7 @@ export default function Downloads() {
                 return;
               }
               if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-                window.open(fileRespJson.redirect_url, '_blank');
+                window.location.href = fileRespJson.redirect_url;
                 setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
                 window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
                 return;

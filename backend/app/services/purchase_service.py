@@ -203,7 +203,7 @@ class PurchaseService:
             db.flush() # Ensure all IDs populated
 
             # 9. Sync to Firestore (Read-Only Mirror)
-            sync_order_to_firestore(order, db)
+            sync_order_to_firestore(order)
 
             return order
 
