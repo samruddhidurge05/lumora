@@ -120,8 +120,11 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
     finally:
         db_s.close()
 
+_firestore_broken = False
+
 def get_reviews_dashboard_data():
-    if not firebase_connected or db is None:
+    global _firestore_broken
+    if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             docs = db_s.query(ReviewModel).order_by(ReviewModel.created_at.desc()).all()
@@ -200,7 +203,12 @@ def get_reviews_dashboard_data():
         finally:
             db_s.close()
 
-    docs = list(db.collection("reviews").stream())
+    try:
+        docs = list(db.collection("reviews").stream())
+    except Exception as e:
+        print(f"[reviews] Firestore error: {e}. Falling back to SQLite.")
+        _firestore_broken = True
+        return get_reviews_dashboard_data()
 
     latest_reviews = []
     ratings = []

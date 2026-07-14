@@ -76,8 +76,11 @@ def calculate_kpis(orders, products_count, vendors_count, reviews):
         "totalRevenue":         round(total_revenue, 2),
     }
 
+_firestore_broken = False
+
 def get_analytics_dashboard_data(date_range: str = "all"):
-    if not firebase_connected or db is None:
+    global _firestore_broken
+    if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             cutoff = _get_cutoff(date_range)
@@ -181,32 +184,45 @@ def get_analytics_dashboard_data(date_range: str = "all"):
 
             geo_analytics = []
             rev = kpis["totalRevenue"]
-            timeline_daily = [
-                {"label": d, "value": round(rev * w, 2)}
-                for d, w in [("Mon", .10), ("Tue", .12), ("Wed", .15), ("Thu", .11),
-                             ("Fri", .18), ("Sat", .20), ("Sun", .14)]
-            ]
+            # Build real daily timeline from actual order dates
+            _sql_daily: dict = {}
+            for o in orders:
+                price_o = float(o.get("price", o.get("total", 0)))
+                pay_s   = o.get("paymentStatus", "")
+                stat_o  = o.get("status", "")
+                if not (pay_s == "Paid" or stat_o == "Completed"):
+                    continue
+                try:
+                    dt_o = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
+                    dow  = dt_o.strftime("%a")
+                    _sql_daily[dow] = _sql_daily.get(dow, 0.0) + price_o
+                except Exception:
+                    pass
+
+            _all_dows = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            timeline_daily = [{"label": d, "value": round(_sql_daily.get(d, 0.0), 2)} for d in _all_dows]
+            sparkline_vals  = [round(_sql_daily.get(d, 0.0), 2) for d in _all_dows]
 
             return {
                 "kpis": kpis,
                 "revenueTrend": {
-                    "today":    round(rev * 0.15, 2),
-                    "sparkline":[100, 150, 120, 200, 250, 220, 300],
+                    "today":    round(_sql_daily.get(datetime.utcnow().strftime("%a"), 0.0), 2),
+                    "sparkline": sparkline_vals,
                     "timeline": {
                         "daily":   timeline_daily,
                         "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
                                      {"label": "Wk 2", "value": round(rev * .28, 2)}],
-                        "monthly": [{"label": "Jun",  "value": rev}],
+                        "monthly": [{"label": datetime.utcnow().strftime("%b"), "value": rev}],
                     },
                 },
                 "productPerformance": product_performance,
                 "customerAnalytics": {
-                    "returningCustomers":  int(kpis["activeCustomers"] * 0.35),
-                    "repeatPurchasesCount":int(kpis["activeCustomers"] * 0.25),
-                    "repeatPurchaseRate":  35,
-                    "newCustomers":        int(kpis["activeCustomers"] * 0.65),
+                    "returningCustomers":  kpis["activeCustomers"],
+                    "repeatPurchasesCount":kpis["completedOrdersCount"],
+                    "repeatPurchaseRate":  round((kpis["completedOrdersCount"] / max(kpis["totalOrders"], 1)) * 100, 1),
+                    "newCustomers":        kpis["activeCustomers"],
                     "clv":                 round(kpis["aov"] * 1.5, 2),
-                    "clvTrend":            [100, 110, 115, round(kpis["aov"] * 1.5, 2)],
+                    "clvTrend":            [round(kpis["aov"] * 0.5, 2), round(kpis["aov"] * 0.8, 2), round(kpis["aov"] * 1.2, 2), round(kpis["aov"] * 1.5, 2)],
                     "totalCustomers":      kpis["activeCustomers"],
                 },
                 "trustMetrics": {
@@ -217,18 +233,18 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                 "growth": {
                     "revenueGrowth":   revenue_growth,
                     "aovGrowth":       aov_growth,
-                    "refundRateGrowth":-1,
+                    "refundRateGrowth": round((-kpis["refundRate"]), 1) if kpis["refundRate"] > 0 else 0,
                     "customerGrowth":  growth_velocity,
-                    "reviewGrowth":    5,
+                    "reviewGrowth":    0,
                 },
                 "forecast": {
                     "nextQuarterRevenue": round(rev * 1.25, 2),
-                    "nextMonthRevenue":   round(rev * 0.45, 2),
-                    "confidenceScore":    90,
+                    "nextMonthRevenue":   round(rev * 0.35, 2),
+                    "confidenceScore":    75 if rev > 0 else 0,
                     "forecastPath": [
-                        {"label": "Jul", "value": round(rev * 0.42, 2)},
-                        {"label": "Aug", "value": round(rev * 0.45, 2)},
-                        {"label": "Sep", "value": round(rev * 0.48, 2)},
+                        {"label": "M+1", "value": round(rev * 0.35, 2)},
+                        {"label": "M+2", "value": round(rev * 0.38, 2)},
+                        {"label": "M+3", "value": round(rev * 0.42, 2)},
                     ],
                 },
                 "_meta": {"totalReviews": len(reviews)},
@@ -236,10 +252,15 @@ def get_analytics_dashboard_data(date_range: str = "all"):
         finally:
             db_s.close()
 
-    orders   = [doc.to_dict() for doc in db.collection("orders").stream()]
-    products = [doc.to_dict() for doc in db.collection("products").stream()]
-    vendors  = [doc.to_dict() for doc in db.collection("vendors").stream()]
-    reviews  = [doc.to_dict() for doc in db.collection("reviews").stream()]
+    try:
+        orders   = [doc.to_dict() for doc in db.collection("orders").stream()]
+        products = [doc.to_dict() for doc in db.collection("products").stream()]
+        vendors  = [doc.to_dict() for doc in db.collection("vendors").stream()]
+        reviews  = [doc.to_dict() for doc in db.collection("reviews").stream()]
+    except Exception as e:
+        print(f"[analytics] Firestore error: {e}. Falling back to SQLite.")
+        _firestore_broken = True
+        return get_analytics_dashboard_data(date_range)
 
     # Apply date_range filter to Firestore orders
     cutoff = _get_cutoff(date_range)
@@ -329,32 +350,45 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     ]
 
     rev = kpis["totalRevenue"]
-    timeline_daily = [
-        {"label": d, "value": round(rev * w, 2)}
-        for d, w in [("Mon", .10), ("Tue", .12), ("Wed", .15), ("Thu", .11),
-                     ("Fri", .18), ("Sat", .20), ("Sun", .14)]
-    ]
+    # Build real daily timeline from actual Firestore order dates
+    _fs_daily: dict = {}
+    for o in orders:
+        price_o = float(o.get("price", o.get("total", 0)))
+        pay_s   = o.get("paymentStatus", "")
+        stat_o  = o.get("status", "")
+        if not (pay_s == "Paid" or stat_o == "Completed"):
+            continue
+        try:
+            dt_o = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
+            dow  = dt_o.strftime("%a")
+            _fs_daily[dow] = _fs_daily.get(dow, 0.0) + price_o
+        except Exception:
+            pass
+
+    _all_dows_fs   = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    timeline_daily = [{"label": d, "value": round(_fs_daily.get(d, 0.0), 2)} for d in _all_dows_fs]
+    sparkline_vals  = [round(_fs_daily.get(d, 0.0), 2) for d in _all_dows_fs]
 
     return {
         "kpis": kpis,
         "revenueTrend": {
-            "today":    round(rev * 0.15, 2),
-            "sparkline":[100, 150, 120, 200, 250, 220, 300],
+            "today":    round(_fs_daily.get(datetime.utcnow().strftime("%a"), 0.0), 2),
+            "sparkline": sparkline_vals,
             "timeline": {
                 "daily":   timeline_daily,
                 "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
                              {"label": "Wk 2", "value": round(rev * .28, 2)}],
-                "monthly": [{"label": "Jun",  "value": rev}],
+                "monthly": [{"label": datetime.utcnow().strftime("%b"), "value": rev}],
             },
         },
         "productPerformance": product_performance,
         "customerAnalytics": {
-            "returningCustomers":  int(kpis["activeCustomers"] * 0.35),
-            "repeatPurchasesCount":int(kpis["activeCustomers"] * 0.25),
-            "repeatPurchaseRate":  35,
-            "newCustomers":        int(kpis["activeCustomers"] * 0.65),
+            "returningCustomers":  kpis["activeCustomers"],
+            "repeatPurchasesCount":kpis["completedOrdersCount"],
+            "repeatPurchaseRate":  round((kpis["completedOrdersCount"] / max(kpis["totalOrders"], 1)) * 100, 1),
+            "newCustomers":        kpis["activeCustomers"],
             "clv":                 round(kpis["aov"] * 1.5, 2),
-            "clvTrend":            [100, 110, 115, round(kpis["aov"] * 1.5, 2)],
+            "clvTrend":            [round(kpis["aov"] * 0.5, 2), round(kpis["aov"] * 0.8, 2), round(kpis["aov"] * 1.2, 2), round(kpis["aov"] * 1.5, 2)],
             "totalCustomers":      kpis["activeCustomers"],
         },
         "trustMetrics": {
@@ -365,25 +399,26 @@ def get_analytics_dashboard_data(date_range: str = "all"):
         "growth": {
             "revenueGrowth":   revenue_growth,
             "aovGrowth":       aov_growth,
-            "refundRateGrowth":-1,
+            "refundRateGrowth": round((-kpis["refundRate"]), 1) if kpis["refundRate"] > 0 else 0,
             "customerGrowth":  growth_velocity,
-            "reviewGrowth":    5,
+            "reviewGrowth":    0,
         },
         "forecast": {
             "nextQuarterRevenue": round(rev * 1.25, 2),
-            "nextMonthRevenue":   round(rev * 0.45, 2),
-            "confidenceScore":    90,
+            "nextMonthRevenue":   round(rev * 0.35, 2),
+            "confidenceScore":    75 if rev > 0 else 0,
             "forecastPath": [
-                {"label": "Jul", "value": round(rev * 0.42, 2)},
-                {"label": "Aug", "value": round(rev * 0.45, 2)},
-                {"label": "Sep", "value": round(rev * 0.48, 2)},
+                {"label": "M+1", "value": round(rev * 0.35, 2)},
+                {"label": "M+2", "value": round(rev * 0.38, 2)},
+                {"label": "M+3", "value": round(rev * 0.42, 2)},
             ],
         },
         "_meta": {"totalReviews": len(reviews)},
     }
 
 def get_full_dashboard_data():
-    if not firebase_connected or db is None:
+    global _firestore_broken
+    if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             sql_orders = db_s.query(OrderModel).all()
@@ -469,8 +504,8 @@ def get_full_dashboard_data():
                 "refundRate":          refund_rate,
                 "growthVelocity":      sql_growth_velocity,
                 "revenueChange":       sql_revenue_change,
-                "ordersChange":        8,
-                "activeProductsChange":4,
+                "ordersChange":        round(((curr_count_30d - prev_count_30d) / max(prev_count_30d, 1)) * 100, 1),
+                "activeProductsChange":0,
                 "modalData": {
                     "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
                     "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
@@ -482,16 +517,29 @@ def get_full_dashboard_data():
             }
 
             sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
-            live_feed = [
-                {"id": f"sale-{o['id']}", "type": "sale", "user": o.get("customerName", "Customer"),
-                 "item": o.get("productName", "Product"), "time": "Recently", "value": float(o.get("price", o.get("total", 0)))}
-                for o in sorted_orders
-            ]
-            for i, v in enumerate(vendors[:3]):
+            live_feed = []
+            for o in sorted_orders:
+                amt  = float(o.get("price", o.get("total", 0)))
+                item = o.get("productName", "Product")
+                user = o.get("customerName", "Customer")
+                ts   = o.get("createdAt", "")
+                try:
+                    dt_feed = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+                    elapsed_min = int((datetime.utcnow() - dt_feed).total_seconds() / 60)
+                    if elapsed_min < 60:
+                        time_label = f"{elapsed_min} min ago"
+                    elif elapsed_min < 1440:
+                        time_label = f"{elapsed_min // 60}h ago"
+                    else:
+                        time_label = dt_feed.strftime("%b %d")
+                except Exception:
+                    time_label = "Recently"
                 live_feed.append({
-                    "id": f"signup-{i}", "type": "signup",
-                    "user": v.get("storeName", v.get("displayName", "Vendor")),
-                    "item": "Creator Account", "time": "Recently", "value": None,
+                    "id":       f"sale-{o['id']}",
+                    "text":     f"{user} purchased {item}",
+                    "category": "purchase",
+                    "time":     time_label,
+                    "value":    f"+₹{round(amt)}",
                 })
 
             prod_sales = {}
@@ -536,33 +584,91 @@ def get_full_dashboard_data():
                 geo[region] = geo.get(region, 0) + 1
             geo_distribution = [{"region": r, "sales": c} for r, c in geo.items()]
 
+            # Build revenueChart from real daily order data (last 30 days)
+            daily_rev: dict = {}
+            weekly_rev: dict = {}
+            monthly_rev: dict = {}
+            now_chart = datetime.utcnow()
+            for o in orders:
+                price      = float(o.get("price", o.get("total", 0)))
+                pay_status = o.get("paymentStatus", "")
+                status_v   = o.get("status", "")
+                if not (pay_status == "Paid" or status_v == "Completed"):
+                    continue
+                try:
+                    dt = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
+                except Exception:
+                    continue
+                # Daily (last 30 days)
+                day_key = dt.strftime("%b %d")
+                daily_rev[day_key] = daily_rev.get(day_key, {"gross": 0.0, "net": 0.0, "label": day_key})
+                daily_rev[day_key]["gross"] += price
+                daily_rev[day_key]["net"]   += round(price * 0.95, 2)
+                # Weekly (last 12 weeks)
+                week_key = f"Wk {dt.isocalendar()[1]}"
+                weekly_rev[week_key] = weekly_rev.get(week_key, {"gross": 0.0, "net": 0.0, "label": week_key})
+                weekly_rev[week_key]["gross"] += price
+                weekly_rev[week_key]["net"]   += round(price * 0.95, 2)
+                # Monthly (last 12 months)
+                mon_key = dt.strftime("%b %Y")
+                monthly_rev[mon_key] = monthly_rev.get(mon_key, {"gross": 0.0, "net": 0.0, "label": dt.strftime("%b")})
+                monthly_rev[mon_key]["gross"] += price
+                monthly_rev[mon_key]["net"]   += round(price * 0.95, 2)
+
+            def _sort_chart(d):
+                return sorted(d.values(), key=lambda x: x["label"])
+
+            revenue_chart = {
+                "daily":   _sort_chart(daily_rev)[-30:],
+                "weekly":  _sort_chart(weekly_rev)[-12:],
+                "monthly": _sort_chart(monthly_rev)[-12:],
+            }
+
+            # Health score from real metrics (0-100)
+            health_deductions = 0
+            if refund_rate > 5:
+                health_deductions += 20
+            elif refund_rate > 2:
+                health_deductions += 10
+            if total_orders == 0:
+                health_deductions += 15
+            computed_health = max(0, 100 - health_deductions)
+            health_status_label = "Optimal" if computed_health >= 90 else ("Good" if computed_health >= 70 else "Needs Attention")
+
             return {
                 "kpis": kpis,
                 "liveFeed":        live_feed,
                 "productPerf":     product_perf,
                 "leaderboard":     leaderboard,
                 "riskPanel":       risk_panel,
+                "revenueChart":    revenue_chart,
                 "customerInsights":{"topCustomers": top_customers, "geoDistribution": geo_distribution},
                 "insights": [
-                    f"Platform has processed {total_orders} transactions.",
-                    f"Catalog contains {active_products or len(products)} products.",
+                    {"label": "Transactions", "text": f"Platform has processed {total_orders} transactions."},
+                    {"label": "Catalog", "text": f"Catalog contains {active_products or len(products)} products."},
                 ],
                 "headerStats": {
                     "activeUsers":   len(unique_cust),
                     "greeting":      "Good day",
                     "marketStatus":  "Active",
                 },
-                "healthScore":  98,
-                "healthStatus": "Optimal",
+                "healthScore":  computed_health,
+                "healthStatus": health_status_label,
+                "_meta": {"fetchedAt": datetime.utcnow().isoformat() + "Z"},
             }
         finally:
             db_s.close()
 
-    orders_docs  = list(db.collection("orders").stream())
-    products_docs= list(db.collection("products").stream())
-    vendors_docs = list(db.collection("vendors").stream())
-    reviews_docs = list(db.collection("reviews").stream())
-    reports_docs = list(db.collection("reports").stream())
+    try:
+        orders_docs  = list(db.collection("orders").stream())
+        products_docs= list(db.collection("products").stream())
+        vendors_docs = list(db.collection("vendors").stream())
+        reviews_docs = list(db.collection("reviews").stream())
+        reports_docs = list(db.collection("reports").stream())
+    except Exception as e:
+        print(f"[analytics] Firestore error in get_full_dashboard_data: {e}. Falling back to SQLite.")
+        _firestore_broken = True
+        return get_full_dashboard_data()
 
     orders   = [{"id": d.id, **d.to_dict()} for d in orders_docs]
     products = [d.to_dict() for d in products_docs]
@@ -622,8 +728,8 @@ def get_full_dashboard_data():
         "refundRate":          refund_rate,
         "growthVelocity":      fs_growth_velocity,
         "revenueChange":       fs_revenue_change,
-        "ordersChange":        8,
-        "activeProductsChange":4,
+        "ordersChange":        round(((curr_cnt_fs - prev_cnt_fs) / max(prev_cnt_fs, 1)) * 100, 1),
+        "activeProductsChange":0,
         "modalData": {
             "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
             "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
@@ -634,16 +740,29 @@ def get_full_dashboard_data():
         },
     }
     sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
-    live_feed = [
-        {"id": f"sale-{o['id']}", "type": "sale", "user": o.get("customerName", "Customer"),
-         "item": o.get("productName", "Product"), "time": "Recently", "value": float(o.get("price", o.get("total", 0)))}
-        for o in sorted_orders
-    ]
-    for i, v in enumerate(vendors[:3]):
+    live_feed = []
+    for o in sorted_orders:
+        amt  = float(o.get("price", o.get("total", 0)))
+        item = o.get("productName", "Product")
+        user = o.get("customerName", "Customer")
+        ts   = o.get("createdAt", "")
+        try:
+            dt_feed = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+            elapsed_min = int((datetime.utcnow() - dt_feed).total_seconds() / 60)
+            if elapsed_min < 60:
+                time_label = f"{elapsed_min} min ago"
+            elif elapsed_min < 1440:
+                time_label = f"{elapsed_min // 60}h ago"
+            else:
+                time_label = dt_feed.strftime("%b %d")
+        except Exception:
+            time_label = "Recently"
         live_feed.append({
-            "id": f"signup-{i}", "type": "signup",
-            "user": v.get("storeName", v.get("displayName", "Vendor")),
-            "item": "Creator Account", "time": "Recently", "value": None,
+            "id":       f"sale-{o['id']}",
+            "text":     f"{user} purchased {item}",
+            "category": "purchase",
+            "time":     time_label,
+            "value":    f"+₹{round(amt)}",
         })
 
     prod_sales = {}
@@ -701,22 +820,71 @@ def get_full_dashboard_data():
         geo[region] = geo.get(region, 0) + 1
     geo_distribution = [{"region": r, "sales": c} for r, c in geo.items()]
 
+    # Build revenueChart from real Firestore order data
+    fs_daily_rev: dict = {}
+    fs_weekly_rev: dict = {}
+    fs_monthly_rev: dict = {}
+    for o in orders:
+        price      = float(o.get("price", o.get("total", 0)))
+        pay_status = o.get("paymentStatus", "")
+        status_v   = o.get("status", "")
+        if not (pay_status == "Paid" or status_v == "Completed"):
+            continue
+        try:
+            dt = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
+        except Exception:
+            continue
+        day_key = dt.strftime("%b %d")
+        fs_daily_rev[day_key] = fs_daily_rev.get(day_key, {"gross": 0.0, "net": 0.0, "label": day_key})
+        fs_daily_rev[day_key]["gross"] += price
+        fs_daily_rev[day_key]["net"]   += round(price * 0.95, 2)
+        week_key = f"Wk {dt.isocalendar()[1]}"
+        fs_weekly_rev[week_key] = fs_weekly_rev.get(week_key, {"gross": 0.0, "net": 0.0, "label": week_key})
+        fs_weekly_rev[week_key]["gross"] += price
+        fs_weekly_rev[week_key]["net"]   += round(price * 0.95, 2)
+        mon_key = dt.strftime("%b %Y")
+        fs_monthly_rev[mon_key] = fs_monthly_rev.get(mon_key, {"gross": 0.0, "net": 0.0, "label": dt.strftime("%b")})
+        fs_monthly_rev[mon_key]["gross"] += price
+        fs_monthly_rev[mon_key]["net"]   += round(price * 0.95, 2)
+
+    def _fs_sort_chart(d):
+        return sorted(d.values(), key=lambda x: x["label"])
+
+    revenue_chart = {
+        "daily":   _fs_sort_chart(fs_daily_rev)[-30:],
+        "weekly":  _fs_sort_chart(fs_weekly_rev)[-12:],
+        "monthly": _fs_sort_chart(fs_monthly_rev)[-12:],
+    }
+
+    # Health score computed from real metrics
+    fs_health_deductions = 0
+    if refund_rate > 5:
+        fs_health_deductions += 20
+    elif refund_rate > 2:
+        fs_health_deductions += 10
+    if total_orders == 0:
+        fs_health_deductions += 15
+    fs_computed_health = max(0, 100 - fs_health_deductions)
+    fs_health_label = "Optimal" if fs_computed_health >= 90 else ("Good" if fs_computed_health >= 70 else "Needs Attention")
+
     return {
         "kpis": kpis,
         "liveFeed":        live_feed,
         "productPerf":     product_perf,
         "leaderboard":     leaderboard,
         "riskPanel":       risk_panel,
+        "revenueChart":    revenue_chart,
         "customerInsights":{"topCustomers": top_customers, "geoDistribution": geo_distribution},
         "insights": [
-            f"Platform has processed {total_orders} transactions.",
-            f"Catalog contains {active_products or len(products)} products.",
+            {"label": "Transactions", "text": f"Platform has processed {total_orders} transactions."},
+            {"label": "Catalog",      "text": f"Catalog contains {active_products or len(products)} products."},
         ],
         "headerStats": {
             "activeUsers":   len(unique_cust),
             "greeting":      "Good day",
             "marketStatus":  "Active",
         },
-        "healthScore":  98,
-        "healthStatus": "Optimal",
+        "healthScore":  fs_computed_health,
+        "healthStatus": fs_health_label,
+        "_meta": {"fetchedAt": datetime.utcnow().isoformat() + "Z"},
     }

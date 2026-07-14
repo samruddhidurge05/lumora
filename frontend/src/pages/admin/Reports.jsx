@@ -38,7 +38,8 @@ const Icon = ({ name, size = 16, className = "" }) => {
     Search: <g><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></g>,
     Users: <g><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g>,
     Eye: <g><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></g>,
-    Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></g>
+    Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></g>,
+    Package: <g><line x1="16.5" y1="9.4" x2="7.5" y2="4.21" /><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08" /><polygon points="12 22.08 21 17.08 21 6.92 12 12 12 22.08" /><polygon points="12 12 21 6.92 12 1.84 3 6.92 12 12" /></g>
   };
 
   return (
@@ -175,6 +176,9 @@ export default function Reports() {
 
   // Real data from Firestore via reportsService
   const [reports, setReports] = useState([]);
+  const reportsSyncKey = useMemo(() => {
+    return reports.map(r => `${r.id}-${r.status}`).join(',');
+  }, [reports]);
   const [analytics, setAnalytics] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -256,7 +260,7 @@ export default function Reports() {
 
   useEffect(() => {
     loadReportsList(reportPage, statusFilter);
-  }, [reportPage, statusFilter]); // re-run when page or filter changes
+  }, [reportPage, statusFilter, reportsSyncKey]); // re-run when page, filter, or Firestore updates change
 
   // Real-time subscription: update reports list only.
   // Analytics are recomputed from a debounced reload, not on every snapshot,
@@ -267,13 +271,13 @@ export default function Reports() {
     const unsub = subscribeToReports((updatedReports) => {
       setReports(updatedReports);
 
-      // Debounce analytics reload — only recompute after 2s of no new changes
+      // Debounce analytics reload — only recompute after 200ms of no new changes
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         getReportAnalytics()
           .then(result => setAnalytics(result))
           .catch(err => console.error('[Reports] Realtime analytics error:', err));
-      }, 2000);
+      }, 200); // 200ms instead of 2000ms for real-time counts
     });
 
     return () => {
@@ -1239,20 +1243,34 @@ export default function Reports() {
                       </thead>
                       <tbody>
                         {reportListItems.map((r, idx) => {
-                          const isPending = !r.status || r.status === 'Pending';
+                          const isPending = !r.status || r.status.toLowerCase() === 'pending';
                           const isActioning = actionLoading === r.id;
                           return (
                             <tr key={r.id || `report-${idx}`} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
                               {/* Product */}
                               <td className="py-3 pr-3">
                                 {r.productTitle || r.productId ? (
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-[#2D004D] max-w-[120px] truncate" title={r.productTitle}>
-                                      {r.productTitle || '—'}
-                                    </span>
-                                    {r.productId && (
-                                      <span className="text-[8px] text-[#8E6AA8] font-mono">#{r.productId.slice(0, 8)}</span>
+                                  <div className="flex items-center gap-2">
+                                    {r.productThumbnail ? (
+                                      <img
+                                        src={r.productThumbnail}
+                                        alt={r.productTitle || 'Product'}
+                                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-[#F5E9DD]"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-lg bg-[#F5E9DD]/60 flex items-center justify-center flex-shrink-0">
+                                        <Icon name="Package" size={12} className="text-[#7B3FA0]" />
+                                      </div>
                                     )}
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-[10px] font-bold text-[#2D004D] max-w-[110px] truncate" title={r.productTitle}>
+                                        {r.productTitle || '—'}
+                                      </span>
+                                      {r.productId && (
+                                        <span className="text-[8px] text-[#8E6AA8] font-mono">#{r.productId.toString().slice(0, 8)}</span>
+                                      )}
+                                    </div>
                                   </div>
                                 ) : (
                                   <span className="text-[9px] text-[#C4A4D8]">—</span>
@@ -1279,9 +1297,9 @@ export default function Reports() {
                               {/* Status */}
                               <td className="py-3 pr-3">
                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
-                                  r.status === 'Resolved'
+                                  r.status?.toLowerCase() === 'resolved'
                                     ? 'bg-emerald-100 text-emerald-700'
-                                    : r.status === 'Rejected'
+                                    : r.status?.toLowerCase() === 'rejected'
                                     ? 'bg-red-100 text-red-600'
                                     : 'bg-[#D8BFE3]/40 text-[#5A1E7E]'
                                 }`}>
@@ -1308,7 +1326,7 @@ export default function Reports() {
                                         opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap',
                                       }}
                                     >
-                                      {isActioning ? '…' : '✓ Resolve'}
+                                      {isActioning ? '…' : '✓ Mark as Resolved'}
                                     </button>
                                     <button
                                       disabled={isActioning}

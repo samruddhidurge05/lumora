@@ -76,8 +76,31 @@ export default function Downloads() {
         const numericId = parseInt(product.id, 10);
         if (!isNaN(numericId)) {
           const resp = await backendFetch(`/products/${numericId}/download`);
-          if (resp?.download_url && resp.download_url.startsWith('http')) {
-            window.open(resp.download_url, '_blank');
+
+          // ── Download Pending state ──────────────────────────────────────────
+          // Backend signals the asset has not been uploaded yet.
+          if (resp?.download_available === false) {
+            setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
+            return;
+          }
+
+          // Handle pCloud / external redirect (temporary dev/testing implementation)
+          if (resp?.type === 'external' && resp?.redirect_url) {
+            window.open(resp.redirect_url, '_blank');
+            setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+          } else if (resp?.download_url) {
+            // Internal token-based URL — call the download-file endpoint
+            const fileResp = await backendFetch(resp.download_url.replace('/api', ''));
+            // ── Handle pending response from download-file endpoint ────────────
+            if (fileResp?.type === 'pending') {
+              setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
+              return;
+            }
+            if (fileResp?.type === 'external' && fileResp?.redirect_url) {
+              window.open(fileResp.redirect_url, '_blank');
+            } else {
+              window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${resp.download_url}`, '_blank');
+            }
             setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
           } else {
             setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
@@ -93,8 +116,8 @@ export default function Downloads() {
       setDownloadToast({ id: product.id, msg, ok: false });
     } finally {
       setDownloadingId(null);
-      // Auto-clear toast after 4s
-      setTimeout(() => setDownloadToast(null), 4000);
+      // Auto-clear toast after 6s (longer for pending messages)
+      setTimeout(() => setDownloadToast(null), 6000);
     }
   };
 
@@ -194,12 +217,27 @@ export default function Downloads() {
                   {downloadToast && downloadToast.id === p.id && (
                     <div style={{
                       padding: '8px 16px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 600,
-                      background: downloadToast.ok ? 'rgba(34,197,94,0.10)' : 'rgba(251,191,36,0.12)',
-                      border: `1px solid ${downloadToast.ok ? 'rgba(34,197,94,0.30)' : 'rgba(251,191,36,0.30)'}`,
-                      color: downloadToast.ok ? '#15803d' : '#92400e',
-                      display: 'flex', alignItems: 'center', gap: '6px'
+                      background: downloadToast.ok
+                        ? 'rgba(34,197,94,0.10)'
+                        : downloadToast.pending
+                          ? 'rgba(123,63,160,0.08)'
+                          : 'rgba(251,191,36,0.12)',
+                      border: `1px solid ${downloadToast.ok
+                        ? 'rgba(34,197,94,0.30)'
+                        : downloadToast.pending
+                          ? 'rgba(123,63,160,0.25)'
+                          : 'rgba(251,191,36,0.30)'}`,
+                      color: downloadToast.ok ? '#15803d' : downloadToast.pending ? '#5A1E7E' : '#92400e',
+                      display: 'flex', flexDirection: 'column', gap: '4px'
                     }}>
-                      {downloadToast.msg}
+                      {downloadToast.pending ? (
+                        <>
+                          <span style={{ fontWeight: 800 }}>⏳ Download Not Yet Available</span>
+                          <span style={{ fontWeight: 400, fontSize: '0.74rem', lineHeight: 1.5 }}>
+                            The creator has not uploaded the downloadable asset yet. Your purchase is secure and your ownership has been verified. Once the creator uploads the file, it will automatically become available in your Downloads.
+                          </span>
+                        </>
+                      ) : downloadToast.msg}
                     </div>
                   )}
                   </div>

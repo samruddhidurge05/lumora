@@ -747,6 +747,8 @@ export default function App() {
       setProducts([uiProduct, ...products]);
       setIsNewProductOpen(false);
       triggerNotification(`Created product "${uiProduct.name}" successfully!`);
+      // Signal customer AppContext to re-fetch products from the backend immediately.
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
       console.error('Create product failed:', err);
       triggerNotification(`Failed to create product: ${err.message}`, 'error');
@@ -795,6 +797,9 @@ export default function App() {
       // updatedProductData.title comes from the mapper; fall back to name for display
       const displayName = updatedProductData.title || updatedProductData.name || 'product';
       triggerNotification(`Updated product details for "${displayName}"`);
+      // Always notify customer AppContext to re-fetch after any product update,
+      // so image changes, feature edits, and metadata updates appear immediately.
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
       console.error('Update product failed:', err);
       triggerNotification(`Failed to update product: ${err.message}`, 'error');
@@ -837,6 +842,10 @@ export default function App() {
         }
         return p;
       }));
+      // When a product is published, notify customer AppContext to re-fetch immediately.
+      if (nextStatusUI === 'Published') {
+        window.dispatchEvent(new CustomEvent('lumora:product:created'));
+      }
     } catch (err) {
       console.error('Toggle publish failed:', err);
       triggerNotification(`Failed to update status: ${err.message}`, 'error');

@@ -629,6 +629,27 @@ const SAMPLE_COMMENTS = [
 ];
 const SAMPLE_USERS = ['Alex M.', 'Priya S.', 'Jordan K.', 'Sam T.', 'Chris R.', 'Maya L.', 'Rohan D.', 'Nina W.'];
 
+// Backend origin for resolving relative /uploads/... image paths
+// from product thumbnail/preview fields stored as local server paths.
+const _BACKEND_ORIGIN = (() => {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  if (base.startsWith('/')) {
+    const origin = import.meta.env.VITE_BACKEND_ORIGIN;
+    if (origin && origin !== 'http://localhost:8000') {
+      return origin;
+    }
+    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  }
+  return base.replace(/\/api\/?$/, '');
+})();
+
+function _resolveProductImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  // Relative path like /uploads/vendors/1/products/5/images/uuid.png
+  return `${_BACKEND_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 function enrichRawProducts(raw) {
   return raw.map((p, idx) => {
     const creatorSeed = idx % CREATOR_AVATARS.length;
@@ -650,7 +671,12 @@ function enrichRawProducts(raw) {
       id: String(p.id),
       title: p.title || p.name || 'Untitled Product',
       price: typeof p.price === 'string' ? parseFloat(p.price) || 0 : (p.price || 0),
-      preview: p.preview || p.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+      // Resolve relative /uploads/... paths to absolute backend URLs
+      preview: _resolveProductImageUrl(p.preview || p.thumbnail) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+      thumbnail: _resolveProductImageUrl(p.thumbnail || p.preview) || null,
+      // Resolve gallery image_urls array
+      image_urls: Array.isArray(p.image_urls) ? p.image_urls.map(_resolveProductImageUrl).filter(Boolean) : [],
+      preview_images: Array.isArray(p.preview_images) ? p.preview_images.map(_resolveProductImageUrl).filter(Boolean) : [],
       badge: p.badge || (p.trending ? 'Trending' : (p.newArrival || p.new_arrival) ? 'New' : p.featured ? 'Featured' : null),
       compatibility: p.compatibility || p.tags || [],
       features: p.features || p.highlights || (isBackend ? [] : [
@@ -781,6 +807,26 @@ export function AppContextProvider({ children }) {
     };
   }, []);
 
+  // ── Listen for product creation/update events from the Admin portal ───────
+  // When ProductsManagement creates or publishes a product it dispatches
+  // 'lumora:product:created'. We immediately re-fetch from the backend so
+  // the customer sees the new product without waiting for Firestore onSnapshot
+  // or a full page reload.  This also covers the case where Firebase is offline.
+  useEffect(() => {
+    const handleProductCreated = () => { refetchProducts(); };
+    window.addEventListener('lumora:product:created', handleProductCreated);
+
+    // Background safety net: re-fetch published products every 60 s.
+    // Covers edge cases where the custom event was missed (e.g. different tab).
+    const backgroundInterval = setInterval(refetchProducts, 60000);
+
+    return () => {
+      window.removeEventListener('lumora:product:created', handleProductCreated);
+      clearInterval(backgroundInterval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Add a review to a product (local state, survives re-render session)
   const addReview = (productId, review) => {
     setProducts(prev => prev.map(p => {
@@ -886,7 +932,7 @@ export function AppContextProvider({ children }) {
       
       const fetchStatus = async () => {
         try {
-          const res = await fetch('http://localhost:8000/api/public/platform/status');
+          const res = await fetch(`${_BACKEND_ORIGIN}/api/public/platform/status`);
           if (res.ok) {
             const data = await res.json();
             setPlatformStatus({

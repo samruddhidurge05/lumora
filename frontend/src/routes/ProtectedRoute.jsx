@@ -79,7 +79,6 @@ export default function ProtectedRoute({
     if (!user || !userRole || userRole !== 'admin' || !auth.currentUser) {
       const redirectParam = encodeURIComponent(location.pathname + location.search);
       const target = `/admin/login?redirect=${redirectParam}`;
-      console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Admin Route Guard. Previous route: "${location.pathname}", Destination route: "${target}", Current role: "${userRole}", Firebase UID: "${user?.uid}"`);
       return <Navigate to={target} replace />;
     }
 
@@ -95,7 +94,6 @@ export default function ProtectedRoute({
 
   // Not authenticated
   if (!user) {
-    console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Auth Guard. Reason: No user. Previous route: "${location.pathname}", Destination route: "${redirectTo}"`);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
@@ -110,14 +108,11 @@ export default function ProtectedRoute({
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
 
     if (!allowed.includes(userRole)) {
-      // Role confirmed — redirect to the correct dashboard
       const correctPath =
         userRole === 'affiliate' ? '/affiliate/dashboard'
         : userRole === 'vendor'  ? '/vendor/dashboard'
         : userRole === 'admin'   ? '/admin/dashboard'
         : '/customer/dashboard';
-
-      console.log(`[DEBUG] [ProtectedRoute] [${new Date().toISOString()}] Redirect triggered by: Standard Role Guard. Reason: Current userRole "${userRole}" is not in allowed roles [${allowed.join(', ')}]. Previous route (current): "${location.pathname}", Destination route: "${correctPath}", Firebase UID: "${user?.uid}"`);
       return <Navigate to={correctPath} replace />;
     }
   }

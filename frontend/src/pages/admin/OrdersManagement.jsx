@@ -10,7 +10,6 @@ import {
   disputeOrder as firestoreDisputeOrder,
 } from '../../services/orderService.js';
 import {
-  generateDownloadLink,
   getDownloadErrorMessage,
 } from '../../services/downloadService.js';
 
@@ -458,8 +457,9 @@ export default function OrdersManagement() {
     setDownloadLoading(prev => ({ ...prev, [orderId]: true }));
 
     try {
-      // Admin context: pass null for userId to skip ownership check
-      const result = await generateDownloadLink(orderId, null);
+      // Admin context: request a signed download URL from the backend
+      // Uses GET /api/orders/{orderId}/download-info which returns { downloadUrl, fileName }
+      const result = await backendFetch(`/orders/${orderId}/download-info`);
 
       // Trigger browser download via a temporary anchor element
       const a      = document.createElement('a');

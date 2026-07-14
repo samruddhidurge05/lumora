@@ -339,8 +339,12 @@ async def add_security_headers(request: Request, call_next):
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Read allowed origins from the CORS_ORIGINS env var (comma-separated).
-# Falls back to local dev origins when the variable is not set.
-_cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174")
+# Falls back to all standard Vite dev ports (5173–5176) when the variable is not set.
+# Vite auto-increments ports when one is busy, so we cover the common range.
+_cors_origins_raw = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
+)
 origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
 
 app.add_middleware(

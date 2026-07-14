@@ -587,99 +587,102 @@ export default function Reviews() {
                     </div>
                   </div>
 
-                  {/* SVG Double lines */}
+                  {/* SVG Double lines — driven by real sentimentTrend data from backend */}
                   <div className="h-[250px] w-full relative pt-4">
-                    <svg viewBox="0 0 600 220" className="w-full h-full overflow-visible">
-                      <defs>
-                        <linearGradient id="posGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#B886D0" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#B886D0" stopOpacity="0" />
-                        </linearGradient>
-                        <linearGradient id="negGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.15" />
-                          <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
+                    {(() => {
+                      // sentimentTrend is an array of positivePercentage values (one per data point)
+                      // Backend returns [pos_pct] * 6 — we map each to a positive/negative pair.
+                      const trend = initialData.sentimentTrend && initialData.sentimentTrend.length > 0
+                        ? initialData.sentimentTrend
+                        : null;
 
-                      {/* Grid guidelines */}
-                      {[0, 1, 2, 3, 4].map(idx => (
-                        <line 
-                          key={idx}
-                          x1="40" y1={20 + idx * 40}
-                          x2="580" y2={20 + idx * 40}
-                          stroke="rgba(90, 30, 126, 0.05)"
-                          strokeDasharray="4"
-                        />
-                      ))}
+                      // No data yet — show empty state
+                      if (!trend) {
+                        return (
+                          <div className="flex items-center justify-center h-full text-[11px] text-[#7B3FA0]">
+                            No sentiment data yet.
+                          </div>
+                        );
+                      }
 
-                      {/* Area positive curve */}
-                      <path d="M40,110 C120,90 180,120 280,60 T480,45 L580,30 L580,180 L40,180 Z" fill="url(#posGrad)" />
-                      <motion.path 
-                        d="M40,110 C120,90 180,120 280,60 T480,45 L580,30" 
-                        fill="none" stroke="#B886D0" strokeWidth="2.5" strokeLinecap="round"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1.2 }}
-                      />
+                      const n = trend.length;
+                      const W = 540; // usable width between padL and padR
+                      const H = 160; // chart height
+                      const padL = 40; const padT = 20; const padB = 30;
+                      const totalW = W + padL + 20;
+                      const totalH = H + padT + padB;
 
-                      {/* Area negative curve */}
-                      <path d="M40,170 C120,150 180,165 280,140 T480,160 L580,175 L580,180 L40,180 Z" fill="url(#negGrad)" />
-                      <motion.path 
-                        d="M40,170 C120,150 180,165 280,140 T480,160 L580,175" 
-                        fill="none" stroke="#D8BFE3" strokeWidth="2" strokeLinecap="round" strokeDasharray="3"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1.2, delay: 0.2 }}
-                      />
+                      // Map positive% to Y (inverted — higher % = lower Y = higher on chart)
+                      const posY = (pct) => padT + (1 - Math.min(100, Math.max(0, pct)) / 100) * H;
+                      // Negative line is 100 - positive
+                      const negY = (pct) => posY(100 - pct);
 
-                      {/* Coordinate Nodes */}
-                      {[
-                        { x: 40, py: 110, ny: 170, label: "Mon", val: { p: 78, n: 22 } },
-                        { x: 175, py: 92, ny: 154, label: "Tue", val: { p: 82, n: 18 } },
-                        { x: 310, py: 104, ny: 161, label: "Wed", val: { p: 75, n: 25 } },
-                        { x: 445, py: 50, ny: 145, label: "Thu", val: { p: 88, n: 12 } },
-                        { x: 580, py: 30, ny: 175, label: "Fri", val: { p: 91, n: 9 } }
-                      ].map((node, i) => (
-                        <g key={i}>
-                          {/* Positive trigger node */}
-                          <circle 
-                            cx={node.x} cy={node.py} r="4.5" fill="#B886D0" stroke="white" strokeWidth="1.5"
-                            className="cursor-pointer hover:r-6 transition-all"
-                            onMouseEnter={(e) => {
-                              const rect = e.target.getBoundingClientRect();
-                              setActiveTooltip({
-                                x: rect.left + window.scrollX,
-                                y: rect.top + window.scrollY - 38,
-                                title: `${node.label} positive`,
-                                value: `${node.val.p}%`
-                              });
-                            }}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                          />
+                      const xOf = (i) => padL + (i / Math.max(n - 1, 1)) * W;
 
-                          {/* Negative trigger node */}
-                          <circle 
-                            cx={node.x} cy={node.ny} r="4" fill="#D8BFE3" stroke="white" strokeWidth="1.5"
-                            className="cursor-pointer hover:r-6 transition-all"
-                            onMouseEnter={(e) => {
-                              const rect = e.target.getBoundingClientRect();
-                              setActiveTooltip({
-                                x: rect.left + window.scrollX,
-                                y: rect.top + window.scrollY - 38,
-                                title: `${node.label} negative`,
-                                value: `${node.val.n}%`
-                              });
-                            }}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                          />
+                      const posPoints = trend.map((v, i) => `${xOf(i)},${posY(v)}`).join(' ');
+                      const negPoints = trend.map((v, i) => `${xOf(i)},${negY(v)}`).join(' ');
+                      const areaClose = `${xOf(n - 1)},${padT + H} ${padL},${padT + H}`;
+                      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].slice(0, n);
 
-                          <text x={node.x} y="200" fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            {node.label}
-                          </text>
-                        </g>
-                      ))}
+                      return (
+                        <svg viewBox={`0 0 ${totalW} ${totalH}`} className="w-full h-full overflow-visible">
+                          <defs>
+                            <linearGradient id="posGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#B886D0" stopOpacity="0.25" />
+                              <stop offset="100%" stopColor="#B886D0" stopOpacity="0" />
+                            </linearGradient>
+                            <linearGradient id="negGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.15" />
+                              <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
 
-                    </svg>
+                          {/* Grid guidelines */}
+                          {[0, 1, 2, 3, 4].map(idx => (
+                            <line key={idx} x1={padL} y1={padT + idx * (H / 4)} x2={W + padL} y2={padT + idx * (H / 4)}
+                              stroke="rgba(90,30,126,0.05)" strokeDasharray="4" />
+                          ))}
+
+                          {/* Positive area fill */}
+                          <polygon points={`${posPoints} ${areaClose}`} fill="url(#posGrad)" />
+                          {/* Positive line */}
+                          <polyline points={posPoints} fill="none" stroke="#B886D0" strokeWidth="2.5"
+                            strokeLinecap="round" strokeLinejoin="round" />
+
+                          {/* Negative line */}
+                          <polyline points={negPoints} fill="none" stroke="#D8BFE3" strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3" />
+
+                          {/* Data nodes */}
+                          {trend.map((v, i) => {
+                            const px = xOf(i); const py = posY(v);
+                            const nx = xOf(i); const ny = negY(v);
+                            const label = labels[i] || `P${i + 1}`;
+                            return (
+                              <g key={i}>
+                                <circle cx={px} cy={py} r="4.5" fill="#B886D0" stroke="white" strokeWidth="1.5"
+                                  className="cursor-pointer"
+                                  onMouseEnter={(e) => {
+                                    const r = e.target.getBoundingClientRect();
+                                    setActiveTooltip({ x: r.left + window.scrollX, y: r.top + window.scrollY - 38, title: `${label} positive`, value: `${Math.round(v)}%` });
+                                  }}
+                                  onMouseLeave={() => setActiveTooltip(null)} />
+                                <circle cx={nx} cy={ny} r="4" fill="#D8BFE3" stroke="white" strokeWidth="1.5"
+                                  className="cursor-pointer"
+                                  onMouseEnter={(e) => {
+                                    const r = e.target.getBoundingClientRect();
+                                    setActiveTooltip({ x: r.left + window.scrollX, y: r.top + window.scrollY - 38, title: `${label} negative`, value: `${Math.round(100 - v)}%` });
+                                  }}
+                                  onMouseLeave={() => setActiveTooltip(null)} />
+                                <text x={px} y={padT + H + 16} fill="#7B3FA0" fontSize="8" fontWeight="bold" textAnchor="middle">
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      );
+                    })()}
 
                     {/* Chart Tooltip */}
                     {activeTooltip && (

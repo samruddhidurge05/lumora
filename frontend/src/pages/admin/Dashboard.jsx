@@ -745,7 +745,7 @@ export default function Dashboard() {
               ) : (
                 <AnimatePresence initial={false}>
                   {liveFeed.map((evt) => {
-                    const isReport = evt.text.toLowerCase().includes('report') || evt.category === 'refund';
+                    const isReport = (evt.text || '').toLowerCase().includes('report') || evt.category === 'refund';
                     return (
                       <motion.div 
                         key={evt.id}

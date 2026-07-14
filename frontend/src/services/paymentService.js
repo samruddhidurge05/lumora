@@ -102,15 +102,8 @@ export const subscribeToPaymentsTelemetry = (callback) => {
     ordersList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     handleUpdate();
   }, () => {
-    // Fallback if permission/offline
-    if (ordersList.length === 0) {
-      ordersList = [
-        { id: 'o1', orderId: 'ord1092', price: 2499, status: 'Completed', customerName: 'John Doe', vendorId: 'v1', paymentStatus: 'Paid' },
-        { id: 'o2', orderId: 'ord1074', price: 1200, status: 'Refunded', customerName: 'Alice Green', vendorId: 'v2', refundReason: 'Defective Product', paymentStatus: 'Refunded' },
-        { id: 'o3', orderId: 'ord1051', price: 4999, status: 'Pending', customerName: 'Bob White', vendorId: 'v1', paymentStatus: 'Pending' }
-      ];
-      handleUpdate();
-    }
+    // Firestore unavailable — rely on SQL payments already fetched above
+    handleUpdate();
   });
 
   const unsubVendors = onSnapshot(collection(db, 'users'), (snap) => {
@@ -118,13 +111,8 @@ export const subscribeToPaymentsTelemetry = (callback) => {
     vendorsList = allUsers.filter(u => u.role === 'vendor');
     handleUpdate();
   }, () => {
-    if (vendorsList.length === 0) {
-      vendorsList = [
-        { id: 'v1', uid: 'v1', fullName: 'Alex Rivers', role: 'vendor' },
-        { id: 'v2', uid: 'v2', fullName: 'Marta Diaz', role: 'vendor' }
-      ];
-      handleUpdate();
-    }
+    // Firestore unavailable — vendor list stays empty, SQL payments drive the view
+    handleUpdate();
   });
 
   return () => {
@@ -205,13 +193,6 @@ export const calculateVendorPayouts = (orders, vendors) => {
     };
   });
 
-  if (payouts.length === 0) {
-    return [
-      { vendorId: 'v1', vendorName: 'Alex Rivers', totalSales: 154000, commission: 15400, paidPayout: 107800, pendingPayout: 30800 },
-      { vendorId: 'v2', vendorName: 'Marta Diaz', totalSales: 123000, commission: 12300, paidPayout: 86100, pendingPayout: 24600 }
-    ];
-  }
-
   return payouts;
 };
 
@@ -223,22 +204,15 @@ export const getRefundMonitorList = (orders) => {
     const status = (o.status || '').toLowerCase();
     if (status === 'refunded' || o.refundReason || status === 'disputed') {
       refunds.push({
-        id: o.id || Math.random().toString(),
+        id: o.id || `ref-${refunds.length}`,
         orderId: o.orderId || o.id || 'N/A',
         amount: parseFloat(o.price || o.total || 0),
         customerName: o.customerName || o.customerEmail || 'Customer',
         status: o.status === 'Refunded' ? 'Approved' : (o.status === 'Disputed' ? 'Pending' : 'Approved'),
-        refundReason: o.refundReason || 'Accidental purchase'
+        refundReason: o.refundReason || 'Customer refund request'
       });
     }
   });
-
-  if (refunds.length === 0) {
-    return [
-      { id: 'ref1', orderId: 'ord1092', amount: 2499, customerName: 'John Doe', status: 'Approved', refundReason: 'Accidental Purchase' },
-      { id: 'ref2', orderId: 'ord1074', amount: 1200, customerName: 'Alice Green', status: 'Pending', refundReason: 'Defective Product' }
-    ];
-  }
 
   return refunds;
 };

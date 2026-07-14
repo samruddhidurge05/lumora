@@ -48,7 +48,9 @@ def sync_product_to_firestore(product):
             "license": product.license or "Personal Use",
             "affiliate_enabled": bool(product.affiliate_enabled),
             "commission_type": product.commission_type or "percentage",
-            "commission_value": float(product.commission_value or 0.0)
+            "commission_value": float(product.commission_value or 0.0),
+            # pCloud / external image URLs — for gallery display
+            "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")
@@ -69,8 +71,10 @@ def get_platform_settings():
         snap = doc_ref.get()
         if snap.exists:
             return snap.to_dict()
-    except Exception as e:
-        print(f"[firestore-sync] Error getting platform settings: {e}")
+    except Exception:
+        # Silently swallow quota/offline errors — platform settings are non-critical.
+        # Caller falls back to local state or defaults.
+        pass
     return {}
 
 def sync_order_to_firestore(order):

@@ -27,7 +27,11 @@ def get_orders(
     status: Optional[str] = Query(None),
     admin_user: User = Depends(require_admin_role)
 ):
-    return get_orders_list(page=page, page_size=page_size, status=status)
+    try:
+        return get_orders_list(page=page, page_size=page_size, status=status)
+    except Exception as e:
+        logger.error("[admin/orders] get_orders_list raised: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{order_id}")
 def get_order(order_id: str, admin_user: User = Depends(require_admin_role)):
@@ -137,3 +141,48 @@ def post_dispute(
     except Exception:
         pass  # Non-blocking
     return result
+
+
+@router.get("/{order_id}/download-info")
+def get_order_download_info(
+    order_id: str,
+    admin_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db),
+):
+    """
+    Admin endpoint: returns a signed download URL for the first product in an order.
+    Used by OrdersManagement.jsx to give admins access to order files.
+    """
+    from app.models.order import Order as OrderModel, OrderItem
+    from app.models.product import Product as ProductModel
+    from app.api.products_router import generate_download_token
+
+    try:
+        oid = int(order_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid order ID.")
+
+    order = db.query(OrderModel).filter(OrderModel.id == oid).first()
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
+
+    items = order.items if hasattr(order, "items") and order.items else []
+    if not items:
+        raise HTTPException(status_code=404, detail="No items found for this order.")
+
+    first_item = items[0]
+    product = db.query(ProductModel).filter(ProductModel.id == first_item.product_id).first()
+    if not product or not product.file_url:
+        raise HTTPException(status_code=404, detail="Product file not available.")
+
+    token = generate_download_token(order.user_id, first_item.product_id)
+    download_url = f"/api/products/{first_item.product_id}/download-file?token={token}"
+    file_name = f"{(product.title or 'product').replace(' ', '_')}.zip"
+
+    return {
+        "orderId": order_id,
+        "productId": str(first_item.product_id),
+        "productName": product.title,
+        "downloadUrl": download_url,
+        "fileName": file_name,
+    }

@@ -258,11 +258,11 @@ const sysSound = new AudioController();
 // No hardcoded mock data — all data comes from analyticsService.js via Firestore.
 
 export default function Analytics() {
-  const { role } = useAuth();
+  const { userRole } = useAuth();
   const { settings, loading: settingsLoading } = usePlatformSettings();
 
   // Enforce analyticsEnabled — Admins always have access; non-admins are blocked when disabled
-  if (!settingsLoading && !settings.analyticsEnabled && role !== 'Admin') {
+  if (!settingsLoading && !settings.analyticsEnabled && userRole !== 'admin') {
     return (
       <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center bg-white/80 backdrop-blur-md border border-stone-200/50 rounded-3xl p-10 shadow-lg">

@@ -30,7 +30,7 @@ export const addProduct = async (productData) => {
 
 export const updateProduct = async (productId, updateData) => {
   try {
-    await updateProductApi(productId, updateData);
+    return await updateProductApi(productId, updateData);
   } catch (error) {
     console.error('[productService] Error updating product:', error);
     throw error;

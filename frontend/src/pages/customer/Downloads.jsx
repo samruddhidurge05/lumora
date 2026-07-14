@@ -30,8 +30,8 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl, productId }) {
-  const [state, setState] = useState('idle'); // idle | downloading | done
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
+  const [state, setState] = useState('idle'); // idle | downloading | done | pending
 
   const handleDownload = async () => {
     if (state !== 'idle') return;
@@ -44,6 +44,20 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     if (!isNaN(numericId)) {
       try {
         const res = await backendFetch(`/products/${numericId}/download`);
+
+        // ── Download Pending: backend signals asset not yet uploaded ──────────
+        if (res?.download_available === false) {
+          setState('pending');
+          return;
+        }
+
+        // Handle pCloud / external redirect (temporary dev/testing implementation)
+        if (res?.type === 'external' && res?.redirect_url) {
+          window.open(res.redirect_url, '_blank');
+          setTimeout(() => setState('done'), 400);
+          setTimeout(() => setState('idle'), 4500);
+          return;
+        }
         if (res && res.download_url) {
           activeUrl = res.download_url;
         }
@@ -55,8 +69,32 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     // Connect to backend download URL if provided
     if (activeUrl) {
       try {
+        // ── Check if the actual file response is pending ─────────────────────
+        // The download-file endpoint returns JSON {type:"pending"} when no file
+        // is uploaded — intercept before triggering a browser download attempt.
+        const fileCheckUrl = activeUrl.startsWith('/api')
+          ? activeUrl.replace('/api', '')
+          : activeUrl;
+        try {
+          const fileResp = await backendFetch(fileCheckUrl);
+          if (fileResp?.type === 'pending') {
+            setState('pending');
+            return;
+          }
+          if (fileResp?.type === 'external' && fileResp?.redirect_url) {
+            window.open(fileResp.redirect_url, '_blank');
+            setTimeout(() => setState('done'), 400);
+            setTimeout(() => setState('idle'), 4500);
+            return;
+          }
+        } catch (_) {
+          // Not JSON — means it's a real file stream; proceed with link click
+        }
+
         const link = document.createElement('a');
-        link.href = activeUrl;
+        link.href = activeUrl.startsWith('/') 
+          ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${activeUrl}`
+          : activeUrl;
         link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
         document.body.appendChild(link);
         link.click();
@@ -69,6 +107,32 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     setTimeout(() => setState('done'), 1800);
     setTimeout(() => setState('idle'), 4500);
   };
+
+  // ── Pending state: show professional message, not an error ───────────────
+  if (state === 'pending') {
+    return (
+      <div style={{
+        display: 'inline-flex', flexDirection: 'column', gap: '4px',
+        padding: '10px 14px', borderRadius: '12px',
+        background: 'rgba(123,63,160,0.06)',
+        border: '1px solid rgba(123,63,160,0.18)',
+        maxWidth: '260px',
+      }}>
+        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5A1E7E', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          ⏳ Download Pending
+        </span>
+        <span style={{ fontSize: '0.68rem', color: '#7B3FA0', lineHeight: 1.5, fontWeight: 400 }}>
+          Asset not yet uploaded by creator. Your ownership is verified — check back soon.
+        </span>
+        <button
+          onClick={() => setState('idle')}
+          style={{ marginTop: '4px', fontSize: '0.64rem', fontWeight: 700, color: '#8B6B5B', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
 
   const configs = {
     idle: {
@@ -96,7 +160,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     },
   };
 
-  const c = configs[state];
+  const c = configs[state] || configs.idle;
 
   return (
     <button
@@ -148,6 +212,11 @@ export default function CustomerDownloads() {
         orders.forEach(ord => {
           (ord.items || []).forEach(item => {
             const prod = products.find(p => String(p.id) === String(item.product_id));
+            // Determine download availability from the order item's download_url
+            // and from any backend download_available flag if present.
+            // A product with a real download_url path (not just the /download endpoint)
+            // will be treated as available; the actual pending check happens server-side.
+            const downloadAvailable = item.download_available !== false; // default true unless explicitly false
             itemsList.push({
               id: String(item.product_id),
               name: prod?.title || `Digital Asset #${item.product_id}`,
@@ -163,6 +232,7 @@ export default function CustomerDownloads() {
               gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
               accentColor: '#4E3B31',
               downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
+              downloadAvailable,
               verified: true,
             });
           });
@@ -701,17 +771,45 @@ function VaultCard({ product, isHovered, onHover }) {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingTop: 4, borderTop: '1px solid rgba(78,59,49,0.06)' }}>
-          <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
-          <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} />
-          <button style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
-            background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
-            color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
-          }}>
-            <ExternalLink size={11} /> Open
-          </button>
+          {product.downloadAvailable === false ? (
+            /* ── Download Pending: asset not yet uploaded by creator ──────────
+               Never removes the card from the vault. Ownership is preserved.
+               The message is production-friendly — no technical errors shown. */
+            <div style={{
+              flex: 1,
+              padding: '10px 14px',
+              borderRadius: 12,
+              background: 'rgba(123,63,160,0.05)',
+              border: '1px solid rgba(123,63,160,0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+            }}>
+              <span style={{
+                fontSize: '0.72rem', fontWeight: 800, color: '#5A1E7E',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                ⏳ Download Pending
+              </span>
+              <span style={{ fontSize: '0.66rem', color: '#7B3FA0', lineHeight: 1.5, fontWeight: 400 }}>
+                The creator has not yet uploaded the downloadable asset. Your ownership is verified — the file will appear here automatically once available.
+              </span>
+            </div>
+          ) : (
+            <>
+              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+              <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} />
+              <button style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
+                background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
+                color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
+              }}>
+                <ExternalLink size={11} /> Open
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
