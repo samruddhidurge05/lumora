@@ -433,7 +433,7 @@ export const AuthProvider = ({ children }) => {
       const affDocRef = doc(db, 'affiliates', firebaseUser.uid);
       const affDocSnap = await getDoc(affDocRef);
       if (!affDocSnap.exists()) {
-        // Generate a unique code without reading the entire affiliates collection
+     // Generate a unique code without reading the entire affiliates collection
         // (collection-level getDocs is denied by Firestore rules for non-admins)
         const code = 'AFF' + Date.now().toString(36).toUpperCase().slice(-6);
         await setDoc(affDocRef, {

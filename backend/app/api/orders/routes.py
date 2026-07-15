@@ -12,6 +12,103 @@ from app.services.purchase_service import PurchaseService
 
 router = APIRouter()
 
+
+def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer_user_id: int) -> None:
+    """
+    Create AffiliateCommission records in SQLite for each eligible product
+    in this order that was referred by the given affiliate_code.
+
+    Idempotency: if a commission already exists for (affiliate_id, order_id)
+    we skip creation — safe to call multiple times for the same order.
+
+    Self-referral prevention: if the affiliate IS the buyer, no commission
+    is created.
+
+    Business rules:
+    - Commission rate: uses product.commission_value if affiliate_enabled,
+      falls back to the affiliate profile's default commission_rate.
+    - Commission type: "fixed" or "percentage" per product setting.
+    - Products with affiliate_enabled=False are skipped.
+    """
+    from app.models.affiliate import AffiliateProfile, AffiliateCommission
+    from app.models.product import Product
+
+    code_upper = affiliate_code.strip().upper()
+
+    # 1. Find the AffiliateProfile by referral_code
+    profile = db.query(AffiliateProfile).filter(
+        AffiliateProfile.referral_code == code_upper,
+        AffiliateProfile.is_active == True,
+    ).first()
+
+    if not profile:
+        return  # Unknown or inactive affiliate code — skip silently
+
+    # 2. Self-referral prevention
+    if profile.user_id == buyer_user_id:
+        return
+
+    # 3. Idempotency: if ANY commission already exists for this affiliate+order, abort
+    existing = db.query(AffiliateCommission).filter(
+        AffiliateCommission.affiliate_id == profile.id,
+        AffiliateCommission.order_id == order.id,
+    ).first()
+    if existing:
+        return  # Already processed — prevent duplicates
+
+    # 4. Create one commission record per order item
+    total_commission = 0.0
+    commissions_created = 0
+
+    for item in order.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if not product:
+            continue
+
+        sale_amount = float(item.price_paid or 0)
+
+        # Calculate commission amount.
+        # If the vendor configured a custom commission (affiliate_enabled + value > 0),
+        # use that. Otherwise fall back to the affiliate profile's default rate.
+        # Note: we always create a commission when a referral code is present —
+        # the platform earns commission on every referred sale.
+        if (
+            product.affiliate_enabled
+            and product.commission_value is not None
+            and float(product.commission_value) > 0
+        ):
+            if product.commission_type == "fixed":
+                commission_amt = float(product.commission_value)
+            else:
+                commission_amt = round(sale_amount * float(product.commission_value) / 100, 2)
+        else:
+            # Use the affiliate profile's platform default commission rate
+            commission_amt = round(sale_amount * float(profile.commission_rate) / 100, 2)
+
+        commission_amt = max(0.0, commission_amt)
+
+        commission = AffiliateCommission(
+            affiliate_id=profile.id,
+            order_id=order.id,
+            product_id=item.product_id,
+            product_name=product.title or product.name or f"Product {item.product_id}",
+            sale_amount=sale_amount,
+            commission_amt=commission_amt,
+            status="pending",
+        )
+        db.add(commission)
+        total_commission += commission_amt
+        commissions_created += 1
+
+    if commissions_created == 0:
+        return  # No eligible products in this order
+
+    # 5. Update aggregate totals on the affiliate profile
+    profile.total_earnings += total_commission
+    profile.total_sales += commissions_created
+
+    db.commit()
+
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_new_order(
     order_in: OrderCreate,
@@ -121,6 +218,23 @@ def create_new_order(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=f"Payment status is '{payment.status}'. Orders can only be completed for successful payments."
         )
+
+    # ── Affiliate Commission Creation ───────────────────────────────────────
+    # If this payment was made via an affiliate referral, create commission
+    # records in SQLite so the affiliate dashboard reflects real earnings.
+    # This is idempotent: we check for existing commissions for this order
+    # before creating new ones to prevent duplicates.
+    if payment.affiliate_code:
+        try:
+            _create_affiliate_commissions(db, order, payment.affiliate_code, current_user.id)
+        except Exception as aff_err:
+            import logging
+            _aff_logger = logging.getLogger(__name__)
+            _aff_logger.error(
+                "Affiliate commission creation failed for order %s (code %s): %s — order preserved",
+                order.id, payment.affiliate_code, aff_err,
+            )
+    # ────────────────────────────────────────────────────────────────────────
 
     # ── Best-effort Firestore sync ───────────────────────────────────────────
     # Platform Pause policy (Option A / Requirement 13): checkout is blocked
