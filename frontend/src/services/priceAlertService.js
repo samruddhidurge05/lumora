@@ -125,7 +125,7 @@ export const triggerPriceDropNotifications = async (product, newPrice) => {
       const alert = alertDoc.data();
       const userId = alert.userId;
 
-      const message = `Price Drop Alert! '${product.title}' has dropped from ₹${Math.round(oldPrice * 80)} to ₹${Math.round(newPrice * 80)} (${discountPercent}% OFF).`;
+      const message = `Price Drop Alert! '${product.title}' has dropped from ₹${Math.round(oldPrice)} to ₹${Math.round(newPrice)} (${discountPercent}% OFF).`;
       await createNotification(userId, "Price Drop Alert! ✦", message, "price_drop");
 
       const alertRef = doc(db, "price_alerts", alertDoc.id);
