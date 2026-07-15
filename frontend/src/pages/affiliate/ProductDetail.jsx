@@ -132,7 +132,7 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
     : `${customCommVal !== undefined ? customCommVal : (profile?.commission_rate ?? COMMISSION_RATES[product?.category] ?? 15)}%`;
 
   /* ── Price + earning per sale ─────────────────────────────────────── */
-  const priceINR  = Math.round((product?.price || 0) * 80);
+  const priceINR  = Math.round(product?.price || 0);
   const earnPerSale = isFixed
     ? Math.round(customCommVal || 0)
     : Math.round((priceINR * parseFloat(rate)) / 100);

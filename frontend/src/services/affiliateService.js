@@ -197,8 +197,8 @@ export const affiliateService = {
     let actualAddedItemsCount = 0;
     for (const item of items) {
       const saleAmountUSD = item.snapshot?.price || 0;
-      // Convert to INR with standard multiplier (1 USD = 80 INR)
-      const saleAmountINR = Math.round(saleAmountUSD * 80);
+      // All prices are already in INR.
+      const saleAmountINR = Math.round(saleAmountUSD);
       
       let commissionAmountINR = 0;
       try {

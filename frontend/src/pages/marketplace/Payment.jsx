@@ -69,6 +69,13 @@ export default function Payment() {
     }
   }, [pendingPaymentRef]);
 
+  // Safeguard: Redirect to marketplace if cart and buyNowProduct are empty (e.g. after refresh)
+  useEffect(() => {
+    if (checkoutItems.length === 0) {
+      navigateTo('marketplace');
+    }
+  }, [checkoutItems.length, navigateTo]);
+
   // Recovery: check if there's an incomplete payment from a previous session
   useEffect(() => {
     const ref = sessionStorage.getItem('lumora_pending_payment_ref');

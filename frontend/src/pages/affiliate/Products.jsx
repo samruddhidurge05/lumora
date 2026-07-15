@@ -63,8 +63,8 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     )
     .sort((a, b) => {
       if (sortBy === 'commission') {
-        const ca = a.commission_type === 'fixed' ? (a.commission_value * 80) : ((a.price * 80) * (a.commission_value !== undefined ? a.commission_value : (COMMISSION_RATES[a.category] || 15)) / 100);
-        const cb = b.commission_type === 'fixed' ? (b.commission_value * 80) : ((b.price * 80) * (b.commission_value !== undefined ? b.commission_value : (COMMISSION_RATES[b.category] || 15)) / 100);
+        const ca = a.commission_type === 'fixed' ? (a.commission_value) : ((a.price) * (a.commission_value !== undefined ? a.commission_value : (COMMISSION_RATES[a.category] || 15)) / 100);
+        const cb = b.commission_type === 'fixed' ? (b.commission_value) : ((b.price) * (b.commission_value !== undefined ? b.commission_value : (COMMISSION_RATES[b.category] || 15)) / 100);
         return cb - ca;
       }
       if (sortBy === 'price-desc') return b.price - a.price;
@@ -101,7 +101,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     if (product.commission_type === 'fixed') {
       return Math.round(product.commission_value || 0);
     }
-    const priceINR = Math.round(product.price * 80);
+    const priceINR = Math.round(product.price);
     const rateVal = product.commission_value !== undefined ? product.commission_value : (COMMISSION_RATES[product.category] || 15);
     return Math.round((priceINR * rateVal) / 100);
   };
