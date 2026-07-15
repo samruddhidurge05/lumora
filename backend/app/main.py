@@ -163,6 +163,32 @@ _validate_startup_config()
 # ── Database Table Creation ───────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
+# ── Schema Migrations (idempotent ALTER TABLE for SQLite) ─────────────────────
+def _run_schema_migrations() -> None:
+    """
+    Safe, idempotent column additions for SQLite.
+    Uses PRAGMA table_info to check before adding — never fails if column exists.
+    """
+    from sqlalchemy import text as _text
+    try:
+        with engine.connect() as conn:
+            # admin_invitations — add revoked_at, invited_name, message
+            inv_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(admin_invitations)"))}
+            if "revoked_at"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
+            if "invited_name" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
+            if "message"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
+
+            # users — add last_login_at
+            user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
+            if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+
+            conn.commit()
+        _logger.info("[startup] Schema migrations applied OK")
+    except Exception as _mig_err:
+        _logger.warning("[startup] Schema migration warning (non-fatal): %s", _mig_err)
+
+_run_schema_migrations()
+
 # ── Seed Admin Users ──────────────────────────────────────────────────────────
 from app.db.database import SessionLocal
 from app.models.user import User

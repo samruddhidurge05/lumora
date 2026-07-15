@@ -57,6 +57,7 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role');
   const justRegistered = searchParams.get('registered') === 'true';
+  const nextUrl = searchParams.get('next') || null; // invite redirect support
   const validRoles = ['customer', 'affiliate', 'vendor', 'admin'];
 
   if (!role || !validRoles.includes(role)) {
@@ -108,7 +109,11 @@ export default function Login() {
     setAuthStatus(null);
     try {
       await login(email, password, rememberMe, role);
-      navigate(`/${role}/dashboard`);
+      if (nextUrl) {
+        navigate(nextUrl, { replace: true });
+      } else {
+        navigate(`/${role}/dashboard`);
+      }
     } catch (err) {
       setAuthStatus('error');
       setStatusMessage(mapAuthError(err.code));
@@ -122,7 +127,11 @@ export default function Login() {
     setAuthStatus(null);
     try {
       const user = await googleSignIn(rememberMe, role);
-      navigate(`/${role}/dashboard`);
+      if (nextUrl) {
+        navigate(nextUrl, { replace: true });
+      } else {
+        navigate(`/${role}/dashboard`);
+      }
     } catch (err) {
       setAuthStatus('error');
       setStatusMessage(mapAuthError(err.code) || err.message);
@@ -136,7 +145,11 @@ export default function Login() {
     setAuthStatus(null);
     try {
       const user = await githubSignIn(rememberMe, role);
-      navigate(`/${role}/dashboard`);
+      if (nextUrl) {
+        navigate(nextUrl, { replace: true });
+      } else {
+        navigate(`/${role}/dashboard`);
+      }
     } catch (err) {
       setAuthStatus('error');
       setStatusMessage(mapAuthError(err.code) || err.message);

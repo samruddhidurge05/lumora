@@ -41,15 +41,14 @@ export default function ProtectedRoute({
     // Replace current history entry — prevents stale dashboard from appearing via Back
     window.history.replaceState(null, '', window.location.href);
 
-    // Validate backend session is alive
+    // Validate backend session is alive — only when a token exists
     const token = localStorage.getItem('lumora_backend_token');
     if (token) {
       // Quick async validation — if backend says 401, force logout
       import('../utils/api').then(({ backendFetch }) => {
         backendFetch('/auth/me').catch((err) => {
-          // 401 or network error means session is dead
-          if (err?.status === 401 || err?.message?.includes('401')) {
-            console.warn('[ProtectedRoute] Backend session expired, forcing logout');
+          // Only force logout on a confirmed 401 — not on network errors
+          if (err?.status === 401) {
             if (typeof logout === 'function') {
               logout();
             }

@@ -55,11 +55,20 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {
     const firebaseUser = auth.currentUser;
+    const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
+
+    // Admin sessions use a separate JWT flow — never attempt syncWithBackend
+    // for admin tokens. Clear the token and let AuthContext redirect to /admin/login.
+    if (activeRole === 'admin') {
+      clearBackendToken();
+      const error = new Error('Admin session expired. Please log in again.');
+      error.status = 401;
+      throw error;
+    }
 
     if (firebaseUser) {
       // Refresh Firebase ID token and re-sync with backend
-      const role = localStorage.getItem('lumora_active_role') || 'customer';
-      const synced = await syncWithBackend(firebaseUser, role);
+      const synced = await syncWithBackend(firebaseUser, activeRole);
 
       if (synced?.access_token) {
         // Retry the original request with the new token
