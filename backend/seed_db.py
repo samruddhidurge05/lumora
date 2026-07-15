@@ -20,14 +20,15 @@ def seed():
 
     db = SessionLocal()
     try:
-        # Check if already seeded
-        count = db.query(Product).count()
-        if count > 0:
-            print(f"[seed] Database already contains {count} products. Skipping seed.")
-            return
-
-        print(f"[seed] Seeding {len(data)} products from JSON...")
+        # Check if already seeded but allow incremental seeding
+        existing_ids = {str(p.id) for p in db.query(Product.id).all()}
+        
+        inserted = 0
+        print(f"[seed] Found {len(existing_ids)} existing products. Seeding missing products from JSON...")
         for item in data:
+            if str(item.get("id")) in existing_ids:
+                continue
+            inserted += 1
             product = Product(
                 id=item.get("id"),
                 title=item.get("title"),
