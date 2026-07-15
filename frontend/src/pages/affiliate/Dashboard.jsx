@@ -347,13 +347,13 @@ export default function AffiliateDashboardHome({
           </p>
           <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <button
-              onClick={() => navigateTo('affiliate-products')}
+              onClick={() => window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: 'products' }))}
               style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'10px 22px', fontSize:'0.84rem', fontWeight:700, borderRadius:'12px', border:'none', background:'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color:'#fff', cursor:'pointer', boxShadow:'0 4px 18px rgba(123,63,160,0.38)', fontFamily:'var(--font-sans)' }}
             >
               <Link2 size={14} /> Get Links
             </button>
             <button
-              onClick={() => navigateTo('affiliate-earnings')}
+              onClick={() => window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: 'earnings' }))}
               style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'10px 22px', fontSize:'0.84rem', fontWeight:700, borderRadius:'12px', border:'1.5px solid rgba(185,157,216,0.35)', background:'rgba(255,255,255,0.80)', color:'var(--text-primary)', cursor:'pointer', fontFamily:'var(--font-sans)' }}
             >
               View Earnings
