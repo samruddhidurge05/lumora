@@ -6,6 +6,7 @@ import {
   where, serverTimestamp, updateDoc, doc,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import { backendFetch } from '../../utils/api';
 
 function getVendorId() {
   return localStorage.getItem('lumora_backend_uid') || null;
@@ -54,19 +55,36 @@ export default function Affiliate() {
   useEffect(() => {
     const vendorId = getVendorId();
     if (!vendorId) {
-      setLoading(false);
-      return;
+      // vendorId not ready yet — listen for the backend session event and retry
+      const onReady = () => {
+        const id = getVendorId();
+        if (!id) return;
+        window.removeEventListener('lumora_backend_ready', onReady);
+        loadData(id);
+      };
+      window.addEventListener('lumora_backend_ready', onReady);
+      return () => window.removeEventListener('lumora_backend_ready', onReady);
     }
+    loadData(vendorId);
+  }, []);
+
+  function loadData(vendorId) {
+    setLoading(true);
     Promise.all([
       getAffiliateLinks(vendorId),
       getAffiliateStats(vendorId),
-      getDocs(query(collection(db, 'products'), where('vendor_id', '==', vendorId))),
-    ]).then(([l, s, pSnap]) => {
+      // Fetch vendor products from the SQLite backend (not Firestore)
+      // Firestore only holds products synced from the old flow; new products
+      // created via the vendor dashboard go to SQLite only.
+      backendFetch('/vendors/' + vendorId + '/products?limit=200')
+        .then(res => Array.isArray(res) ? res : (res.items || []))
+        .catch(() => []),
+    ]).then(([l, s, productItems]) => {
       setLinks(l);
       setStats(s);
-      setProducts(pSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setProducts(productItems);
     }).catch(console.error).finally(() => setLoading(false));
-  }, []);
+  }
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -77,7 +95,7 @@ export default function Affiliate() {
     try {
       const newLink = await createAffiliateLink(
         vendorId, form.productId,
-        form.productName || products.find(p => p.id === form.productId)?.name || form.productId,
+        form.productName || products.find(p => String(p.id) === String(form.productId))?.title || products.find(p => String(p.id) === String(form.productId))?.name || form.productId,
         form.commissionPct
       );
       setLinks(prev => [newLink, ...prev]);
@@ -129,11 +147,11 @@ export default function Affiliate() {
                 <label className="v-label">Select Product *</label>
                 <select className="v-select" value={form.productId}
                   onChange={e => {
-                    const p = products.find(p => p.id === e.target.value);
-                    setForm(f => ({ ...f, productId: e.target.value, productName: p?.name || '' }));
+                    const p = products.find(p => String(p.id) === e.target.value);
+                    setForm(f => ({ ...f, productId: e.target.value, productName: p?.title || p?.name || '' }));
                   }} required>
                   <option value="">Choose a product</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name || p.title}</option>)}
+                  {products.map(p => <option key={p.id} value={String(p.id)}>{p.title || p.name}</option>)}
                   {products.length === 0 && <option value="demo-product">Demo Product (no products yet)</option>}
                 </select>
               </div>

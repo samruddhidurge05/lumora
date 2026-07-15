@@ -48,4 +48,8 @@ add_column_if_missing('payments', 'items_json', 'TEXT')
 add_column_if_missing('payments', 'updated_at', 'DATETIME')
 add_column_if_missing('payments', 'customer_id', 'INTEGER')
 
+print('=== Migrating products table (new columns) ===')
+add_column_if_missing('products', 'pcloud_download_link', 'VARCHAR(512)')
+add_column_if_missing('products', 'image_urls', 'JSON')
+
 print('=== Migration complete ===')

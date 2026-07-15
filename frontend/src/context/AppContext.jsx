@@ -1490,6 +1490,10 @@ export function AppContextProvider({ children }) {
     } else if (view.startsWith('affiliate')) {
       const sub = view.replace('affiliate-', '').replace('affiliate', 'dashboard');
       navigate(`/affiliate/dashboard#affiliate/${sub}`);
+      // Dispatch the tab-change event directly because React Router's navigate()
+      // uses pushState — which does NOT trigger the native 'hashchange' event.
+      // AffiliateDashboard.jsx listens for this custom event to switch tabs.
+      window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: sub }));
       setCurrentView('affiliate');
     } else {
       navigate(`/#${view}`);
