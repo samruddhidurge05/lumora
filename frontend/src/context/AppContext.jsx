@@ -645,7 +645,14 @@ const _BACKEND_ORIGIN = (() => {
 
 function _resolveProductImageUrl(url) {
   if (!url) return null;
-  if (url.startsWith('http')) return url;
+  // Strip localhost origins so the Vite proxy forwards /uploads/... to the backend.
+  // Stored temp URLs like "http://localhost:8000/uploads/..." become "/uploads/..."
+  // which the Vite proxy maps to the backend. This prevents 404s on the customer side.
+  const localhostPattern = /^https?:\/\/localhost:\d+/;
+  if (localhostPattern.test(url)) {
+    url = url.replace(localhostPattern, '');
+  }
+  if (url.startsWith('http')) return url; // external CDN — pass through unchanged
   // Relative path like /uploads/vendors/1/products/5/images/uuid.png
   return `${_BACKEND_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
 }
@@ -687,7 +694,9 @@ function enrichRawProducts(raw) {
       ]),
       version: p.version || 'v1.0.0',
       fileSize: p.fileSize || p.file_size || '48 MB',
-      lastUpdated: p.lastUpdated || p.last_updated || (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Recently'),
+      // Normalize creation timestamp to camelCase for consistent sorting
+      createdAt: p.createdAt || p.created_at || null,
+      lastUpdated: p.lastUpdated || p.last_updated || (p.createdAt || p.created_at ? new Date(p.createdAt || p.created_at).toLocaleDateString() : 'Recently'),
       reviews: isBackend ? (p.reviews || 0) : (p.reviews || Math.floor((p.downloads || 100) * 0.08)),
       downloads: p.downloads || 0,
       reviewsList,
@@ -731,14 +740,19 @@ export function AppContextProvider({ children }) {
   const refetchProducts = () => {
     getProducts()
       .then(fetched => {
-        if (fetched && fetched.length > 0) {
-          console.log('[Backend] Refreshed products from FastAPI:', fetched.length);
+        if (fetched && Array.isArray(fetched)) {
           // Update the authoritative backend ID set
           backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
           const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
           const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          setProducts([...enrichRawProducts(fetched), ...jsonOnly, ...localOnly]);
+          // Sort backend products by created_at descending so newest appear first
+          const sorted = [...fetched].sort((a, b) => {
+            const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return tb - ta;
+          });
+          setProducts([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly]);
         }
       })
       .catch(err => console.warn('[Backend] Product refresh failed:', err.message));
@@ -750,13 +764,18 @@ export function AppContextProvider({ children }) {
     getProducts()
       .then(fetched => {
         if (fetched && fetched.length > 0) {
-          console.log('[Backend] Loaded products from FastAPI:', fetched.length);
           // Record which IDs came from the backend
           backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
           const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
           const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          setProducts([...enrichRawProducts(fetched), ...jsonOnly, ...localOnly]);
+          // Sort backend products by created_at descending so newest appear first
+          const sorted = [...fetched].sort((a, b) => {
+            const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return tb - ta;
+          });
+          setProducts([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly]);
         }
       })
       .catch(err => console.warn('[Backend] Product fetch failed (non-fatal):', err.message));
@@ -776,7 +795,6 @@ export function AppContextProvider({ children }) {
           return enrichRawProducts([{ ...data, id: d.id }])[0];
         });
         if (firestoreDocs.length > 0) {
-          console.log('[Firestore] Real-time products update:', firestoreDocs.length);
           setProducts(prev => {
             // Always keep backend products (they are the authoritative source)
             const currentBackendIds = backendProductIdsRef.current;
@@ -989,7 +1007,6 @@ export function AppContextProvider({ children }) {
   useEffect(() => {
     const currentUid = user?.uid || null;
     if (lastUserUidRef.current !== currentUid) {
-      console.log(`[AppContext] User session changed from ${lastUserUidRef.current} to ${currentUid}. Wiping context state.`);
       setCart([]);
       setWishlist([]);
       setOwnedProducts([]);
@@ -1065,11 +1082,9 @@ export function AppContextProvider({ children }) {
           // CRITICAL: Always overwrite so stale/mock IDs from previous sessions are cleared
           // This ensures the UI reflects exactly what's in the SQLite database
           setOwnedProducts([...new Set(purchasedIds)]); // Remove duplicates
-          console.log(`[AppContext] Owned products synced from SQLite: ${purchasedIds.length} unique items from ${orders.length} orders`);
         } else {
           // If no orders returned, user owns no products
           setOwnedProducts([]);
-          console.log('[AppContext] No orders found, cleared owned products');
         }
       } catch (err) {
         console.warn('[AppContext] Owned products sync failed (backend may be offline):', err.message);
@@ -1111,7 +1126,6 @@ export function AppContextProvider({ children }) {
   useEffect(() => {
     const handleRefresh = () => {
       if (!user || !syncBackend.current) return;
-      console.log('[AppContext] lumora_refresh_user_data received — re-syncing with backend');
       syncBackend.current();
     };
     window.addEventListener('lumora_refresh_user_data', handleRefresh);

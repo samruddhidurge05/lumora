@@ -794,6 +794,157 @@ function DashboardHome({
         </div>
       </div>
 
+      {/* Recently Added Products */}
+      {(() => {
+        // Pull the 6 newest published products from AppContext products array.
+        // AppContext already sorts backend products by created_at DESC on every
+        // fetch/refetch, so the first items in `filtered` (or the full products
+        // array if no category/search filter is active) are the most recent.
+        // We use the full products list here (not filtered) so recently added
+        // products always appear regardless of the user's current category filter.
+        const { products: allProducts } = { products: filtered.concat([]) };
+
+        // Sort by real creation timestamp, fall back to numeric ID for mock products
+        const recentlyAdded = [...filtered]
+          .filter(p => p.status === 'published' || !p.status)
+          .sort((a, b) => {
+            const tsA = a.createdAt || a.created_at;
+            const tsB = b.createdAt || b.created_at;
+            const ta = tsA ? new Date(tsA).getTime() : (Number(a.id) || 0);
+            const tb = tsB ? new Date(tsB).getTime() : (Number(b.id) || 0);
+            return tb - ta;
+          })
+          .slice(0, 6);
+
+        if (recentlyAdded.length === 0) return null;
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span className="caption-premium" style={{ color: '#7B3FA0' }}>✦ Fresh Off The Press</span>
+                <h3 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>
+                  Recently Added
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500 }}>
+                  Newest products — updated in real time
+                </p>
+              </div>
+              <button
+                onClick={() => navigateTo('marketplace')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', borderRadius: '20px', border: '1.5px solid rgba(123,63,160,0.28)', background: 'rgba(255,255,255,0.80)', color: '#7B3FA0', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.07)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
+              >
+                View All Products →
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '18px' }}>
+              {recentlyAdded.map(p => {
+                const isWished = wishlist.some(w => String(w.id) === String(p.id));
+                const thumbSrc = p.preview || p.thumbnail
+                  || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70';
+                const isNew = (() => {
+                  const ts = p.createdAt || p.created_at;
+                  if (!ts) return false;
+                  return (Date.now() - new Date(ts).getTime()) < 7 * 24 * 60 * 60 * 1000; // 7 days
+                })();
+
+                return (
+                  <div
+                    key={p.id}
+                    className="glass-card"
+                    onClick={() => navigateTo('product-detail', p.id)}
+                    style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', border: '1px solid rgba(196,148,230,0.22)', transition: 'all 0.28s cubic-bezier(0.16,1,0.3,1)' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 24px 60px rgba(90,30,126,0.14)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = ''; }}
+                  >
+                    {/* Thumbnail */}
+                    <div style={{ position: 'relative', height: '160px', overflow: 'hidden', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', background: 'rgba(220,198,255,0.12)' }}>
+                      <img
+                        src={thumbSrc}
+                        alt={p.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loading="lazy"
+                        onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70'; }}
+                      />
+                      {/* Badges */}
+                      <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                        {isNew && (
+                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', letterSpacing: '0.04em' }}>
+                            NEW
+                          </span>
+                        )}
+                        {(p.featured || p.isFeatured) && (
+                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#C7A55A,#A07840)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
+                            ★ Featured
+                          </span>
+                        )}
+                        {p.badge && !isNew && !(p.featured || p.isFeatured) && (
+                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
+                            {p.badge}
+                          </span>
+                        )}
+                      </div>
+                      {/* Wishlist button */}
+                      <button
+                        onClick={e => { e.stopPropagation(); toggleWishlist(p); }}
+                        style={{ position: 'absolute', top: 10, right: 10, width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isWished ? '#E11D48' : 'var(--text-muted)', transition: 'all 0.2s' }}
+                      >
+                        <Heart size={12} fill={isWished ? '#E11D48' : 'none'} />
+                      </button>
+                    </div>
+
+                    {/* Card body */}
+                    <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                      <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'rgba(123,63,160,0.07)', padding: '2px 7px', borderRadius: '5px', alignSelf: 'flex-start' }}>
+                        {p.category}
+                      </span>
+                      <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
+                        {p.title}
+                      </h4>
+                      {/* Short description */}
+                      {(p.shortDesc || p.short_desc || p.description) && (
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
+                          {p.shortDesc || p.short_desc || p.description}
+                        </p>
+                      )}
+                      {/* Rating */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={10} fill={i < Math.round(p.rating || 4.8) ? '#C7A55A' : 'none'} stroke="#C7A55A" />
+                        ))}
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: '3px' }}>{(p.rating || 4.8).toFixed(1)}</span>
+                        {p.reviews > 0 && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({p.reviews})</span>}
+                      </div>
+                      {/* Price + CTA */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(196,148,230,0.15)', marginTop: 'auto' }}>
+                        <span style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(p.price)}</span>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          <button
+                            onClick={e => { e.stopPropagation(); addToCart(p); }}
+                            style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid rgba(123,63,160,0.30)', background: 'rgba(255,255,255,0.90)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={e => { e.stopPropagation(); buyNow(p); }}
+                            style={{ padding: '6px 12px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)', fontFamily: 'var(--font-sans)' }}
+                          >
+                            Buy Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Discovery stream */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* Header row */}

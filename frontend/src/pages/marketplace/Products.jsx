@@ -12,6 +12,7 @@ const ALL_CATS = [
   { id: 'React Templates', icon: '⚛️' },
   { id: 'Website Templates', icon: '💻' },
   { id: 'Design Assets', icon: '🎨' },
+  { id: 'Graphics & UI', icon: '🖼️' },
   { id: 'E-books', icon: '📖' },
   { id: 'Notion Templates', icon: '🚀' },
   { id: 'Social Media Kits', icon: '📸' },
@@ -62,7 +63,15 @@ export default function Products() {
       case 'price-desc': return [...list].sort((a, b) => b.price - a.price);
       case 'rating':     return [...list].sort((a, b) => (b.rating||0) - (a.rating||0));
       case 'popular':    return [...list].sort((a, b) => (b.downloads||0) - (a.downloads||0));
-      case 'newest':     return [...list].sort((a, b) => (b.newArrival?1:0) - (a.newArrival?1:0));
+      case 'newest':     return [...list].sort((a, b) => {
+        const tsA = a.createdAt || a.created_at;
+        const tsB = b.createdAt || b.created_at;
+        const ta = tsA ? new Date(tsA).getTime() : (Number(a.id) || 0);
+        const tb = tsB ? new Date(tsB).getTime() : (Number(b.id) || 0);
+        if (tb !== ta) return tb - ta;
+        // Secondary: new_arrival flag for mock products
+        return (b.newArrival || b.new_arrival ? 1 : 0) - (a.newArrival || a.new_arrival ? 1 : 0);
+      });
       default:           return [...list].sort((a, b) => (b.featured?1:0) - (a.featured?1:0));
     }
   }, [products, activeCategory, search, sort, priceIdx]);
