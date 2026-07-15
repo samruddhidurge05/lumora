@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Send, Mail, MessageSquare } from 'lucide-react';
 
-export default function Contact() {
+export default function Contact({ role }) {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
@@ -37,8 +37,14 @@ export default function Contact() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: 'clamp(2rem,5vw,5rem) clamp(1.5rem,5vw,2rem)' }}>
       <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#7B3FA0', textTransform: 'uppercase' }}>Get in Touch</span>
-      <h2 className="text-editorial" style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 400, color: '#2D004D', marginTop: '8px', marginBottom: '8px' }}>Contact Us</h2>
-      <p style={{ color: '#7B3FA0', fontSize: '1rem', marginBottom: '40px' }}>We're here to help. Send us a message and we'll respond within 24 hours.</p>
+      <h2 className="text-editorial" style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 400, color: '#2D004D', marginTop: '8px', marginBottom: '8px' }}>
+        {role === 'affiliate' ? 'Affiliate Support' : 'Contact Us'}
+      </h2>
+      <p style={{ color: '#7B3FA0', fontSize: '1rem', marginBottom: '40px' }}>
+        {role === 'affiliate' 
+          ? 'Have an issue with a referral, commission, or payout? Send us a message.'
+          : 'We\'re here to help. Send us a message and we\'ll respond within 24 hours.'}
+      </p>
 
       {sent && <div style={{ padding: '14px 18px', borderRadius: '12px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', color: '#16a34a', fontSize: '0.85rem', fontWeight: 700, marginBottom: '24px' }}>✓ Message sent! We'll get back to you soon.</div>}
 

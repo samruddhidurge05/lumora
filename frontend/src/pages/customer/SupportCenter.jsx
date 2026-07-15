@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { createTicket, getMyTickets, getTicketMessages, sendReply } from '../../services/supportService';
 
 export default function SupportCenter() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [supportTab, setSupportTab] = useState('tickets');
 
   const [tickets, setTickets] = useState([]);
@@ -290,10 +290,21 @@ export default function SupportCenter() {
                     onChange={e => setCategory(e.target.value)}
                     style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(123, 63, 160, 0.2)', background: '#fff', fontSize: '0.8rem', outline: 'none', fontFamily: 'var(--font-sans)', fontWeight: 700 }}
                   >
-                    <option value="Download Assistance">Downloads</option>
-                    <option value="Billing Issue">Billing</option>
-                    <option value="Customization Request">Customization</option>
-                    <option value="General Query">General Query</option>
+                    {userRole === 'affiliate' ? (
+                      <>
+                        <option value="Referral Tracking">Referral Tracking</option>
+                        <option value="Missing Commission">Missing Commission</option>
+                        <option value="Payout Issue">Payout Issue</option>
+                        <option value="General Affiliate Query">General Query</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Download Assistance">Downloads</option>
+                        <option value="Billing Issue">Billing</option>
+                        <option value="Customization Request">Customization</option>
+                        <option value="General Query">General Query</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -380,11 +391,15 @@ export default function SupportCenter() {
 
           {/* Support FAQ cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {[
+            {(userRole === 'affiliate' ? [
+              { q: "How are commissions calculated?", a: "Commissions are applied based on the vendor's fixed or percentage rate for each qualifying purchase." },
+              { q: "Why is my commission pending?", a: "Commissions enter a pending state until the product's refund period has passed." },
+              { q: "How do I monitor performance?", a: "Check your Earnings tab for a detailed breakdown of clicks and conversions." },
+            ] : [
               { q: "What is your refund policy?", a: "Due to the digital nature of design resources, we offer refunds on verified broken file downloads only." },
               { q: "How do I download updates?", a: "Head to the 'Product Updates' tab in your dashboard, select the product, and click 'Download Update'." },
               { q: "Can I use assets for client work?", a: "Yes. All purchases come with a standard commercial license allowing client projects." },
-            ].map((faq, i) => (
+            ]).map((faq, i) => (
               <div key={i} className="premium-flat-card" style={{ padding: '20px', borderRadius: '16px' }}>
                 <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-espresso)' }}>{faq.q}</h4>
                 <p style={{ fontSize: '0.74rem', color: 'var(--color-mocha)', marginTop: '8px', lineHeight: '1.4', fontWeight: 500 }}>{faq.a}</p>
@@ -394,11 +409,11 @@ export default function SupportCenter() {
         </div>
       )}
 
-      {supportTab === 'about' && <About />}
-      {supportTab === 'contact' && <Contact />}
-      {supportTab === 'faq' && <FAQ />}
-      {supportTab === 'help' && <Help />}
-      {supportTab === 'privacy' && <PrivacyPolicy />}
+      {supportTab === 'about' && <About role={userRole} />}
+      {supportTab === 'contact' && <Contact role={userRole} />}
+      {supportTab === 'faq' && <FAQ role={userRole} />}
+      {supportTab === 'help' && <Help role={userRole} />}
+      {supportTab === 'privacy' && <PrivacyPolicy role={userRole} />}
     </div>
   );
 }

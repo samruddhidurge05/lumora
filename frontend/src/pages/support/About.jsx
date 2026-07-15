@@ -42,8 +42,11 @@ function AnimatedCounter({ target, suffix = '', duration = 2200 }) {
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+
+
 /* ─── MAIN COMPONENT ────────────────────────────────────────────── */
-const About = () => {
+const About = ({ role }) => {
+
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
@@ -101,8 +104,120 @@ const About = () => {
 
   return (
     <div className="ab-root">
-      {/* ════════════════ SECTION 1 · HERO ════════════════ */}
-      <motion.section className="ab-hero" style={{ y: heroY, opacity: heroOpacity }}>
+      
+      {role === 'affiliate' ? (
+        <>
+          {/* ════════════════ AFFILIATE SECTION 1 · HERO ════════════════ */}
+          <motion.section className="ab-hero" style={{ y: heroY, opacity: heroOpacity }}>
+            <motion.div
+              initial={{ opacity: 0, y: 45 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+              className="ab-hero-inner"
+            >
+              <div className="ab-badge">
+                <span className="ab-badge-dot" />
+                PARTNERSHIP
+              </div>
+
+              <h1 className="ab-hero-h1">
+                Grow with<br />
+                <em>the Lumora Network.</em>
+              </h1>
+
+              <p className="ab-hero-sub">
+                The Lumora Affiliate Program is a premium partnership network designed to reward marketers, creators, and advocates who bring new customers to the Lumora marketplace.
+              </p>
+
+              <div className="ab-trust-row">
+                {[
+                  { icon: <Globe size={14} /> , label: 'Global Reach' },
+                  { icon: <CreditCard size={14} />, label: 'High Commissions' },
+                  { icon: <LineChart size={14} />, label: 'Real-time Tracking' },
+                  { icon: <ShieldCheck size={14} />, label: 'Reliable Payouts' },
+                ].map((b, i) => (
+                  <motion.div
+                    key={i}
+                    className="ab-trust-badge"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {b.icon}
+                    <span>{b.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.section>
+
+          {/* ════════════════ AFFILIATE SECTION 2 · MISSION ════════════════ */}
+          <section className="ab-section">
+            <motion.div className="ab-section-head" variants={fadeUp} custom={0} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
+              <span className="ab-label">OUR MISSION</span>
+              <h2 className="ab-section-h2">Empowering Advocates</h2>
+            </motion.div>
+
+            <motion.div className="ab-story-grid" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
+              {[
+                { num: '01', title: 'Our Mission', body: 'The Lumora Affiliate Program was established to democratize access to premium digital tools while rewarding the community that helps us grow.' },
+                { num: '02', title: 'How it Works', body: 'Generate and share unique referral links. Our robust tracking systems attribute any resulting visitor sessions directly to your profile.' },
+                { num: '03', title: 'Earning Commissions', body: 'If a visitor completes a purchase within the cookie duration, a commission is immediately logged. Fully automated, transparent, and verifiable.' },
+              ].map((card, i) => (
+                <motion.div
+                  key={i}
+                  className="ab-story-card ab-glass"
+                  variants={fadeUp}
+                  custom={i}
+                  whileHover={{ y: -8, scale: 1.015 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                >
+                  <div className="ab-story-num">{card.num}</div>
+                  <h3 className="ab-story-title">{card.title}</h3>
+                  <p className="ab-story-body">{card.body}</p>
+                  <div className="ab-story-line" />
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
+
+          {/* ════════════════ AFFILIATE SECTION 3 · BENEFITS ════════════════ */}
+          <section className="ab-section">
+            <motion.div className="ab-section-head ab-center" variants={fadeUp} custom={0} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
+              <span className="ab-label">PROGRAM BENEFITS</span>
+              <h2 className="ab-section-h2">Why Join Us?</h2>
+              <p className="ab-diff-desc" style={{ marginTop: '20px', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>
+                We are deeply committed to maintaining a fair, lucrative, and technically superior affiliate ecosystem. Your success drives our success.
+              </p>
+            </motion.div>
+
+            <motion.div className="ab-diff-grid" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
+              {[
+                { icon: <Award size={20} />, title: 'High Commission Rates', desc: 'Highly competitive commission rates across our premium marketplace.' },
+                { icon: <Target size={20} />, title: 'Extended Attribution', desc: 'Extended tracking windows to capture delayed and returning conversions.' },
+                { icon: <Activity size={20} />, title: 'Real-time Analytics', desc: 'Transparent earnings reporting and live tracking for all your links.' },
+                { icon: <CheckCircle size={20} />, title: 'Priority Support', desc: 'Dedicated support for all your technical, tracking, or payout queries.' }
+              ].map((d, i) => (
+                <motion.div
+                  key={i}
+                  className="ab-diff-card ab-glass"
+                  variants={fadeUp}
+                  custom={i}
+                  whileHover={{ y: -10, scale: 1.02, boxShadow: '0 28px 60px -20px rgba(56, 19, 71,0.14)' }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                >
+                  <div className="ab-diff-icon">{d.icon}</div>
+                  <h3 className="ab-diff-title">{d.title}</h3>
+                  <p className="ab-diff-desc">{d.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
+        </>
+      ) : (
+        <>
+          {/* ════════════════ SECTION 1 · HERO ════════════════ */}
+          <motion.section className="ab-hero" style={{ y: heroY, opacity: heroOpacity }}>
         <motion.div
           initial={{ opacity: 0, y: 45 }}
           animate={{ opacity: 1, y: 0 }}
@@ -390,6 +505,8 @@ const About = () => {
           </div>
         </motion.div>
       </section>
+        </>
+      )}
 
       {/* ═══════════════════ STYLES ═══════════════════ */}
       <style>{`
@@ -488,7 +605,7 @@ const About = () => {
         }
 
         .ab-section-h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(2rem, 4vw, 2.6rem);
           font-weight: 500;
           color: #381347;
@@ -534,7 +651,7 @@ const About = () => {
         }
 
         .ab-hero-h1 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(3rem, 7vw, 5.2rem);
           font-weight: 500;
           color: #381347;
@@ -619,7 +736,7 @@ const About = () => {
           overflow: hidden;
         }
         .ab-story-num {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 2.8rem;
           font-weight: 700;
           color: rgba(161, 116, 184,0.18);
@@ -627,7 +744,7 @@ const About = () => {
           margin-bottom: 1.5rem;
         }
         .ab-story-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.4rem;
           font-weight: 500;
           color: #381347;
@@ -670,7 +787,7 @@ const About = () => {
           background: rgba(161, 116, 184,0.15);
         }
         .ab-diff-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.3rem;
           font-weight: 500;
           color: #381347;
@@ -703,7 +820,7 @@ const About = () => {
           z-index: 0;
         }
         .ab-stat-val {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(2.2rem, 4vw, 3.2rem);
           font-weight: 700;
           color: #381347;
@@ -745,7 +862,7 @@ const About = () => {
           background: rgba(255,214,186,0.20);
         }
         .ab-vision-h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(2.4rem, 5.5vw, 4.2rem);
           font-weight: 500;
           color: #381347;
@@ -821,7 +938,7 @@ const About = () => {
         }
         .ab-value-card:hover .ab-value-icon { background: rgba(161, 116, 184,0.16); }
         .ab-value-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.3rem;
           font-weight: 500;
           color: #381347;
@@ -859,7 +976,7 @@ const About = () => {
         }
         .ab-pillar-card:hover .ab-pillar-icon { background: rgba(161, 116, 184,0.16); }
         .ab-pillar-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.2rem;
           font-weight: 500;
           color: #381347;
@@ -887,7 +1004,7 @@ const About = () => {
           margin-bottom: 1.2rem;
         }
         .ab-quote-mark {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 3.5rem;
           line-height: 0.8;
           color: rgba(161, 116, 184,0.25);
@@ -910,7 +1027,7 @@ const About = () => {
           border-radius: 50%;
           background: linear-gradient(135deg, #DCC6FF, #FFD6BA);
           display: flex; align-items: center; justify-content: center;
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1rem;
           font-weight: 700;
           color: #381347;
@@ -952,7 +1069,7 @@ const About = () => {
           background: rgba(255,214,186,0.22);
         }
         .ab-cta-h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(2.2rem, 5vw, 3.8rem);
           font-weight: 500;
           color: #381347;

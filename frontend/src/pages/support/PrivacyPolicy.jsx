@@ -5,7 +5,7 @@ import {
   Database, ShieldAlert, ArrowRight, Sparkles, Check
 } from 'lucide-react';
 
-const PrivacyPolicy = () => {
+const PrivacyPolicy = ({ role }) => {
   // Checkbox states
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToTelemetry, setAgreedToTelemetry] = useState(false);
@@ -55,7 +55,109 @@ const PrivacyPolicy = () => {
           animate="show"
           className="pp-wrapper"
         >
-          {/* SECTION 1: HERO */}
+          {role === 'affiliate' ? (
+            <>
+              <motion.section className="pp-hero" variants={itemVariants}>
+                <div className="pp-badge">
+                  <ShieldCheck size={13} className="pp-badge-icon" />
+                  <span>AFFILIATE PRIVACY LEDGER</span>
+                </div>
+                <h1 className="pp-hero-title">Affiliate Data & Tracking Policy.</h1>
+                <p className="pp-hero-subtitle">
+                  Learn how we handle referral tracking cookies, commission attribution, and affiliate account data.
+                </p>
+              </motion.section>
+
+              <motion.section className="pp-content-section" variants={itemVariants}>
+                <div className="pp-glass-panel">
+                  <div className="pp-policy-grid">
+                    
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><Database size={20} /></div>
+                        <h3>Information We Collect</h3>
+                      </div>
+                      <p>
+                        To facilitate the Lumora Affiliate Program, we collect essential data required to maintain your account, track referrals, and process payouts. This includes your name, email address, payment details, and web telemetry associated with your unique affiliate links.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><Eye size={20} /></div>
+                        <h3>Referral Tracking</h3>
+                      </div>
+                      <p>
+                        When you share your affiliate referral link, we track the inbound traffic to properly attribute any resulting actions to your profile. We log the timestamp, origin IP (anonymized), and the specific product or page accessed.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><Sparkles size={20} /></div>
+                        <h3>Cookies</h3>
+                      </div>
+                      <p>
+                        We drop a functional tracking cookie on the visitor's browser when they click your link. This cookie has an extended lifespan (typically 30-90 days) and is solely used to attribute subsequent purchases back to your affiliate account. We do not track visitors across other websites or third-party networks.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><FileText size={20} /></div>
+                        <h3>Commission Attribution</h3>
+                      </div>
+                      <p>
+                        We record the timestamp, referral code, order ID, and sale amount for every transaction attributed to your account. This data is strictly used for calculating and validating your commissions. We do not share customer personal identification with affiliates.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><ShieldAlert size={20} /></div>
+                        <h3>Affiliate Account Data</h3>
+                      </div>
+                      <p>
+                        Your payout details, earnings history, and account profile are encrypted. We retain this data as long as your account is active. If you choose to close your account, we may retain certain records for tax compliance and legal obligations.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><CheckCircle2 size={20} /></div>
+                        <h3>Payout Information</h3>
+                      </div>
+                      <p>
+                        Payout requests are processed securely via third-party financial institutions (e.g., Stripe, PayPal, or direct bank transfer). We share only the necessary transactional data required to execute the payout successfully.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><Lock size={20} /></div>
+                        <h3>Data Security</h3>
+                      </div>
+                      <p>
+                        All telemetry and affiliate data is secured behind 256-bit SSL encryption. Access to our tracking databases is strictly limited to authorized engineering personnel for the purposes of maintaining the integrity of the affiliate program.
+                      </p>
+                    </div>
+
+                    <div className="pp-policy-item">
+                      <div className="pp-item-header">
+                        <div className="pp-icon-box"><ArrowRight size={20} /></div>
+                        <h3>Contact Information</h3>
+                      </div>
+                      <p>
+                        If you have any questions regarding this privacy policy or how we handle your affiliate data, please reach out to us via the Contact section in your Affiliate Support dashboard, or email us at legal@lumora.com.
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+              </motion.section>
+            </>
+          ) : (
+            <>
           <motion.section className="pp-hero" variants={itemVariants}>
             <div className="pp-badge">
               <ShieldCheck size={13} className="pp-badge-icon" />
@@ -230,6 +332,8 @@ const PrivacyPolicy = () => {
               </AnimatePresence>
             </div>
           </motion.section>
+            </>
+          )}
         </motion.div>
       </div>
 
@@ -250,7 +354,7 @@ const PrivacyPolicy = () => {
           z-index: 1;
           max-width: 1240px;
           margin: 0 auto;
-          padding: 8.5rem 2rem 4rem 2rem;
+          padding: 2rem 2rem 4rem 2rem;
           box-sizing: border-box;
         }
 
@@ -261,12 +365,6 @@ const PrivacyPolicy = () => {
         }
 
         .pp-glass-panel {
-          background: rgba(255, 253, 249, 0.52);
-          backdrop-filter: blur(28px) saturate(150%) brightness(1.04);
-          -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.04);
-          border: 1px solid rgba(255, 255, 255, 0.55);
-          border-radius: 24px;
-          box-shadow: 0 8px 32px rgba(56, 19, 71, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.8);
           transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -304,7 +402,7 @@ const PrivacyPolicy = () => {
         }
 
         .pp-hero-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: clamp(2.8rem, 6vw, 3.8rem);
           font-weight: 500;
           color: #381347;
@@ -328,7 +426,7 @@ const PrivacyPolicy = () => {
 
         .pp-policy-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: 1fr;
           gap: 3rem;
           padding: 4rem;
         }
@@ -372,7 +470,7 @@ const PrivacyPolicy = () => {
         }
 
         .pp-item-header h3 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.35rem;
           font-weight: 500;
           color: #381347;
@@ -418,7 +516,7 @@ const PrivacyPolicy = () => {
         }
 
         .pp-consent-intro h2 {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 2rem;
           font-weight: 500;
           color: #381347;
@@ -589,7 +687,7 @@ const PrivacyPolicy = () => {
         }
 
         .pp-success-title {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 1.8rem;
           font-weight: 500;
           color: #381347;

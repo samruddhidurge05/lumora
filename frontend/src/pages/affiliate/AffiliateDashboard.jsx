@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, DollarSign, User,
   LogOut, Link2, BarChart2, ShoppingBag, ChevronRight,
-  Menu, X, RefreshCw, AlertCircle
+  Menu, X, RefreshCw, AlertCircle, HelpCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,7 @@ import AffiliateDashboardHome from './Dashboard';
 import AffiliateProducts       from './Products';
 import AffiliateEarnings       from './Earnings';
 import AffiliateProfile        from './Profile';
+import SupportCenter           from '../customer/SupportCenter';
 import { AffiliateCartProvider, useAffiliateCart } from '../../context/AffiliateCartContext';
 import AffiliateCartDrawer from '../../components/affiliate/AffiliateCartDrawer';
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { id: 'products',  label: 'Products',   icon: <ShoppingBag size={17} />     },
   { id: 'earnings',  label: 'Earnings',   icon: <BarChart2 size={17} />       },
   { id: 'profile',   label: 'Profile',    icon: <User size={17} />            },
+  { id: 'support',   label: 'Support',    icon: <HelpCircle size={17} />      },
 ];
 
 export default function AffiliateDashboard() {
@@ -39,7 +41,7 @@ function AffiliateDashboardInner() {
     const hash = window.location.hash;
     const parts = hash.split('/');
     const sub = parts[1];
-    const valid = ['dashboard','products','earnings','profile'];
+    const valid = ['dashboard','products','earnings','profile', 'support'];
     return valid.includes(sub) ? sub : 'dashboard';
   });
   const [scrolled, setScrolled]   = useState(false);
@@ -106,7 +108,7 @@ function AffiliateDashboardInner() {
   useEffect(() => {
     const handleTabChange = (e) => {
       const tab = e.detail;
-      const valid = ['dashboard', 'products', 'earnings', 'profile'];
+      const valid = ['dashboard', 'products', 'earnings', 'profile', 'support'];
       if (valid.includes(tab)) {
         setActiveTab(tab);
       }
@@ -144,6 +146,7 @@ function AffiliateDashboardInner() {
       case 'products': return <AffiliateProducts {...commonProps} />;
       case 'earnings': return <AffiliateEarnings {...commonProps} />;
       case 'profile':  return <AffiliateProfile {...commonProps} />;
+      case 'support':  return <SupportCenter />;
       default:         return <AffiliateDashboardHome {...commonProps} />;
     }
   };
@@ -153,6 +156,7 @@ function AffiliateDashboardInner() {
     products:  'Products & Links',
     earnings:  'Earnings',
     profile:   'Profile',
+    support:   'Support Center',
   };
 
   return (

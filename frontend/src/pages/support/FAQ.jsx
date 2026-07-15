@@ -12,8 +12,20 @@ const FAQS = [
   { q: 'Is my payment information secure?', a: 'Yes. All transactions are processed through PCI-DSS compliant gateways. We never store your card details.' },
 ];
 
-export default function FAQ() {
+const AFFILIATE_FAQS = [
+  { q: 'How do I generate my referral link?', a: 'Go to the Products tab in your Affiliate Dashboard. Browse or search for a product and click "Copy Link" to generate your unique referral URL.' },
+  { q: 'How are commissions calculated?', a: 'Commissions are calculated as a percentage of the final sale price or a fixed amount per sale, depending on the vendor’s configuration for that product.' },
+  { q: 'When do I receive payouts?', a: 'Payouts can be requested once your pending commissions clear the refund period and your balance reaches the minimum threshold.' },
+  { q: 'Why is my commission pending?', a: 'To protect against fraud and refunds, all commissions are held in a pending state until the product\'s return window expires (typically 14-30 days).' },
+  { q: 'Why aren\'t my referral clicks showing?', a: 'Make sure your customers are using the exact link provided in your dashboard. Clicks are updated periodically and require cookies to be enabled.' },
+  { q: 'Why isn\'t a purchase being tracked?', a: 'Purchases won\'t track if the customer cleared their cookies, used ad-blockers that strip referral parameters, or purchased from a different device.' },
+  { q: 'Can I promote multiple products?', a: 'Absolutely! You can generate and share unique referral links for any number of products available in the marketplace.' },
+  { q: 'How do I monitor my performance?', a: 'Use the Earnings and Dashboard tabs to view real-time statistics on your clicks, conversions, pending earnings, and approved payouts.' },
+];
+
+export default function FAQ({ role }) {
   const [open, setOpen] = useState(null);
+  const data = role === 'affiliate' ? AFFILIATE_FAQS : FAQS;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: 'clamp(2rem,5vw,5rem) clamp(1.5rem,5vw,2rem)' }}>
@@ -21,7 +33,7 @@ export default function FAQ() {
       <h2 className="text-editorial" style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 400, color: '#2D004D', marginTop: '8px', marginBottom: '40px' }}>Frequently Asked Questions</h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {FAQS.map((faq, i) => (
+        {data.map((faq, i) => (
           <div key={i} className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,181,253,0.22)', transition: 'box-shadow 0.2s' }}>
             <button
               onClick={() => setOpen(open === i ? null : i)}

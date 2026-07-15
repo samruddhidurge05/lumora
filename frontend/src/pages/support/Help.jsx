@@ -10,13 +10,23 @@ const TOPICS = [
   { icon: <MessageSquare size={20} />, title: 'Contacting Creators', body: 'Visit a product page and click "Message Creator". You can ask pre-sale questions or request customizations.' },
 ];
 
-export default function Help() {
+const AFFILIATE_TOPICS = [
+  { icon: <Download size={20} />, title: 'Getting Started', body: 'Join the Lumora Affiliate Program, log in to your dashboard, and start exploring the marketplace for products to promote.' },
+  { icon: <ShoppingBag size={20} />, title: 'Referral Link Guide', body: 'Copy your unique ?ref=AFF_CODE link from the Products tab. You can share this link on social media, blogs, or directly to clients.' },
+  { icon: <CreditCard size={20} />, title: 'Commission Lifecycle', body: 'When a customer purchases via your link, a pending commission is created. After the return period, it becomes available.' },
+  { icon: <RefreshCw size={20} />, title: 'Click & Conversion Tracking', body: 'Your dashboard automatically tracks clicks and conversions. Note that the customer must have cookies enabled for tracking.' },
+  { icon: <Shield size={20} />, title: 'Affiliate Program Rules', body: 'Do not spam links, disguise URLs maliciously, or use your own link to purchase products for yourself.' },
+  { icon: <MessageSquare size={20} />, title: 'Payout Process', body: 'Request payouts directly from the Earnings tab once your available balance meets the minimum withdrawal threshold.' },
+];
+
+export default function Help({ role }) {
+  const data = role === 'affiliate' ? AFFILIATE_TOPICS : TOPICS;
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: 'clamp(2rem,5vw,5rem) clamp(1.5rem,5vw,2rem)' }}>
       <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#7B3FA0', textTransform: 'uppercase' }}>Documentation</span>
       <h2 className="text-editorial" style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 400, color: '#2D004D', marginTop: '8px', marginBottom: '40px' }}>Help Center</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: '20px' }}>
-        {TOPICS.map((t, i) => (
+        {data.map((t, i) => (
           <div key={i} className="glass-card" style={{ padding: '28px', border: '1px solid rgba(196,181,253,0.22)' }}>
             <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(123,63,160,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7B3FA0', marginBottom: '16px' }}>
               {t.icon}
