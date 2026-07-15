@@ -686,12 +686,38 @@ function enrichRawProducts(raw) {
       preview_images: Array.isArray(p.preview_images) ? p.preview_images.map(_resolveProductImageUrl).filter(Boolean) : [],
       badge: p.badge || (p.trending ? 'Trending' : (p.newArrival || p.new_arrival) ? 'New' : p.featured ? 'Featured' : null),
       compatibility: p.compatibility || p.tags || [],
-      features: p.features || p.highlights || (isBackend ? [] : [
-        'Fully customizable layers & styles',
-        'Commercial usage license included',
-        'Lifetime updates & version revisions',
-        'High-fidelity responsive components',
-      ]),
+      // ── Feature fields — support both snake_case (backend) and camelCase (Firestore) ──
+      features: Array.isArray(p.features) && p.features.length > 0
+        ? p.features
+        : Array.isArray(p.highlights) && p.highlights.length > 0
+          ? p.highlights
+          : (isBackend ? [] : [
+              'Fully customizable layers & styles',
+              'Commercial usage license included',
+              'Lifetime updates & version revisions',
+              'High-fidelity responsive components',
+            ]),
+      highlights: Array.isArray(p.highlights) ? p.highlights : [],
+      // what_you_get — stored as snake_case from backend, camelCase from Firestore
+      what_you_get: Array.isArray(p.what_you_get) ? p.what_you_get
+                  : Array.isArray(p.whatYouGet)   ? p.whatYouGet
+                  : [],
+      whatYouGet:   Array.isArray(p.whatYouGet)   ? p.whatYouGet
+                  : Array.isArray(p.what_you_get) ? p.what_you_get
+                  : [],
+      // system_requirements
+      system_requirements: Array.isArray(p.system_requirements) ? p.system_requirements
+                         : Array.isArray(p.systemRequirements)  ? p.systemRequirements
+                         : [],
+      systemRequirements:  Array.isArray(p.systemRequirements)  ? p.systemRequirements
+                         : Array.isArray(p.system_requirements) ? p.system_requirements
+                         : [],
+      // Short description — prefer short_desc, fall back to first 150 chars of description
+      short_desc: p.short_desc || p.shortDesc || (p.description ? p.description.substring(0, 150) : ''),
+      shortDesc:  p.shortDesc  || p.short_desc || (p.description ? p.description.substring(0, 150) : ''),
+      // Installation guide
+      installation_guide: p.installation_guide || p.installationGuide || '',
+      installationGuide:  p.installationGuide  || p.installation_guide || '',
       version: p.version || 'v1.0.0',
       fileSize: p.fileSize || p.file_size || '48 MB',
       // Normalize creation timestamp to camelCase for consistent sorting
