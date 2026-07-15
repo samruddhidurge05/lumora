@@ -1,6 +1,8 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Literal
+from pydantic import BaseModel
 from app.db.session import get_db
 from app.models.product import Product
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
@@ -8,7 +10,16 @@ from admin.validators.admin_auth import require_admin_role
 from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
 from app.services.audit_log_service import log_admin_action
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+class StatusPatch(BaseModel):
+    status: Literal["published", "draft"]
+
+
+class FeaturedPatch(BaseModel):
+    featured: bool
 
 @router.get("/")
 def get_products(
@@ -79,6 +90,46 @@ def update_product(product_id: int, product_in: ProductUpdate, db: Session = Dep
         pass
     return product
 
+@router.patch("/{product_id}/status", response_model=ProductResponse)
+def patch_product_status(
+    product_id: int,
+    body: StatusPatch,
+    db: Session = Depends(get_db),
+    admin_user = Depends(require_admin_role)
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.status = body.status
+    db.commit()
+    db.refresh(product)
+    sync_product_to_firestore(product)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_status_patched", target_type="product", target_id=str(product_id))
+    except Exception:
+        pass
+    return product
+
+@router.patch("/{product_id}/featured", response_model=ProductResponse)
+def patch_product_featured(
+    product_id: int,
+    body: FeaturedPatch,
+    db: Session = Depends(get_db),
+    admin_user = Depends(require_admin_role)
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.featured = body.featured
+    db.commit()
+    db.refresh(product)
+    sync_product_to_firestore(product)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_featured_patched", target_type="product", target_id=str(product_id))
+    except Exception:
+        pass
+    return product
+
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):
     product = db.query(Product).filter(Product.id == product_id).first()
@@ -86,7 +137,13 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
         raise HTTPException(status_code=404, detail="Product not found")
     db.delete(product)
     db.commit()
-    delete_product_from_firestore(product_id)
+    result = delete_product_from_firestore(product_id)
+    if result.get("blocked") == True and result.get("reason") != "firestore_unavailable":
+        logger.warning(
+            "[firestore-sync] Firestore delete blocked for product %s: %s",
+            product_id,
+            result.get("references"),
+        )
     try:
         log_admin_action(db, admin_user_id=admin_user.id, action="product_deleted", target_type="product", target_id=str(product_id))
     except Exception:

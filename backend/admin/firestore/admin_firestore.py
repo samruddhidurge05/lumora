@@ -19,6 +19,7 @@ def sync_product_to_firestore(product):
             "price": float(product.price or 0.0),
             "rating": float(product.rating or 5.0),
             "reviews": int(product.reviews or 0),
+            "review_count": int(product.reviews or 0),
             "downloads": int(product.downloads or 0),
             # ── Image URLs ─────────────────────────────────────────────────────
             # Priority: 1) real non-Unsplash thumbnail  2) first image_urls entry
@@ -42,7 +43,7 @@ def sync_product_to_firestore(product):
                 )
             ),
             "creatorName": product.seller or "Creator",
-            "creatorAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+            "creatorAvatar": (product.creator_avatar if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar else None),
             "featured": bool(product.featured),
             "isFeatured": bool(product.featured),
             "status": product.status or "published",
@@ -51,7 +52,7 @@ def sync_product_to_firestore(product):
             "version": product.version or "v1.0.0",
             "fileSize": product.file_size or "48 MB",
             "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
-            "updatedAt": datetime.now(timezone.utc).isoformat() + "Z",
+            "updatedAt": (product.updated_at.isoformat() + "Z" if product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
             "vendor_id": str(product.vendor_id) if product.vendor_id else None,
             "features": product.features if isinstance(product.features, list) else [],
             "highlights": product.highlights if isinstance(product.highlights, list) else [],
@@ -73,6 +74,9 @@ def sync_product_to_firestore(product):
                 product.image_urls if isinstance(product.image_urls, list) and product.image_urls
                 else (product.preview_images if isinstance(product.preview_images, list) else [])
             ),
+            # preview_images (snake_case) mirrors previewImages so restore_sqlite_products_from_firestore
+            # and any snake_case consumer can always find the gallery array without key-name guessing.
+            "preview_images": product.preview_images if isinstance(product.preview_images, list) else [],
             "previewVideo": product.preview_video or "",
             "seoTitle": product.seo_title or "",
             "seoDescription": product.seo_description or "",
@@ -84,17 +88,45 @@ def sync_product_to_firestore(product):
             # pCloud download link — both naming conventions for full compatibility
             "pcloud_download_link": product.pcloud_download_link,
             "pcloudDownloadLink": product.pcloud_download_link,
+            # file_url — both naming conventions so all consumers can find the download link
+            "file_url": product.file_url or None,
+            "fileUrl": product.file_url or None,
+            # Integer primary key — clients that need a numeric ID without parsing the doc ID string
+            "product_id": int(product.id),
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")
 
-def delete_product_from_firestore(product_id: int):
+def delete_product_from_firestore(product_id: int) -> dict:
     if not firebase_connected or db is None:
-        return
+        return {"blocked": True, "reason": "firestore_unavailable", "references": []}
     try:
-        db.collection("products").document(str(product_id)).delete()
+        pid = str(product_id)
+        references = []
+
+        # Check orders collection (items array contains productId)
+        for doc in db.collection("orders").stream():
+            data = doc.to_dict() or {}
+            items = data.get("items", [])
+            if any(str(item.get("productId", "")) == pid for item in items):
+                references.append({"collection": "orders", "doc_id": doc.id})
+
+        # Check reviews
+        for doc in db.collection("reviews").where("productId", "==", pid).stream():
+            references.append({"collection": "reviews", "doc_id": doc.id})
+
+        # Check downloads
+        for doc in db.collection("downloads").where("productId", "==", pid).stream():
+            references.append({"collection": "downloads", "doc_id": doc.id})
+
+        if references:
+            return {"blocked": True, "references": references}
+
+        db.collection("products").document(pid).delete()
+        return {"blocked": False, "references": []}
     except Exception as e:
         print(f"[firestore-sync] Error deleting product {product_id} from Firestore: {e}")
+        return {"blocked": True, "reason": "exception", "references": []}
 
 def get_platform_settings():
     if not firebase_connected or db is None:

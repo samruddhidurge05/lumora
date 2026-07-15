@@ -86,7 +86,10 @@ export const mapDocToProduct = (docSnap) => {
       status: data.status || 'Draft',
       videoUrl: data.videoUrl || null,
       creatorName: data.creatorName || data.vendorName || 'Creator',
-      creatorAvatar: data.creatorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
+      // Do NOT fall back to a hardcoded Unsplash URL — the backend already filters
+      // Unsplash URLs out of creatorAvatar (Defect 5 fix). Keeping null here
+      // lets the UI display a neutral default without re-injecting the placeholder.
+      creatorAvatar: data.creatorAvatar || null,
       shortDesc: data.shortDesc || data.short_desc || data.description || 'Premium digital assets',
       short_desc: data.short_desc || data.shortDesc || '',
       description: data.description || '',
@@ -136,7 +139,9 @@ export const mapDocToProduct = (docSnap) => {
     status: data.status || 'Draft',
     videoUrl: data.videoUrl || null,
     creatorName: data.creatorName || data.vendorName || 'Creator',
-    creatorAvatar: data.creatorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
+    // Do NOT fall back to a hardcoded Unsplash URL — backend Defect 5 fix writes null
+    // when no real avatar is available. Re-injecting Unsplash here would undo that fix.
+    creatorAvatar: data.creatorAvatar || null,
     shortDesc: data.shortDesc || data.short_desc || data.description || 'Premium digital assets',
     short_desc: data.short_desc || data.shortDesc || '',
     description: data.description || '',

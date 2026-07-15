@@ -89,17 +89,11 @@ def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Opt
             absolute_filepath = os.path.abspath(os.path.join(_BACKEND_DIR, relative_filepath))
             
             if not os.path.exists(absolute_filepath):
-                # File is missing! Return a beautiful Unsplash placeholder based on category
-                placeholders = {
-                    "templates": "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80",
-                    "graphics & ui": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-                    "productivity tools": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
-                    "notion templates": "https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=800&q=80",
-                    "productivity systems": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
-                    "design assets": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=800&q=80",
-                }
-                cat_key = (category or "").lower().strip()
-                return placeholders.get(cat_key, "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80")
+                # File is missing from disk — return None so the frontend can
+                # display a neutral placeholder rather than an Unsplash CDN image.
+                # Returning an Unsplash URL here was previously masking upload issues
+                # by silently substituting a random stock photo for missing product assets.
+                return None
         except Exception:
             pass
             
@@ -255,6 +249,17 @@ def resolve_product_media(product, db):
 
     product.thumbnail = resolved_thumb
     product.preview = resolved_preview
+
+    # ── file_url resolution ───────────────────────────────────────────────────
+    # Resolve relative /uploads/... file_url paths to absolute backend URLs.
+    # External pCloud/CDN URLs are returned as-is.
+    if product.file_url:
+        if "/uploads/" in (product.file_url or ""):
+            product.file_url = resolve_media_url(product.file_url, product.category)
+        # If resolution returned None (file missing on disk), keep original URL
+        # so the download endpoint can still attempt server-side resolution.
+        if not product.file_url:
+            product.file_url = None
 
     # Resolve gallery arrays — keep direct image URLs, only resolve relative paths
     if product.image_urls:
