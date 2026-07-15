@@ -18,7 +18,7 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "read:*",
         "write:products", "write:orders", "write:reviews",
         "write:reports", "write:support", "write:vendors", "write:affiliates",
-        "write:referral_links", "write:platform_settings",
+        "write:referral_links", "write:platform_settings", "write:team",
         "read:analytics", "read:audit_logs",
     ],
     "moderator": ["read:*", "write:reviews", "write:reports", "write:support"],

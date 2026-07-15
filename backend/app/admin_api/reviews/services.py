@@ -122,6 +122,67 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
 
 _firestore_broken = False
 
+def _compute_sentiment_trend(reviews_list: list) -> list:
+    """
+    Group reviews by day (last 6 days that have data) and return
+    a list of positive-percentage values — one per day bucket.
+    If there are fewer than 2 days of data, returns [] so the frontend
+    shows the "Not enough data" empty state instead of a flat line.
+    """
+    from collections import defaultdict
+    import datetime
+
+    buckets = defaultdict(lambda: {"pos": 0, "total": 0})
+    for rev in reviews_list:
+        raw_date = rev.get("date") or rev.get("createdAt") or ""
+        if isinstance(raw_date, str) and raw_date:
+            try:
+                dt = datetime.datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+                day_key = dt.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+        elif hasattr(raw_date, "strftime"):
+            day_key = raw_date.strftime("%Y-%m-%d")
+        else:
+            continue
+        buckets[day_key]["total"] += 1
+        if rev.get("sentiment") == "positive":
+            buckets[day_key]["pos"] += 1
+
+    if len(buckets) < 2:
+        return []
+
+    sorted_days = sorted(buckets.keys())[-6:]
+    return [
+        round(buckets[d]["pos"] / buckets[d]["total"] * 100) if buckets[d]["total"] > 0 else 0
+        for d in sorted_days
+    ]
+
+
+def _compute_sentiment_trend_sql(reviews_sql: list) -> list:
+    """Same bucketing logic for SQLite review model objects."""
+    import datetime
+    from collections import defaultdict
+
+    buckets = defaultdict(lambda: {"pos": 0, "total": 0})
+    for r in reviews_sql:
+        if r.created_at:
+            day_key = r.created_at.strftime("%Y-%m-%d")
+        else:
+            continue
+        buckets[day_key]["total"] += 1
+        if (r.rating or 5) > 3:
+            buckets[day_key]["pos"] += 1
+
+    if len(buckets) < 2:
+        return []
+
+    sorted_days = sorted(buckets.keys())[-6:]
+    return [
+        round(buckets[d]["pos"] / buckets[d]["total"] * 100) if buckets[d]["total"] > 0 else 0
+        for d in sorted_days
+    ]
+
 def get_reviews_dashboard_data():
     global _firestore_broken
     if not firebase_connected or db is None or _firestore_broken:
@@ -191,8 +252,7 @@ def get_reviews_dashboard_data():
                 "positivePercentage": pos_pct,
                 "neutralPercentage":  neu_pct,
                 "negativePercentage": neg_pct,
-                "sentimentTrend":     [pos_pct] * 6,
-                "latestReviews":      latest_reviews,
+                "sentimentTrend":     _compute_sentiment_trend_sql(docs),                "latestReviews":      latest_reviews,
                 "productSatisfaction":product_satisfaction,
                 "voiceHighlights": {
                     "positive":     next((r["comment"] for r in latest_reviews if r["sentiment"] == "positive"), ""),
@@ -271,7 +331,7 @@ def get_reviews_dashboard_data():
         "positivePercentage": pos_pct,
         "neutralPercentage":  neu_pct,
         "negativePercentage": neg_pct,
-        "sentimentTrend":     [pos_pct] * 6,
+        "sentimentTrend":     _compute_sentiment_trend(latest_reviews),
         "latestReviews":      latest_reviews,
         "productSatisfaction":product_satisfaction,
         "voiceHighlights": {
