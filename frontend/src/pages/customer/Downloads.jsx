@@ -36,11 +36,6 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
   const handleDownload = async () => {
     if (state !== 'idle') return;
 
-    if (pcloudDownloadLink) {
-      window.location.href = pcloudDownloadLink;
-      return;
-    }
-
     setState('downloading');
     
     let activeUrl = downloadUrl;
@@ -59,7 +54,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
 
         // Handle pCloud / external redirect (temporary dev/testing implementation)
         if (res?.type === 'external' && res?.redirect_url) {
-          window.location.href = res.redirect_url;
+          window.open(res.redirect_url, '_blank');
           setTimeout(() => setState('done'), 400);
           setTimeout(() => setState('idle'), 4500);
           return;
@@ -99,7 +94,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
             return;
           }
           if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-            window.location.href = fileRespJson.redirect_url;
+            window.open(fileRespJson.redirect_url, '_blank');
             setTimeout(() => setState('done'), 400);
             setTimeout(() => setState('idle'), 4500);
             return;
@@ -716,11 +711,6 @@ function VaultCard({ product, isHovered, onHover }) {
   };
 
   const handleOpen = async () => {
-    if (product.pcloud_download_link) {
-      window.open(product.pcloud_download_link, '_blank');
-      return;
-    }
-
     const numericId = parseInt(product.id, 10);
     if (isNaN(numericId)) return;
 

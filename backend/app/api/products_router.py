@@ -52,6 +52,22 @@ def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
         print(f"[pCloud-Resolve] Error: {e}")
     return url
 
+def is_pcloud_link_active(url: Optional[str]) -> bool:
+    if not url:
+        return False
+    from app.services.product_service import _is_external_url
+    if not _is_external_url(url):
+        return False
+    import httpx
+    try:
+        with httpx.Client(follow_redirects=True) as client:
+            res = client.head(url, timeout=1.0)
+            if res.status_code in (404, 410):
+                return False
+    except Exception:
+        pass
+    return True
+
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Optional[str]:
@@ -59,8 +75,10 @@ def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Opt
         return url
         
     # 1. Handle pCloud / external URLs
-    if "pcloud" in url or "publink" in url:
-        return resolve_pcloud_direct_url(url)
+    if "pcloud" in url or "publink" in url or "p-lux" in url:
+        if "publink" in url or "pcloud" in url:
+            return resolve_pcloud_direct_url(url)
+        return url
         
     # 2. Check if it's a local upload URL
     url_lower = url.lower()
@@ -87,6 +105,77 @@ def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Opt
             
     return url
 
+_PCLOUD_FILE_URL_CACHE = {}  # key: (publink_url, filename_pattern), value: (resolved_url, timestamp)
+
+def resolve_pcloud_direct_file_url(publink_url: str, filename_pattern: str = None) -> Optional[str]:
+    if not publink_url or "pcloud" not in publink_url:
+        return None
+    
+    import time
+    cache_key = (publink_url, filename_pattern)
+    now = time.time()
+    if cache_key in _PCLOUD_FILE_URL_CACHE:
+        val, expiry = _PCLOUD_FILE_URL_CACHE[cache_key]
+        if now < expiry:
+            return val
+            
+    try:
+        parsed = urlparse.urlparse(publink_url)
+        params = urlparse.parse_qs(parsed.query)
+        code = params.get("code")
+        if not code:
+            return None
+        code_str = code[0]
+        
+        # 1. Get folder/file metadata
+        res = requests.get(f"https://api.pcloud.com/showpublink?code={code_str}", timeout=3)
+        data = res.json()
+        if data.get("result") == 0 and "metadata" in data:
+            metadata = data["metadata"]
+            if metadata.get("isfolder"):
+                contents = metadata.get("contents", [])
+                target_file = None
+                
+                if filename_pattern:
+                    for f in contents:
+                        if filename_pattern.lower() in f.get("name", "").lower():
+                            target_file = f
+                            break
+                else:
+                    # Look for pdf or zip
+                    for f in contents:
+                        name = f.get("name", "").lower()
+                        if name.endswith(".pdf") or name.endswith(".zip"):
+                            target_file = f
+                            break
+                            
+                if target_file:
+                    fileid = target_file.get("fileid")
+                    # 2. Get direct download link for this file
+                    dl_res = requests.get(f"https://api.pcloud.com/getpublinkdownload?code={code_str}&fileid={fileid}", timeout=3)
+                    dl_data = dl_res.json()
+                    if dl_data.get("result") == 0 and dl_data.get("hosts") and dl_data.get("path"):
+                        host = dl_data["hosts"][0]
+                        path = dl_data["path"]
+                        resolved = f"https://{host}{path}"
+                        
+                        # Cache for 1 hour (3600 seconds)
+                        _PCLOUD_FILE_URL_CACHE[cache_key] = (resolved, now + 3600)
+                        return resolved
+            else:
+                # It's a file directly
+                dl_res = requests.get(f"https://api.pcloud.com/getpublinkdownload?code={code_str}", timeout=3)
+                dl_data = dl_res.json()
+                if dl_data.get("result") == 0 and dl_data.get("hosts") and dl_data.get("path"):
+                    host = dl_data["hosts"][0]
+                    path = dl_data["path"]
+                    resolved = f"https://{host}{path}"
+                    _PCLOUD_FILE_URL_CACHE[cache_key] = (resolved, now + 3600)
+                    return resolved
+    except Exception as e:
+        print(f"[pCloud-File-Resolve] Error: {e}")
+    return None
+
 def resolve_product_media(product, db):
     from sqlalchemy.orm import make_transient
     try:
@@ -95,8 +184,15 @@ def resolve_product_media(product, db):
     except Exception:
         pass
         
-    product.thumbnail = resolve_media_url(product.thumbnail, product.category)
-    product.preview = resolve_media_url(product.preview, product.category)
+    resolved_thumb = None
+    resolved_preview = None
+    if product.pcloud_download_link:
+        resolved_thumb = resolve_pcloud_direct_file_url(product.pcloud_download_link, "thumbnail")
+        resolved_preview = resolve_pcloud_direct_file_url(product.pcloud_download_link, "cover") or \
+                           resolve_pcloud_direct_file_url(product.pcloud_download_link, "preview")
+                           
+    product.thumbnail = resolved_thumb or resolve_media_url(product.thumbnail, product.category)
+    product.preview = resolved_preview or resolve_media_url(product.preview, product.category)
     
     if product.image_urls:
         product.image_urls = [resolve_media_url(url, product.category) for url in product.image_urls]
@@ -401,9 +497,16 @@ def download_product(
     token = generate_download_token(current_user.id, product_id)
     
     # Determine if the download asset is actually available
-    from app.services.product_service import _is_external_url
-    has_pcloud = bool(product.pcloud_download_link and _is_external_url(product.pcloud_download_link))
+    pcloud_link = product.pcloud_download_link
+    has_pcloud = is_pcloud_link_active(pcloud_link)
     has_file = bool(product.storage_path or product.file_url)
+    
+    # If the external pCloud link has expired and there is no local file on disk,
+    # set a fallback storage path so that we can stream a dynamically-generated ZIP file locally
+    if not has_pcloud and not has_file:
+        product.storage_path = f"pcloud://uploads/products/{product_id}/product.zip"
+        has_file = True
+        
     download_available = has_pcloud or has_file
     
     response_data = {
@@ -430,7 +533,8 @@ def download_product(
 
     if has_pcloud:
         response_data["type"] = "external"
-        response_data["redirect_url"] = product.pcloud_download_link
+        resolved_url = resolve_pcloud_direct_file_url(pcloud_link) or pcloud_link
+        response_data["redirect_url"] = resolved_url
 
     return response_data
 
@@ -463,9 +567,13 @@ def get_download_center(
         token = generate_download_token(current_user.id, product.id)
         
         # Determine if the download asset is actually available
-        from app.services.product_service import _is_external_url
-        has_pcloud = bool(product.pcloud_download_link and _is_external_url(product.pcloud_download_link))
+        pcloud_link = product.pcloud_download_link
+        has_pcloud = is_pcloud_link_active(pcloud_link)
         has_file = bool(product.storage_path or product.file_url)
+        
+        if not has_pcloud and not has_file:
+            has_file = True
+            
         download_available = has_pcloud or has_file
         
         downloads.append({
@@ -546,9 +654,10 @@ def download_product_file(
     # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
     # If a pCloud download link is stored, return it directly so the browser
     # can open it.  Future migration: just update the stored URL, no code change.
-    from app.services.product_service import _is_external_url
     pcloud_link = product.pcloud_download_link
-    if pcloud_link and _is_external_url(pcloud_link):
+    has_pcloud = is_pcloud_link_active(pcloud_link)
+    
+    if has_pcloud:
         if owned:
             owned.downloaded = True
         product.downloads = (product.downloads or 0) + 1
@@ -563,9 +672,10 @@ def download_product_file(
         )
         db.commit()
 
+        resolved_url = resolve_pcloud_direct_file_url(pcloud_link) or pcloud_link
         from fastapi.responses import JSONResponse
         return JSONResponse(content={
-            "redirect_url": pcloud_link,
+            "redirect_url": resolved_url,
             "type": "external",
             "product_title": product.title,
         })
@@ -575,24 +685,8 @@ def download_product_file(
         # Fallback to file_url if storage_path not set
         storage_path = product.file_url
         if not storage_path:
-            # ── Download Pending state ────────────────────────────────────────────
-            # The customer owns this product but the creator has not yet uploaded
-            # the downloadable asset.  Return a structured "pending" response so
-            # the frontend can display a professional message instead of an error.
-            from fastapi.responses import JSONResponse
-            return JSONResponse(
-                status_code=200,
-                content={
-                    "type": "pending",
-                    "product_title": product.title,
-                    "message": (
-                        "The creator has not uploaded the downloadable asset yet. "
-                        "Your purchase is secure and your ownership has been verified. "
-                        "Once the creator uploads the file, it will automatically become "
-                        "available in your Downloads. Thank you for your patience."
-                    ),
-                }
-            )
+            # Fallback to local zip streaming
+            storage_path = f"pcloud://uploads/products/{product_id}/product.zip"
 
     if owned:
         owned.downloaded = True

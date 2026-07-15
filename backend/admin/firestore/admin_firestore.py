@@ -52,6 +52,7 @@ def sync_product_to_firestore(product):
             # pCloud / external image URLs — for gallery display
             "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
             "pcloud_download_link": product.pcloud_download_link,
+            "pcloudDownloadLink": product.pcloud_download_link,
         }, merge=True)
     except Exception as e:
         print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")

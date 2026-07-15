@@ -38,7 +38,7 @@ class LocalStorageProvider(BaseStorageProvider):
         # Strip local:// scheme
         clean_path = relative_path.replace("local://", "")
         # Prevent path traversal characters
-        clean_path = clean_path.replace("\\", "/").replace("..", "")
+        clean_path = clean_path.replace("\\", "/").replace("..", "").lstrip("/")
         root_dir = os.path.abspath(os.path.join(self.upload_dir, ".."))
         abs_path = os.path.abspath(os.path.join(root_dir, clean_path))
         if not abs_path.startswith(root_dir):
@@ -210,7 +210,7 @@ class PCloudStorageProvider(BaseStorageProvider):
         # Strip pcloud:// scheme
         clean_path = relative_path.replace("pcloud://", "")
         # Prevent path traversal characters
-        clean_path = clean_path.replace("\\", "/").replace("..", "")
+        clean_path = clean_path.replace("\\", "/").replace("..", "").lstrip("/")
         root_dir = os.path.abspath(os.path.join(self.upload_dir, ".."))
         abs_path = os.path.abspath(os.path.join(root_dir, clean_path))
         if not abs_path.startswith(root_dir):

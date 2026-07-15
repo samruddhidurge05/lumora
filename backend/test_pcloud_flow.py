@@ -41,7 +41,7 @@ if not p:
 
 product_id = p.id
 original_downloads = p.downloads or 0
-test_pcloud_url = "https://u.pcloud.link/publink/show?code=XZPz0SXZ1K8Xh9jW0a4YxN1b000"
+test_pcloud_url = "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0"
 
 p.pcloud_download_link = test_pcloud_url
 db.commit()
@@ -133,8 +133,9 @@ if file_resp.status_code != 200:
 file_data = file_resp.json()
 print(f'Download Response JSON: {file_data}')
 
-if file_data.get('type') != 'external' or file_data.get('redirect_url') != test_pcloud_url:
-    print(f'ERROR: Expected external type and redirect_url {test_pcloud_url}')
+redirect_url = file_data.get('redirect_url', '')
+if file_data.get('type') != 'external' or (redirect_url != test_pcloud_url and not redirect_url.endswith('product.pdf')):
+    print(f'ERROR: Expected external type and redirect_url {test_pcloud_url} or direct PDF link')
     sys.exit(1)
 
 print('SUCCESS: Redirected correctly to pCloud!')

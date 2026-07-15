@@ -17,13 +17,28 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
       origin: { y: 0.6 },
     });
 
-    // Auto-trigger downloads for all purchased items
+    // Auto-trigger downloads or open pCloud links for all purchased items
     purchasedItems.forEach((item, index) => {
       setTimeout(() => {
+        const directLink = item.redirect_url;
+        if (directLink) {
+          window.open(directLink, '_blank');
+          return;
+        }
+
         if (item.download_url) {
-          // Create a temporary link and trigger download
+          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+          let finalUrl = item.download_url;
+          if (finalUrl.startsWith('/api')) {
+            finalUrl = `${BACKEND_URL}${finalUrl.replace('/api', '')}`;
+          } else if (finalUrl.startsWith('/')) {
+            finalUrl = `${BACKEND_URL}${finalUrl}`;
+          } else if (!finalUrl.startsWith('http')) {
+            finalUrl = `${BACKEND_URL}/${finalUrl}`;
+          }
+
           const link = document.createElement('a');
-          link.href = item.download_url;
+          link.href = finalUrl;
           link.download = `${item.title || item.name || 'product'}.zip`;
           link.target = '_blank';
           document.body.appendChild(link);

@@ -789,9 +789,75 @@ export default function ProductPage() {
 
               {/* CTAs */}
               {isOwned ? (
-                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <Download size={16} style={{ color: '#16a34a' }} />
-                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#15803d' }}>You own this product</span>
+                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Check size={16} style={{ color: '#16a34a' }} />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#15803d' }}>You own this product</span>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      const numericId = parseInt(product.id, 10);
+                      if (isNaN(numericId)) return;
+                      
+                      try {
+                        const res = await backendFetch(`/products/${numericId}/download`);
+                        if (res?.download_available === false) {
+                          alert("The creator has not yet uploaded the downloadable asset.");
+                          return;
+                        }
+                        
+                        let activeUrl = res?.download_url || `/downloads/product-${product.id}.zip`;
+                        if (res?.type === 'external' && res?.redirect_url) {
+                          window.open(res.redirect_url, '_blank');
+                          return;
+                        }
+                        
+                        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+                        const fileCheckUrl = activeUrl.startsWith('/api') ? activeUrl.replace('/api', '') : activeUrl;
+                        const token = localStorage.getItem('lumora_backend_token');
+                        
+                        const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
+                          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                        });
+
+                        if (fileResp.ok) {
+                          const contentType = fileResp.headers.get('content-type');
+                          if (contentType && contentType.includes('application/json')) {
+                            const fileRespJson = await fileResp.json();
+                            if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
+                              window.open(fileRespJson.redirect_url, '_blank');
+                              return;
+                            }
+                          }
+                        }
+                        
+                        window.open(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, '_blank');
+                      } catch (err) {
+                        console.warn('[ProductPage] Failed to resolve download:', err);
+                        window.open(`/downloads/product-${product.id}.zip`, '_blank');
+                      }
+                    }}
+                    className="btn-premium btn-premium-solid"
+                    style={{ 
+                      width: '100%', 
+                      justifyContent: 'center', 
+                      padding: '12px', 
+                      fontSize: '0.88rem', 
+                      borderRadius: '12px', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      background: 'linear-gradient(135deg,#16a34a,#15803d)',
+                      boxShadow: '0 4px 12px rgba(22,163,74,0.3)',
+                      border: 'none',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-sans)',
+                    }}
+                  >
+                    <Download size={15} /> Download Product
+                  </button>
                 </div>
               ) : user ? (
                 <>

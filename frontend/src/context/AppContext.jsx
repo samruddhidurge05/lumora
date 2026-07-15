@@ -1359,7 +1359,12 @@ export function AppContextProvider({ children }) {
         items.map(async (item) => {
           try {
             const response = await backendFetch(`/products/${item.id}/download`);
-            return { ...item, download_url: response?.download_url || null };
+            return { 
+              ...item, 
+              download_url: response?.download_url || null,
+              redirect_url: response?.redirect_url || null,
+              type: response?.type || null
+            };
           } catch {
             return { ...item, download_url: null };
           }
