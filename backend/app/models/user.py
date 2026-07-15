@@ -19,6 +19,7 @@ class User(Base):
     firebase_uid  = Column(String(128), unique=True, index=True, nullable=True)
     created_at    = Column(DateTime, default=datetime.utcnow)
     updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login_at = Column(DateTime, nullable=True)  # set on every successful admin login (Req 9)
 
     @property
     def sqlite_user_id(self) -> int:

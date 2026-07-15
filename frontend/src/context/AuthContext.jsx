@@ -107,8 +107,8 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // One-time check: only runs once per user session
-    if (!statusCheckDoneRef.current) {
+    // One-time check: only runs once per user session, and only when token exists
+    if (!statusCheckDoneRef.current && localStorage.getItem('lumora_backend_token')) {
       statusCheckDoneRef.current = true;
       backendFetch('/auth/me')
         .then(session => {
@@ -184,6 +184,8 @@ export const AuthProvider = ({ children }) => {
     if (!user) return;
 
     const poll = async () => {
+      // Skip poll if no backend token exists — avoids 401 spam on login page
+      if (!localStorage.getItem('lumora_backend_token')) return;
       try {
         const session = await backendFetch('/auth/me');
         if (!session) return;
@@ -255,21 +257,31 @@ export const AuthProvider = ({ children }) => {
 
         // ── Admin branch: check for existing admin token ─────────────────────
         // Admin uses a separate JWT flow (Firebase ID token, not firebase-sync).
-        // We detect this by an existing backend token AND local admin hint.
+        // We detect this by the 'admin' hint in localStorage which is set
+        // BEFORE signInWithPopup is called in AdminLogin.jsx to win the race.
         const localHint = localStorage.getItem('lumora_active_role') || 'customer';
 
         if (localHint === 'admin') {
-          try {
-            await adminLogin(firebaseUser);
-            setUserRole('admin');
-            localStorage.setItem('lumora_active_role', 'admin');
-          } catch (adminErr) {
-            console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
-            clearBackendToken(); // clears all auth keys including lumora_active_role
-            await signOut(auth);
-            window.location.replace('/admin/login');
-            return;
+          // If we already have a valid backend token, skip re-calling adminLogin.
+          // AdminLogin.jsx calls adminLogin() directly in the popup handler —
+          // that call sets lumora_backend_token before onAuthStateChanged runs.
+          const existingToken = localStorage.getItem('lumora_backend_token');
+          if (!existingToken) {
+            // No token yet — this is a page-reload admin session restore.
+            // Re-exchange the Firebase token for a fresh backend JWT.
+            try {
+              await adminLogin(firebaseUser);
+            } catch (adminErr) {
+              console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+              clearBackendToken();
+              await signOut(auth);
+              window.location.replace('/admin/login');
+              return;
+            }
           }
+          // Token is present (either just set by popup handler or restored from storage).
+          setUserRole('admin');
+          localStorage.setItem('lumora_active_role', 'admin');
           setLoading(false);
           return; // do NOT call syncWithBackend for admin
         }
@@ -566,11 +578,6 @@ export const AuthProvider = ({ children }) => {
       await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'login', true);
       return firebaseUser;
     } catch (error) {
-      console.error('═══════════════════════════════════════════');
-      console.error('[LOGIN] FATAL ERROR – Login failed');
-      console.error('[LOGIN] Error code:', error.code);
-      console.error('[LOGIN] Error message:', error.message);
-      console.error('═══════════════════════════════════════════');
       await logAuthEvent(null, email, 'login', false, error.message);
       throw error;
     }

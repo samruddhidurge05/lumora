@@ -220,3 +220,100 @@ def restore_sqlite_products_from_firestore(db_session):
         db_session.rollback()
         print(f"[firestore-sync] Error recovering products from Firestore: {e}")
 
+
+
+# ── Team Management Firestore Sync ────────────────────────────────────────────
+# All three helpers are best-effort: they never raise and never block the
+# SQLite commit that precedes them.
+
+def _invitation_status(inv) -> str:
+    """Compute invitation status string from model fields."""
+    if getattr(inv, "revoked_at", None):
+        return "revoked"
+    if inv.accepted_at:
+        return "accepted"
+    now = datetime.now(timezone.utc)
+    exp = inv.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    if exp < now:
+        return "expired"
+    return "pending"
+
+
+def sync_team_member_to_firestore(user, role_record) -> None:
+    """
+    Write / update an admin team member document in Firestore.
+    Path: admin/team/members/{user.id}
+    Called after: accept_invite, activate_admin, deactivate_admin, change_admin_role
+    """
+    if not firebase_connected or db is None:
+        return
+    try:
+        doc_ref = db.collection("admin").document("team").collection("members").document(str(user.id))
+        doc_ref.set({
+            "user_id":      user.id,
+            "name":         user.name or "",
+            "email":        user.email or "",
+            "role_level":   role_record.role_level if role_record else "admin",
+            "is_active":    role_record.is_active if role_record else True,
+            "activated_at": role_record.activated_at.isoformat() if role_record and role_record.activated_at else None,
+            "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
+            "updated_at":   datetime.now(timezone.utc).isoformat(),
+        }, merge=True)
+    except Exception as e:
+        print(f"[firestore-sync] Error syncing team member {user.id}: {e}")
+
+
+def sync_invitation_to_firestore(invitation) -> None:
+    """
+    Write / update an admin invitation document in Firestore.
+    Path: admin/team/invitations/{invitation.id}
+    Called after: invite_admin, cancel_invitation (revoke), resend_invitation, accept_invite
+    """
+    if not firebase_connected or db is None:
+        return
+    try:
+        status = _invitation_status(invitation)
+        exp = invitation.expires_at
+        if exp and exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        doc_ref = db.collection("admin").document("team").collection("invitations").document(str(invitation.id))
+        doc_ref.set({
+            "id":           invitation.id,
+            "email":        invitation.email,
+            "invited_name": getattr(invitation, "invited_name", None),
+            "role_level":   invitation.role_level,
+            "status":       status,
+            "expires_at":   exp.isoformat() if exp else None,
+            "accepted_at":  invitation.accepted_at.isoformat() if invitation.accepted_at else None,
+            "revoked_at":   invitation.revoked_at.isoformat() if getattr(invitation, "revoked_at", None) else None,
+            "created_at":   invitation.created_at.isoformat() if invitation.created_at else None,
+        }, merge=True)
+    except Exception as e:
+        print(f"[firestore-sync] Error syncing invitation {invitation.id}: {e}")
+
+
+def write_admin_notification_to_firestore(user, invitation) -> None:
+    """
+    Write a new admin notification when a team member accepts an invitation.
+    Path: admin/notifications/{uuid}
+    Only super_admins read this collection — no ACL changes needed here.
+    """
+    if not firebase_connected or db is None:
+        return
+    try:
+        import uuid as _uuid
+        notif_id = _uuid.uuid4().hex
+        doc_ref = db.collection("admin").document("notifications").collection("items").document(notif_id)
+        doc_ref.set({
+            "type":          "invite_accepted",
+            "actor_email":   user.email or "",
+            "actor_name":    user.name or user.email or "",
+            "role_level":    invitation.role_level,
+            "invitation_id": invitation.id,
+            "created_at":    datetime.now(timezone.utc).isoformat(),
+            "read":          False,
+        })
+    except Exception as e:
+        print(f"[firestore-sync] Error writing admin notification: {e}")

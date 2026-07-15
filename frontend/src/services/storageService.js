@@ -144,7 +144,7 @@ export function uploadFile(file, type, onProgress) {
  * Delete a file by path (no-op stub — backend deletion not yet implemented).
  */
 export const deleteFile = (path) => {
-  console.log('[storageService] delete request (no-op):', path);
+  // No-op: backend file deletion not yet implemented
   return Promise.resolve();
 };
 

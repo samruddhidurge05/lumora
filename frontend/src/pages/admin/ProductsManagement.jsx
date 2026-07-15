@@ -134,16 +134,28 @@ const INITIAL_PRODUCTS = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // resolveImageUrl
-// Converts relative /uploads/... backend paths to full http://localhost:8000/...
-// URLs so <img> tags load from the backend, not the Vite dev server.
+// Converts relative /uploads/... backend paths OR localhost:8000 absolute URLs
+// to paths that load correctly through the Vite proxy (/uploads → localhost:8000).
+// Absolute localhost:PORT URLs are stripped to their path so the Vite proxy
+// forwards them to the backend — prevents 404s when the stored URL origin
+// doesn't match the dev server origin (localhost:5173 vs localhost:8000).
 // ─────────────────────────────────────────────────────────────────────────────
 const BACKEND_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api')
   .replace(/\/api\/?$/, '');
 
 function resolveImageUrl(url) {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
+  // Strip localhost origins so the path flows through the Vite dev proxy.
+  // e.g. "http://localhost:8000/uploads/..." → "/uploads/..."
+  // This prevents the browser requesting localhost:5173/uploads/... (404).
+  // In production VITE_API_BASE_URL will be an external host, so this branch
+  // only triggers for local dev (localhost:xxxx patterns).
+  const localhostPattern = /^https?:\/\/localhost:\d+/;
+  if (localhostPattern.test(url)) {
+    url = url.replace(localhostPattern, '');
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) return url; // external CDN
+  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`; // relative path → full backend URL
   return url;
 }
 
@@ -819,12 +831,15 @@ export default function App() {
 
     try {
       if (productId) {
-        // DELETE from Firestore
+        // DELETE via backend API (which also removes from Firestore via admin_firestore.py)
         await productService.remove(productId);
       }
-      // Remove from local state
+      // Remove from local admin state
       setProducts(products.filter(p => p.id !== productId));
       triggerNotification(`Removed "${targetProduct?.name || 'product'}" from Lumora`, 'info');
+      // Notify customer AppContext to re-fetch immediately so deleted product
+      // disappears from the marketplace without waiting for the 60s background poll.
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
       console.error('Delete product failed:', err);
       triggerNotification(`Failed to delete product: ${err.message}`, 'error');

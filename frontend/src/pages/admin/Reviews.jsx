@@ -293,9 +293,9 @@ export default function Reviews() {
         reviews: [],
         productTrust: [],
         voiceHighlights: {
-          positive:     'Loading reviews…',
-          constructive: 'Loading reviews…',
-          requests:     'Loading reviews…',
+          positive:     '',
+          constructive: '',
+          requests:     '',
         },
       };
     }
@@ -504,11 +504,13 @@ export default function Reviews() {
                     <Icon name="TrendingUp" size={13} className="text-emerald-500" />
                   </div>
                   <h3 className="text-xl font-serif font-black text-[#2D004D] mb-1">
-                    <CountUp value={initialData.summary.positive} suffix="%" />
+                    {initialData.summary.totalReviews > 0
+                      ? <CountUp value={initialData.summary.positive} suffix="%" />
+                      : <span>—</span>}
                   </h3>
                   <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">High customer happiness</p>
                   <div className="w-full bg-emerald-500/10 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div className="bg-emerald-500 h-full" initial={{ width: 0 }} animate={{ width: "82%" }} transition={{ duration: 1 }} />
+                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(100, initialData.summary.positive)}%` }} />
                   </div>
                 </div>
 
@@ -519,11 +521,13 @@ export default function Reviews() {
                     <Icon name="Activity" size={13} className="text-[#8E6AA8]" />
                   </div>
                   <h3 className="text-xl font-serif font-black text-[#2D004D] mb-1">
-                    <CountUp value={initialData.summary.neutral} suffix="%" />
+                    {initialData.summary.totalReviews > 0
+                      ? <CountUp value={initialData.summary.neutral} suffix="%" />
+                      : <span>—</span>}
                   </h3>
                   <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Constructive comments</p>
                   <div className="w-full bg-[#8E6AA8]/15 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div className="bg-[#8E6AA8] h-full" initial={{ width: 0 }} animate={{ width: "10%" }} transition={{ duration: 1 }} />
+                    <div className="bg-[#8E6AA8] h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(100, initialData.summary.neutral)}%` }} />
                   </div>
                 </div>
 
@@ -534,11 +538,13 @@ export default function Reviews() {
                     <Icon name="TrendingDown" size={13} className="text-rose-400" />
                   </div>
                   <h3 className="text-xl font-serif font-black text-[#2D004D] mb-1">
-                    <CountUp value={initialData.summary.negative} suffix="%" />
+                    {initialData.summary.totalReviews > 0
+                      ? <CountUp value={initialData.summary.negative} suffix="%" />
+                      : <span>—</span>}
                   </h3>
                   <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Requires resolution scans</p>
                   <div className="w-full bg-rose-400/10 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div className="bg-rose-400 h-full" initial={{ width: 0 }} animate={{ width: "8%" }} transition={{ duration: 1 }} />
+                    <div className="bg-rose-400 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(100, initialData.summary.negative)}%` }} />
                   </div>
                 </div>
 
@@ -555,11 +561,9 @@ export default function Reviews() {
                   </h3>
                   <p className="text-[9px] text-[#7B3FA0] uppercase font-bold tracking-wider">Positive verified reviews</p>
                   <div className="w-full bg-[#B886D0]/20 h-1 rounded-full mt-4 overflow-hidden">
-                    <motion.div
-                      className="bg-[#B886D0] h-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
-                      transition={{ duration: 1 }}
+                    <div
+                      className="bg-[#B886D0] h-full rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${Math.min(100, initialData.summary.positive)}%` }}
                     />
                   </div>
                 </div>
@@ -979,7 +983,8 @@ export default function Reviews() {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                      {initialData.productTrust.map((prod, idx) => (
+                      {initialData.productTrust.length > 0 ? (
+                      initialData.productTrust.map((prod, idx) => (
                         <div key={idx} className="flex flex-col gap-1.5">
                           <div className="flex justify-between items-center text-[10px] font-bold">
                             <span className="text-[#2D004D] truncate max-w-[150px]">{prod.name}</span>
@@ -993,7 +998,10 @@ export default function Reviews() {
                             />
                           </div>
                         </div>
-                      ))}
+                      ))
+                    ) : (
+                      <p className="text-[10px] text-[#8E6AA8] text-center py-4">No product reviews yet.</p>
+                    )}
                     </div>
                   </div>
 
@@ -1080,20 +1088,41 @@ export default function Reviews() {
                   {/* Band 1: Positive highlight marquee */}
                   <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
                     
-                    <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
-                      <span className="text-[8px] font-extrabold tracking-widest text-emerald-500 uppercase">★ Top Positive Feedback</span>
-                      <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.positive}"</p>
-                    </div>
+                    {initialData.voiceHighlights.positive ? (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-emerald-500 uppercase">★ Top Positive Feedback</span>
+                        <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.positive}"</p>
+                      </div>
+                    ) : (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-emerald-500 uppercase">★ Top Positive Feedback</span>
+                        <p className="text-[10px] text-[#8E6AA8] italic leading-relaxed">No positive reviews yet.</p>
+                      </div>
+                    )}
 
-                    <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
-                      <span className="text-[8px] font-extrabold tracking-widest text-amber-500 uppercase">✎ Constructive Feedback</span>
-                      <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.constructive}"</p>
-                    </div>
+                    {initialData.voiceHighlights.constructive ? (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-amber-500 uppercase">✎ Constructive Feedback</span>
+                        <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.constructive}"</p>
+                      </div>
+                    ) : (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-amber-500 uppercase">✎ Constructive Feedback</span>
+                        <p className="text-[10px] text-[#8E6AA8] italic leading-relaxed">No neutral reviews yet.</p>
+                      </div>
+                    )}
 
-                    <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
-                      <span className="text-[8px] font-extrabold tracking-widest text-[#B886D0] uppercase">⚿ Feature Request</span>
-                      <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.requests}"</p>
-                    </div>
+                    {initialData.voiceHighlights.requests ? (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-[#B886D0] uppercase">⚿ Feature Request</span>
+                        <p className="text-[10px] text-[#7B3FA0] italic leading-relaxed">"{initialData.voiceHighlights.requests}"</p>
+                      </div>
+                    ) : (
+                      <div className="min-w-[280px] sm:min-w-[340px] p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] snap-start flex flex-col gap-1.5 shadow-sm">
+                        <span className="text-[8px] font-extrabold tracking-widest text-[#B886D0] uppercase">⚿ Feature Request</span>
+                        <p className="text-[10px] text-[#8E6AA8] italic leading-relaxed">No negative reviews yet.</p>
+                      </div>
+                    )}
 
                   </div>
 

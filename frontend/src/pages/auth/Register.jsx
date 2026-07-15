@@ -54,15 +54,26 @@ const itemVariants = {
 export default function Register() {
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role');
+  const inviteToken = searchParams.get('invite_token') || null;
+  const inviteEmail = searchParams.get('email') || '';
+  // Allow role=admin ONLY when a valid invite_token is present
   const validRoles = ['customer', 'affiliate', 'vendor'];
+  const isAdminInvite = role === 'admin' && !!inviteToken;
 
-  if (!role || !validRoles.includes(role)) {
+  if (!role || (!validRoles.includes(role) && !isAdminInvite)) {
     return <Navigate to="/auth/register?role=customer" replace />;
   }
 
-  const meta = ROLE_META[role];
+  const meta = isAdminInvite
+    ? {
+        heading: 'Create Admin Account',
+        sub: 'Create your account to accept the admin invitation.',
+        badge: '👑 Admin Invite',
+        btnLabel: 'Create Account & Accept Invite',
+      }
+    : ROLE_META[role];
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(inviteEmail); // pre-fill from invite URL
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -93,17 +104,24 @@ export default function Register() {
     if (!validate()) return;
     setIsLoading(true);
     try {
-      await register(name, email, password, role);
-      navigate(`/auth/login?role=${role}&registered=true`);
+      // Register with 'customer' role for admin invites — role is elevated by accept-invite endpoint
+      const registrationRole = isAdminInvite ? 'customer' : role;
+      await register(name, email, password, registrationRole);
+      if (isAdminInvite) {
+        // Redirect back to AcceptInvite — the user will log in and activate their role
+        navigate(`/auth/login?role=customer&next=${encodeURIComponent(`/admin/accept-invite?token=${encodeURIComponent(inviteToken)}`)}&registered=true`);
+      } else {
+        navigate(`/auth/login?role=${role}&registered=true`);
+      }
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
-        setErrors({ form: `This email is already registered. To add the ${role} role to your account, enter your existing Lumora password. If you forgot it, use "Forgot password" on the login page.` });
+        setErrors({ form: `This email is already registered. To add the ${isAdminInvite ? 'admin' : role} role to your account, enter your existing Lumora password. If you forgot it, use "Forgot password" on the login page.` });
       } else if (err.code === 'auth/weak-password') {
         setErrors({ password: 'Password must be at least 6 characters.' });
       } else if (err.code === 'auth/invalid-email') {
         setErrors({ email: 'Please enter a valid email address.' });
       } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setErrors({ form: `Wrong password. To add the ${role} role, enter the password you used when you first registered on Lumora.` });
+        setErrors({ form: `Wrong password. To add the ${isAdminInvite ? 'admin' : role} role, enter the password you used when you first registered on Lumora.` });
       } else {
         setErrors({ form: err.message || 'Registration failed. Please try again.' });
       }
@@ -231,8 +249,15 @@ export default function Register() {
           </motion.form>
 
           <motion.div className="signup-prompt" variants={itemVariants}>
-            Already have a {role} account?{' '}
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate(`/auth/login?role=${role}`); }}>
+            Already have a {isAdminInvite ? 'Lumora' : role} account?{' '}
+            <a href="#" onClick={(e) => {
+              e.preventDefault();
+              if (isAdminInvite) {
+                navigate(`/auth/login?role=customer&next=${encodeURIComponent(`/admin/accept-invite?token=${encodeURIComponent(inviteToken)}`)}`);
+              } else {
+                navigate(`/auth/login?role=${role}`);
+              }
+            }}>
               Sign in →
             </a>
           </motion.div>

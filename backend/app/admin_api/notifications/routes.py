@@ -59,12 +59,25 @@ def get_notification_counts(
         except Exception:
             pending_orders = 0
 
+    # Pending admin invitations (not yet accepted, not expired, not revoked)
+    team_invites = 0
+    try:
+        from app.models.admin_invitation import AdminInvitation
+        team_invites = db.query(AdminInvitation).filter(
+            AdminInvitation.accepted_at == None,
+            AdminInvitation.expires_at > now,
+            AdminInvitation.revoked_at == None,
+        ).count()
+    except Exception:
+        team_invites = 0
+
     result = {
         "support_tickets": support_tickets,
         "reports": reports,
         "contact_requests": contact_requests,
         "pending_orders": pending_orders,
-        "total": support_tickets + reports + contact_requests + pending_orders,
+        "team_invites": team_invites,
+        "total": support_tickets + reports + contact_requests + pending_orders + team_invites,
     }
 
     _cache["data"] = result

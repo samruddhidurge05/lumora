@@ -19,9 +19,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
+import { clearBackendToken } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 /* ─── Google "G" SVG logo ─────────────────────────────────────────────────── */
@@ -55,9 +56,34 @@ function GoogleLogo() {
   );
 }
 
+/* ─── Helper: sign out without triggering the full logout() redirect ──────── */
+async function signOutAndStay(navigate) {
+  try {
+    clearBackendToken();
+    // Re-set the admin role hint after clearing tokens so the next sign-in
+    // attempt immediately triggers the admin auth branch in AuthContext
+    localStorage.setItem('lumora_active_role', 'admin');
+    try { sessionStorage.clear(); } catch (_) {}
+    await signOut(auth);
+  } catch (_) {}
+  // Stay on /admin/login so the admin Google sign-in button is shown
+  navigate('/admin/login', { replace: true });
+}
+
 /* ─── Access Denied screen ────────────────────────────────────────────────── */
 function AccessDenied() {
   const navigate = useNavigate();
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  // Auto sign-out after 3 s — brings the user back to /admin/login sign-in form
+  React.useEffect(() => {
+    const timer = setTimeout(async () => {
+      setSigningOut(true);
+      await signOutAndStay(navigate);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
   return (
     <div style={styles.page} aria-live="assertive">
       <div style={styles.card}>
@@ -88,17 +114,31 @@ function AccessDenied() {
             Access Denied — Admin Only
           </strong>
           <p style={{ color: '#d1d5db', marginTop: 8, fontSize: '0.875rem', lineHeight: 1.5 }}>
-            You are signed in with a non-administrator account. This area is restricted
-            to platform administrators only.
+            You are signed in with a non-administrator account.{' '}
+            {signingOut
+              ? 'Signing you out…'
+              : 'Signing out automatically in 3 seconds so you can log in with an admin account.'}
           </p>
         </div>
 
         <button
-          style={styles.secondaryBtn}
+          style={{ ...styles.secondaryBtn, opacity: signingOut ? 0.6 : 1 }}
+          onClick={async () => {
+            setSigningOut(true);
+            await signOutAndStay(navigate);
+          }}
+          type="button"
+          disabled={signingOut}
+        >
+          {signingOut ? 'Signing out…' : 'Sign Out & Use Admin Account'}
+        </button>
+
+        <button
+          style={{ ...styles.secondaryBtn, marginTop: 8, background: 'transparent', border: 'none', color: '#6b7280', fontSize: '0.75rem' }}
           onClick={() => navigate('/')}
           type="button"
         >
-          Return to Marketplace
+          Return to Marketplace instead
         </button>
       </div>
       <div style={styles.blob1} aria-hidden="true" />
@@ -141,6 +181,12 @@ export default function AdminLogin() {
     setError('');
 
     try {
+      // Set the admin role hint BEFORE opening the popup.
+      // onAuthStateChanged fires the moment signInWithPopup resolves — if
+      // lumora_active_role is not 'admin' at that instant, AuthContext falls
+      // through to syncWithBackend and overwrites the role with 'customer'.
+      localStorage.setItem('lumora_active_role', 'admin');
+
       const provider = new GoogleAuthProvider();
       const result   = await signInWithPopup(auth, provider);
       const firebaseUser = result.user;
@@ -158,7 +204,9 @@ export default function AdminLogin() {
       // Navigate to the intended destination (or dashboard)
       navigate(redirectTarget, { replace: true });
     } catch (err) {
-      console.error('[AdminLogin] Sign-in error:', err);
+      // Clear the admin hint if sign-in failed — prevents a stale 'admin'
+      // hint from causing AuthContext to attempt admin login on next page load
+      localStorage.removeItem('lumora_active_role');
 
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in cancelled');

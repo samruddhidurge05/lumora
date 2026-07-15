@@ -8,7 +8,7 @@ Admin authentication endpoints:
 """
 
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -238,6 +238,13 @@ def admin_login(
         {"sub": str(user.id)},
         expires_delta=timedelta(hours=24),
     )
+
+    # ── Step 5a: Record last login timestamp (Req 9) ───────────────────────
+    try:
+        user.last_login_at = datetime.now(timezone.utc)
+        db.commit()
+    except Exception:
+        db.rollback()  # non-fatal — proceed with login
 
     # ── Step 6: Write success audit log ───────────────────────────────────
     _insert_audit_log(
