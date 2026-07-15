@@ -102,87 +102,87 @@ builds on the previous steps; no code is left hanging or un-integrated.
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Vendor Status ID Fix (P3)
-  - [~] 7.1 Fix `firebase_uid` vs `str(id)` mismatch in `verify_vendor_active` in `status_checks.py`
+  - [ ] 7.1 Fix `firebase_uid` vs `str(id)` mismatch in `verify_vendor_active` in `status_checks.py`
     - In `backend/admin/validators/status_checks.py`, in `verify_vendor_active`, find the call to `get_vendor_status_from_firestore(str(current_user.id))`
     - Replace argument with `current_user.firebase_uid`
     - Add null-guard: if `current_user.firebase_uid` is `None` or empty string, skip the Firestore check, log a warning (`logger.warning("verify_vendor_active: user %s has no firebase_uid — skipping Firestore status check", current_user.id)`), and set `status_val = None`
     - _Requirements: 8.1, 8.2, 8.4, 8.5_
 
-  - [~] 7.2 Apply same `firebase_uid` fix to `verify_affiliate_active` in `status_checks.py`
+  - [ ] 7.2 Apply same `firebase_uid` fix to `verify_affiliate_active` in `status_checks.py`
     - In the same file, apply the identical fix to `verify_affiliate_active`: replace `str(current_user.id)` with `current_user.firebase_uid` in the `get_affiliate_status_from_firestore()` call
     - Add same null-guard with warning log
     - _Requirements: 8.3_
 
 - [ ] 8. Dead Code Removal (P3)
-  - [~] 8.1 Delete unmounted `admin_controls/vendor/routes.py`
+  - [ ] 8.1 Delete unmounted `admin_controls/vendor/routes.py`
     - Delete `backend/admin_controls/vendor/routes.py`
     - Verify the file is not imported anywhere in `main.py` or any `__init__.py` before deleting
     - _Requirements: 9.1, 9.5_
 
-  - [~] 8.2 Delete unmounted `admin_controls/affiliate/routes.py`
+  - [ ] 8.2 Delete unmounted `admin_controls/affiliate/routes.py`
     - Delete `backend/admin_controls/affiliate/routes.py`
     - Verify the file is not imported in `main.py` or any `__init__.py`
     - _Requirements: 9.2, 9.5_
 
-  - [~] 8.3 Delete vestigial `app/core/database.py`
+  - [ ] 8.3 Delete vestigial `app/core/database.py`
     - Delete `backend/app/core/database.py`
     - Search for any `from app.core.database import` statements across the codebase; if found, update them to use `from app.db.database import` instead
     - _Requirements: 9.6_
 
-  - [~] 8.4 Remove duplicate `purchases` Firestore write from `purchaseService.js`
+  - [ ] 8.4 Remove duplicate `purchases` Firestore write from `purchaseService.js`
     - In `frontend/src/services/purchaseService.js`, in `recordPurchase()`, remove the `addDoc(collection(db, 'purchases'), ...)` call entirely
     - Keep all other logic in the function intact
     - _Requirements: 9.3_
 
-  - [~] 8.5 Remove `vendorStats` Firestore write from `ecosystemService.js`
+  - [ ] 8.5 Remove `vendorStats` Firestore write from `ecosystemService.js`
     - In `frontend/src/services/ecosystemService.js`, remove the entire `safeRun('vendorStats(${item.id})', ...)` block (Step 3 per the design)
     - _Requirements: 9.4_
 
 - [ ] 9. Audit Log Coverage Extension (P3)
-  - [~] 9.1 Add audit log calls to product CRUD endpoints in `admin/routes/products.py`
+  - [ ] 9.1 Add audit log calls to product CRUD endpoints in `admin/routes/products.py`
     - In `backend/admin/routes/products.py`, wrap `log_admin_action(...)` calls in try/except with pass (non-blocking) at the end of:
       - `POST /admin/products/` → `action="product_created"`, `target_id=str(product.id)`
       - `PUT /admin/products/{id}` → `action="product_updated"`, `target_id=str(id)`
       - `DELETE /admin/products/{id}` → `action="product_deleted"`, `target_id=str(id)`
     - _Requirements: 10.9, 10.14_
 
-  - [~] 9.2 Add audit log calls to settings endpoints in `admin/routes/settings.py`
+  - [ ] 9.2 Add audit log calls to settings endpoints in `admin/routes/settings.py`
     - In `backend/admin/routes/settings.py`, add non-blocking `log_admin_action` calls:
       - `POST /admin/settings/pause` → `action="platform_pause"`, no target
       - `POST /admin/settings/resume` → `action="platform_resume"`, no target
     - _Requirements: 10.6, 10.7, 10.14_
 
-  - [~] 9.3 Add audit log call to `PUT /admin/settings/` in `app/admin_api/settings/routes.py`
+  - [ ] 9.3 Add audit log call to `PUT /admin/settings/` in `app/admin_api/settings/routes.py`
     - In `backend/app/admin_api/settings/routes.py`, add a non-blocking `log_admin_action` call with `action="settings_updated"` and `metadata={"keys": list(payload.keys())}` (or equivalent changed-key info)
     - _Requirements: 10.14_
 
-  - [~] 9.4 Add audit log calls to review moderation endpoints in `admin/routes/reviews.py`
+  - [ ] 9.4 Add audit log calls to review moderation endpoints in `admin/routes/reviews.py`
     - In `backend/admin/routes/reviews.py`, add a non-blocking `log_admin_action` call with `action="review_moderated"`, `target_type="review"`, and `target_id=str(review_id)` on all moderation state-change routes
     - _Requirements: 10.10, 10.14_
 
-  - [~] 9.5 Add audit log calls to report endpoints in `admin/routes/reports.py`
+  - [ ] 9.5 Add audit log calls to report endpoints in `admin/routes/reports.py`
     - In `backend/admin/routes/reports.py`, add non-blocking `log_admin_action` calls:
       - Resolve route → `action="report_resolved"`, `target_id=str(report_id)`
       - Reject route → `action="report_rejected"`, `target_id=str(report_id)`
       - Assign route → `action="report_assigned"`, `target_id=str(report_id)`
     - _Requirements: 10.11, 10.14_
 
-  - [~] 9.6 Add audit log calls to referral link endpoints in `admin/routes/referral_links.py`
+  - [ ] 9.6 Add audit log calls to referral link endpoints in `admin/routes/referral_links.py`
     - In `backend/admin/routes/referral_links.py`, add non-blocking `log_admin_action` calls:
       - Create referral link route → `action="admin_referral_link_created"`, `target_id=str(link_id)`
       - Delete referral link route → `action="admin_referral_link_deleted"`, `target_id=str(link_id)`
     - _Requirements: 10.12, 10.14_
 
-  - [~] 9.7 Extend `ACTION_COLORS` map in `AuditLogs.jsx`
+  - [ ] 9.7 Extend `ACTION_COLORS` map in `AuditLogs.jsx`
     - In `frontend/src/pages/admin/AuditLogs.jsx`, add entries to the `ACTION_COLORS` (or equivalent color-mapping object) for all new action types:
       `product_created`, `product_updated`, `product_deleted`, `platform_pause`, `platform_resume`, `settings_updated`, `review_moderated`, `report_resolved`, `report_rejected`, `report_assigned`, `admin_referral_link_created`, `admin_referral_link_deleted`
     - _Requirements: 10.13_
 
-- [~] 10. Checkpoint — Verify P3 fixes and run backend tests
+- [ ] 10. Checkpoint — Verify P3 fixes and run backend tests
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Vendor Analytics Data Integrity (P4)
-  - [~] 11.1 Remove fake view multiplier calculations from `Analytics.jsx`
+  - [ ] 11.1 Remove fake view multiplier calculations from `Analytics.jsx`
     - In `frontend/src/pages/vendor/Analytics.jsx`:
       - Replace `const storeViews = Math.round(totalOrders * 32.5 + products.length * 18.2 + 85)` with `const storeViews = null; // Real view tracking not yet implemented`
       - Replace the Store Views stat card value with `storeViews !== null ? storeViews : '—'`; set `sub: 'Not yet tracked'` and `delta: null`
@@ -192,13 +192,13 @@ builds on the previous steps; no code is left hanging or un-integrated.
 
 - [ ] 12. Admin Referral Links Tracking (P4)
   - _Note: The core `adminReferralLinks` conversion write was implemented as part of task 5.2. This task confirms and validates the integration._
-  - [~] 12.1 Validate `adminReferralLinks` integration end-to-end
+  - [ ] 12.1 Validate `adminReferralLinks` integration end-to-end
     - Confirm the `safeRun('adminReferralConversion', ...)` block added in 5.2 writes correctly to `adminAffiliateOrders` with all required fields (`campaignId`, `code`, `orderId`, `customerId`, `totalAmount`, `createdAt`)
     - Confirm `CampaignManager.jsx` reads from `adminAffiliateOrders` without changes (read-only, no modifications needed)
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
 - [ ] 13. Backend Test Suite
-  - [~] 13.1 Write auth regression tests in `test_admin_auth_regression.py`
+  - [ ] 13.1 Write auth regression tests in `test_admin_auth_regression.py`
     - Create `backend/tests/test_admin_auth_regression.py`
     - `test_no_auth_returns_401`: GET `/admin/orders/` with no header → 401 (Req 14.1)
     - `test_vendor_jwt_returns_403`: GET `/admin/orders/` with vendor JWT → 403 (Req 14.2)
@@ -206,7 +206,7 @@ builds on the previous steps; no code is left hanging or un-integrated.
     - `test_non_admin_login_failure_writes_audit_log`: POST `/admin/auth/login` with customer token → 403, `admin_login_failure` AuditLog entry exists (Req 14.4)
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-  - [~] 13.2 Write upload auth enforcement tests in `test_upload_auth.py`
+  - [ ] 13.2 Write upload auth enforcement tests in `test_upload_auth.py`
     - Create `backend/tests/test_upload_auth.py`
     - `test_admin_can_upload_file`: admin JWT → POST `/api/uploads/` → 200, `url` in response (Req 16)
     - `test_admin_can_upload_image`: admin JWT → POST `/api/uploads/image` → 200 (Req 16)
@@ -236,7 +236,7 @@ builds on the previous steps; no code is left hanging or un-integrated.
     - **Validates: Requirement 4**
 
 - [ ] 14. Frontend Test Suite
-  - [~] 14.1 Confirm `mapAdminProductToApi` tests created in task 1.4 pass
+  - [ ] 14.1 Confirm `mapAdminProductToApi` tests created in task 1.4 pass
     - Run `frontend/src/tests/mapAdminProductToApi.test.js`; fix any failures
     - _Requirements: 16_
 
@@ -246,7 +246,7 @@ builds on the previous steps; no code is left hanging or un-integrated.
     - **Property 11: Platform settings writes always pass through FastAPI**
     - **Validates: Requirements 5.1, 5.2**
 
-- [~] 15. Final Checkpoint — Ensure all tests pass
+- [ ] 15. Final Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ---
