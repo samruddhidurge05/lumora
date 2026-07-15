@@ -19,7 +19,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
 import { clearBackendToken } from '../../services/authService';
@@ -152,6 +152,11 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
+  // Email/password form state
+  const [emailInput, setEmailInput]   = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showEmailForm, setShowEmailForm] = useState(false);
+
   const { user, userRole } = useAuth();
   const navigate           = useNavigate();
   const [searchParams]     = useSearchParams();
@@ -221,6 +226,51 @@ export default function AdminLogin() {
         setError('This account is not authorised as a platform administrator');
       } else {
         setError('Sign-in failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ── Email / password sign-in handler ─────────────────────────────────── */
+  const handleEmailSignIn = async (e) => {
+    e.preventDefault();
+    if (!emailInput || !passwordInput) {
+      setError('Please enter your email and password.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    try {
+      localStorage.setItem('lumora_active_role', 'admin');
+
+      const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+      const firebaseUser = result.user;
+
+      await adminLogin(firebaseUser);
+
+      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+      if (pendingInviteToken) {
+        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
+        return;
+      }
+
+      navigate(redirectTarget, { replace: true });
+    } catch (err) {
+      localStorage.removeItem('lumora_active_role');
+
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Incorrect email or password.');
+      } else if (
+        err.message?.toLowerCase().includes('not authorised') ||
+        err.message?.toLowerCase().includes('not authorized') ||
+        err.message?.toLowerCase().includes('only administrators') ||
+        err.status === 403
+      ) {
+        setError('This account is not authorised as a platform administrator.');
+      } else {
+        setError(err.message || 'Sign-in failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -307,6 +357,94 @@ export default function AdminLogin() {
             </>
           )}
         </button>
+
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', margin: '16px 0 4px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+          <span style={{ fontSize: '0.72rem', color: '#6b7280', letterSpacing: '0.05em' }}>or</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+        </div>
+
+        {/* Email / password toggle */}
+        {!showEmailForm ? (
+          <button
+            type="button"
+            onClick={() => setShowEmailForm(true)}
+            style={{
+              marginTop: '4px',
+              background: 'transparent',
+              border: '1px solid rgba(139,92,246,0.25)',
+              borderRadius: '12px',
+              color: '#a78bfa',
+              fontSize: '0.82rem',
+              fontWeight: 500,
+              padding: '10px 20px',
+              cursor: 'pointer',
+              width: '100%',
+              fontFamily: 'inherit',
+            }}
+          >
+            Sign in with Email &amp; Password
+          </button>
+        ) : (
+          <form onSubmit={handleEmailSignIn} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+            <input
+              type="email"
+              placeholder="admin@yourdomain.com"
+              value={emailInput}
+              onChange={e => setEmailInput(e.target.value)}
+              disabled={loading}
+              autoComplete="email"
+              required
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '11px 14px', borderRadius: '12px',
+                border: '1px solid rgba(139,92,246,0.30)',
+                background: 'rgba(255,255,255,0.06)',
+                color: '#e5e7eb', fontSize: '0.875rem',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value)}
+              disabled={loading}
+              autoComplete="current-password"
+              required
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '11px 14px', borderRadius: '12px',
+                border: '1px solid rgba(139,92,246,0.30)',
+                background: 'rgba(255,255,255,0.06)',
+                color: '#e5e7eb', fontSize: '0.875rem',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: '12px', borderRadius: '12px', border: 'none',
+                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                color: '#fff', fontSize: '0.9rem', fontWeight: 600,
+                fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.65 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              }}
+            >
+              {loading ? <><span style={styles.spinner} /><span>Signing in…</span></> : 'Sign In'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowEmailForm(false); setError(''); }}
+              style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              ← Back to Google sign-in
+            </button>
+          </form>
+        )}
 
         <p style={styles.hint}>
           This portal is restricted to platform administrators.

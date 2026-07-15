@@ -231,7 +231,9 @@ function mapAdminProductToApi(uiForm) {
     category:          uiForm.category    || null,
 
     // Pricing
-    price:             Number(uiForm.price) || 0,
+    price:             (uiForm.price !== '' && uiForm.price !== null && uiForm.price !== undefined)
+                         ? parseFloat(uiForm.price)
+                         : 0,
 
     // Media
     thumbnail:         (uiForm.thumbnail && !uiForm.thumbnail.includes('unsplash.com') && !uiForm.thumbnail.includes('temp/'))
@@ -262,7 +264,7 @@ function mapAdminProductToApi(uiForm) {
 
     // Metadata
     tags,
-    highlights:        Array.isArray(uiForm.highlights) ? uiForm.highlights : null,
+    highlights:        Array.isArray(uiForm.keyFeatures) ? uiForm.keyFeatures : (Array.isArray(uiForm.highlights) ? uiForm.highlights : null),
     version:           uiForm.version     || 'v1.0.0',
     file_size,
     license:           uiForm.license     || null,
@@ -745,23 +747,42 @@ export default function App() {
         title:       saved.title       || '',
         creatorName: saved.seller      || saved.vendor_id || newProductData.seller || '',
         category:    saved.category    || 'Uncategorized',
-        shortDesc:   saved.description || '',
+        shortDesc:   saved.short_desc  || saved.description || '',
         description: saved.description || '',
-        price:       parseFloat(saved.price) || 0,
+        price:       saved.price != null ? parseFloat(saved.price) : 0,
         status:      saved.status === 'published' ? 'Published'
                    : saved.status === 'pending_review' ? 'Pending Review'
                    : 'Draft',
         isFeatured:  saved.featured    || false,
         featured:    saved.featured    || false,
-        thumbnail:   resolveImageUrl(saved.thumbnail || saved.preview || null),
-        preview:     resolveImageUrl(saved.preview || saved.thumbnail || null),
+        thumbnail:   resolveImageUrl(saved.thumbnail || saved.preview || (Array.isArray(saved.image_urls) && saved.image_urls[0]) || null),
+        preview:     resolveImageUrl(saved.preview || saved.thumbnail || (Array.isArray(saved.image_urls) && saved.image_urls[0]) || null),
         image_urls:  Array.isArray(saved.image_urls) ? saved.image_urls.map(resolveImageUrl) : [],
+        previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
         downloadUrl: saved.file_url    || null,
         file_url:    saved.file_url    || null,
         pcloud_download_link: saved.pcloud_download_link || null,
+        pcloudDownloadLink:   saved.pcloud_download_link || null,
         tags:        saved.tags        || [],
         downloads:   saved.downloads   || 0,
         dateAdded:   saved.created_at  ? saved.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        // Features & specs
+        features:           Array.isArray(saved.features)            ? saved.features            : [],
+        highlights:         Array.isArray(saved.highlights)          ? saved.highlights          : [],
+        whatYouGet:         Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+        what_you_get:       Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+        systemRequirements: Array.isArray(saved.system_requirements) ? saved.system_requirements : [],
+        system_requirements:Array.isArray(saved.system_requirements) ? saved.system_requirements : [],
+        installation_guide: saved.installation_guide || '',
+        installationGuide:  saved.installation_guide || '',
+        // Form aliases used by edit modal
+        keyFeatures:        Array.isArray(saved.features)            ? saved.features            : [],
+        whatsIncluded:      Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+        version:            saved.version     || 'v1.0.0',
+        license:            saved.license     || null,
+        subcategory:        saved.subcategory || '',
+        discount:           saved.discount    || 0,
+        visibility:         saved.visibility  || 'public',
       };
 
       setProducts([uiProduct, ...products]);
@@ -793,23 +814,42 @@ export default function App() {
           title:        saved.title  || '',
           creatorName:  saved.seller || saved.vendor_id || updatedProductData.seller || '',
           category:     saved.category    || 'Uncategorized',
-          shortDesc:    saved.description || '',
+          shortDesc:    saved.short_desc  || saved.description || '',
           description:  saved.description || '',
-          price:        parseFloat(saved.price) || 0,
+          price:        saved.price != null ? parseFloat(saved.price) : 0,
           status:       saved.status === 'published'       ? 'Published'
                       : saved.status === 'archived'        ? 'Archived'
                       : saved.status === 'pending_review'  ? 'Pending Review'
                       : 'Draft',
           isFeatured:   saved.featured     || false,
           featured:     saved.featured     || false,
-          thumbnail:    resolveImageUrl(saved.thumbnail || saved.preview || updatedProductData.thumbnail || null),
-          preview:      resolveImageUrl(saved.preview || saved.thumbnail || null),
+          thumbnail:    resolveImageUrl(saved.thumbnail || saved.preview || (Array.isArray(saved.image_urls) && saved.image_urls[0]) || updatedProductData.thumbnail || null),
+          preview:      resolveImageUrl(saved.preview || saved.thumbnail || (Array.isArray(saved.image_urls) && saved.image_urls[0]) || null),
           image_urls:   Array.isArray(saved.image_urls) ? saved.image_urls.map(resolveImageUrl) : [],
+          previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
           downloadUrl:  saved.file_url     || updatedProductData.file_url  || null,
           file_url:     saved.file_url     || null,
           pcloud_download_link: saved.pcloud_download_link || null,
+          pcloudDownloadLink:   saved.pcloud_download_link || null,
           fileSize:     saved.file_size    || updatedProductData.file_size  || null,
           dateAdded:    saved.updated_at   ? saved.updated_at.split('T')[0] : updatedProductData.dateAdded,
+          // Features & specs
+          features:           Array.isArray(saved.features)            ? saved.features            : [],
+          highlights:         Array.isArray(saved.highlights)          ? saved.highlights          : [],
+          whatYouGet:         Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+          what_you_get:       Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+          systemRequirements: Array.isArray(saved.system_requirements) ? saved.system_requirements : [],
+          system_requirements:Array.isArray(saved.system_requirements) ? saved.system_requirements : [],
+          installation_guide: saved.installation_guide || '',
+          installationGuide:  saved.installation_guide || '',
+          keyFeatures:        Array.isArray(saved.features)            ? saved.features            : [],
+          whatsIncluded:      Array.isArray(saved.what_you_get)        ? saved.what_you_get        : [],
+          version:            saved.version     || updatedProductData.version || 'v1.0.0',
+          license:            saved.license     || null,
+          tags:               saved.tags        || [],
+          subcategory:        saved.subcategory || '',
+          discount:           saved.discount    || 0,
+          visibility:         saved.visibility  || 'public',
         };
         setProducts(products.map(p => p.id === targetId ? mapped : p));
       }
@@ -2087,11 +2127,11 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     category: product?.category || 'Graphics & UI',
     shortDesc: product?.shortDesc || '',
     description: product?.description || '',
-    price: product?.price || 45,
+    price: product?.price != null ? product.price : '',
     discountPrice: product?.discountPrice || '',
-    status: product?.status || 'Draft',
+    status: product?.status || 'Published',
     tagsInput: product?.tags?.join(', ') || '',
-    thumbnail: product?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+    thumbnail: product?.thumbnail || null,
     galleryInput: product?.gallery?.join(', ') || '',
     videoUrl: product?.videoUrl || '',
     zipName: product?.zipName || '',

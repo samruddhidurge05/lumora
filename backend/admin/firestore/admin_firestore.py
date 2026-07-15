@@ -20,8 +20,27 @@ def sync_product_to_firestore(product):
             "rating": float(product.rating or 5.0),
             "reviews": int(product.reviews or 0),
             "downloads": int(product.downloads or 0),
-            "thumbnail": product.thumbnail or "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80",
-            "preview": product.preview or "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80",
+            # ── Image URLs ─────────────────────────────────────────────────────
+            # Priority: 1) real non-Unsplash thumbnail  2) first image_urls entry
+            # 3) first preview_images entry  4) None (never store Unsplash placeholders)
+            "thumbnail": (
+                product.thumbnail
+                if product.thumbnail and "unsplash.com" not in product.thumbnail
+                else (
+                    (product.image_urls[0] if isinstance(product.image_urls, list) and product.image_urls else None)
+                    or (product.preview_images[0] if isinstance(product.preview_images, list) and product.preview_images else None)
+                    or (product.thumbnail if product.thumbnail and "unsplash.com" not in product.thumbnail else None)
+                )
+            ),
+            "preview": (
+                product.preview
+                if product.preview and "unsplash.com" not in product.preview
+                else (
+                    (product.image_urls[0] if isinstance(product.image_urls, list) and product.image_urls else None)
+                    or (product.preview_images[0] if isinstance(product.preview_images, list) and product.preview_images else None)
+                    or (product.preview if product.preview and "unsplash.com" not in product.preview else None)
+                )
+            ),
             "creatorName": product.seller or "Creator",
             "creatorAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
             "featured": bool(product.featured),
@@ -43,10 +62,17 @@ def sync_product_to_firestore(product):
             "installationGuide": product.installation_guide or "",
             "installation_guide": product.installation_guide or "",
             "short_desc": product.short_desc or "",
-            "shortDesc": product.short_desc or "",
+            "shortDesc": product.short_desc or (product.description[:150] if product.description else ""),
             "subcategory": product.subcategory or "",
             "discount": float(product.discount or 0.0),
-            "previewImages": product.preview_images if isinstance(product.preview_images, list) else [],
+            # ── Gallery arrays — always populated from image_urls ──────────────
+            # previewImages and image_urls both carry the same pCloud URLs so
+            # every consumer (marketplace, product page, downloads) can find them.
+            "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
+            "previewImages": (
+                product.image_urls if isinstance(product.image_urls, list) and product.image_urls
+                else (product.preview_images if isinstance(product.preview_images, list) else [])
+            ),
             "previewVideo": product.preview_video or "",
             "seoTitle": product.seo_title or "",
             "seoDescription": product.seo_description or "",
@@ -55,8 +81,7 @@ def sync_product_to_firestore(product):
             "affiliate_enabled": bool(product.affiliate_enabled),
             "commission_type": product.commission_type or "percentage",
             "commission_value": float(product.commission_value or 0.0),
-            # pCloud / external image URLs — for gallery display
-            "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
+            # pCloud download link — both naming conventions for full compatibility
             "pcloud_download_link": product.pcloud_download_link,
             "pcloudDownloadLink": product.pcloud_download_link,
         }, merge=True)

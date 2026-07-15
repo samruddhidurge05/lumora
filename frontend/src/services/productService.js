@@ -63,15 +63,25 @@ export const mapDocToProduct = (docSnap) => {
   if (!docSnap || typeof docSnap.data !== 'function' || !docSnap.exists()) {
     // Handle plain javascript object case if passed direct data
     const data = docSnap || {};
+    const imageUrlsList = Array.isArray(data.image_urls) ? data.image_urls
+                        : Array.isArray(data.previewImages) ? data.previewImages
+                        : [];
     return {
       id: data.id || data.uid || '',
       name: data.name || data.title || 'Untitled Product',
       title: data.title || data.name || 'Untitled Product',
-      price: data.price || 0,
+      price: data.price != null ? parseFloat(data.price) : 0,
       discountPrice: data.discountPrice || null,
       category: data.category || 'General',
-      thumbnail: data.thumbnail || data.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
-      gallery: data.gallery || [],
+      thumbnail: (data.thumbnail && !data.thumbnail.includes('unsplash.com'))
+        ? data.thumbnail
+        : (imageUrlsList[0] || data.thumbnail || null),
+      preview: (data.preview && !data.preview.includes('unsplash.com'))
+        ? data.preview
+        : (imageUrlsList[0] || data.preview || null),
+      image_urls: imageUrlsList,
+      previewImages: imageUrlsList,
+      gallery: data.gallery || imageUrlsList,
       isFeatured: data.isFeatured || data.featured || false,
       status: data.status || 'Draft',
       videoUrl: data.videoUrl || null,
@@ -93,20 +103,35 @@ export const mapDocToProduct = (docSnap) => {
       revenue: data.revenue || 0,
       createdAt: data.createdAt || null,
       pcloud_download_link: data.pcloud_download_link || data.pcloudDownloadLink || null,
-      pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null
+      pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null,
+      version: data.version || 'v1.0.0',
+      license: data.license || null,
+      subcategory: data.subcategory || '',
+      discount: data.discount || 0,
+      visibility: data.visibility || 'public',
     };
   }
 
   const data = docSnap.data();
+  const imageUrlsList = Array.isArray(data.image_urls) ? data.image_urls
+                      : Array.isArray(data.previewImages) ? data.previewImages
+                      : [];
   return {
     id: docSnap.id,
     name: data.name || data.title || 'Untitled Product',
     title: data.title || data.name || 'Untitled Product',
-    price: data.price || 0,
+    price: data.price != null ? parseFloat(data.price) : 0,
     discountPrice: data.discountPrice || null,
     category: data.category || 'General',
-    thumbnail: data.thumbnail || data.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
-    gallery: data.gallery || [],
+    thumbnail: (data.thumbnail && !data.thumbnail.includes('unsplash.com'))
+      ? data.thumbnail
+      : (imageUrlsList[0] || data.thumbnail || null),
+    preview: (data.preview && !data.preview.includes('unsplash.com'))
+      ? data.preview
+      : (imageUrlsList[0] || data.preview || null),
+    image_urls: imageUrlsList,
+    previewImages: imageUrlsList,
+    gallery: data.gallery || imageUrlsList,
     isFeatured: data.isFeatured || data.featured || false,
     status: data.status || 'Draft',
     videoUrl: data.videoUrl || null,
@@ -128,7 +153,12 @@ export const mapDocToProduct = (docSnap) => {
     revenue: data.revenue || 0,
     createdAt: data.createdAt || null,
     pcloud_download_link: data.pcloud_download_link || data.pcloudDownloadLink || null,
-    pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null
+    pcloudDownloadLink: data.pcloudDownloadLink || data.pcloud_download_link || null,
+    version: data.version || 'v1.0.0',
+    license: data.license || null,
+    subcategory: data.subcategory || '',
+    discount: data.discount || 0,
+    visibility: data.visibility || 'public',
   };
 };
 

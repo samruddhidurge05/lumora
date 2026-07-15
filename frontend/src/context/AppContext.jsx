@@ -679,8 +679,25 @@ function enrichRawProducts(raw) {
       title: p.title || p.name || 'Untitled Product',
       price: typeof p.price === 'string' ? parseFloat(p.price) || 0 : (p.price || 0),
       // Resolve relative /uploads/... paths to absolute backend URLs
-      preview: _resolveProductImageUrl(p.preview || p.thumbnail) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
-      thumbnail: _resolveProductImageUrl(p.thumbnail || p.preview) || null,
+      // Priority: 1) real non-placeholder thumbnail/preview  2) first image_urls entry
+      preview: (() => {
+        const resolved = _resolveProductImageUrl(p.preview || p.thumbnail);
+        if (resolved && !resolved.includes('unsplash.com')) return resolved;
+        const imgUrls = Array.isArray(p.image_urls) ? p.image_urls.filter(Boolean) : [];
+        const previewImgs = Array.isArray(p.preview_images) ? p.preview_images.filter(Boolean) : [];
+        return imgUrls[0] ? _resolveProductImageUrl(imgUrls[0])
+             : previewImgs[0] ? _resolveProductImageUrl(previewImgs[0])
+             : resolved || null;
+      })(),
+      thumbnail: (() => {
+        const resolved = _resolveProductImageUrl(p.thumbnail || p.preview);
+        if (resolved && !resolved.includes('unsplash.com')) return resolved;
+        const imgUrls = Array.isArray(p.image_urls) ? p.image_urls.filter(Boolean) : [];
+        const previewImgs = Array.isArray(p.preview_images) ? p.preview_images.filter(Boolean) : [];
+        return imgUrls[0] ? _resolveProductImageUrl(imgUrls[0])
+             : previewImgs[0] ? _resolveProductImageUrl(previewImgs[0])
+             : resolved || null;
+      })(),
       // Resolve gallery image_urls array
       image_urls: Array.isArray(p.image_urls) ? p.image_urls.map(_resolveProductImageUrl).filter(Boolean) : [],
       preview_images: Array.isArray(p.preview_images) ? p.preview_images.map(_resolveProductImageUrl).filter(Boolean) : [],
@@ -1002,12 +1019,8 @@ export function AppContextProvider({ children }) {
     return saved !== null ? Number(saved) : 70;
   });
 
-  // Notifications
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: "Aurora UI Kit updated", text: "Version v2.4.0 is now ready. Core rendering speed increased by 40%.", date: "2 hrs ago", read: false },
-    { id: 2, title: "New Release", text: "Sophia Vance published 'Solace Mobile System' presets. Claim now.", date: "1 day ago", read: false },
-    { id: 3, title: "Security Ledger Clean", text: "Vault safety checks passed. Decryption algorithms intact.", date: "2 days ago", read: true }
-  ]);
+  // Notifications — loaded from backend, start empty
+  const [notifications, setNotifications] = useState([]);
 
   // Cart Drawer Visibility
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -1017,12 +1030,12 @@ export function AppContextProvider({ children }) {
 
   // Global Checkout Form state for multi-step checkout
   const [checkoutForm, setCheckoutForm] = useState({
-    name: 'Sam durge',
-    email: 'sam@lumora.design',
-    phone: '9876543210',
+    name: '',
+    email: '',
+    phone: '',
     country: 'India',
-    state: 'Maharashtra',
-    city: 'Mumbai'
+    state: '',
+    city: '',
   });
 
   // State is managed in React memory context and fetched directly from the backend SQLite DB
@@ -1172,7 +1185,6 @@ export function AppContextProvider({ children }) {
       if (cart && cart.length > 0) {
         const filteredCart = cart.filter(item => validProductIds.has(String(item.id)));
         if (filteredCart.length !== cart.length) {
-          console.log('[AppContext] Cleaning up invalid/deleted products from cart');
           setCart(filteredCart);
           // Sync deletion to backend
           const invalidItems = cart.filter(item => !validProductIds.has(String(item.id)));
@@ -1188,13 +1200,11 @@ export function AppContextProvider({ children }) {
       if (wishlist && wishlist.length > 0) {
         const filteredWishlist = wishlist.filter(item => validProductIds.has(String(item.id)));
         if (filteredWishlist.length !== wishlist.length) {
-          console.log('[AppContext] Cleaning up invalid/deleted products from wishlist');
           setWishlist(filteredWishlist);
         }
       }
 
       if (buyNowProduct && !validProductIds.has(String(buyNowProduct.id))) {
-        console.log('[AppContext] Clearing invalid buyNowProduct');
         setBuyNowProduct(null);
       }
     }
