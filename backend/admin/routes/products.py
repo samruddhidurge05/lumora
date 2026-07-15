@@ -34,6 +34,15 @@ def create_product(product_in: ProductCreate, db: Session = Depends(get_db), adm
     data["vendor_id"] = str(admin_user.id)
     if not data.get("seller"):
         data["seller"] = admin_user.name
+
+    # Auto-populate thumbnail/preview from image_urls[0] when not explicitly set
+    # so the admin card and customer marketplace always show the first pCloud image.
+    image_urls = data.get("image_urls") or []
+    if not data.get("thumbnail") and image_urls:
+        data["thumbnail"] = image_urls[0]
+    if not data.get("preview") and image_urls:
+        data["preview"] = image_urls[0]
+
     product = Product(**data)
     db.add(product)
     db.commit()
@@ -53,6 +62,14 @@ def update_product(product_id: int, product_in: ProductUpdate, db: Session = Dep
     update_data = product_in.model_dump(exclude_none=True)
     for key, val in update_data.items():
         setattr(product, key, val)
+
+    # Auto-populate thumbnail/preview from image_urls[0] when still missing after update
+    image_urls = product.image_urls or []
+    if not product.thumbnail and image_urls:
+        product.thumbnail = image_urls[0]
+    if not product.preview and image_urls:
+        product.preview = image_urls[0]
+
     db.commit()
     db.refresh(product)
     sync_product_to_firestore(product)

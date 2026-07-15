@@ -27,39 +27,44 @@ const CAT_GALLERY = {
 };
 
 function getGallery(product) {
-  // Use vendor-uploaded preview image first, then thumbnail, then category fallback
-  const vendorImage = product.preview || product.thumbnail || null;
-  const fallback = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
-  const primary = vendorImage || fallback;
-
   // Prefer explicitly stored pCloud/external image URLs (image_urls column)
   const pcloudImages = Array.isArray(product.image_urls || product.imageUrls)
     ? (product.image_urls || product.imageUrls).filter(Boolean)
     : [];
 
-  if (pcloudImages.length > 0) {
-    // Use pCloud images as the gallery; primary vendor image is the first entry
-    const combined = [primary, ...pcloudImages.filter(img => img !== primary)];
-    return combined;
-  }
-
   const extraImages = Array.isArray(product.previewImages || product.preview_images)
     ? (product.previewImages || product.preview_images).filter(Boolean)
     : [];
 
-  // If vendor uploaded additional images, show them alongside primary
-  if (extraImages.length > 0) {
-    return [primary, ...extraImages.filter(img => img !== primary)];
+  // Build the full gallery pool — pCloud images take priority over preview/thumbnail
+  const allGallery = pcloudImages.length > 0 ? pcloudImages : extraImages;
+
+  // Pick the best single primary: prefer non-Unsplash thumbnail/preview, else first gallery image
+  const rawPrimary = product.preview || product.thumbnail || null;
+  const isPlaceholder = !rawPrimary || rawPrimary.includes('unsplash.com');
+  const primary = isPlaceholder
+    ? (allGallery[0] || null)
+    : rawPrimary;
+
+  if (!primary) {
+    // Absolute fallback only when there are truly no images at all
+    const fallback = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85';
+    const catImgs = CAT_GALLERY[product.category] || CAT_GALLERY['Design Assets'];
+    return [fallback, ...catImgs.filter(img => img !== fallback)].slice(0, 5);
   }
 
-  // If vendor uploaded a primary image, show only that (don't pad with Unsplash)
-  if (vendorImage) {
-    return [vendorImage];
+  // De-duplicate: primary first, then the rest of the gallery
+  const rest = allGallery.filter(img => img !== primary);
+  if (rest.length > 0) {
+    return [primary, ...rest];
   }
 
-  // Pure fallback: category stock images
-  const catImgs = CAT_GALLERY[product.category] || CAT_GALLERY['Design Assets'];
-  return [primary, ...catImgs.filter(img => img !== primary)].slice(0, 5);
+  // Only a single real image — also try vendor thumbnail if different
+  if (!isPlaceholder && rawPrimary !== primary) {
+    return [primary, rawPrimary];
+  }
+
+  return [primary];
 }
 
 export default function ProductPage() {

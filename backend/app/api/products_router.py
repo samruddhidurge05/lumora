@@ -183,21 +183,105 @@ def resolve_product_media(product, db):
         make_transient(product)
     except Exception:
         pass
-        
+
+    # ── Thumbnail / Preview resolution ──────────────────────────────────────
+    # Rules:
+    # 1. If the stored thumbnail/preview is a direct image URL (ends in an image
+    #    extension or is a p-lux CDN link), use it as-is — never run it through
+    #    the folder-resolver which would replace it with a PDF/ZIP link.
+    # 2. Only use resolve_pcloud_direct_file_url on pcloud_download_link (the
+    #    download publink) to find "thumbnail" or "cover" image files inside the
+    #    product folder.
+    # 3. Fall back to image_urls[0] when everything else is missing.
+
+    def _is_image_url(url):
+        if not url:
+            return False
+        low = url.lower().split("?")[0]
+        if any(low.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".avif")):
+            return True
+        # p-lux CDN resolved links are direct images
+        if "p-lux" in url and "/" in url.split("p-lux")[-1]:
+            # Check it doesn't look like a PDF/ZIP path
+            if not any(low.endswith(ext) for ext in (".pdf", ".zip", ".mp4", ".mov")):
+                return True
+        return False
+
+    # Try to find a thumbnail image inside the download folder (only if download link set)
     resolved_thumb = None
     resolved_preview = None
     if product.pcloud_download_link:
         resolved_thumb = resolve_pcloud_direct_file_url(product.pcloud_download_link, "thumbnail")
-        resolved_preview = resolve_pcloud_direct_file_url(product.pcloud_download_link, "cover") or \
-                           resolve_pcloud_direct_file_url(product.pcloud_download_link, "preview")
-                           
-    product.thumbnail = resolved_thumb or resolve_media_url(product.thumbnail, product.category)
-    product.preview = resolved_preview or resolve_media_url(product.preview, product.category)
-    
+        # Only accept if it's actually an image, not a PDF/ZIP
+        if resolved_thumb and not _is_image_url(resolved_thumb):
+            resolved_thumb = None
+        resolved_preview = (
+            resolve_pcloud_direct_file_url(product.pcloud_download_link, "cover") or
+            resolve_pcloud_direct_file_url(product.pcloud_download_link, "preview")
+        )
+        if resolved_preview and not _is_image_url(resolved_preview):
+            resolved_preview = None
+
+    # If no image found in download folder, use the stored thumbnail/preview directly
+    # (only resolve it if it's NOT already a direct image URL — avoid double-resolving)
+    stored_thumb = product.thumbnail
+    stored_preview = product.preview
+    image_urls = product.image_urls if isinstance(product.image_urls, list) else []
+
+    if not resolved_thumb:
+        if _is_image_url(stored_thumb):
+            resolved_thumb = stored_thumb  # direct image — use as-is
+        elif stored_thumb:
+            resolved_thumb = resolve_media_url(stored_thumb, product.category)
+            # If media resolver returned a PDF/ZIP, discard it
+            if resolved_thumb and not _is_image_url(resolved_thumb):
+                resolved_thumb = None
+
+    if not resolved_preview:
+        if _is_image_url(stored_preview):
+            resolved_preview = stored_preview
+        elif stored_preview:
+            resolved_preview = resolve_media_url(stored_preview, product.category)
+            if resolved_preview and not _is_image_url(resolved_preview):
+                resolved_preview = None
+
+    # Final fallback: use image_urls[0] if thumbnail is still missing
+    if not resolved_thumb and image_urls:
+        first = image_urls[0]
+        resolved_thumb = first if _is_image_url(first) else resolve_media_url(first, product.category)
+    if not resolved_preview and image_urls:
+        first = image_urls[0]
+        resolved_preview = first if _is_image_url(first) else resolve_media_url(first, product.category)
+
+    product.thumbnail = resolved_thumb
+    product.preview = resolved_preview
+
+    # Resolve gallery arrays — keep direct image URLs, only resolve relative paths
     if product.image_urls:
-        product.image_urls = [resolve_media_url(url, product.category) for url in product.image_urls]
+        resolved_images = []
+        for url in product.image_urls:
+            if _is_image_url(url):
+                resolved_images.append(url)
+            else:
+                r = resolve_media_url(url, product.category)
+                if r and _is_image_url(r):
+                    resolved_images.append(r)
+                elif url:
+                    resolved_images.append(url)  # keep original if can't resolve
+        product.image_urls = resolved_images
+
     if product.preview_images:
-        product.preview_images = [resolve_media_url(url, product.category) for url in product.preview_images]
+        resolved_pi = []
+        for url in product.preview_images:
+            if _is_image_url(url):
+                resolved_pi.append(url)
+            else:
+                r = resolve_media_url(url, product.category)
+                if r and _is_image_url(r):
+                    resolved_pi.append(r)
+                elif url:
+                    resolved_pi.append(url)
+        product.preview_images = resolved_pi
         
     return product
 

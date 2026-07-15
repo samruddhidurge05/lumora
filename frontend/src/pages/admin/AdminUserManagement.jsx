@@ -251,49 +251,47 @@ export default function AdminUserManagement() {
   }, []);
 
   // ── Firestore real-time listeners (Req 5)
+  // NOTE: Team members are loaded via REST only (the Firestore 'admin/team/members'
+  // subcollection uses Firebase UIDs as doc IDs which differ from SQLite integer
+  // user_ids. Loading from Firestore causes action buttons to call
+  // /admin/team/undefined — broken. REST is the authoritative source for team data.)
+  // Invitations are still synced from Firestore (read-only, no action buttons use FS doc IDs).
   useEffect(() => {
     setLoading(true);
-    let unsubTeam, unsubInvites;
-    let fsOk = false;
+
+    let unsubInvites;
 
     try {
-      unsubTeam = onSnapshot(
-        collection(db, 'admin', 'team', 'members'),
-        snap => {
-          fsOk = true;
-          setLiveStatus('live');
-          setTeam(snap.docs.map(d => d.data()));
-          setLoading(false);
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-        },
-        () => startPollingFallback()
-      );
       unsubInvites = onSnapshot(
         collection(db, 'admin', 'team', 'invitations'),
-        snap => setInvitations(snap.docs.map(d => d.data())),
-        () => {}
+        snap => {
+          // Only update from Firestore if REST hasn't already loaded invitations
+          // (REST invitations have id as integer, Firestore may have different shape)
+          // Use Firestore purely as a real-time signal to re-fetch from REST
+          fetchData();
+        },
+        () => {} // silent on Firestore error — REST polling covers it
       );
     } catch (_) {
-      startPollingFallback();
+      // Firestore unavailable — REST polling is the fallback
     }
 
-    // Initial REST load so the page isn't empty while Firestore connects
+    // Primary data load always comes from REST
     fetchData();
 
-    return () => {
-      if (unsubTeam)   unsubTeam();
-      if (unsubInvites) unsubInvites();
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [fetchData]);
-
-  function startPollingFallback() {
-    setLiveStatus('paused');
-    fetchData();
+    // REST polling every 30 s for real-time updates
     if (!pollRef.current) {
       pollRef.current = setInterval(fetchData, 30000);
     }
-  }
+    setLiveStatus('live');
+
+    return () => {
+      if (unsubInvites) unsubInvites();
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+  }, [fetchData]);
+
+  
 
   // ── Action handlers ───────────────────────────────────────────────────────
 

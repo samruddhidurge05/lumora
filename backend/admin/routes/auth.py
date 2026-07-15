@@ -100,26 +100,17 @@ def admin_login(
     firebase_uid: Optional[str] = claims.get("uid")
     email: Optional[str] = claims.get("email")
 
-    # Only log the subject claim, never the raw token
     logger.info("Admin login attempt — firebase_uid=%s", firebase_uid)
-
-    # ── DEBUG: log token claims (step 4 of debug checklist) ───────────────
-    logger.info("[DEBUG] Token subject (uid)=%s | email=%s", firebase_uid, email)
 
     # ── Step 2: Look up user in SQLite ─────────────────────────────────────
     user: Optional[User] = None
 
     if firebase_uid:
-        logger.info("[DEBUG] Querying by firebase_uid=%s", firebase_uid)
         user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
-        logger.info("[DEBUG] firebase_uid lookup result: %s", user)
 
     if user is None and email:
-        logger.info("[DEBUG] firebase_uid lookup found nothing — falling back to email=%s", email)
+        logger.info("Querying by email=%s (firebase_uid lookup found nothing)", email)
         user = db.query(User).filter(User.email == email).first()
-        logger.info("[DEBUG] email lookup result: %s | role=%s | is_active=%s | firebase_uid=%s",
-                    user, user.role if user else None, user.is_active if user else None,
-                    user.firebase_uid if user else None)
 
     if user is None:
         _insert_audit_log(
@@ -162,22 +153,55 @@ def admin_login(
         )
 
     # ── Step 4: firebase_uid binding / validation ──────────────────────────
+    # Admin accounts may have been created via email/password (customer flow first,
+    # then promoted via invitation). When such a user later signs into the admin
+    # portal via Google OAuth, Firebase issues a different UID than the one stored
+    # from the email/password registration. We resolve this by email — if the
+    # Firebase token's email matches the admin's email and the user is confirmed
+    # admin, we update the stored firebase_uid to the new Google UID. This is safe
+    # because Firebase has already verified email ownership via OAuth.
     if user.firebase_uid is not None:
-        # Subsequent login — uid must match
         if firebase_uid and user.firebase_uid != firebase_uid:
-            logger.warning("[DEBUG] firebase_uid mismatch — token uid=%s | db firebase_uid=%s",
-                           firebase_uid, user.firebase_uid)
-            _insert_audit_log(
-                db,
-                action="admin_login_failure",
-                admin_user_id=user.id,
-                ip_address=ip,
-                metadata_json='{"reason": "firebase_uid_mismatch"}',
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Firebase UID does not match the stored identity for this account.",
-            )
+            # UID mismatch — check if it's a provider switch (email/password → Google)
+            # by verifying the email matches. If so, update the stored UID.
+            if email and user.email.lower() == email.lower():
+                logger.info(
+                    "[admin_login] firebase_uid updated for user %s — "
+                    "provider switch detected (old=%s new=%s)",
+                    user.id, user.firebase_uid, firebase_uid,
+                )
+                try:
+                    locked_user = (
+                        db.query(User)
+                        .filter(User.id == user.id)
+                        .with_for_update()
+                        .first()
+                    )
+                    if locked_user:
+                        locked_user.firebase_uid = firebase_uid
+                        db.commit()
+                        db.refresh(locked_user)
+                        user = locked_user
+                except Exception as exc:
+                    db.rollback()
+                    logger.error("Failed to update firebase_uid for user %s: %s", user.id, exc)
+                    # Non-fatal for the login — proceed with the existing UID
+            else:
+                logger.warning(
+                    "[admin_login] firebase_uid mismatch — token uid=%s | db uid=%s | email mismatch",
+                    firebase_uid, user.firebase_uid,
+                )
+                _insert_audit_log(
+                    db,
+                    action="admin_login_failure",
+                    admin_user_id=user.id,
+                    ip_address=ip,
+                    metadata_json='{"reason": "firebase_uid_mismatch"}',
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Firebase UID does not match the stored identity for this account.",
+                )
     else:
         # First login — bind the firebase_uid atomically.
         # SQLite serialises all writes, but we follow the SELECT-FOR-UPDATE
