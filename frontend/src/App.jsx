@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppContextProvider, useApp } from './context/AppContext';
+import { AdminContextProvider } from './context/AdminContext';
+import AdminNotificationBanner from './pages/admin/components/AdminNotificationBanner';
 import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
 import CustomCursor from './components/CustomCursor';
@@ -509,7 +511,10 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <AppContextProvider>
-          <AppContent />
+          <AdminContextProvider>
+            <AdminNotificationBanner />
+            <AppContent />
+          </AdminContextProvider>
         </AppContextProvider>
       </AuthProvider>
     </ErrorBoundary>

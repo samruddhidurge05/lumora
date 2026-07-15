@@ -8,6 +8,13 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    headers: {
+      // Allow Firebase Auth popups (Google/GitHub sign-in) to communicate
+      // with the opener window. Without this, the COOP policy blocks
+      // window.closed checks and popup auth flows break.
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+    },
     proxy: {
       // Forward /uploads/ requests to the backend (local storage files)
       '/uploads': {

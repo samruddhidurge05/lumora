@@ -151,6 +151,4 @@ export const onPurchaseComplete = async (uid, items, totalUSD, affCode) => {
 
   // ── 6. Clear the stored affiliate referral code after use
   sessionStorage.removeItem('lumora_aff_ref');
-
-  console.log('[ecosystemService] Purchase propagation complete for order:', orderId);
 };

@@ -206,7 +206,6 @@ export const affiliateService = {
         if (prodData) {
           // If affiliate program is disabled on this product, skip it!
           if (prodData.affiliate_enabled === false) {
-            console.log(`[Affiliate] Affiliate marketing is disabled for product ${item.productId}. Skipping commission.`);
             continue;
           }
           if (prodData.commission_type === 'fixed') {
@@ -256,7 +255,6 @@ export const affiliateService = {
     }
 
     if (actualAddedItemsCount === 0) {
-      console.log('[Affiliate] No eligible affiliate products in order.');
       return;
     }
 

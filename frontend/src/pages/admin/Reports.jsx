@@ -832,11 +832,9 @@ export default function Reports() {
                           </span>
                         </div>
                         <div className="w-full bg-[#F5E9DD]/60 h-2 rounded-full overflow-hidden mt-1.5">
-                          <motion.div
-                            className="bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] h-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, reportData.summary.conversionRate)}%` }}
-                            transition={{ duration: 1.2 }}
+                          <div
+                            className="bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] h-full rounded-full transition-all duration-[1200ms] ease-out"
+                            style={{ width: `${Math.min(100, reportData.summary.conversionRate)}%` }}
                           />
                         </div>
                       </div>
@@ -931,11 +929,9 @@ export default function Reports() {
                           
                           {/* Inner customized visual loadbar */}
                           <div className="w-full bg-[#F5E9DD]/30 h-1.5 rounded-full overflow-hidden mt-1">
-                            <motion.div 
-                              className="bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] h-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${widthPct}%` }}
-                              transition={{ duration: 1, delay: idx * 0.1 }}
+                            <div
+                              className="bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] h-full rounded-full transition-all duration-1000 ease-out"
+                              style={{ width: `${widthPct}%`, transitionDelay: `${idx * 100}ms` }}
                             />
                           </div>
                         </div>
@@ -971,7 +967,7 @@ export default function Reports() {
                               strokeWidth="8"
                               fill="transparent"
                               strokeDasharray={circ}
-                              strokeDashoffset={circ}
+                              initial={{ strokeDashoffset: circ }}
                               animate={{ strokeDashoffset: circ * (1 - pct) }}
                               transition={{ duration: 1.2, delay: i * 0.2 }}
                               strokeLinecap="round"
@@ -1075,7 +1071,8 @@ export default function Reports() {
                     
                     <AnimatePresence>
                       {insightsStage >= 1 && reportData.aiInsights[0] && (
-                        <motion.div 
+                        <motion.div
+                          key="insight-0"
                           initial={{ opacity: 0, x: -15 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] flex gap-3.5 items-start"
@@ -1091,7 +1088,8 @@ export default function Reports() {
                       )}
 
                       {insightsStage >= 2 && reportData.aiInsights[1] && (
-                        <motion.div 
+                        <motion.div
+                          key="insight-1"
                           initial={{ opacity: 0, x: -15 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] flex gap-3.5 items-start"
@@ -1118,7 +1116,8 @@ export default function Reports() {
 
                     <AnimatePresence>
                       {insightsStage >= 2 && reportData.aiInsights[2] && (
-                        <motion.div 
+                        <motion.div
+                          key="insight-2"
                           initial={{ opacity: 0, x: 15 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="p-4 rounded-2xl bg-white/40 border border-[#F3EAF8] flex gap-3.5 items-start"
@@ -1134,7 +1133,8 @@ export default function Reports() {
                       )}
 
                       {insightsStage >= 3 && reportData.aiInsights[3] && (
-                        <motion.div 
+                        <motion.div
+                          key="insight-3"
                           initial={{ opacity: 0, x: 15 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="p-4 rounded-2xl bg-white/40 border border-red-50 flex gap-3.5 items-start"

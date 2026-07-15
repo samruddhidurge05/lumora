@@ -211,7 +211,6 @@ export function AffiliateProvider({ children }) {
               updateRole('Affiliate');
             }
 
-            console.log('[AffiliateContext] Auto-created affiliate profile:', newAffiliate);
           } catch (err) {
             console.error('[AffiliateContext] Failed to auto-create affiliate profile:', err);
             setError(err.message);
