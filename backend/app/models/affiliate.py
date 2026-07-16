@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from app.models.user import Base
 from datetime import datetime
@@ -25,6 +25,23 @@ class AffiliateProfile(Base):
     bank_name       = Column(String(120), nullable=True)
     account_number  = Column(String(50), nullable=True)
     ifsc_code       = Column(String(20), nullable=True)
+    
+    # Phase 1 UI New Fields
+    display_name         = Column(String(150), nullable=True)
+    short_bio            = Column(Text, nullable=True)
+    country              = Column(String(100), nullable=True)
+    youtube              = Column(String(255), nullable=True)
+    instagram            = Column(String(255), nullable=True)
+    linkedin             = Column(String(255), nullable=True)
+    preferred_categories = Column(JSON, nullable=True)
+    promotion_methods    = Column(JSON, nullable=True)
+    primary_audience     = Column(String(100), nullable=True)
+    audience_size        = Column(String(50), nullable=True)
+    preferred_language   = Column(String(50), nullable=True)
+    preferred_currency   = Column(String(10), nullable=True)
+    timezone             = Column(String(50), nullable=True)
+    email_notifications  = Column(Boolean, default=True)
+
     # Status
     is_active       = Column(Boolean, default=True)
     status          = Column(String(50), default="active")

@@ -17,6 +17,20 @@ class AffiliateProfileResponse(BaseModel):
     bank_name: Optional[str] = None
     account_number: Optional[str] = None
     ifsc_code: Optional[str] = None
+    display_name: Optional[str] = None
+    short_bio: Optional[str] = None
+    country: Optional[str] = None
+    youtube: Optional[str] = None
+    instagram: Optional[str] = None
+    linkedin: Optional[str] = None
+    preferred_categories: Optional[List[str]] = None
+    promotion_methods: Optional[List[str]] = None
+    primary_audience: Optional[str] = None
+    audience_size: Optional[str] = None
+    preferred_language: Optional[str] = None
+    preferred_currency: Optional[str] = None
+    timezone: Optional[str] = None
+    email_notifications: Optional[bool] = None
     is_active: bool
     created_at: datetime
 
@@ -29,6 +43,20 @@ class AffiliateProfileUpdate(BaseModel):
     bank_name: Optional[str] = None
     account_number: Optional[str] = None
     ifsc_code: Optional[str] = None
+    display_name: Optional[str] = None
+    short_bio: Optional[str] = None
+    country: Optional[str] = None
+    youtube: Optional[str] = None
+    instagram: Optional[str] = None
+    linkedin: Optional[str] = None
+    preferred_categories: Optional[List[str]] = None
+    promotion_methods: Optional[List[str]] = None
+    primary_audience: Optional[str] = None
+    audience_size: Optional[str] = None
+    preferred_language: Optional[str] = None
+    preferred_currency: Optional[str] = None
+    timezone: Optional[str] = None
+    email_notifications: Optional[bool] = None
 
 
 # ── Commission ─────────────────────────────────────────────────────────────────
