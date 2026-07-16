@@ -20,8 +20,10 @@ export const getProductById = async (productId) => {
 
 export const addProduct = async (productData) => {
   try {
+    // Return the full ProductResponse object so callers can read all fields
+    // (title, price, thumbnail, features, etc.) to immediately update local UI state.
     const res = await createProductApi(productData);
-    return res.id;
+    return res;
   } catch (error) {
     console.error('[productService] Error adding product:', error);
     throw error;
