@@ -135,15 +135,21 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # ── Delete from Firestore BEFORE removing the SQLite row ──────────────────
+    # This ensures no orphan Firestore documents are left when the product has
+    # cross-collection references. delete_product_from_firestore always deletes
+    # and logs reference warnings — it never blocks the admin delete.
+    result = delete_product_from_firestore(product_id)
+    if not result.get("deleted") and result.get("reason") != "firestore_unavailable":
+        logger.warning(
+            "[firestore-sync] Firestore delete failed for product %s: %s",
+            product_id,
+            result.get("reason"),
+        )
+
     db.delete(product)
     db.commit()
-    result = delete_product_from_firestore(product_id)
-    if result.get("blocked") == True and result.get("reason") != "firestore_unavailable":
-        logger.warning(
-            "[firestore-sync] Firestore delete blocked for product %s: %s",
-            product_id,
-            result.get("references"),
-        )
     try:
         log_admin_action(db, admin_user_id=admin_user.id, action="product_deleted", target_type="product", target_id=str(product_id))
     except Exception:

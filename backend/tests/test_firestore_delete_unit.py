@@ -1,10 +1,15 @@
 """
 test_firestore_delete_unit.py
 ------------------------------
-Unit tests for the fixed `delete_product_from_firestore` function.
+Unit tests for `delete_product_from_firestore`.
 
-These tests verify the referential-integrity-checked delete implementation
-introduced in Task 4.1 of the firestore-product-sync-cleanup spec.
+The function:
+  - Always deletes the Firestore product document (admin has authority).
+  - Collects cross-collection references (orders, reviews, downloads) and
+    returns them in the result for logging — they do NOT block deletion.
+  - Returns {"deleted": True, "references": [...]} on success.
+  - Returns {"deleted": False, "reason": "..."} when Firestore is unavailable
+    or an exception occurs.
 
 All tests must PASS on the fixed code.
 
@@ -55,8 +60,7 @@ def build_mock_db(
     download_docs=None,
 ):
     """
-    Build a mock Firestore db using the collection_router side_effect pattern
-    (matching the pattern established in test_firestore_sync_bug_condition.py).
+    Build a mock Firestore db using the collection_router side_effect pattern.
     """
     mock_db = MagicMock()
     mock_product_doc_ref = MagicMock()
@@ -108,22 +112,24 @@ class TestDeleteFirestoreUnavailable:
 
         result = call_delete(product_id=7, mock_db=mock_db, firebase_connected=False)
 
-        assert result == {
-            "blocked": True,
-            "reason": "firestore_unavailable",
-            "references": [],
-        }, f"Expected firestore_unavailable sentinel, got: {result}"
+        assert result["deleted"] is False, \
+            f"Expected deleted=False when Firestore unavailable, got: {result}"
+        assert result.get("reason") == "firestore_unavailable", \
+            f"Expected reason='firestore_unavailable', got: {result}"
 
         mock_product_doc_ref.delete.assert_not_called()
 
 
-class TestDeleteBlockedByReferences:
-    """Delete must be blocked (and delete() not called) when references exist."""
+class TestDeleteProceedsWithReferences:
+    """
+    Delete ALWAYS proceeds even when cross-collection references exist.
+    Admin has authority to delete any product; references are logged as warnings.
+    """
 
-    def test_delete_blocked_when_order_reference_exists(self):
+    def test_delete_proceeds_when_order_reference_exists(self):
         """
         When the orders collection contains a doc whose items array references
-        productId == '7', the delete must be blocked.
+        productId == '7', the delete must still proceed (not be blocked).
 
         Validates: Requirements 1.7
         """
@@ -132,16 +138,17 @@ class TestDeleteBlockedByReferences:
 
         result = call_delete(product_id=7, mock_db=mock_db)
 
-        assert result["blocked"] is True, \
-            f"Expected blocked=True when order reference exists, got: {result}"
+        assert result["deleted"] is True, \
+            f"Expected deleted=True even when order reference exists, got: {result}"
         assert len(result["references"]) > 0, \
             f"Expected non-empty references list, got: {result['references']}"
-        mock_product_doc_ref.delete.assert_not_called()
+        # delete() MUST have been called — references do not block deletion
+        mock_product_doc_ref.delete.assert_called_once()
 
-    def test_delete_blocked_when_review_reference_exists(self):
+    def test_delete_proceeds_when_review_reference_exists(self):
         """
         When the reviews collection has a document matching the product,
-        delete must be blocked.
+        delete must still proceed.
 
         Validates: Requirements 1.7
         """
@@ -150,16 +157,16 @@ class TestDeleteBlockedByReferences:
 
         result = call_delete(product_id=7, mock_db=mock_db)
 
-        assert result["blocked"] is True, \
-            f"Expected blocked=True when review reference exists, got: {result}"
+        assert result["deleted"] is True, \
+            f"Expected deleted=True even when review reference exists, got: {result}"
         assert len(result["references"]) > 0, \
             f"Expected non-empty references list for reviews, got: {result['references']}"
-        mock_product_doc_ref.delete.assert_not_called()
+        mock_product_doc_ref.delete.assert_called_once()
 
-    def test_delete_blocked_when_download_reference_exists(self):
+    def test_delete_proceeds_when_download_reference_exists(self):
         """
         When the downloads collection has a matching document, delete must
-        be blocked.
+        still proceed.
 
         Validates: Requirements 1.7
         """
@@ -168,11 +175,11 @@ class TestDeleteBlockedByReferences:
 
         result = call_delete(product_id=7, mock_db=mock_db)
 
-        assert result["blocked"] is True, \
-            f"Expected blocked=True when download reference exists, got: {result}"
+        assert result["deleted"] is True, \
+            f"Expected deleted=True even when download reference exists, got: {result}"
         assert len(result["references"]) > 0, \
             f"Expected non-empty references list for downloads, got: {result['references']}"
-        mock_product_doc_ref.delete.assert_not_called()
+        mock_product_doc_ref.delete.assert_called_once()
 
 
 class TestDeleteSucceeds:
@@ -181,8 +188,7 @@ class TestDeleteSucceeds:
     def test_delete_succeeds_when_no_references(self):
         """
         When orders, reviews, and downloads all return empty, the product
-        document must be deleted and the return value must be
-        {"blocked": False, "references": []}.
+        document must be deleted and the return value must indicate success.
 
         Validates: Requirements 1.7
         """
@@ -194,8 +200,10 @@ class TestDeleteSucceeds:
 
         result = call_delete(product_id=7, mock_db=mock_db)
 
-        assert result == {"blocked": False, "references": []}, \
-            f"Expected unblocked result, got: {result}"
+        assert result["deleted"] is True, \
+            f"Expected deleted=True with no references, got: {result}"
+        assert result["references"] == [], \
+            f"Expected empty references list, got: {result['references']}"
         mock_product_doc_ref.delete.assert_called_once()
 
 
@@ -205,7 +213,8 @@ class TestDeleteMultipleReferences:
     def test_delete_returns_multiple_reference_entries(self):
         """
         When both orders and reviews have matching documents, the references
-        list must contain entries for both collections.
+        list must contain entries for both collections, and deletion still
+        proceeds.
 
         Validates: Requirements 1.7
         """
@@ -218,8 +227,8 @@ class TestDeleteMultipleReferences:
 
         result = call_delete(product_id=7, mock_db=mock_db)
 
-        assert result["blocked"] is True, \
-            f"Expected blocked=True when multiple references exist, got: {result}"
+        assert result["deleted"] is True, \
+            f"Expected deleted=True even with multiple references, got: {result}"
 
         collections_in_refs = {ref["collection"] for ref in result["references"]}
         assert "orders" in collections_in_refs, \
@@ -229,4 +238,5 @@ class TestDeleteMultipleReferences:
         assert len(result["references"]) >= 2, \
             f"Expected at least 2 reference entries, got: {result['references']}"
 
-        mock_product_doc_ref.delete.assert_not_called()
+        # deletion must proceed despite references
+        mock_product_doc_ref.delete.assert_called_once()

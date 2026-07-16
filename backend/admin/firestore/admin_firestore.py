@@ -1,6 +1,9 @@
 from app.shared.firebase.connection import db, firebase_connected
 from firebase_admin import firestore
 from datetime import datetime, timezone
+import logging
+
+_logger = logging.getLogger(__name__)
 
 def sync_product_to_firestore(product):
     if not firebase_connected or db is None:
@@ -9,97 +12,107 @@ def sync_product_to_firestore(product):
         tags = product.tags if isinstance(product.tags, list) else []
         highlights = product.highlights if isinstance(product.highlights, list) else []
         
+        # Resolve thumbnail: prefer real non-Unsplash URL, fall back to image_urls[0],
+        # then preview_images[0]. Never store Unsplash placeholders in Firestore.
+        image_urls_list = product.image_urls if isinstance(product.image_urls, list) else []
+        preview_images_list = product.preview_images if isinstance(product.preview_images, list) else []
+
+        def _best_image(primary):
+            if primary and "unsplash.com" not in primary:
+                return primary
+            if image_urls_list:
+                return image_urls_list[0]
+            if preview_images_list:
+                return preview_images_list[0]
+            return None
+
         doc_ref = db.collection("products").document(str(product.id))
         doc_ref.set({
             "title": product.title,
             "name": product.title,
             "description": product.description or "",
             "shortDesc": product.short_desc or (product.description[:150] if product.description else "Premium digital assets"),
+            "short_desc": product.short_desc or "",
             "category": product.category or "General",
             "price": float(product.price or 0.0),
             "rating": float(product.rating or 5.0),
             "reviews": int(product.reviews or 0),
             "review_count": int(product.reviews or 0),
             "downloads": int(product.downloads or 0),
-            # ── Image URLs ─────────────────────────────────────────────────────
-            # Priority: 1) real non-Unsplash thumbnail  2) first image_urls entry
-            # 3) first preview_images entry  4) None (never store Unsplash placeholders)
-            "thumbnail": (
-                product.thumbnail
-                if product.thumbnail and "unsplash.com" not in product.thumbnail
-                else (
-                    (product.image_urls[0] if isinstance(product.image_urls, list) and product.image_urls else None)
-                    or (product.preview_images[0] if isinstance(product.preview_images, list) and product.preview_images else None)
-                    or (product.thumbnail if product.thumbnail and "unsplash.com" not in product.thumbnail else None)
-                )
-            ),
-            "preview": (
-                product.preview
-                if product.preview and "unsplash.com" not in product.preview
-                else (
-                    (product.image_urls[0] if isinstance(product.image_urls, list) and product.image_urls else None)
-                    or (product.preview_images[0] if isinstance(product.preview_images, list) and product.preview_images else None)
-                    or (product.preview if product.preview and "unsplash.com" not in product.preview else None)
-                )
-            ),
+            # ── Image URLs ──────────────────────────────────────────────────────
+            "thumbnail": _best_image(product.thumbnail),
+            "preview": _best_image(product.preview),
+            "imageUrl": _best_image(product.thumbnail),   # alias used by some customer views
             "creatorName": product.seller or "Creator",
-            "creatorAvatar": (product.creator_avatar if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar else None),
+            "creatorAvatar": (
+                product.creator_avatar
+                if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar
+                else None
+            ),
             "featured": bool(product.featured),
             "isFeatured": bool(product.featured),
             "status": product.status or "published",
             "tags": tags,
+            # ── Features & specs (single occurrence of each key) ────────────────
             "highlights": highlights,
-            "version": product.version or "v1.0.0",
-            "fileSize": product.file_size or "48 MB",
-            "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
-            "updatedAt": (product.updated_at.isoformat() + "Z" if product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
-            "vendor_id": str(product.vendor_id) if product.vendor_id else None,
             "features": product.features if isinstance(product.features, list) else [],
-            "highlights": product.highlights if isinstance(product.highlights, list) else [],
             "systemRequirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
             "system_requirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
             "whatYouGet": product.what_you_get if isinstance(product.what_you_get, list) else [],
             "what_you_get": product.what_you_get if isinstance(product.what_you_get, list) else [],
             "installationGuide": product.installation_guide or "",
             "installation_guide": product.installation_guide or "",
-            "short_desc": product.short_desc or "",
-            "shortDesc": product.short_desc or (product.description[:150] if product.description else ""),
+            # ── Metadata ────────────────────────────────────────────────────────
+            "version": product.version or "v1.0.0",
+            "fileSize": product.file_size or "48 MB",
+            "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
+            "updatedAt": (product.updated_at.isoformat() + "Z" if product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
+            "vendor_id": str(product.vendor_id) if product.vendor_id else None,
             "subcategory": product.subcategory or "",
             "discount": float(product.discount or 0.0),
-            # ── Gallery arrays — always populated from image_urls ──────────────
-            # previewImages and image_urls both carry the same pCloud URLs so
-            # every consumer (marketplace, product page, downloads) can find them.
-            "image_urls": product.image_urls if isinstance(product.image_urls, list) else [],
-            "previewImages": (
-                product.image_urls if isinstance(product.image_urls, list) and product.image_urls
-                else (product.preview_images if isinstance(product.preview_images, list) else [])
-            ),
-            # preview_images (snake_case) mirrors previewImages so restore_sqlite_products_from_firestore
-            # and any snake_case consumer can always find the gallery array without key-name guessing.
-            "preview_images": product.preview_images if isinstance(product.preview_images, list) else [],
+            # ── Gallery arrays ──────────────────────────────────────────────────
+            "image_urls": image_urls_list,
+            "previewImages": image_urls_list if image_urls_list else preview_images_list,
+            "preview_images": preview_images_list,
             "previewVideo": product.preview_video or "",
+            # ── SEO ─────────────────────────────────────────────────────────────
             "seoTitle": product.seo_title or "",
             "seoDescription": product.seo_description or "",
             "visibility": product.visibility or "public",
             "license": product.license or "Personal Use",
+            # ── Affiliate ───────────────────────────────────────────────────────
             "affiliate_enabled": bool(product.affiliate_enabled),
             "commission_type": product.commission_type or "percentage",
             "commission_value": float(product.commission_value or 0.0),
-            # pCloud download link — both naming conventions for full compatibility
+            # ── Download URLs — both naming conventions for full compatibility ──
             "pcloud_download_link": product.pcloud_download_link,
             "pcloudDownloadLink": product.pcloud_download_link,
-            # file_url — both naming conventions so all consumers can find the download link
             "file_url": product.file_url or None,
             "fileUrl": product.file_url or None,
-            # Integer primary key — clients that need a numeric ID without parsing the doc ID string
+            # ── Integer primary key ─────────────────────────────────────────────
             "product_id": int(product.id),
         }, merge=True)
+        _logger.info("[firestore-sync] Product %s synced to Firestore (status=%s)", product.id, product.status)
     except Exception as e:
-        print(f"[firestore-sync] Error syncing product {product.id} to Firestore: {e}")
+        _logger.error("[firestore-sync] ERROR syncing product %s to Firestore: %s", product.id, e, exc_info=True)
+        # Do NOT re-raise — SQLite is the canonical source of truth.
+        # Log the error clearly so operators can detect and investigate failures.
 
 def delete_product_from_firestore(product_id: int) -> dict:
+    """
+    Delete a product document from Firestore.
+
+    Checks for cross-collection references (orders, reviews, downloads) and
+    logs them as warnings, but ALWAYS deletes the product document.  Referential
+    integrity in Firestore is informational — SQLite is the canonical source and
+    the admin has authority to delete.
+
+    Returns:
+        {"deleted": True, "references": [...]}    — deleted, references logged
+        {"deleted": False, "reason": "..."}        — Firestore unavailable or exception
+    """
     if not firebase_connected or db is None:
-        return {"blocked": True, "reason": "firestore_unavailable", "references": []}
+        return {"deleted": False, "reason": "firestore_unavailable", "references": []}
     try:
         pid = str(product_id)
         references = []
@@ -120,13 +133,18 @@ def delete_product_from_firestore(product_id: int) -> dict:
             references.append({"collection": "downloads", "doc_id": doc.id})
 
         if references:
-            return {"blocked": True, "references": references}
+            _logger.warning(
+                "[firestore-sync] Deleting product %s which has %d cross-collection references: %s",
+                product_id, len(references), references,
+            )
 
+        # Always delete — admin has authority; references are logged above
         db.collection("products").document(pid).delete()
-        return {"blocked": False, "references": []}
+        _logger.info("[firestore-sync] Product %s deleted from Firestore", product_id)
+        return {"deleted": True, "references": references}
     except Exception as e:
-        print(f"[firestore-sync] Error deleting product {product_id} from Firestore: {e}")
-        return {"blocked": True, "reason": "exception", "references": []}
+        _logger.error("[firestore-sync] ERROR deleting product %s from Firestore: %s", product_id, e, exc_info=True)
+        return {"deleted": False, "reason": "exception", "references": []}
 
 def get_platform_settings():
     if not firebase_connected or db is None:
