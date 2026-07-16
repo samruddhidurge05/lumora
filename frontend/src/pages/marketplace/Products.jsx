@@ -154,7 +154,7 @@ export default function Products() {
               </button>
             </div>
           ) : view === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
+            <div className="product-auto-grid">
               {filtered.map((p, i) => <GlassProductCard key={p.id} product={p} index={i} />)}
             </div>
           ) : (

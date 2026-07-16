@@ -398,10 +398,13 @@ export default function Dashboard() {
         boxShadow: scrolled ? '0 4px 24px rgba(45,0,96,0.08)' : '0 1px 12px rgba(45,0,96,0.04)',
         transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
       }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px', height: '64px', gap: '16px',
-        }}>
+        <div
+          className="dash-header-inner"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 24px', height: '64px', gap: '16px',
+          }}
+        >
           {/* Brand Logo */}
           <button
             onClick={() => navigateTo('landing')}
@@ -540,11 +543,11 @@ export default function Dashboard() {
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.70)'; }}
             >
               <ShoppingBag size={12} />
-              <span>Cart ({cart?.length || 0})</span>
+              <span className="dash-cart-label">Cart ({cart?.length || 0})</span>
             </button>
 
             {/* AI Search */}
-            <form onSubmit={handleAISearch} style={{
+            <form onSubmit={handleAISearch} className="dash-ai-search" style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '6px 12px', borderRadius: '20px',
               background: 'rgba(255,255,255,0.70)',
@@ -573,7 +576,7 @@ export default function Dashboard() {
               <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0 }}>
                 {username[0]?.toUpperCase()}
               </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
+              <span className="dash-user-name" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
             </div>
 
             {/* Exit */}

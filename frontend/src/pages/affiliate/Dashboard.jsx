@@ -262,7 +262,7 @@ export default function AffiliateDashboardHome({
           ))}
         </div>
         <div className="premium-flat-card" style={{ height: '70px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="aff-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <div className="premium-flat-card" style={{ height: '280px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
           <div className="premium-flat-card" style={{ height: '280px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
         </div>
@@ -635,9 +635,9 @@ export default function AffiliateDashboardHome({
             </button>
           </div>
         ) : (
-          <>
+          <div className="aff-table-wrap" style={{ minWidth: 0 }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px', minWidth: '440px' }}>
               {['Product', 'Total Sales', 'Commission Earned'].map(h => (
                 <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
               ))}
@@ -647,7 +647,7 @@ export default function AffiliateDashboardHome({
                 key={prod.id}
                 style={{
                   display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
-                  gap: '16px', padding: '12px', borderRadius: '10px',
+                  gap: '16px', padding: '12px', borderRadius: '10px', minWidth: '440px',
                   border: '1px solid transparent', transition: 'all 0.25s', alignItems: 'center',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.03)'; e.currentTarget.style.borderColor = 'rgba(196,181,253,0.20)'; }}
@@ -662,7 +662,7 @@ export default function AffiliateDashboardHome({
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(prod.commission)}</span>
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
 

@@ -340,7 +340,7 @@ export default function Home() {
             </div>
             <button onClick={()=>navigateTo('marketplace')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all 103 <ArrowRight size={14}/></button>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid">
             {featured.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Trending This Week</h2>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid">
             {trending.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Latest Products</h2>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid">
             {latest.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>

@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Menu, X } from 'lucide-react';
 import '../styles/vendor.css';
 
 export default function VendorLayout({ activePage, title, subtitle, actions, children }) {
   const { user, logout, isAccountDisabled, isPlatformPaused } = useAuth();
   const navigate = useNavigate();
-  
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const isSuspended = isAccountDisabled;
+
+  // Close sidebar on route change / resize to desktop
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth > 900) setSidebarOpen(false); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -19,9 +28,9 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
   const handleProfileClick = (e) => {
     e.preventDefault();
     navigate('/vendor/profile');
+    setSidebarOpen(false);
   };
 
-  // Derive display name
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Creator';
   const initials = displayName[0]?.toUpperCase() || 'V';
 
@@ -31,6 +40,15 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
       {/* ── Top Navigation Bar ── */}
       <header className="vendor-topnav">
         <div className="vendor-topnav-inner">
+
+          {/* Hamburger — mobile only */}
+          <button
+            className={`vendor-hamburger${sidebarOpen ? ' open' : ''}`}
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label="Toggle sidebar"
+          >
+            <span /><span /><span />
+          </button>
 
           {/* Brand */}
           <a href="/" onClick={handleLogout} style={{
@@ -54,7 +72,7 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
           </a>
 
           {/* Right: profile + exit */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Avatar */}
             <a href="/vendor/profile" onClick={handleProfileClick} style={{
               display: 'flex', alignItems: 'center', gap: '8px',
@@ -75,7 +93,7 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
                   {initials}
                 </div>
               )}
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+              <span className="vendor-topnav-username" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 {displayName}
               </span>
             </a>
@@ -102,8 +120,17 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
 
       {/* ── Main layout grid ── */}
       <div className="vendor-layout-grid">
-        {/* Sidebar */}
-        <Sidebar activePage={activePage} />
+
+        {/* Overlay — mobile only */}
+        <div
+          className={`vendor-sidebar-overlay${sidebarOpen ? ' open' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+
+        {/* Sidebar — static on desktop, drawer on mobile */}
+        <aside className={`vendor-sidebar${sidebarOpen ? ' open' : ''}`}>
+          <Sidebar activePage={activePage} />
+        </aside>
 
         {/* Main content */}
         <div className="vendor-main-content">
@@ -139,14 +166,11 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
                 color: 'var(--text-primary)',
               }}>
                 <div style={{
-                  width: '80px',
-                  height: '80px',
+                  width: '80px', height: '80px',
                   background: 'rgba(220, 38, 38, 0.1)',
                   border: '1px solid rgba(220, 38, 38, 0.2)',
                   borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   margin: '0 auto 24px',
                   color: '#ef4444',
                 }}>
@@ -168,18 +192,13 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '32px', fontWeight: 500 }}>
                   Please contact support for assistance.
                 </p>
-                <button 
+                <button
                   onClick={handleLogout}
                   style={{
                     background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                    border: 'none',
-                    color: '#fff',
-                    padding: '12px 36px',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    border: 'none', color: '#fff',
+                    padding: '12px 36px', fontSize: '0.85rem', fontWeight: 700,
+                    borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s',
                     boxShadow: '0 4px 12px rgba(123, 63, 160, 0.2)',
                   }}
                 >
@@ -190,22 +209,14 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
               <>
                 {isPlatformPaused && (
                   <div style={{
-                    marginBottom: '24px',
-                    padding: '20px 24px',
-                    borderRadius: '16px',
+                    marginBottom: '24px', padding: '20px 24px', borderRadius: '16px',
                     background: 'linear-gradient(135deg, rgba(37,99,235,0.10), rgba(29,78,216,0.10))',
                     border: '1px solid rgba(37,99,235,0.30)',
                     boxShadow: '0 8px 32px rgba(37,99,235,0.08)',
                     backdropFilter: 'blur(16px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
+                    display: 'flex', alignItems: 'center', gap: '16px',
                   }}>
-                    <div style={{
-                      width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-                      background: 'rgba(37,99,235,0.15)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
+                    <div style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                       </svg>

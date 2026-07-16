@@ -28,16 +28,11 @@ export default function Sidebar({ activePage: activeProp }) {
 
   return (
     <aside style={{
-      width: '240px',
-      flexShrink: 0,
+      width: '100%',
       minHeight: '100%',
-      position: 'sticky',
-      top: 0,
       background: 'rgba(255,255,255,0.62)',
       backdropFilter: 'blur(40px) saturate(200%)',
       WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-      borderRight: '1px solid rgba(196,148,230,0.22)',
-      boxShadow: '4px 0 24px rgba(90,30,126,0.04)',
       padding: '20px 14px',
       display: 'flex',
       flexDirection: 'column',
