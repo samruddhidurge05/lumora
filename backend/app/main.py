@@ -195,7 +195,7 @@ from app.models.user import User
 
 db_session = SessionLocal()
 try:
-    admin_email = "avikapawar4@gmail.com"
+    admin_email = "avikapawar08@gmail.com"
     admin_user = db_session.query(User).filter(User.email == admin_email).first()
     if not admin_user:
         admin_user = User(
