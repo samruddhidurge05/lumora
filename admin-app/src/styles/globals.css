@@ -1,0 +1,18 @@
+/* globals.css — additional global overrides */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(196,181,253,0.4); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(123,63,160,0.5); }
+
+::selection { background: rgba(123,63,160,0.25); color: #2D004D; }
+
+img { display: block; max-width: 100%; }
+button { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
