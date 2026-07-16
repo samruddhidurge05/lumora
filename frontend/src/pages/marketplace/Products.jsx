@@ -4,7 +4,7 @@ import { Search, SlidersHorizontal, Star, ShoppingBag, Heart, Grid3X3, List, X, 
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
-import ProductGradientCover from '../../components/product/ProductGradientCover';
+import ProductImage from '../../components/product/ProductImage';
 
 const ALL_CATS = [
   { id: 'All', icon: '✦' },
@@ -175,14 +175,12 @@ export default function Products() {
 function GlassProductCard({ product, index }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
   const [hov, setHov] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
   const isWished  = wishlist.some(w => w.id === product.id);
   const isOwned   = ownedProducts.some(id => String(id) === String(product.id));
 
   // Generate multiple preview images based on category
   const extraImages = getExtraImages(product);
 
-  const showFallback = !product.preview || imgFailed || product.preview.includes('localhost') || product.preview.startsWith('/');
 
   return (
     <motion.div
@@ -213,17 +211,10 @@ function GlassProductCard({ product, index }) {
     >
       {/* ── Image area with multi-preview on hover ── */}
       <div style={{ height: '195px', overflow: 'hidden', position: 'relative', borderRadius: '24px 24px 0 0' }}>
-        {showFallback ? (
-          <ProductGradientCover product={product} />
-        ) : (
-          <img
-            src={hov && extraImages.length > 0 ? extraImages[0] : product.preview}
-            alt={product.title}
-            loading="lazy"
-            onError={() => setImgFailed(true)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hov ? 'scale(1.06)' : 'scale(1)', transition: 'transform 0.5s ease, opacity 0.3s' }}
-          />
-        )}
+        <ProductImage
+          product={product}
+          style={{ transform: hov ? 'scale(1.06)' : 'scale(1)', transition: 'transform 0.5s ease, opacity 0.3s' }}
+        />
         {/* Gradient overlay */}
         <div style={{ position: 'absolute', inset: 0, background: hov ? 'linear-gradient(180deg,transparent 50%,rgba(45,0,77,0.12))' : 'transparent', transition: 'background 0.3s', pointerEvents: 'none' }} />
 

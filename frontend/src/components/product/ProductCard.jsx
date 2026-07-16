@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Star, ShoppingBag, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import ProductGradientCover from './ProductGradientCover';
+import ProductImage from './ProductImage';
 
 export default function ProductCard({ product }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
-  const [imgFailed, setImgFailed] = useState(false);
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
-
-  const showFallback = !product.preview || imgFailed || product.preview.includes('localhost') || product.preview.startsWith('/');
 
   return (
     <div
@@ -20,16 +17,7 @@ export default function ProductCard({ product }) {
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; }}
     >
       <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
-        {showFallback ? (
-          <ProductGradientCover product={product} />
-        ) : (
-          <img
-            src={product.preview || product.thumbnail}
-            alt={product.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={() => setImgFailed(true)}
-          />
-        )}
+        <ProductImage product={product} style={{ objectFit: 'cover' }} />
         {product.badge && (
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}

@@ -839,9 +839,24 @@ export function AppContextProvider({ children }) {
         });
         if (firestoreDocs.length > 0) {
           setProducts(prev => {
-            // Always keep backend products (they are the authoritative source)
             const currentBackendIds = backendProductIdsRef.current;
-            const backendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
+            const rawBackendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
+
+            // Merge Firestore values into backend products to prefer fresh pCloud share links/media URLs
+            const backendProducts = rawBackendProducts.map(bp => {
+              const fd = firestoreDocs.find(f => String(f.id) === String(bp.id));
+              if (fd) {
+                return {
+                  ...bp,
+                  preview_images: fd.preview_images || fd.previewImages || bp.preview_images || [],
+                  image_urls: fd.image_urls || fd.imageUrls || bp.image_urls || [],
+                  pcloud_download_link: fd.pcloud_download_link || fd.pcloudDownloadLink || bp.pcloud_download_link,
+                  preview: fd.preview || fd.thumbnail || bp.preview,
+                  thumbnail: fd.thumbnail || fd.preview || bp.thumbnail,
+                };
+              }
+              return bp;
+            });
 
             // Only add Firestore products that do NOT already exist in the backend
             const firestoreIds = new Set(firestoreDocs.map(p => String(p.id)));
