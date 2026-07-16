@@ -242,12 +242,42 @@ app = FastAPI(
 def restore_products():
     from app.db.database import SessionLocal
     from app.models.product import Product as ProductModel
-    from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
-    
+    from admin.firestore.admin_firestore import (
+        restore_sqlite_products_from_firestore,
+        sync_product_to_firestore,
+    )
+    from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
+
     db = SessionLocal()
     try:
         _logger.info("[startup] Syncing and restoring any missing published products from Firestore to SQLite...")
         restore_sqlite_products_from_firestore(db)
+
+        # ── Forward-sync: push any SQLite products missing from Firestore ────
+        # This catches products created while Firebase was temporarily offline.
+        if _fs_ok and _fs_db is not None:
+            try:
+                existing_ids = {doc.id for doc in _fs_db.collection("products").stream()}
+                all_active = db.query(ProductModel).filter(
+                    ProductModel.status.in_(["published", "draft"])
+                ).all()
+                missing = [p for p in all_active if str(p.id) not in existing_ids]
+                if missing:
+                    _logger.info(
+                        "[startup] Found %d product(s) in SQLite not yet in Firestore — syncing now: %s",
+                        len(missing), [p.id for p in missing],
+                    )
+                    for p in missing:
+                        try:
+                            sync_product_to_firestore(p)
+                        except Exception as _sync_err:
+                            _logger.error("[startup] Failed to sync product %s: %s", p.id, _sync_err)
+                    _logger.info("[startup] Missing-product forward-sync complete.")
+                else:
+                    _logger.info("[startup] All SQLite products are already in Firestore. ✓")
+            except Exception as _fwd_err:
+                _logger.warning("[startup] Forward-sync check failed (non-fatal): %s", _fwd_err)
+
     except Exception as e:
         _logger.error("[startup] Error running startup products recovery: %s", e)
     finally:
