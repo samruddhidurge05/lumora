@@ -336,8 +336,10 @@ function ProductListRow({ product }) {
       style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(220,198,255,0.28)', borderRadius: '18px', cursor: 'pointer', transition: 'all 0.22s', boxShadow: '0 2px 12px rgba(123,63,160,0.05)' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 10px 32px rgba(123,63,160,0.12)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.28)'; e.currentTarget.style.transform = 'translateX(3px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(123,63,160,0.05)'; e.currentTarget.style.borderColor = 'rgba(220,198,255,0.28)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
-      <img src={product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'} alt=""
-        style={{ width: '74px', height: '74px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(220,198,255,0.25)' }} loading="lazy" />
+      <img src={product.preview || product.thumbnail || (Array.isArray(product.image_urls) && product.image_urls[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'} alt=""
+        style={{ width: '74px', height: '74px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(220,198,255,0.25)' }} loading="lazy"
+        onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'; }}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
           <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '2px 7px', borderRadius: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category}</span>

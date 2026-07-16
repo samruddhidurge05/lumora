@@ -264,7 +264,9 @@ function mapAdminProductToApi(uiForm) {
 
     // Metadata
     tags,
-    highlights:        Array.isArray(uiForm.keyFeatures) ? uiForm.keyFeatures : (Array.isArray(uiForm.highlights) ? uiForm.highlights : null),
+    highlights:        Array.isArray(uiForm.keyFeatures)
+                         ? uiForm.keyFeatures.map(f => (typeof f === 'string' ? f.trim() : f)).filter(Boolean)
+                         : (Array.isArray(uiForm.highlights) ? uiForm.highlights : null),
     version:           uiForm.version     || 'v1.0.0',
     file_size,
     license:           uiForm.license     || null,
@@ -275,7 +277,10 @@ function mapAdminProductToApi(uiForm) {
     commission_value:  Number(uiForm.commission_value) || 0.0,
 
     // ── Features & Specs (Section 5) ──────────────────────────────────────
-    features:             Array.isArray(uiForm.keyFeatures)        ? uiForm.keyFeatures        : [],
+    // keyFeatures comes from a textarea (one per line) — filter empty lines
+    features:             Array.isArray(uiForm.keyFeatures)
+                            ? uiForm.keyFeatures.map(f => (typeof f === 'string' ? f.trim() : f)).filter(Boolean)
+                            : [],
     what_you_get:         Array.isArray(uiForm.whatsIncluded)       ? uiForm.whatsIncluded       : [],
     system_requirements:  Array.isArray(uiForm.systemRequirements)  ? uiForm.systemRequirements  : [],
     installation_guide:   typeof uiForm.installationGuide === 'string' ? uiForm.installationGuide : '',
@@ -2436,8 +2441,26 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     e.preventDefault();
     if (form.name.trim() === '') return;
 
+    // ── Auto-flush any pending tag-input text before submitting ──────────────
+    // If the admin typed a feature/tag but didn't press Enter, capture it now
+    // so it's not silently lost on save.
+    let finalForm = { ...form };
+
+    if (keyFeaturesInput.trim()) {
+      finalForm = { ...finalForm, keyFeatures: [...(finalForm.keyFeatures || []), keyFeaturesInput.trim()] };
+      setKeyFeaturesInput('');
+    }
+    if (whatsIncludedInput.trim()) {
+      finalForm = { ...finalForm, whatsIncluded: [...(finalForm.whatsIncluded || []), whatsIncludedInput.trim()] };
+      setWhatsIncludedInput('');
+    }
+    if (systemRequirementsInput.trim()) {
+      finalForm = { ...finalForm, systemRequirements: [...(finalForm.systemRequirements || []), systemRequirementsInput.trim()] };
+      setSystemRequirementsInput('');
+    }
+
     // Translate Admin UI model → FastAPI ProductCreate schema
-    const apiPayload = mapAdminProductToApi(form);
+    const apiPayload = mapAdminProductToApi(finalForm);
 
     if (product) {
       // Edit: merge UI id back so the parent handler knows which record to PATCH
@@ -3041,55 +3064,21 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               {/* ── 5.1 Key Features ── */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
-                  Key Features
+                  Key Features <span className="normal-case text-[#7B3FA0] font-normal">(one per line)</span>
                 </label>
-                {form.keyFeatures.length > 0 && (
-                  <ul className="mb-2 space-y-1">
-                    {form.keyFeatures.map((entry, idx) => (
-                      <li key={entry} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]">
-                        <span className="flex-1 truncate">{entry}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleChange('keyFeatures', form.keyFeatures.filter((_, i) => i !== idx))}
-                          className="text-[#7B3FA0] hover:text-red-500 transition-colors flex-shrink-0"
-                          aria-label="Remove key feature"
-                        >
-                          <Icon name="X" size={12} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={keyFeaturesInput}
-                    onChange={(e) => setKeyFeaturesInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const v = keyFeaturesInput.trim();
-                        if (!v) return;
-                        handleChange('keyFeatures', [...form.keyFeatures, v]);
-                        setKeyFeaturesInput('');
-                      }
-                    }}
-                    placeholder="e.g. 100+ premium UI components"
-                    className="flex-1 bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const v = keyFeaturesInput.trim();
-                      if (!v) return;
-                      handleChange('keyFeatures', [...form.keyFeatures, v]);
-                      setKeyFeaturesInput('');
-                    }}
-                    className="px-4 py-2.5 rounded-xl bg-[#F3EAF8] hover:bg-[#D8BFE3]/40 text-xs font-bold uppercase tracking-wider text-[#7B3FA0] transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
+                {/* Textarea — one feature per line. No pressing Enter required. */}
+                <textarea
+                  rows={5}
+                  value={form.keyFeatures.join('\n')}
+                  onChange={(e) => {
+                    const lines = e.target.value.split('\n');
+                    handleChange('keyFeatures', lines);
+                  }}
+                  placeholder={"e.g.\n100+ premium UI components\nCommercial usage license included\nLifetime updates\nResponsive design"}
+                  className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D] resize-y"
+                  style={{ minHeight: '100px' }}
+                />
+                <p className="text-[10px] text-[#8B6B5B] mt-1">Type each feature on a new line. All features are saved automatically when you click Save.</p>
               </div>
 
               {/* ── 5.2 What's Included ── */}

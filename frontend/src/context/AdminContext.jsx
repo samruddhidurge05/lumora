@@ -78,4 +78,9 @@ export function AdminContextProvider({ children }) {
   );
 }
 
-export const useAdminContext = () => useContext(AdminContext);
+export const useAdminContext = () => {
+  const ctx = useContext(AdminContext);
+  // Return safe defaults when used outside AdminContextProvider (non-admin routes).
+  if (!ctx) return { adminProfile: null, hasPermission: () => false, loadError: false };
+  return ctx;
+};

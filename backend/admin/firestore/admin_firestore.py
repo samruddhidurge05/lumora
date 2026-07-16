@@ -43,7 +43,7 @@ def sync_product_to_firestore(product):
             "thumbnail": _best_image(product.thumbnail),
             "preview": _best_image(product.preview),
             "imageUrl": _best_image(product.thumbnail),   # alias used by some customer views
-            "creatorName": product.seller or "Creator",
+            "creatorName": (product.seller or "Lumora").strip() or "Lumora",
             "creatorAvatar": (
                 product.creator_avatar
                 if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar

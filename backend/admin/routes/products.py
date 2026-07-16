@@ -45,6 +45,25 @@ def create_product(product_in: ProductCreate, db: Session = Depends(get_db), adm
     data["vendor_id"] = str(admin_user.id)
     if not data.get("seller"):
         data["seller"] = admin_user.name
+    # Always clean the seller name: strip whitespace and ensure "Lumora" branding
+    # when the admin didn't enter a specific creator/brand name.
+    if data.get("seller"):
+        data["seller"] = data["seller"].strip()
+    if not data.get("seller"):
+        data["seller"] = "Lumora"
+
+    # ── Ensure list fields are preserved even when sent as empty lists ────────
+    # model_dump(exclude_none=True) drops None values but keeps [].
+    # However, if the frontend sends null for these fields they'd be excluded.
+    # Force-set them from the original payload (before exclude_none) to preserve [].
+    raw_data = product_in.model_dump()
+    for list_field in ("features", "highlights", "what_you_get", "system_requirements",
+                       "tags", "image_urls", "preview_images"):
+        if list_field not in data:
+            raw_val = raw_data.get(list_field)
+            data[list_field] = raw_val if isinstance(raw_val, list) else []
+
+    logger.info("[product-create] features=%s highlights=%s", data.get("features"), data.get("highlights"))
 
     # Auto-populate thumbnail/preview from image_urls[0] when not explicitly set
     # so the admin card and customer marketplace always show the first pCloud image.
@@ -71,6 +90,16 @@ def update_product(product_id: int, product_in: ProductUpdate, db: Session = Dep
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     update_data = product_in.model_dump(exclude_none=True)
+    # Clean seller name on update: strip whitespace
+    if "seller" in update_data and update_data["seller"]:
+        update_data["seller"] = update_data["seller"].strip() or "Lumora"
+    # Preserve list fields even when sent as empty lists (exclude_none=True would miss nulls)
+    raw_update = product_in.model_dump()
+    for list_field in ("features", "highlights", "what_you_get", "system_requirements",
+                       "tags", "image_urls", "preview_images"):
+        if list_field not in update_data and isinstance(raw_update.get(list_field), list):
+            update_data[list_field] = raw_update[list_field]
+    logger.info("[product-update] id=%s features=%s highlights=%s", product_id, update_data.get("features"), update_data.get("highlights"))
     for key, val in update_data.items():
         setattr(product, key, val)
 
