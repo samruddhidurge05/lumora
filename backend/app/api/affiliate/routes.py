@@ -15,7 +15,7 @@ to their AffiliateProfile, creating one automatically on first access.
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Header, status as http_status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import uuid
 
@@ -637,8 +637,12 @@ def track_click(
     Increment click counter when a visitor lands via a referral link.
     Tracks both default affiliate codes and custom referral link codes.
     No auth required — called client-side when ?ref=CODE is detected.
+    Includes 24-hour IP deduplication.
     """
     code_upper = referral_code.upper()
+    client_ip = request.client.host if request.client else None
+    now = datetime.utcnow()
+    cutoff = now - timedelta(hours=24)
 
     # 1. Check if it's a custom referral link code
     custom_link = db.query(ReferralLink).filter(
@@ -655,24 +659,30 @@ def track_click(
                 aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
                 if not aff_user or not aff_user.is_active:
                     raise HTTPException(status_code=403, detail="Affiliate account is suspended")
-                    
-            custom_link.clicks_count += 1
-            # Increment running total on the affiliate profile
-            profile = db.query(AffiliateProfile).filter(
-                AffiliateProfile.id == custom_link.affiliate_id
-            ).first()
-            if profile:
-                profile.total_clicks += 1
 
-            # Log the individual click event
-            click = ReferralClick(
-                referral_link_id=custom_link.id,
-                affiliate_id=custom_link.affiliate_id,
-                ip_address=request.client.host if request.client else None,
-                user_agent=user_agent
-            )
-            db.add(click)
-            db.commit()
+                # Deduplication Check
+                if client_ip:
+                    recent_click = db.query(ReferralClick).filter(
+                        ReferralClick.affiliate_id == custom_link.affiliate_id,
+                        ReferralClick.referral_link_id == custom_link.id,
+                        ReferralClick.ip_address == client_ip,
+                        ReferralClick.clicked_at >= cutoff
+                    ).first()
+                    if recent_click:
+                        return ClickTrackResponse(tracked=True, referral_code=code_upper)
+
+                custom_link.clicks_count += 1
+                aff_profile.total_clicks += 1
+
+                click = ReferralClick(
+                    referral_link_id=custom_link.id,
+                    affiliate_id=custom_link.affiliate_id,
+                    ip_address=client_ip,
+                    user_agent=user_agent,
+                    clicked_at=now
+                )
+                db.add(click)
+                db.commit()
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
     # 2. Check if it's a default affiliate profile referral code
@@ -685,8 +695,28 @@ def track_click(
         aff_user = db.query(User).filter(User.id == profile.user_id).first()
         if not aff_user or not aff_user.is_active:
             raise HTTPException(status_code=403, detail="Affiliate account is suspended")
-            
+
+        # Deduplication Check
+        if client_ip:
+            recent_click = db.query(ReferralClick).filter(
+                ReferralClick.affiliate_id == profile.id,
+                ReferralClick.referral_link_id == None,
+                ReferralClick.ip_address == client_ip,
+                ReferralClick.clicked_at >= cutoff
+            ).first()
+            if recent_click:
+                return ClickTrackResponse(tracked=True, referral_code=code_upper)
+
         profile.total_clicks += 1
+
+        click = ReferralClick(
+            referral_link_id=None,
+            affiliate_id=profile.id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            clicked_at=now
+        )
+        db.add(click)
         db.commit()
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 

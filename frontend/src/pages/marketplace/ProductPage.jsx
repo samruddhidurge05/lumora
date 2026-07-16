@@ -122,6 +122,13 @@ export default function ProductPage() {
       const ref = urlParams.get('ref') || (hashParams && hashParams.get('ref')) || '';
       if (ref) {
         sessionStorage.setItem('lumora_aff_ref', ref);
+        
+        // Prevent duplicate API calls (e.g. from React Strict Mode or re-renders)
+        const tracked = sessionStorage.getItem('lumora_aff_tracked');
+        if (tracked !== ref) {
+          sessionStorage.setItem('lumora_aff_tracked', ref);
+          backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => {});
+        }
       }
     } catch (_) {}
   }, [product?.id]);
