@@ -206,7 +206,7 @@ export default function Checkout() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Name + Phone */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="checkout-name-grid">
                 {field('Full Name', 'name', { placeholder: 'Your full name' })}
                 {field('Phone', 'phone', { placeholder: '+91 98765 43210', type: 'tel' })}
               </div>
@@ -215,7 +215,7 @@ export default function Checkout() {
               {field('Email Address', 'email', { placeholder: 'you@example.com', type: 'email' })}
 
               {/* City + State + Country */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="checkout-card-grid">
                 {field('City', 'city', { placeholder: 'Mumbai' })}
                 {field('State', 'state', { placeholder: 'Maharashtra' })}
                 {field('Country', 'country', { placeholder: 'India', required: false })}

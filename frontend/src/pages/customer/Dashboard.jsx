@@ -727,7 +727,7 @@ function DashboardHome({
       )}
 
       {/* Hero welcome */}
-      <div className="glass-card" style={{
+      <div className="glass-card dash-welcome-card" style={{
         padding: '40px 44px',
         background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -736,14 +736,14 @@ function DashboardHome({
         <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>✦ Customer Portal</span>
-          <h2 className="text-editorial" style={{ fontSize: '2.4rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
+          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '2.4rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
             Welcome back, {profile?.name || username}.
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '420px' }}>
+          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '420px' }}>
             Explore {filtered.length} premium digital products — browse, wishlist, and add to cart.
           </p>
           {/* Quick Actions */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
             <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)' }}>
               <TrendingUp size={14} /> Browse Marketplace
             </button>
@@ -755,13 +755,13 @@ function DashboardHome({
             </button>
           </div>
         </div>
-        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 32px rgba(123,63,160,0.30)', fontSize: '2.5rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
+        <div className="dash-welcome-avatar" style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 32px rgba(123,63,160,0.30)', fontSize: '2.5rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
           {(profile?.name || username)[0]?.toUpperCase()}
         </div>
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '16px' }}>
+      <div className="dash-stat-grid">
         {QUICK_STATS.map((s, i) => (
           <div key={i} className="premium-flat-card" style={{ padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -777,7 +777,7 @@ function DashboardHome({
       </div>
 
       {/* Recent Purchases & Recent Activity Dual Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '20px' }}>
+      <div className="dash-two-col">
         {/* Recent Purchases */}
         <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

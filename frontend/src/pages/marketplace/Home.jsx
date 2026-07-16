@@ -251,6 +251,7 @@ export default function Home() {
               </motion.p>
 
               <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.55}}
+                className="home-hero-ctas"
                 style={{ display:'flex', gap:'12px', flexWrap:'wrap', marginBottom:'52px' }}>
                 {user ? (
                   <>
@@ -267,6 +268,7 @@ export default function Home() {
 
               {/* Stats */}
               <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.7}}
+                className="home-hero-stats"
                 style={{ display:'flex', gap:'36px', flexWrap:'wrap', paddingTop:'28px', borderTop:'1px solid rgba(220,198,255,.25)' }}>
                 {[{v:'103',s:'+',l:'Products'},{v:'45',s:'K+',l:'Customers'},{v:'16',s:'Cr+',l:'Earnings'}].map((s,i)=>(
                   <div key={i}>

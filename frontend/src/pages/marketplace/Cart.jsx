@@ -26,11 +26,11 @@ export default function Cart() {
   return (
     <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh' }}>
       <Navbar />
-      <div style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,5vw,6rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
+      <div className="cart-outer-pad" style={{ paddingTop: '100px', padding: '100px clamp(1rem,5vw,6rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Your Cart</span>
-            <h1 className="text-editorial" style={{ fontSize: '2.5rem', fontWeight: 400, color: 'var(--color-espresso)', marginTop: '4px' }}>{cart.length} Item{cart.length !== 1 ? 's' : ''}</h1>
+            <h1 className="text-editorial cart-title" style={{ fontSize: '2.5rem', fontWeight: 400, color: 'var(--color-espresso)', marginTop: '4px' }}>{cart.length} Item{cart.length !== 1 ? 's' : ''}</h1>
           </div>
           <button onClick={clearCart} className="btn-premium" style={{ fontSize: '0.75rem', color: '#dc2626', borderColor: 'rgba(220,38,38,0.25)' }}>
             <Trash2 size={13} /> Clear All
@@ -41,11 +41,12 @@ export default function Cart() {
           {/* Items */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {cart.map(item => (
-              <div key={item.id} className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center', border: '1px solid rgba(196,181,253,0.22)' }}>
+              <div key={item.id} className="glass-card cart-item-row" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center', border: '1px solid rgba(196,181,253,0.22)' }}>
                 <img 
                   src={item.preview} 
                   alt={item.title} 
                   onClick={() => navigateTo('product-detail', item.id)}
+                  className="cart-item-thumb"
                   style={{ width: '72px', height: '72px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, cursor: 'pointer' }} 
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -58,7 +59,7 @@ export default function Cart() {
                   </h3>
                   <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>by {item.seller?.name}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="cart-item-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(196,181,253,0.35)', background: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                     <Minus size={12} />
                   </button>
@@ -67,7 +68,7 @@ export default function Cart() {
                     <Plus size={12} />
                   </button>
                 </div>
-                <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                <div className="cart-item-price" style={{ textAlign: 'right', minWidth: '80px' }}>
                   <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{formatPrice(item.price * (item.quantity || 1))}</div>
                 </div>
                 <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(220,38,38,0.6)', padding: '4px' }}>
@@ -78,7 +79,7 @@ export default function Cart() {
           </div>
 
           {/* Summary */}
-          <div className="glass-card" style={{ padding: '28px', position: 'sticky', top: '100px' }}>
+          <div className="glass-card cart-summary" style={{ padding: '28px', position: 'sticky', top: '100px' }}>
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--color-espresso)', marginBottom: '20px' }}>Order Summary</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--color-mocha)', marginBottom: '10px', fontWeight: 600 }}>
               <span>Subtotal ({cart.length} items)</span><span>{formatPrice(subtotal)}</span>

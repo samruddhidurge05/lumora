@@ -462,6 +462,7 @@ export default function ProductPage() {
                     key="video"
                     src={videoUrl}
                     controls
+                    className="product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
                   />
                 ) : (
@@ -473,6 +474,7 @@ export default function ProductPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
                   />
                 )}
@@ -994,7 +996,7 @@ export default function ProductPage() {
               )}
 
               {/* Secondary actions */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="product-tag-grid">
                 <button onClick={() => toggleWishlist(product)} className="btn-premium"
                   style={{ justifyContent: 'center', padding: '10px', fontSize: '0.75rem', borderRadius: '12px', cursor: 'pointer', color: isWishlisted ? '#E11D48' : undefined, borderColor: isWishlisted ? 'rgba(225,29,72,0.30)' : undefined, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} /> {isWishlisted ? 'Saved' : 'Wishlist'}
@@ -1346,7 +1348,7 @@ function ReportModal({
               <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#4E3B31', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Category <span style={{ color: '#E11D48' }}>*</span>
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="product-tag-grid">
                 {REPORT_CATEGORIES.map(cat => (
                   <button
                     key={cat.value}

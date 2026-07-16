@@ -483,7 +483,7 @@ export default function CustomerDownloads() {
         </div>
 
         {/* Filter pill tabs — built from real library categories */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="scroll-container">
+        <div className="downloads-filter-bar" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
           {dynamicFilterTabs.map(tab => {
             const isActive = activeFilter === tab.id;
             return (
@@ -563,7 +563,7 @@ export default function CustomerDownloads() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
+          <div className="downloads-grid">
             {filtered.map(product => (
               <VaultCard
                 key={product.id}

@@ -316,7 +316,7 @@ export default function AffiliateDashboardHome({
      MAIN RENDER
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   return (
-    <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
+    <div ref={containerRef} className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
 
       {/* Mouse glow */}
       <div style={{
@@ -402,7 +402,7 @@ export default function AffiliateDashboardHome({
       </div>
 
       {/* ── STAT CARDS ───────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '20px', position: 'relative', zIndex: 1 }}>
+      <div className="aff-stat-grid" style={{ position: 'relative', zIndex: 1 }}>
         {[
           {
             label: 'Total Earnings',

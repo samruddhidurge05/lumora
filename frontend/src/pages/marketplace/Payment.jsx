@@ -645,7 +645,7 @@ export default function Payment() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="payment-card-expiry-grid">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '0.62rem', fontWeight: 800, color: 'var(--color-mocha)', letterSpacing: '0.05em' }}>EXPIRY</label>
                       <input name="expiry" value={cardForm.expiry} onChange={handleCardChange} required placeholder="MM/YY" maxLength={5}
@@ -670,7 +670,7 @@ export default function Payment() {
               {/* Net Banking Tab */}
               {paymentMethod === 'netbanking' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="payment-card-grid">
                     {[
                       { id: 'hdfc', label: 'HDFC Bank' },
                       { id: 'sbi', label: 'SBI' },
@@ -703,7 +703,7 @@ export default function Payment() {
             </div>
 
             {/* Trust Badges and Indicators */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.68rem', color: 'var(--color-mocha)', fontWeight: 600 }} className="trust-row-mobile">
+            <div className="payment-trust-grid" style={{ fontSize: '0.68rem', color: 'var(--color-mocha)', fontWeight: 600 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(45,0,77,0.02)', border: '1px solid rgba(45,0,77,0.08)' }}>
                 <Check size={14} style={{ color: 'var(--purple-600)' }} /> PCI-DSS Compliant Secure
               </div>
