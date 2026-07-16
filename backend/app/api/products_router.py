@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import cast, String, or_
-from app.db.session import get_db
+from app.db.session import get_db, SessionLocal
 from app.models.product import Product
 from app.models.user import User
 from app.models.order import Order, OrderItem
@@ -14,9 +14,11 @@ from app.core.exceptions import LumoraException
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import os
+import time
 from app.core.config import settings
 from app.services.product_service import ProductService
 from app.services.storage_service import storage_service
+from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
 
 router = APIRouter()
 
@@ -24,6 +26,23 @@ import urllib.parse as urlparse
 import requests
 
 _PCLOUD_URL_CACHE = {}
+_LAST_FIRESTORE_SYNC_TIME = 0.0
+
+def _bg_sync_firestore():
+    db = SessionLocal()
+    try:
+        restore_sqlite_products_from_firestore(db)
+    except Exception as e:
+        print(f"[bg-sync] Error syncing Firestore products: {e}")
+    finally:
+        db.close()
+
+def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
+    global _LAST_FIRESTORE_SYNC_TIME
+    now = time.time()
+    if now - _LAST_FIRESTORE_SYNC_TIME > 30:  # 30 seconds throttle
+        _LAST_FIRESTORE_SYNC_TIME = now
+        background_tasks.add_task(_bg_sync_firestore)
 
 def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
     if not url or "pcloud" not in url:
@@ -294,12 +313,14 @@ def resolve_products_media(products, db):
 
 @router.get("/", response_model=List[ProductResponse])
 def read_products(
+    background_tasks: BackgroundTasks,
     category: Optional[str] = None,
     skip: int = 0,
     limit: int = 1000,
     db: Session = Depends(get_db)
 ):
     """List all published products. Public — no authentication required."""
+    trigger_firestore_sync_if_needed(background_tasks)
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)

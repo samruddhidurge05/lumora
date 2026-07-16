@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
 from admin.validators.admin_auth import require_admin_role
 from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
 from app.services.audit_log_service import log_admin_action
+from app.api.products_router import trigger_firestore_sync_if_needed
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,6 +24,7 @@ class FeaturedPatch(BaseModel):
 
 @router.get("/")
 def get_products(
+    background_tasks: BackgroundTasks,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     status: Optional[str] = Query(None),
@@ -30,6 +32,7 @@ def get_products(
     db: Session = Depends(get_db),
     admin_user = Depends(require_admin_role)
 ):
+    trigger_firestore_sync_if_needed(background_tasks)
     q = db.query(Product)
     if status:
         q = q.filter(Product.status.ilike(status))

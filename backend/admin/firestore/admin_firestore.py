@@ -394,10 +394,62 @@ def restore_sqlite_products_from_firestore(db_session):
                         fixed += 1
 
                 added += 1
+            else:
+                # Update existing product fields from Firestore
+                exists.title = data.get("title", data.get("name", exists.title))
+                exists.description = data.get("description", exists.description)
+                exists.category = data.get("category", exists.category)
+                exists.price = float(data.get("price", exists.price))
+                exists.rating = float(data.get("rating", exists.rating))
+                exists.reviews = int(data.get("reviews", exists.reviews))
+                exists.downloads = int(data.get("downloads", exists.downloads))
+                
+                if not is_broken_thumb:
+                    if thumbnail:
+                        exists.thumbnail = thumbnail
+                    if data.get("preview") or thumbnail:
+                        exists.preview = data.get("preview") or thumbnail
+                    if data.get("image_urls") or data.get("imageUrls"):
+                        exists.image_urls = data.get("image_urls") or data.get("imageUrls") or []
+
+                exists.file_url = data.get("file_url") or data.get("fileUrl") or pcloud_link or exists.file_url
+                exists.seller = data.get("creatorName", data.get("seller", exists.seller))
+                exists.vendor_id = data.get("vendor_id") or exists.vendor_id
+                exists.featured = bool(data.get("featured", data.get("isFeatured", exists.featured)))
+                exists.trending = bool(data.get("trending", exists.trending))
+                exists.badge = data.get("badge", exists.badge)
+                exists.visibility = data.get("visibility", exists.visibility)
+                exists.tags = data.get("tags") or exists.tags
+                exists.highlights = data.get("highlights") or exists.highlights
+                exists.version = data.get("version", exists.version)
+                exists.file_size = data.get("fileSize", exists.file_size)
+                exists.license = data.get("license", exists.license)
+                exists.affiliate_enabled = bool(data.get("affiliate_enabled", exists.affiliate_enabled))
+                exists.commission_type = data.get("commission_type", exists.commission_type)
+                exists.commission_value = float(data.get("commission_value", exists.commission_value))
+                exists.short_desc = data.get("shortDesc") or data.get("short_desc") or exists.short_desc
+                exists.features = data.get("features") or exists.features
+                exists.system_requirements = data.get("systemRequirements") or data.get("system_requirements") or exists.system_requirements
+                exists.what_you_get = data.get("whatYouGet") or data.get("what_you_get") or exists.what_you_get
+                exists.installation_guide = data.get("installationGuide") or data.get("installation_guide") or exists.installation_guide
+                exists.subcategory = data.get("subcategory") or exists.subcategory
+                exists.discount = float(data.get("discount", exists.discount))
+                exists.preview_images = data.get("previewImages") or data.get("preview_images") or exists.preview_images
+                exists.preview_video = data.get("previewVideo") or data.get("preview_video") or exists.preview_video
+                exists.seo_title = data.get("seoTitle") or data.get("seo_title") or exists.seo_title
+                exists.seo_description = data.get("seoDescription") or data.get("seo_description") or exists.seo_description
+                exists.pcloud_download_link = pcloud_link or exists.pcloud_download_link
+
+                if pcloud_link and (is_broken_thumb or not exists.thumbnail):
+                    refreshed = _refresh_pcloud_images_for_product(exists, pcloud_link)
+                    if refreshed:
+                        fixed += 1
+                
+                added += 1
 
         db_session.commit()
         if added:
-            print(f"[firestore-sync] Auto-imported {added} new products from Firestore to SQLite ({fixed} with refreshed images).")
+            print(f"[firestore-sync] Auto-synced {added} products from Firestore to SQLite ({fixed} with refreshed images).")
         else:
             print("[firestore-sync] SQLite is up to date with Firestore.")
 
