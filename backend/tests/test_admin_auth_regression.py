@@ -122,7 +122,7 @@ def test_admin_login_success_writes_audit_log(client):
         "email": "admin@test.com",
         "email_verified": True,
     }
-    with patch("app.core.firebase.verify_firebase_id_token", return_value=fake_claims):
+    with patch("admin.routes.auth.verify_firebase_id_token", return_value=fake_claims):
         response = client.post(
             "/api/admin/auth/login",
             json={"idToken": "fake-valid-firebase-token"},
@@ -152,7 +152,7 @@ def test_non_admin_login_failure_writes_audit_log(client):
         "email": "customer@test.com",
         "email_verified": True,
     }
-    with patch("app.core.firebase.verify_firebase_id_token", return_value=fake_claims):
+    with patch("admin.routes.auth.verify_firebase_id_token", return_value=fake_claims):
         response = client.post(
             "/api/admin/auth/login",
             json={"idToken": "fake-customer-token"},

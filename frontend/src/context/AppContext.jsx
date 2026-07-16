@@ -1041,7 +1041,7 @@ export function AppContextProvider({ children }) {
   // State is managed in React memory context and fetched directly from the backend SQLite DB
 
   const lastUserUidRef = useRef(null);
-  const syncedUserRef = useRef(null);
+  const lastSyncedKeyRef = useRef('');
   
   useEffect(() => {
     const currentUid = user?.uid || null;
@@ -1054,7 +1054,7 @@ export function AppContextProvider({ children }) {
       setBuyNowProduct(null);
       setLastPurchasedItems([]);
       lastUserUidRef.current = currentUid;
-      syncedUserRef.current = null; // Allow backend sync to run again for the new user
+      lastSyncedKeyRef.current = ''; // Reset the sync key so next sync for new/reloaded user can run
     }
   }, [user]);
 
@@ -1134,14 +1134,14 @@ export function AppContextProvider({ children }) {
 
   useEffect(() => {
     if (!user) return;
-    // NOTE: Removed the customer-only role guard — users with any role may own
-    // purchased products and should have their vault synced on login.
-    if (syncedUserRef.current === user.uid) return;
-    syncedUserRef.current = user.uid;
+    const hasToken = () => !!localStorage.getItem('lumora_backend_token');
+
+    // Check sync status using a composite key: uid + products length
+    // This ensures we re-sync if products list updates (e.g. finishes loading from SQLite)
+    const currentSyncKey = `${user.uid}_${products.length}`;
+    if (lastSyncedKeyRef.current === currentSyncKey) return;
 
     const runSync = async () => {
-      // Wait for the backend JWT to be written (set by syncWithBackend in AuthContext).
-      const hasToken = () => !!localStorage.getItem('lumora_backend_token');
       if (!hasToken()) {
         await new Promise((resolve) => {
           const onReady = () => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); };
@@ -1153,6 +1153,12 @@ export function AppContextProvider({ children }) {
         console.warn('[AppContext] Backend token unavailable after 5s — skipping sync');
         return;
       }
+
+      // Re-verify the key after wait, in case products or user changed during wait
+      const freshSyncKey = `${user?.uid || ''}_${products.length}`;
+      if (lastSyncedKeyRef.current === freshSyncKey) return;
+      lastSyncedKeyRef.current = freshSyncKey;
+
       if (syncBackend.current) await syncBackend.current();
     };
 
@@ -1529,6 +1535,7 @@ export function AppContextProvider({ children }) {
       setActiveProductId(payload);
       navigate(`/#product/${payload}`);
       setCurrentView('product-detail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (view === 'creator-profile') {
       setActiveCreatorId(payload);
       navigate(`/#creator/${payload}`);
@@ -1558,7 +1565,8 @@ export function AppContextProvider({ children }) {
   };
 
   const getActiveProduct = () => {
-    return products.find(p => String(p.id) === String(activeProductId)) || products[0];
+    if (!activeProductId) return products[0];
+    return products.find(p => String(p.id) === String(activeProductId)) || null;
   };
 
   const getActiveCreator = () => {
