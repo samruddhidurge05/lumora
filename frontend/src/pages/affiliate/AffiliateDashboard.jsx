@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, DollarSign, User,
   LogOut, Link2, BarChart2, ShoppingBag, ChevronRight,
-  Menu, X, RefreshCw, AlertCircle, HelpCircle
+  Menu, X, RefreshCw, AlertCircle, HelpCircle, ArrowLeft
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -314,11 +314,30 @@ function AffiliateDashboardInner() {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <div>
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Affiliate Dashboard</span>
-            <h1 className="text-editorial" style={{ fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.1, marginTop: '1px' }}>
-              {isSuspended ? "Account Suspended" : PAGE_TITLES[activeTab]}
-            </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {activeTab !== 'dashboard' && (
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                style={{
+                  width: '38px', height: '38px', borderRadius: '10px',
+                  background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#7B3FA0', cursor: 'pointer', transition: 'all 0.2s',
+                  flexShrink: 0
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.12)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; e.currentTarget.style.borderColor = 'rgba(196,181,253,0.25)'; }}
+                title="Back to Dashboard"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Affiliate Dashboard</span>
+              <h1 className="text-editorial" style={{ fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.1, marginTop: '1px' }}>
+                {isSuspended ? "Account Suspended" : PAGE_TITLES[activeTab]}
+              </h1>
+            </div>
           </div>
 
           {/* Right: breadcrumb + quick actions */}
@@ -358,22 +377,6 @@ function AffiliateDashboardInner() {
               )}
             </button>
 
-            {activeTab !== 'products' && !isSuspended && (
-              <button
-                onClick={() => setActiveTab('products')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '0.75rem', fontWeight: 700, borderRadius: '20px', border: '1px solid rgba(196,181,253,0.35)', background: 'rgba(255,255,255,0.80)', color: '#7B3FA0', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}
-              >
-                <Link2 size={12} /> Get Links
-              </button>
-            )}
-            {activeTab !== 'earnings' && !isSuspended && (
-              <button
-                onClick={() => setActiveTab('earnings')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '0.75rem', fontWeight: 700, borderRadius: '20px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', boxShadow: '0 3px 12px rgba(123,63,160,0.32)' }}
-              >
-                <DollarSign size={12} /> Earnings
-              </button>
-            )}
           </div>
         </header>
 
