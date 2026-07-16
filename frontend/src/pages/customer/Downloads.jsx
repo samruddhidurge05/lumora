@@ -36,6 +36,15 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
   const handleDownload = async () => {
     if (state !== 'idle') return;
 
+    // ── Fast path: pCloud link → open instantly, no API round-trip ────────────
+    if (pcloudDownloadLink) {
+      window.open(pcloudDownloadLink, '_blank');
+      setState('downloading');
+      setTimeout(() => setState('done'), 600);
+      setTimeout(() => setState('idle'), 4000);
+      return;
+    }
+
     setState('downloading');
     
     let activeUrl = downloadUrl;
@@ -285,7 +294,7 @@ export default function CustomerDownloads() {
 
   useEffect(() => {
     fetchBackendDownloads();
-  }, [user, ownedProducts.length]);
+  }, [user, ownedProducts.length, products.length]);
 
   // Build real product list from ONLY backend order items + context ownedProducts
   const ownedReal = products.filter(p => ownedProducts.includes(p.id)).map(p => ({
@@ -710,56 +719,44 @@ function VaultCard({ product, isHovered, onHover }) {
     onHover(null);
   };
 
-  const handleOpen = async () => {
+  const handleOpen = () => {
+    // ── Fast path: open pCloud link instantly, no API needed ─────────────────
+    const quickUrl = product.pcloud_download_link || product.downloadUrl;
+    if (quickUrl && (quickUrl.includes('pcloud') || quickUrl.includes('publink'))) {
+      window.open(quickUrl, '_blank');
+      return;
+    }
+
+    // ── Fallback: resolve via backend for non-pCloud products ─────────────────
     const numericId = parseInt(product.id, 10);
     if (isNaN(numericId)) return;
 
-    try {
-      const res = await backendFetch(`/products/${numericId}/download`);
-      if (res?.download_available === false) {
-        alert("The creator has not yet uploaded the downloadable asset.");
-        return;
-      }
-
-      let activeUrl = res?.download_url || product.downloadUrl;
-      if (res?.type === 'external' && res?.redirect_url) {
-        window.open(res.redirect_url, '_blank');
-        return;
-      }
-
-      if (activeUrl) {
-        const fileCheckUrl = activeUrl.startsWith('/api')
-          ? activeUrl.replace('/api', '')
-          : activeUrl;
-        const token = localStorage.getItem('lumora_backend_token');
-        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-
-        if (fileResp.ok) {
-          const contentType = fileResp.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const fileRespJson = await fileResp.json();
-            if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-              window.open(fileRespJson.redirect_url, '_blank');
-              return;
-            }
-          }
+    (async () => {
+      try {
+        const res = await backendFetch(`/products/${numericId}/download`);
+        if (res?.download_available === false) {
+          alert('The creator has not yet uploaded the downloadable asset.');
+          return;
         }
-        
-        // Fallback for direct ZIP/PDF files: open download URL in a new tab
-        const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
-        window.open(fullUrl, '_blank');
+        if (res?.type === 'external' && res?.redirect_url) {
+          window.open(res.redirect_url, '_blank');
+          return;
+        }
+        const activeUrl = res?.download_url || product.downloadUrl;
+        if (activeUrl) {
+          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+          const fileCheckUrl = activeUrl.startsWith('/api') ? activeUrl.replace('/api', '') : activeUrl;
+          window.open(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, '_blank');
+        }
+      } catch (err) {
+        console.warn('[OpenButton] Failed to resolve download link:', err);
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const fallbackUrl = product.downloadUrl?.startsWith('http')
+          ? product.downloadUrl
+          : `${BACKEND_URL}${product.downloadUrl?.startsWith('/') ? product.downloadUrl : '/' + product.downloadUrl}`;
+        window.open(fallbackUrl, '_blank');
       }
-    } catch (err) {
-      console.warn('[OpenButton] Failed to resolve download link:', err);
-      const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      const fallbackUrl = product.downloadUrl.startsWith('http')
-        ? product.downloadUrl
-        : `${BACKEND_URL}${product.downloadUrl.startsWith('/') ? product.downloadUrl : '/' + product.downloadUrl}`;
-      window.open(fallbackUrl, '_blank');
-    }
+    })();
   };
 
   return (

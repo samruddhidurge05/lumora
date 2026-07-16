@@ -58,7 +58,7 @@ export default function CustomerWishlist() {
 
   useEffect(() => {
     fetchWishlist();
-  }, [user]);
+  }, [user, products.length]);
 
   // 2. Add Item to Backend Wishlist
   const handleAddItem = async (product) => {

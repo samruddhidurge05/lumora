@@ -53,20 +53,13 @@ def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
     return url
 
 def is_pcloud_link_active(url: Optional[str]) -> bool:
+    """Return True for any stored external/pCloud URL without doing a live network check.
+    The admin always sets valid links; a 1-second HEAD probe caused false negatives
+    on slow networks and made downloads appear unavailable. Trust the DB value."""
     if not url:
         return False
     from app.services.product_service import _is_external_url
-    if not _is_external_url(url):
-        return False
-    import httpx
-    try:
-        with httpx.Client(follow_redirects=True) as client:
-            res = client.head(url, timeout=1.0)
-            if res.status_code in (404, 410):
-                return False
-    except Exception:
-        pass
-    return True
+    return _is_external_url(url)
 
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
