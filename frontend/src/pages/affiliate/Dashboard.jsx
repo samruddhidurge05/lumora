@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Link2, DollarSign, TrendingUp, Users,
   MousePointerClick, BarChart2, ArrowUpRight, Copy, Check,
   Activity, Sparkles, ShoppingBag, Star, AlertCircle, RefreshCw,
-  Clock, CheckCircle, XCircle,
+  Clock, CheckCircle, XCircle, HelpCircle, User, Headset
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -155,6 +155,7 @@ export default function AffiliateDashboardHome({
     conversionRate: stats?.conversion_rate  ?? MOCK_STATS.conversionRate,
     pendingEarnings:stats?.pending_earnings ?? 0,
     paidEarnings:   stats?.paid_earnings    ?? 0,
+    revenueGenerated: stats?.revenue_generated ?? 0,
   };
 
   /* ── Commission summary breakdown ────────────────────────────────────── */
@@ -426,7 +427,7 @@ export default function AffiliateDashboardHome({
           },
           {
             label: 'Total Sales',
-            value: formatINR((commissions || []).reduce((s, c) => s + (c.sale_amount || 0), 0)),
+            value: formatINR(activeStats.revenueGenerated),
             sub: 'Revenue generated',
             icon: <TrendingUp size={14} />,
             trend: 'Store revenue',
@@ -751,29 +752,29 @@ export default function AffiliateDashboardHome({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '16px', position: 'relative', zIndex: 1 }}>
         {[
           { label: 'Browse Products',  sub: 'Generate referral links',    icon: <Link2 size={18} />,      action: () => navigateTo('affiliate-products') },
-          { label: 'View Earnings',    sub: 'Track commissions & payouts', icon: <BarChart2 size={18} />,  action: () => navigateTo('affiliate-earnings') },
-          { label: 'Edit Profile',     sub: 'Update payment details',      icon: <Sparkles size={18} />,   action: () => navigateTo('affiliate-profile') },
-          { label: 'Request Payout',   sub: 'Withdraw pending balance',    icon: <DollarSign size={18} />, action: () => navigateTo('affiliate-earnings') },
+          { label: 'View Earnings & Payouts', sub: 'Track commissions and payouts', icon: <BarChart2 size={18} />,  action: () => navigateTo('affiliate-earnings') },
+          { label: 'Edit Profile',     sub: 'Update payment details',      icon: <User size={18} />,       action: () => navigateTo('affiliate-profile') },
+          { label: 'Support',          sub: 'Get help and support',        icon: <Headset size={18} />,    action: () => navigateTo('affiliate-support') },
         ].map((qa, i) => (
           <button
             key={i}
             onClick={qa.action}
             className="premium-flat-card"
             style={{
-              padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px',
+              padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: '6px',
               textAlign: 'left', border: '1px solid rgba(45,0,96,0.06)',
               background: 'rgba(255,255,255,0.75)', cursor: 'pointer',
-              fontFamily: 'var(--font-sans)', outline: 'none', transition: 'all 0.25s',
+              fontFamily: 'var(--font-sans)', outline: 'none', transition: 'all 0.25s', height: '100%',
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(123,63,160,0.22)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(123,63,160,0.08)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(45,0,96,0.06)'; e.currentTarget.style.boxShadow = ''; }}
           >
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}>
               {qa.icon}
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>{qa.label}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>{qa.sub}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>{qa.sub}</div>
             </div>
           </button>
         ))}

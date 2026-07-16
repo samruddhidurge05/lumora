@@ -117,6 +117,7 @@ def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats
     """Compute aggregated stats from profile + commission rows."""
     paid    = sum(c.commission_amt for c in commissions if c.status == "paid")
     pending = sum(c.commission_amt for c in commissions if c.status == "pending")
+    revenue = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
     conv    = round(
         (profile.total_sales / profile.total_clicks * 100), 2
     ) if profile.total_clicks else 0.0
@@ -126,6 +127,7 @@ def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats
         total_sales=profile.total_sales,
         pending_earnings=pending,
         paid_earnings=paid,
+        revenue_generated=revenue,
         conversion_rate=conv,
         referral_code=profile.referral_code,
         referral_link=f"{SITE_URL}?ref={profile.referral_code}",

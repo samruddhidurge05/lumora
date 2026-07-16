@@ -110,6 +110,7 @@ class AffiliateStats(BaseModel):
     total_sales: int
     pending_earnings: float
     paid_earnings: float
+    revenue_generated: float
     conversion_rate: float
     referral_code: str
     referral_link: str
