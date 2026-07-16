@@ -216,11 +216,31 @@ def resolve_product_media(product, db):
     # Try to find a thumbnail image inside the download folder (only if download link set)
     resolved_thumb = None
     resolved_preview = None
-    if product.pcloud_download_link:
+    
+    # 1. First, search for any explicit pCloud image public share links in preview_images/image_urls
+    pcloud_share_links = []
+    p_imgs = product.preview_images if isinstance(product.preview_images, list) else []
+    p_urls = product.image_urls if isinstance(product.image_urls, list) else []
+    for url in p_imgs + p_urls:
+        if isinstance(url, str) and "pcloud" in url and ("code=" in url or "publink/show" in url):
+            if url not in pcloud_share_links:
+                pcloud_share_links.append(url)
+                
+    for link in pcloud_share_links:
+        resolved = resolve_pcloud_direct_file_url(link)
+        if resolved and _is_image_url(resolved):
+            resolved_thumb = resolved
+            resolved_preview = resolved
+            break
+
+    # 2. Fall back to searching inside the pcloud_download_link folder
+    if not resolved_thumb and product.pcloud_download_link:
         resolved_thumb = resolve_pcloud_direct_file_url(product.pcloud_download_link, "thumbnail")
         # Only accept if it's actually an image, not a PDF/ZIP
         if resolved_thumb and not _is_image_url(resolved_thumb):
             resolved_thumb = None
+            
+    if not resolved_preview and product.pcloud_download_link:
         resolved_preview = (
             resolve_pcloud_direct_file_url(product.pcloud_download_link, "cover") or
             resolve_pcloud_direct_file_url(product.pcloud_download_link, "preview")

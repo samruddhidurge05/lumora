@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import ProductGradientCover from '../../components/product/ProductGradientCover';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 
@@ -63,6 +64,7 @@ function PCard({ product, delay = 0 }) {
   const { addToCart, buyNow, navigateTo, formatPrice } = useApp();
   const { user } = useAuth();
   const [hov, setHov] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const handleBuy = (e) => {
     e.stopPropagation();
@@ -75,6 +77,8 @@ function PCard({ product, delay = 0 }) {
     if (!user) { navigateTo('login-selection'); return; }
     addToCart(product);
   };
+
+  const showFallback = !product.preview || imgFailed || product.preview.includes('localhost') || product.preview.startsWith('/');
 
   return (
     <motion.div
@@ -101,12 +105,18 @@ function PCard({ product, delay = 0 }) {
       }}
     >
       <div style={{ height:'190px', overflow:'hidden', position:'relative' }}>
-        <img
-          src={product.preview||'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
-          alt={product.title} loading="lazy"
-          style={{ width:'100%', height:'100%', objectFit:'cover', transform:hov?'scale(1.07)':'scale(1)', transition:'transform .5s ease' }}
-        />
-        <div style={{ position:'absolute', inset:0, background: hov?'rgba(123,63,160,.06)':'transparent', transition:'background .3s' }} />
+        {showFallback ? (
+          <ProductGradientCover product={product} />
+        ) : (
+          <img
+            src={product.preview}
+            alt={product.title}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+            style={{ width:'100%', height:'100%', objectFit:'cover', transform:hov?'scale(1.07)':'scale(1)', transition:'transform .5s ease' }}
+          />
+        )}
+        <div style={{ position:'absolute', inset:0, background: hov?'rgba(123,63,160,.06)':'transparent', transition:'background .3s', pointerEvents: 'none' }} />
         {product.badge && (
           <span style={{ position:'absolute', top:'10px', left:'10px', fontSize:'.58rem', background:'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color:'#fff', fontWeight:800, padding:'3px 9px', borderRadius:'20px' }}>
             {product.badge}

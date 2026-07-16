@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Star, ShoppingBag, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import ProductGradientCover from './ProductGradientCover';
 
 export default function ProductCard({ product }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
+  const [imgFailed, setImgFailed] = useState(false);
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
+
+  const showFallback = !product.preview || imgFailed || product.preview.includes('localhost') || product.preview.startsWith('/');
 
   return (
     <div
@@ -16,12 +20,16 @@ export default function ProductCard({ product }) {
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; }}
     >
       <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
-        <img
-          src={product.preview || product.thumbnail || product.image_urls?.[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
-          alt={product.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'; }}
-        />
+        {showFallback ? (
+          <ProductGradientCover product={product} />
+        ) : (
+          <img
+            src={product.preview || product.thumbnail}
+            alt={product.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={() => setImgFailed(true)}
+          />
+        )}
         {product.badge && (
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}
