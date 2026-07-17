@@ -26,7 +26,7 @@ export default function FileUploader({ onUpload, accept = '*', label = 'Drop fil
         onDrop={handleDrop}
         onDragOver={e => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
-        style={{ border: '2px dashed rgba(196,181,253,0.4)', borderRadius: '14px', padding: '40px', textAlign: 'center', cursor: 'none', background: 'rgba(123,63,160,0.02)', transition: 'border-color 0.2s' }}
+        style={{ border: '2px dashed rgba(196,181,253,0.4)', borderRadius: '14px', padding: '40px', textAlign: 'center', cursor: 'pointer', background: 'rgba(123,63,160,0.02)', transition: 'border-color 0.2s' }}
         onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(123,63,160,0.5)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(196,181,253,0.4)'}
       >

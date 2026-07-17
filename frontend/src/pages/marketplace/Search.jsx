@@ -21,10 +21,10 @@ const SORT_OPTIONS = [
 
 const PRICE_RANGES = [
   { label: 'All Prices',      min: 0,   max: 99999 },
-  { label: 'Under ₹1,000',    min: 0,   max: 13    },
-  { label: '₹1,000 – ₹2,500', min: 13,  max: 31    },
-  { label: '₹2,500 – ₹5,000', min: 31,  max: 63    },
-  { label: 'Above ₹5,000',    min: 63,  max: 99999 },
+  { label: 'Under ₹1,000',    min: 0,   max: 1000  },
+  { label: '₹1,000 – ₹2,500', min: 1000, max: 2500  },
+  { label: '₹2,500 – ₹5,000', min: 2500, max: 5000  },
+  { label: 'Above ₹5,000',    min: 5000, max: 99999 },
 ];
 
 const QUICK_SUGGESTIONS = [

@@ -147,7 +147,7 @@ export default function TrendingCategories() {
                   willChange: 'transform, box-shadow',
                   position: 'relative',
                   overflow: 'hidden',
-                  cursor: 'none'
+                  cursor: 'pointer'
                 }}
               >
                 {/* Radial custom glow spot */}

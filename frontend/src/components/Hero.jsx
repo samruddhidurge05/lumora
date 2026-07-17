@@ -386,7 +386,7 @@ const styles = {
     border: '1px solid rgba(216, 191, 227, 0.22)',
     boxShadow: '0 15px 30px rgba(45, 0, 96, 0.06)',
     transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1))',
-    cursor: 'none',
+    cursor: 'pointer',
     position: 'relative',
     overflow: 'hidden',
     background: 'rgba(255, 255, 255, 0.55)',

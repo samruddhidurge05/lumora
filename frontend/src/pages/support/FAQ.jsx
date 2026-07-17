@@ -37,7 +37,7 @@ export default function FAQ({ role }) {
           <div key={i} className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,181,253,0.22)', transition: 'box-shadow 0.2s' }}>
             <button
               onClick={() => setOpen(open === i ? null : i)}
-              style={{ width: '100%', padding: '20px 24px', background: 'none', border: 'none', cursor: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', fontFamily: 'var(--font-sans)', textAlign: 'left' }}
+              style={{ width: '100%', padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', fontFamily: 'var(--font-sans)', textAlign: 'left' }}
             >
               <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#2D004D' }}>{faq.q}</span>
               <span style={{ color: '#7B3FA0', flexShrink: 0 }}>

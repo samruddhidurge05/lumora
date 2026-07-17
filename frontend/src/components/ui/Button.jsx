@@ -4,7 +4,7 @@ export default function Button({ children, variant = 'default', size = 'md', onC
   const base = {
     display: 'inline-flex', alignItems: 'center', gap: '6px',
     borderRadius: '12px', fontFamily: 'var(--font-sans)', fontWeight: 700,
-    cursor: 'none', outline: 'none', border: 'none', transition: 'all 0.22s',
+    cursor: 'pointer', outline: 'none', border: 'none', transition: 'all 0.22s',
   };
   const sizes = {
     sm: { padding: '6px 14px', fontSize: '0.74rem' },

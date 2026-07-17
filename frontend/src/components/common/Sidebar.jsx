@@ -22,7 +22,7 @@ export default function Sidebar({ isOpen, onClose, title, children }) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: '1px solid rgba(196,181,253,0.16)' }}>
           {title && <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--color-espresso)' }}>{title}</h3>}
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'none', color: 'var(--text-muted)', padding: '4px' }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px' }}>
             <X size={20} />
           </button>
         </div>

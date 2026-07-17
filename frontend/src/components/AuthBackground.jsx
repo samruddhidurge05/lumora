@@ -28,7 +28,7 @@ export default function AuthBackground({ children }) {
           fontSize: '0.78rem',
           fontWeight: 600,
           fontFamily: 'var(--font-sans)',
-          cursor: 'none',
+          cursor: 'pointer',
           outline: 'none',
           transition: 'background 0.2s, border-color 0.2s, transform 0.15s',
           boxShadow: '0 2px 12px rgba(45,0,77,0.18)',

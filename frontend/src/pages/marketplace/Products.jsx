@@ -29,10 +29,10 @@ const ALL_CATS = [
 
 const PRICE_RANGES = [
   { label: 'All Prices', min: 0, max: 99999 },
-  { label: 'Under ₹1,000', min: 0, max: 12 },
-  { label: '₹1,000 – ₹2,500', min: 12, max: 30 },
-  { label: '₹2,500 – ₹5,000', min: 30, max: 60 },
-  { label: 'Above ₹5,000', min: 60, max: 99999 },
+  { label: 'Under ₹1,000', min: 0, max: 1000 },
+  { label: '₹1,000 – ₹2,500', min: 1000, max: 2500 },
+  { label: '₹2,500 – ₹5,000', min: 2500, max: 5000 },
+  { label: 'Above ₹5,000', min: 5000, max: 99999 },
 ];
 
 export default function Products() {
