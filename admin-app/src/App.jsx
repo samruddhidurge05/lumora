@@ -24,6 +24,7 @@ const AdminAuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
 const AdminSupportInbox = lazy(() => import('./pages/admin/AdminSupportInbox'));
 const AdminUserManagement = lazy(() => import('./pages/admin/AdminUserManagement'));
 const AcceptInvite = lazy(() => import('./pages/admin/AcceptInvite'));
+const AdminRegister = lazy(() => import('./pages/admin/AdminRegister'));
 
 // ── Loading spinner ───────────────────────────────────────────────
 function PageLoader() {
@@ -89,6 +90,9 @@ function AppContent() {
         />
         <Route path="/admin/accept-invite"
           element={<AcceptInvite />}
+        />
+        <Route path="/admin/register"
+          element={<AdminRegister />}
         />
 
         {/* ── Admin app fallbacks ── */}

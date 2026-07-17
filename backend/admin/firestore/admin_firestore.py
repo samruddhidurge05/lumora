@@ -501,6 +501,38 @@ def sync_team_member_to_firestore(user, role_record) -> None:
             "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
             "updated_at":   datetime.now(timezone.utc).isoformat(),
         }, merge=True)
+
+        # Also sync role to users/{firebase_uid} collection in Firestore so that
+        # Firestore rules (isAdmin()) and AuthContext role check resolve correctly.
+        if user.firebase_uid:
+            user_doc_ref = db.collection("users").document(user.firebase_uid)
+            user_snap = user_doc_ref.get()
+            if user_snap.exists:
+                user_data = user_snap.to_dict() or {}
+                roles = user_data.get("roles", [])
+                is_active = role_record.is_active if role_record else True
+                
+                if is_active:
+                    # Activate admin role
+                    if "admin" not in roles:
+                        roles.append("admin")
+                    user_doc_ref.update({
+                        "role": "admin",
+                        "roles": roles
+                    })
+                else:
+                    # Deactivate admin role: fall back to customer (or another non-admin role if they have one)
+                    if "admin" in roles:
+                        roles.remove("admin")
+                    fallback_role = "customer"
+                    for r in roles:
+                        if r in ("vendor", "affiliate", "customer"):
+                            fallback_role = r
+                            break
+                    user_doc_ref.update({
+                        "role": fallback_role,
+                        "roles": roles
+                    })
     except Exception as e:
         print(f"[firestore-sync] Error syncing team member {user.id}: {e}")
 
