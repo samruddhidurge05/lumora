@@ -890,23 +890,22 @@ export function AppContextProvider({ children }) {
               };
             };
 
-            // 1) Merge Firestore image/download data into backend-sourced products
-            const backendProducts = rawBackendProducts.map(bp => {
-              const fd = firestoreById[String(bp.id)];
-              return _mergeFirestoreImages(bp, fd);
+            // Map over ALL previous products (whether from SQLite backend or local JSON/mock)
+            // If the product exists in Firestore, merge its images/pcloud links on top of it.
+            // This prevents Firestore documents with null image fields from blanking out valid local pCloud URLs.
+            const mergedProducts = prev.map(p => {
+              const fd = firestoreById[String(p.id)];
+              if (fd) {
+                return _mergeFirestoreImages(p, fd);
+              }
+              return p;
             });
 
-            const firestoreIds = new Set(firestoreDocs.map(p => String(p.id)));
+            // Also include any completely new products from Firestore that did not exist in prev
+            const prevIds = new Set(prev.map(p => String(p.id)));
+            const newFirestoreProducts = firestoreDocs.filter(fd => !prevIds.has(String(fd.id)));
 
-            // 2) Firestore-only products (not in backend) — use full Firestore doc
-            const firestoreOnly = firestoreDocs.filter(p => !currentBackendIds.has(String(p.id)));
-
-            // 3) JSON/mock products not in backend or Firestore — merge Firestore images if available
-            const localMock = prev
-              .filter(p => !currentBackendIds.has(String(p.id)) && !firestoreIds.has(String(p.id)))
-              .map(lp => _mergeFirestoreImages(lp, firestoreById[String(lp.id)]));
-
-            return [...backendProducts, ...firestoreOnly, ...localMock];
+            return [...mergedProducts, ...newFirestoreProducts];
           });
         }
       }, (err) => {
