@@ -4,7 +4,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminContextProvider } from './context/AdminContext';
 import AdminNotificationBanner from './pages/admin/components/AdminNotificationBanner';
-import CustomCursor from './components/CustomCursor';
+
 
 // ── Lazy page imports ─────────────────────────────────────────────
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -123,7 +123,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AdminBoundary>
-        <CustomCursor />
+
         <AppContent />
       </AdminBoundary>
     </AuthProvider>

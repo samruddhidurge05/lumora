@@ -12,7 +12,7 @@ export default function ProductCard({ product }) {
     <div
       className="glass-card"
       onClick={() => navigateTo('product-detail', product.id)}
-      style={{ padding: 0, overflow: 'hidden', cursor: 'none', display: 'flex', flexDirection: 'column', border: '1px solid rgba(196,181,253,0.22)', transition: 'transform 0.2s, box-shadow 0.2s' }}
+      style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', border: '1px solid rgba(196,181,253,0.22)', transition: 'transform 0.2s, box-shadow 0.2s' }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(45,0,96,0.15)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; }}
     >
@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}
         <button onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
-          style={{ position: 'absolute', top: '10px', right: '10px', width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted ? '#E11D48' : 'var(--text-muted)' }}>
+          style={{ position: 'absolute', top: '10px', right: '10px', width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted ? '#E11D48' : 'var(--text-muted)' }}>
           <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} />
         </button>
         {isOwned && <span style={{ position: 'absolute', bottom: '8px', left: '8px', fontSize: '0.58rem', background: 'rgba(34,197,94,0.90)', color: '#fff', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>OWNED</span>}

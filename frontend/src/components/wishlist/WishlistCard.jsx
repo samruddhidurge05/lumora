@@ -6,10 +6,10 @@ export default function WishlistCard({ product }) {
   const { addToCart, toggleWishlist, navigateTo, formatPrice } = useApp();
   return (
     <div className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,181,253,0.22)' }}>
-      <div style={{ height: '160px', overflow: 'hidden', position: 'relative', cursor: 'none' }} onClick={() => navigateTo('product-detail', product.id)}>
+      <div style={{ height: '160px', overflow: 'hidden', position: 'relative', cursor: 'pointer' }} onClick={() => navigateTo('product-detail', product.id)}>
         <img src={product.preview} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <button onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
-          style={{ position: 'absolute', top: '8px', right: '8px', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E11D48' }}>
+          style={{ position: 'absolute', top: '8px', right: '8px', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E11D48' }}>
           <Heart size={12} fill="#E11D48" />
         </button>
       </div>

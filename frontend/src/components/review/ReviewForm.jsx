@@ -22,7 +22,7 @@ export default function ReviewForm({ onSubmit }) {
               onClick={() => setRating(i + 1)}
               onMouseEnter={() => setHover(i + 1)}
               onMouseLeave={() => setHover(0)}
-              style={{ background: 'none', border: 'none', cursor: 'none', padding: '2px' }}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}>
               <Star size={22} fill={(hover || rating) > i ? 'var(--color-latte)' : 'none'} stroke="var(--color-latte)" />
             </button>
           ))}

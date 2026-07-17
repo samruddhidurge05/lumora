@@ -7,7 +7,7 @@ import { AdminContextProvider } from './context/AdminContext';
 import AdminNotificationBanner from './pages/admin/components/AdminNotificationBanner';
 import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
-import CustomCursor from './components/CustomCursor';
+
 import DownloadReadyPopup from './components/download/DownloadReadyPopup';
 
 /* ── Error boundary ── */
@@ -216,7 +216,7 @@ function AppContent() {
 
   return (
     <>
-      <CustomCursor />
+
       
       {/* Download Ready Popup */}
       {showDownloadPopup && popupData && (

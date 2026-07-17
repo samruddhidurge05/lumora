@@ -33,7 +33,7 @@ export default function Footer() {
             <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px' }}>Marketplace</h4>
             {['marketplace', 'search', 'categories'].map(v => (
               <button key={v} onClick={() => navigateTo(v)}
-                style={{ display: 'block', background: 'none', border: 'none', cursor: 'none', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', textTransform: 'capitalize', marginBottom: '4px' }}>
+                style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', textTransform: 'capitalize', marginBottom: '4px' }}>
                 {v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
             ))}
@@ -44,7 +44,7 @@ export default function Footer() {
             <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px' }}>Company</h4>
             {['about', 'contact'].map(v => (
               <button key={v} onClick={() => navigateTo(v)}
-                style={{ display: 'block', background: 'none', border: 'none', cursor: 'none', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', textTransform: 'capitalize', marginBottom: '4px' }}>
+                style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', textTransform: 'capitalize', marginBottom: '4px' }}>
                 {v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
             ))}
@@ -55,7 +55,7 @@ export default function Footer() {
             <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px' }}>Account</h4>
             {[['login-selection', 'Sign In'], ['register-selection', 'Sign Up'], ['dashboard', 'Dashboard']].map(([v, label]) => (
               <button key={v} onClick={() => navigateTo(v)}
-                style={{ display: 'block', background: 'none', border: 'none', cursor: 'none', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', marginBottom: '4px' }}>
+                style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)', textAlign: 'left', marginBottom: '4px' }}>
                 {label}
               </button>
             ))}
@@ -67,7 +67,7 @@ export default function Footer() {
           <div style={{ display: 'flex', gap: '16px' }}>
             {[['privacy', 'Privacy'], ['terms', 'Terms']].map(([v, label]) => (
               <button key={v} onClick={() => navigateTo(v)}
-                style={{ background: 'none', border: 'none', cursor: 'none', fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)' }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)' }}>
                 {label}
               </button>
             ))}

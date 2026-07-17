@@ -216,7 +216,7 @@ export default function Navbar() {
                   color: 'var(--color-espresso)',
                   textDecoration: 'none',
                   transition: 'opacity 0.3s',
-                  cursor: 'none'
+                  cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -232,7 +232,7 @@ export default function Navbar() {
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',
                   willChange: 'transform',
-                  cursor: 'none'
+                  cursor: 'pointer'
                 }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -252,7 +252,7 @@ export default function Navbar() {
                   color: 'var(--color-espresso)',
                   textDecoration: 'none',
                   transition: 'opacity 0.3s',
-                  cursor: 'none'
+                  cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -268,7 +268,7 @@ export default function Navbar() {
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',
                   willChange: 'transform',
-                  cursor: 'none'
+                  cursor: 'pointer'
                 }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -292,7 +292,7 @@ export default function Navbar() {
         </button>
 
         {/* Mobile Dropdown Menu */}
-        <div className={`lumora-mobile-nav${mobileOpen ? ' open' : ''}`}>
+        <div ref={mobileRef} className={`lumora-mobile-nav${mobileOpen ? ' open' : ''}`}>
           {navItems.map((item, index) => (
             <a key={index} href={item.href} onClick={(e) => handleNavClick(e, item)}>
               <span style={{ color: '#7B3FA0', display: 'flex', alignItems: 'center' }}>{item.icon}</span>

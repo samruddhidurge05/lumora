@@ -46,7 +46,7 @@ export default function ProductShowcase() {
               paddingBottom: '4px',
               fontWeight: 700,
               fontSize: '0.9rem',
-              cursor: 'none',
+              cursor: 'pointer',
               transition: 'opacity 0.3s'
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
