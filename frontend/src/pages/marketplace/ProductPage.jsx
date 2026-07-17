@@ -68,9 +68,15 @@ function getGallery(product) {
 }
 
 export default function ProductPage() {
-  const { getActiveProduct, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview } = useApp();
+  const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview } = useApp();
   const { user, userRole } = useAuth();
-  const product = getActiveProduct();
+  
+  const [fetchedProduct, setFetchedProduct] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
+
+  const product = getActiveProduct() || fetchedProduct;
+
   const [activeTab, setActiveTab] = useState('overview');
   const [activeImg, setActiveImg] = useState(0);
   const [reviewRating, setReviewRating] = useState(5);
@@ -88,6 +94,73 @@ export default function ProductPage() {
   const [reportSubmitting, setReportSubmitting]      = useState(false);
   const [reportSubmitted, setReportSubmitted]        = useState(false);
   const [reportError, setReportError]               = useState('');
+
+  // Clear stale fetchedProduct whenever activeProductId changes so we never
+  // briefly display the previous product while the new one loads.
+  useEffect(() => {
+    setFetchedProduct(null);
+    setFetchError(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeProductId]);
+
+  // Fetch product fallback if not present in memory
+  useEffect(() => {
+    if (getActiveProduct()) {
+      setFetchError(false);
+      return;
+    }
+    if (!activeProductId) return;
+
+    const numericId = parseInt(activeProductId, 10);
+    if (isNaN(numericId)) {
+      setFetchError(true);
+      return;
+    }
+
+    setIsFetching(true);
+    setFetchError(false);
+    backendFetch(`/products/${numericId}`)
+      .then(data => {
+        if (data) {
+          const sellerName = (typeof data.seller === 'object' ? data.seller?.name : data.seller) || data.vendor_id || 'Lumora Creator';
+          const sellerId = String(sellerName).toLowerCase().replace(/\s+/g, '-');
+          const mapped = {
+            ...data,
+            id: String(data.id),
+            title: data.title || data.name || 'Untitled Product',
+            price: typeof data.price === 'string' ? parseFloat(data.price) || 0 : (data.price || 0),
+            discountPrice: data.discountPrice !== undefined ? data.discountPrice : (data.price && data.discount ? Math.round(data.price * (1 - data.discount / 100)) : null),
+            preview: data.preview || data.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
+            rating: data.rating || 5.0,
+            reviews: data.reviews || 0,
+            downloads: data.downloads || 0,
+            creator: {
+              id: sellerId,
+              name: sellerName,
+              avatar: data.creatorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
+              banner: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+              bio: 'Premium digital assets creator.',
+              verified: true
+            },
+            highlights: data.highlights || [],
+            features: data.features || data.highlights || [],
+            what_you_get: data.what_you_get || [],
+            system_requirements: data.system_requirements || [],
+            installation_guide: data.installation_guide || '',
+            pcloud_download_link: data.pcloud_download_link || null
+          };
+          setFetchedProduct(mapped);
+        } else {
+          setFetchError(true);
+        }
+      })
+      .catch(() => {
+        setFetchError(true);
+      })
+      .finally(() => {
+        setIsFetching(false);
+      });
+  }, [activeProductId, products]);
 
   useEffect(() => {
     if (product) {
@@ -122,6 +195,13 @@ export default function ProductPage() {
       const ref = urlParams.get('ref') || (hashParams && hashParams.get('ref')) || '';
       if (ref) {
         sessionStorage.setItem('lumora_aff_ref', ref);
+        
+        // Prevent duplicate API calls (e.g. from React Strict Mode or re-renders)
+        const tracked = sessionStorage.getItem('lumora_aff_tracked');
+        if (tracked !== ref) {
+          sessionStorage.setItem('lumora_aff_tracked', ref);
+          backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => {});
+        }
       }
     } catch (_) {}
   }, [product?.id]);
@@ -143,7 +223,26 @@ export default function ProductPage() {
   }, [product?.id]);
 
 
-  if (!product) return null;
+  if (!product) {
+    if (isFetching) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(196,181,253,0.2)', borderTop: '3px solid #7B3FA0', animation: 'spin 0.8s linear infinite' }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      );
+    }
+    if (fetchError) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', fontFamily: 'var(--font-sans)', color: 'var(--color-espresso)' }}>
+          <h2>Product Not Found</h2>
+          <p style={{ color: 'var(--text-muted)' }}>The product may have been removed or does not exist.</p>
+          <button onClick={() => navigateTo('marketplace')} className="btn-premium btn-premium-solid" style={{ padding: '12px 24px', borderRadius: '10px' }}>Go to Marketplace</button>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const gallery = getGallery(product);
   const videoUrl = product.previewVideo || product.preview_video;
@@ -363,6 +462,7 @@ export default function ProductPage() {
                     key="video"
                     src={videoUrl}
                     controls
+                    className="product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
                     className="lumora-product-gallery-img"
                   />
@@ -375,6 +475,7 @@ export default function ProductPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
                     className="lumora-product-gallery-img"
                   />
@@ -897,7 +998,7 @@ export default function ProductPage() {
               )}
 
               {/* Secondary actions */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="product-tag-grid">
                 <button onClick={() => toggleWishlist(product)} className="btn-premium"
                   style={{ justifyContent: 'center', padding: '10px', fontSize: '0.75rem', borderRadius: '12px', cursor: 'pointer', color: isWishlisted ? '#E11D48' : undefined, borderColor: isWishlisted ? 'rgba(225,29,72,0.30)' : undefined, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} /> {isWishlisted ? 'Saved' : 'Wishlist'}
@@ -1036,6 +1137,7 @@ function RelatedCard({ product, thumb, isWished, formatPrice, onView, onCart, on
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      onClick={onView}
       style={{
         background: hov ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.45)',
         backdropFilter: 'blur(28px) saturate(190%)',
@@ -1248,7 +1350,7 @@ function ReportModal({
               <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#4E3B31', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Category <span style={{ color: '#E11D48' }}>*</span>
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="product-tag-grid">
                 {REPORT_CATEGORIES.map(cat => (
                   <button
                     key={cat.value}

@@ -645,6 +645,8 @@ const _BACKEND_ORIGIN = (() => {
 
 function _resolveProductImageUrl(url) {
   if (!url) return null;
+  // Reject base64 data URIs — they are test/temp uploads and should never be used as display images
+  if (url.startsWith('data:')) return null;
   // Strip localhost origins so the Vite proxy forwards /uploads/... to the backend.
   // Stored temp URLs like "http://localhost:8000/uploads/..." become "/uploads/..."
   // which the Vite proxy maps to the backend. This prevents 404s on the customer side.
@@ -652,9 +654,29 @@ function _resolveProductImageUrl(url) {
   if (localhostPattern.test(url)) {
     url = url.replace(localhostPattern, '');
   }
-  if (url.startsWith('http')) return url; // external CDN — pass through unchanged
+  if (url.startsWith('http')) return url; // external CDN (pCloud, etc.) — pass through unchanged
   // Relative path like /uploads/vendors/1/products/5/images/uuid.png
   return `${_BACKEND_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+// Pick the best image URL from a Firestore product document.
+// Priority: pCloud CDN > non-Unsplash https > image_urls array > null
+function _bestFirestoreImage(fd) {
+  const candidates = [
+    fd.thumbnail,
+    fd.preview,
+    ...(Array.isArray(fd.image_urls) ? fd.image_urls : []),
+    ...(Array.isArray(fd.preview_images) ? fd.preview_images : []),
+  ];
+  for (const url of candidates) {
+    if (!url) continue;
+    if (url.startsWith('data:')) continue;              // skip base64 blobs
+    if (url.includes('unsplash.com')) continue;         // skip placeholders
+    if (url.includes('localhost')) continue;             // skip dev-only paths
+    const resolved = _resolveProductImageUrl(url);
+    if (resolved) return resolved;
+  }
+  return null;
 }
 
 function enrichRawProducts(raw) {
@@ -678,29 +700,33 @@ function enrichRawProducts(raw) {
       id: String(p.id),
       title: p.title || p.name || 'Untitled Product',
       price: typeof p.price === 'string' ? parseFloat(p.price) || 0 : (p.price || 0),
-      // Resolve relative /uploads/... paths to absolute backend URLs
-      // Priority: 1) real non-placeholder thumbnail/preview  2) first image_urls entry
+      // Resolve image: Priority: pCloud CDN / real non-Unsplash URL > image_urls[0] > preview_images[0] > null
       preview: (() => {
-        const resolved = _resolveProductImageUrl(p.preview || p.thumbnail);
-        if (resolved && !resolved.includes('unsplash.com')) return resolved;
-        const imgUrls = Array.isArray(p.image_urls) ? p.image_urls.filter(Boolean) : [];
-        const previewImgs = Array.isArray(p.preview_images) ? p.preview_images.filter(Boolean) : [];
-        return imgUrls[0] ? _resolveProductImageUrl(imgUrls[0])
-             : previewImgs[0] ? _resolveProductImageUrl(previewImgs[0])
-             : resolved || null;
+        const candidates = [p.preview, p.thumbnail, ...(Array.isArray(p.image_urls) ? p.image_urls : []), ...(Array.isArray(p.preview_images) ? p.preview_images : [])];
+        for (const u of candidates) {
+          if (!u) continue;
+          const r = _resolveProductImageUrl(u);
+          if (r && !r.includes('unsplash.com')) return r;
+        }
+        // Last resort: Unsplash placeholder from thumbnail/preview
+        return _resolveProductImageUrl(p.preview || p.thumbnail) || null;
       })(),
       thumbnail: (() => {
-        const resolved = _resolveProductImageUrl(p.thumbnail || p.preview);
-        if (resolved && !resolved.includes('unsplash.com')) return resolved;
-        const imgUrls = Array.isArray(p.image_urls) ? p.image_urls.filter(Boolean) : [];
-        const previewImgs = Array.isArray(p.preview_images) ? p.preview_images.filter(Boolean) : [];
-        return imgUrls[0] ? _resolveProductImageUrl(imgUrls[0])
-             : previewImgs[0] ? _resolveProductImageUrl(previewImgs[0])
-             : resolved || null;
+        const candidates = [p.thumbnail, p.preview, ...(Array.isArray(p.image_urls) ? p.image_urls : []), ...(Array.isArray(p.preview_images) ? p.preview_images : [])];
+        for (const u of candidates) {
+          if (!u) continue;
+          const r = _resolveProductImageUrl(u);
+          if (r && !r.includes('unsplash.com')) return r;
+        }
+        return _resolveProductImageUrl(p.thumbnail || p.preview) || null;
       })(),
-      // Resolve gallery image_urls array
-      image_urls: Array.isArray(p.image_urls) ? p.image_urls.map(_resolveProductImageUrl).filter(Boolean) : [],
-      preview_images: Array.isArray(p.preview_images) ? p.preview_images.map(_resolveProductImageUrl).filter(Boolean) : [],
+      // Filter gallery arrays: strip base64 blobs, localhost paths, resolve remaining URLs
+      image_urls: Array.isArray(p.image_urls)
+        ? p.image_urls.map(_resolveProductImageUrl).filter(Boolean)
+        : [],
+      preview_images: Array.isArray(p.preview_images)
+        ? p.preview_images.map(_resolveProductImageUrl).filter(Boolean)
+        : [],
       badge: p.badge || (p.trending ? 'Trending' : (p.newArrival || p.new_arrival) ? 'New' : p.featured ? 'Featured' : null),
       compatibility: p.compatibility || p.tags || [],
       // ── Feature fields — support both snake_case (backend) and camelCase (Firestore) ──
@@ -839,20 +865,47 @@ export function AppContextProvider({ children }) {
         });
         if (firestoreDocs.length > 0) {
           setProducts(prev => {
-            // Always keep backend products (they are the authoritative source)
             const currentBackendIds = backendProductIdsRef.current;
-            const backendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
+            const rawBackendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
 
-            // Only add Firestore products that do NOT already exist in the backend
-            const firestoreIds = new Set(firestoreDocs.map(p => String(p.id)));
-            const firestoreOnly = firestoreDocs.filter(p => !currentBackendIds.has(String(p.id)));
+            // Build a fast lookup of Firestore docs by id
+            const firestoreById = {};
+            firestoreDocs.forEach(fd => { firestoreById[String(fd.id)] = fd; });
 
-            // Keep local JSON/mock products that are in neither backend nor Firestore
-            const localMock = prev.filter(
-              p => !currentBackendIds.has(String(p.id)) && !firestoreIds.has(String(p.id))
-            );
+            // Helper: merge pCloud/image fields from a Firestore doc into a product
+            const _mergeFirestoreImages = (base, fd) => {
+              if (!fd) return base;
+              const fsImg = _bestFirestoreImage(fd);
+              const fsImageUrls = (fd.image_urls || []).filter(
+                u => u && !u.startsWith('data:') && !u.includes('unsplash.com') && !u.includes('localhost')
+              ).map(_resolveProductImageUrl).filter(Boolean);
+              const fsPcloud = fd.pcloud_download_link || fd.pcloudDownloadLink || null;
+              return {
+                ...base,
+                // Only override image fields when Firestore has a real (non-Unsplash) URL
+                ...(fsImg ? { preview: fsImg, thumbnail: fsImg } : {}),
+                ...(fsImageUrls.length ? { image_urls: fsImageUrls, preview_images: fsImageUrls } : {}),
+                // Always take pCloud download link from Firestore if present
+                ...(fsPcloud ? { pcloud_download_link: fsPcloud, pcloudDownloadLink: fsPcloud } : {}),
+              };
+            };
 
-            return [...backendProducts, ...firestoreOnly, ...localMock];
+            // Map over ALL previous products (whether from SQLite backend or local JSON/mock)
+            // If the product exists in Firestore, merge its images/pcloud links on top of it.
+            // This prevents Firestore documents with null image fields from blanking out valid local pCloud URLs.
+            const mergedProducts = prev.map(p => {
+              const fd = firestoreById[String(p.id)];
+              if (fd) {
+                return _mergeFirestoreImages(p, fd);
+              }
+              return p;
+            });
+
+            // Also include any completely new products from Firestore that did not exist in prev
+            const prevIds = new Set(prev.map(p => String(p.id)));
+            const newFirestoreProducts = firestoreDocs.filter(fd => !prevIds.has(String(fd.id)));
+
+            return [...mergedProducts, ...newFirestoreProducts];
           });
         }
       }, (err) => {
@@ -1041,7 +1094,7 @@ export function AppContextProvider({ children }) {
   // State is managed in React memory context and fetched directly from the backend SQLite DB
 
   const lastUserUidRef = useRef(null);
-  const syncedUserRef = useRef(null);
+  const lastSyncedKeyRef = useRef('');
   
   useEffect(() => {
     const currentUid = user?.uid || null;
@@ -1054,7 +1107,7 @@ export function AppContextProvider({ children }) {
       setBuyNowProduct(null);
       setLastPurchasedItems([]);
       lastUserUidRef.current = currentUid;
-      syncedUserRef.current = null; // Allow backend sync to run again for the new user
+      lastSyncedKeyRef.current = ''; // Reset the sync key so next sync for new/reloaded user can run
     }
   }, [user]);
 
@@ -1134,14 +1187,14 @@ export function AppContextProvider({ children }) {
 
   useEffect(() => {
     if (!user) return;
-    // NOTE: Removed the customer-only role guard — users with any role may own
-    // purchased products and should have their vault synced on login.
-    if (syncedUserRef.current === user.uid) return;
-    syncedUserRef.current = user.uid;
+    const hasToken = () => !!localStorage.getItem('lumora_backend_token');
+
+    // Check sync status using a composite key: uid + products length
+    // This ensures we re-sync if products list updates (e.g. finishes loading from SQLite)
+    const currentSyncKey = `${user.uid}_${products.length}`;
+    if (lastSyncedKeyRef.current === currentSyncKey) return;
 
     const runSync = async () => {
-      // Wait for the backend JWT to be written (set by syncWithBackend in AuthContext).
-      const hasToken = () => !!localStorage.getItem('lumora_backend_token');
       if (!hasToken()) {
         await new Promise((resolve) => {
           const onReady = () => { window.removeEventListener('lumora_backend_ready', onReady); resolve(); };
@@ -1153,6 +1206,12 @@ export function AppContextProvider({ children }) {
         console.warn('[AppContext] Backend token unavailable after 5s — skipping sync');
         return;
       }
+
+      // Re-verify the key after wait, in case products or user changed during wait
+      const freshSyncKey = `${user?.uid || ''}_${products.length}`;
+      if (lastSyncedKeyRef.current === freshSyncKey) return;
+      lastSyncedKeyRef.current = freshSyncKey;
+
       if (syncBackend.current) await syncBackend.current();
     };
 
@@ -1529,6 +1588,7 @@ export function AppContextProvider({ children }) {
       setActiveProductId(payload);
       navigate(`/#product/${payload}`);
       setCurrentView('product-detail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (view === 'creator-profile') {
       setActiveCreatorId(payload);
       navigate(`/#creator/${payload}`);
@@ -1558,7 +1618,8 @@ export function AppContextProvider({ children }) {
   };
 
   const getActiveProduct = () => {
-    return products.find(p => String(p.id) === String(activeProductId)) || products[0];
+    if (!activeProductId) return products[0];
+    return products.find(p => String(p.id) === String(activeProductId)) || null;
   };
 
   const getActiveCreator = () => {

@@ -64,7 +64,7 @@ export default function CustomerPurchases() {
 
   useEffect(() => {
     fetchPurchases();
-  }, [user, ownedProducts.length]);
+  }, [user, ownedProducts.length, products.length]);
 
   // Reload when a purchase event fires from anywhere in the app
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function CustomerPurchases() {
                 </div>
 
                 {/* Product Information Grid inside Order */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                <div className="purchases-card-grid">
                   {(ord.items || []).map((item, idx) => {
                     const product = products.find(p => String(p.id) === String(item.product_id)) || {
                       id: item.product_id,

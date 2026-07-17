@@ -207,7 +207,7 @@ def invite_admin(
 
     token      = str(uuid.uuid4()).replace("-", "")
     expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
-    accept_url = f"{settings.FRONTEND_URL}/admin/accept-invite?token={token}"
+    accept_url = f"{settings.ADMIN_FRONTEND_URL}/admin/accept-invite?token={token}"
 
     invitation = AdminInvitation(
         email=body.email,
@@ -288,7 +288,7 @@ def resend_invitation(
     db.commit()
     db.refresh(invitation)
 
-    accept_url = f"{settings.FRONTEND_URL}/admin/accept-invite?token={invitation.invite_token}"
+    accept_url = f"{settings.ADMIN_FRONTEND_URL}/admin/accept-invite?token={invitation.invite_token}"
 
     try:
         log_admin_action(

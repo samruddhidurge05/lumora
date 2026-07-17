@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import cast, String, or_
-from app.db.session import get_db
+from app.db.session import get_db, SessionLocal
 from app.models.product import Product
 from app.models.user import User
 from app.models.order import Order, OrderItem
@@ -14,9 +14,11 @@ from app.core.exceptions import LumoraException
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import os
+import time
 from app.core.config import settings
 from app.services.product_service import ProductService
 from app.services.storage_service import storage_service
+from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
 
 router = APIRouter()
 
@@ -24,6 +26,23 @@ import urllib.parse as urlparse
 import requests
 
 _PCLOUD_URL_CACHE = {}
+_LAST_FIRESTORE_SYNC_TIME = 0.0
+
+def _bg_sync_firestore():
+    db = SessionLocal()
+    try:
+        restore_sqlite_products_from_firestore(db)
+    except Exception as e:
+        print(f"[bg-sync] Error syncing Firestore products: {e}")
+    finally:
+        db.close()
+
+def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
+    global _LAST_FIRESTORE_SYNC_TIME
+    now = time.time()
+    if now - _LAST_FIRESTORE_SYNC_TIME > 30:  # 30 seconds throttle
+        _LAST_FIRESTORE_SYNC_TIME = now
+        background_tasks.add_task(_bg_sync_firestore)
 
 def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
     if not url or "pcloud" not in url:
@@ -53,20 +72,13 @@ def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
     return url
 
 def is_pcloud_link_active(url: Optional[str]) -> bool:
+    """Return True for any stored external/pCloud URL without doing a live network check.
+    The admin always sets valid links; a 1-second HEAD probe caused false negatives
+    on slow networks and made downloads appear unavailable. Trust the DB value."""
     if not url:
         return False
     from app.services.product_service import _is_external_url
-    if not _is_external_url(url):
-        return False
-    import httpx
-    try:
-        with httpx.Client(follow_redirects=True) as client:
-            res = client.head(url, timeout=1.0)
-            if res.status_code in (404, 410):
-                return False
-    except Exception:
-        pass
-    return True
+    return _is_external_url(url)
 
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -204,11 +216,31 @@ def resolve_product_media(product, db):
     # Try to find a thumbnail image inside the download folder (only if download link set)
     resolved_thumb = None
     resolved_preview = None
-    if product.pcloud_download_link:
+    
+    # 1. First, search for any explicit pCloud image public share links in preview_images/image_urls
+    pcloud_share_links = []
+    p_imgs = product.preview_images if isinstance(product.preview_images, list) else []
+    p_urls = product.image_urls if isinstance(product.image_urls, list) else []
+    for url in p_imgs + p_urls:
+        if isinstance(url, str) and "pcloud" in url and ("code=" in url or "publink/show" in url):
+            if url not in pcloud_share_links:
+                pcloud_share_links.append(url)
+                
+    for link in pcloud_share_links:
+        resolved = resolve_pcloud_direct_file_url(link)
+        if resolved and _is_image_url(resolved):
+            resolved_thumb = resolved
+            resolved_preview = resolved
+            break
+
+    # 2. Fall back to searching inside the pcloud_download_link folder
+    if not resolved_thumb and product.pcloud_download_link:
         resolved_thumb = resolve_pcloud_direct_file_url(product.pcloud_download_link, "thumbnail")
         # Only accept if it's actually an image, not a PDF/ZIP
         if resolved_thumb and not _is_image_url(resolved_thumb):
             resolved_thumb = None
+            
+    if not resolved_preview and product.pcloud_download_link:
         resolved_preview = (
             resolve_pcloud_direct_file_url(product.pcloud_download_link, "cover") or
             resolve_pcloud_direct_file_url(product.pcloud_download_link, "preview")
@@ -301,12 +333,14 @@ def resolve_products_media(products, db):
 
 @router.get("/", response_model=List[ProductResponse])
 def read_products(
+    background_tasks: BackgroundTasks,
     category: Optional[str] = None,
     skip: int = 0,
     limit: int = 1000,
     db: Session = Depends(get_db)
 ):
     """List all published products. Public — no authentication required."""
+    trigger_firestore_sync_if_needed(background_tasks)
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)

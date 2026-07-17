@@ -58,7 +58,7 @@ export default function CustomerWishlist() {
 
   useEffect(() => {
     fetchWishlist();
-  }, [user]);
+  }, [user, products.length]);
 
   // 2. Add Item to Backend Wishlist
   const handleAddItem = async (product) => {
@@ -152,7 +152,7 @@ export default function CustomerWishlist() {
         </div>
       ) : (
         /* Wishlist Items Grid */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: '20px' }}>
+        <div className="wishlist-grid">
           {safeWishlist.map(p => (
             <div key={p.id} className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,148,230,0.22)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ position: 'relative', height: '160px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigateTo('product-detail', p.id)}>

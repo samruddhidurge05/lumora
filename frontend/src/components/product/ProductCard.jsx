@@ -1,6 +1,7 @@
 import React from 'react';
 import { Star, ShoppingBag, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import ProductImage from './ProductImage';
 
 export default function ProductCard({ product }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
@@ -16,7 +17,7 @@ export default function ProductCard({ product }) {
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; }}
     >
       <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
-        <img src={product.preview} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <ProductImage product={product} style={{ objectFit: 'cover' }} />
         {product.badge && (
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}

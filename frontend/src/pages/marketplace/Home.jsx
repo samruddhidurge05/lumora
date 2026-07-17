@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import ProductImage from '../../components/product/ProductImage';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 
@@ -101,12 +102,11 @@ function PCard({ product, delay = 0 }) {
       }}
     >
       <div style={{ height:'190px', overflow:'hidden', position:'relative' }}>
-        <img
-          src={product.preview||'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
-          alt={product.title} loading="lazy"
-          style={{ width:'100%', height:'100%', objectFit:'cover', transform:hov?'scale(1.07)':'scale(1)', transition:'transform .5s ease' }}
+        <ProductImage
+          product={product}
+          style={{ transform:hov?'scale(1.07)':'scale(1)', transition:'transform .5s ease' }}
         />
-        <div style={{ position:'absolute', inset:0, background: hov?'rgba(123,63,160,.06)':'transparent', transition:'background .3s' }} />
+        <div style={{ position:'absolute', inset:0, background: hov?'rgba(123,63,160,.06)':'transparent', transition:'background .3s', pointerEvents: 'none' }} />
         {product.badge && (
           <span style={{ position:'absolute', top:'10px', left:'10px', fontSize:'.58rem', background:'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color:'#fff', fontWeight:800, padding:'3px 9px', borderRadius:'20px' }}>
             {product.badge}
@@ -251,6 +251,7 @@ export default function Home() {
               </motion.p>
 
               <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.55}}
+                className="home-hero-ctas"
                 style={{ display:'flex', gap:'12px', flexWrap:'wrap', marginBottom:'52px' }}>
                 {user ? (
                   <>
@@ -267,6 +268,7 @@ export default function Home() {
 
               {/* Stats */}
               <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.7}}
+                className="home-hero-stats"
                 style={{ display:'flex', gap:'36px', flexWrap:'wrap', paddingTop:'28px', borderTop:'1px solid rgba(220,198,255,.25)' }}>
                 {[{v:'103',s:'+',l:'Products'},{v:'45',s:'K+',l:'Customers'},{v:'16',s:'Cr+',l:'Earnings'}].map((s,i)=>(
                   <div key={i}>
@@ -340,7 +342,7 @@ export default function Home() {
             </div>
             <button onClick={()=>navigateTo('marketplace')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all 103 <ArrowRight size={14}/></button>
           </div>
-          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid lumora-home-products-grid">
             {featured.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -376,7 +378,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Trending This Week</h2>
             </div>
           </div>
-          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid lumora-home-products-grid">
             {trending.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -391,7 +393,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Latest Products</h2>
             </div>
           </div>
-          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="home-product-grid lumora-home-products-grid">
             {latest.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>

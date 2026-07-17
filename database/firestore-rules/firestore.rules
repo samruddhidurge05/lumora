@@ -167,6 +167,11 @@ service cloud.firestore {
       allow list:  if isAdmin();
     }
 
+    // ── Admin team and notifications ──────────────────────────────────────────
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     // ── Cart — own cart only ──────────────────────────────────────────────────
     match /carts/{userId} {
       allow read, write: if isOwner(userId);

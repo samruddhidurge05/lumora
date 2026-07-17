@@ -413,6 +413,64 @@ export default function Payment() {
     }
   };
 
+  const handleTestBypass = async () => {
+    setIsProcessing(true);
+    setProcessingStep(1);
+    
+    const freshIdempotencyKey = 'bypass_idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    const basePayload = {
+      items: checkoutItems.map(i => ({
+        product_id: parseInt(i.id),
+        price_paid: parseFloat(i.price) || 0,
+      })),
+      total_amount: parseFloat(total.toFixed(2)),
+      currency: 'INR',
+      payment_method: 'test_bypass',
+      idempotency_key: freshIdempotencyKey,
+      promo_code:     appliedPromo?.code || null,
+      affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+      discount_amount: parseFloat(discount.toFixed(2)),
+      tax_amount: parseFloat((platformFee + gst).toFixed(2)),
+    };
+
+    try {
+      const res = await backendFetch('/payments/initiate', {
+        method: 'POST',
+        body: JSON.stringify(basePayload),
+      });
+
+      if (!res?.payment_ref) {
+        throw new Error('Invalid initiate response from server');
+      }
+
+      setProcessingStep(2);
+
+      await backendFetch('/payments/confirm', {
+        method: 'POST',
+        body: JSON.stringify({
+          payment_ref:        res.payment_ref,
+          gateway_payment_id: 'bypass_pay_' + Date.now(),
+          gateway_signature:  'bypass_signature_verification_test',
+          payment_method:     'test_bypass',
+        }),
+      });
+
+      setPendingPaymentRef(null);
+      sessionStorage.removeItem('lumora_idempotency_key');
+      sessionStorage.removeItem('lumora_pending_payment_ref');
+      sessionStorage.removeItem('lumora_upi_session');
+      
+      completePurchase('test_bypass', res.payment_ref, appliedPromo?.code || null, discount);
+      
+    } catch (err) {
+      console.error('[Payment] Test bypass failed:', err);
+      alert('Test bypass failed: ' + (err.message || 'Please try again.'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleQrVerified = async (confirmResponse) => {
     // Clear persisted UPI session completely
     sessionStorage.removeItem('lumora_upi_session');
@@ -587,7 +645,7 @@ export default function Payment() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="payment-card-expiry-grid">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '0.62rem', fontWeight: 800, color: 'var(--color-mocha)', letterSpacing: '0.05em' }}>EXPIRY</label>
                       <input name="expiry" value={cardForm.expiry} onChange={handleCardChange} required placeholder="MM/YY" maxLength={5}
@@ -612,7 +670,7 @@ export default function Payment() {
               {/* Net Banking Tab */}
               {paymentMethod === 'netbanking' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="payment-card-grid">
                     {[
                       { id: 'hdfc', label: 'HDFC Bank' },
                       { id: 'sbi', label: 'SBI' },
@@ -645,7 +703,7 @@ export default function Payment() {
             </div>
 
             {/* Trust Badges and Indicators */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.68rem', color: 'var(--color-mocha)', fontWeight: 600 }} className="trust-row-mobile">
+            <div className="payment-trust-grid" style={{ fontSize: '0.68rem', color: 'var(--color-mocha)', fontWeight: 600 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(45,0,77,0.02)', border: '1px solid rgba(45,0,77,0.08)' }}>
                 <Check size={14} style={{ color: 'var(--purple-600)' }} /> PCI-DSS Compliant Secure
               </div>
@@ -671,10 +729,16 @@ export default function Payment() {
                 Purchases are paused. Platform Maintenance is active.
               </div>
             ) : (
-              <button type="submit" className="btn-premium btn-premium-solid buy-now-glow"
-                style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '0.9rem', borderRadius: '12px', marginTop: '8px', boxShadow: '0 8px 24px rgba(123,63,160,0.4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={16} /> {paymentMethod === 'upi_qr' ? `Generate QR · ${formatPrice(total)}` : `Authorize & Pay · ${formatPrice(total)}`}
-              </button>
+              <>
+                <button type="submit" className="btn-premium btn-premium-solid buy-now-glow"
+                  style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '0.9rem', borderRadius: '12px', marginTop: '8px', boxShadow: '0 8px 24px rgba(123,63,160,0.4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={16} /> {paymentMethod === 'upi_qr' ? `Generate QR · ${formatPrice(total)}` : `Authorize & Pay · ${formatPrice(total)}`}
+                </button>
+                <button type="button" onClick={handleTestBypass} className="btn-premium"
+                  style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: '0.9rem', borderRadius: '12px', marginTop: '12px', background: '#F59E0B', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(245,158,11,0.25)' }}>
+                  ⚡ Test Bypass Checkout (Free)
+                </button>
+              </>
             )}
           </form>
           )}

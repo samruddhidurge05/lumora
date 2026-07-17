@@ -30,7 +30,7 @@ export default function Cart() {
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Your Cart</span>
-            <h1 className="text-editorial" style={{ fontSize: '2.5rem', fontWeight: 400, color: 'var(--color-espresso)', marginTop: '4px' }}>{cart.length} Item{cart.length !== 1 ? 's' : ''}</h1>
+            <h1 className="text-editorial cart-title" style={{ fontSize: '2.5rem', fontWeight: 400, color: 'var(--color-espresso)', marginTop: '4px' }}>{cart.length} Item{cart.length !== 1 ? 's' : ''}</h1>
           </div>
           <button onClick={clearCart} className="btn-premium" style={{ fontSize: '0.75rem', color: '#dc2626', borderColor: 'rgba(220,38,38,0.25)' }}>
             <Trash2 size={13} /> Clear All
@@ -59,7 +59,7 @@ export default function Cart() {
                   </h3>
                   <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>by {item.seller?.name}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="cart-item-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(196,181,253,0.35)', background: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                     <Minus size={12} />
                   </button>
@@ -79,7 +79,7 @@ export default function Cart() {
           </div>
 
           {/* Summary */}
-          <div className="glass-card" style={{ padding: '28px', position: 'sticky', top: '100px' }}>
+          <div className="glass-card cart-summary" style={{ padding: '28px', position: 'sticky', top: '100px' }}>
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--color-espresso)', marginBottom: '20px' }}>Order Summary</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--color-mocha)', marginBottom: '10px', fontWeight: 600 }}>
               <span>Subtotal ({cart.length} items)</span><span>{formatPrice(subtotal)}</span>

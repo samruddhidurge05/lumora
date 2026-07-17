@@ -203,91 +203,33 @@ export default function AffiliateCartDrawer() {
                 flexShrink: 0,
                 padding: '20px 28px',
                 borderTop: '1px solid rgba(196,181,253,0.20)',
-                display: 'flex', flexDirection: 'column', gap: '12px',
+                display: 'flex', gap: '12px',
               }}>
-                {/* Promo code */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    placeholder="Promo code"
-                    value={promoInput}
-                    onChange={e => { setPromoInput(e.target.value); setPromoError(''); }}
-                    style={{
-                      flex: 1, padding: '9px 14px', borderRadius: '10px',
-                      border: `1px solid ${promoError ? 'rgba(239,68,68,0.50)' : 'rgba(196,181,253,0.35)'}`,
-                      background: 'rgba(255,255,255,0.80)',
-                      fontSize: '0.78rem', fontFamily: 'var(--font-sans)',
-                      color: 'var(--text-primary)', outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={handleApplyPromo}
-                    style={{
-                      padding: '9px 16px', borderRadius: '10px',
-                      border: '1.5px solid rgba(123,63,160,0.35)',
-                      background: 'rgba(255,255,255,0.80)',
-                      fontSize: '0.78rem', fontWeight: 700,
-                      color: '#7B3FA0', cursor: 'pointer',
-                      fontFamily: 'var(--font-sans)',
-                    }}
-                  >Apply</button>
-                </div>
-                {promoError && <div style={{ fontSize: '0.72rem', color: '#ef4444' }}>{promoError}</div>}
-                {appliedPromo && (
-                  <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 600 }}>
-                    ✓ {appliedPromo.discountPercent}% discount applied!
-                  </div>
-                )}
-
-                {/* Summary */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Subtotal</span><span style={{ fontWeight: 600 }}>{formatINR(affCartTotal)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a' }}>
-                      <span>Discount ({appliedPromo.discountPercent}%)</span><span>-{formatINR(discount)}</span>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Platform Fee</span><span>{platformFee === 0 ? 'Free' : `₹${platformFee}`}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    <span>GST (18%)</span><span>{formatINR(gst)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', paddingTop: '8px', borderTop: '1px solid rgba(196,181,253,0.20)', marginTop: '4px' }}>
-                    <span>Total</span><span>{formatINR(total)}</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={clearAffCart}
-                    style={{
-                      flex: '0 0 auto', padding: '11px 16px', borderRadius: '12px',
-                      border: '1px solid rgba(196,181,253,0.35)',
-                      background: 'rgba(255,255,255,0.80)',
-                      fontSize: '0.75rem', fontWeight: 600,
-                      color: 'var(--text-secondary)', cursor: 'pointer',
-                      fontFamily: 'var(--font-sans)',
-                    }}
-                  >Clear</button>
-                  <button
-                    onClick={handleCheckout}
-                    style={{
-                      flex: 1, padding: '12px 20px', borderRadius: '12px',
-                      border: 'none',
-                      background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                      color: '#fff', fontSize: '0.84rem', fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                      boxShadow: '0 4px 16px rgba(123,63,160,0.35)',
-                    }}
-                  >
-                    Checkout <ArrowRight size={14} />
-                  </button>
-                </div>
+                <button
+                  onClick={clearAffCart}
+                  style={{
+                    flex: '0 0 auto', padding: '11px 16px', borderRadius: '12px',
+                    border: '1px solid rgba(196,181,253,0.35)',
+                    background: 'rgba(255,255,255,0.80)',
+                    fontSize: '0.75rem', fontWeight: 600,
+                    color: 'var(--text-secondary)', cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >Clear Cart</button>
+                <button
+                  onClick={() => setIsAffCartOpen(false)}
+                  style={{
+                    flex: 1, padding: '12px 20px', borderRadius: '12px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                    color: '#fff', fontSize: '0.84rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 16px rgba(123,63,160,0.35)',
+                  }}
+                >
+                  Continue Browsing
+                </button>
               </div>
             )}
           </motion.div>

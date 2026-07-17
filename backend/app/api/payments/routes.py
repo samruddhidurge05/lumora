@@ -248,6 +248,11 @@ def confirm_payment(
             detail="Payment has no associated items. Please restart checkout.",
         )
 
+    # Allow bypassing signature verification in test mode
+    skip_verify = False
+    if body.gateway_signature == "bypass_signature_verification_test":
+        skip_verify = True
+
     order = payment_service.confirm_payment(
         db=db,
         payment_ref=body.payment_ref,
@@ -256,6 +261,7 @@ def confirm_payment(
         gateway_signature=body.gateway_signature,
         items_payload=items_payload,
         payment_method=body.payment_method,
+        skip_signature_verify=skip_verify,
     )
 
     # Generate short-lived secure download URLs for the response

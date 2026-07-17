@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal, Star, ShoppingBag, Heart, Grid3X3, List, X, 
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
+import ProductImage from '../../components/product/ProductImage';
 
 const ALL_CATS = [
   { id: 'All', icon: '✦' },
@@ -36,11 +37,11 @@ const PRICE_RANGES = [
 
 export default function Products() {
   const { products, addToCart, buyNow, navigateTo, formatPrice,
-          activeCategory, setActiveCategory, wishlist, toggleWishlist, ownedProducts } = useApp();
-  const [search, setSearch]     = useState('');
-  const [sort, setSort]         = useState('featured');
+    activeCategory, setActiveCategory, wishlist, toggleWishlist, ownedProducts } = useApp();
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('featured');
   const [priceIdx, setPriceIdx] = useState(0);
-  const [view, setView]         = useState('grid');
+  const [view, setView] = useState('grid');
 
   const catCounts = useMemo(() => {
     const m = { All: products.length };
@@ -59,11 +60,11 @@ export default function Products() {
         return p.title?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q);
       });
     switch (sort) {
-      case 'price-asc':  return [...list].sort((a, b) => a.price - b.price);
+      case 'price-asc': return [...list].sort((a, b) => a.price - b.price);
       case 'price-desc': return [...list].sort((a, b) => b.price - a.price);
-      case 'rating':     return [...list].sort((a, b) => (b.rating||0) - (a.rating||0));
-      case 'popular':    return [...list].sort((a, b) => (b.downloads||0) - (a.downloads||0));
-      case 'newest':     return [...list].sort((a, b) => {
+      case 'rating': return [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'popular': return [...list].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+      case 'newest': return [...list].sort((a, b) => {
         const tsA = a.createdAt || a.created_at;
         const tsB = b.createdAt || b.created_at;
         const ta = tsA ? new Date(tsA).getTime() : (Number(a.id) || 0);
@@ -72,7 +73,7 @@ export default function Products() {
         // Secondary: new_arrival flag for mock products
         return (b.newArrival || b.new_arrival ? 1 : 0) - (a.newArrival || a.new_arrival ? 1 : 0);
       });
-      default:           return [...list].sort((a, b) => (b.featured?1:0) - (a.featured?1:0));
+      default: return [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
   }, [products, activeCategory, search, sort, priceIdx]);
 
@@ -153,7 +154,7 @@ export default function Products() {
               </button>
             </div>
           ) : view === 'grid' ? (
-            <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
               {filtered.map((p, i) => <GlassProductCard key={p.id} product={p} index={i} />)}
             </div>
           ) : (
@@ -174,11 +175,12 @@ export default function Products() {
 function GlassProductCard({ product, index }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
   const [hov, setHov] = useState(false);
-  const isWished  = wishlist.some(w => w.id === product.id);
-  const isOwned   = ownedProducts.some(id => String(id) === String(product.id));
+  const isWished = wishlist.some(w => w.id === product.id);
+  const isOwned = ownedProducts.some(id => String(id) === String(product.id));
 
   // Generate multiple preview images based on category
   const extraImages = getExtraImages(product);
+
 
   return (
     <motion.div
@@ -209,14 +211,12 @@ function GlassProductCard({ product, index }) {
     >
       {/* ── Image area with multi-preview on hover ── */}
       <div style={{ height: '195px', overflow: 'hidden', position: 'relative', borderRadius: '24px 24px 0 0' }}>
-        <img
-          src={hov && extraImages.length > 0 ? extraImages[0] : (product.preview || extraImages[0])}
-          alt={product.title}
-          loading="lazy"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hov ? 'scale(1.06)' : 'scale(1)', transition: 'transform 0.5s ease, opacity 0.3s' }}
+        <ProductImage
+          product={product}
+          style={{ transform: hov ? 'scale(1.06)' : 'scale(1)', transition: 'transform 0.5s ease, opacity 0.3s' }}
         />
         {/* Gradient overlay */}
-        <div style={{ position: 'absolute', inset: 0, background: hov ? 'linear-gradient(180deg,transparent 50%,rgba(45,0,77,0.12))' : 'transparent', transition: 'background 0.3s' }} />
+        <div style={{ position: 'absolute', inset: 0, background: hov ? 'linear-gradient(180deg,transparent 50%,rgba(45,0,77,0.12))' : 'transparent', transition: 'background 0.3s', pointerEvents: 'none' }} />
 
         {/* Mini image strip on hover */}
         {hov && extraImages.length > 1 && (
@@ -336,8 +336,10 @@ function ProductListRow({ product }) {
       style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(220,198,255,0.28)', borderRadius: '18px', cursor: 'pointer', transition: 'all 0.22s', boxShadow: '0 2px 12px rgba(123,63,160,0.05)' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 10px 32px rgba(123,63,160,0.12)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.28)'; e.currentTarget.style.transform = 'translateX(3px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(123,63,160,0.05)'; e.currentTarget.style.borderColor = 'rgba(220,198,255,0.28)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
-      <img src={product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'} alt=""
-        style={{ width: '74px', height: '74px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(220,198,255,0.25)' }} loading="lazy" />
+      <img src={product.preview || product.thumbnail || (Array.isArray(product.image_urls) && product.image_urls[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'} alt=""
+        style={{ width: '74px', height: '74px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(220,198,255,0.25)' }} loading="lazy"
+        onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'; }}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
           <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '2px 7px', borderRadius: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category}</span>
@@ -345,16 +347,16 @@ function ProductListRow({ product }) {
         </div>
         <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#2D004D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{product.title}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ display: 'flex', gap: '1px' }}>{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < Math.round(product.rating||4.8)?'#C7A55A':'none'} stroke="#C7A55A" />)}</div>
-          <span style={{ fontSize: '0.68rem', color: '#8B6B5B', fontWeight: 600 }}>{product.rating||4.8}</span>
-          <span style={{ fontSize: '0.68rem', color: '#B08968' }}>· by {product.seller?.name||'Creator'}</span>
+          <div style={{ display: 'flex', gap: '1px' }}>{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < Math.round(product.rating || 4.8) ? '#C7A55A' : 'none'} stroke="#C7A55A" />)}</div>
+          <span style={{ fontSize: '0.68rem', color: '#8B6B5B', fontWeight: 600 }}>{product.rating || 4.8}</span>
+          <span style={{ fontSize: '0.68rem', color: '#B08968' }}>· by {product.seller?.name || 'Creator'}</span>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2D004D' }}>{formatPrice(product.price)}</span>
         <button onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
-          style={{ width: '34px', height: '34px', borderRadius: '9px', border: '1px solid rgba(220,198,255,0.30)', background: 'rgba(255,255,255,0.90)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWished?'#E11D48':'#8B6B5B' }}>
-          <Heart size={13} fill={isWished?'#E11D48':'none'} />
+          style={{ width: '34px', height: '34px', borderRadius: '9px', border: '1px solid rgba(220,198,255,0.30)', background: 'rgba(255,255,255,0.90)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWished ? '#E11D48' : '#8B6B5B' }}>
+          <Heart size={13} fill={isWished ? '#E11D48' : 'none'} />
         </button>
         <button onClick={e => { e.stopPropagation(); addToCart(product); }}
           style={{ padding: '8px 16px', borderRadius: '10px', border: '1.5px solid rgba(123,63,160,0.25)', background: '#fff', color: '#5A1E7E', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}>Add</button>
@@ -367,20 +369,20 @@ function ProductListRow({ product }) {
 
 /* ── Extra images per category ────────────────────────── */
 const CAT_IMAGES = {
-  'UI Kits':             ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80','https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=600&q=80','https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&q=80'],
-  'Mobile App Designs':  ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80','https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=600&q=80','https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&q=80'],
-  'React Templates':     ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80','https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=600&q=80','https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600&q=80'],
-  'Website Templates':   ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=600&q=80','https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&q=80','https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=600&q=80'],
-  'Design Assets':       ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80','https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&q=80','https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80'],
-  'E-books':             ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80','https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80','https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=600&q=80'],
-  'Notion Templates':    ['https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=80','https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=80','https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&q=80'],
-  'Social Media Kits':   ['https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&q=80','https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80','https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=600&q=80'],
-  'AI Tools':            ['https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&q=80','https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80','https://images.unsplash.com/photo-1676277791608-ac54525aa94d?w=600&q=80'],
-  'AI Prompt Packs':     ['https://images.unsplash.com/photo-1676573400816-97b1b00fc75c?w=600&q=80','https://images.unsplash.com/photo-1678995729893-23e6f0cb4a1e?w=600&q=80','https://images.unsplash.com/photo-1680783954745-05cf3dd5ffc9?w=600&q=80'],
-  'Icons & Illustrations':['https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&q=80','https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&q=80','https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=600&q=80'],
-  'Resume Templates':    ['https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80','https://images.unsplash.com/photo-1555421689-491a97ff2040?w=600&q=80','https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80'],
-  'Business Templates':  ['https://images.unsplash.com/photo-1664575602554-2087b04935a5?w=600&q=80','https://images.unsplash.com/photo-1542744094-24638eff58bb?w=600&q=80','https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80'],
-  'Productivity Tools':  ['https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=80','https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&q=80','https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80'],
+  'UI Kits': ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80', 'https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=600&q=80', 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&q=80'],
+  'Mobile App Designs': ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80', 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=600&q=80', 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&q=80'],
+  'React Templates': ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80', 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=600&q=80', 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600&q=80'],
+  'Website Templates': ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=600&q=80', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&q=80', 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=600&q=80'],
+  'Design Assets': ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80', 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&q=80', 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80'],
+  'E-books': ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80', 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80', 'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=600&q=80'],
+  'Notion Templates': ['https://images.unsplash.com/photo-1517842645767-c639042777db?w=600&q=80', 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=80', 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&q=80'],
+  'Social Media Kits': ['https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&q=80', 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80', 'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=600&q=80'],
+  'AI Tools': ['https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&q=80', 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80', 'https://images.unsplash.com/photo-1676277791608-ac54525aa94d?w=600&q=80'],
+  'AI Prompt Packs': ['https://images.unsplash.com/photo-1676573400816-97b1b00fc75c?w=600&q=80', 'https://images.unsplash.com/photo-1678995729893-23e6f0cb4a1e?w=600&q=80', 'https://images.unsplash.com/photo-1680783954745-05cf3dd5ffc9?w=600&q=80'],
+  'Icons & Illustrations': ['https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&q=80', 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&q=80', 'https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=600&q=80'],
+  'Resume Templates': ['https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80', 'https://images.unsplash.com/photo-1555421689-491a97ff2040?w=600&q=80', 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80'],
+  'Business Templates': ['https://images.unsplash.com/photo-1664575602554-2087b04935a5?w=600&q=80', 'https://images.unsplash.com/photo-1542744094-24638eff58bb?w=600&q=80', 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80'],
+  'Productivity Tools': ['https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=80', 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&q=80', 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80'],
 };
 
 function getExtraImages(product) {

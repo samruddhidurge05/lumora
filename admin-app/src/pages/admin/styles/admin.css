@@ -1,0 +1,441 @@
+/* ══════════════════════════════════════════
+   LUMORA — Admin Panel Design System Overrides
+   ══════════════════════════════════════════ */
+
+/* --- Custom CSS Variables & Design Tokens --- */
+:root {
+  --admin-spacing-8: 8px;
+  --admin-spacing-16: 16px;
+  --admin-spacing-24: 24px;
+  --admin-spacing-32: 32px;
+  --admin-spacing-48: 48px;
+
+  --admin-radius-card: 24px;
+  --admin-radius-input: 12px;
+  --admin-radius-button: 12px;
+
+  --admin-shadow-sm: 0 4px 20px rgba(90, 30, 126, 0.04);
+  --admin-shadow-md: 0 8px 32px rgba(90, 30, 126, 0.07);
+  --admin-shadow-lg: 0 20px 56px rgba(90, 30, 126, 0.12);
+  
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-blur: 40px;
+}
+
+/* --- Admin Layout Grid System --- */
+.admin-layout-grid {
+  display: flex;
+  gap: var(--admin-spacing-32);
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--admin-spacing-32);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  align-items: flex-start;
+}
+
+.admin-main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-spacing-32);
+  box-sizing: border-box;
+}
+
+.admin-page-container {
+  width: 100%;
+  max-width: 100% !important;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* --- Sidebar Refinement --- */
+.admin-sidebar {
+  width: 260px !important;
+  border-radius: var(--admin-radius-card) !important;
+  padding: var(--admin-spacing-24) var(--admin-spacing-16) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--admin-spacing-24) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: var(--admin-shadow-md) !important;
+  height: calc(100vh - 48px) !important;
+  position: sticky !important;
+  top: var(--admin-spacing-24) !important;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-sidebar.collapsed {
+  width: 76px !important;
+  padding: var(--admin-spacing-24) var(--admin-spacing-8) !important;
+}
+
+/* Sidebar Nav Items */
+.admin-sidebar .admin-nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  border-radius: var(--admin-radius-input) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #2D004D !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 1.5px solid transparent !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.admin-sidebar .admin-nav-item:hover {
+  background: rgba(123, 63, 160, 0.05) !important;
+  border-color: rgba(123, 63, 160, 0.1) !important;
+  transform: translateX(4px) !important;
+}
+
+.admin-sidebar .admin-nav-item.active {
+  color: #7B3FA0 !important;
+  background: rgba(123, 63, 160, 0.08) !important;
+  border-color: rgba(123, 63, 160, 0.15) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.admin-sidebar .admin-nav-item.active:hover {
+  transform: none !important;
+}
+
+/* Tooltip styles for collapsed sidebar items */
+@media (min-width: 1025px) {
+  .admin-sidebar.collapsed .admin-nav-item {
+    position: relative;
+  }
+  
+  .admin-sidebar.collapsed .admin-nav-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%) translateX(-8px);
+    margin-left: 14px;
+    background: #2D004D;
+    color: #F8F3FB;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 4px 16px rgba(45, 0, 77, 0.16);
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  
+  .admin-sidebar.collapsed .admin-nav-item:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* --- Card System Consistency Pass --- */
+.admin-main-content .glass-surface, 
+.admin-main-content .glass-card, 
+.admin-main-content .premium-flat-card {
+  border-radius: var(--admin-radius-card) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+  border-top: 2px solid rgba(255, 255, 255, 0.6) !important;
+  border-left: 2px solid rgba(255, 255, 255, 0.5) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
+  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s !important;
+  box-sizing: border-box !important;
+}
+
+.admin-main-content .glass-surface:hover, 
+.admin-main-content .glass-card:hover, 
+.admin-main-content .premium-flat-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--admin-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Ensure equal spacing, alignment, and wrapping for stats cards */
+.admin-main-content .grid {
+  gap: var(--admin-spacing-24) !important;
+}
+
+/* Ensure equal height on grid cards in dashboards */
+.admin-main-content .grid > div {
+  padding: var(--admin-spacing-24) !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* --- Table Standardization --- */
+.admin-main-content table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  text-align: left !important;
+  box-sizing: border-box;
+}
+
+.admin-main-content thead tr,
+.admin-main-content table tr.bg-stone-100\/40 {
+  background: rgba(142, 106, 168, 0.04) !important;
+  border-bottom: 1.5px solid rgba(142, 106, 168, 0.1) !important;
+}
+
+.admin-main-content th {
+  padding: var(--admin-spacing-16) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #7B3FA0 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box;
+}
+
+.admin-main-content td {
+  padding: var(--admin-spacing-16) !important;
+  font-size: 0.82rem !important;
+  color: #2D004D !important;
+  border-bottom: 1px solid rgba(142, 106, 168, 0.06) !important;
+  vertical-align: middle !important;
+  box-sizing: border-box;
+}
+
+.admin-main-content tbody tr {
+  border-bottom: 1px solid rgba(142, 106, 168, 0.06) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.admin-main-content tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Fix table container wraps for overflow scrollbars */
+.admin-main-content .overflow-x-auto,
+.admin-main-content .overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123, 63, 160, 0.22) transparent;
+}
+
+/* --- Form Design Standardization --- */
+.admin-main-content input[type="text"],
+.admin-main-content input[type="email"],
+.admin-main-content input[type="password"],
+.admin-main-content select,
+.admin-main-content textarea,
+.admin-main-content .glass-input {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.35) !important;
+  border-radius: var(--admin-radius-input) !important;
+  padding: 10px 14px !important;
+  font-size: 0.82rem !important;
+  font-family: inherit !important;
+  color: #2D004D !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s !important;
+}
+
+.admin-main-content input[type="text"]:focus,
+.admin-main-content input[type="email"]:focus,
+.admin-main-content input[type="password"]:focus,
+.admin-main-content select:focus,
+.admin-main-content textarea:focus {
+  outline: none !important;
+  border-color: #7B3FA0 !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.14) !important;
+}
+
+.admin-main-content textarea {
+  height: auto !important;
+  min-height: 100px !important;
+}
+
+/* Forms Labels */
+.admin-main-content label,
+.admin-main-content .text-xs.font-extrabold {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #7B3FA0 !important;
+}
+
+/* --- Buttons Standardization --- */
+.admin-main-content button,
+.admin-main-content .btn-premium {
+  border-radius: var(--admin-radius-button) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Fix generic small icon buttons/tabs height stretching */
+.admin-main-content button[class*="w-"],
+.admin-main-content button[class*="h-"],
+.admin-main-content .flex button,
+.admin-main-content .grid button,
+.admin-main-content .inline-flex button,
+.admin-main-content td button {
+  height: auto !important;
+}
+
+/* Button Variants */
+.btn-admin-primary {
+  background: linear-gradient(135deg, #7B3FA0, #5A1E7E) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(90, 30, 126, 0.2) !important;
+}
+.btn-admin-primary:hover {
+  background: linear-gradient(135deg, #8B4FAF, #6A2E8E) !important;
+  box-shadow: 0 8px 24px rgba(90, 30, 126, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+.btn-admin-primary:disabled {
+  background: #E9D5FF !important;
+  color: #C084FC !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-admin-secondary {
+  border: 1.5px solid rgba(196, 181, 253, 0.4) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  color: #2D004D !important;
+}
+.btn-admin-secondary:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(123, 63, 160, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(90, 30, 126, 0.08) !important;
+}
+.btn-admin-secondary:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.btn-admin-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.25) !important;
+  color: #DC2626 !important;
+}
+.btn-admin-danger:hover {
+  background: #DC2626 !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.2) !important;
+}
+
+.btn-admin-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+  color: #059669 !important;
+}
+.btn-admin-success:hover {
+  background: #059669 !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-admin-ghost {
+  background: transparent !important;
+  border: 1.5px solid transparent !important;
+  color: #7B3FA0 !important;
+}
+.btn-admin-ghost:hover {
+  background: rgba(123, 63, 160, 0.06) !important;
+  color: #2D004D !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Generalized inputs to include search, number, email, password */
+.admin-main-content input[type="text"],
+.admin-main-content input[type="email"],
+.admin-main-content input[type="password"],
+.admin-main-content input[type="number"],
+.admin-main-content input[type="search"],
+.admin-main-content input[type="date"],
+.admin-main-content select,
+.admin-main-content textarea,
+.admin-main-content .glass-input {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.35) !important;
+  border-radius: var(--admin-radius-input) !important;
+  padding: 10px 14px !important;
+  font-size: 0.82rem !important;
+  font-family: inherit !important;
+  color: #2D004D !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s !important;
+}
+
+.admin-main-content input[type="text"]:focus,
+.admin-main-content input[type="email"]:focus,
+.admin-main-content input[type="password"]:focus,
+.admin-main-content input[type="number"]:focus,
+.admin-main-content input[type="search"]:focus,
+.admin-main-content input[type="date"]:focus,
+.admin-main-content select:focus,
+.admin-main-content textarea:focus {
+  outline: none !important;
+  border-color: #7B3FA0 !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.14) !important;
+}
+
+/* --- Spacing Scale Enforcement --- */
+.admin-gap-8 { gap: var(--admin-spacing-8) !important; }
+.admin-gap-16 { gap: var(--admin-spacing-16) !important; }
+.admin-gap-24 { gap: var(--admin-spacing-24) !important; }
+.admin-gap-32 { gap: var(--admin-spacing-32) !important; }
+.admin-gap-48 { gap: var(--admin-spacing-48) !important; }
+
+.admin-mb-8 { margin-bottom: var(--admin-spacing-8) !important; }
+.admin-mb-16 { margin-bottom: var(--admin-spacing-16) !important; }
+.admin-mb-24 { margin-bottom: var(--admin-spacing-24) !important; }
+.admin-mb-32 { margin-bottom: var(--admin-spacing-32) !important; }
+.admin-mb-48 { margin-bottom: var(--admin-spacing-48) !important; }
+
+/* --- Responsive & Structural Overrides --- */
+@media (max-width: 1024px) {
+  .admin-layout-grid {
+    flex-direction: column;
+    padding: 0 var(--admin-spacing-16);
+    gap: var(--admin-spacing-24);
+  }
+  .admin-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    top: 0 !important;
+  }
+}
+

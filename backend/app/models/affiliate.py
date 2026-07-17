@@ -112,7 +112,7 @@ class ReferralClick(Base):
     __tablename__ = "referral_clicks"
 
     id               = Column(Integer, primary_key=True, index=True)
-    referral_link_id = Column(Integer, ForeignKey("referral_links.id"), nullable=False, index=True)
+    referral_link_id = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
     affiliate_id     = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
     ip_address       = Column(String(45), nullable=True)
     user_agent       = Column(Text, nullable=True)

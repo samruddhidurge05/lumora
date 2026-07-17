@@ -106,11 +106,20 @@ export default function Downloads() {
 
   const handleDownload = async (product) => {
     const directUrl = getDownloadUrl(product.id);
+    const externalLink = product.pcloud_download_link || product.file_url;
+    
+    // 1. Instant check for direct public external link
+    if (externalLink && String(externalLink).startsWith('http')) {
+      window.open(externalLink, '_blank');
+      setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
+      return;
+    }
+
     setDownloadingId(product.id);
     setDownloadToast(null);
     try {
-      await new Promise(r => setTimeout(r, 600)); // brief "preparing" delay
-
+      await new Promise(r => setTimeout(r, 400)); // brief preparing delay for internal files
+      
       let activeUrl = directUrl;
       if (!activeUrl) {
         const numericId = parseInt(product.id, 10);
@@ -118,16 +127,15 @@ export default function Downloads() {
           const resp = await backendFetch(`/products/${numericId}/download`);
 
           // ── Download Pending state ──────────────────────────────────────────
-          // Backend signals the asset has not been uploaded yet.
           if (resp?.download_available === false) {
             setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
             return;
           }
 
-          // Handle pCloud / external redirect (temporary dev/testing implementation)
+          // Handle pCloud / external redirect
           if (resp?.type === 'external' && resp?.redirect_url) {
-            window.location.href = resp.redirect_url;
-            setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+            window.open(resp.redirect_url, '_blank');
+            setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
             return;
           } else if (resp?.download_url) {
             // Internal token-based URL — call the download-file endpoint
@@ -150,8 +158,8 @@ export default function Downloads() {
                 return;
               }
               if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-                window.location.href = fileRespJson.redirect_url;
-                setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+                window.open(fileRespJson.redirect_url, '_blank');
+                setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
                 window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
                 return;
               }
@@ -291,7 +299,7 @@ export default function Downloads() {
                         className="btn-premium btn-premium-solid"
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.78rem', borderRadius: '10px', flexShrink: 0, opacity: isDownloading ? 0.7 : 1, cursor: isDownloading ? 'not-allowed' : 'pointer' }}>
                         {isDownloading ? <RefreshCw size={13} style={{ animation: 'spin 1.2s linear infinite' }} /> : <Download size={13} />}
-                        {isDownloading ? 'Preparing…' : 'Download'}
+                        {isDownloading ? 'Preparing…' : (p.pcloud_download_link || p.file_url ? 'Open' : 'Download')}
                       </button>
                     </div>
                   </div>

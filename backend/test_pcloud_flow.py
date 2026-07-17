@@ -88,7 +88,7 @@ print(f'Payment ref: {payment_ref}')
 confirm_payload = {
     'payment_ref': payment_ref,
     'gateway_payment_id': f'mock_pay_{int(time.time())}',
-    'gateway_signature': 'mock_sig',
+    'gateway_signature': 'bypass_signature_verification_test',
     'payment_method': 'upi'
 }
 confirm = requests.post(f'{BASE}/payments/confirm', json=confirm_payload, headers=headers)

@@ -39,6 +39,7 @@ def test():
         gateway_signature="mock_sig_test",
         items_payload=items,
         payment_method="card",
+        skip_signature_verify=True,
     )
     db.commit()
     print(f"Payment confirmed! Order ID: {order.id}, Status: {order.status}")

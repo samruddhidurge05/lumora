@@ -21,6 +21,7 @@ import ReviewsManager from './ReviewsManager';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
+import ProductImage from '../../components/product/ProductImage';
 
 /* ── Primary nav items (always visible in horizontal bar) ─────────── */
 const PRIMARY_NAV = [
@@ -43,6 +44,98 @@ const MORE_NAV = [
   { name: 'Support Center',  icon: <HelpCircle size={14} /> },
   { name: 'My Reports',      icon: <AlertCircle size={14} /> },
 ];
+
+function DashboardProductCard({ p, wishlist, toggleWishlist, navigateTo, addToCart, buyNow, formatPrice }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const isWished = wishlist.some(w => String(w.id) === String(p.id));
+  const isNew = (() => {
+    const ts = p.createdAt || p.created_at;
+    if (!ts) return false;
+    return (Date.now() - new Date(ts).getTime()) < 7 * 24 * 60 * 60 * 1000;
+  })();
+
+  return (
+    <div
+      className="glass-card"
+      onClick={() => navigateTo('product-detail', p.id)}
+      style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', border: '1px solid rgba(196,148,230,0.22)', transition: 'all 0.28s cubic-bezier(0.16,1,0.3,1)' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 24px 60px rgba(90,30,126,0.14)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = ''; }}
+    >
+      {/* Thumbnail */}
+      <div style={{ position: 'relative', height: '160px', overflow: 'hidden', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', background: 'rgba(220,198,255,0.12)' }}>
+        <ProductImage product={p} />
+        {/* Badges */}
+        <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+          {isNew && (
+            <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', letterSpacing: '0.04em' }}>
+              NEW
+            </span>
+          )}
+          {(p.featured || p.isFeatured) && (
+            <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#C7A55A,#A07840)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
+              ★ Featured
+            </span>
+          )}
+          {p.badge && !isNew && !(p.featured || p.isFeatured) && (
+            <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
+              {p.badge}
+            </span>
+          )}
+        </div>
+        {/* Wishlist button */}
+        <button
+          onClick={e => { e.stopPropagation(); toggleWishlist(p); }}
+          style={{ position: 'absolute', top: 10, right: 10, width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isWished ? '#E11D48' : 'var(--text-muted)', transition: 'all 0.2s' }}
+        >
+          <Heart size={12} fill={isWished ? '#E11D48' : 'none'} />
+        </button>
+      </div>
+
+      {/* Card body */}
+      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '7px' }}>
+        <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'rgba(123,63,160,0.07)', padding: '2px 7px', borderRadius: '5px', alignSelf: 'flex-start' }}>
+          {p.category}
+        </span>
+        <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
+          {p.title}
+        </h4>
+        {/* Short description */}
+        {(p.shortDesc || p.short_desc || p.description) && (
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
+            {p.shortDesc || p.short_desc || p.description}
+          </p>
+        )}
+        {/* Rating */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} size={10} fill={i < Math.round(p.rating || 4.8) ? '#C7A55A' : 'none'} stroke="#C7A55A" />
+          ))}
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: '3px' }}>{(p.rating || 4.8).toFixed(1)}</span>
+          {p.reviews > 0 && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({p.reviews})</span>}
+        </div>
+        {/* Price + CTA */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(196,148,230,0.15)', marginTop: 'auto' }}>
+          <span style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(p.price)}</span>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            <button
+              onClick={e => { e.stopPropagation(); addToCart(p); }}
+              style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid rgba(123,63,160,0.30)', background: 'rgba(255,255,255,0.90)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+            >
+              Add
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); buyNow(p); }}
+              style={{ padding: '6px 12px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)', fontFamily: 'var(--font-sans)' }}
+            >
+              Buy Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -305,10 +398,13 @@ export default function Dashboard() {
         boxShadow: scrolled ? '0 4px 24px rgba(45,0,96,0.08)' : '0 1px 12px rgba(45,0,96,0.04)',
         transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
       }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px', height: '64px', gap: '16px',
-        }}>
+        <div
+          className="dash-header-inner"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 24px', height: '64px', gap: '16px',
+          }}
+        >
           {/* Brand Logo */}
           <button
             onClick={() => navigateTo('landing')}
@@ -447,11 +543,11 @@ export default function Dashboard() {
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.70)'; }}
             >
               <ShoppingBag size={12} />
-              <span>Cart ({cart?.length || 0})</span>
+              <span className="dash-cart-label">Cart ({cart?.length || 0})</span>
             </button>
 
             {/* AI Search */}
-            <form onSubmit={handleAISearch} style={{
+            <form onSubmit={handleAISearch} className="dash-ai-search" style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '6px 12px', borderRadius: '20px',
               background: 'rgba(255,255,255,0.70)',
@@ -480,7 +576,7 @@ export default function Dashboard() {
               <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0 }}>
                 {username[0]?.toUpperCase()}
               </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
+              <span className="dash-user-name" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
             </div>
 
             {/* Exit */}
@@ -631,7 +727,7 @@ function DashboardHome({
       )}
 
       {/* Hero welcome */}
-      <div className="glass-card" style={{
+      <div className="glass-card dash-welcome-card" style={{
         padding: '40px 44px',
         background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -640,14 +736,14 @@ function DashboardHome({
         <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>✦ Customer Portal</span>
-          <h2 className="text-editorial" style={{ fontSize: '2.4rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
+          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '2.4rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
             Welcome back, {profile?.name || username}.
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '420px' }}>
+          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '420px' }}>
             Explore {filtered.length} premium digital products — browse, wishlist, and add to cart.
           </p>
           {/* Quick Actions */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
             <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)' }}>
               <TrendingUp size={14} /> Browse Marketplace
             </button>
@@ -659,13 +755,13 @@ function DashboardHome({
             </button>
           </div>
         </div>
-        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 32px rgba(123,63,160,0.30)', fontSize: '2.5rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
+        <div className="dash-welcome-avatar" style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 32px rgba(123,63,160,0.30)', fontSize: '2.5rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
           {(profile?.name || username)[0]?.toUpperCase()}
         </div>
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '16px' }}>
+      <div className="dash-stat-grid">
         {QUICK_STATS.map((s, i) => (
           <div key={i} className="premium-flat-card" style={{ padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -681,7 +777,7 @@ function DashboardHome({
       </div>
 
       {/* Recent Purchases & Recent Activity Dual Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '20px' }}>
+      <div className="dash-two-col">
         {/* Recent Purchases */}
         <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -841,105 +937,18 @@ function DashboardHome({
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '18px' }}>
-              {recentlyAdded.map(p => {
-                const isWished = wishlist.some(w => String(w.id) === String(p.id));
-                const thumbSrc = p.preview || p.thumbnail
-                  || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70';
-                const isNew = (() => {
-                  const ts = p.createdAt || p.created_at;
-                  if (!ts) return false;
-                  return (Date.now() - new Date(ts).getTime()) < 7 * 24 * 60 * 60 * 1000; // 7 days
-                })();
-
-                return (
-                  <div
-                    key={p.id}
-                    className="glass-card"
-                    onClick={() => navigateTo('product-detail', p.id)}
-                    style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', border: '1px solid rgba(196,148,230,0.22)', transition: 'all 0.28s cubic-bezier(0.16,1,0.3,1)' }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 24px 60px rgba(90,30,126,0.14)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = ''; }}
-                  >
-                    {/* Thumbnail */}
-                    <div style={{ position: 'relative', height: '160px', overflow: 'hidden', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', background: 'rgba(220,198,255,0.12)' }}>
-                      <img
-                        src={thumbSrc}
-                        alt={p.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        loading="lazy"
-                        onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70'; }}
-                      />
-                      {/* Badges */}
-                      <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                        {isNew && (
-                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', letterSpacing: '0.04em' }}>
-                            NEW
-                          </span>
-                        )}
-                        {(p.featured || p.isFeatured) && (
-                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#C7A55A,#A07840)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
-                            ★ Featured
-                          </span>
-                        )}
-                        {p.badge && !isNew && !(p.featured || p.isFeatured) && (
-                          <span style={{ fontSize: '0.55rem', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
-                            {p.badge}
-                          </span>
-                        )}
-                      </div>
-                      {/* Wishlist button */}
-                      <button
-                        onClick={e => { e.stopPropagation(); toggleWishlist(p); }}
-                        style={{ position: 'absolute', top: 10, right: 10, width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.90)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: isWished ? '#E11D48' : 'var(--text-muted)', transition: 'all 0.2s' }}
-                      >
-                        <Heart size={12} fill={isWished ? '#E11D48' : 'none'} />
-                      </button>
-                    </div>
-
-                    {/* Card body */}
-                    <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                      <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'rgba(123,63,160,0.07)', padding: '2px 7px', borderRadius: '5px', alignSelf: 'flex-start' }}>
-                        {p.category}
-                      </span>
-                      <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
-                        {p.title}
-                      </h4>
-                      {/* Short description */}
-                      {(p.shortDesc || p.short_desc || p.description) && (
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
-                          {p.shortDesc || p.short_desc || p.description}
-                        </p>
-                      )}
-                      {/* Rating */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={10} fill={i < Math.round(p.rating || 4.8) ? '#C7A55A' : 'none'} stroke="#C7A55A" />
-                        ))}
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: '3px' }}>{(p.rating || 4.8).toFixed(1)}</span>
-                        {p.reviews > 0 && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({p.reviews})</span>}
-                      </div>
-                      {/* Price + CTA */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(196,148,230,0.15)', marginTop: 'auto' }}>
-                        <span style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(p.price)}</span>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button
-                            onClick={e => { e.stopPropagation(); addToCart(p); }}
-                            style={{ padding: '6px 10px', borderRadius: '7px', border: '1px solid rgba(123,63,160,0.30)', background: 'rgba(255,255,255,0.90)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
-                          >
-                            Add
-                          </button>
-                          <button
-                            onClick={e => { e.stopPropagation(); buyNow(p); }}
-                            style={{ padding: '6px 12px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)', fontFamily: 'var(--font-sans)' }}
-                          >
-                            Buy Now
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {recentlyAdded.map(p => (
+                <DashboardProductCard
+                  key={p.id}
+                  p={p}
+                  wishlist={wishlist}
+                  toggleWishlist={toggleWishlist}
+                  navigateTo={navigateTo}
+                  addToCart={addToCart}
+                  buyNow={buyNow}
+                  formatPrice={formatPrice}
+                />
+              ))}
             </div>
           </div>
         );

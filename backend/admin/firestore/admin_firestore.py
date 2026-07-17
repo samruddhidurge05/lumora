@@ -43,7 +43,7 @@ def sync_product_to_firestore(product):
             "thumbnail": _best_image(product.thumbnail),
             "preview": _best_image(product.preview),
             "imageUrl": _best_image(product.thumbnail),   # alias used by some customer views
-            "creatorName": product.seller or "Creator",
+            "creatorName": (product.seller or "Lumora").strip() or "Lumora",
             "creatorAvatar": (
                 product.creator_avatar
                 if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar
@@ -228,78 +228,237 @@ def sync_order_to_firestore(order):
     except Exception as e:
         print(f"[firestore-sync] Error syncing order {order.id} to Firestore: {e}")
 
+def _refresh_pcloud_images_for_product(product_model, pcloud_share_url: str) -> bool:
+    """
+    Fetch fresh direct p-lux pCloud image URLs from a shared folder.
+    Returns True if images were updated, False otherwise.
+    """
+    import urllib.request
+    import json as _json
+
+    def _extract_code(url):
+        if not url or "code=" not in url:
+            return None
+        return url.split("code=")[1].split("&")[0].split("#")[0]
+
+    def _get_files(code):
+        req = urllib.request.Request(
+            f"https://api.pcloud.com/showpublink?code={code}",
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = _json.loads(r.read().decode())
+        if data.get("result") != 0:
+            return {}
+        return {f["name"]: f["fileid"] for f in data["metadata"].get("contents", []) if not f.get("isfolder")}
+
+    def _get_link(code, fid):
+        req = urllib.request.Request(
+            f"https://api.pcloud.com/getpublinkdownload?code={code}&fileid={fid}",
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = _json.loads(r.read().decode())
+        if data.get("result") == 0:
+            hosts = data.get("hosts", [])
+            path = data.get("path", "")
+            if hosts and path:
+                return f"https://{hosts[0]}{path}"
+        return None
+
+    try:
+        code = _extract_code(pcloud_share_url)
+        if not code:
+            return False
+        files = _get_files(code)
+        if not files:
+            return False
+
+        png_files = [n for n in files if n.lower().endswith(".png")]
+        if not png_files:
+            return False
+
+        def pick(names, kw):
+            for n in names:
+                if kw in n.lower():
+                    return n
+            return names[0] if names else None
+
+        thumb_name    = pick(png_files, "thumbnail") or pick(png_files, "cover")
+        cover_name    = pick(png_files, "cover")
+        featured_name = pick(png_files, "featured")
+        preview_name  = pick(png_files, "preview")
+
+        fresh = {}
+        for n in set(filter(None, [thumb_name, cover_name, featured_name, preview_name])):
+            link = _get_link(code, files[n])
+            if link:
+                fresh[n] = link
+
+        if not fresh:
+            return False
+
+        img_list = []
+        for n in [cover_name, featured_name, preview_name, thumb_name]:
+            if n and n in fresh and fresh[n] not in img_list:
+                img_list.append(fresh[n])
+
+        product_model.thumbnail  = fresh.get(thumb_name) or fresh.get(cover_name) or img_list[0]
+        product_model.preview    = fresh.get(preview_name) or fresh.get(featured_name) or product_model.thumbnail
+        product_model.image_urls = img_list or [product_model.thumbnail]
+        return True
+    except Exception as e:
+        print(f"[firestore-sync] pCloud image refresh failed: {e}")
+        return False
+
+
 def restore_sqlite_products_from_firestore(db_session):
     """
-    Safe recovery logic: Restore published products from Firestore to SQLite
-    in case the SQLite database was reset.
-    Rules: Only restore active, published products (status == 'published').
-    Avoid duplicates by checking if the product ID already exists in SQLite.
+    Auto-sync: Pull any published Firestore products missing from SQLite into SQLite.
+    Also fixes broken localhost thumbnail URLs by refreshing them from pCloud.
+    Runs at backend startup and can be called manually.
     """
     if not firebase_connected or db is None:
         return
     try:
         from app.models.product import Product as ProductModel
+
         docs = db.collection("products").where("status", "==", "published").stream()
-        count = 0
+        added = 0
+        fixed = 0
+
         for doc in docs:
             data = doc.to_dict()
             try:
                 prod_id = int(doc.id)
             except ValueError:
                 continue
-            # Check for existing product to prevent duplicate key constraint failure
+
             exists = db_session.query(ProductModel).filter(ProductModel.id == prod_id).first()
+            pcloud_link = data.get("pcloud_download_link") or data.get("pcloudDownloadLink")
+            thumbnail   = data.get("thumbnail") or data.get("imageUrl", "")
+            is_broken_thumb = thumbnail and "localhost" in thumbnail
+
             if not exists:
+                # New product from Firestore — import it
                 product = ProductModel(
                     id=prod_id,
                     title=data.get("title", data.get("name", "Product")),
                     description=data.get("description", ""),
-                    category=data.get("category", "General"),
+                    category=data.get("category", "Productivity Tools"),
                     price=float(data.get("price", 0.0)),
                     rating=float(data.get("rating", 5.0)),
                     reviews=int(data.get("reviews", 0)),
                     downloads=int(data.get("downloads", 0)),
-                    thumbnail=data.get("thumbnail"),
-                    preview=data.get("preview"),
-                    file_url=data.get("file_url", data.get("fileUrl")),
-                    seller=data.get("creatorName", data.get("seller", "Creator")),
+                    thumbnail=None if is_broken_thumb else thumbnail,
+                    preview=None if is_broken_thumb else (data.get("preview") or thumbnail),
+                    file_url=data.get("file_url") or data.get("fileUrl") or pcloud_link,
+                    seller=data.get("creatorName", data.get("seller", "Lumora")),
                     vendor_id=data.get("vendor_id"),
                     featured=bool(data.get("featured", data.get("isFeatured", False))),
                     trending=bool(data.get("trending", False)),
-                    new_arrival=bool(data.get("new_arrival", False)),
+                    new_arrival=True,
                     badge=data.get("badge"),
-                    status=data.get("status", "published"),
-                    tags=data.get("tags", []),
-                    highlights=data.get("highlights", []),
+                    status="published",
+                    visibility=data.get("visibility", "public"),
+                    tags=data.get("tags") or [],
+                    highlights=data.get("highlights") or [],
                     version=data.get("version", "v1.0.0"),
                     file_size=data.get("fileSize", "48 MB"),
-                    last_updated=data.get("last_updated", "Recently"),
+                    last_updated="Recently",
                     license=data.get("license", "Personal Use"),
                     affiliate_enabled=bool(data.get("affiliate_enabled", False)),
                     commission_type=data.get("commission_type", "percentage"),
                     commission_value=float(data.get("commission_value", 0.0)),
-                    short_desc=data.get("shortDesc", data.get("short_desc")),
-                    features=data.get("features", []),
-                    system_requirements=data.get("systemRequirements", data.get("system_requirements", [])),
-                    what_you_get=data.get("whatYouGet", data.get("what_you_get", [])),
-                    installation_guide=data.get("installationGuide", data.get("installation_guide")),
+                    short_desc=data.get("shortDesc") or data.get("short_desc") or "",
+                    features=data.get("features") or [],
+                    system_requirements=data.get("systemRequirements") or data.get("system_requirements") or [],
+                    what_you_get=data.get("whatYouGet") or data.get("what_you_get") or [],
+                    installation_guide=data.get("installationGuide") or data.get("installation_guide"),
                     subcategory=data.get("subcategory"),
                     discount=float(data.get("discount", 0.0)),
-                    preview_images=data.get("previewImages", data.get("preview_images", [])),
-                    preview_video=data.get("previewVideo", data.get("preview_video")),
-                    seo_title=data.get("seoTitle", data.get("seo_title")),
-                    seo_description=data.get("seoDescription", data.get("seo_description")),
-                    visibility=data.get("visibility", "public"),
-                    pcloud_download_link=data.get("pcloud_download_link", data.get("pcloudDownloadLink")),
-                    image_urls=data.get("image_urls", data.get("imageUrls", [])),
+                    preview_images=data.get("previewImages") or data.get("preview_images") or [],
+                    preview_video=data.get("previewVideo") or data.get("preview_video"),
+                    seo_title=data.get("seoTitle") or data.get("seo_title"),
+                    seo_description=data.get("seoDescription") or data.get("seo_description"),
+                    pcloud_download_link=pcloud_link,
+                    image_urls=[] if is_broken_thumb else (data.get("image_urls") or data.get("imageUrls") or []),
                 )
                 db_session.add(product)
-                count += 1
+                db_session.flush()  # get product into session so we can update it
+
+                # Refresh pCloud images if thumbnail was broken or missing
+                if pcloud_link and (is_broken_thumb or not product.thumbnail):
+                    refreshed = _refresh_pcloud_images_for_product(product, pcloud_link)
+                    if refreshed:
+                        fixed += 1
+
+                added += 1
+            else:
+                # Update existing product fields from Firestore
+                exists.title = data.get("title", data.get("name", exists.title))
+                exists.description = data.get("description", exists.description)
+                exists.category = data.get("category", exists.category)
+                exists.price = float(data.get("price", exists.price))
+                exists.rating = float(data.get("rating", exists.rating))
+                exists.reviews = int(data.get("reviews", exists.reviews))
+                exists.downloads = int(data.get("downloads", exists.downloads))
+                
+                if not is_broken_thumb:
+                    if thumbnail:
+                        exists.thumbnail = thumbnail
+                    if data.get("preview") or thumbnail:
+                        exists.preview = data.get("preview") or thumbnail
+                    if data.get("image_urls") or data.get("imageUrls"):
+                        exists.image_urls = data.get("image_urls") or data.get("imageUrls") or []
+
+                exists.file_url = data.get("file_url") or data.get("fileUrl") or pcloud_link or exists.file_url
+                exists.seller = data.get("creatorName", data.get("seller", exists.seller))
+                exists.vendor_id = data.get("vendor_id") or exists.vendor_id
+                exists.featured = bool(data.get("featured", data.get("isFeatured", exists.featured)))
+                exists.trending = bool(data.get("trending", exists.trending))
+                exists.badge = data.get("badge", exists.badge)
+                exists.visibility = data.get("visibility", exists.visibility)
+                exists.tags = data.get("tags") or exists.tags
+                exists.highlights = data.get("highlights") or exists.highlights
+                exists.version = data.get("version", exists.version)
+                exists.file_size = data.get("fileSize", exists.file_size)
+                exists.license = data.get("license", exists.license)
+                exists.affiliate_enabled = bool(data.get("affiliate_enabled", exists.affiliate_enabled))
+                exists.commission_type = data.get("commission_type", exists.commission_type)
+                exists.commission_value = float(data.get("commission_value", exists.commission_value))
+                exists.short_desc = data.get("shortDesc") or data.get("short_desc") or exists.short_desc
+                exists.features = data.get("features") or exists.features
+                exists.system_requirements = data.get("systemRequirements") or data.get("system_requirements") or exists.system_requirements
+                exists.what_you_get = data.get("whatYouGet") or data.get("what_you_get") or exists.what_you_get
+                exists.installation_guide = data.get("installationGuide") or data.get("installation_guide") or exists.installation_guide
+                exists.subcategory = data.get("subcategory") or exists.subcategory
+                exists.discount = float(data.get("discount", exists.discount))
+                exists.preview_images = data.get("previewImages") or data.get("preview_images") or exists.preview_images
+                exists.preview_video = data.get("previewVideo") or data.get("preview_video") or exists.preview_video
+                exists.seo_title = data.get("seoTitle") or data.get("seo_title") or exists.seo_title
+                exists.seo_description = data.get("seoDescription") or data.get("seo_description") or exists.seo_description
+                exists.pcloud_download_link = pcloud_link or exists.pcloud_download_link
+
+                if pcloud_link and (is_broken_thumb or not exists.thumbnail):
+                    refreshed = _refresh_pcloud_images_for_product(exists, pcloud_link)
+                    if refreshed:
+                        fixed += 1
+                
+                added += 1
+
         db_session.commit()
-        print(f"[firestore-sync] Successfully restored {count} products from Firestore to SQLite.")
+        if added:
+            print(f"[firestore-sync] Auto-synced {added} products from Firestore to SQLite ({fixed} with refreshed images).")
+        else:
+            print("[firestore-sync] SQLite is up to date with Firestore.")
+
     except Exception as e:
         db_session.rollback()
-        print(f"[firestore-sync] Error recovering products from Firestore: {e}")
+        print(f"[firestore-sync] Error during Firestore sync: {e}")
+        import traceback
+        traceback.print_exc()
+
 
 
 
@@ -342,6 +501,38 @@ def sync_team_member_to_firestore(user, role_record) -> None:
             "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
             "updated_at":   datetime.now(timezone.utc).isoformat(),
         }, merge=True)
+
+        # Also sync role to users/{firebase_uid} collection in Firestore so that
+        # Firestore rules (isAdmin()) and AuthContext role check resolve correctly.
+        if user.firebase_uid:
+            user_doc_ref = db.collection("users").document(user.firebase_uid)
+            user_snap = user_doc_ref.get()
+            if user_snap.exists:
+                user_data = user_snap.to_dict() or {}
+                roles = user_data.get("roles", [])
+                is_active = role_record.is_active if role_record else True
+                
+                if is_active:
+                    # Activate admin role
+                    if "admin" not in roles:
+                        roles.append("admin")
+                    user_doc_ref.update({
+                        "role": "admin",
+                        "roles": roles
+                    })
+                else:
+                    # Deactivate admin role: fall back to customer (or another non-admin role if they have one)
+                    if "admin" in roles:
+                        roles.remove("admin")
+                    fallback_role = "customer"
+                    for r in roles:
+                        if r in ("vendor", "affiliate", "customer"):
+                            fallback_role = r
+                            break
+                    user_doc_ref.update({
+                        "role": fallback_role,
+                        "roles": roles
+                    })
     except Exception as e:
         print(f"[firestore-sync] Error syncing team member {user.id}: {e}")
 
