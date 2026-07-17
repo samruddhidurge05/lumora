@@ -6,15 +6,17 @@ import ProductCard from './product/ProductCard';
 export default function ProductShowcase() {
   const { products, navigateTo } = useApp();
 
-  // Filter featured products, fallback to first 4 if none are marked featured
+  // Always show the pinned pCloud products first
+  const PINNED_IDS = new Set([108, 109, 111, 112, 115, 116, 117, 118, 119, 120, 121, 122]);
   const seen = new Set();
-  const featuredProducts = products.filter(p => {
+  const allUnique = products.filter(p => {
     const k = String(p.id);
     if (seen.has(k)) return false;
     seen.add(k);
-    return p.featured;
-  }).slice(0, 8);
-  const displayProducts = featuredProducts.length > 0 ? featuredProducts : [...products].slice(0, 8);
+    return true;
+  });
+  const pinned = allUnique.filter(p => PINNED_IDS.has(Number(p.id)));
+  const displayProducts = pinned.length > 0 ? pinned.slice(0, 8) : allUnique.slice(0, 8);
 
   return (
     <section 

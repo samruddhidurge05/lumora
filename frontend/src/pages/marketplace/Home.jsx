@@ -192,13 +192,22 @@ export default function Home() {
     return true;
   });
 
+  // ── Pin the real pCloud products ALWAYS first ────────────────────────────
+  // These are the products you assigned pCloud folders to. They must always
+  // appear at the top of the Featured section and never be displaced.
+  const PINNED_IDS = new Set([108, 109, 111, 112, 115, 116, 117, 118, 119, 120, 121, 122]);
+  const pinned = uniqueProducts.filter(p => PINNED_IDS.has(Number(p.id)));
+  const rest   = uniqueProducts.filter(p => !PINNED_IDS.has(Number(p.id)));
+  const ordered = [...pinned, ...rest]; // pinned always first
+
   // ── Partition into non-overlapping sections of 8 ──
-  // Every product is now featured+trending, so we just rotate through the
-  // unique list to avoid showing the same card in multiple sections.
+  // Featured always shows the pinned pCloud products (up to first 8).
+  // Trending shows pinned products 9–12 + first others.
+  // Latest shows the rest.
   const SECTION_SIZE = 8;
-  const featured = uniqueProducts.slice(0, SECTION_SIZE);
-  const trending  = uniqueProducts.slice(SECTION_SIZE, SECTION_SIZE * 2);
-  const latest    = uniqueProducts.slice(SECTION_SIZE * 2, SECTION_SIZE * 3);
+  const featured = ordered.slice(0, SECTION_SIZE);
+  const trending  = ordered.slice(SECTION_SIZE, SECTION_SIZE * 2);
+  const latest    = ordered.slice(SECTION_SIZE * 2, SECTION_SIZE * 3);
 
   useEffect(() => {
     const t = setInterval(() => setActiveTestimonial(p => (p+1) % TESTIMONIALS.length), 4500);

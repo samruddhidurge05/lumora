@@ -800,13 +800,23 @@ function dedupeById(arr) {
   });
 }
 
+// Products that must always appear first everywhere (real pCloud products)
+const PINNED_IDS = new Set([108, 109, 111, 112, 115, 116, 117, 118, 119, 120, 121, 122]);
+
+// Helper: sort pinned products to front, keep relative order within each group
+function pinnedFirst(arr) {
+  const pinned = arr.filter(p => PINNED_IDS.has(Number(p.id)));
+  const rest   = arr.filter(p => !PINNED_IDS.has(Number(p.id)));
+  return [...pinned, ...rest];
+}
+
 export function AppContextProvider({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   // Merge: JSON products take priority; keep PRODUCTS as fallback for items not in JSON
   const jsonIds = new Set(ENRICHED_JSON_PRODUCTS.map(p => String(p.id)));
   const localFallback = PRODUCTS.filter(p => !jsonIds.has(String(p.id)));
-  const [products, setProducts] = useState(dedupeById([...ENRICHED_JSON_PRODUCTS, ...localFallback]));
+  const [products, setProducts] = useState(pinnedFirst(dedupeById([...ENRICHED_JSON_PRODUCTS, ...localFallback])));
 
   // Track which product IDs came from the SQLite backend (the authoritative source).
   // This prevents the Firestore listener from overwriting backend-only products.
@@ -832,7 +842,7 @@ export function AppContextProvider({ children }) {
             const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
             return tb - ta;
           });
-          setProducts(dedupeById([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly]));
+          setProducts(pinnedFirst(dedupeById([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly])));
         }
       })
       .catch(err => console.warn('[Backend] Product refresh failed:', err.message));
@@ -855,7 +865,7 @@ export function AppContextProvider({ children }) {
             const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
             return tb - ta;
           });
-          setProducts(dedupeById([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly]));
+          setProducts(pinnedFirst(dedupeById([...enrichRawProducts(sorted), ...jsonOnly, ...localOnly])));
         }
       })
       .catch(err => console.warn('[Backend] Product fetch failed (non-fatal):', err.message));
