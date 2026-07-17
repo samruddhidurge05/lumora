@@ -38,7 +38,7 @@ import { clearBackendToken, syncWithBackend } from '../../services/authService';
 export default function AcceptInvite() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, userRole } = useAuth();
+  const { user, userRole, loading } = useAuth();
 
   const token = searchParams.get('token');
 
@@ -76,7 +76,7 @@ export default function AcceptInvite() {
   //   a) User was already logged in when they opened the link, OR
   //   b) User logged in / registered and was redirected back here
   useEffect(() => {
-    if (status !== 'valid' || !invitation || !user) return;
+    if (loading || status !== 'valid' || !invitation || !user) return;
     // If the user is already a full admin (not via this invite), skip activation
     if (userRole === 'admin') {
       // They might already be an admin — just redirect to the team page
@@ -86,7 +86,7 @@ export default function AcceptInvite() {
     // For any logged-in non-admin user: call the accept-invite endpoint
     activateViaRegularJwt();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, invitation, user, userRole]);
+  }, [loading, status, invitation, user, userRole]);
 
   // ── Accept invite using the regular (customer) JWT ────────────────────────
   const activateViaRegularJwt = async () => {
