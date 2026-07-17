@@ -5,7 +5,7 @@ import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
 
 export default function Wishlist() {
-  const { wishlist, toggleWishlist, addToCart, buyNow, navigateTo, formatPrice } = useApp();
+  const { wishlist, toggleWishlist, addToCart, buyNow, navigateTo, formatPrice, cart } = useApp();
 
   const handleMoveToCart = (product) => {
     addToCart(product);
@@ -46,7 +46,7 @@ export default function Wishlist() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{formatPrice(product.price)}</span>
                     <button onClick={() => handleMoveToCart(product)} className="btn-premium" style={{ padding: '7px 12px', fontSize: '0.72rem', borderRadius: '8px' }}>
-                      <ShoppingBag size={12} /> Add to Cart
+                      <ShoppingBag size={12} /> {cart.some(item => String(item.id) === String(product.id)) ? '✓ Added to Cart' : 'Add to Cart'}
                     </button>
                   </div>
                   <button onClick={() => buyNow(product)} className="btn-premium btn-premium-solid" style={{ width: '100%', justifyContent: 'center', padding: '9px', fontSize: '0.78rem', borderRadius: '8px' }}>

@@ -4,9 +4,10 @@ import { useApp } from '../../context/AppContext';
 import ProductImage from './ProductImage';
 
 export default function ProductCard({ product }) {
-  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
+  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, cart } = useApp();
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
+  const inCart = cart.some(item => String(item.id) === String(product.id));
 
   return (
     <div
@@ -41,7 +42,7 @@ export default function ProductCard({ product }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{formatPrice(product.price)}</span>
             <button onClick={e => { e.stopPropagation(); addToCart(product); }} className="btn-premium" style={{ padding: '6px 11px', fontSize: '0.7rem', borderRadius: '7px' }}>
-              <ShoppingBag size={11} /> Add
+              <ShoppingBag size={11} /> {inCart ? '✓ Added' : 'Add'}
             </button>
           </div>
           <button onClick={e => { e.stopPropagation(); buyNow(product); }} className="btn-premium btn-premium-solid buy-now-glow" style={{ width: '100%', padding: '8px', fontSize: '0.75rem', borderRadius: '8px', justifyContent: 'center' }}>
