@@ -17,42 +17,74 @@ DEFAULT_MAPPINGS = [
     {
         "code": "kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0",
         "hint_ids": [108, 109],  # Resume Template Pack
-        "title": "Resume Template Pack"
+        "title": "Resume Template Pack",
+        "price": 299.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Best Seller"
     },
     {
         "code": "kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y",
         "hint_ids": [111],       # digital planner
-        "title": "digital planner"
+        "title": "digital planner",
+        "price": 399.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Top Choice"
     },
     {
         "code": "kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V",
         "hint_ids": [112],       # Instagram content calendar
-        "title": "Instagram content calendar"
+        "title": "Instagram content calendar",
+        "price": 149.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Trending"
     },
     {
         "code": "kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu",
         "hint_ids": [115],       # UI Design Icon Pack & Guide
-        "title": "UI Design Icon Pack & Guide"
+        "title": "UI Design Icon Pack & Guide",
+        "price": 199.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Popular"
     },
     {
         "code": "kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk",
         "hint_ids": [116],       # The Personal Budget Planner
-        "title": "The Personal Budget Planner"
+        "title": "The Personal Budget Planner",
+        "price": 249.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Best Value"
     },
     {
         "code": "kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys",
         "hint_ids": [117],       # Study Planner & Exam Organizer
-        "title": "Study Planner & Exam Organizer"
+        "title": "Study Planner & Exam Organizer",
+        "price": 149.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Editor's Pick"
     },
     {
         "code": "kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y",
         "hint_ids": [118],       # The Freelancer Client Toolkit
-        "title": "The Freelancer Client Toolkit"
+        "title": "The Freelancer Client Toolkit",
+        "price": 249.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Hot Product"
     },
     {
         "code": "kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7",
         "hint_ids": [119],       # The Healthy Habit Tracker
-        "title": "The Healthy Habit Tracker"
+        "title": "The Healthy Habit Tracker",
+        "price": 149.0,
+        "featured": True,
+        "trending": True,
+        "badge": "New Release"
     }
 ]
 
@@ -177,6 +209,22 @@ def import_folder(db, code, product_id=None):
         product.preview = preview_url
     if img_urls:
         product.image_urls = img_urls
+
+    # Apply price, featured, trending, and badge from mapping
+    mapping = None
+    for m in DEFAULT_MAPPINGS:
+        if m["code"] == code:
+            mapping = m
+            break
+    if mapping:
+        if "price" in mapping:
+            product.price = mapping["price"]
+        if "featured" in mapping:
+            product.featured = mapping["featured"]
+        if "trending" in mapping:
+            product.trending = mapping["trending"]
+        if "badge" in mapping:
+            product.badge = mapping["badge"]
         
     db.commit()
     
@@ -231,6 +279,10 @@ def update_products_json():
                     item["pcloudDownloadLink"] = db_p.pcloud_download_link
                     item["file_url"] = db_p.file_url
                     item["fileUrl"] = db_p.file_url
+                    item["price"] = db_p.price
+                    item["featured"] = bool(db_p.featured)
+                    item["trending"] = bool(db_p.trending)
+                    item["badge"] = db_p.badge if db_p.badge not in (0, "0", "None", None) else None
                     updated_count += 1
                     
         with open(json_path, "w", encoding="utf-8") as f:
@@ -319,13 +371,27 @@ def main():
             # List other mock/pcloud products that were not matched to any folders
             all_mock_products = db.query(ProductModel).filter(ProductModel.id >= 108).all()
             matched_ids = {r["id"] for r in results}
+            has_db_updates = False
             for p in all_mock_products:
                 if p.id not in matched_ids:
+                    # If the price is 0.0 or very small, let's update it to a non-zero price
+                    if p.price is None or p.price < 10.0:
+                        fallback_prices = {120: 199.0, 121: 249.0, 122: 199.0}
+                        p.price = fallback_prices.get(p.id, 199.0)
+                        has_db_updates = True
+                        try:
+                            sync_product_to_firestore(p)
+                            print(f"Updated price for skipped product {p.id} to {p.price} and synced to Firestore.")
+                        except Exception as fs_err:
+                            print(f"Failed to sync skipped product {p.id} price to Firestore: {fs_err}")
+                            
                     skipped.append({
                         "id": p.id,
                         "title": p.title,
                         "reason": "Preserved existing single-file link (no folder link provided)"
                     })
+            if has_db_updates:
+                db.commit()
                     
         # 2. Update frontend json
         update_products_json()
