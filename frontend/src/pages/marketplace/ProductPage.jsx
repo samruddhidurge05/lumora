@@ -68,7 +68,7 @@ function getGallery(product) {
 }
 
 export default function ProductPage() {
-  const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview } = useApp();
+  const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview, cart } = useApp();
   const { user, userRole } = useAuth();
   
   const [fetchedProduct, setFetchedProduct] = useState(null);
@@ -248,6 +248,7 @@ export default function ProductPage() {
   const videoUrl = product.previewVideo || product.preview_video;
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
+  const inCart  = cart.some(item => String(item.id) === String(product.id));
 
   // Features list parsing:
   // For backend products (numeric IDs), never show hardcoded defaults.
@@ -973,7 +974,7 @@ export default function ProductPage() {
                   </button>
                   <button onClick={() => addToCart(product)} className="btn-premium"
                     style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: '0.88rem', borderRadius: '14px', marginBottom: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShoppingBag size={15} /> Add to Cart
+                    <ShoppingBag size={15} /> {inCart ? '✓ Added to Cart' : 'Add to Cart'}
                   </button>
                 </>
               ) : (

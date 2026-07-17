@@ -6,7 +6,7 @@ import { getLocalRecentlyViewed, clearRecentlyViewedHistory, fetchRecentlyViewed
 
 export default function RecentlyViewed() {
   const { user } = useAuth();
-  const { addToCart, buyNow, navigateTo, formatPrice, products } = useApp();
+  const { addToCart, buyNow, navigateTo, formatPrice, products, cart } = useApp();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -159,7 +159,7 @@ export default function RecentlyViewed() {
                     className="btn-premium"
                     style={{ padding: '6px 12px', fontSize: '0.7rem', borderRadius: '8px', border: '1.5px solid rgba(123, 63, 160, 0.25)', background: 'rgba(255, 255, 255, 0.60)', cursor: 'pointer' }}
                   >
-                    Add to Cart
+                    {cart.some(cartItem => String(cartItem.id) === String(item.id)) ? '✓ Added to Cart' : 'Add to Cart'}
                   </button>
                 </div>
                 <button

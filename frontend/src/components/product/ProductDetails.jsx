@@ -3,9 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { Zap, ShoppingBag, Star } from 'lucide-react';
 
 export default function ProductDetails({ product }) {
-  const { addToCart, buyNow, formatPrice, wishlist, toggleWishlist } = useApp();
+  const { addToCart, buyNow, formatPrice, wishlist, toggleWishlist, cart } = useApp();
   if (!product) return null;
   const isWishlisted = wishlist.some(w => w.id === product.id);
+  const inCart = cart.some(item => String(item.id) === String(product.id));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
@@ -23,7 +24,7 @@ export default function ProductDetails({ product }) {
         <Zap size={16} /> Buy Now
       </button>
       <button onClick={() => addToCart(product)} className="btn-premium" style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: '0.85rem', borderRadius: '12px' }}>
-        <ShoppingBag size={15} /> Add to Cart
+        <ShoppingBag size={15} /> {inCart ? '✓ Added to Cart' : 'Add to Cart'}
       </button>
     </div>
   );
