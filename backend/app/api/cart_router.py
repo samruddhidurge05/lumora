@@ -28,7 +28,8 @@ def add_to_cart(
     db: Session = Depends(get_db)
 ):
     """Add a product to the authenticated user's cart. Duplicate-safe."""
-    prod = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, product_id)
     if not prod:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 

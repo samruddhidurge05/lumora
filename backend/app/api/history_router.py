@@ -34,7 +34,8 @@ def create_history_entry(
         )
 
     # Verify product and user exist
-    product = db.query(Product).filter(Product.id == entry_in.product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, entry_in.product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     user = db.query(User).filter(User.id == entry_in.user_id).first()

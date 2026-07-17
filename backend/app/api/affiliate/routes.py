@@ -569,7 +569,8 @@ def create_referral_link(
     profile = _get_affiliate_profile(current_user, db)
 
     # Validate product exists
-    product = db.query(Product).filter(Product.id == data.product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, data.product_id)
     if not product:
         raise HTTPException(
             status_code=404,

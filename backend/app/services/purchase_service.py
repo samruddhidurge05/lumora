@@ -60,7 +60,8 @@ class PurchaseService:
                 prod_id = item["product_id"]
                 price_paid = item["price_paid"]
                 
-                prod = db.query(Product).filter(Product.id == prod_id).first()
+                from app.utils.db_sync import get_product_by_id
+                prod = get_product_by_id(db, prod_id)
                 if not prod:
                     raise HTTPException(
                         status_code=404,

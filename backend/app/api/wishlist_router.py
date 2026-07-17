@@ -16,7 +16,8 @@ def add_to_wishlist(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    prod = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, product_id)
     if not prod:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
@@ -55,7 +56,8 @@ def remove_from_wishlist(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wishlist item not found")
     
-    prod = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, product_id)
     prod_title = prod.title if prod else f"Product ID {product_id}"
 
     db.delete(item)

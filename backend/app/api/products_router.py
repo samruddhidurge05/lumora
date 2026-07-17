@@ -436,8 +436,16 @@ def get_product_categories(db: Session = Depends(get_db)):
 @router.get("/{product_id}", response_model=ProductResponse)
 def read_product(product_id: str, db: Session = Depends(get_db)):
     """Get a single product by ID. Public — no authentication required."""
+    try:
+        pid = int(product_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    from app.utils.db_sync import get_product_by_id
+    get_product_by_id(db, pid)
+
     product = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
-        Product.id == product_id,
+        Product.id == pid,
         or_(User.id == None, User.is_active == True)
     ).first()
     if not product:
@@ -448,7 +456,8 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
 @router.get("/{product_id}/related", response_model=List[ProductResponse])
 def get_related_products(product_id: int, limit: int = 4, db: Session = Depends(get_db)):
     """Return related products of the same category, excluding the product itself. Public."""
-    product = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     results = db.query(Product).filter(
@@ -462,7 +471,8 @@ def get_related_products(product_id: int, limit: int = 4, db: Session = Depends(
 @router.get("/{product_id}/images", response_model=List[str])
 def get_product_images(product_id: int, db: Session = Depends(get_db)):
     """Return screenshot/gallery URLs for the product. Public."""
-    product = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     
@@ -574,6 +584,9 @@ def download_product(
     """Securely download a product. Returns detailed product info for popup display."""
     check_platform_paused()
     
+    from app.utils.db_sync import get_product_by_id
+    get_product_by_id(db, product_id)
+
     # Check if vendor is active and get vendor details
     product_with_vendor = db.query(Product, User.name.label("vendor_name")).outerjoin(
         User, Product.vendor_id == cast(User.id, String)
@@ -751,7 +764,8 @@ def download_product_file(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
         
-    product = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 

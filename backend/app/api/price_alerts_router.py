@@ -40,7 +40,8 @@ def toggle_price_alert(
         )
 
     # Verify product and user exist
-    product = db.query(Product).filter(Product.id == alert_in.product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, alert_in.product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     user = db.query(User).filter(User.id == alert_in.user_id).first()
@@ -92,7 +93,8 @@ def trigger_price_alerts(
             detail="New price cannot be negative."
         )
 
-    product = db.query(Product).filter(Product.id == product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 

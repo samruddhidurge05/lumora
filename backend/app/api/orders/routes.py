@@ -61,7 +61,8 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
     commissions_created = 0
 
     for item in order.items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
+        from app.utils.db_sync import get_product_by_id
+        product = get_product_by_id(db, item.product_id)
         if not product:
             continue
 
@@ -156,7 +157,8 @@ def create_new_order(
     from app.core.exceptions import LumoraException
     
     for item in order_in.items:
-        prod = db.query(Product).filter(Product.id == item.product_id).first()
+        from app.utils.db_sync import get_product_by_id
+        prod = get_product_by_id(db, item.product_id)
         if not prod:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product {item.product_id} not found")
             

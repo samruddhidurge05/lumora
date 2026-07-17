@@ -58,6 +58,8 @@ def _require_admin(current_user: User) -> None:
         )
 
 
+from app.utils.db_sync import get_product_by_id
+
 def _build_vendor_ids(db: Session, items) -> str:
     """
     Build a comma-separated string of vendor_ids from cart items.
@@ -65,7 +67,7 @@ def _build_vendor_ids(db: Session, items) -> str:
     """
     vendor_ids = set()
     for item in items:
-        prod = db.query(Product).filter(Product.id == item.product_id).first()
+        prod = get_product_by_id(db, item.product_id)
         if prod and prod.vendor_id:
             vendor_ids.add(str(prod.vendor_id))
     return ",".join(sorted(vendor_ids))
@@ -109,7 +111,7 @@ def initiate_payment(
 
         subtotal = 0.0
         for item in body.items:
-            prod = db.query(Product).filter(Product.id == item.product_id).first()
+            prod = get_product_by_id(db, item.product_id)
             if not prod:
                 print(f"DEBUG INITIATE - Product {item.product_id} not found in database!")
                 raise HTTPException(

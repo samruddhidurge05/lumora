@@ -96,7 +96,8 @@ def create_review(
         )
 
     # Check if product exists
-    prod = db.query(Product).filter(Product.id == review_in.product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, review_in.product_id)
     if not prod:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
@@ -208,7 +209,8 @@ def delete_review(
     db.commit()
 
     # Recalculate product rating
-    prod = db.query(Product).filter(Product.id == prod_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, prod_id)
     if prod:
         reviews = db.query(Review).filter(Review.product_id == prod_id).all()
         if reviews:
@@ -263,7 +265,8 @@ def update_review(
     db.refresh(review)
 
     # Recalculate product rating
-    prod = db.query(Product).filter(Product.id == review.product_id).first()
+    from app.utils.db_sync import get_product_by_id
+    prod = get_product_by_id(db, review.product_id)
     if prod:
         reviews = db.query(Review).filter(Review.product_id == review.product_id).all()
         if reviews:
