@@ -85,6 +85,33 @@ DEFAULT_MAPPINGS = [
         "featured": True,
         "trending": True,
         "badge": "New Release"
+    },
+    {
+        "code": "kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV",
+        "hint_ids": [120],       # The Small Business Startup Workbook
+        "title": "The Small Business Startup Workbook",
+        "price": 199.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Must Have"
+    },
+    {
+        "code": "kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7",
+        "hint_ids": [121],       # The Wedding Planning Toolkit
+        "title": "The Wedding Planning Toolkit",
+        "price": 249.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Top Pick"
+    },
+    {
+        "code": "kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7",
+        "hint_ids": [122],       # Meal Prep & Recipe Planner
+        "title": "Meal Prep & Recipe Planner",
+        "price": 199.0,
+        "featured": True,
+        "trending": True,
+        "badge": "Fan Favorite"
     }
 ]
 
