@@ -7,8 +7,14 @@ export default function ProductShowcase() {
   const { products, navigateTo } = useApp();
 
   // Filter featured products, fallback to first 4 if none are marked featured
-  const featuredProducts = products.filter(p => p.featured);
-  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products;
+  const seen = new Set();
+  const featuredProducts = products.filter(p => {
+    const k = String(p.id);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return p.featured;
+  }).slice(0, 8);
+  const displayProducts = featuredProducts.length > 0 ? featuredProducts : [...products].slice(0, 8);
 
   return (
     <section 

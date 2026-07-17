@@ -183,13 +183,22 @@ export default function Home() {
   const heroY       = useTransform(scrollYProgress, [0, 0.25], [0, -50]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.20], [1, 0.25]);
 
-  const featured = products.filter(p => p.featured || p.badge);
-  const trending = products.filter(p => p.trending || (p.downloads || 0) > 500);
-  const latest = (() => {
-    const list = products.filter(p => p.new_arrival || p.newArrival);
-    if (list.length > 0) return list;
-    return [...products].sort((a, b) => Number(b.id) - Number(a.id));
-  })();
+  // ── Deduplicate by ID (backend + JSON can both emit same product) ──
+  const seenIds = new Set();
+  const uniqueProducts = products.filter(p => {
+    const key = String(p.id);
+    if (seenIds.has(key)) return false;
+    seenIds.add(key);
+    return true;
+  });
+
+  // ── Partition into non-overlapping sections of 8 ──
+  // Every product is now featured+trending, so we just rotate through the
+  // unique list to avoid showing the same card in multiple sections.
+  const SECTION_SIZE = 8;
+  const featured = uniqueProducts.slice(0, SECTION_SIZE);
+  const trending  = uniqueProducts.slice(SECTION_SIZE, SECTION_SIZE * 2);
+  const latest    = uniqueProducts.slice(SECTION_SIZE * 2, SECTION_SIZE * 3);
 
   useEffect(() => {
     const t = setInterval(() => setActiveTestimonial(p => (p+1) % TESTIMONIALS.length), 4500);
