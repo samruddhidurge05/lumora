@@ -462,9 +462,8 @@ export default function ProductPage() {
                     key="video"
                     src={videoUrl}
                     controls
-                    className="product-gallery-img"
+                    className="product-gallery-img lumora-product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
-                    className="lumora-product-gallery-img"
                   />
                 ) : (
                   <motion.img
@@ -475,9 +474,8 @@ export default function ProductPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="product-gallery-img"
+                    className="product-gallery-img lumora-product-gallery-img"
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
-                    className="lumora-product-gallery-img"
                   />
                 )}
               </AnimatePresence>
