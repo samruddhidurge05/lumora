@@ -248,6 +248,15 @@ def restore_products():
     )
     from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
 
+    # Seed local SQLite from products.json first if needed
+    try:
+        from scripts.seed_products import seed as seed_db_products
+        _logger.info("[startup] Auto-seeding local SQLite database from products.json...")
+        seed_db_products()
+        _logger.info("[startup] Local SQLite seeding completed successfully.")
+    except Exception as _seed_err:
+        _logger.error("[startup] Failed to auto-seed local database: %s", _seed_err)
+
     db = SessionLocal()
     try:
         _logger.info("[startup] Syncing and restoring any missing published products from Firestore to SQLite...")
