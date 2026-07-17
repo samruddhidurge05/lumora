@@ -228,7 +228,7 @@ export default function Home() {
 
       {/* ═══════════ 1. HERO ═══════════ */}
       <motion.div style={{ y:heroY, opacity:heroOpacity }}>
-        <section style={{ minHeight:'100vh', position:'relative', display:'flex', alignItems:'center', padding:'clamp(6rem,12vw,10rem) clamp(1.5rem,6vw,7rem) 5rem', overflow:'hidden' }}>
+        <section className="lumora-hero-section" style={{ minHeight:'100vh', position:'relative', display:'flex', alignItems:'center', padding:'clamp(6rem,12vw,10rem) clamp(1.5rem,6vw,7rem) 5rem', overflow:'hidden' }}>
 
           <div style={{ maxWidth:'1280px', margin:'0 auto', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'64px', alignItems:'center', position:'relative', zIndex:2 }} className="hero-grid">            {/* LEFT */}
             <div>
@@ -307,7 +307,7 @@ export default function Home() {
             <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Browse by Category</p>
             <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Everything You Need to Build</h2>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'16px' }}>
+          <div className="lumora-cats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'16px' }}>
             {CATS.map((cat,i)=>(
               <motion.button key={cat.name}
                 initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}}
@@ -340,7 +340,7 @@ export default function Home() {
             </div>
             <button onClick={()=>navigateTo('marketplace')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all 103 <ArrowRight size={14}/></button>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
             {featured.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function Home() {
       {/* ═══════════ 4. STATS STRIP ═══════════ */}
       <section style={{ padding:'64px clamp(1.5rem,6vw,7rem)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1px', background:'rgba(220,198,255,0.15)', borderRadius:'24px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.35)' }}>
+          <div className="gsap-reveal lumora-stats-strip" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1px', background:'rgba(220,198,255,0.15)', borderRadius:'24px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.35)' }}>
             {[
               {icon:<Sparkles size={22}/>,v:'103',s:'+',l:'Products'},
               {icon:<Users size={22}/>,v:'45000',s:'+',l:'Customers'},
@@ -376,7 +376,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Trending This Week</h2>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
             {trending.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function Home() {
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Latest Products</h2>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
+          <div className="lumora-home-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'20px' }}>
             {latest.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
           </div>
         </div>

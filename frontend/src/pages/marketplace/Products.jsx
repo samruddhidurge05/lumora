@@ -82,7 +82,7 @@ export default function Products() {
       <div style={{ background: 'transparent', minHeight: '100vh', paddingTop: '100px' }}>
 
         {/* ── Header band ── */}
-        <div style={{ background: 'transparent', borderBottom: '1px solid rgba(123,63,160,0.12)', padding: '28px clamp(1.5rem,5vw,5rem) 0' }}>
+        <div className="lumora-products-header-band" style={{ background: 'transparent', borderBottom: '1px solid rgba(123,63,160,0.12)', padding: '28px clamp(1.5rem,5vw,5rem) 0' }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ marginBottom: '20px' }}>
               <p style={{ fontSize: '0.62rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Marketplace</p>
@@ -111,8 +111,8 @@ export default function Products() {
 
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px clamp(1.5rem,5vw,5rem) 80px' }}>
           {/* ── Filter bar ── */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ flex: 1, minWidth: '200px', maxWidth: '320px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(196,181,253,0.30)', backdropFilter: 'blur(12px)', boxShadow: '0 2px 12px rgba(123,63,160,0.06)' }}>
+          <div className="lumora-products-filter-bar" style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="lumora-products-search" style={{ flex: 1, minWidth: '200px', maxWidth: '320px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(196,181,253,0.30)', backdropFilter: 'blur(12px)', boxShadow: '0 2px 12px rgba(123,63,160,0.06)' }}>
               <Search size={15} style={{ color: '#8B6B5B', flexShrink: 0 }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…"
                 style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: '0.83rem', fontFamily: 'var(--font-sans)', color: '#2D004D', width: '100%' }} />
@@ -153,7 +153,7 @@ export default function Products() {
               </button>
             </div>
           ) : view === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
+            <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
               {filtered.map((p, i) => <GlassProductCard key={p.id} product={p} index={i} />)}
             </div>
           ) : (

@@ -343,7 +343,7 @@ export default function ProductPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <Navbar />
-      <div style={{ paddingTop: '90px', padding: '90px clamp(1.5rem,5vw,5rem) 80px', maxWidth: '1280px', margin: '0 auto' }}>
+      <div className="lumora-product-detail-container" style={{ paddingTop: '90px', padding: '90px clamp(1.5rem,5vw,5rem) 80px', maxWidth: '1280px', margin: '0 auto' }}>
 
         {/* Back */}
         <button onClick={() => navigateTo('marketplace')} className="btn-premium"
@@ -364,6 +364,7 @@ export default function ProductPage() {
                     src={videoUrl}
                     controls
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                    className="lumora-product-gallery-img"
                   />
                 ) : (
                   <motion.img
@@ -375,6 +376,7 @@ export default function ProductPage() {
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                    className="lumora-product-gallery-img"
                   />
                 )}
               </AnimatePresence>
@@ -409,7 +411,7 @@ export default function ProductPage() {
             </div>
 
             {/* Thumbnail strip */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
+            <div className="lumora-product-thumbnails" style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
               {gallery.map((img, i) => (
                 <button key={i} onClick={() => setActiveImg(i)}
                   style={{ flex: 1, height: '68px', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${i === activeImg ? '#7B3FA0' : 'rgba(220,198,255,0.30)'}`, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', boxShadow: i === activeImg ? '0 4px 16px rgba(123,63,160,0.18)' : 'none' }}>

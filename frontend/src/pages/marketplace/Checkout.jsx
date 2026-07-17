@@ -180,7 +180,7 @@ export default function Checkout() {
   return (
     <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh' }}>
       <Navbar />
-      <div style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,4vw,4rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
+      <div className="lumora-checkout-page" style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,4vw,4rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
 
         {/* Progress stepper */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '36px', fontSize: '0.75rem', fontWeight: 700 }}>
@@ -206,7 +206,7 @@ export default function Checkout() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Name + Phone */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="lumora-checkout-form-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {field('Full Name', 'name', { placeholder: 'Your full name' })}
                 {field('Phone', 'phone', { placeholder: '+91 98765 43210', type: 'tel' })}
               </div>
@@ -215,7 +215,7 @@ export default function Checkout() {
               {field('Email Address', 'email', { placeholder: 'you@example.com', type: 'email' })}
 
               {/* City + State + Country */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="lumora-checkout-form-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 {field('City', 'city', { placeholder: 'Mumbai' })}
                 {field('State', 'state', { placeholder: 'Maharashtra' })}
                 {field('Country', 'country', { placeholder: 'India', required: false })}

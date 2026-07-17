@@ -464,7 +464,7 @@ export default function Payment() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', padding: '32px clamp(16px, 4vw, 48px)', position: 'relative', zIndex: 20 }}>
+    <div className="lumora-checkout-page" style={{ minHeight: '100vh', padding: '32px clamp(16px, 4vw, 48px)', position: 'relative', zIndex: 20 }}>
       {/* Back button */}
       <button onClick={() => navigateTo('checkout')} className="btn-premium"
         style={{ padding: '8px 16px', fontSize: '0.75rem', borderRadius: '20px', marginBottom: '32px' }}>
@@ -506,7 +506,7 @@ export default function Payment() {
             {/* Payment Tabs Selector */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-mocha)', letterSpacing: '0.05em' }}>SELECT PAYMENT METHOD</label>
-              <div className="glass-surface" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '4px', borderRadius: '14px', gap: '4px' }}>
+              <div className="glass-surface lumora-payment-tabs" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '4px', borderRadius: '14px', gap: '4px' }}>
                 <button type="button" onClick={() => setPaymentMethod('upi_qr')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 4px', borderRadius: '10px', border: 'none', background: paymentMethod === 'upi_qr' ? 'var(--color-espresso)' : 'transparent', color: paymentMethod === 'upi_qr' ? '#fff' : 'var(--color-mocha)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>
                   <QrCode size={13} /> UPI QR

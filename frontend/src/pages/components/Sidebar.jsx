@@ -27,7 +27,7 @@ export default function Sidebar({ activePage: activeProp }) {
   const activePage = activeProp || pathname.replace('/vendor/', '') || 'dashboard';
 
   return (
-    <aside style={{
+    <aside className="vendor-sidebar" style={{
       width: '240px',
       flexShrink: 0,
       minHeight: '100%',
@@ -45,7 +45,7 @@ export default function Sidebar({ activePage: activeProp }) {
     }}>
 
       {/* Section label */}
-      <div style={{
+      <div className="vendor-sidebar-label" style={{
         fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.10em',
         color: 'rgba(123,63,160,0.45)', textTransform: 'uppercase',
         padding: '0 10px', marginBottom: '10px',
@@ -57,6 +57,7 @@ export default function Sidebar({ activePage: activeProp }) {
         const isActive = activePage === item.id;
         return (
           <button key={item.id} onClick={() => navigate(item.path)}
+            className={`vendor-sidebar-btn ${isActive ? 'active-btn' : ''}`}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px',
               padding: '10px 13px', borderRadius: '12px', border: 'none', outline: 'none',
@@ -92,10 +93,10 @@ export default function Sidebar({ activePage: activeProp }) {
       })}
 
       {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      <div className="vendor-sidebar-spacer" style={{ flex: 1 }} />
 
       {/* Footer badge */}
-      <div style={{
+      <div className="vendor-sidebar-footer" style={{
         padding: '14px', borderRadius: '14px', marginTop: '8px',
         background: 'linear-gradient(135deg, rgba(123,63,160,0.08), rgba(90,30,126,0.04))',
         border: '1px solid rgba(196,148,230,0.25)',

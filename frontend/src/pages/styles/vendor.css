@@ -399,8 +399,95 @@
 .v-delay-3 { animation-delay: 0.24s; }
 .v-delay-4 { animation-delay: 0.32s; }
 
+
 /* Scrollbar — matches global */
 .v-scroll::-webkit-scrollbar       { width:4px; }
 .v-scroll::-webkit-scrollbar-track { background:transparent; }
 .v-scroll::-webkit-scrollbar-thumb { background:rgba(196,148,230,0.32); border-radius:4px; }
 .v-scroll { scrollbar-width:thin; scrollbar-color:rgba(196,148,230,0.32) transparent; }
+
+/* ══════════════════════════════════════════════════════
+   VENDOR PORTAL MOBILE OVERRIDES (≤ 900px)
+   Converts sticky sidebar to scrollable horizontal tab bar
+══════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .vendor-layout-grid {
+    flex-direction: column !important;
+    min-height: calc(100vh - 58px) !important;
+  }
+
+  .vendor-sidebar {
+    width: 100% !important;
+    min-height: auto !important;
+    height: 52px !important;
+    position: sticky !important;
+    top: 56px !important; /* Topnav height */
+    z-index: 40 !important;
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(196, 148, 230, 0.20) !important;
+    box-shadow: 0 4px 12px rgba(90, 30, 126, 0.05) !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  .vendor-sidebar::-webkit-scrollbar {
+    display: none !important; /* Chrome/Safari */
+  }
+
+  .vendor-sidebar-label {
+    display: none !important;
+  }
+
+  .vendor-sidebar-btn {
+    width: auto !important;
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+    border-left: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 38px !important;
+  }
+
+  .vendor-sidebar-btn > span:last-child {
+    display: none !important; /* Hide chevron arrow icons */
+  }
+
+  .vendor-sidebar-spacer {
+    display: none !important;
+  }
+
+  .vendor-sidebar-footer {
+    display: none !important;
+  }
+
+  .vendor-main-content {
+    padding: 20px 14px !important;
+  }
+
+  .vendor-topnav {
+    padding: 10px 16px !important;
+    height: 56px !important;
+  }
+
+  /* Compact grid cards on mobile dashboard */
+  .v-grid-4, .v-grid-3, .v-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .v-stat-card {
+    padding: 16px !important;
+  }
+}
+

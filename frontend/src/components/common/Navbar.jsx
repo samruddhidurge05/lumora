@@ -98,6 +98,7 @@ export default function Navbar() {
 
   return (
     <header 
+      className="lumora-navbar-header"
       style={{
         position: 'fixed',
         top: isPlatformPaused ? (scrolled ? '1rem' : '2rem') : (scrolled ? '1rem' : '2rem'),
@@ -109,7 +110,7 @@ export default function Navbar() {
       }}
     >
       <div 
-        className="glass-surface"
+        className="glass-surface lumora-navbar-inner"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -131,7 +132,7 @@ export default function Navbar() {
         <a 
           href="#" 
           onClick={(e) => { e.preventDefault(); navigateTo('landing'); }}
-          className="text-editorial"
+          className="text-editorial lumora-navbar-logo"
           style={{
             fontSize: '1.8rem',
             fontWeight: 500,
@@ -214,13 +215,13 @@ export default function Navbar() {
         </nav>
 
         {/* Action Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="lumora-navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {user ? (
             <>
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); handleLogout(); }}
-                className="text-sans"
+                className="text-sans lumora-navbar-signin"
                 style={{
                   fontSize: '0.85rem',
                   fontWeight: 600,
@@ -238,7 +239,7 @@ export default function Navbar() {
               <a 
                 href="#"
                 onClick={(e) => { e.preventDefault(); handleDashboardClick(); }}
-                className="btn-premium"
+                className="btn-premium lumora-navbar-cta"
                 style={{
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',
@@ -257,7 +258,7 @@ export default function Navbar() {
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); navigateTo('login', 'customer'); }}
-                className="text-sans"
+                className="text-sans lumora-navbar-signin"
                 style={{
                   fontSize: '0.85rem',
                   fontWeight: 600,
@@ -275,7 +276,7 @@ export default function Navbar() {
               <a 
                 href="#"
                 onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); }}
-                className="btn-premium"
+                className="btn-premium lumora-navbar-cta"
                 style={{
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',

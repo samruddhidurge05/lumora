@@ -26,7 +26,7 @@ export default function Cart() {
   return (
     <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh' }}>
       <Navbar />
-      <div style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,5vw,6rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
+      <div className="lumora-cart-page" style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,5vw,6rem) 80px', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Your Cart</span>
@@ -41,11 +41,12 @@ export default function Cart() {
           {/* Items */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {cart.map(item => (
-              <div key={item.id} className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center', border: '1px solid rgba(196,181,253,0.22)' }}>
+              <div key={item.id} className="glass-card lumora-cart-item" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center', border: '1px solid rgba(196,181,253,0.22)' }}>
                 <img 
                   src={item.preview} 
                   alt={item.title} 
                   onClick={() => navigateTo('product-detail', item.id)}
+                  className="lumora-cart-item-img"
                   style={{ width: '72px', height: '72px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, cursor: 'pointer' }} 
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -67,7 +68,7 @@ export default function Cart() {
                     <Plus size={12} />
                   </button>
                 </div>
-                <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                <div className="lumora-cart-item-price" style={{ textAlign: 'right', minWidth: '80px' }}>
                   <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{formatPrice(item.price * (item.quantity || 1))}</div>
                 </div>
                 <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(220,38,38,0.6)', padding: '4px' }}>
