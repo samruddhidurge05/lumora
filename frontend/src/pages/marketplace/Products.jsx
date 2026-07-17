@@ -173,10 +173,11 @@ export default function Products() {
    PREMIUM GLASS PRODUCT CARD
 ═══════════════════════════════════════ */
 function GlassProductCard({ product, index }) {
-  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts } = useApp();
+  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, cart } = useApp();
   const [hov, setHov] = useState(false);
   const isWished = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
+  const inCart = cart.some(item => String(item.id) === String(product.id));
 
   // Generate multiple preview images based on category
   const extraImages = getExtraImages(product);
@@ -303,11 +304,12 @@ function GlassProductCard({ product, index }) {
           <div style={{ display: 'flex', gap: '6px' }}>
             <button
               onClick={e => { e.stopPropagation(); addToCart(product); }}
-              style={{ width: '32px', height: '32px', borderRadius: '9px', border: '1.5px solid rgba(123,63,160,0.25)', background: 'rgba(255,255,255,0.90)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E', transition: 'all 0.2s', boxShadow: hov ? '0 2px 10px rgba(123,63,160,0.12)' : 'none' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#7B3FA0'; e.currentTarget.style.transform = 'scale(1.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.90)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.25)'; e.currentTarget.style.transform = 'scale(1)'; }}
+              style={{ width: '32px', height: '32px', borderRadius: '9px', border: `1.5px solid ${inCart ? 'rgba(34,197,94,0.50)' : 'rgba(123,63,160,0.25)'}`, background: inCart ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.90)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: inCart ? '#16a34a' : '#5A1E7E', transition: 'all 0.2s', boxShadow: hov ? '0 2px 10px rgba(123,63,160,0.12)' : 'none' }}
+              title={inCart ? 'Added to cart' : 'Add to cart'}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
-              <ShoppingBag size={13} />
+              {inCart ? '✓' : <ShoppingBag size={13} />}
             </button>
             <button
               onClick={e => { e.stopPropagation(); buyNow(product); }}
@@ -329,8 +331,9 @@ function GlassProductCard({ product, index }) {
 
 /* ── List row ─────────────────────────────────────────── */
 function ProductListRow({ product }) {
-  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist } = useApp();
+  const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, cart } = useApp();
   const isWished = wishlist.some(w => w.id === product.id);
+  const inCart = cart.some(item => String(item.id) === String(product.id));
   return (
     <div onClick={() => navigateTo('product-detail', product.id)}
       style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(220,198,255,0.28)', borderRadius: '18px', cursor: 'pointer', transition: 'all 0.22s', boxShadow: '0 2px 12px rgba(123,63,160,0.05)' }}
@@ -359,7 +362,7 @@ function ProductListRow({ product }) {
           <Heart size={13} fill={isWished ? '#E11D48' : 'none'} />
         </button>
         <button onClick={e => { e.stopPropagation(); addToCart(product); }}
-          style={{ padding: '8px 16px', borderRadius: '10px', border: '1.5px solid rgba(123,63,160,0.25)', background: '#fff', color: '#5A1E7E', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}>Add</button>
+          style={{ padding: '8px 16px', borderRadius: '10px', border: `1.5px solid ${inCart ? 'rgba(34,197,94,0.50)' : 'rgba(123,63,160,0.25)'}`, background: inCart ? 'rgba(34,197,94,0.10)' : '#fff', color: inCart ? '#16a34a' : '#5A1E7E', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>{inCart ? '✓ Added' : 'Add'}</button>
         <button onClick={e => { e.stopPropagation(); buyNow(product); }}
           style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)' }}>Buy Now</button>
       </div>
