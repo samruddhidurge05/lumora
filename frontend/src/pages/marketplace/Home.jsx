@@ -183,12 +183,12 @@ export default function Home() {
   const heroY       = useTransform(scrollYProgress, [0, 0.25], [0, -50]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.20], [1, 0.25]);
 
-  const featured = products.filter(p => p.featured || p.badge).slice(0, 8);
-  const trending = products.filter(p => p.trending || (p.downloads || 0) > 500).slice(0, 8);
+  const featured = products.filter(p => p.featured || p.badge);
+  const trending = products.filter(p => p.trending || (p.downloads || 0) > 500);
   const latest = (() => {
     const list = products.filter(p => p.new_arrival || p.newArrival);
-    if (list.length > 0) return list.slice(0, 8);
-    return [...products].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, 8);
+    if (list.length > 0) return list;
+    return [...products].sort((a, b) => Number(b.id) - Number(a.id));
   })();
 
   useEffect(() => {

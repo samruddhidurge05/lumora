@@ -15,7 +15,7 @@
     "vendor_id": "DesignHub",
     "reviews": 353,
     "preview": "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ui kit",
@@ -47,7 +47,7 @@
     "file_url": "/products/ui-kit-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 174,
@@ -81,12 +81,12 @@
     "file_url": "/products/ui-kit-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 305,
     "preview": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "mobile",
@@ -115,12 +115,12 @@
     "file_url": "/products/ui-kit-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 376,
     "preview": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "mobile",
@@ -136,7 +136,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Popular"
   },
   {
     "id": 5,
@@ -149,12 +149,12 @@
     "file_url": "/products/ui-kit-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=800&q=80",
     "seller": "UXMasters",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "UXMasters",
     "reviews": 36,
     "preview": "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ui kit",
@@ -169,7 +169,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Value"
   },
   {
     "id": 6,
@@ -182,12 +182,12 @@
     "file_url": "/products/web-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "WebStudio",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "WebStudio",
     "reviews": 273,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "web",
@@ -203,7 +203,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Editor's Pick"
   },
   {
     "id": 7,
@@ -216,12 +216,12 @@
     "file_url": "/products/web-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 246,
     "preview": "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "web",
@@ -237,7 +237,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Hot Product"
   },
   {
     "id": 8,
@@ -250,7 +250,7 @@
     "file_url": "/products/web-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 237,
@@ -284,12 +284,12 @@
     "file_url": "/products/web-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
     "seller": "WebStudio",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "WebStudio",
     "reviews": 204,
     "preview": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "web",
@@ -305,7 +305,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Must Have"
   },
   {
     "id": 10,
@@ -318,12 +318,12 @@
     "file_url": "/products/web-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 226,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "web",
@@ -357,7 +357,7 @@
     "vendor_id": "CodeForge",
     "reviews": 281,
     "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -391,7 +391,7 @@
     "vendor_id": "CodeForge",
     "reviews": 191,
     "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -420,12 +420,12 @@
     "file_url": "/products/react-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 114,
     "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -441,7 +441,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Featured"
   },
   {
     "id": 14,
@@ -454,12 +454,12 @@
     "file_url": "/products/react-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 142,
     "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -475,7 +475,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Premium"
   },
   {
     "id": 15,
@@ -488,12 +488,12 @@
     "file_url": "/products/react-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 258,
     "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -509,7 +509,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 16,
@@ -522,7 +522,7 @@
     "file_url": "/products/next-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 355,
@@ -556,12 +556,12 @@
     "file_url": "/products/next-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 157,
     "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -577,7 +577,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Trending"
   },
   {
     "id": 18,
@@ -590,12 +590,12 @@
     "file_url": "/products/next-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
     "seller": "WebStudio",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "WebStudio",
     "reviews": 350,
     "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -611,7 +611,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Popular"
   },
   {
     "id": 19,
@@ -624,12 +624,12 @@
     "file_url": "/products/next-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 182,
     "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -645,7 +645,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Value"
   },
   {
     "id": 20,
@@ -658,12 +658,12 @@
     "file_url": "/products/next-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 311,
     "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "react",
@@ -692,7 +692,7 @@
     "file_url": "/products/prompt-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
     "seller": "PromptMaster",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PromptMaster",
     "reviews": 348,
@@ -725,12 +725,12 @@
     "file_url": "/products/prompt-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
     "seller": "PromptMaster",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PromptMaster",
     "reviews": 113,
     "preview": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -745,7 +745,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "New Release"
   },
   {
     "id": 23,
@@ -758,12 +758,12 @@
     "file_url": "/products/prompt-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
     "seller": "AILabs",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "AILabs",
     "reviews": 329,
     "preview": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -778,7 +778,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Must Have"
   },
   {
     "id": 24,
@@ -824,12 +824,12 @@
     "file_url": "/products/prompt-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
     "seller": "AILabs",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "AILabs",
     "reviews": 201,
     "preview": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -844,7 +844,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Fan Favorite"
   },
   {
     "id": 26,
@@ -857,12 +857,12 @@
     "file_url": "/products/canva-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 378,
     "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "social",
@@ -877,7 +877,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Staff Pick"
   },
   {
     "id": 27,
@@ -890,12 +890,12 @@
     "file_url": "/products/canva-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 224,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "business",
@@ -910,7 +910,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Featured"
   },
   {
     "id": 28,
@@ -923,12 +923,12 @@
     "file_url": "/products/canva-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 188,
     "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "social",
@@ -943,7 +943,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Premium"
   },
   {
     "id": 29,
@@ -956,12 +956,12 @@
     "file_url": "/products/canva-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 100,
     "preview": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "social",
@@ -976,7 +976,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 30,
@@ -989,12 +989,12 @@
     "file_url": "/products/canva-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 35,
     "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "social",
@@ -1022,12 +1022,12 @@
     "file_url": "/products/canva-006.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 236,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "business",
@@ -1042,7 +1042,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Trending"
   },
   {
     "id": 32,
@@ -1055,7 +1055,7 @@
     "file_url": "/products/canva-007.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 373,
@@ -1088,12 +1088,12 @@
     "file_url": "/products/canva-008.zip",
     "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 168,
     "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "assets",
@@ -1109,7 +1109,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Value"
   },
   {
     "id": 34,
@@ -1122,12 +1122,12 @@
     "file_url": "/products/canva-009.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 48,
     "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "social",
@@ -1142,7 +1142,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Editor's Pick"
   },
   {
     "id": 35,
@@ -1155,12 +1155,12 @@
     "file_url": "/products/canva-010.zip",
     "thumbnail": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 86,
     "preview": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "social",
@@ -1175,7 +1175,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Hot Product"
   },
   {
     "id": 36,
@@ -1193,7 +1193,7 @@
     "vendor_id": "NotionFlow",
     "reviews": 376,
     "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1221,12 +1221,12 @@
     "file_url": "/products/notion-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
     "seller": "StudyHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "StudyHub",
     "reviews": 266,
     "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1241,7 +1241,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Must Have"
   },
   {
     "id": 38,
@@ -1254,12 +1254,12 @@
     "file_url": "/products/notion-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
     "seller": "NotionFlow",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "NotionFlow",
     "reviews": 34,
     "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1274,7 +1274,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Top Pick"
   },
   {
     "id": 39,
@@ -1287,12 +1287,12 @@
     "file_url": "/products/notion-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 72,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "business",
@@ -1307,7 +1307,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Fan Favorite"
   },
   {
     "id": 40,
@@ -1320,7 +1320,7 @@
     "file_url": "/products/notion-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
     "seller": "CreatorTools",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreatorTools",
     "reviews": 295,
@@ -1353,12 +1353,12 @@
     "file_url": "/products/notion-006.zip",
     "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
     "seller": "FinanceFlow",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "FinanceFlow",
     "reviews": 278,
     "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1373,7 +1373,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Featured"
   },
   {
     "id": 42,
@@ -1386,12 +1386,12 @@
     "file_url": "/products/notion-007.zip",
     "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 69,
     "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1406,7 +1406,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Premium"
   },
   {
     "id": 43,
@@ -1419,12 +1419,12 @@
     "file_url": "/products/notion-008.zip",
     "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
     "seller": "NotionFlow",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "NotionFlow",
     "reviews": 368,
     "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1439,7 +1439,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 44,
@@ -1452,12 +1452,12 @@
     "file_url": "/products/notion-009.zip",
     "thumbnail": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 251,
     "preview": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "business",
@@ -1472,7 +1472,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Top Choice"
   },
   {
     "id": 45,
@@ -1485,12 +1485,12 @@
     "file_url": "/products/notion-010.zip",
     "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
     "seller": "CreatorTools",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreatorTools",
     "reviews": 324,
     "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "notion",
@@ -1505,7 +1505,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Trending"
   },
   {
     "id": 46,
@@ -1518,12 +1518,12 @@
     "file_url": "/products/resume-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 158,
     "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "resume",
@@ -1552,12 +1552,12 @@
     "file_url": "/products/resume-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 49,
     "preview": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "resume",
@@ -1573,7 +1573,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Value"
   },
   {
     "id": 48,
@@ -1620,12 +1620,12 @@
     "file_url": "/products/resume-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 45,
     "preview": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "resume",
@@ -1641,7 +1641,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Hot Product"
   },
   {
     "id": 50,
@@ -1654,12 +1654,12 @@
     "file_url": "/products/resume-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 82,
     "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "resume",
@@ -1688,12 +1688,12 @@
     "file_url": "/products/ebook-001.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 386,
     "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1709,7 +1709,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Must Have"
   },
   {
     "id": 52,
@@ -1722,12 +1722,12 @@
     "file_url": "/products/ebook-002.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 215,
     "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1743,7 +1743,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Top Pick"
   },
   {
     "id": 53,
@@ -1756,12 +1756,12 @@
     "file_url": "/products/ebook-003.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 168,
     "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1777,7 +1777,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Fan Favorite"
   },
   {
     "id": 54,
@@ -1790,12 +1790,12 @@
     "file_url": "/products/ebook-004.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 231,
     "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1811,7 +1811,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Staff Pick"
   },
   {
     "id": 55,
@@ -1824,12 +1824,12 @@
     "file_url": "/products/ebook-005.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 79,
     "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1845,7 +1845,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Featured"
   },
   {
     "id": 56,
@@ -1858,7 +1858,7 @@
     "file_url": "/products/ebook-006.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 302,
@@ -1892,12 +1892,12 @@
     "file_url": "/products/ebook-007.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 240,
     "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1913,7 +1913,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 58,
@@ -1926,12 +1926,12 @@
     "file_url": "/products/ebook-008.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 300,
     "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ebook",
@@ -1947,7 +1947,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Top Choice"
   },
   {
     "id": 59,
@@ -1960,12 +1960,12 @@
     "file_url": "/products/ebook-009.pdf",
     "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 290,
     "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "productivity",
@@ -1980,7 +1980,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Trending"
   },
   {
     "id": 60,
@@ -1998,7 +1998,7 @@
     "vendor_id": "BusinessStack",
     "reviews": 376,
     "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "ebook",
@@ -2027,12 +2027,12 @@
     "file_url": "/products/course-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 185,
     "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -2048,7 +2048,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Value"
   },
   {
     "id": 62,
@@ -2061,12 +2061,12 @@
     "file_url": "/products/course-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 222,
     "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "react",
@@ -2082,7 +2082,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Editor's Pick"
   },
   {
     "id": 63,
@@ -2095,12 +2095,12 @@
     "file_url": "/products/course-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 220,
     "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "figma",
@@ -2115,7 +2115,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Hot Product"
   },
   {
     "id": 64,
@@ -2128,7 +2128,7 @@
     "file_url": "/products/course-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 226,
@@ -2161,12 +2161,12 @@
     "file_url": "/products/course-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 130,
     "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "business",
@@ -2181,7 +2181,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Must Have"
   },
   {
     "id": 66,
@@ -2194,12 +2194,12 @@
     "file_url": "/products/online-courses-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 82,
     "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -2215,7 +2215,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Top Pick"
   },
   {
     "id": 67,
@@ -2228,12 +2228,12 @@
     "file_url": "/products/online-courses-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 240,
     "preview": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -2249,7 +2249,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Fan Favorite"
   },
   {
     "id": 68,
@@ -2262,12 +2262,12 @@
     "file_url": "/products/online-courses-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 177,
     "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -2283,7 +2283,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Staff Pick"
   },
   {
     "id": 69,
@@ -2296,12 +2296,12 @@
     "file_url": "/products/online-courses-004.zip",
     "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 30,
     "preview": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "ai",
@@ -2317,7 +2317,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Featured"
   },
   {
     "id": 70,
@@ -2330,12 +2330,12 @@
     "file_url": "/products/online-courses-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 122,
     "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "ai",
@@ -2364,12 +2364,12 @@
     "file_url": "/products/icon-packs-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 50,
     "preview": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "icons",
@@ -2384,7 +2384,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 80,
@@ -2397,7 +2397,7 @@
     "file_url": "/products/font-packs-005.zip",
     "thumbnail": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 274,
@@ -2431,12 +2431,12 @@
     "file_url": "/products/video-assets-001.zip",
     "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 206,
     "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "assets",
@@ -2452,7 +2452,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 87,
@@ -2465,12 +2465,12 @@
     "file_url": "/products/music-packs-002.zip",
     "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 367,
     "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "assets",
@@ -2486,7 +2486,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 93,
@@ -2499,12 +2499,12 @@
     "file_url": "/products/motion-graphics-003.zip",
     "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 124,
     "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": false,
     "tags": [
       "assets",
@@ -2520,7 +2520,7 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": ""
+    "badge": "Best Seller"
   },
   {
     "id": 101,
@@ -2583,12 +2583,12 @@
     "file_url": "/products/lunar-manifest-102.zip",
     "thumbnail": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80",
     "seller": "Marcus Kane",
-    "featured": false,
+    "featured": true,
     "status": "published",
     "vendor_id": "marcus-kane",
     "reviews": 22,
     "preview": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80",
-    "trending": false,
+    "trending": true,
     "newArrival": true,
     "tags": [
       "planner",
@@ -2764,12 +2764,12 @@
     "image_urls": [],
     "seller": "Lumora Creator",
     "vendor_id": "",
-    "featured": false,
+    "featured": true,
     "status": "draft",
     "reviews": 0,
     "tags": [],
     "highlights": [],
-    "badge": null,
+    "badge": "Fan Favorite",
     "pcloud_download_link": "https://u.pcloud.com/#/register?invite=Qsvw7ZcTkHOy",
     "pcloudDownloadLink": "https://u.pcloud.com/#/register?invite=Qsvw7ZcTkHOy",
     "version": "v1.0.0",
@@ -2777,7 +2777,8 @@
     "short_desc": "",
     "features": [],
     "what_you_get": [],
-    "installation_guide": ""
+    "installation_guide": "",
+    "trending": true
   },
   {
     "id": 111,

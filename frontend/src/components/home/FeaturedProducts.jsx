@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 
 export default function FeaturedProducts() {
   const { products } = useApp();
-  const featured = products.filter(p => p.featured).slice(0, 6);
+  const featured = products.filter(p => p.featured);
   return (
     <section style={{ padding: '80px clamp(1.5rem,5vw,6rem)', position: 'relative', zIndex: 10 }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
