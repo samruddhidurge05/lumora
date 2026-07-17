@@ -47,6 +47,8 @@ def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
 def resolve_pcloud_direct_url(url: Optional[str]) -> Optional[str]:
     if not url or "pcloud" not in url:
         return url
+    if "getpubthumb" in url or "getpubimage" in url:
+        return url
     if url in _PCLOUD_URL_CACHE:
         return _PCLOUD_URL_CACHE[url]
     
@@ -88,6 +90,8 @@ def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Opt
         
     # 1. Handle pCloud / external URLs
     if "pcloud" in url or "publink" in url or "p-lux" in url:
+        if "getpubthumb" in url or "getpubimage" in url:
+            return url
         if "publink" in url or "pcloud" in url:
             return resolve_pcloud_direct_url(url)
         return url
@@ -669,8 +673,7 @@ def download_product(
 
     if has_pcloud:
         response_data["type"] = "external"
-        resolved_url = resolve_pcloud_direct_file_url(pcloud_link) or pcloud_link
-        response_data["redirect_url"] = resolved_url
+        response_data["redirect_url"] = pcloud_link
 
     return response_data
 
@@ -809,10 +812,9 @@ def download_product_file(
         )
         db.commit()
 
-        resolved_url = resolve_pcloud_direct_file_url(pcloud_link) or pcloud_link
         from fastapi.responses import JSONResponse
         return JSONResponse(content={
-            "redirect_url": resolved_url,
+            "redirect_url": pcloud_link,
             "type": "external",
             "product_title": product.title,
         })
