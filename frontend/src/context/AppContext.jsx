@@ -926,7 +926,7 @@ export function AppContextProvider({ children }) {
             const prevIds = new Set(prev.map(p => String(p.id)));
             const newFirestoreProducts = firestoreDocs.filter(fd => !prevIds.has(String(fd.id)));
 
-            return [...mergedProducts, ...newFirestoreProducts];
+            return pinnedFirst(dedupeById([...mergedProducts, ...newFirestoreProducts]));
           });
         }
       }, (err) => {
