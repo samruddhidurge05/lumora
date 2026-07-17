@@ -257,6 +257,7 @@ export default function Home() {
               </motion.div>
 
               <motion.h1 initial={{opacity:0,y:44}} animate={{opacity:1,y:0}} transition={{duration:.95,delay:.25,ease:[.16,1,.3,1]}}
+                className="home-hero-title"
                 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(3rem,5.5vw,5.5rem)', fontWeight:400, lineHeight:1.06, color:'#2D004D', letterSpacing:'-.02em', marginBottom:'24px' }}>
                 Discover &amp; Sell<br/>
                 <span style={{ background:'linear-gradient(135deg,#7B3FA0,#C084FC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontStyle:'italic' }}>Premium Digital</span><br/>
@@ -264,6 +265,7 @@ export default function Home() {
               </motion.h1>
 
               <motion.p initial={{opacity:0,y:28}} animate={{opacity:1,y:0}} transition={{duration:.8,delay:.4}}
+                className="home-hero-sub"
                 style={{ fontSize:'1.05rem', lineHeight:1.7, color:'#6B4F7A', maxWidth:'460px', marginBottom:'40px' }}>
                 The curated marketplace for UI kits, templates, AI tools and digital assets — crafted by world-class creators.
               </motion.p>

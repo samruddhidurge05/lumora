@@ -159,6 +159,39 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .lumora-nav-hamburger { display: flex; }
   .nav-menu             { display: none !important; }
   .lumora-nav-actions   { display: none !important; }
+
+  /* ── Compact floating navbar on mobile ── */
+  .lumora-navbar-header {
+    top: 0.6rem !important;
+    width: calc(100% - 24px) !important;
+    left: 12px !important;
+    transform: none !important;
+  }
+  .lumora-navbar-inner {
+    padding: 8px 14px !important;
+    border-radius: 60px !important;
+  }
+  .lumora-navbar-logo {
+    font-size: 1.3rem !important;
+  }
+  .lumora-nav-hamburger {
+    min-height: 36px !important;
+    min-width: 36px !important;
+    padding: 5px 8px !important;
+  }
+}
+@media (max-width: 480px) {
+  .lumora-navbar-header {
+    top: 0.5rem !important;
+    width: calc(100% - 16px) !important;
+    left: 8px !important;
+  }
+  .lumora-navbar-inner {
+    padding: 7px 12px !important;
+  }
+  .lumora-navbar-logo {
+    font-size: 1.2rem !important;
+  }
 }
 
 
@@ -184,18 +217,50 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 768px) {
-  /* Hero section padding */
+  /* Hero section padding — compact so nothing is buried under navbar */
   .lumora-hero-section {
-    padding: 5rem var(--mob-pad) 3rem !important;
+    padding: 5.5rem var(--mob-pad) 2.5rem !important;
     min-height: auto !important;
     align-items: flex-start !important;
   }
-  .home-hero-title  { font-size: clamp(2.2rem, 10vw, 3.5rem) !important; line-height: 1.1 !important; }
-  .home-hero-sub    { font-size: 0.9rem !important; max-width: 100% !important; margin-bottom: 28px !important; }
-  .home-hero-ctas   { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
-  .home-hero-ctas > * { width: 100% !important; justify-content: center !important; padding: 14px 20px !important; }
-  .home-hero-stats  { gap: 20px !important; flex-wrap: wrap !important; justify-content: center !important; }
-  
+  /* Headline: much smaller on mobile — no more 10vw oversizing */
+  .home-hero-title {
+    font-size: clamp(1.9rem, 8.5vw, 2.8rem) !important;
+    line-height: 1.08 !important;
+    margin-bottom: 14px !important;
+    letter-spacing: -0.025em !important;
+  }
+  .home-hero-sub {
+    font-size: 0.85rem !important;
+    line-height: 1.55 !important;
+    max-width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+  /* Hero badge compact */
+  .hero-badge { margin-bottom: 14px !important; }
+  /* CTAs: side-by-side, not full-bleed */
+  .home-hero-ctas {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    margin-bottom: 24px !important;
+  }
+  .home-hero-ctas > * {
+    flex: 1 1 auto !important;
+    max-width: 190px !important;
+    min-width: 110px !important;
+    padding: 11px 16px !important;
+    font-size: 0.82rem !important;
+    justify-content: center !important;
+  }
+  .home-hero-stats {
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    padding-top: 16px !important;
+  }
   /* Categories grid */
   .lumora-cats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -204,7 +269,22 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 480px) {
-  .lumora-hero-section { padding: 4.5rem var(--mob-pad) 2.5rem !important; }
+  .lumora-hero-section { padding: 5rem var(--mob-pad) 2rem !important; }
+  .home-hero-title { font-size: clamp(1.65rem, 7.5vw, 2.2rem) !important; }
+  /* On very small phones stack buttons but keep them compact */
+  .home-hero-ctas {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .home-hero-ctas > * {
+    max-width: 100% !important;
+    padding: 12px 20px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .home-hero-title { font-size: 1.55rem !important; }
+  .lumora-hero-section { padding: 4.5rem var(--mob-pad) 1.8rem !important; }
 }
 
 
@@ -926,6 +1006,48 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 ════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
   .section-pad { padding: 48px var(--mob-pad) !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   21. AFFILIATE PRODUCT DETAIL PAGE — Mobile Column Order
+   On desktop: [Left: Image+Info+Tabs] [Right: Commission+CTA]
+   On mobile:  Image → Title → Commission panel → Tabs/affiliate tools
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  /* Stack the two-column grid */
+  .aff-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Left column (image + info) — stays on top naturally (order:1 default) */
+  .aff-detail-grid > :first-child {
+    order: 1;
+  }
+
+  /* Right column (commission + CTA panel) — move BELOW info but ABOVE tabs */
+  /* We achieve this by using order:2 on the right panel.                    */
+  /* The tab content inside the left col renders after the image naturally.  */
+  .aff-detail-grid > :last-child {
+    order: 2;
+    position: static !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Affiliate page inner spacing */
+  .aff-page-wrap { padding: 12px 12px 40px !important; }
+
+  /* Product image height — don't let it be too tall on mobile */
+  .aff-detail-grid img[style*="height: 300px"],
+  .aff-detail-grid img {
+    height: clamp(180px, 50vw, 260px) !important;
+  }
+
+  /* Commission/CTA card — remove sticky, full width */
+  .aff-detail-grid > :last-child > .glass-card:first-child {
+    padding: 20px !important;
+  }
 }
 
 /* ── END ──────────────────────────────────────────────────────── */

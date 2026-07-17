@@ -796,9 +796,6 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
       </div>
 
       <style>{`
-        @media (max-width: 960px) {
-          .aff-detail-grid { grid-template-columns: 1fr !important; }
-        }
         @keyframes toastIn {
           from { opacity: 0; transform: translateX(-50%) translateY(12px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
