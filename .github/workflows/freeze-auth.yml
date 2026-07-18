@@ -1,0 +1,52 @@
+name: Freeze Authentication Files
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-auth-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for unauthorized modifications
+        run: |
+          FROZEN_FILES=(
+            "backend/app/api/auth_router.py"
+            "frontend/src/context/AuthContext.jsx"
+            "frontend/src/pages/auth/Login.jsx"
+            "frontend/src/pages/auth/Register.jsx"
+            "frontend/src/pages/auth/VerifyEmail.jsx"
+            "frontend/src/routes/ProtectedRoute.jsx"
+          )
+          
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.base_ref }}"
+          else
+            # For pushes, compare HEAD against the previous commit
+            BASE_REF="HEAD~1"
+          fi
+          
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_REF HEAD)
+          
+          VIOLATION=0
+          for file in "${FROZEN_FILES[@]}"; do
+            if echo "$CHANGED_FILES" | grep -q "^$file$"; then
+              echo "❌ ERROR: File '$file' is frozen and cannot be modified."
+              VIOLATION=1
+            fi
+          done
+          
+          if [ $VIOLATION -eq 1 ]; then
+            echo "CRITICAL: Authentication files are frozen. Changes are rejected."
+            exit 1
+          else
+            echo "✅ No frozen authentication files were modified."
+          fi
