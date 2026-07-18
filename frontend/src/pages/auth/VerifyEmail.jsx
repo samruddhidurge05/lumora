@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { applyActionCode, checkActionCode } from 'firebase/auth';
+import { applyActionCode, checkActionCode, signOut } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { clearBackendToken } from '../../services/authService';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 40, scale: 0.97 },
@@ -41,7 +42,8 @@ export default function VerifyEmail() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, reloadUser, resendVerification } = useAuth();
+  const { user, reloadUser, resendVerification, logout } = useAuth();
+  const role = new URLSearchParams(location.search).get('role') || 'customer';
 
   // Parse oobCode from query params (Firebase verification link)
   const query = new URLSearchParams(location.search);
@@ -49,14 +51,35 @@ export default function VerifyEmail() {
 
   // Initialize email from user context and start cooldown timer
   useEffect(() => {
+    const queryEmail = new URLSearchParams(location.search).get('email');
     if (user?.email) {
       setEmail(user.email);
+    } else if (queryEmail) {
+      setEmail(queryEmail);
     }
     const timer = setInterval(() => {
       setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [user]);
+  }, [user, location.search]);
+
+  const handleChangeEmail = async () => {
+    setIsLoading(true);
+    try {
+      if (typeof logout === 'function') {
+        await logout();
+      } else {
+        await signOut(auth);
+        clearBackendToken();
+      }
+      navigate(`/auth/register?role=${role}`);
+    } catch (err) {
+      setStatus('error');
+      setMessage('Failed to sign out.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const navigateToDashboard = async (firebaseUser) => {
     if (!firebaseUser) { navigate('/'); return; }
@@ -184,16 +207,19 @@ export default function VerifyEmail() {
             {isLoading ? 'Checking...' : "I've Verified My Email"}
           </motion.button>
 
-          <motion.div className="signup-prompt" style={{ marginTop: '1rem' }} variants={itemVariants}>
+          <motion.div className="signup-prompt" style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', alignItems: 'center' }} variants={itemVariants}>
             {cooldown > 0 ? (
               <span style={{ color: '#7B3FA0', fontWeight: '500' }}>
                 Resend in {cooldown}s
               </span>
             ) : (
-              <a href="#" onClick={(e) => { e.preventDefault(); handleResend(); }}>
+              <a href="#" onClick={(e) => { e.preventDefault(); handleResend(); }} style={{ fontSize: '0.9rem' }}>
                 Resend verification email
               </a>
             )}
+            <a href="#" onClick={(e) => { e.preventDefault(); handleChangeEmail(); }} style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
+              Change email / Register again
+            </a>
           </motion.div>
         </motion.div>
       </div>

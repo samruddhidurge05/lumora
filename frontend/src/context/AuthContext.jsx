@@ -355,11 +355,12 @@ export const AuthProvider = ({ children }) => {
 
   /** Registration with email/password - supports multi-role */
   const register = async (fullName, email, password, role = 'user') => {
+    const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role === 'user' ? 'customer' : role;
     let firebaseUser;
     
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       firebaseUser = cred.user;
       await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
       try {
@@ -369,15 +370,9 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
-        try {
-          // Attempt to log in with this email and password to verify ownership
-          const signInCred = await signInWithEmailAndPassword(auth, email, password);
-          firebaseUser = signInCred.user;
-        } catch (signInErr) {
-          const err = new Error('This email is already in use by another account. Please enter the correct password to add this new role to your existing account.');
-          err.code = 'auth/email-already-in-use';
-          throw err;
-        }
+        const err = new Error('An account with this email already exists. Please sign in instead.');
+        err.code = 'auth/email-already-in-use';
+        throw err;
       } else {
         throw createErr;
       }
@@ -458,12 +453,12 @@ export const AuthProvider = ({ children }) => {
 
     await syncWithBackend(firebaseUser, normalizedRole);
     await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'registration', true);
-    await signOut(auth);
     return firebaseUser;
   };
 
   /** Login with optional Remember Me */
   const login = async (email, password, rememberMe = false, role = null) => {
+    const normalizedEmail = email.trim().toLowerCase();
     // Destroy any previous session & clear local caches before authenticating new user
     try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
@@ -485,7 +480,7 @@ export const AuthProvider = ({ children }) => {
 
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password);
       const firebaseUser = cred.user;
       
       try {
@@ -557,7 +552,7 @@ export const AuthProvider = ({ children }) => {
             if (custSnap.exists()) hasRole = true;
           }
         }
-
+ 
         if (!hasRole) {
           await signOut(auth);
           await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'login', false, `Role mismatch: User does not have ${role} role`);
@@ -578,7 +573,7 @@ export const AuthProvider = ({ children }) => {
       await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'login', true);
       return firebaseUser;
     } catch (error) {
-      await logAuthEvent(null, email, 'login', false, error.message);
+      await logAuthEvent(null, normalizedEmail, 'login', false, error.message);
       throw error;
     }
   };
@@ -808,11 +803,12 @@ export const AuthProvider = ({ children }) => {
 
   /** Send password‑reset email */
   const sendPasswordReset = async (email) => {
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await sendPasswordResetEmail(auth, email);
-      await logAuthEvent(null, email, 'password_reset', true);
+      await sendPasswordResetEmail(auth, normalizedEmail);
+      await logAuthEvent(null, normalizedEmail, 'password_reset', true);
     } catch (e) {
-      await logAuthEvent(null, email, 'password_reset', false, e.message);
+      await logAuthEvent(null, normalizedEmail, 'password_reset', false, e.message);
       throw e;
     }
   };

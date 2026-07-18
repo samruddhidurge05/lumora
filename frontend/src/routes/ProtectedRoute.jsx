@@ -96,6 +96,11 @@ export default function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
+  // Enforce email verification
+  if (!user.emailVerified) {
+    return <Navigate to={`/auth/verify-email?email=${encodeURIComponent(user.email)}&role=${userRole || 'customer'}`} replace />;
+  }
+
   // Role guard — only enforce once userRole is fully resolved from the backend.
   if (requiredRole) {
     if (!userRole) {

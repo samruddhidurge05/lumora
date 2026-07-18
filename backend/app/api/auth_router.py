@@ -73,7 +73,7 @@ def get_current_user(
 )
 @limiter.limit("10/minute")
 def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
-    email = body.email.lower()
+    email = body.email.strip().lower()
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(
@@ -291,7 +291,8 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         )
 
     email: Optional[str] = claims.get("email")
-    name: str = claims.get("name") or (email.split("@")[0] if email else "User")
+    normalized_email = email.strip().lower() if email else None
+    name: str = claims.get("name") or (normalized_email.split("@")[0] if normalized_email else "User")
     email_verified: bool = claims.get("email_verified", False)
     role: str = body.role or "customer"
     # Normalise role value
@@ -299,15 +300,15 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         role = "customer"
 
     # Step 2 — look up or create user
-    if email:
-        user = db.query(User).filter(User.email == email.lower()).first()
+    if normalized_email:
+        user = db.query(User).filter(User.email == normalized_email).first()
     else:
         # Rare: GitHub accounts with hidden email — use Firebase UID as identifier
         user = None
 
     if user is None:
         # Step 3 — auto-create backend user for this Firebase account
-        if not email:
+        if not normalized_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Firebase account has no email address. Cannot create backend account.",
@@ -315,7 +316,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         # Use a sentinel password_hash so the account cannot be used with /login
         user = User(
             name=name,
-            email=email.lower(),
+            email=normalized_email,
             password_hash="firebase_managed",   # not a valid bcrypt hash
             role=role,
             is_verified=email_verified,
@@ -327,7 +328,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
             db.refresh(user)
         except IntegrityError:
             db.rollback()
-            user = db.query(User).filter(User.email == email.lower()).first()
+            user = db.query(User).filter(User.email == normalized_email).first()
             if not user:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -360,6 +361,13 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         if changed:
             db.commit()
             db.refresh(user)
+
+    # Enforce email verification (exclude admins or special cases if any? No, admin doesn't use firebase-sync)
+    if not email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before continuing.",
+        )
 
     check_user_active(user)
     from app.services.activity_log_service import ActivityLogService

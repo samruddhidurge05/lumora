@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { auth } from '../../services/firebase';
 import './auth.css';
 
 const ROLE_META = {
@@ -104,15 +105,23 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    setEmail(normalizedEmail);
+
     if (!validate()) return;
     setIsLoading(true);
     setAuthStatus(null);
     try {
-      await login(email, password, rememberMe, role);
-      if (nextUrl) {
-        navigate(nextUrl, { replace: true });
+      await login(normalizedEmail, password, rememberMe, role);
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        const nextParam = nextUrl ? `&next=${encodeURIComponent(nextUrl)}` : '';
+        navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${role}${nextParam}`);
       } else {
-        navigate(`/${role}/dashboard`);
+        if (nextUrl) {
+          navigate(nextUrl, { replace: true });
+        } else {
+          navigate(`/${role}/dashboard`);
+        }
       }
     } catch (err) {
       setAuthStatus('error');

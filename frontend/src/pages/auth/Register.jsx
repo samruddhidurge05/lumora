@@ -101,27 +101,28 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    setEmail(normalizedEmail);
+
     if (!validate()) return;
     setIsLoading(true);
     try {
       // Register with 'customer' role for admin invites — role is elevated by accept-invite endpoint
       const registrationRole = isAdminInvite ? 'customer' : role;
-      await register(name, email, password, registrationRole);
-      if (isAdminInvite) {
-        // Redirect back to AcceptInvite — the user will log in and activate their role
-        navigate(`/auth/login?role=customer&next=${encodeURIComponent(`/admin/accept-invite?token=${encodeURIComponent(inviteToken)}`)}&registered=true`);
-      } else {
-        navigate(`/auth/login?role=${role}&registered=true`);
-      }
+      await register(name, normalizedEmail, password, registrationRole);
+      
+      // On success, redirect to verification screen
+      const nextParam = isAdminInvite
+        ? `&next=${encodeURIComponent(`/admin/accept-invite?token=${encodeURIComponent(inviteToken)}`)}`
+        : '';
+      navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${registrationRole}${nextParam}`);
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
-        setErrors({ form: `This email is already registered. To add the ${isAdminInvite ? 'admin' : role} role to your account, enter your existing Lumora password. If you forgot it, use "Forgot password" on the login page.` });
+        setErrors({ form: 'An account with this email already exists. Please sign in instead.' });
       } else if (err.code === 'auth/weak-password') {
         setErrors({ password: 'Password must be at least 6 characters.' });
       } else if (err.code === 'auth/invalid-email') {
         setErrors({ email: 'Please enter a valid email address.' });
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setErrors({ form: `Wrong password. To add the ${isAdminInvite ? 'admin' : role} role, enter the password you used when you first registered on Lumora.` });
       } else {
         setErrors({ form: err.message || 'Registration failed. Please try again.' });
       }
