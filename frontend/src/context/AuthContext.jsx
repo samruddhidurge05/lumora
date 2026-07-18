@@ -548,8 +548,27 @@ export const AuthProvider = ({ children }) => {
             const venSnap = await getDoc(doc(db, 'vendors', firebaseUser.uid));
             if (venSnap.exists()) hasRole = true;
           } else if (normalizedTarget === 'customer') {
-            const custSnap = await getDoc(doc(db, 'customers', firebaseUser.uid));
-            if (custSnap.exists()) hasRole = true;
+            try {
+              const userRef = doc(db, 'users', firebaseUser.uid);
+              const updatedRoles = Array.from(new Set([...roles, 'customer']));
+              await updateDoc(userRef, { roles: updatedRoles });
+              
+              const custDocRef = doc(db, 'customers', firebaseUser.uid);
+              const custSnap = await getDoc(custDocRef);
+              if (!custSnap.exists()) {
+                await setDoc(custDocRef, {
+                  uid: firebaseUser.uid,
+                  fullName: firebaseUser.displayName || data.fullName || '',
+                  email: firebaseUser.email,
+                  role: 'customer',
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                });
+              }
+              hasRole = true;
+            } catch (e) {
+              console.error('Failed to auto-link customer role', e);
+            }
           }
         }
  
