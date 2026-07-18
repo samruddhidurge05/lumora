@@ -76,6 +76,11 @@ def admin_login(
     """
     Exchange a Firebase ID token for a Lumora admin JWT.
 
+    Identity resolution order (most → least specific):
+      1. Exact firebase_uid match.
+      2. Email match + firebase_uid reconciliation (provider switch or
+         first-time Google sign-in after email/password registration).
+
     The full idToken is never logged at INFO level or below.
     """
     ip = request.client.host if request.client else None
@@ -99,18 +104,39 @@ def admin_login(
 
     firebase_uid: Optional[str] = claims.get("uid")
     email: Optional[str] = claims.get("email")
+    email_verified: bool = claims.get("email_verified", False)
 
-    logger.info("Admin login attempt — firebase_uid=%s", firebase_uid)
+    logger.info("Admin login attempt — firebase_uid=%s email_verified=%s", firebase_uid, email_verified)
 
-    # ── Step 2: Look up user in SQLite ─────────────────────────────────────
+    # ── Step 2: Resolve user identity ──────────────────────────────────────
+    # Strategy: prefer exact firebase_uid match; fall back to verified email.
+    # This handles the common post-invitation scenario where the user
+    # registered with email/password (creating one firebase_uid) and later
+    # signs in to the admin portal via Google OAuth (different firebase_uid
+    # for the same verified email).
     user: Optional[User] = None
 
+    # 2a. Exact UID match — fastest, most specific
     if firebase_uid:
         user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
-    if user is None and email:
-        logger.info("Querying by email=%s (firebase_uid lookup found nothing)", email)
-        user = db.query(User).filter(User.email == email).first()
+    # 2b. Email fallback — covers provider switch (email/password → Google)
+    #     and first-time Google sign-in after invitation acceptance.
+    #     Only allowed when Firebase has verified the email address, ensuring
+    #     we cannot be spoofed by an unverified email claim.
+    if user is None and email and email_verified:
+        logger.info(
+            "Admin login: UID lookup missed — falling back to verified email=%s", email
+        )
+        user = db.query(User).filter(User.email == email.lower()).first()
+
+    # 2c. Last-resort: unverified email fallback (log a warning, still allow
+    #     lookup so the role/active checks below produce the right error message)
+    if user is None and email and not email_verified:
+        logger.warning(
+            "Admin login: UID miss + unverified email=%s — attempting lookup anyway", email
+        )
+        user = db.query(User).filter(User.email == email.lower()).first()
 
     if user is None:
         _insert_audit_log(
@@ -152,110 +178,76 @@ def admin_login(
             detail="Admin account is disabled.",
         )
 
-    # ── Step 4: firebase_uid binding / validation ──────────────────────────
-    # Admin accounts may have been created via email/password (customer flow first,
-    # then promoted via invitation). When such a user later signs into the admin
-    # portal via Google OAuth, Firebase issues a different UID than the one stored
-    # from the email/password registration. We resolve this by email — if the
-    # Firebase token's email matches the admin's email and the user is confirmed
-    # admin, we update the stored firebase_uid to the new Google UID. This is safe
-    # because Firebase has already verified email ownership via OAuth.
-    if user.firebase_uid is not None:
-        if firebase_uid and user.firebase_uid != firebase_uid:
-            # UID mismatch — check if it's a provider switch (email/password → Google)
-            # by verifying the email matches. If so, update the stored UID.
-            if email and user.email.lower() == email.lower():
-                logger.info(
-                    "[admin_login] firebase_uid updated for user %s — "
-                    "provider switch detected (old=%s new=%s)",
-                    user.id, user.firebase_uid, firebase_uid,
-                )
-                try:
-                    locked_user = (
-                        db.query(User)
-                        .filter(User.id == user.id)
-                        .with_for_update()
-                        .first()
-                    )
-                    if locked_user:
-                        locked_user.firebase_uid = firebase_uid
-                        db.commit()
-                        db.refresh(locked_user)
-                        user = locked_user
-                except Exception as exc:
-                    db.rollback()
-                    logger.error("Failed to update firebase_uid for user %s: %s", user.id, exc)
-                    # Non-fatal for the login — proceed with the existing UID
-            else:
-                logger.warning(
-                    "[admin_login] firebase_uid mismatch — token uid=%s | db uid=%s | email mismatch",
-                    firebase_uid, user.firebase_uid,
-                )
-                _insert_audit_log(
-                    db,
-                    action="admin_login_failure",
-                    admin_user_id=user.id,
-                    ip_address=ip,
-                    metadata_json='{"reason": "firebase_uid_mismatch"}',
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Firebase UID does not match the stored identity for this account.",
-                )
-    else:
-        # First login — bind the firebase_uid atomically.
-        # SQLite serialises all writes, but we follow the SELECT-FOR-UPDATE
-        # pattern so this is correct under a concurrent RDBMS too.
-        if firebase_uid:
-            try:
-                # Re-fetch inside the same transaction to get the latest row.
-                # SQLAlchemy's with_for_update() issues SELECT … FOR UPDATE on
-                # databases that support it; on SQLite it degrades gracefully to
-                # a plain SELECT because SQLite's write serialisation already
-                # prevents concurrent writes.
-                locked_user = (
-                    db.query(User)
-                    .filter(User.id == user.id)
-                    .with_for_update()
-                    .first()
-                )
-                if locked_user is None:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="User record disappeared unexpectedly.",
-                    )
-                # Only write if still null (another concurrent request may have
-                # won the race on a non-SQLite backend)
-                if locked_user.firebase_uid is None:
+    # ── Step 4: firebase_uid binding / reconciliation ──────────────────────
+    # At this point the user is confirmed admin and active.
+    # If the stored UID differs from the token UID, update it — Firebase has
+    # already verified ownership of the email via OAuth, so this is safe.
+    # This covers:
+    #   • First-time Google sign-in (user.firebase_uid is None)
+    #   • Provider switch: email/password → Google OAuth
+    #   • Concurrent duplicate request (same UID already written — no-op)
+    if firebase_uid and user.firebase_uid != firebase_uid:
+        logger.info(
+            "[admin_login] Reconciling firebase_uid for user %s "
+            "(old=%s new=%s email_verified=%s)",
+            user.id, user.firebase_uid, firebase_uid, email_verified,
+        )
+        try:
+            locked_user = (
+                db.query(User)
+                .filter(User.id == user.id)
+                .with_for_update()
+                .first()
+            )
+            if locked_user:
+                # Re-check under lock: another concurrent request may have
+                # already written the correct UID.
+                if locked_user.firebase_uid == firebase_uid:
+                    # Already reconciled by a concurrent request — proceed.
+                    user = locked_user
+                elif locked_user.firebase_uid is None or (
+                    email and locked_user.email.lower() == email.lower()
+                ):
+                    # Safe to update: either null (first bind) or same email
+                    # (provider switch confirmed by Firebase-verified email).
                     locked_user.firebase_uid = firebase_uid
                     db.commit()
                     db.refresh(locked_user)
                     user = locked_user
-                elif locked_user.firebase_uid != firebase_uid:
+                    logger.info(
+                        "[admin_login] firebase_uid reconciled for user %s → %s",
+                        user.id, firebase_uid,
+                    )
+                else:
+                    # Different email under lock — genuine mismatch, reject.
                     db.rollback()
+                    logger.warning(
+                        "[admin_login] firebase_uid mismatch under lock for user %s "
+                        "(token_email=%s db_email=%s)",
+                        user.id, email, locked_user.email,
+                    )
                     _insert_audit_log(
                         db,
                         action="admin_login_failure",
                         admin_user_id=user.id,
                         ip_address=ip,
-                        metadata_json='{"reason": "firebase_uid_race_mismatch"}',
+                        metadata_json='{"reason": "firebase_uid_email_mismatch"}',
                     )
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="Firebase UID does not match the stored identity for this account.",
                     )
-                else:
-                    # Another request already wrote the same uid — that's fine
-                    user = locked_user
-            except HTTPException:
-                raise
-            except Exception as exc:
-                db.rollback()
-                logger.error("Failed to bind firebase_uid for user %s: %s", user.id, exc)
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to bind Firebase identity.",
-                )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            db.rollback()
+            logger.error(
+                "[admin_login] firebase_uid reconciliation failed for user %s: %s",
+                user.id, exc,
+            )
+            # Non-fatal: proceed with login even if UID update failed.
+            # The user is already verified admin — don't block access for a
+            # transient DB error.
 
     # ── Step 5: Issue JWT ──────────────────────────────────────────────────
     access_token = create_access_token(

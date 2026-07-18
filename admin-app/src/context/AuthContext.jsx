@@ -107,8 +107,19 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // One-time check: only runs once per user session, and only when token exists
-    if (!statusCheckDoneRef.current && localStorage.getItem('lumora_backend_token')) {
+    // One-time check: only runs once per non-admin user session, and only when token exists.
+    // Admin sessions skip this entirely — the admin branch in onAuthStateChanged manages
+    // session state via the adminLogin() / adminRefreshToken() flow. Running /auth/me
+    // against the customer endpoint for an admin session creates a destructive race:
+    // if the request fires before the admin JWT is stored (onAuthStateChanged is still
+    // mid-execution), the backend returns 401, backendFetch calls clearBackendToken(),
+    // which wipes lumora_active_role, and onAuthStateChanged then takes the customer
+    // branch — setting userRole='customer' and triggering an immediate redirect to
+    // /admin/login even though authentication succeeded.
+    const activeRoleAtCheck = localStorage.getItem('lumora_active_role');
+    if (!statusCheckDoneRef.current
+        && localStorage.getItem('lumora_backend_token')
+        && activeRoleAtCheck !== 'admin') {
       statusCheckDoneRef.current = true;
       backendFetch('/auth/me')
         .then(session => {
@@ -260,24 +271,67 @@ export const AuthProvider = ({ children }) => {
         // We detect this by the 'admin' hint in localStorage which is set
         // BEFORE signInWithPopup is called in AdminLogin.jsx to win the race.
         const localHint = localStorage.getItem('lumora_active_role') || 'customer';
+        const existingToken = localStorage.getItem('lumora_backend_token');
+
+        console.log('[AuthContext] ── onAuthStateChanged fired ───────────────');
+        console.log('[AuthContext] uid:', firebaseUser.uid, 'email:', firebaseUser.email);
+        console.log('[AuthContext] lumora_active_role (localHint):', localHint);
+        console.log('[AuthContext] lumora_backend_token:', existingToken ? 'EXISTS' : 'null');
+        console.log('[AuthContext] loading at entry:', true); // loading is still true here
 
         if (localHint === 'admin') {
+          console.log('[AuthContext] selected branch: ADMIN');
           // If we already have a valid backend token, skip re-calling adminLogin.
           // AdminLogin.jsx calls adminLogin() directly in the popup handler —
           // that call sets lumora_backend_token before onAuthStateChanged runs.
-          const existingToken = localStorage.getItem('lumora_backend_token');
           if (!existingToken) {
-            // No token yet — this is a page-reload admin session restore.
-            // Re-exchange the Firebase token for a fresh backend JWT.
-            try {
-              await adminLogin(firebaseUser);
-            } catch (adminErr) {
-              console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+            // Check whether AdminLogin.jsx is actively handling this sign-in.
+            // It sets 'lumora_admin_login_in_progress' before calling signInWithPopup
+            // and clears it after adminLogin() resolves. If that flag is present,
+            // onAuthStateChanged must NOT call adminLogin() concurrently — doing so
+            // causes two simultaneous POSTs to /api/admin/auth/login which triggers
+            // the firebase_uid race condition and a 403 on one of the two requests.
+            const loginInProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+            if (loginInProgress) {
+              console.log('[AuthContext] AdminLogin.jsx is handling this login — skipping concurrent adminLogin() call');
+              // Wait for AdminLogin.jsx to finish and store the token.
+              // Poll localStorage for up to 10 seconds in 100 ms intervals.
+              const token = await new Promise((resolve) => {
+                let elapsed = 0;
+                const interval = setInterval(() => {
+                  const t = localStorage.getItem('lumora_backend_token');
+                  elapsed += 100;
+                  if (t || elapsed >= 10000) {
+                    clearInterval(interval);
+                    resolve(t);
+                  }
+                }, 100);
+              });
+              if (!token) {
+                console.error('[AuthContext] Timed out waiting for AdminLogin.jsx to store token');
+                // AdminLogin.jsx failed — do not redirect here, let its catch block handle it
+                setLoading(false);
+                return;
+              }
+              console.log('[AuthContext] AdminLogin.jsx stored token — proceeding with admin session');
+            } else {
+              console.log('[AuthContext] no existing token — entering session restore (calling adminLogin)');
+              // No token yet and no active login in progress — this is a page-reload
+              // admin session restore. Re-exchange the Firebase token for a fresh JWT.
+              try {
+                await adminLogin(firebaseUser);
+                console.log('[AuthContext] session restore adminLogin() SUCCESS');
+                console.log('[AuthContext] lumora_backend_token after restore:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
+              } catch (adminErr) {
+              console.error('[AuthContext] session restore adminLogin() FAILED:', adminErr.message);
               clearBackendToken();
               await signOut(auth);
               window.location.replace('/admin/login');
               return;
             }
+            }
+          } else {
+            console.log('[AuthContext] existing admin token found — skipping adminLogin(), using cached token');
           }
           // Token is present (either just set by popup handler or restored from storage).
           setUserRole('admin');
@@ -288,14 +342,15 @@ export const AuthProvider = ({ children }) => {
 
         // ── STEP 2: syncWithBackend — backend is the authoritative role SOT ─
         // Pass localHint to backend so it knows our desired active role session.
+        console.log('[AuthContext] selected branch: CUSTOMER/SYNC (localHint:', localHint, ')');
         let backendRole = null;
         let backendIsActive = true;
         try {
           const syncResult = await syncWithBackend(firebaseUser, localHint);
           if (syncResult?.user) {
-            // Backend returned confirmed role + status — use them as SOT
             backendRole = syncResult.user.role === 'user' ? 'customer' : syncResult.user.role;
-            backendIsActive = syncResult.user.is_active !== false; // default true if missing
+            backendIsActive = syncResult.user.is_active !== false;
+            console.log('[AuthContext] syncWithBackend SUCCESS → backendRole:', backendRole, 'is_active:', backendIsActive);
             setUserRole(backendRole);
             localStorage.setItem('lumora_active_role', backendRole);
             if (!backendIsActive) {
@@ -318,26 +373,31 @@ export const AuthProvider = ({ children }) => {
             if (snap.exists()) {
               const firestoreRole = snap.data().role || 'customer';
               backendRole = firestoreRole === 'user' ? 'customer' : firestoreRole;
+              console.log('[AuthContext] Firestore fallback role:', backendRole);
               setUserRole(backendRole);
               localStorage.setItem('lumora_active_role', backendRole);
             } else {
-              // Unknown user — default to customer (safest)
+              console.warn('[AuthContext] Firestore: no user doc found — defaulting to customer');
+              backendRole = 'customer';
               setUserRole('customer');
               localStorage.setItem('lumora_active_role', 'customer');
             }
           } catch (fsErr) {
             console.warn('[AuthContext] Firestore fallback failed:', fsErr.message);
             // Last resort: customer (never vendor/admin from stale storage)
+            backendRole = 'customer';
             setUserRole('customer');
           }
         }
 
+        console.log('[AuthContext] userRole after sync:', backendRole);
         // User synced successfully
 
       } else {
         // ── No Firebase user — clear ALL session state ────────────────────────
         // BUG FIX: clearBackendToken() now also removes lumora_active_role and
         // lumora_user, preventing stale role from persisting to the next login.
+        console.log('[AuthContext] ── onAuthStateChanged: no Firebase user (signed out) ──');
         setUser(null);
         setUserRole(null);
         setIsAccountDisabled(false);
@@ -348,6 +408,7 @@ export const AuthProvider = ({ children }) => {
       // ── CRITICAL: setLoading(false) is ALWAYS called last ────────────────
       // ProtectedRoute only evaluates after loading = false.
       // This guarantees userRole is set from the backend before any route guard runs.
+      console.log('[AuthContext] setLoading(false) — final step of onAuthStateChanged');
       setLoading(false);
     });
     return () => unsubscribe();

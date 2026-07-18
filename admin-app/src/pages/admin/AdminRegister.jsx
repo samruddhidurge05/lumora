@@ -115,7 +115,8 @@ export default function AdminRegister() {
       await syncWithBackend(firebaseUser, 'customer');
 
       // 5. Redirect back to AcceptInvite to perform role elevation
-      navigate(`/admin/accept-invite?token=${encodeURIComponent(token)}`, { replace: true });
+      const redirectTarget = searchParams.get('redirect') || `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       setFormError(err.message || 'Registration failed. Please try again.');
     } finally {
