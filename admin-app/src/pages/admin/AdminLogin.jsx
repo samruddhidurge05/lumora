@@ -22,7 +22,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
-import { clearBackendToken } from '../../services/authService';
+import { clearBackendToken, syncWithBackend } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 /* ─── Google "G" SVG logo ─────────────────────────────────────────────────── */
@@ -162,16 +162,28 @@ export default function AdminLogin() {
   const [searchParams]     = useSearchParams();
 
   const redirectTarget = searchParams.get('redirect') || '/admin/dashboard';
+  const authMode       = searchParams.get('auth_mode') || 'admin';
+  // When auth_mode=identity, AcceptInvite may pass provider=google to indicate
+  // the invited email only has a Google Firebase account. In that case the
+  // email/password form must not be offered.
+  const providerHint   = searchParams.get('provider') || null; // 'google' | null
 
-  /* Auto-redirect if already authenticated as admin */
+  /* Auto-redirect if already authenticated */
   useEffect(() => {
-    if (user && userRole === 'admin') {
-      navigate(redirectTarget, { replace: true });
+    if (user) {
+      if (authMode === 'identity') {
+        navigate(redirectTarget, { replace: true });
+      } else if (userRole === 'admin') {
+        navigate(redirectTarget, { replace: true });
+      }
     }
-  }, [user, userRole, navigate, redirectTarget]);
+  }, [user, userRole, navigate, redirectTarget, authMode]);
 
   /* Show Access Denied for authenticated non-admin users */
   if (user && userRole && userRole !== 'admin') {
+    if (authMode === 'identity') {
+      return null; // Skip AccessDenied check for identity mode redirects
+    }
     return <AccessDenied />;
   }
 
@@ -185,33 +197,73 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
+    console.log('[AdminLogin] ── Google Sign-In started ──────────────────');
+    console.log('[AdminLogin] authMode:', authMode);
+    console.log('[AdminLogin] redirectTarget:', redirectTarget);
+    console.log('[AdminLogin] lumora_active_role BEFORE setItem:', localStorage.getItem('lumora_active_role'));
+
     try {
-      // Set the admin role hint BEFORE opening the popup.
-      // onAuthStateChanged fires the moment signInWithPopup resolves — if
-      // lumora_active_role is not 'admin' at that instant, AuthContext falls
-      // through to syncWithBackend and overwrites the role with 'customer'.
-      localStorage.setItem('lumora_active_role', 'admin');
+      if (authMode === 'identity') {
+        // Log in in identity/customer scope to bypass admin elevation rules
+        localStorage.setItem('lumora_active_role', 'customer');
+        console.log('[AdminLogin] identity mode → active_role set to customer');
+        const provider = new GoogleAuthProvider();
+        const result   = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        console.log('[AdminLogin] Firebase Sign-In SUCCESS (identity) uid:', firebaseUser.uid);
+        await syncWithBackend(firebaseUser, 'customer');
+        navigate(redirectTarget, { replace: true });
+      } else {
+        // Enforce full admin checks
+        localStorage.setItem('lumora_active_role', 'admin');
+        console.log('[AdminLogin] admin mode → active_role set to admin');
+        // Signal AuthContext that AdminLogin.jsx owns this authentication event.
+        // This prevents onAuthStateChanged from calling adminLogin() concurrently,
+        // which would cause two simultaneous POSTs to /api/admin/auth/login and
+        // a race-condition 403 on one of the two requests.
+        sessionStorage.setItem('lumora_admin_login_in_progress', '1');
+        const provider = new GoogleAuthProvider();
+        const result   = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        console.log('[AdminLogin] Firebase Sign-In SUCCESS uid:', firebaseUser.uid, 'email:', firebaseUser.email);
+        console.log('[AdminLogin] lumora_active_role after Firebase popup:', localStorage.getItem('lumora_active_role'));
+        console.log('[AdminLogin] lumora_backend_token before adminLogin():', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
 
-      const provider = new GoogleAuthProvider();
-      const result   = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
+        console.log('[AdminLogin] calling adminLogin()…');
+        await adminLogin(firebaseUser);
+        // adminLogin() succeeded — clear the in-progress flag so AuthContext
+        // can see the stored token and proceed normally.
+        sessionStorage.removeItem('lumora_admin_login_in_progress');
+        console.log('[AdminLogin] adminLogin() SUCCESS');
+        console.log('[AdminLogin] lumora_backend_token after adminLogin():', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
+        console.log('[AdminLogin] lumora_active_role after adminLogin():', localStorage.getItem('lumora_active_role'));
 
-      // Exchange Firebase ID token for a Lumora admin backend JWT
-      await adminLogin(firebaseUser);
+        const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+        if (pendingInviteToken) {
+          const inviteTarget = `/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`;
+          navigate(inviteTarget, { replace: true });
+          return;
+        }
 
-      // ── Pending invite token: redirect back to AcceptInvite to complete activation
-      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
-      if (pendingInviteToken) {
-        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
-        return;
+        navigate(redirectTarget, { replace: true });
       }
-
-      // Navigate to the intended destination (or dashboard)
-      navigate(redirectTarget, { replace: true });
     } catch (err) {
-      // Clear the admin hint if sign-in failed — prevents a stale 'admin'
-      // hint from causing AuthContext to attempt admin login on next page load
-      localStorage.removeItem('lumora_active_role');
+      // Always clear the in-progress flag so AuthContext is not left waiting
+      sessionStorage.removeItem('lumora_admin_login_in_progress');
+      console.error('[AdminLogin] ── CATCH BLOCK ────────────────────────────────');
+      console.error('[AdminLogin] error.code:', err.code);
+      console.error('[AdminLogin] error.message:', err.message);
+      console.error('[AdminLogin] error.status:', err.status);
+      console.error('[AdminLogin] lumora_active_role at catch time:', localStorage.getItem('lumora_active_role'));
+      console.error('[AdminLogin] lumora_backend_token at catch time:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
+      // NOTE: lumora_active_role is intentionally NOT removed here.
+      // Removing it after Firebase auth already succeeded causes onAuthStateChanged
+      // to take the customer branch and overwrite userRole — creating the login loop.
+      // It is only removed if Firebase itself failed (popup closed/blocked).
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked') {
+        console.warn('[AdminLogin] popup closed/blocked — removing active_role hint');
+        localStorage.removeItem('lumora_active_role');
+      }
 
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in cancelled');
@@ -242,23 +294,58 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
+    console.log('[AdminLogin] ── Email Sign-In started ──────────────────');
+    console.log('[AdminLogin] authMode:', authMode);
+
     try {
-      localStorage.setItem('lumora_active_role', 'admin');
+      if (authMode === 'identity') {
+        // Log in in identity/customer scope to bypass admin elevation rules
+        localStorage.setItem('lumora_active_role', 'customer');
+        const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+        const firebaseUser = result.user;
+        console.log('[AdminLogin] Firebase Sign-In SUCCESS (identity) uid:', firebaseUser.uid);
+        await syncWithBackend(firebaseUser, 'customer');
+        navigate(redirectTarget, { replace: true });
+      } else {
+        // Enforce full admin checks
+        localStorage.setItem('lumora_active_role', 'admin');
+        // Signal AuthContext that AdminLogin.jsx owns this authentication event
+        sessionStorage.setItem('lumora_admin_login_in_progress', '1');
+        const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+        const firebaseUser = result.user;
+        console.log('[AdminLogin] Firebase Sign-In SUCCESS uid:', firebaseUser.uid, 'email:', firebaseUser.email);
+        console.log('[AdminLogin] calling adminLogin()…');
+        await adminLogin(firebaseUser);
+        sessionStorage.removeItem('lumora_admin_login_in_progress');
+        console.log('[AdminLogin] adminLogin() SUCCESS');
+        console.log('[AdminLogin] lumora_backend_token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
+        console.log('[AdminLogin] lumora_active_role:', localStorage.getItem('lumora_active_role'));
 
-      const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
-      const firebaseUser = result.user;
+        const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+        if (pendingInviteToken) {
+          navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
+          return;
+        }
 
-      await adminLogin(firebaseUser);
-
-      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
-      if (pendingInviteToken) {
-        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
-        return;
+        navigate(redirectTarget, { replace: true });
       }
-
-      navigate(redirectTarget, { replace: true });
     } catch (err) {
-      localStorage.removeItem('lumora_active_role');
+      // Always clear the in-progress flag so AuthContext is not left waiting
+      sessionStorage.removeItem('lumora_admin_login_in_progress');
+      console.error('[AdminLogin] ── EMAIL CATCH BLOCK ──────────────────────────');
+      console.error('[AdminLogin] error.code:', err.code);
+      console.error('[AdminLogin] error.message:', err.message);
+      console.error('[AdminLogin] lumora_active_role at catch time:', localStorage.getItem('lumora_active_role'));
+      // Only remove role hint if Firebase auth itself failed (bad credentials).
+      // Do not remove it if Firebase succeeded but the backend call failed.
+      if (
+        err.code === 'auth/user-not-found' ||
+        err.code === 'auth/wrong-password' ||
+        err.code === 'auth/invalid-credential'
+      ) {
+        console.warn('[AdminLogin] bad credentials — removing active_role hint');
+        localStorage.removeItem('lumora_active_role');
+      }
 
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('Incorrect email or password.');
@@ -365,85 +452,87 @@ export default function AdminLogin() {
           <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
         </div>
 
-        {/* Email / password toggle */}
-        {!showEmailForm ? (
-          <button
-            type="button"
-            onClick={() => setShowEmailForm(true)}
-            style={{
-              marginTop: '4px',
-              background: 'transparent',
-              border: '1px solid rgba(139,92,246,0.25)',
-              borderRadius: '12px',
-              color: '#a78bfa',
-              fontSize: '0.82rem',
-              fontWeight: 500,
-              padding: '10px 20px',
-              cursor: 'pointer',
-              width: '100%',
-              fontFamily: 'inherit',
-            }}
-          >
-            Sign in with Email &amp; Password
-          </button>
-        ) : (
-          <form onSubmit={handleEmailSignIn} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
-            <input
-              type="email"
-              placeholder="admin@yourdomain.com"
-              value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
-              disabled={loading}
-              autoComplete="email"
-              required
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '11px 14px', borderRadius: '12px',
-                border: '1px solid rgba(139,92,246,0.30)',
-                background: 'rgba(255,255,255,0.06)',
-                color: '#e5e7eb', fontSize: '0.875rem',
-                fontFamily: 'inherit', outline: 'none',
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value)}
-              disabled={loading}
-              autoComplete="current-password"
-              required
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '11px 14px', borderRadius: '12px',
-                border: '1px solid rgba(139,92,246,0.30)',
-                background: 'rgba(255,255,255,0.06)',
-                color: '#e5e7eb', fontSize: '0.875rem',
-                fontFamily: 'inherit', outline: 'none',
-              }}
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '12px', borderRadius: '12px', border: 'none',
-                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                color: '#fff', fontSize: '0.9rem', fontWeight: 600,
-                fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.65 : 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}
-            >
-              {loading ? <><span style={styles.spinner} /><span>Signing in…</span></> : 'Sign In'}
-            </button>
+        {/* Email / password toggle — hidden when provider is Google-only */}
+        {providerHint !== 'google' && (
+          !showEmailForm ? (
             <button
               type="button"
-              onClick={() => { setShowEmailForm(false); setError(''); }}
-              style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}
+              onClick={() => setShowEmailForm(true)}
+              style={{
+                marginTop: '4px',
+                background: 'transparent',
+                border: '1px solid rgba(139,92,246,0.25)',
+                borderRadius: '12px',
+                color: '#a78bfa',
+                fontSize: '0.82rem',
+                fontWeight: 500,
+                padding: '10px 20px',
+                cursor: 'pointer',
+                width: '100%',
+                fontFamily: 'inherit',
+              }}
             >
-              ← Back to Google sign-in
+              Sign in with Email &amp; Password
             </button>
-          </form>
+          ) : (
+            <form onSubmit={handleEmailSignIn} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+              <input
+                type="email"
+                placeholder="admin@yourdomain.com"
+                value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                disabled={loading}
+                autoComplete="email"
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '11px 14px', borderRadius: '12px',
+                  border: '1px solid rgba(139,92,246,0.30)',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#e5e7eb', fontSize: '0.875rem',
+                  fontFamily: 'inherit', outline: 'none',
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={passwordInput}
+                onChange={e => setPasswordInput(e.target.value)}
+                disabled={loading}
+                autoComplete="current-password"
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '11px 14px', borderRadius: '12px',
+                  border: '1px solid rgba(139,92,246,0.30)',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#e5e7eb', fontSize: '0.875rem',
+                  fontFamily: 'inherit', outline: 'none',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '12px', borderRadius: '12px', border: 'none',
+                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                  color: '#fff', fontSize: '0.9rem', fontWeight: 600,
+                  fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.65 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                }}
+              >
+                {loading ? <><span style={styles.spinner} /><span>Signing in…</span></> : 'Sign In'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowEmailForm(false); setError(''); }}
+                style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                ← Back to Google sign-in
+              </button>
+            </form>
+          )
         )}
 
         <p style={styles.hint}>

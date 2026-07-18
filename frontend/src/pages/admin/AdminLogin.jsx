@@ -22,7 +22,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
-import { clearBackendToken } from '../../services/authService';
+import { clearBackendToken, syncWithBackend } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 /* ─── Google "G" SVG logo ─────────────────────────────────────────────────── */
@@ -162,16 +162,24 @@ export default function AdminLogin() {
   const [searchParams]     = useSearchParams();
 
   const redirectTarget = searchParams.get('redirect') || '/admin/dashboard';
+  const authMode       = searchParams.get('auth_mode') || 'admin';
 
-  /* Auto-redirect if already authenticated as admin */
+  /* Auto-redirect if already authenticated */
   useEffect(() => {
-    if (user && userRole === 'admin') {
-      navigate(redirectTarget, { replace: true });
+    if (user) {
+      if (authMode === 'identity') {
+        navigate(redirectTarget, { replace: true });
+      } else if (userRole === 'admin') {
+        navigate(redirectTarget, { replace: true });
+      }
     }
-  }, [user, userRole, navigate, redirectTarget]);
+  }, [user, userRole, navigate, redirectTarget, authMode]);
 
   /* Show Access Denied for authenticated non-admin users */
   if (user && userRole && userRole !== 'admin') {
+    if (authMode === 'identity') {
+      return null; // Skip AccessDenied check for identity mode redirects
+    }
     return <AccessDenied />;
   }
 
@@ -186,31 +194,31 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      // Set the admin role hint BEFORE opening the popup.
-      // onAuthStateChanged fires the moment signInWithPopup resolves — if
-      // lumora_active_role is not 'admin' at that instant, AuthContext falls
-      // through to syncWithBackend and overwrites the role with 'customer'.
-      localStorage.setItem('lumora_active_role', 'admin');
+      if (authMode === 'identity') {
+        // Log in in identity/customer scope to bypass admin elevation rules
+        localStorage.setItem('lumora_active_role', 'customer');
+        const provider = new GoogleAuthProvider();
+        const result   = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        await syncWithBackend(firebaseUser, 'customer');
+        navigate(redirectTarget, { replace: true });
+      } else {
+        // Enforce full admin checks
+        localStorage.setItem('lumora_active_role', 'admin');
+        const provider = new GoogleAuthProvider();
+        const result   = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        await adminLogin(firebaseUser);
 
-      const provider = new GoogleAuthProvider();
-      const result   = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
+        const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+        if (pendingInviteToken) {
+          navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
+          return;
+        }
 
-      // Exchange Firebase ID token for a Lumora admin backend JWT
-      await adminLogin(firebaseUser);
-
-      // ── Pending invite token: redirect back to AcceptInvite to complete activation
-      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
-      if (pendingInviteToken) {
-        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
-        return;
+        navigate(redirectTarget, { replace: true });
       }
-
-      // Navigate to the intended destination (or dashboard)
-      navigate(redirectTarget, { replace: true });
     } catch (err) {
-      // Clear the admin hint if sign-in failed — prevents a stale 'admin'
-      // hint from causing AuthContext to attempt admin login on next page load
       localStorage.removeItem('lumora_active_role');
 
       if (err.code === 'auth/popup-closed-by-user') {
@@ -243,20 +251,28 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      localStorage.setItem('lumora_active_role', 'admin');
+      if (authMode === 'identity') {
+        // Log in in identity/customer scope to bypass admin elevation rules
+        localStorage.setItem('lumora_active_role', 'customer');
+        const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+        const firebaseUser = result.user;
+        await syncWithBackend(firebaseUser, 'customer');
+        navigate(redirectTarget, { replace: true });
+      } else {
+        // Enforce full admin checks
+        localStorage.setItem('lumora_active_role', 'admin');
+        const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+        const firebaseUser = result.user;
+        await adminLogin(firebaseUser);
 
-      const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
-      const firebaseUser = result.user;
+        const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
+        if (pendingInviteToken) {
+          navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
+          return;
+        }
 
-      await adminLogin(firebaseUser);
-
-      const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
-      if (pendingInviteToken) {
-        navigate(`/admin/accept-invite?token=${encodeURIComponent(pendingInviteToken)}`, { replace: true });
-        return;
+        navigate(redirectTarget, { replace: true });
       }
-
-      navigate(redirectTarget, { replace: true });
     } catch (err) {
       localStorage.removeItem('lumora_active_role');
 

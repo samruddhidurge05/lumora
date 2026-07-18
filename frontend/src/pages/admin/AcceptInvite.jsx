@@ -46,12 +46,6 @@ export default function AcceptInvite() {
   const [invitation, setInvitation] = useState(null);
   const [errorMsg, setErrorMsg]     = useState('');
 
-  // Inline login state
-  const [showInlineLogin, setShowInlineLogin] = useState(false);
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-
   // ── Step 1: Verify token on mount ─────────────────────────────────────────
   useEffect(() => {
     if (!token) {
@@ -112,35 +106,16 @@ export default function AcceptInvite() {
     }
   };
 
-  // ── Show inline login form instead of redirecting ─────────────────────────
+  // ── Redirect to global AdminLogin with identity auth scope ───────────────
   const handleLoginRedirect = () => {
-    setShowInlineLogin(true);
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/login?redirect=${encodeURIComponent(targetPath)}&auth_mode=identity`);
   };
 
   // ── Redirect to the dedicated admin registration page ────────────────────
   const handleRegisterRedirect = () => {
-    navigate(`/admin/register?token=${encodeURIComponent(token)}`);
-  };
-
-  // ── Handle inline login submission ────────────────────────────────────────
-  const handleInlineLoginSubmit = async (e) => {
-    e.preventDefault();
-    if (!loginPassword) {
-      setLoginError('Please enter your password.');
-      return;
-    }
-    setLoginLoading(true);
-    setLoginError('');
-
-    try {
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      const cred = await signInWithEmailAndPassword(auth, invitation.email, loginPassword);
-      await syncWithBackend(cred.user, 'customer');
-    } catch (err) {
-      setLoginError(err.message || 'Login failed. Please verify your password.');
-    } finally {
-      setLoginLoading(false);
-    }
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/register?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(targetPath)}`);
   };
 
   // ── After activation: go to admin login to get the admin JWT ─────────────
@@ -207,98 +182,43 @@ export default function AcceptInvite() {
 
         {/* ── Valid — not yet authenticated ── */}
         {status === 'valid' && invitation && !user && (
-          showInlineLogin ? (
-            <form onSubmit={handleInlineLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
-              <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 4px', textAlign: 'center' }}>Log In to Accept</h2>
-              <p style={{ color: '#7B3FA0', fontSize: '0.82rem', textAlign: 'center', margin: '0 0 16px' }}>
-                Please enter the password for your existing account.
-              </p>
-
-              {loginError && (
-                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px', padding: '12px', color: '#f87171', fontSize: '0.8rem', display: 'flex', gap: '8px' }}>
-                  <span>⚠️</span>
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
-                <input
-                  type="email"
-                  value={invitation.email}
-                  disabled
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.05)', color: '#6b7280', fontSize: '0.875rem', cursor: 'not-allowed', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  disabled={loginLoading}
-                  required
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: '#fff', color: '#1f2937', fontSize: '0.875rem', outline: 'none' }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: loginLoading ? 'not-allowed' : 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                {loginLoading ? 'Logging in…' : 'Log In & Accept'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setShowInlineLogin(false); setLoginError(''); setLoginPassword(''); }}
-                style={{ background: 'transparent', border: 'none', color: '#7B3FA0', fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, alignSelf: 'center', marginTop: '8px' }}
-              >
-                Cancel
-              </button>
-            </form>
-          ) : (
-            <div>
-              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem', textAlign: 'center' }}>✉️</div>
-              <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>You've been invited!</h2>
-              <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-                You have been invited to join Lumora Admin as:
-              </p>
-              <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                <span style={{ padding: '4px 16px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {invitation.role_level?.replace(/_/g, ' ')}
-                </span>
-              </div>
-              <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-                Invited email: <strong>{invitation.email}</strong>
-              </p>
-              {invitation.expires_at && (
-                <p style={{ color: '#8E6AA8', fontSize: '0.72rem', textAlign: 'center', margin: '0 0 24px' }}>
-                  Expires: {new Date(invitation.expires_at).toLocaleString()}
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button
-                  onClick={handleLoginRedirect}
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  Log in to accept
-                </button>
-                <button
-                  onClick={handleRegisterRedirect}
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  Create a new account
-                </button>
-              </div>
-              <p style={{ color: '#8E6AA8', fontSize: '0.70rem', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
-                You must sign in with the email address the invitation was sent to.
-              </p>
+          <div>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem', textAlign: 'center' }}>✉️</div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>You've been invited!</h2>
+            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
+              You have been invited to join Lumora Admin as:
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <span style={{ padding: '4px 16px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {invitation.role_level?.replace(/_/g, ' ')}
+              </span>
             </div>
-          )
+            <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
+              Invited email: <strong>{invitation.email}</strong>
+            </p>
+            {invitation.expires_at && (
+              <p style={{ color: '#8E6AA8', fontSize: '0.72rem', textAlign: 'center', margin: '0 0 24px' }}>
+                Expires: {new Date(invitation.expires_at).toLocaleString()}
+              </p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button
+                onClick={handleLoginRedirect}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                Log in to accept
+              </button>
+              <button
+                onClick={handleRegisterRedirect}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                Create a new account
+              </button>
+            </div>
+            <p style={{ color: '#8E6AA8', fontSize: '0.70rem', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
+              You must sign in with the email address the invitation was sent to.
+            </p>
+          </div>
         )}
 
         {/* ── Activation Success ── */}

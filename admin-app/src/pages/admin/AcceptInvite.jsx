@@ -5,22 +5,14 @@
  *
  * FLOW A — Invited user already has a Lumora account (any role):
  *   1. Verify token (public endpoint, no auth required)
- *   2. Show invitation details
- *   3. User clicks "Log in to accept"
- *   4. Redirect to /auth/login?role=customer (regular login, NOT admin login)
- *   5. After login, user is redirected back here via sessionStorage token
- *   6. Call POST /admin/team/accept-invite with regular JWT + token
- *   7. Backend sets user.role='admin' + creates AdminRole record
- *   8. Redirect to /admin/login so the admin JWT can be issued
- *
- * FLOW B — Invited user has NO Lumora account:
- *   1. Verify token
- *   2. User clicks "Create a new account"
- *   3. Redirect to /auth/register?role=admin&invite_token=TOKEN&email=EMAIL
- *   4. Register.jsx creates the Firebase + backend user
- *   5. After registration, user is redirected back here
- *   6. Call POST /admin/team/accept-invite
- *   7. Redirect to /admin/login
+ *   2. Detect Firebase provider(s) for the invited email
+ *   3a. Google-only → Show "Continue with Google" button only
+ *   3b. Password → Show "Log in with email/password"
+ *   3c. No account → Show "Create a new account"
+ *   4. After login, user is redirected back here via sessionStorage token
+ *   5. Call POST /admin/team/accept-invite with regular JWT + token
+ *   6. Backend sets user.role='admin' + creates AdminRole record
+ *   7. Redirect to /admin/login so the admin JWT can be issued
  *
  * SECURITY:
  *   - Token is single-use (accepted_at is set on use)
@@ -33,7 +25,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import { auth } from '../../services/firebase';
-import { clearBackendToken, syncWithBackend } from '../../services/authService';
+import { clearBackendToken } from '../../services/authService';
+import { fetchSignInMethodsForEmail } from 'firebase/auth';
 
 export default function AcceptInvite() {
   const [searchParams] = useSearchParams();
@@ -45,12 +38,13 @@ export default function AcceptInvite() {
   const [status, setStatus]         = useState('loading'); // loading | valid | invalid | activating | activated | error
   const [invitation, setInvitation] = useState(null);
   const [errorMsg, setErrorMsg]     = useState('');
-
-  // Inline login state
-  const [showInlineLogin, setShowInlineLogin] = useState(false);
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  // Detected Firebase sign-in providers for the invited email.
+  // null  = not yet checked
+  // []    = no Firebase account (show Create Account)
+  // ['google.com']          = Google-only account (show Continue with Google)
+  // ['password']            = Email/password account (show Log in)
+  // ['google.com','password'] = both available (show both)
+  const [signInMethods, setSignInMethods] = useState(null);
 
   // ── Step 1: Verify token on mount ─────────────────────────────────────────
   useEffect(() => {
@@ -61,8 +55,25 @@ export default function AcceptInvite() {
     }
 
     backendFetch(`/admin/team/invitations/verify?token=${encodeURIComponent(token)}`)
-      .then(data => {
+      .then(async (data) => {
         setInvitation(data);
+        // ── Provider detection ──────────────────────────────────────────────
+        // Check which Firebase sign-in methods exist for the invited email.
+        // This determines which action button(s) to show the user:
+        //   []            → no Firebase account → show Create Account
+        //   ['google.com'] → Google-only → show Continue with Google (NOT email form)
+        //   ['password']   → email/password → show Log in with password
+        // Without this check, a Google-only user who clicks "Create Account" gets
+        // auth/email-already-in-use, and one who clicks "Log in" and uses the
+        // password form gets auth/invalid-credential.
+        try {
+          const methods = await fetchSignInMethodsForEmail(auth, data.email);
+          setSignInMethods(methods || []);
+        } catch (_) {
+          // fetchSignInMethodsForEmail can fail if the email is malformed or
+          // Firebase is offline. Fall back to showing all options.
+          setSignInMethods([]);
+        }
         setStatus('valid');
       })
       .catch(err => {
@@ -112,42 +123,31 @@ export default function AcceptInvite() {
     }
   };
 
-  // ── Show inline login form instead of redirecting ─────────────────────────
+  // ── Redirect to global AdminLogin with identity auth scope ───────────────
+  // auth_mode=identity tells AdminLogin to bypass admin role checks.
+  // provider hint tells it which sign-in button to show / auto-trigger.
   const handleLoginRedirect = () => {
-    setShowInlineLogin(true);
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/login?redirect=${encodeURIComponent(targetPath)}&auth_mode=identity`);
+  };
+
+  // ── Continue with Google — for accounts that only have Google provider ────
+  const handleGoogleRedirect = () => {
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/login?redirect=${encodeURIComponent(targetPath)}&auth_mode=identity&provider=google`);
   };
 
   // ── Redirect to the dedicated admin registration page ────────────────────
   const handleRegisterRedirect = () => {
-    navigate(`/admin/register?token=${encodeURIComponent(token)}`);
-  };
-
-  // ── Handle inline login submission ────────────────────────────────────────
-  const handleInlineLoginSubmit = async (e) => {
-    e.preventDefault();
-    if (!loginPassword) {
-      setLoginError('Please enter your password.');
-      return;
-    }
-    setLoginLoading(true);
-    setLoginError('');
-
-    try {
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      const cred = await signInWithEmailAndPassword(auth, invitation.email, loginPassword);
-      await syncWithBackend(cred.user, 'customer');
-    } catch (err) {
-      setLoginError(err.message || 'Login failed. Please verify your password.');
-    } finally {
-      setLoginLoading(false);
-    }
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/register?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(targetPath)}`);
   };
 
   // ── After activation: go to admin login to get the admin JWT ─────────────
   const handleGoToAdminLogin = async () => {
     try {
-      localStorage.setItem('lumora_active_role', 'admin');
-      clearBackendToken();
+      clearBackendToken();                                 // clear ALL tokens first
+      localStorage.setItem('lumora_active_role', 'admin'); // then plant the admin hint
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
     } catch (_) {}
@@ -207,98 +207,86 @@ export default function AcceptInvite() {
 
         {/* ── Valid — not yet authenticated ── */}
         {status === 'valid' && invitation && !user && (
-          showInlineLogin ? (
-            <form onSubmit={handleInlineLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
-              <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 4px', textAlign: 'center' }}>Log In to Accept</h2>
-              <p style={{ color: '#7B3FA0', fontSize: '0.82rem', textAlign: 'center', margin: '0 0 16px' }}>
-                Please enter the password for your existing account.
-              </p>
-
-              {loginError && (
-                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px', padding: '12px', color: '#f87171', fontSize: '0.8rem', display: 'flex', gap: '8px' }}>
-                  <span>⚠️</span>
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
-                <input
-                  type="email"
-                  value={invitation.email}
-                  disabled
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.05)', color: '#6b7280', fontSize: '0.875rem', cursor: 'not-allowed', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  disabled={loginLoading}
-                  required
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: '#fff', color: '#1f2937', fontSize: '0.875rem', outline: 'none' }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: loginLoading ? 'not-allowed' : 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                {loginLoading ? 'Logging in…' : 'Log In & Accept'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setShowInlineLogin(false); setLoginError(''); setLoginPassword(''); }}
-                style={{ background: 'transparent', border: 'none', color: '#7B3FA0', fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, alignSelf: 'center', marginTop: '8px' }}
-              >
-                Cancel
-              </button>
-            </form>
-          ) : (
-            <div>
-              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem', textAlign: 'center' }}>✉️</div>
-              <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>You've been invited!</h2>
-              <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-                You have been invited to join Lumora Admin as:
-              </p>
-              <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                <span style={{ padding: '4px 16px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {invitation.role_level?.replace(/_/g, ' ')}
-                </span>
-              </div>
-              <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-                Invited email: <strong>{invitation.email}</strong>
-              </p>
-              {invitation.expires_at && (
-                <p style={{ color: '#8E6AA8', fontSize: '0.72rem', textAlign: 'center', margin: '0 0 24px' }}>
-                  Expires: {new Date(invitation.expires_at).toLocaleString()}
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button
-                  onClick={handleLoginRedirect}
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  Log in to accept
-                </button>
-                <button
-                  onClick={handleRegisterRedirect}
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  Create a new account
-                </button>
-              </div>
-              <p style={{ color: '#8E6AA8', fontSize: '0.70rem', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
-                You must sign in with the email address the invitation was sent to.
-              </p>
+          <div>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem', textAlign: 'center' }}>✉️</div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>You've been invited!</h2>
+            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
+              You have been invited to join Lumora Admin as:
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <span style={{ padding: '4px 16px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {invitation.role_level?.replace(/_/g, ' ')}
+              </span>
             </div>
-          )
+            <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
+              Invited email: <strong>{invitation.email}</strong>
+            </p>
+            {invitation.expires_at && (
+              <p style={{ color: '#8E6AA8', fontSize: '0.72rem', textAlign: 'center', margin: '0 0 24px' }}>
+                Expires: {new Date(invitation.expires_at).toLocaleString()}
+              </p>
+            )}
+
+            {/* ── Provider-aware action buttons ──────────────────────────── */}
+            {/* signInMethods === null means provider check is still loading  */}
+            {signInMethods === null ? (
+              <div style={{ textAlign: 'center', color: '#7B3FA0', fontSize: '0.85rem', padding: '8px 0' }}>
+                Checking account…
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* No Firebase account → offer registration */}
+                {signInMethods.length === 0 && (
+                  <button
+                    onClick={handleRegisterRedirect}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                  >
+                    Create a new account
+                  </button>
+                )}
+
+                {/* Google-only account → show Google button, NOT password form */}
+                {signInMethods.includes('google.com') && (
+                  <button
+                    onClick={handleGoogleRedirect}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    Continue with Google
+                  </button>
+                )}
+
+                {/* Password account → show email login */}
+                {signInMethods.includes('password') && (
+                  <button
+                    onClick={handleLoginRedirect}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: signInMethods.includes('google.com') ? '1px solid rgba(123,63,160,0.3)' : 'none', background: signInMethods.includes('google.com') ? 'transparent' : 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: signInMethods.includes('google.com') ? '#5A1E7E' : '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                  >
+                    Log in with email & password
+                  </button>
+                )}
+
+                {/* No account + offer alternate registration */}
+                {signInMethods.length === 0 && (
+                  <button
+                    onClick={handleLoginRedirect}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                  >
+                    I already have an account
+                  </button>
+                )}
+              </div>
+            )}
+
+            <p style={{ color: '#8E6AA8', fontSize: '0.70rem', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
+              You must sign in with the email address the invitation was sent to.
+            </p>
+          </div>
         )}
 
         {/* ── Activation Success ── */}
