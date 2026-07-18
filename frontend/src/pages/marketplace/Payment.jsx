@@ -44,7 +44,7 @@ export default function Payment() {
   const discount = appliedPromo ? subtotal * (appliedPromo.discountPercent / 100) : 0;
   const platformFee = subtotal > 100 ? 0 : 5;
   const gst = Math.round((subtotal - discount + platformFee) * 0.18);  // 18% GST
-  const total = Math.round(subtotal - discount + platformFee + gst);
+  const total = subtotal - discount + platformFee + gst;
 
   // Persist UPI session to sessionStorage
   useEffect(() => {
