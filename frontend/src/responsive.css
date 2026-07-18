@@ -159,6 +159,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .lumora-nav-hamburger { display: flex; }
   .nav-menu             { display: none !important; }
   .lumora-nav-actions   { display: none !important; }
+  .lumora-navbar-actions { display: none !important; }
 
   /* ── Compact floating navbar on mobile ── */
   .lumora-navbar-header {
@@ -211,7 +212,12 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 0;
-    text-align: center;
+    text-align: left;           /* Don't force-center — content has its own alignment */
+    justify-items: center;      /* But center the column within the container */
+  }
+  .hero-grid > :first-child {
+    max-width: 520px;           /* Cap width on tablet */
+    width: 100%;
   }
   .hero-cards { display: none; }
 }
@@ -1051,3 +1057,116 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── END ──────────────────────────────────────────────────────── */
+
+/* ════════════════════════════════════════════════════════════════════
+   21. PRODUCTS LIST VIEW — Mobile fix
+   ProductListRow has fixed-width price+buttons that overflow on small screens
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* List view rows become card-like on narrow screens */
+  .lumora-products-list-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .lumora-products-list-thumb {
+    width: 100% !important;
+    height: 140px !important;
+    border-radius: 12px !important;
+    object-fit: cover !important;
+  }
+  .lumora-products-list-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   22. VENDOR BUTTON — v-btn-ghost (missing from vendor.css)
+════════════════════════════════════════════════════════════════════ */
+.v-btn-ghost {
+  background: transparent;
+  border: 1.5px solid rgba(196,148,230,0.30);
+  color: var(--v-text2, #4A1070);
+  font-family: var(--v-sans, var(--font-sans));
+  font-size: 0.83rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.22s;
+}
+.v-btn-ghost:hover {
+  background: rgba(123,63,160,0.06);
+  border-color: rgba(123,63,160,0.40);
+  color: var(--v-purple, #7B3FA0);
+  transform: translateY(-1px);
+}
+.v-btn-ghost.v-btn-sm {
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  border-radius: 8px;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   23. AFFILIATE PROFILE — wide sections on mobile
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Profile stats strip scrolls instead of wrapping badly */
+  .aff-status-strip {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+    gap: 16px !important;
+  }
+  .aff-status-strip::-webkit-scrollbar { display: none; }
+
+  /* Profile referral link — prevent text overflow */
+  .aff-referral-link-text {
+    font-size: 0.76rem !important;
+    word-break: break-all !important;
+    white-space: normal !important;
+  }
+
+  /* Payment info grid — stack on mobile */
+  .aff-payment-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   24. VENDOR STAT GRID — ensure 2-col on mobile (vendor.css used 1-col)
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .v-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+}
+@media (max-width: 360px) {
+  .v-stat-grid { grid-template-columns: 1fr !important; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   25. VENDOR FORM GRID — stack on mobile
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .v-form-grid       { grid-template-columns: 1fr !important; }
+  .v-form-grid-2col  { grid-template-columns: 1fr !important; }
+}
+
+
+/* ── END ROUND 2 ────────────────────────────────────────────────── */

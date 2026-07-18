@@ -600,8 +600,7 @@ export const AuthProvider = ({ children }) => {
 
 
   /** Logout — production-level full session teardown */
-  async function logout() {
-    const wasAdmin = userRole === 'admin';
+  async function logout() {    const wasAdmin = userRole === 'admin';
 
     // 1. Log the event BEFORE signing out (token still valid)
     if (auth.currentUser) {

@@ -16,7 +16,7 @@ export default function Footer() {
       padding: '48px clamp(1.5rem,5vw,6rem) 32px',
     }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: '40px', marginBottom: '40px' }}>
+        <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: '40px', marginBottom: '40px' }}>
           {/* Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>

@@ -871,7 +871,7 @@ export default function ProductPage() {
 
           {/* ── RIGHT: Purchase panel ── */}
 
-          <div style={{ position: 'sticky', top: '100px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="product-info-sticky" style={{ position: 'sticky', top: '100px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Main card */}
             <div style={{ background: 'rgba(255, 255, 255, 0.48)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255, 255, 255, 0.45)', borderRadius: '24px', padding: '28px', boxShadow: '0 8px 40px rgba(123, 63, 160, 0.08)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>

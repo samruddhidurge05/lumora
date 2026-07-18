@@ -154,7 +154,7 @@ export default function Products() {
               </button>
             </div>
           ) : view === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
+            <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
               {filtered.map((p, i) => <GlassProductCard key={p.id} product={p} index={i} />)}
             </div>
           ) : (
@@ -211,7 +211,7 @@ function GlassProductCard({ product, index }) {
       }}
     >
       {/* ── Image area with multi-preview on hover ── */}
-      <div style={{ height: '195px', overflow: 'hidden', position: 'relative', borderRadius: '24px 24px 0 0' }}>
+      <div className="lumora-product-card-img" style={{ height: '195px', overflow: 'hidden', position: 'relative', borderRadius: '24px 24px 0 0' }}>
         <ProductImage
           product={product}
           style={{ transform: hov ? 'scale(1.06)' : 'scale(1)', transition: 'transform 0.5s ease, opacity 0.3s' }}
