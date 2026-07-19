@@ -78,6 +78,8 @@ def build_app(sync_mock: MagicMock) -> FastAPI:
     with patch(
         "admin.routes.products.sync_product_to_firestore", sync_mock
     ), patch(
+        "app.services.product_service.sync_product_to_firestore", sync_mock
+    ), patch(
         "admin.routes.products.log_admin_action", MagicMock()
     ):
         # Import router INSIDE the patch context so patched names are used
@@ -111,6 +113,8 @@ def client(sync_mock):
     """TestClient backed by in-memory SQLite with sync mocked."""
     with patch(
         "admin.routes.products.sync_product_to_firestore", sync_mock
+    ), patch(
+        "app.services.product_service.sync_product_to_firestore", sync_mock
     ), patch(
         "admin.routes.products.log_admin_action", MagicMock()
     ):
