@@ -15,8 +15,14 @@
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
 
-const BACKEND_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const BACKEND_URL = (() => {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  if (base.startsWith('/') && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const origin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
+    return `${origin.replace(/\/$/, '')}${base}`;
+  }
+  return base;
+})();
 
 let globalErrorListener = null;
 

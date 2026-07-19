@@ -14,20 +14,19 @@
  * call sites remain unchanged.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = (() => {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  if (base.startsWith('/') && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const origin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
+    return `${origin.replace(/\/$/, '')}${base}`;
+  }
+  return base;
+})();
 
-// Separate constant for the backend server origin used to resolve upload response URLs.
-// VITE_API_BASE_URL may be '/api' (proxy path) in dev — but uploaded file URLs must
-// always resolve to the real backend server, not the Vite dev server.
 const BACKEND_ORIGIN = (() => {
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  // If base is a relative path ('/api'), fall back to the explicit backend URL.
   if (base.startsWith('/')) {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN;
-    if (origin && origin !== 'http://localhost:8000') {
-      return origin;
-    }
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+    return import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
   }
   return base.replace(/\/api\/?$/, '');
 })();
