@@ -84,17 +84,25 @@ def is_pcloud_link_active(url: Optional[str]) -> bool:
 
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Optional[str]:
+def resolve_media_url(url: str, category: str = None) -> Optional[str]:
     if not url:
-        return url
+        return None
         
-    # 1. Handle pCloud / external URLs
-    if "pcloud" in url or "publink" in url or "p-lux" in url:
+    # 0. Check for Backblaze B2 storage scheme
+    if url.startswith("b2://"):
+        clean_path = url.replace("b2://", "")
+        parts = clean_path.split("/", 1)
+        if len(parts) == 2:
+            bucket_name, file_path = parts
+            from app.services.storage_service import storage_service
+            download_domain = getattr(storage_service.b2_provider, "download_url", None) or "https://f005.backblazeb2.com"
+            return f"{download_domain}/file/{bucket_name}/{file_path}"
+
+    # 1. Check if it's a pCloud URL
+    if "publink" in url or "pcloud" in url:
         if "getpubthumb" in url or "getpubimage" in url:
             return url
-        if "publink" in url or "pcloud" in url:
-            return resolve_pcloud_direct_url(url)
-        return url
+        return resolve_pcloud_direct_url(url)
         
     # 2. Check if it's a local upload URL
     url_lower = url.lower()
@@ -210,12 +218,16 @@ def resolve_product_media(product, db):
         low = url.lower().split("?")[0]
         if any(low.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".avif")):
             return True
+        # Backblaze B2 CDN image URLs or b2:// paths
+        if ("backblazeb2.com" in url or "b2://" in url) and not any(low.endswith(ext) for ext in (".pdf", ".zip", ".mp4", ".mov")):
+            return True
         # p-lux CDN resolved links are direct images
         if "p-lux" in url and "/" in url.split("p-lux")[-1]:
             # Check it doesn't look like a PDF/ZIP path
             if not any(low.endswith(ext) for ext in (".pdf", ".zip", ".mp4", ".mov")):
                 return True
         return False
+
 
     # Try to find a thumbnail image inside the download folder (only if download link set)
     resolved_thumb = None
@@ -638,7 +650,8 @@ def download_product(
     
     # Determine if the download asset is actually available
     pcloud_link = product.pcloud_download_link
-    has_pcloud = is_pcloud_link_active(pcloud_link)
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2
     has_file = bool(product.storage_path or product.file_url)
     
     # If the external pCloud link has expired and there is no local file on disk,
@@ -647,7 +660,7 @@ def download_product(
         product.storage_path = f"pcloud://uploads/products/{product_id}/product.zip"
         has_file = True
         
-    download_available = has_pcloud or has_file
+    download_available = has_b2 or has_pcloud or has_file
     
     response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
@@ -707,13 +720,14 @@ def get_download_center(
         
         # Determine if the download asset is actually available
         pcloud_link = product.pcloud_download_link
-        has_pcloud = is_pcloud_link_active(pcloud_link)
+        has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+        has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2
         has_file = bool(product.storage_path or product.file_url)
         
         if not has_pcloud and not has_file:
             has_file = True
             
-        download_available = has_pcloud or has_file
+        download_available = has_b2 or has_pcloud or has_file
         
         downloads.append({
             "order_id": order.id,
@@ -792,10 +806,9 @@ def download_product_file(
         )
 
     # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
-    # If a pCloud download link is stored, return it directly so the browser
-    # can open it.  Future migration: just update the stored URL, no code change.
     pcloud_link = product.pcloud_download_link
-    has_pcloud = is_pcloud_link_active(pcloud_link)
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2
     
     if has_pcloud:
         if owned:
@@ -854,13 +867,22 @@ def download_product_file(
             
     content_type = product.content_type or "application/octet-stream"
     
+    try:
+        stream = storage_service.get_stream(storage_path)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[DownloadError] Stream error for path {storage_path}: {e}")
+        raise HTTPException(status_code=404, detail="Product file is currently missing or unavailable from storage.")
+
     return StreamingResponse(
-        storage_service.get_stream(storage_path),
+        stream,
         media_type=content_type,
         headers={
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
 
 
 # ── Protected write endpoints (JWT required) ──────────────────────────────────

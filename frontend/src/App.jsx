@@ -50,6 +50,8 @@ const Categories     = lazy(() => import('./pages/marketplace/Categories'));
 const About          = lazy(() => import('./pages/marketplace/About'));
 const Contact        = lazy(() => import('./pages/marketplace/Contact'));
 const Downloads      = lazy(() => import('./pages/marketplace/Downloads'));
+const RefundPolicy   = lazy(() => import('./pages/support/RefundPolicy'));
+
 
 const LoginSelection    = lazy(() => import('./pages/auth/LoginSelection'));
 const RegisterSelection = lazy(() => import('./pages/auth/RegisterSelection'));
@@ -133,6 +135,8 @@ function SPARouter() {
       case 'about':             return <About />;
       case 'contact':           return <Contact />;
       case 'downloads':         return <Downloads />;
+      case 'refund-policy':     return <RefundPolicy />;
+
       // Legacy in-SPA auth views (navigateTo still works from other components)
       case 'login-selection':    return <LoginSelection />;
       case 'register-selection': return <RegisterSelection />;
@@ -370,7 +374,10 @@ function AppContent() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* ── Auth routes ── */}
+          <Route path="/refund-policy"          element={<RefundPolicy />} />
+          <Route path="/support/refund-policy"  element={<RefundPolicy />} />
           <Route path="/auth/login-selection"    element={<Navigate to="/auth/login?role=customer" replace />} />
+
           <Route path="/auth/register-selection" element={<Navigate to="/auth/register?role=customer" replace />} />
           <Route path="/auth/login"              element={<Login />} />
           <Route path="/auth/register"           element={<Register />} />

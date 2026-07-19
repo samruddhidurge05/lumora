@@ -5,12 +5,16 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import confetti from 'canvas-confetti';
+import PolicyLink from '../../components/policy/PolicyLink';
+import RefundPolicyModal from '../../components/policy/RefundPolicyModal';
 
 export default function Success() {
   const { lastPurchasedItems, navigateTo, formatPrice } = useApp();
   const { user } = useAuth();
   const [latestOrder, setLatestOrder] = useState(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+
 
   useEffect(() => {
     // Fire confetti on mount
@@ -194,6 +198,27 @@ export default function Success() {
             </p>
           </div>
         </div>
+
+        {/* Digital Product Policy Card */}
+        <div className="glass-card" style={{
+          marginTop: '16px', padding: '16px 20px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          textAlign: 'left', border: '1px solid rgba(196,181,253,0.25)',
+          background: 'rgba(123,63,160,0.03)',
+        }}>
+          <p style={{ fontSize: '0.84rem', fontWeight: 700, color: '#2D004D', margin: 0 }}>
+            Thank you for your purchase.
+          </p>
+          <p style={{ fontSize: '0.78rem', color: 'var(--color-mocha)', lineHeight: 1.5, margin: 0 }}>
+            Your digital product is available in your Downloads. Please remember that digital products cannot be physically returned after delivery or download, and refund requests are governed by Lumora's Refund Policy.
+          </p>
+          <div style={{ marginTop: '2px' }}>
+            <PolicyLink onClick={() => setShowPolicyModal(true)} label="Read Refund Policy" />
+          </div>
+        </div>
+
+        <RefundPolicyModal isOpen={showPolicyModal} onClose={() => setShowPolicyModal(false)} />
+
 
         {/* CTA buttons */}
         <div style={{

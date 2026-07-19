@@ -5,6 +5,8 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import { Download, Lock, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
+import PolicyBanner from '../../components/policy/PolicyBanner';
+
 
 export default function Downloads() {
   const { ownedProducts, products, formatPrice, navigateTo } = useApp();
@@ -216,7 +218,7 @@ export default function Downloads() {
       <Navbar />
       <div style={{ paddingTop: '100px', padding: '100px clamp(1.5rem,5vw,6rem) 80px', maxWidth: '1000px', margin: '0 auto' }}>
         
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Your Vault</span>
             <h1 className="text-editorial" style={{ fontSize: 'clamp(2.5rem,5vw,4rem)', fontWeight: 400, color: 'var(--color-espresso)', marginTop: '4px' }}>Downloads</h1>
@@ -229,6 +231,9 @@ export default function Downloads() {
             </button>
           )}
         </div>
+
+        <PolicyBanner style={{ marginBottom: '24px' }} />
+
 
         {/* Error banner */}
         {error && (

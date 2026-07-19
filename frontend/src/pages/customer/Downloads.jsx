@@ -9,6 +9,8 @@ import {
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
+import PolicyBanner from '../../components/policy/PolicyBanner';
+
 
 /* ─── FILTER TAB BASE ───────────────────────────────────────── */
 // Static base tabs; category tabs are computed dynamically from real data
@@ -431,6 +433,12 @@ export default function CustomerDownloads() {
           </div>
         </div>
       </section>
+
+
+      <PolicyBanner style={{ marginTop: '20px', marginBottom: '0px' }} />
+
+
+
 
       {/* Loading state notification */}
       {loading && (

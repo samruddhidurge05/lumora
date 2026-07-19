@@ -12,6 +12,11 @@ import { togglePriceAlertSubscription } from '../../services/priceAlertService';
 import { trackProductViewing } from '../../services/historyService';
 import { getReviewsApi, createReviewApi } from '../../api/reviewApi';
 import { backendFetch } from '../../utils/api';
+import RefundPolicyCard from '../../components/policy/RefundPolicyCard';
+import RefundPolicyModal from '../../components/policy/RefundPolicyModal';
+import RefundAcknowledgementModal from '../../components/policy/RefundAcknowledgementModal';
+import PurchaseConfirmationDialog from '../../components/policy/PurchaseConfirmationDialog';
+
 
 // Same gallery images as Products page
 const CAT_GALLERY = {
@@ -94,6 +99,30 @@ export default function ProductPage() {
   const [reportSubmitting, setReportSubmitting]      = useState(false);
   const [reportSubmitted, setReportSubmitted]        = useState(false);
   const [reportError, setReportError]               = useState('');
+
+  // ── Customer Refund Policy Acknowledgement State ──────────────────────────
+  const [showPolicyModal, setShowPolicyModal]       = useState(false);
+  const [showAckModal, setShowAckModal]             = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog]   = useState(false);
+
+  const handleBuyNowClick = (prod) => {
+    if (!user) {
+      navigateTo('login-selection');
+      return;
+    }
+    setShowAckModal(true);
+  };
+
+  const handleAckModalContinue = () => {
+    setShowAckModal(false);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmPurchase = () => {
+    setShowConfirmDialog(false);
+    buyNow(product);
+  };
+
 
   // Clear stale fetchedProduct whenever activeProductId changes so we never
   // briefly display the previous product while the new one loads.
@@ -968,14 +997,15 @@ export default function ProductPage() {
                 </div>
               ) : user ? (
                 <>
-                  <button onClick={() => buyNow(product)} className="btn-premium btn-premium-solid buy-now-glow"
+                  <button onClick={() => handleBuyNowClick(product)} className="btn-premium btn-premium-solid buy-now-glow"
                     style={{ width: '100%', justifyContent: 'center', padding: '15px', fontSize: '0.92rem', borderRadius: '14px', marginBottom: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Zap size={16} /> Buy Now · {formatPrice(product.price)}
                   </button>
                   <button onClick={() => addToCart(product)} className="btn-premium"
-                    style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: '0.88rem', borderRadius: '14px', marginBottom: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: '0.88rem', borderRadius: '14px', marginBottom: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <ShoppingBag size={15} /> {inCart ? '✓ Added to Cart' : 'Add to Cart'}
                   </button>
+                  <RefundPolicyCard onOpenPolicy={() => setShowPolicyModal(true)} />
                 </>
               ) : (
                 /* Not logged in — show sign-in prompt instead of purchase buttons */
@@ -993,8 +1023,10 @@ export default function ProductPage() {
                       New here? Create account →
                     </button>
                   </div>
+                  <RefundPolicyCard onOpenPolicy={() => setShowPolicyModal(true)} />
                 </div>
               )}
+
 
               {/* Secondary actions */}
               <div className="product-tag-grid">
@@ -1123,10 +1155,30 @@ export default function ProductPage() {
         </div>
       )}
 
+      {/* Policy Modals & Confirmation Dialog */}
+      <RefundPolicyModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+      />
+      <RefundAcknowledgementModal
+        isOpen={showAckModal}
+        onClose={() => setShowAckModal(false)}
+        onContinue={handleAckModalContinue}
+        onOpenFullPolicy={() => setShowPolicyModal(true)}
+      />
+      <PurchaseConfirmationDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmPurchase}
+        productName={product?.title}
+        productPrice={formatPrice(product?.price)}
+      />
+
       <Footer />
     </div>
   );
 }
+
 
 // ── Related Product Card ──────────────────────────────────────────────────────
 function RelatedCard({ product, thumb, isWished, formatPrice, onView, onCart, onWishlist }) {
@@ -1452,3 +1504,5 @@ function ReportModal({
     </div>
   );
 }
+
+
