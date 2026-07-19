@@ -45,10 +45,17 @@ function _uploadToBackend(file, endpoint, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    // Use a root-relative path so the request routes through Vite's /api proxy.
-    // This avoids CORS issues when the dev server runs on any port (5173, 5174, 5175…)
-    // because the browser sees it as same-origin. In production the reverse proxy handles it.
-    xhr.open('POST', endpoint);
+    let uploadUrl = endpoint;
+    if (!endpoint.startsWith('http')) {
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      if (cleanEndpoint.startsWith('/api/')) {
+        const baseOrigin = API_BASE.replace(/\/api\/?$/, '');
+        uploadUrl = `${baseOrigin}${cleanEndpoint}`;
+      } else {
+        uploadUrl = `${API_BASE}${cleanEndpoint}`;
+      }
+    }
+    xhr.open('POST', uploadUrl);
 
     // Attach JWT token
     const token = localStorage.getItem('lumora_backend_token');

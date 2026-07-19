@@ -259,6 +259,12 @@ function SuccessDownloadLink({ downloadUrl, title }) {
         window.open(resp.redirect_url, '_blank');
         return;
       }
+      if (resp?.download_url) {
+        const apiBaseClean = (import.meta.env.VITE_API_BASE_URL || apiBase || 'http://localhost:8000').replace(/\/api\/?$/, '');
+        const fileCheckUrl = resp.download_url.startsWith('/api') ? resp.download_url.replace('/api', '') : resp.download_url;
+        window.open(`${apiBaseClean}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, '_blank');
+        return;
+      }
     } catch (_) {
       // Not JSON — it's a real file stream; open directly
     }
