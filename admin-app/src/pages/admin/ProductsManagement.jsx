@@ -353,6 +353,9 @@ export default function App() {
               thumbnail:   resolveImageUrl(p.preview || p.thumbnail),
               preview:     resolveImageUrl(p.preview || p.thumbnail),
               image_urls:  Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : [],
+              gallery:     Array.isArray(p.preview_images) && p.preview_images.length > 0
+                ? p.preview_images.map(resolveImageUrl)
+                : (Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : []),
               downloadUrl: p.file_url || null,
               file_url:    p.file_url || null,
               pcloud_download_link: p.pcloud_download_link || null,
@@ -382,6 +385,9 @@ export default function App() {
               return {
                 ...mapped,
                 thumbnail: resolveImageUrl(mapped.thumbnail),
+                preview: resolveImageUrl(mapped.preview),
+                image_urls: Array.isArray(mapped.image_urls) ? mapped.image_urls.map(resolveImageUrl) : [],
+                gallery: Array.isArray(mapped.gallery) ? mapped.gallery.map(resolveImageUrl) : [],
                 price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
               };
             });
@@ -1960,7 +1966,7 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
           </div>
 
           {/* REAL INTERACTIONS & ACTION BUTTONS */}
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-6 gap-1.5">
             
             {/* Play/Inspect detail */}
             <button 
