@@ -430,7 +430,7 @@
     flex-direction: column !important;
     min-height: calc(100vh - 58px) !important;
   }
-
+  
   .vendor-main-content {
     padding: 20px 14px !important;
   }

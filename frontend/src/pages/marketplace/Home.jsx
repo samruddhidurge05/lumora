@@ -101,7 +101,7 @@ function PCard({ product, delay = 0 }) {
         cursor: 'pointer', display: 'flex', flexDirection: 'column',
       }}
     >
-      <div style={{ height:'190px', overflow:'hidden', position:'relative' }}>
+      <div className="pcard-img" style={{ height:'190px', overflow:'hidden', position:'relative' }}>
         <ProductImage
           product={product}
           style={{ transform:hov?'scale(1.07)':'scale(1)', transition:'transform .5s ease' }}
@@ -115,33 +115,33 @@ function PCard({ product, delay = 0 }) {
         {/* Glass sheen */}
         <div style={{ position:'absolute', top:0, left:'10%', right:'10%', height:'1px', background:'linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent)', pointerEvents:'none' }} />
       </div>
-      <div style={{ padding:'17px', flex:1, display:'flex', flexDirection:'column', gap:'8px' }}>
-        <span style={{ fontSize:'.58rem', fontWeight:700, color:'#7B3FA0', textTransform:'uppercase', letterSpacing:'.07em', background:'rgba(123,63,160,.08)', padding:'2px 8px', borderRadius:'5px', alignSelf:'flex-start' }}>
+      <div className="pcard-body" style={{ padding:'17px', flex:1, display:'flex', flexDirection:'column', gap:'8px' }}>
+        <span className="pcard-category-badge" style={{ fontSize:'.58rem', fontWeight:700, color:'#7B3FA0', textTransform:'uppercase', letterSpacing:'.07em', background:'rgba(123,63,160,.08)', padding:'2px 8px', borderRadius:'5px', alignSelf:'flex-start' }}>
           {product.category}
         </span>
-        <h3 style={{ fontSize:'.9rem', fontWeight:700, color:'#2D004D', lineHeight:1.35, overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>
+        <h3 className="pcard-title" style={{ fontSize:'.9rem', fontWeight:700, color:'#2D004D', lineHeight:1.35, overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>
           {product.title}
         </h3>
-        <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
+        <div className="pcard-stars" style={{ display:'flex', alignItems:'center', gap:'3px' }}>
           {[...Array(5)].map((_,i)=><Star key={i} size={10} fill={i<Math.round(product.rating||4.8)?'#C7A55A':'none'} stroke="#C7A55A" />)}
           <span style={{ fontSize:'.68rem', color:'#8B6B5B', fontWeight:600, marginLeft:'2px' }}>{product.rating||'4.8'}</span>
         </div>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'auto', paddingTop:'10px', borderTop:'1px solid rgba(220,198,255,.18)' }}>
-          <span style={{ fontSize:'1.05rem', fontWeight:800, color:'#2D004D' }}>{formatPrice(product.price)}</span>
+        <div className="pcard-footer" style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'auto', paddingTop:'10px', borderTop:'1px solid rgba(220,198,255,.18)' }}>
+          <span className="pcard-price" style={{ fontSize:'1.05rem', fontWeight:800, color:'#2D004D' }}>{formatPrice(product.price)}</span>
           <div style={{ display:'flex', gap:'6px' }}>
             {user ? (
               <>
-                <button onClick={handleCart}
+                <button onClick={handleCart} className="pcard-cart-btn"
                   style={{ width:'30px', height:'30px', borderRadius:'8px', border:'1.5px solid rgba(123,63,160,.25)', background:'rgba(255,255,255,.85)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#5A1E7E', backdropFilter:'blur(8px)' }}>
                   <ShoppingBag size={12} />
                 </button>
-                <button onClick={handleBuy}
+                <button onClick={handleBuy} className="pcard-buy-btn"
                   style={{ padding:'6px 12px', borderRadius:'8px', border:'none', background:'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color:'#fff', fontSize:'.68rem', fontWeight:700, cursor:'pointer', boxShadow:'0 3px 10px rgba(90,30,126,.28)' }}>
                   Buy
                 </button>
               </>
             ) : (
-              <button onClick={e=>{e.stopPropagation();navigateTo('login-selection');}}
+              <button onClick={e=>{e.stopPropagation();navigateTo('login-selection');}} className="pcard-buy-btn"
                 style={{ padding:'6px 14px', borderRadius:'8px', border:'1.5px solid rgba(123,63,160,.30)', background:'rgba(255,255,255,.85)', color:'#7B3FA0', fontSize:'.68rem', fontWeight:700, cursor:'pointer', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', gap:'4px' }}>
                 Sign in to Buy
               </button>
@@ -241,7 +241,7 @@ export default function Home() {
   });
 
   return (
-    <div style={{ minHeight:'100vh', position:'relative', zIndex:10 }}>
+    <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:10 }}>
       <Navbar />
 
       {/* ═══════════ 1. HERO ═══════════ */}
@@ -325,7 +325,7 @@ export default function Home() {
       {/* ═══════════ 2. CATEGORIES ═══════════ */}
       <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal" style={{ textAlign:'center', marginBottom:'52px' }}>
+          <div className="gsap-reveal lumora-cats-section-head" style={{ textAlign:'center', marginBottom:'52px' }}>
             <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Browse by Category</p>
             <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Everything You Need to Build</h2>
           </div>
@@ -355,7 +355,7 @@ export default function Home() {
       {/* ═══════════ 3. FEATURED PRODUCTS ═══════════ */}
       <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
+          <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
             <div>
               <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>Editor's Pick</p>
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Featured Products</h2>
@@ -392,7 +392,7 @@ export default function Home() {
       {/* ═══════════ 5. TRENDING ═══════════ */}
       <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
+          <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
             <div>
               <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>🔥 Hot Right Now</p>
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Trending This Week</h2>
@@ -407,7 +407,7 @@ export default function Home() {
       {/* ── LATEST PRODUCTS ── */}
       <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
+          <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
             <div>
               <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>✦ Fresh Off The Press</p>
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Latest Products</h2>
@@ -420,7 +420,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 6. TESTIMONIALS ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(207,232,214,0.10)' }}>
+      <section className="lumora-testimonials-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(207,232,214,0.10)' }}>
         <div style={{ maxWidth:'900px', margin:'0 auto' }}>
           <div className="gsap-reveal" style={{ textAlign:'center', marginBottom:'52px' }}>
             <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Creator Voices</p>
@@ -430,6 +430,7 @@ export default function Home() {
             <motion.div key={activeTestimonial}
               initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}
               transition={{duration:.45}}
+              className="lumora-testimonial-card"
               style={{ ...glass({padding:'44px', marginBottom:'28px'}) }}>
               <div style={{ display:'flex', gap:'3px', marginBottom:'20px' }}>
                 {[...Array(5)].map((_,i)=><Star key={i} size={16} fill="#C7A55A" stroke="#C7A55A"/>)}
@@ -464,7 +465,7 @@ export default function Home() {
             <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Why Lumora</p>
             <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Built for Creators &amp; Builders</h2>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'20px' }}>
+          <div className="lumora-why-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'20px' }}>
             {[
               {icon:<Zap size={22}/>,    color:'rgba(220,198,255,.45)', title:'Instant Download',      desc:'Every purchase gives you immediate access. No waiting — just seamless, secure delivery.'},
               {icon:<Shield size={22}/>, color:'rgba(207,232,214,.45)', title:'Commercial License',    desc:'Use all products in client work, SaaS apps and commercial projects with full transparency.'},
@@ -488,10 +489,10 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 8. CTA ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem) 100px' }}>
+      <section className="lumora-cta-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem) 100px' }}>
         <div style={{ maxWidth:'880px', margin:'0 auto' }}>
           <Reveal>
-            <div style={{ ...glass({padding:'clamp(48px,8vw,80px)', textAlign:'center', position:'relative', overflow:'hidden', borderRadius:'32px'}) }}>
+            <div className="lumora-cta-card" style={{ ...glass({padding:'clamp(48px,8vw,80px)', textAlign:'center', position:'relative', overflow:'hidden', borderRadius:'32px'}) }}>
               <div style={{ position:'absolute', top:'-30%', left:'-10%', width:'480px', height:'480px', borderRadius:'50%', background:'radial-gradient(circle,rgba(220,198,255,.28) 0%,transparent 65%)', filter:'blur(60px)', pointerEvents:'none' }} />
               <div style={{ position:'absolute', bottom:'-30%', right:'-10%', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,214,186,.22) 0%,transparent 65%)', filter:'blur(60px)', pointerEvents:'none' }} />
               <div style={{ position:'relative', zIndex:1 }}>
@@ -503,11 +504,11 @@ export default function Home() {
                 <p style={{ color:'#6B4F7A', fontSize:'1rem', maxWidth:'480px', margin:'0 auto 36px', lineHeight:1.65 }}>
                   Join 45,000+ creators and builders already using Lumora to ship faster, design better and earn more.
                 </p>
-                <div style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap' }}>
+                <div className="lumora-cta-btns" style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap' }}>
                   <button onClick={()=>navigateTo('register-selection')} className="btn-premium btn-premium-solid" style={{ padding:'15px 36px', fontSize:'.95rem', borderRadius:'14px', gap:'8px' }}>Get Started Free <ArrowRight size={16}/></button>
                   <button onClick={()=>navigateTo('marketplace')} className="btn-premium" style={{ padding:'15px 36px', fontSize:'.95rem', borderRadius:'14px' }}>Browse Products</button>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', marginTop:'24px', flexWrap:'wrap' }}>
+                <div className="lumora-cta-trust" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', marginTop:'24px', flexWrap:'wrap' }}>
                   {['No credit card required','Instant access','Commercial license'].map((t,i)=>(
                     <span key={i} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'.76rem', color:'#8B6B5B', fontWeight:600 }}>
                       <Check size={12} style={{ color:'#16a34a' }}/> {t}

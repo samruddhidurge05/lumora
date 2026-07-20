@@ -262,15 +262,21 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     justify-content: center !important;
   }
   .home-hero-stats {
-    gap: 16px !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-start !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    justify-content: unset !important;
     padding-top: 16px !important;
   }
   /* Categories grid */
   .lumora-cats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
+  }
+  /* Category card: compact — reduces unnecessary whitespace */
+  .lumora-cats-grid > button,
+  .lumora-cats-grid > [class*="cat"] {
+    padding: 16px 14px !important;
   }
 }
 
@@ -314,14 +320,22 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   /* Two columns on mobile — premium app feel */
   .home-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .lumora-home-products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .home-product-grid .pcard-img { height: 130px !important; }
+
+  /* PCard image: compact height via className="pcard-img" added to Home.jsx */
+  .pcard-img {
+    height: 130px !important;
+    min-height: 130px !important;
+    max-height: 130px !important;
+  }
 
   /* Section padding reduced on mobile */
   section { padding-left: var(--mob-pad) !important; padding-right: var(--mob-pad) !important; }
 }
+
 @media (max-width: 360px) {
   .home-product-grid { grid-template-columns: 1fr; }
   .lumora-home-products-grid { grid-template-columns: 1fr; }
+  .pcard-img { height: 120px !important; max-height: 120px !important; }
 }
 
 
@@ -1169,4 +1183,326 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 
-/* ── END ROUND 2 ────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   26. LANDING PAGE — MOBILE UX REFINEMENT (Round 3)
+   Sections: Stats Strip · Categories · Product Cards · Section Spacing
+             Hero Stats · Testimonials · Why Lumora · CTA
+   ⚠️  Desktop (1024px+) = ZERO changes.
+════════════════════════════════════════════════════════════════════ */
+
+/* ── 26a. SECTION VERTICAL SPACING — remove excess gaps on mobile ─ */
+@media (max-width: 768px) {
+  /* Reduce section padding across the entire landing page on mobile.
+     Target all <section> inside the landing page root div.
+     This overrides the 80px padding set via inline styles.           */
+  .lumora-landing-root section {
+    padding-top: 44px !important;
+    padding-bottom: 44px !important;
+  }
+  /* Hero section keeps its own padding (handled in Section 2 above) */
+  .lumora-landing-root .lumora-hero-section {
+    padding-top: 5.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+}
+@media (max-width: 480px) {
+  .lumora-landing-root section {
+    padding-top: 36px !important;
+    padding-bottom: 36px !important;
+  }
+  .lumora-landing-root .lumora-hero-section {
+    padding-top: 5rem !important;
+    padding-bottom: 2rem !important;
+  }
+}
+
+/* ── 26b. HERO STATS — clean 3-col grid, compact numbers ──────────
+   Already has grid-template-columns applied in Section 2 above.
+   These rules refine the stat cell visuals.
+─────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .home-hero-stats > div {
+    background: rgba(255,255,255,0.30);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(220,198,255,0.35);
+    border-radius: 14px;
+    padding: 12px 10px !important;
+    text-align: center;
+  }
+  /* Stat number */
+  .home-hero-stats > div > :first-child {
+    font-size: 1.45rem !important;
+    line-height: 1 !important;
+  }
+  /* Stat label */
+  .home-hero-stats > div > :last-child {
+    font-size: 0.64rem !important;
+    margin-top: 3px !important;
+  }
+}
+@media (max-width: 360px) {
+  .home-hero-stats > div > :first-child { font-size: 1.2rem !important; }
+}
+
+/* ── 26c. CATEGORY SECTION ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Section heading — compact */
+  .lumora-cats-section-head {
+    margin-bottom: 28px !important;
+    text-align: left !important;
+  }
+  .lumora-cats-section-head h2 {
+    font-size: clamp(1.5rem, 6.5vw, 2.2rem) !important;
+  }
+
+  /* Category card — reduce padding, compact icon + label */
+  .lumora-cats-grid > button {
+    padding: 14px 12px !important;
+    border-radius: 16px !important;
+  }
+  /* Icon bubble */
+  .lumora-cats-grid > button > :first-child {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  /* Category name */
+  .lumora-cats-grid > button > div:last-of-type {
+    font-size: 0.78rem !important;
+    margin-bottom: 0 !important;
+  }
+  /* "All Categories" dashed tile */
+  .lumora-cats-grid > button[style*="dashed"] {
+    padding: 14px 12px !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* ── 26d. PRODUCT CARD (PCard) — premium compact mobile layout ─── */
+@media (max-width: 640px) {
+  /* Already handled: 2-col grid, pcard-img height 130px (Section 3) */
+
+  /* Card container */
+  .lumora-home-products-grid [style*="borderRadius: '22px'"],
+  .home-product-grid > div {
+    border-radius: 16px !important;
+  }
+
+  /* Card inner content area — tighten padding and gaps */
+  .pcard-body {
+    padding: 11px 11px 12px !important;
+    gap: 5px !important;
+  }
+
+  /* Category badge */
+  .pcard-category-badge {
+    font-size: 0.52rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Product title — 2-line clamp, smaller */
+  .pcard-title {
+    font-size: 0.78rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Star rating row — tiny */
+  .pcard-stars span {
+    font-size: 0.62rem !important;
+  }
+
+  /* Price + CTA row */
+  .pcard-footer {
+    padding-top: 8px !important;
+    margin-top: auto !important;
+  }
+
+  /* Price */
+  .pcard-price {
+    font-size: 0.88rem !important;
+  }
+
+  /* Buy button */
+  .pcard-buy-btn {
+    padding: 5px 10px !important;
+    font-size: 0.62rem !important;
+    border-radius: 7px !important;
+  }
+
+  /* Cart icon button */
+  .pcard-cart-btn {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 7px !important;
+  }
+}
+
+/* ── 26e. STATS STRIP ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .lumora-stats-strip {
+    /* Collapse 5-col grid → 2-col × 3-row on mobile */
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1px !important;
+    border-radius: 20px !important;
+  }
+  /* Stat cell */
+  .lumora-stats-strip > div {
+    padding: 24px 16px !important;
+  }
+  /* Icon */
+  .lumora-stats-strip > div > :first-child {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  /* Number */
+  .lumora-stats-strip > div > :nth-child(2) {
+    font-size: 1.65rem !important;
+  }
+  /* Label */
+  .lumora-stats-strip > div > :last-child {
+    font-size: 0.66rem !important;
+    margin-top: 4px !important;
+  }
+}
+@media (max-width: 480px) {
+  .lumora-stats-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .lumora-stats-strip > div {
+    padding: 20px 12px !important;
+  }
+  .lumora-stats-strip > div > :nth-child(2) {
+    font-size: 1.45rem !important;
+  }
+}
+
+/* ── 26f. SECTION HEADINGS (Featured, Trending, Latest, Categories) */
+@media (max-width: 640px) {
+  /* Section header row (title left + "View all" right) → stack */
+  .lumora-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    margin-bottom: 24px !important;
+  }
+  /* Section h2 */
+  .lumora-section-header h2 {
+    font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+  /* "View all" button — compact */
+  .lumora-section-header .btn-premium {
+    padding: 8px 16px !important;
+    font-size: 0.75rem !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* ── 26g. TESTIMONIALS ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lumora-testimonials-section {
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+  }
+  .lumora-testimonials-section > div {
+    padding: 0 !important;
+  }
+  /* Testimonial heading */
+  .lumora-testimonials-section h2 {
+    font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+  /* Testimonial card */
+  .lumora-testimonials-section [style*="padding: '44px'"],
+  .lumora-testimonial-card {
+    padding: 24px 20px !important;
+    border-radius: 20px !important;
+  }
+  /* Quote text */
+  .lumora-testimonial-card p,
+  .lumora-testimonials-section blockquote {
+    font-size: clamp(0.95rem, 4vw, 1.15rem) !important;
+    margin-bottom: 18px !important;
+  }
+}
+
+/* ── 26h. WHY LUMORA grid ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lumora-why-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  /* Feature card */
+  .lumora-why-grid > div {
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+  }
+  /* Icon */
+  .lumora-why-grid > div > :first-child {
+    width: 38px !important;
+    height: 38px !important;
+    margin-bottom: 12px !important;
+    border-radius: 11px !important;
+  }
+  /* Title */
+  .lumora-why-grid > div h3 {
+    font-size: 0.82rem !important;
+    margin-bottom: 6px !important;
+  }
+  /* Description */
+  .lumora-why-grid > div p {
+    font-size: 0.74rem !important;
+    line-height: 1.55 !important;
+  }
+}
+@media (max-width: 400px) {
+  .lumora-why-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── 26i. FINAL CTA SECTION ────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lumora-cta-section {
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+    padding-bottom: 60px !important;
+  }
+  /* CTA card */
+  .lumora-cta-card {
+    padding: 36px 24px !important;
+    border-radius: 24px !important;
+  }
+  /* Heading */
+  .lumora-cta-card h2 {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+    margin-bottom: 14px !important;
+  }
+  /* Sub text */
+  .lumora-cta-card p {
+    font-size: 0.84rem !important;
+    margin-bottom: 26px !important;
+  }
+  /* CTA buttons row — stack */
+  .lumora-cta-btns {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .lumora-cta-btns > button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 13px 24px !important;
+    font-size: 0.88rem !important;
+    border-radius: 12px !important;
+  }
+  /* Trust badges */
+  .lumora-cta-trust {
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+    margin-top: 18px !important;
+  }
+}
+
+/* ── END ROUND 3 ────────────────────────────────────────────────── */
