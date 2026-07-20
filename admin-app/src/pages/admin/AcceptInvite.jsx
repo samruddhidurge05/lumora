@@ -82,22 +82,28 @@ export default function AcceptInvite() {
       });
   }, [token]);
 
-  // ── Step 2: User is already authenticated → try to activate ───────────────
+  // ── Step 2: User is already authenticated → activate the invitation ────────
   // This fires when:
   //   a) User was already logged in when they opened the link, OR
   //   b) User logged in / registered and was redirected back here
+  //
+  // BUG FIX: The previous code short-circuited and navigated to /admin/team
+  // when userRole === 'admin', without calling POST /admin/team/accept-invite.
+  // AuthContext sets userRole='admin' from localStorage.getItem('lumora_active_role'),
+  // which is 'admin' for ANY user coming through the admin login redirect —
+  // including brand-new invitees. This left invitation.accepted_at = NULL in
+  // SQLite forever, so the Admin Team page always showed the invitation as Pending.
+  //
+  // Fix: always call activateViaRegularJwt() regardless of current role.
+  // The invitation token is the credential; accept-invite MUST be called to
+  // set accepted_at in SQLite and update the Firestore mirror.
+  // The backend handles duplicate calls safely: if already accepted, it returns
+  // 400 ("Invalid or already used invitation token") which is caught below.
   useEffect(() => {
     if (loading || status !== 'valid' || !invitation || !user) return;
-    // If the user is already a full admin (not via this invite), skip activation
-    if (userRole === 'admin') {
-      // They might already be an admin — just redirect to the team page
-      navigate('/admin/team', { replace: true });
-      return;
-    }
-    // For any logged-in non-admin user: call the accept-invite endpoint
     activateViaRegularJwt();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, status, invitation, user, userRole]);
+  }, [loading, status, invitation, user]);
 
   // ── Accept invite using the regular (customer) JWT ────────────────────────
   const activateViaRegularJwt = async () => {
