@@ -11,19 +11,12 @@ from admin.firestore.admin_firestore import sync_product_to_firestore, delete_pr
 
 def _is_external_url(url: Optional[str]) -> bool:
     """
-    Returns True if the URL is an external/permanent link (pCloud, Cloudflare R2,
-    AWS S3, Firebase Storage, Unsplash, etc.) that should be stored as-is and
-    NOT passed through move_to_permanent().
-
-    FUTURE MIGRATION: When switching to a different storage provider, only the
-    stored URLs need to change. This detection logic keeps the service layer clean.
+    Returns True if the URL is an external link (Cloudflare R2, AWS S3, Firebase Storage,
+    Unsplash, etc.) that should be stored as-is and NOT passed through move_to_permanent().
     """
     if not url:
         return False
     external_markers = (
-        'pcloud.link',     # pCloud public links
-        'filedn.com',      # pCloud CDN
-        'u.pcloud.link',   # pCloud share links
         'cloudflare',      # Cloudflare R2
         's3.amazonaws.com',# AWS S3
         'firebasestorage.googleapis.com',  # Firebase Storage
@@ -118,7 +111,8 @@ class ProductService:
                         vendor_id=vendor_id,
                         product_id=product.id,
                         filename=f"product-{product.id}.zip",
-                        is_image=False
+                        is_image=False,
+                        asset_type="file"
                     )
                     if storage_path:
                         product.storage_path = storage_path
@@ -134,7 +128,8 @@ class ProductService:
                         vendor_id=vendor_id,
                         product_id=product.id,
                         filename="preview.png",
-                        is_image=True
+                        is_image=True,
+                        asset_type="preview"
                     )
                     if preview_path:
                         product.preview_path = preview_path
@@ -150,7 +145,8 @@ class ProductService:
                         vendor_id=vendor_id,
                         product_id=product.id,
                         filename="thumbnail.png",
-                        is_image=True
+                        is_image=True,
+                        asset_type="thumbnail"
                     )
                     if thumbnail_path:
                         product.thumbnail_path = thumbnail_path
@@ -223,7 +219,8 @@ class ProductService:
                             vendor_id=vendor_id,
                             product_id=product_id,
                             filename=f"product-{product_id}.zip",
-                            is_image=False
+                            is_image=False,
+                            asset_type="file"
                         )
                         product.storage_path = new_storage_path
                         product.file_url = perm_url
@@ -246,7 +243,8 @@ class ProductService:
                             vendor_id=vendor_id,
                             product_id=product_id,
                             filename="preview.png",
-                            is_image=True
+                            is_image=True,
+                            asset_type="preview"
                         )
                         product.preview_path = new_preview_path
                         product.preview = perm_preview
@@ -268,7 +266,8 @@ class ProductService:
                             vendor_id=vendor_id,
                             product_id=product_id,
                             filename="thumbnail.png",
-                            is_image=True
+                            is_image=True,
+                            asset_type="thumbnail"
                         )
                         product.thumbnail_path = new_thumbnail_path
                         product.thumbnail = perm_thumbnail

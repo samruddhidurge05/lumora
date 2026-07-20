@@ -5,7 +5,7 @@ import hashlib
 import urllib.parse
 import requests
 from abc import ABC, abstractmethod
-from typing import Generator, Dict, Any, Tuple
+from typing import Generator, Dict, Any, Tuple, Optional
 from fastapi import HTTPException, status
 from app.core.config import settings
 
@@ -94,13 +94,7 @@ class LocalStorageProvider(BaseStorageProvider):
     def get_file_stream(self, storage_path: str) -> Generator[bytes, None, None]:
         abs_path = self._get_absolute_path(storage_path)
         if not os.path.exists(abs_path):
-            try:
-                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-                import zipfile
-                with zipfile.ZipFile(abs_path, 'w') as zipf:
-                    zipf.writestr('readme.txt', f'Thank you for purchasing this product! File path: {storage_path}')
-            except Exception as e:
-                raise HTTPException(status_code=404, detail=f"File not found on disk and could not create dummy: {e}")
+            raise HTTPException(status_code=404, detail=f"Product file not found on disk at '{storage_path}'.")
         
         with open(abs_path, "rb") as f:
             while chunk := f.read(8192):
@@ -203,86 +197,7 @@ class FirebaseStorageProvider(BaseStorageProvider):
         blob = self.bucket.blob(blob_path)
         return blob.exists()
 
-class PCloudStorageProvider(BaseStorageProvider):
-    def __init__(self, upload_dir: str):
-        self.upload_dir = upload_dir
-        os.makedirs(upload_dir, exist_ok=True)
 
-    def _get_absolute_path(self, relative_path: str) -> str:
-        # Strip pcloud:// scheme
-        clean_path = relative_path.replace("pcloud://", "")
-        # Prevent path traversal characters
-        clean_path = clean_path.replace("\\", "/").replace("..", "").lstrip("/")
-        root_dir = os.path.abspath(os.path.join(self.upload_dir, ".."))
-        abs_path = os.path.abspath(os.path.join(root_dir, clean_path))
-        if not abs_path.startswith(root_dir):
-            raise HTTPException(status_code=400, detail="Invalid path traversal detected.")
-        return abs_path
-
-    def upload_file(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
-        ext = os.path.splitext(filename.lower())[1]
-        unique_name = f"{uuid.uuid4()}{ext}"
-        
-        # Temp local path: uploads/vendors/{vendor_id}/temp/
-        rel_folder = f"uploads/vendors/{vendor_id}/temp"
-        abs_folder = os.path.abspath(os.path.join(self.upload_dir, "..", rel_folder))
-        os.makedirs(abs_folder, exist_ok=True)
-        
-        rel_path = f"{rel_folder}/{unique_name}"
-        abs_path = os.path.join(abs_folder, unique_name)
-        
-        with open(abs_path, "wb") as f:
-            f.write(file_bytes)
-            
-        return {
-            "storage_path": f"pcloud://{rel_path}",
-            "url": f"/uploads/vendors/{vendor_id}/temp/{unique_name}",
-        }
-
-    def move_file(self, source_path: str, target_path: str) -> str:
-        abs_src = self._get_absolute_path(source_path)
-        abs_dest = self._get_absolute_path(target_path)
-        
-        os.makedirs(os.path.dirname(abs_dest), exist_ok=True)
-        if os.path.exists(abs_src):
-            shutil.move(abs_src, abs_dest)
-            
-        # Clean source relative url to target relative url
-        dest_rel = target_path.replace("pcloud://", "")
-        return f"/{dest_rel}"
-
-    def delete_file(self, storage_path: str) -> bool:
-        if not storage_path:
-            return False
-        abs_path = self._get_absolute_path(storage_path)
-        if os.path.exists(abs_path):
-            try:
-                os.remove(abs_path)
-                return True
-            except OSError:
-                return False
-        return False
-
-    def get_file_stream(self, storage_path: str) -> Generator[bytes, None, None]:
-        abs_path = self._get_absolute_path(storage_path)
-        if not os.path.exists(abs_path):
-            try:
-                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-                import zipfile
-                with zipfile.ZipFile(abs_path, 'w') as zipf:
-                    zipf.writestr('readme.txt', f'Thank you for purchasing this product! File path: {storage_path}')
-            except Exception as e:
-                raise HTTPException(status_code=404, detail=f"File not found on disk and could not create dummy: {e}")
-        
-        with open(abs_path, "rb") as f:
-            while chunk := f.read(8192):
-                yield chunk
-
-    def exists(self, storage_path: str) -> bool:
-        if not storage_path:
-            return False
-        abs_path = self._get_absolute_path(storage_path)
-        return os.path.exists(abs_path)
 
 
 class B2StorageProvider(BaseStorageProvider):
@@ -387,12 +302,15 @@ class B2StorageProvider(BaseStorageProvider):
 
     def move_file(self, source_path: str, target_path: str) -> str:
         self._ensure_auth()
-        src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
+        download_domain = self.download_url or "https://f005.backblazeb2.com"
         dest_clean = target_path.replace(f"b2://{self.bucket_name}/", "")
+        if not self.is_available():
+            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
 
+        src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
         file_id = self._get_file_id_by_name(src_clean)
         if not file_id:
-            return ""
+            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
 
         copy_endpoint = f"{self.api_url}/b2api/v2/b2_copy_file"
         copy_res = requests.post(
@@ -406,11 +324,13 @@ class B2StorageProvider(BaseStorageProvider):
         )
         if copy_res.status_code == 200:
             self.delete_file_id(file_id, src_clean)
-            return f"{self.download_url}/file/{self.bucket_name}/{dest_clean}"
-        return ""
+            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+        return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
 
     def _get_file_id_by_name(self, file_name: str) -> str:
         self._ensure_auth()
+        if not self.is_available():
+            return ""
         endpoint = f"{self.api_url}/b2api/v2/b2_list_file_names"
         res = requests.post(
             endpoint,
@@ -430,6 +350,8 @@ class B2StorageProvider(BaseStorageProvider):
 
     def delete_file_id(self, file_id: str, file_name: str) -> bool:
         self._ensure_auth()
+        if not self.is_available():
+            return False
         endpoint = f"{self.api_url}/b2api/v2/b2_delete_file_version"
         res = requests.post(
             endpoint,
@@ -470,7 +392,6 @@ class StorageService:
     def __init__(self):
         backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.local_provider = LocalStorageProvider(os.path.join(backend_dir, "uploads"))
-        self.pcloud_provider = PCloudStorageProvider(os.path.join(backend_dir, "uploads"))
         self.b2_provider = B2StorageProvider()
         
         # Fetch configurations from environment/settings
@@ -482,9 +403,6 @@ class StorageService:
         if pref == "b2" and self.b2_provider.is_available():
             self.provider = self.b2_provider
             print("[StorageService] Active Provider: Backblaze B2 Storage")
-        elif pref == "pcloud":
-            self.provider = self.pcloud_provider
-            print("[StorageService] Active Provider: pCloud Storage (Testing)")
         elif pref == "firebase" and self.firebase_provider.is_available():
             self.provider = self.firebase_provider
             print("[StorageService] Active Provider: Firebase Storage")
@@ -550,7 +468,7 @@ class StorageService:
     def resolve_storage_path_from_url(self, url: str) -> str:
         if not url:
             return ""
-        if url.startswith("gs://") or url.startswith("local://") or url.startswith("pcloud://") or url.startswith("b2://"):
+        if url.startswith("gs://") or url.startswith("local://") or url.startswith("b2://"):
             return url
         if "storage.googleapis.com" in url:
             parts = url.split("storage.googleapis.com/")[1].split("/")
@@ -564,32 +482,56 @@ class StorageService:
             return f"b2://{bucket}/{file_path}"
         elif "/uploads/" in url:
             rel_path = url.split("/uploads/")[1]
-            if isinstance(self.provider, PCloudStorageProvider):
-                return f"pcloud://uploads/{rel_path}"
             return f"local://uploads/{rel_path}"
         return url
 
-    def move_to_permanent(self, source_path: str, vendor_id: str, product_id: int, filename: str, is_image: bool = False) -> Tuple[str, str]:
+    def move_to_permanent(
+        self,
+        source_path: str,
+        vendor_id: str,
+        product_id: int,
+        filename: str,
+        is_image: bool = False,
+        asset_type: Optional[str] = None
+    ) -> Tuple[str, str]:
         if not source_path:
             return "", ""
             
         resolved_src = self.resolve_storage_path_from_url(source_path)
         ext = os.path.splitext(filename.lower())[1]
-        unique_name = f"{uuid.uuid4()}{ext}"
-        subfolder = "images" if is_image else "files"
+        clean_ext = "".join(c for c in ext if c.isalnum() or c == '.')
+        if not clean_ext or clean_ext.startswith(".."):
+            clean_ext = ".bin" if not is_image else ".png"
+        unique_name = f"{uuid.uuid4()}{clean_ext}"
         
+        # Build public/private logical object structure
+        if asset_type == "thumbnail":
+            rel_folder = f"public/products/{product_id}/thumbnail"
+        elif asset_type in ("preview", "previews"):
+            rel_folder = f"public/products/{product_id}/previews"
+        elif asset_type in ("video", "videos"):
+            rel_folder = f"public/products/{product_id}/videos"
+        elif asset_type in ("file", "private") or not is_image:
+            rel_folder = f"private/products/{product_id}"
+        else:
+            rel_folder = f"public/products/{product_id}/previews"
+
         if resolved_src.startswith("gs://"):
             bucket_name = resolved_src.split("/")[2]
-            target_path = f"gs://{bucket_name}/vendors/{vendor_id}/products/{product_id}/{subfolder}/{unique_name}"
+            target_path = f"gs://{bucket_name}/{rel_folder}/{unique_name}"
         elif resolved_src.startswith("b2://"):
             bucket_name = resolved_src.split("/")[2]
-            target_path = f"b2://{bucket_name}/vendors/{vendor_id}/products/{product_id}/{subfolder}/{unique_name}"
-        elif resolved_src.startswith("pcloud://"):
-            target_path = f"pcloud://uploads/vendors/{vendor_id}/products/{product_id}/{subfolder}/{unique_name}"
+            target_path = f"b2://{bucket_name}/{rel_folder}/{unique_name}"
         else:
-            target_path = f"local://uploads/vendors/{vendor_id}/products/{product_id}/{subfolder}/{unique_name}"
+            target_path = f"local://uploads/{rel_folder}/{unique_name}"
+
+        if target_path.startswith("b2://"):
+            new_url = self.b2_provider.move_file(resolved_src, target_path)
+        elif target_path.startswith("gs://"):
+            new_url = self.firebase_provider.move_file(resolved_src, target_path)
+        else:
+            new_url = self.local_provider.move_file(resolved_src, target_path)
             
-        new_url = self.provider.move_file(resolved_src, target_path)
         return target_path, new_url
 
     def delete(self, storage_path: str) -> bool:
@@ -600,8 +542,6 @@ class StorageService:
             return self.b2_provider.delete_file(resolved_path)
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.delete_file(resolved_path)
-        elif resolved_path.startswith("pcloud://") and isinstance(self.pcloud_provider, PCloudStorageProvider):
-            return self.pcloud_provider.delete_file(resolved_path)
         else:
             return self.local_provider.delete_file(resolved_path)
 
@@ -611,8 +551,6 @@ class StorageService:
             return self.b2_provider.get_file_stream(resolved_path)
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.get_file_stream(resolved_path)
-        elif resolved_path.startswith("pcloud://") and isinstance(self.pcloud_provider, PCloudStorageProvider):
-            return self.pcloud_provider.get_file_stream(resolved_path)
         else:
             return self.local_provider.get_file_stream(resolved_path)
 
@@ -622,8 +560,6 @@ class StorageService:
             return self.b2_provider.exists(resolved_path)
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.exists(resolved_path)
-        elif resolved_path.startswith("pcloud://") and isinstance(self.pcloud_provider, PCloudStorageProvider):
-            return self.pcloud_provider.exists(resolved_path)
         else:
             return self.local_provider.exists(resolved_path)
 
