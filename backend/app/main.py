@@ -399,6 +399,14 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
+# ── Duplicate API Prefix Fix ──────────────────────────────────────────────────
+@app.middleware("http")
+async def fix_duplicate_api_prefix(request: Request, call_next):
+    if request.url.path.startswith("/api/api/"):
+        request.scope["path"] = request.url.path.replace("/api/api/", "/api/", 1)
+    return await call_next(request)
+
+
 # ── Security Headers ──────────────────────────────────────────────────────────
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
