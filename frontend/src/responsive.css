@@ -229,6 +229,10 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     min-height: auto !important;
     align-items: flex-start !important;
   }
+  /* Center the hero content column on mobile */
+  .hero-grid > :first-child {
+    text-align: center !important;
+  }
   /* Headline: much smaller on mobile — no more 10vw oversizing */
   .home-hero-title {
     font-size: clamp(1.9rem, 8.5vw, 2.8rem) !important;
@@ -244,13 +248,13 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
   /* Hero badge compact */
   .hero-badge { margin-bottom: 14px !important; }
-  /* CTAs: side-by-side, not full-bleed */
+  /* CTAs: side-by-side, centered */
   .home-hero-ctas {
     flex-direction: row !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
     align-items: center !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     margin-bottom: 24px !important;
   }
   .home-hero-ctas > * {
@@ -267,6 +271,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     gap: 10px !important;
     justify-content: unset !important;
     padding-top: 16px !important;
+    text-align: left !important; /* keep numbers/labels left inside their cell */
   }
   /* Categories grid */
   .lumora-cats-grid {
