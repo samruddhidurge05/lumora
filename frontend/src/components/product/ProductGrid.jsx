@@ -8,8 +8,12 @@ export default function ProductGrid({ products = [] }) {
     </div>
   );
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: '24px' }}>
-      {products.map(p => <ProductCard key={p.id} product={p} />)}
+    <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: '24px' }}>
+      {products.map((p, idx) => (
+        <div key={p.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(idx * 0.07, 0.35)}s`, animationFillMode: 'both' }}>
+          <ProductCard product={p} />
+        </div>
+      ))}
     </div>
   );
 }

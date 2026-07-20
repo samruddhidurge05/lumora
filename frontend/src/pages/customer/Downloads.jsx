@@ -569,13 +569,14 @@ export default function CustomerDownloads() {
           </div>
         ) : (
           <div className="downloads-grid">
-            {filtered.map(product => (
-              <VaultCard
-                key={product.id}
-                product={product}
-                isHovered={hoveredCard === product.id}
-                onHover={setHoveredCard}
-              />
+            {filtered.map((product, idx) => (
+              <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(idx * 0.08, 0.4)}s`, animationFillMode: 'both' }}>
+                <VaultCard
+                  product={product}
+                  isHovered={hoveredCard === product.id}
+                  onHover={setHoveredCard}
+                />
+              </div>
             ))}
           </div>
         )}
