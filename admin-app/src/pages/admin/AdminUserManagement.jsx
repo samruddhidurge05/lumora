@@ -215,6 +215,7 @@ export default function AdminUserManagement() {
 
   const [team, setTeam]             = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [invFetchError, setInvFetchError] = useState(null);
   const [loading, setLoading]         = useState(true);
   const [toast, setToast]             = useState(null);
   const [liveStatus, setLiveStatus]   = useState('live'); // live | paused
@@ -246,7 +247,14 @@ export default function AdminUserManagement() {
         backendFetch('/admin/team/invitations?include_history=true'),
       ]);
       if (teamData.status === 'fulfilled') setTeam(teamData.value || []);
-      if (invData.status  === 'fulfilled') setInvitations(invData.value || []);
+      if (invData.status === 'fulfilled') {
+        setInvitations(invData.value || []);
+        setInvFetchError(null);
+      } else {
+        // Preserve stale data — only update error state.
+        // Do NOT reset invitations to [] on a transient failure.
+        setInvFetchError(invData.reason?.message || 'Failed to load invitations.');
+      }
     } catch (_) {} finally { setLoading(false); }
   }, []);
 
@@ -495,7 +503,11 @@ export default function AdminUserManagement() {
               {invitations.length} total
             </span>
           </div>
-          {invitations.length === 0 ? (
+          {invFetchError && invitations.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#DC2626', opacity: 0.8, fontSize: '0.85rem' }}>
+              ⚠️ Could not load invitations — {invFetchError}
+            </div>
+          ) : invitations.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#7B3FA0', opacity: 0.6, fontSize: '0.85rem' }}>
               No invitations sent yet.
             </div>
