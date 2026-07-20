@@ -29,8 +29,8 @@ def verify_test_isolation():
     print(f"Test Mode Move Target Path: {target_path}")
     print(f"Test Mode Move URL:         {url}")
 
-    assert target_path.startswith("b2://lumora-products/test/storage-tests/private/products/999/"), \
-        f"Test path MUST be isolated under test/storage-tests/! Got: {target_path}"
+    assert "test/storage-tests/" in target_path and "/private/products/999/" in target_path, \
+        f"Test path MUST be isolated under test/storage-tests/{{uuid}}/private/products/999/! Got: {target_path}"
 
     print("[PASS] Test environment isolation safety fix verified successfully! Automated tests can NEVER touch production public/products/ or private/products/ paths.")
 

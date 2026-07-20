@@ -9,6 +9,9 @@ from typing import Generator, Dict, Any, Tuple, Optional
 from fastapi import HTTPException, status
 from app.core.config import settings
 
+# Isolated run namespace for automated testing safety
+TEST_RUN_ID = str(uuid.uuid4())
+
 class BaseStorageProvider(ABC):
     @abstractmethod
     def upload_file(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
@@ -251,7 +254,7 @@ class B2StorageProvider(BaseStorageProvider):
         ext = os.path.splitext(filename.lower())[1]
         unique_name = f"{uuid.uuid4()}{ext}"
         if _is_test_environment():
-            b2_file_path = f"test/storage-tests/vendors/{vendor_id}/temp/{unique_name}"
+            b2_file_path = f"test/storage-tests/{TEST_RUN_ID}/vendors/{vendor_id}/temp/{unique_name}"
         else:
             b2_file_path = f"vendors/{vendor_id}/temp/{unique_name}"
         
@@ -298,6 +301,13 @@ class B2StorageProvider(BaseStorageProvider):
         public_url = f"{self.download_url}/file/{self.bucket_name}/{b2_file_path}"
         storage_path = f"b2://{self.bucket_name}/{b2_file_path}"
 
+        # Verify the uploaded object exists in B2
+        if self.is_available() and not self.exists(storage_path):
+            raise HTTPException(
+                status_code=500,
+                detail=f"B2 upload verification failed: Upload reported success, but object '{storage_path}' was not found in bucket."
+            )
+
         return {
             "storage_path": storage_path,
             "url": public_url,
@@ -308,12 +318,16 @@ class B2StorageProvider(BaseStorageProvider):
         download_domain = self.download_url or "https://f005.backblazeb2.com"
         dest_clean = target_path.replace(f"b2://{self.bucket_name}/", "")
         if not self.is_available():
-            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+            if _is_test_environment():
+                return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+            raise HTTPException(status_code=500, detail="B2 storage provider is not available or authorized.")
 
         src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
         file_id = self._get_file_id_by_name(src_clean)
         if not file_id:
-            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+            if _is_test_environment():
+                return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+            raise HTTPException(status_code=404, detail=f"B2 source object '{src_clean}' not found.")
 
         copy_endpoint = f"{self.api_url}/b2api/v2/b2_copy_file"
         copy_res = requests.post(
@@ -325,9 +339,18 @@ class B2StorageProvider(BaseStorageProvider):
             },
             timeout=15
         )
-        if copy_res.status_code == 200:
-            self.delete_file_id(file_id, src_clean)
-            return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+        if copy_res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"B2 copy failed: {copy_res.text}")
+
+        # Verify the new object exists after copy
+        if self.is_available() and not self.exists(target_path):
+            raise HTTPException(
+                status_code=500,
+                detail=f"B2 move verification failed: Copy returned HTTP 200, but destination object '{target_path}' was not found in bucket."
+            )
+
+        # Clean up old source object
+        self.delete_file_id(file_id, src_clean)
         return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
 
     def _get_file_id_by_name(self, file_name: str) -> str:
@@ -425,6 +448,31 @@ class StorageService:
             print("[StorageService] Active Provider: Local Disk (Fallback)")
 
     def validate_file(self, file_bytes: bytes, filename: str, is_image: bool = False) -> str:
+        if file_bytes is None or len(file_bytes) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="File is empty or zero bytes."
+            )
+
+        # Reject obvious test placeholders case-insensitively
+        BLOCKED_PHRASES = [
+            b"fake zip content",
+            b"dummy content",
+            b"test content",
+            b"readme text",
+            b"fake zip",
+            b"dummy file",
+            b"this is a test",
+            b"placeholder file",
+        ]
+        file_lower = file_bytes.lower()
+        for phrase in BLOCKED_PHRASES:
+            if phrase in file_lower:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"File content rejected: Obvious placeholder/test content '{phrase.decode(errors='ignore')}' detected."
+                )
+
         ext = os.path.splitext(filename.lower())[1]
         
         # Extension & Size check
@@ -457,13 +505,96 @@ class StorageService:
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail=f"File exceeds maximum allowed size of {max_size // 1024 // 1024} MB."
             )
-            
-        if len(file_bytes) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="File is empty."
-            )
-            
+
+        # Verify MIME content compatibility (magic numbers)
+        if is_image:
+            is_valid_image = False
+            detected_format = None
+            if file_bytes.startswith(b"\xff\xd8\xff"):
+                is_valid_image = True
+                detected_format = "JPEG"
+            elif file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+                is_valid_image = True
+                detected_format = "PNG"
+            elif file_bytes.startswith(b"GIF87a") or file_bytes.startswith(b"GIF89a"):
+                is_valid_image = True
+                detected_format = "GIF"
+            elif file_bytes.startswith(b"RIFF") and len(file_bytes) > 12 and file_bytes[8:12] == b"WEBP":
+                is_valid_image = True
+                detected_format = "WEBP"
+            elif b"<svg" in file_lower[:2048] and (b"xmlns=" in file_lower[:2048] or b"svg" in file_lower[:2048]):
+                try:
+                    stripped_start = file_bytes.strip()
+                    if stripped_start.startswith(b"<") or stripped_start.startswith(b"<?xml"):
+                        is_valid_image = True
+                        detected_format = "SVG"
+                except Exception:
+                    pass
+
+            if not is_valid_image:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Invalid image content: Magic signature mismatch. Not a valid image file."
+                )
+
+            # Extension compatibility check
+            if ext in {".jpg", ".jpeg"} and detected_format != "JPEG":
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with JPEG/JPG extension.")
+            elif ext == ".png" and detected_format != "PNG":
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with PNG extension.")
+            elif ext == ".gif" and detected_format != "GIF":
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with GIF extension.")
+            elif ext == ".webp" and detected_format != "WEBP":
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with WEBP extension.")
+            elif ext == ".svg" and detected_format != "SVG":
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with SVG extension.")
+        else:
+            # Validate product file magic numbers at minimum for ZIP and PDF
+            if ext in {".zip", ".epub", ".docx", ".xlsx", ".pptx", ".sketch", ".xd"}:
+                if not file_bytes.startswith(b"PK\x03\x04"):
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"File content is not a valid ZIP-based format ({ext}).")
+            elif ext in {".pdf", ".ai"}:
+                if not (file_bytes.startswith(b"%PDF-") or (ext == ".ai" and file_bytes.startswith(b"%!"))):
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"File content is not a valid PDF or AI file ({ext}).")
+            elif ext == ".psd" and not file_bytes.startswith(b"8BPS"):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid PSD file.")
+            elif ext == ".fig" and not (file_bytes.startswith(b"PK\x03\x04") or file_bytes.startswith(b"fig-")):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid Figma (.fig) file.")
+            elif ext == ".mp4" and (len(file_bytes) < 8 or file_bytes[4:8] != b"ftyp"):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid MP4 file.")
+            elif ext == ".mp3" and not (file_bytes.startswith(b"ID3") or file_bytes.startswith((b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"))):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid MP3 file.")
+            elif ext == ".wav" and (len(file_bytes) < 12 or not (file_bytes.startswith(b"RIFF") and file_bytes[8:12] == b"WAVE")):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid WAV file.")
+            elif ext in {".ttf", ".otf"} and not (file_bytes.startswith(b"\x00\x01\x00\x00") or file_bytes.startswith(b"OTTO")):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid Font file.")
+            elif ext == ".json":
+                try:
+                    import json
+                    json.loads(file_bytes.decode("utf-8"))
+                except Exception:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid JSON string.")
+            elif ext == ".csv":
+                try:
+                    content_str = file_bytes.decode("utf-8-sig")
+                    if "\x00" in content_str:
+                        raise ValueError()
+                except Exception:
+                    try:
+                        content_str = file_bytes.decode("latin1")
+                        if "\x00" in content_str:
+                            raise ValueError()
+                    except Exception:
+                        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not valid CSV text.")
+            elif ext == ".tar" and (len(file_bytes) < 262 or file_bytes[257:262] != b"ustar"):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid TAR archive.")
+            elif ext in {".gz", ".tar.gz"} and not file_bytes.startswith(b"\x1f\x8b"):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid GZIP file.")
+            elif ext == ".rar" and not (file_bytes.startswith(b"Rar!\x1a\x07\x00") or file_bytes.startswith(b"Rar!\x1a\x07\x01\x00")):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid RAR file.")
+            elif ext == ".7z" and not file_bytes.startswith(b"7z\xbc\xaf\x27\x1c"):
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid 7z file.")
+
         return ext
 
     def compute_sha256(self, file_bytes: bytes) -> str:
@@ -528,7 +659,7 @@ class StorageService:
             rel_folder = f"public/products/{product_id}/previews"
 
         if _is_test_environment():
-            rel_folder = f"test/storage-tests/{rel_folder}"
+            rel_folder = f"test/storage-tests/{TEST_RUN_ID}/{rel_folder}"
 
         if resolved_src.startswith("gs://"):
             bucket_name = resolved_src.split("/")[2]

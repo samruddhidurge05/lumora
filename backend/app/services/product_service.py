@@ -174,6 +174,9 @@ class ProductService:
             return product
 
         except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error("[product-service] Product creation database/storage transaction failed: %s", e, exc_info=True)
             db.rollback()
             # Rollback: Clean up any moved permanent files in GCS/disk
             for path in moved_files:
@@ -355,6 +358,9 @@ class ProductService:
             return product
 
         except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error("[product-service] Product update transaction failed for product ID %s: %s", product_id, e, exc_info=True)
             db.rollback()
             # Clean up any new uploads since database transaction failed
             for path in new_files_to_delete:

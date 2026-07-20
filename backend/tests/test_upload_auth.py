@@ -95,7 +95,32 @@ def _token_for_role(role: str) -> str:
         db.close()
 
 
-def _fake_file(filename: str = "test.zip", content: bytes = b"fake zip content"):
+# Real ZIP local file header magic: PK\x03\x04 + 22 bytes of minimal header padding
+_REAL_ZIP_BYTES = (
+    b"PK\x03\x04\x14\x00\x00\x00\x00\x00" +  # signature + version + flags + method
+    b"\x00\x00\x00\x00"                     +  # last mod time + date
+    b"\x00\x00\x00\x00"                     +  # crc-32
+    b"\x00\x00\x00\x00"                     +  # compressed size
+    b"\x00\x00\x00\x00"                     +  # uncompressed size
+    b"\x04\x00\x00\x00"                     +  # file name length + extra field length
+    b"test"                                  +  # file name
+    b"\x00" * 64                               # payload padding (non-placeholder content)
+)
+
+# Minimal valid PNG: 8-byte signature + IHDR chunk
+_REAL_PNG_BYTES = (
+    b"\x89PNG\r\n\x1a\n"  +  # PNG signature
+    b"\x00\x00\x00\rIHDR" +  # IHDR chunk length + type
+    b"\x00\x00\x00\x01"   +  # width = 1
+    b"\x00\x00\x00\x01"   +  # height = 1
+    b"\x08\x02"           +  # bit depth = 8, color type = 2 (RGB)
+    b"\x00\x00\x00"       +  # compression, filter, interlace
+    b"\x90wS\xde"         +  # CRC
+    b"\x00" * 16             # padding
+)
+
+
+def _fake_file(filename: str = "test.zip", content: bytes = _REAL_ZIP_BYTES):
     return ("file", (filename, io.BytesIO(content), "application/zip"))
 
 
@@ -121,7 +146,7 @@ def test_admin_can_upload_image(client):
     token = _token_for_role("admin")
     response = client.post(
         "/api/uploads/image",
-        files=[("file", ("test.png", io.BytesIO(b"fake png content"), "image/png"))],
+        files=[("file", ("test.png", io.BytesIO(_REAL_PNG_BYTES), "image/png"))],
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200, (
