@@ -168,7 +168,19 @@ def list_team_members(
     admin_user: User = Depends(require_admin_role),
 ):
     """List all active admin team members sorted by last_login_at descending."""
+    import os
+    from app.db.database import engine as _engine
+    db_file_path = str(_engine.url).replace("sqlite:///", "")
+    print(f"[FORENSIC-TEAM] engine.url: {_engine.url}")
+    if os.path.exists(db_file_path):
+        print(f"[FORENSIC-TEAM] DB file exists at: {os.path.abspath(db_file_path)}")
+        print(f"[FORENSIC-TEAM] DB file size: {os.path.getsize(db_file_path)} bytes")
+    else:
+        print(f"[FORENSIC-TEAM] DB file NOT found at: {os.path.abspath(db_file_path)}")
+
     roles = db.query(AdminRole).filter(AdminRole.is_active == True).all()
+    print(f"[FORENSIC-TEAM] db.query(AdminRole) returned {len(roles)} active roles")
+
     result = []
     for r in roles:
         user = db.query(User).filter(User.id == r.user_id).first()
@@ -188,6 +200,7 @@ def list_team_members(
             })
     # Sort: last_login_at desc, nulls last
     result.sort(key=lambda m: m["last_login_at"] or "", reverse=True)
+    print(f"[FORENSIC-TEAM] list_team_members returning {len(result)} items")
     return result
 
 
@@ -553,6 +566,16 @@ def list_invitations(
     admin_user: User = Depends(require_admin_role),
 ):
     """List invitations — includes revoked status. (Req 3)"""
+    import os
+    from app.db.database import engine as _engine
+    db_file_path = str(_engine.url).replace("sqlite:///", "")
+    print(f"[FORENSIC-INV] engine.url: {_engine.url}")
+    if os.path.exists(db_file_path):
+        print(f"[FORENSIC-INV] DB file exists at: {os.path.abspath(db_file_path)}")
+        print(f"[FORENSIC-INV] DB file size: {os.path.getsize(db_file_path)} bytes")
+    else:
+        print(f"[FORENSIC-INV] DB file NOT found at: {os.path.abspath(db_file_path)}")
+
     now = datetime.now(timezone.utc)
 
     if include_history:
@@ -564,7 +587,10 @@ def list_invitations(
                                AdminInvitation.expires_at > now)
                        .order_by(AdminInvitation.created_at.desc()).all())
 
-    return [_invitation_payload(inv, now) for inv in invitations]
+    print(f"[FORENSIC-INV] db.query(AdminInvitation) returned {len(invitations)} records (include_history={include_history})")
+    res = [_invitation_payload(inv, now) for inv in invitations]
+    print(f"[FORENSIC-INV] returning {len(res)} items")
+    return res
 
 
 # ── DELETE /team/invitations/{invitation_id} ──────────────────────────────────
