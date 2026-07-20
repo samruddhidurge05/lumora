@@ -1443,28 +1443,34 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 /* ── 26h. WHY LUMORA grid ──────────────────────────────────────── */
 @media (max-width: 640px) {
   .lumora-why-grid {
+    display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
   }
-  /* Feature card */
-  .lumora-why-grid > div {
+  /* Feature card — Reveal wraps in motion.div, card is inside that */
+  .lumora-why-grid > * {
+    min-width: 0 !important;   /* prevent grid blowout */
+    width: 100% !important;
+  }
+  .lumora-why-grid > * > div {
     padding: 20px 16px !important;
     border-radius: 18px !important;
+    min-width: 0 !important;
   }
   /* Icon */
-  .lumora-why-grid > div > :first-child {
+  .lumora-why-grid > * > div > :first-child {
     width: 38px !important;
     height: 38px !important;
     margin-bottom: 12px !important;
     border-radius: 11px !important;
   }
   /* Title */
-  .lumora-why-grid > div h3 {
+  .lumora-why-grid > * > div h3 {
     font-size: 0.82rem !important;
     margin-bottom: 6px !important;
   }
   /* Description */
-  .lumora-why-grid > div p {
+  .lumora-why-grid > * > div p {
     font-size: 0.74rem !important;
     line-height: 1.55 !important;
   }
