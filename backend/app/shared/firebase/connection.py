@@ -9,10 +9,10 @@ try:
     
     # Avoid initializing multiple times
     if not firebase_admin._apps:
-        # Check env var for path to JSON certificate
+        # Check env var for JSON certificate or path
         cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
         
-        # If env var is not set, look in the current folder or project root
+        # If env var is not set, look in the default folders
         if not cert_path:
             base_dir = os.path.dirname(os.path.abspath(__file__)) # backend/app/shared/firebase
             path1 = os.path.join(base_dir, "serviceAccountKey.json")
@@ -23,22 +23,39 @@ try:
                 cert_path = path2
             else:
                 cert_path = path1
-            
-        if os.path.exists(cert_path):
-            cred = credentials.Certificate(cert_path)
-            firebase_admin.initialize_app(cred)
-            db = firestore.client()
-            firebase_connected = True
-            print("[firebase-connection] Firebase Admin SDK initialized successfully via serviceAccountKey.json.")
-        else:
-            # Fall back to default credentials (for GCP environments, etc.)
+
+        import json
+        is_json_string = False
+        if cert_path:
             try:
-                firebase_admin.initialize_app()
+                # Try parsing as JSON dict directly (useful for container envs like Render)
+                parsed_json = json.loads(cert_path)
+                if isinstance(parsed_json, dict):
+                    cred = credentials.Certificate(parsed_json)
+                    firebase_admin.initialize_app(cred)
+                    db = firestore.client()
+                    firebase_connected = True
+                    is_json_string = True
+                    print("[firebase-connection] Firebase Admin SDK initialized successfully via inline JSON.")
+            except Exception:
+                pass
+
+        if not is_json_string:
+            if cert_path and os.path.exists(cert_path):
+                cred = credentials.Certificate(cert_path)
+                firebase_admin.initialize_app(cred)
                 db = firestore.client()
                 firebase_connected = True
-                print("[firebase-connection] Firebase Admin SDK initialized via Application Default Credentials.")
-            except Exception:
-                print("[firebase-connection] Warning: serviceAccountKey.json not found and default auth failed. Firebase admin features will be unavailable.")
+                print("[firebase-connection] Firebase Admin SDK initialized successfully via serviceAccountKey.json.")
+            else:
+                # Fall back to default credentials (for GCP environments, etc.)
+                try:
+                    firebase_admin.initialize_app()
+                    db = firestore.client()
+                    firebase_connected = True
+                    print("[firebase-connection] Firebase Admin SDK initialized via Application Default Credentials.")
+                except Exception:
+                    print("[firebase-connection] Warning: serviceAccountKey.json not found and default auth failed. Firebase admin features will be unavailable.")
     else:
         db = firestore.client()
         firebase_connected = True
