@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 import shutil
 import hashlib
@@ -245,6 +246,40 @@ class B2StorageProvider(BaseStorageProvider):
     def _ensure_auth(self):
         if not self.is_available():
             self._authorize()
+
+    def get_public_download_token(self, prefix: str = "public/", valid_seconds: int = 86400) -> str:
+        self._ensure_auth()
+        if not self.is_available():
+            return ""
+            
+        now = time.time()
+        if hasattr(self, "_public_token_cache") and self._public_token_cache.get("prefix") == prefix:
+            if now < self._public_token_cache.get("expires_at", 0):
+                return self._public_token_cache.get("token", "")
+
+        url_endpoint = f"{self.api_url}/b2api/v2/b2_get_download_authorization"
+        try:
+            res = requests.post(
+                url_endpoint,
+                headers={"Authorization": self.auth_token},
+                json={
+                    "bucketId": self.bucket_id,
+                    "fileNamePrefix": prefix,
+                    "validDurationInSeconds": valid_seconds,
+                },
+                timeout=10
+            )
+            if res.status_code == 200:
+                token = res.json().get("authorizationToken", "")
+                self._public_token_cache = {
+                    "prefix": prefix,
+                    "token": token,
+                    "expires_at": now + valid_seconds - 3600
+                }
+                return token
+        except Exception as e:
+            print(f"[B2Storage] Failed to get public download token: {e}")
+        return ""
 
     def upload_file(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
         self._ensure_auth()

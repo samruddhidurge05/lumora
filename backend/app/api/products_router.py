@@ -61,7 +61,12 @@ def resolve_media_url(url: str, category: str = None) -> Optional[str]:
                 return url  # Keep as internal storage path for secure download streaming
             from app.services.storage_service import storage_service
             download_domain = getattr(storage_service.b2_provider, "download_url", None) or "https://f005.backblazeb2.com"
-            return f"{download_domain}/file/{bucket_name}/{file_path}"
+            base_url = f"{download_domain}/file/{bucket_name}/{file_path}"
+            if file_path.startswith("public/"):
+                pub_token = storage_service.b2_provider.get_public_download_token("public/")
+                if pub_token and "?Authorization=" not in base_url:
+                    return f"{base_url}?Authorization={pub_token}"
+            return base_url
 
     # 1. Check if it's a local upload URL
     url_lower = url.lower()
