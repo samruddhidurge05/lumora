@@ -229,10 +229,16 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     min-height: auto !important;
     align-items: flex-start !important;
   }
+  /* Force single column — override inline gridTemplateColumns:'1fr 1fr' and gap:'64px' */
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
   /* Center the hero content column on mobile — full width, no 520px cap */
   .hero-grid > :first-child {
     text-align: center !important;
     max-width: 100% !important;
+    width: 100% !important;
   }
   /* Headline: much smaller on mobile — no more 10vw oversizing */
   .home-hero-title {
