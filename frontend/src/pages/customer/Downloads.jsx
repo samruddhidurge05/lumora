@@ -162,24 +162,22 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
 
   const configs = {
     idle: {
-      label: variant === 'redownload' ? 'Re-download' : 'Download',
-      icon: variant === 'redownload' ? <RotateCcw size={12} /> : <Download size={12} />,
-      bg: variant === 'primary'
-        ? 'linear-gradient(135deg, #4E3B31, #3A2820)'
-        : 'rgba(78,59,49,0.06)',
-      color: variant === 'primary' ? '#FFFDF9' : '#4E3B31',
-      border: variant === 'primary' ? 'transparent' : '1px solid rgba(78,59,49,0.12)',
+      label: 'Download',
+      icon: <Download size={14} />,
+      bg: 'linear-gradient(135deg, #4E3B31, #2C1E18)',
+      color: '#FFFDF9',
+      border: 'transparent',
     },
     downloading: {
-      label: 'Downloading…',
+      label: 'Opening File…',
       icon: <div style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />,
       bg: 'rgba(78,59,49,0.08)',
       color: '#4E3B31',
       border: '1px solid rgba(78,59,49,0.12)',
     },
     done: {
-      label: 'Completed!',
-      icon: <CheckCircle size={12} />,
+      label: 'Opened!',
+      icon: <CheckCircle size={14} />,
       bg: 'linear-gradient(135deg, #3DB877, #2D9B60)',
       color: '#FFFDF9',
       border: 'transparent',
@@ -192,15 +190,14 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     <button
       onClick={handleDownload}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: '6px',
-        padding: '8px 16px', borderRadius: '10px',
+        display: 'inline-flex', alignItems: 'center', gap: '7px',
+        padding: '9px 18px', borderRadius: '12px',
         background: c.bg, color: c.color, border: c.border,
-        fontSize: '0.72rem', fontWeight: 700,
+        fontSize: '0.75rem', fontWeight: 700,
         fontFamily: 'var(--font-sans)', cursor: 'pointer',
         outline: 'none', transition: 'all 0.3s ease',
         transform: state === 'done' ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: state === 'done' ? '0 4px 16px rgba(61,184,119,0.35)' :
-          variant === 'primary' ? '0 4px 16px rgba(78,59,49,0.18)' : 'none',
+        boxShadow: state === 'done' ? '0 4px 16px rgba(61,184,119,0.35)' : '0 4px 14px rgba(45,30,24,0.20)',
         whiteSpace: 'nowrap',
       }}
     >
@@ -791,7 +788,11 @@ function VaultCard({ product, isHovered, onHover }) {
       }}
     >
       {/* Thumbnail */}
-      <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
+      <div 
+        onClick={handleOpen}
+        title="Click to download / open product file"
+        style={{ position: 'relative', height: 180, overflow: 'hidden', cursor: 'pointer' }}
+      >
         <img
           src={product.thumbnail}
           alt={product.name}
@@ -838,7 +839,13 @@ function VaultCard({ product, isHovered, onHover }) {
       <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Title + version */}
         <div>
-          <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', lineHeight: 1.2 }}>{product.name}</h3>
+          <h3 
+            onClick={handleOpen}
+            title="Click to download / open product file"
+            style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', lineHeight: 1.2, cursor: 'pointer' }}
+          >
+            {product.name}
+          </h3>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 5, flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', fontWeight: 700, background: 'rgba(78,59,49,0.05)', padding: '2px 8px', borderRadius: 6 }}>
               {product.version}
@@ -890,22 +897,7 @@ function VaultCard({ product, isHovered, onHover }) {
               </span>
             </div>
           ) : (
-            <>
-              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
-              <DownloadButton productName={product.name} variant="redownload" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
-              <button 
-                onClick={handleOpen}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '8px 14px', borderRadius: 10, marginLeft: 'auto',
-                  background: 'rgba(78,59,49,0.04)', border: '1px solid rgba(78,59,49,0.08)',
-                  color: 'var(--color-mocha)', fontSize: '0.7rem', fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'var(--font-sans)', outline: 'none',
-                }}
-              >
-                <ExternalLink size={11} /> Open
-              </button>
-            </>
+            <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
           )}
         </div>
       </div>
