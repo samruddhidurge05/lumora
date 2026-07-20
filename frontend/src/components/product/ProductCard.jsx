@@ -23,8 +23,9 @@ export default function ProductCard({ product }) {
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}
         <button onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
-          style={{ position: 'absolute', top: '10px', right: '10px', width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted ? '#E11D48' : 'var(--text-muted)' }}>
-          <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} />
+          title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          style={{ position: 'absolute', top: '10px', right: '10px', width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWishlisted ? '#E11D48' : 'var(--text-muted)', transition: 'all 0.2s ease' }}>
+          <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} className={isWishlisted ? 'heart-pop' : ''} />
         </button>
         {isOwned && <span style={{ position: 'absolute', bottom: '8px', left: '8px', fontSize: '0.58rem', background: 'rgba(34,197,94,0.90)', color: '#fff', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>OWNED</span>}
       </div>
@@ -41,8 +42,8 @@ export default function ProductCard({ product }) {
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '7px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{formatPrice(product.price)}</span>
-            <button onClick={e => { e.stopPropagation(); addToCart(product); }} className="btn-premium" style={{ padding: '6px 11px', fontSize: '0.7rem', borderRadius: '7px' }}>
-              <ShoppingBag size={11} /> {inCart ? '✓ Added' : 'Add'}
+            <button onClick={e => { e.stopPropagation(); addToCart(product); }} className={`btn-premium ${inCart ? 'btn-added-state' : ''}`} style={{ padding: '6px 11px', fontSize: '0.7rem', borderRadius: '7px' }}>
+              <ShoppingBag size={11} className={inCart ? 'cart-added-icon' : ''} /> {inCart ? '✓ Added' : 'Add'}
             </button>
           </div>
           <button onClick={e => { e.stopPropagation(); buyNow(product); }} className="btn-premium btn-premium-solid buy-now-glow" style={{ width: '100%', padding: '8px', fontSize: '0.75rem', borderRadius: '8px', justifyContent: 'center' }}>

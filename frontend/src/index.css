@@ -203,17 +203,83 @@ button { font-family: inherit; }
 @keyframes shimmer        { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes skeletonPulse  { 0%,100%{opacity:.5} 50%{opacity:1} }
 
+/* Premium Micro-Interactions Keyframes */
+@keyframes heart-pulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.3); }
+  65% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cart-check {
+  0% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes page-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Animation utilities ─────────────────────────── */
 .animate-fade-in      { animation: fade-in      .7s cubic-bezier(.16,1,.3,1) both; }
 .animate-fade-in-up   { animation: fade-in-up   .8s cubic-bezier(.16,1,.3,1) both; }
 .animate-scale-in     { animation: scale-in     .6s cubic-bezier(.16,1,.3,1) both; }
 .animate-float        { animation: float-slow   4s  ease-in-out infinite; }
 .animate-pulse-glow   { animation: pulse-glow   3s  ease-in-out infinite; }
+
+.heart-pop            { animation: heart-pulse 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.cart-added-icon      { animation: cart-check  0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.page-enter           { animation: page-fade-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 .delay-100  { animation-delay:.10s; }
 .delay-200  { animation-delay:.20s; }
 .delay-300  { animation-delay:.30s; }
 .delay-400  { animation-delay:.40s; }
 .delay-500  { animation-delay:.50s; }
+
+/* Product Card Smooth Hover Zoom */
+.glass-card img {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+.glass-card:hover img {
+  transform: scale(1.03) !important;
+}
+
+/* Button Tactile Active Feedback */
+.btn-premium:active, .btn-premium-solid:active, button:active {
+  transform: scale(0.98) translateY(0) !important;
+}
+
+.btn-added-state {
+  background: rgba(34, 197, 94, 0.14) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  color: #15803D !important;
+}
+
+/* Touch device safety & prefers-reduced-motion */
+@media (hover: none) {
+  .glass-card:hover {
+    transform: none !important;
+    box-shadow: var(--glass-shadow) !important;
+  }
+  .glass-card:hover img {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .glass-card:hover { transform: none !important; }
+  .glass-card:hover img { transform: none !important; }
+}
 
 /* ── Section layouts ─────────────────────────────── */
 .section-pad { padding: 80px clamp(1.5rem,6vw,7rem); }
