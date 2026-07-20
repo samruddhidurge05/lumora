@@ -5,6 +5,7 @@ import ProductImage from './ProductImage';
 
 export default function ProductCard({ product }) {
   const { addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, cart } = useApp();
+  const [isHovered, setIsHovered] = React.useState(false);
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
   const inCart = cart.some(item => String(item.id) === String(product.id));
@@ -14,11 +15,19 @@ export default function ProductCard({ product }) {
       className="glass-card"
       onClick={() => navigateTo('product-detail', product.id)}
       style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', border: '1px solid rgba(196,181,253,0.22)', transition: 'transform 0.2s, box-shadow 0.2s' }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(45,0,96,0.15)'; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; }}
+      onMouseEnter={e => {
+        setIsHovered(true);
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 16px 40px rgba(45,0,96,0.15)';
+      }}
+      onMouseLeave={e => {
+        setIsHovered(false);
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'var(--shadow-premium)';
+      }}
     >
       <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
-        <ProductImage product={product} style={{ objectFit: 'cover' }} />
+        <ProductImage product={product} isHovered={isHovered} style={{ objectFit: 'cover' }} />
         {product.badge && (
           <span style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.6rem', background: 'rgba(45,0,77,0.70)', color: 'var(--color-lavender)', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>{product.badge}</span>
         )}

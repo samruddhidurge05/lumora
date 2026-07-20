@@ -67,13 +67,44 @@ function isDirectlyLoadable(url) {
  *  2. Resolve the pCloud share link from preview_images/image_urls.
  *  3. Fallback to <ProductGradientCover> (gradient card) on failure or missing images.
  */
-export default function ProductImage({ product, style, className }) {
+export default function ProductImage({ product, isHovered = false, style, className }) {
   const [src, setSrc] = useState(() => {
-    // Use preview immediately if it's directly loadable
     return isDirectlyLoadable(product?.preview) ? product.preview : null;
   });
+  const [loaded, setLoaded] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  // Extract all available valid image URLs
+  const allImages = React.useMemo(() => {
+    const list = [];
+    if (isDirectlyLoadable(product?.preview)) list.push(product.preview);
+    if (isDirectlyLoadable(product?.thumbnail) && !list.includes(product.thumbnail)) list.push(product.thumbnail);
+    if (Array.isArray(product?.preview_images)) {
+      product.preview_images.forEach(img => {
+        if (isDirectlyLoadable(img) && !list.includes(img)) list.push(img);
+      });
+    }
+    if (Array.isArray(product?.image_urls)) {
+      product.image_urls.forEach(img => {
+        if (isDirectlyLoadable(img) && !list.includes(img)) list.push(img);
+      });
+    }
+    return list;
+  }, [product]);
+
+  // Determine displayed image URL with hover support if multiple images exist
+  const displaySrc = React.useMemo(() => {
+    if (isHovered && allImages.length > 1) {
+      return allImages[1];
+    }
+    return src || allImages[0] || null;
+  }, [isHovered, allImages, src]);
+
+  // Reset smooth loaded state whenever displaySrc changes
+  useEffect(() => {
+    setLoaded(false);
+  }, [displaySrc]);
 
   useEffect(() => {
     if (!product) { setFailed(true); return; }
@@ -115,11 +146,11 @@ export default function ProductImage({ product, style, className }) {
     return () => { cancelled = true; };
   }, [product?.id]);
 
-  if (failed || (!src && !resolving)) {
+  if (failed || (!displaySrc && !resolving)) {
     return <ProductGradientCover product={product} />;
   }
 
-  if (resolving && !src) {
+  if (resolving && !displaySrc) {
     // Show gradient with a subtle shimmer while resolving
     return (
       <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#e8d5f5 0%,#c4b5fd 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -129,13 +160,24 @@ export default function ProductImage({ product, style, className }) {
   }
 
   return (
-    <img
-      src={src}
-      alt={product?.title || ''}
-      loading="lazy"
-      onError={() => setFailed(true)}
-      style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }}
-      className={className}
-    />
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: 'rgba(240, 235, 245, 0.4)' }}>
+      <img
+        src={displaySrc}
+        alt={product?.title || ''}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'opacity, transform',
+          ...style
+        }}
+        className={className}
+      />
+    </div>
   );
 }
