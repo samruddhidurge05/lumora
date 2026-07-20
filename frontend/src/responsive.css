@@ -229,9 +229,10 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     min-height: auto !important;
     align-items: flex-start !important;
   }
-  /* Center the hero content column on mobile */
+  /* Center the hero content column on mobile — full width, no 520px cap */
   .hero-grid > :first-child {
     text-align: center !important;
+    max-width: 100% !important;
   }
   /* Headline: much smaller on mobile — no more 10vw oversizing */
   .home-hero-title {
