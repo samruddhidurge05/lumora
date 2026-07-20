@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = Field("secret", env='JWT_SECRET_KEY')
     JWT_ALGORITHM: str = 'HS256'
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFUND_WINDOW_DAYS: int = Field(14, env='REFUND_WINDOW_DAYS')
 
     # Firebase project — used for verifying Firebase ID tokens
     FIREBASE_PROJECT_ID: str = Field("", env="FIREBASE_PROJECT_ID")

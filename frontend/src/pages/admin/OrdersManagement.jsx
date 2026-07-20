@@ -171,6 +171,16 @@ export default function OrdersManagement() {
   const [selectedProductType, setSelectedProductType] = useState("All");
   const [sortBy, setSortBy] = useState("newest"); // newest | value-desc | risk-desc
 
+  // Refund request state management
+  const [viewMode, setViewMode] = useState("orders"); // "orders" | "tickets"
+  const [refundTickets, setRefundTickets] = useState([]);
+  const [selectedTicketId, setSelectedTicketId] = useState("");
+  const [ticketApproveNotes, setTicketApproveNotes] = useState("");
+  const [ticketRejectNotes, setTicketRejectNotes] = useState("");
+  const [submittingTicket, setSubmittingTicket] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+
   // Pagination state (M6)
   const [orderPage, setOrderPage] = useState(1);
   const [orderTotalPages, setOrderTotalPages] = useState(1);
@@ -195,9 +205,6 @@ export default function OrdersManagement() {
   // Responsive Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-
-
-
   // --- FIRESTORE DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     setLoading(true);
@@ -221,11 +228,29 @@ export default function OrdersManagement() {
     }
   }, [ORDER_PAGE_SIZE]);
 
+  const loadRefundTickets = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await backendFetch('/admin/refunds/');
+      const items = Array.isArray(data) ? data : [];
+      setRefundTickets(items);
+      if (items.length > 0) setSelectedTicketId(items[0].id);
+    } catch (err) {
+      console.error('Failed to load refund tickets:', err);
+      setLoadError('Failed to load refund tickets.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
-  }, [loadOrders]);
-
-
+    if (viewMode === 'orders') {
+      loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
+    } else {
+      loadRefundTickets();
+    }
+  }, [viewMode, selectedStatus, loadOrders, loadRefundTickets]);
 
   // Procedural audio synchronization
   useEffect(() => {
@@ -335,6 +360,11 @@ export default function OrdersManagement() {
     return orders.find(o => o.id === selectedOrderId) || processedOrders[0] || null;
   }, [orders, selectedOrderId, processedOrders]);
 
+  // Currently focused refund ticket
+  const selectedTicket = useMemo(() => {
+    return refundTickets.find(t => t.id === selectedTicketId) || refundTickets[0] || null;
+  }, [refundTickets, selectedTicketId]);
+
   // Sync selected order in case the search removes the currently selected ID
   useEffect(() => {
     if (processedOrders.length > 0 && (!selectedOrderId || !processedOrders.find(o => o.id === selectedOrderId))) {
@@ -342,7 +372,49 @@ export default function OrdersManagement() {
     }
   }, [processedOrders, selectedOrderId]);
 
+  // --- REFUND TICKET ACTION HANDLERS ---
+  const handleApproveTicket = async () => {
+    if (!selectedTicket) return;
+    setSubmittingTicket(true);
+    try {
+      await backendFetch(`/admin/refunds/${selectedTicket.id}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ notes: ticketApproveNotes || null })
+      });
+      triggerNotification(`Refund TKT-${selectedTicket.id} approved and gateway initiated.`);
+      setShowApproveModal(false);
+      setTicketApproveNotes('');
+      loadRefundTickets();
+    } catch (err) {
+      console.error('Approve failed:', err);
+      triggerNotification(err.message || 'Failed to approve refund.', 'warning');
+    } finally {
+      setSubmittingTicket(false);
+    }
+  };
+
+  const handleRejectTicket = async () => {
+    if (!selectedTicket) return;
+    setSubmittingTicket(true);
+    try {
+      await backendFetch(`/admin/refunds/${selectedTicket.id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ notes: ticketRejectNotes })
+      });
+      triggerNotification(`Refund TKT-${selectedTicket.id} rejected.`, 'warning');
+      setShowRejectModal(false);
+      setTicketRejectNotes('');
+      loadRefundTickets();
+    } catch (err) {
+      console.error('Reject failed:', err);
+      triggerNotification(err.message || 'Failed to reject refund.', 'warning');
+    } finally {
+      setSubmittingTicket(false);
+    }
+  };
+
   // --- ORDER STATE HANDLERS (Phase C: Firestore-backed) ---
+
   const handleUpdateStatus = async (orderId, newStatus) => {
     // Optimistic update — UI reflects change immediately
     setOrders(prev => prev.map(o => {
@@ -647,6 +719,35 @@ export default function OrdersManagement() {
           subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
         />
 
+        {/* --- VIEW MODE TOGGLE --- */}
+        <div className="flex gap-3 mb-6 p-1 bg-stone-100/50 rounded-2xl border border-stone-200/30 w-fit">
+          <button
+            onClick={() => { sysSound.playTap(); setViewMode("orders"); }}
+            className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 ${
+              viewMode === "orders"
+                ? "bg-[#2D004D] text-white shadow-md"
+                : "hover:bg-white/60 text-[#7B3FA0]"
+            }`}
+          >
+            Transactions Ledger
+          </button>
+          <button
+            onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
+            className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              viewMode === "tickets"
+                ? "bg-[#2D004D] text-white shadow-md"
+                : "hover:bg-white/60 text-[#7B3FA0]"
+            }`}
+          >
+            Refund Tickets Queue
+            {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
+              <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
+                {refundTickets.filter(t => t.status === "PENDING").length}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* --- TOP CONTROL STRIP (Metrics Engine) --- */}
         <StatsGrid columns={4}>
           
@@ -827,12 +928,89 @@ export default function OrdersManagement() {
               }
             />
 
-            {/* THE LEDGER RECORD TABLE */}
+            {/* THE LEDGER RECORD TABLE OR REFUND TICKETS QUEUE */}
             <TableContainer>
               
               <div className="overflow-x-auto w-full">
-                
-                {processedOrders.length > 0 ? (
+
+                {viewMode === "tickets" ? (
+                  /* ── REFUND TICKETS TABLE ── */
+                  refundTickets.length > 0 ? (
+                    <table className="w-full border-collapse text-left">
+                      <thead>
+                        <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                          <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
+                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
+                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
+                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
+                          <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {refundTickets.map((t) => {
+                          const isFocused = selectedTicketId === t.id;
+                          const ticketStatusStyles = {
+                            PENDING: "bg-amber-100/70 text-amber-700 border-amber-200",
+                            UNDER_REVIEW: "bg-blue-100/70 text-blue-700 border-blue-200",
+                            APPROVED: "bg-green-100/70 text-green-700 border-green-200",
+                            PROCESSING: "bg-green-100/70 text-green-700 border-green-200 animate-pulse",
+                            REFUNDED: "bg-green-100/70 text-green-700 border-green-200",
+                            FAILED: "bg-red-100/70 text-red-700 border-red-200",
+                            REJECTED: "bg-red-100/70 text-red-700 border-red-200",
+                            CANCELLED: "bg-stone-100 text-stone-500 border-stone-200"
+                          };
+                          return (
+                            <motion.tr
+                              key={t.id}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
+                                isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
+                              }`}
+                              onClick={() => { sysSound.playTap(); setSelectedTicketId(t.id); }}
+                            >
+                              <td className="py-4 px-5 font-mono text-[11px] font-bold text-[#2D004D]">TKT-{t.id}</td>
+                              <td className="py-4 px-4">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
+                                  <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-[11px] text-[#2D004D] max-w-[140px] truncate">{t.product_name}</td>
+                              <td className="py-4 px-4 text-right font-black text-[#2D004D] text-xs">₹{t.requested_amount?.toFixed(2)}</td>
+                              <td className="py-4 px-4 text-center">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
+                                  {t.status}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span className={`text-[10px] font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                                  {t.is_downloaded ? '🚨 YES' : '✅ NO'}
+                                </span>
+                              </td>
+                              <td className="py-4 px-5 text-center text-[10px] text-[#7B3FA0]">
+                                {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
+                              </td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="py-20 flex flex-col items-center justify-center text-center px-6">
+                      <div className="w-16 h-16 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-4">
+                        <span className="text-[#7B3FA0] text-2xl">✓</span>
+                      </div>
+                      <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">No refund requests pending</h4>
+                      <p className="text-[10px] text-[#7B3FA0] max-w-sm">All customer refund requests have been resolved or none have been submitted.</p>
+                    </div>
+                  )
+                ) : (
+                /* ── ORDERS TABLE ── */
+                processedOrders.length > 0 ? (
+
                   <table className="w-full border-collapse text-left">
                     <thead>
                       <tr className="bg-stone-100/40 border-b border-stone-200/50">
@@ -1022,9 +1200,12 @@ export default function OrdersManagement() {
                     </button>
                   </div>
 
-                )}
+                )
+
+                )} {/* end viewMode === 'tickets' ? ... : ... */}
 
               </div>
+
 
             </TableContainer>
 
@@ -1058,10 +1239,113 @@ export default function OrdersManagement() {
           {/* RIGHT 40% PANEL: TRANSACTION DETAILS & ANOMALY ANALYSIS */}
           <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 sticky top-24">
             
-            {selectedOrder ? (
+            {viewMode === "tickets" ? (
+              /* ── REFUND TICKET DETAIL PANEL ── */
+              selectedTicket ? (
+                <div className="flex flex-col gap-5">
+
+                  {/* Ticket Header */}
+                  <div className="flex justify-between items-start border-b border-stone-200/50 pb-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Refund Ticket</span>
+                      <span className="text-base font-black text-[#2D004D] font-mono">TKT-{selectedTicket.id}</span>
+                      <span className="text-[10px] text-[#8E6AA8]">ORD-{selectedTicket.order_id} · Customer #{selectedTicket.user_id}</span>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-[9px] font-extrabold uppercase border tracking-widest ${
+                      selectedTicket.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                      selectedTicket.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                      selectedTicket.status === 'PROCESSING' ? 'bg-green-100 text-green-700 border-green-200 animate-pulse' :
+                      selectedTicket.status === 'REFUNDED' ? 'bg-green-100 text-green-700 border-green-200' :
+                      selectedTicket.status === 'FAILED' ? 'bg-red-100 text-red-700 border-red-200' :
+                      selectedTicket.status === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' :
+                      selectedTicket.status === 'CANCELLED' ? 'bg-stone-100 text-stone-500 border-stone-200' :
+                      'bg-stone-100 text-stone-600 border-stone-200'
+                    }`}>
+                      {selectedTicket.status}
+                    </div>
+                  </div>
+
+                  {/* Order Snapshot */}
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order Snapshot</h4>
+                    <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2 shadow-sm text-[10px]">
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Product</span><span className="font-bold text-[#2D004D] text-right max-w-[160px] truncate">{selectedTicket.product_name}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Order Total</span><span className="font-black text-[#2D004D]">₹{selectedTicket.order_total?.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Refund Amount</span><span className="font-black text-[#5A1E7E]">₹{selectedTicket.requested_amount?.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Payment Method</span><span className="font-bold text-[#2D004D]">{selectedTicket.payment_method}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Reason</span><span className="font-bold text-[#2D004D] capitalize">{(selectedTicket.reason_category || '').replace(/_/g, ' ')}</span></div>
+                      {selectedTicket.details && (
+                        <div className="flex justify-between"><span className="text-[#7B3FA0]">Details</span><span className="font-medium text-[#2D004D] text-right max-w-[160px]">{selectedTicket.details}</span></div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Download Abuse Diagnostic */}
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Download Abuse Diagnostic</h4>
+                    <div className={`bg-white/60 border p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm text-[10px] ${selectedTicket.is_downloaded ? 'border-red-200/60' : 'border-[#F3EAF8]'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#7B3FA0]">Downloaded</span>
+                        <span className={`font-black ${selectedTicket.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                          {selectedTicket.is_downloaded ? '🚨 YES — High Risk' : '✅ NO'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Download Count</span><span className="font-bold text-[#2D004D]">{selectedTicket.download_count ?? 0}×</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">First Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.first_download_at ? new Date(selectedTicket.first_download_at).toLocaleString() : '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Last Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.last_download_at ? new Date(selectedTicket.last_download_at).toLocaleString() : '—'}</span></div>
+                      <div className="h-px bg-stone-200/40 my-0.5" />
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">IP Address</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.ip_address || '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Device</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.device_details || '—'}</span></div>
+                      <div className="h-px bg-stone-200/40 my-0.5" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#7B3FA0]">Prior Refunds</span>
+                        <span className={`font-black ${selectedTicket.previous_refund_count > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                          {selectedTicket.previous_refund_count} previous refund{selectedTicket.previous_refund_count !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Admin Notes (if already reviewed) */}
+                  {selectedTicket.admin_notes && (
+                    <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-[10px]">
+                      <span className="font-bold text-amber-700">Admin Note: </span>
+                      <span className="text-amber-800">{selectedTicket.admin_notes}</span>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {['PENDING', 'UNDER_REVIEW'].includes(selectedTicket.status) && (
+                    <div className="flex gap-3 pt-3 border-t border-stone-200/50">
+                      <button
+                        onClick={() => { sysSound.playTap(); setShowApproveModal(true); }}
+                        className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
+                      >
+                        ✓ Approve Refund
+                      </button>
+                      <button
+                        onClick={() => { sysSound.playTap(); setShowRejectModal(true); }}
+                        className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
+                      >
+                        ✕ Reject
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <div className="py-20 text-center text-[#7B3FA0]">
+                  <p className="text-xs">No ticket selected.</p>
+                  <p className="text-[10px] mt-1">Click a row in the tickets table to review its details.</p>
+                </div>
+              )
+            ) : (
+            /* ── ORDER DETAIL PANEL ── */
+            selectedOrder ? (
               <div className="flex flex-col gap-6">
                 
                 {/* Customer Profile Header Section */}
+
                 <div className="flex justify-between items-start border-b border-stone-200/50 pb-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D8BFE3] to-[#D8BFE3] flex items-center justify-center text-sm font-black text-[#2D004D] shadow-[0_4px_12px_rgba(216,191,227,0.25)]">
@@ -1326,7 +1610,8 @@ export default function OrdersManagement() {
                 <p className="text-xs">No active ledger entry focused.</p>
                 <p className="text-[10px] mt-1">Select an order row from the grid ledger to parse deep metrics.</p>
               </div>
-            )}
+            )
+            )} {/* end viewMode === 'tickets' ? ... : ... */}
 
           </div>
 
@@ -1555,6 +1840,100 @@ export default function OrdersManagement() {
         )}
       </AnimatePresence>
 
+      {/* ── REFUND APPROVE MODAL ── */}
+      <AnimatePresence>
+        {showApproveModal && (
+          <motion.div
+            key="approve-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6"
+            onClick={() => setShowApproveModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-stone-200/60"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-green-100 flex items-center justify-center text-lg">✓</div>
+                <div>
+                  <h3 className="text-sm font-black text-[#2D004D]">Approve Refund</h3>
+                  <p className="text-[10px] text-[#7B3FA0]">TKT-{selectedTicket?.id} · ₹{selectedTicket?.requested_amount?.toFixed(2)}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-stone-600 mb-4">
+                This will trigger a refund via the payment gateway.
+                {selectedTicket?.is_downloaded && (
+                  <span className="block mt-2 text-amber-700 font-bold">⚠️ Product was downloaded. Customer account may face restrictions per policy.</span>
+                )}
+              </p>
+              <label className="block text-[10px] font-bold text-[#7B3FA0] mb-1.5">Internal Notes (optional)</label>
+              <textarea
+                rows={3}
+                value={ticketApproveNotes}
+                onChange={(e) => setTicketApproveNotes(e.target.value)}
+                placeholder="Reason for approval, evidence reviewed..."
+                className="w-full border border-stone-200 rounded-xl p-3 text-[11px] text-[#2D004D] resize-none focus:outline-none focus:border-green-400"
+              />
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowApproveModal(false)} className="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors">Cancel</button>
+                <button onClick={handleApproveTicket} disabled={submittingTicket} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors disabled:opacity-60">
+                  {submittingTicket ? 'Processing…' : 'Confirm Approve'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── REFUND REJECT MODAL ── */}
+      <AnimatePresence>
+        {showRejectModal && (
+          <motion.div
+            key="reject-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6"
+            onClick={() => setShowRejectModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-stone-200/60"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-red-100 flex items-center justify-center text-lg">✕</div>
+                <div>
+                  <h3 className="text-sm font-black text-[#2D004D]">Reject Refund</h3>
+                  <p className="text-[10px] text-[#7B3FA0]">TKT-{selectedTicket?.id} · ₹{selectedTicket?.requested_amount?.toFixed(2)}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-stone-600 mb-4">
+                Rejection is permanent. Provide a reason so this can be audited later.
+              </p>
+              <label className="block text-[10px] font-bold text-[#7B3FA0] mb-1.5">Rejection Reason <span className="text-red-500">*</span></label>
+              <textarea
+                rows={3}
+                value={ticketRejectNotes}
+                onChange={(e) => setTicketRejectNotes(e.target.value)}
+                placeholder="Policy violation, already downloaded, duplicate request..."
+                className="w-full border border-stone-200 rounded-xl p-3 text-[11px] text-[#2D004D] resize-none focus:outline-none focus:border-red-400"
+              />
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowRejectModal(false)} className="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors">Cancel</button>
+                <button onClick={handleRejectTicket} disabled={submittingTicket || !ticketRejectNotes.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors disabled:opacity-60">
+                  {submittingTicket ? 'Processing…' : 'Confirm Reject'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </AdminLayout>
+
   );
 }

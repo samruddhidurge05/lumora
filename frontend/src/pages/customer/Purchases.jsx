@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Download, ExternalLink, Search, Clock, AlertCircle, RefreshCw, Eye, CheckCircle2, X, CreditCard } from 'lucide-react';
+import { ShoppingBag, Download, ExternalLink, Search, Clock, AlertCircle, RefreshCw, Eye, CheckCircle2, X, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import { getUserPurchases } from '../../services/purchaseService';
+import PolicyAcknowledgementCheckbox from '../../components/policy/PolicyAcknowledgementCheckbox';
 
 export default function CustomerPurchases() {
   const { ownedProducts, products, formatPrice, navigateTo, setDashboardTab } = useApp();
@@ -13,6 +14,25 @@ export default function CustomerPurchases() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Refund request state management
+  const [refundRequests, setRefundRequests] = useState([]);
+  const [showRefundForm, setShowRefundForm] = useState(false);
+  const [refundReason, setRefundReason] = useState('broken_file');
+  const [refundDetails, setRefundDetails] = useState('');
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [refundError, setRefundError] = useState(null);
+  const [refundSuccess, setRefundSuccess] = useState(null);
+  const [ackCheckbox, setAckCheckbox] = useState(false);
+
+  const fetchRefundRequests = async () => {
+    try {
+      const res = await backendFetch('/refunds/me').catch(() => []);
+      setRefundRequests(Array.isArray(res) ? res : []);
+    } catch (err) {
+      console.warn('Failed to load refund requests:', err);
+    }
+  };
 
   const fetchPurchases = async () => {
     try {
@@ -64,11 +84,15 @@ export default function CustomerPurchases() {
 
   useEffect(() => {
     fetchPurchases();
+    fetchRefundRequests();
   }, [user, ownedProducts.length, products.length]);
 
   // Reload when a purchase event fires from anywhere in the app
   useEffect(() => {
-    const handler = () => fetchPurchases();
+    const handler = () => {
+      fetchPurchases();
+      fetchRefundRequests();
+    };
     window.addEventListener('lumora_refresh_user_data', handler);
     return () => window.removeEventListener('lumora_refresh_user_data', handler);
   }, [user]);
@@ -86,6 +110,66 @@ export default function CustomerPurchases() {
     });
     return hasMatchingProduct;
   });
+
+  const getRefundBadge = (orderId) => {
+    const req = refundRequests.find(r => r.order_id === orderId);
+    if (!req) return null;
+
+    let bg = 'rgba(234, 179, 8, 0.12)';
+    let border = 'rgba(234, 179, 8, 0.3)';
+    let color = '#D97706';
+    let text = 'Refund Pending';
+
+    const statusUpper = req.status.toUpperCase();
+    if (statusUpper === 'UNDER_REVIEW') {
+      bg = 'rgba(59, 130, 246, 0.12)';
+      border = 'rgba(59, 130, 246, 0.3)';
+      color = '#2563EB';
+      text = 'Under Review';
+    } else if (statusUpper === 'APPROVED' || statusUpper === 'PROCESSING') {
+      bg = 'rgba(34, 197, 94, 0.12)';
+      border = 'rgba(34, 197, 94, 0.3)';
+      color = '#16A34A';
+      text = 'Refund Processing';
+    } else if (statusUpper === 'REFUNDED') {
+      bg = 'rgba(34, 197, 94, 0.12)';
+      border = 'rgba(34, 197, 94, 0.3)';
+      color = '#16A34A';
+      text = 'Refunded';
+    } else if (statusUpper === 'REJECTED') {
+      bg = 'rgba(239, 68, 68, 0.12)';
+      border = 'rgba(239, 68, 68, 0.3)';
+      color = '#DC2626';
+      text = 'Refund Rejected';
+    } else if (statusUpper === 'FAILED') {
+      bg = 'rgba(220, 38, 38, 0.12)';
+      border = 'rgba(220, 38, 38, 0.3)';
+      color = '#DC2626';
+      text = 'Refund Failed';
+    } else if (statusUpper === 'CANCELLED') {
+      bg = 'rgba(107, 114, 128, 0.12)';
+      border = 'rgba(107, 114, 128, 0.3)';
+      color = '#4B5563';
+      text = 'Cancelled';
+    }
+
+    return (
+      <span style={{ 
+        fontSize: '0.62rem', 
+        fontWeight: 800, 
+        padding: '3px 8px', 
+        borderRadius: '6px', 
+        textTransform: 'uppercase',
+        background: bg,
+        color: color,
+        border: `1px solid ${border}`,
+        marginLeft: '8px'
+      }}>
+        {text}
+      </span>
+    );
+  };
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fade-in 0.5s ease' }}>
@@ -204,6 +288,7 @@ export default function CustomerPurchases() {
                         }}>
                           {ord.status || 'Completed'}
                         </span>
+                        {getRefundBadge(ord.id)}
                       </div>
                       {/* Purchase Date */}
                       <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
@@ -327,16 +412,240 @@ export default function CustomerPurchases() {
               </div>
             </div>
 
+            {/* Refund Section */}
+            {((selectedOrder.status || '').toLowerCase() === 'completed' || (selectedOrder.status || '').toLowerCase() === 'paid') && (
+              <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '16px' }}>
+                {(() => {
+                  const existingReq = refundRequests.find(r => r.order_id === selectedOrder.id);
+                  const isDownloaded = (selectedOrder.items || []).some(item => item.downloaded);
+                  const isWithinWindow = (Date.now() - new Date(selectedOrder.created_at || Date.now())) < 14 * 86400 * 1000;
+
+                  if (existingReq) {
+                    const statusUpper = existingReq.status.toUpperCase();
+                    const canCancel = statusUpper === 'PENDING' || statusUpper === 'UNDER_REVIEW';
+
+                    let bg = 'rgba(234, 179, 8, 0.12)';
+                    let color = '#D97706';
+                    let labelText = existingReq.status;
+
+                    if (statusUpper === 'UNDER_REVIEW') {
+                      bg = 'rgba(59, 130, 246, 0.12)';
+                      color = '#2563EB';
+                      labelText = 'Under Review';
+                    } else if (statusUpper === 'APPROVED' || statusUpper === 'PROCESSING') {
+                      bg = 'rgba(34, 197, 94, 0.12)';
+                      color = '#16A34A';
+                      labelText = 'Processing';
+                    } else if (statusUpper === 'REFUNDED') {
+                      bg = 'rgba(34, 197, 94, 0.12)';
+                      color = '#16A34A';
+                      labelText = 'Refunded';
+                    } else if (statusUpper === 'REJECTED') {
+                      bg = 'rgba(239, 68, 68, 0.12)';
+                      color = '#DC2626';
+                      labelText = 'Rejected';
+                    } else if (statusUpper === 'FAILED') {
+                      bg = 'rgba(220, 38, 38, 0.12)';
+                      color = '#DC2626';
+                      labelText = 'Failed';
+                    } else if (statusUpper === 'CANCELLED') {
+                      bg = 'rgba(107, 114, 128, 0.12)';
+                      color = '#4B5563';
+                      labelText = 'Cancelled';
+                    }
+
+                    return (
+                      <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Refund Request Status</span>
+                          <span style={{ 
+                            fontSize: '0.7rem', 
+                            fontWeight: 800, 
+                            padding: '3px 8px', 
+                            borderRadius: '6px', 
+                            textTransform: 'uppercase',
+                            background: bg,
+                            color: color
+                          }}>
+                            {labelText}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                          <strong>Reason:</strong> {existingReq.reason_category.replace('_', ' ')}
+                        </div>
+                        {existingReq.details && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            <strong>Details:</strong> {existingReq.details}
+                          </div>
+                        )}
+                        {existingReq.admin_notes && (
+                          <div style={{ fontSize: '0.78rem', color: '#B45309', background: 'rgba(245,158,11,0.08)', padding: '8px 12px', borderRadius: '8px', marginTop: '10px' }}>
+                            <strong>Admin Note:</strong> {existingReq.admin_notes}
+                          </div>
+                        )}
+                        {canCancel && (
+                          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('Are you sure you want to cancel this refund request?')) {
+                                  try {
+                                    setRefundSubmitting(true);
+                                    await backendFetch(`/refunds/${existingReq.id}/cancel`, { method: 'POST' });
+                                    fetchRefundRequests();
+                                  } catch (err) {
+                                    alert(err.message || 'Failed to cancel refund request.');
+                                  } finally {
+                                    setRefundSubmitting(false);
+                                  }
+                                }
+                              }}
+                              disabled={refundSubmitting}
+                              style={{ 
+                                padding: '6px 12px', 
+                                borderRadius: '8px', 
+                                border: '1px solid rgba(0,0,0,0.12)', 
+                                background: '#fff', 
+                                color: '#EF4444', 
+                                fontSize: '0.74rem', 
+                                fontWeight: 700, 
+                                cursor: 'pointer' 
+                              }}
+                            >
+                              {refundSubmitting ? 'Cancelling...' : 'Cancel Request'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (showRefundForm) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Submit Refund Request</h4>
+                        
+                        {isDownloaded && (
+                          <div style={{ padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '10px', display: 'flex', gap: '8px', color: '#B45309', fontSize: '0.75rem', lineHeight: 1.4 }}>
+                            <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                            <span>This product has already been downloaded. Downloaded digital products are generally not eligible for refunds. Your request will undergo manual review, and if approved, your purchasing privileges may be restricted.</span>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Reason Category</label>
+                          <select 
+                            value={refundReason} 
+                            onChange={e => setRefundReason(e.target.value)}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.12)', fontSize: '0.8rem', background: '#fff', outline: 'none' }}
+                          >
+                            <option value="broken_file">Broken / corrupted file</option>
+                            <option value="wrong_file">Wrong / incorrect file delivered</option>
+                            <option value="duplicate_charge">Duplicate charge</option>
+                            <option value="other">Other issue</option>
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Additional Details (Optional)</label>
+                          <textarea 
+                            value={refundDetails}
+                            onChange={e => setRefundDetails(e.target.value)}
+                            placeholder="Explain why you are requesting a refund (max 500 chars)..."
+                            maxLength={500}
+                            rows={3}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.12)', fontSize: '0.8rem', outline: 'none', resize: 'none' }}
+                          />
+                        </div>
+
+                        <PolicyAcknowledgementCheckbox 
+                          checked={ackCheckbox}
+                          onChange={setAckCheckbox}
+                          label="I acknowledge that refund decisions are subject to Lumora's Digital Product Policy."
+                        />
+
+                        {refundError && (
+                          <div style={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 600 }}>{refundError}</div>
+                        )}
+                        {refundSuccess && (
+                          <div style={{ color: '#16A34A', fontSize: '0.75rem', fontWeight: 600 }}>{refundSuccess}</div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                          <button 
+                            disabled={refundSubmitting || !ackCheckbox}
+                            onClick={async () => {
+                              try {
+                                setRefundSubmitting(true);
+                                setRefundError(null);
+                                await backendFetch('/refunds/request', {
+                                  method: 'POST',
+                                  body: {
+                                    order_id: selectedOrder.id,
+                                    reason_category: refundReason,
+                                    details: refundDetails
+                                  }
+                                });
+                                setRefundSuccess('Refund request submitted successfully.');
+                                fetchRefundRequests();
+                                setTimeout(() => {
+                                  setShowRefundForm(false);
+                                  setRefundSuccess(null);
+                                  setRefundDetails('');
+                                  setAckCheckbox(false);
+                                }, 1500);
+                              } catch (err) {
+                                setRefundError(err.message || 'Failed to submit refund request.');
+                              } finally {
+                                setRefundSubmitting(false);
+                              }
+                            }}
+                            style={{ flex: 1, padding: '8px 14px', borderRadius: '8px', border: 'none', background: ackCheckbox ? '#7B3FA0' : '#E5E7EB', color: ackCheckbox ? '#fff' : '#9CA3AF', fontWeight: 700, fontSize: '0.78rem', cursor: ackCheckbox ? 'pointer' : 'default' }}
+                          >
+                            {refundSubmitting ? 'Submitting...' : 'Submit Request'}
+                          </button>
+                          <button 
+                            onClick={() => { setShowRefundForm(false); setRefundError(null); }}
+                            style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.12)', background: '#fff', color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (isWithinWindow) {
+                    return (
+                      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                        <button 
+                          onClick={() => setShowRefundForm(true)}
+                          style={{ padding: '8px 16px', borderRadius: '10px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(239,68,68,0.04)', color: '#DC2626', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Request a Refund
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Refund request period expired (limit: 14 days from purchase).
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Modal Actions */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button 
-                onClick={() => { setSelectedOrder(null); setDashboardTab('Downloads'); }} 
+                onClick={() => { setSelectedOrder(null); setDashboardTab('Downloads'); setShowRefundForm(false); setRefundError(null); }} 
                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
                 <Download size={14} /> Go to Downloads Vault
               </button>
               <button 
-                onClick={() => setSelectedOrder(null)} 
+                onClick={() => { setSelectedOrder(null); setShowRefundForm(false); setRefundError(null); }} 
                 style={{ padding: '12px 20px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)', background: '#fff', color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
               >
                 Close

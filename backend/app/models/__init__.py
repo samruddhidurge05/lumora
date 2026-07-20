@@ -21,9 +21,11 @@ from app.models.withdrawal import Withdrawal
 from app.models.verification import Verification
 from app.models.admin_role import AdminRole
 from app.models.admin_invitation import AdminInvitation
+from app.models.refund_request import RefundRequest
 
 __all__ = [
     "Base",
+    "RefundRequest",
     "User",
     "AuditLog",
     "PlatformSetting",
@@ -53,4 +55,5 @@ __all__ = [
     "Verification",
     "AdminRole",
     "AdminInvitation",
+    "RefundRequest",
 ]

@@ -71,6 +71,7 @@ from app.api.contact_router import router as contact_router
 from app.admin_api.notifications.routes import router as admin_notifications_router
 from app.admin_api.products.routes import router as admin_products_router
 from app.admin_api.admin_users.routes import router as admin_users_router
+from app.api.refunds_router import router as refunds_router
 
 # ── Startup Configuration Validation ─────────────────────────────────────────
 def _validate_startup_config() -> None:
@@ -456,6 +457,7 @@ app.include_router(contact_router,       prefix="/api/contact",      tags=["Cont
 app.include_router(admin_notifications_router, prefix="/api/admin/notifications", tags=["Admin Notifications"])
 app.include_router(admin_products_router,      prefix="/api/admin/products",       tags=["Admin Products"])
 app.include_router(admin_users_router,         prefix="/api/admin",                tags=["Admin Team"])
+app.include_router(refunds_router,             prefix="/api/refunds",              tags=["Refund Requests"])
 
 # ── Static files ──────────────────────────────────────────────────────────────
 _UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")

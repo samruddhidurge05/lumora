@@ -11,6 +11,7 @@ from admin.routes.vendors import router as vendors_router
 from admin.routes.affiliates import router as affiliates_router
 from admin.routes.settings import router as settings_router
 from admin.routes.products import router as products_router
+from app.admin_api.refunds.routes import router as admin_refunds_router
 
 router = APIRouter()
 
@@ -26,3 +27,4 @@ router.include_router(vendors_router, prefix="/vendors", tags=["Vendors"])
 router.include_router(affiliates_router, prefix="/affiliates", tags=["Affiliates"])
 router.include_router(settings_router, prefix="/settings", tags=["Settings"])
 router.include_router(products_router, prefix="/products", tags=["Products"])
+router.include_router(admin_refunds_router, prefix="/refunds", tags=["Refund Requests"])
