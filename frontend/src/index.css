@@ -248,6 +248,61 @@ button { font-family: inherit; }
   transform: scale(1.03) !important;
 }
 
+/* Image Crossfade & Gallery Change Transition */
+@keyframes img-crossfade {
+  from { opacity: 0.4; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.img-crossfade {
+  animation: img-crossfade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+/* Directional Page Navigation Transitions */
+@keyframes page-forward {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes page-reverse {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.page-enter-forward { animation: page-forward 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.page-enter-reverse { animation: page-reverse 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Smooth Content Reveal from Loading State */
+@keyframes content-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-reveal {
+  animation: content-reveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Smooth Horizontal Scroll Containers */
+.scroll-container {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-x: contain;
+}
+
+/* Vertical Scroll Reveal Utility */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Button Tactile Active Feedback */
 .btn-premium:active, .btn-premium-solid:active, button:active {
   transform: scale(0.98) translateY(0) !important;
