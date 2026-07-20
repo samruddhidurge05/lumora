@@ -250,7 +250,10 @@ class B2StorageProvider(BaseStorageProvider):
             
         ext = os.path.splitext(filename.lower())[1]
         unique_name = f"{uuid.uuid4()}{ext}"
-        b2_file_path = f"vendors/{vendor_id}/temp/{unique_name}"
+        if _is_test_environment():
+            b2_file_path = f"test/storage-tests/vendors/{vendor_id}/temp/{unique_name}"
+        else:
+            b2_file_path = f"vendors/{vendor_id}/temp/{unique_name}"
         
         upload_url_endpoint = f"{self.api_url}/b2api/v2/b2_get_upload_url"
         res = requests.post(
@@ -388,6 +391,14 @@ class B2StorageProvider(BaseStorageProvider):
         return bool(self._get_file_id_by_name(clean_name))
 
 
+def _is_test_environment() -> bool:
+    return (
+        os.getenv("TESTING") == "True"
+        or "PYTEST_CURRENT_TEST" in os.environ
+        or os.getenv("ENV") == "test"
+    )
+
+
 class StorageService:
     def __init__(self):
         backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -515,6 +526,9 @@ class StorageService:
             rel_folder = f"private/products/{product_id}"
         else:
             rel_folder = f"public/products/{product_id}/previews"
+
+        if _is_test_environment():
+            rel_folder = f"test/storage-tests/{rel_folder}"
 
         if resolved_src.startswith("gs://"):
             bucket_name = resolved_src.split("/")[2]
