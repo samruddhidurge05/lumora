@@ -174,8 +174,9 @@
   gap: var(--admin-spacing-24) !important;
 }
 
-/* Ensure equal height on grid cards in dashboards */
-.admin-main-content .grid > div {
+/* Scoped to .stats-grid only — prevents universal grid > div padding from
+   clobbering non-stats grids on Analytics, Orders, and other complex layouts */
+.admin-main-content .stats-grid > div {
   padding: var(--admin-spacing-24) !important;
   display: flex;
   flex-direction: column;
@@ -232,42 +233,8 @@
   scrollbar-color: rgba(123, 63, 160, 0.22) transparent;
 }
 
+
 /* --- Form Design Standardization --- */
-.admin-main-content input[type="text"],
-.admin-main-content input[type="email"],
-.admin-main-content input[type="password"],
-.admin-main-content select,
-.admin-main-content textarea,
-.admin-main-content .glass-input {
-  background: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(12px) !important;
-  border: 1.5px solid rgba(196, 181, 253, 0.35) !important;
-  border-radius: var(--admin-radius-input) !important;
-  padding: 10px 14px !important;
-  font-size: 0.82rem !important;
-  font-family: inherit !important;
-  color: #2D004D !important;
-  height: 42px !important;
-  box-sizing: border-box !important;
-  transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s !important;
-}
-
-.admin-main-content input[type="text"]:focus,
-.admin-main-content input[type="email"]:focus,
-.admin-main-content input[type="password"]:focus,
-.admin-main-content select:focus,
-.admin-main-content textarea:focus {
-  outline: none !important;
-  border-color: #7B3FA0 !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.14) !important;
-}
-
-.admin-main-content textarea {
-  height: auto !important;
-  min-height: 100px !important;
-}
-
 /* Forms Labels */
 .admin-main-content label,
 .admin-main-content .text-xs.font-extrabold {
@@ -424,6 +391,26 @@
 .admin-mb-32 { margin-bottom: var(--admin-spacing-32) !important; }
 .admin-mb-48 { margin-bottom: var(--admin-spacing-48) !important; }
 
+/* --- Sidebar toggle & logout hover (replaces inline JS handlers) --- */
+.admin-sidebar-toggle:hover {
+  background: rgba(123, 63, 160, 0.12) !important;
+}
+
+.admin-logout-btn {
+  transition: background 0.2s, color 0.2s !important;
+}
+
+.admin-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+}
+
+/* --- Focus ring normalization --- */
+.admin-layout-grid *:focus-visible {
+  outline: 2px solid rgba(123, 63, 160, 0.50) !important;
+  outline-offset: 2px !important;
+}
+
 /* --- Responsive & Structural Overrides --- */
 @media (max-width: 1024px) {
   .admin-layout-grid {
@@ -436,6 +423,14 @@
     height: auto !important;
     position: relative !important;
     top: 0 !important;
+    margin-bottom: var(--admin-spacing-16) !important;
   }
 }
 
+/* Navbar legacy — nav-menu hidden on mobile (Navbar.jsx is currently unused
+   but the rule is retained in CSS so the file can be restored without side-effects) */
+@media (max-width: 768px) {
+  .nav-menu {
+    display: none !important;
+  }
+}

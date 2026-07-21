@@ -39,7 +39,7 @@ export function StatsGrid({ children, columns = 4 }) {
       : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
       
   return (
-    <div className={`${gridColsClass} gap-6 mb-8`}>
+    <div className={`stats-grid ${gridColsClass} gap-6 mb-8`}>
       {children}
     </div>
   );
@@ -159,6 +159,7 @@ export function FilterBar({
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
               className="w-full pl-10 pr-4 h-[42px] glass-input rounded-xl text-xs"
             />
           </div>
@@ -173,7 +174,7 @@ export function FilterBar({
       </div>
       
       {actions && (
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap md:flex-shrink-0">
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap min-w-0">
           {actions}
         </div>
       )}
@@ -181,7 +182,6 @@ export function FilterBar({
   );
 }
 
-// ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
 // ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
 // Standardized card wrapper for table sections. Children are rendered directly
 // inside the card — they must include their own <table> / <tr> / <td> structure.

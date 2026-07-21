@@ -6,7 +6,7 @@ export default function AdminLayout({ activePage, children }) {
   return (
     <div className="min-h-screen relative font-sans text-[#2D004D] bg-[#FFFDF9] overflow-x-hidden selection:bg-[#D8BFE3] selection:text-[#2D004D]">
       
-      <div className="admin-layout-grid">
+      <div className="admin-layout-grid py-6">
         {/* Left Column: Glassmorphism Sidebar */}
         <AdminSidebar activePage={activePage} />
 

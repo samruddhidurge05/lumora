@@ -132,7 +132,7 @@ export default function AdminSidebar({ activePage }) {
               Lumora
             </div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase',
-                          letterSpacing: '0.06em', color: '#8E6AA8' }}>
+                          letterSpacing: '0.06em', color: '#8E6AA8', lineHeight: 1.2 }}>
               Admin Console
             </div>
             {/* Global unread badge (support + reports + contact) */}
@@ -148,12 +148,11 @@ export default function AdminSidebar({ activePage }) {
         <button
           onClick={toggleCollapse}
           aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          className="admin-sidebar-toggle"
           style={{ background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(123,63,160,0.15)',
                    borderRadius: '10px', width: '28px', height: '28px', display: 'flex',
                    alignItems: 'center', justifyContent: 'center', color: '#7B3FA0',
                    cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(123,63,160,0.12)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(123,63,160,0.06)'}
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
@@ -179,7 +178,7 @@ export default function AdminSidebar({ activePage }) {
               ) : (
                 <div style={{ height: '1px', background: 'rgba(142,106,168,0.08)', margin: '4px 8px' }} />
               )}
-              <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <nav aria-label={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {visibleItems.map((item) => {
                   const isActive = activePage === item.id ||
                     (item.path !== '#' && location.pathname === item.path);
@@ -205,14 +204,6 @@ export default function AdminSidebar({ activePage }) {
                         transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
                         cursor: item.disabled ? 'not-allowed' : 'pointer', outline: 'none',
                       }}
-                      onMouseEnter={e => { if (!isActive && !item.disabled) {
-                        e.currentTarget.style.background = 'rgba(123,63,160,0.04)';
-                        e.currentTarget.style.borderColor = 'rgba(123,63,160,0.08)';
-                      }}}
-                      onMouseLeave={e => { if (!isActive && !item.disabled) {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = 'transparent';
-                      }}}
                     >
                       <span style={{ color: item.disabled ? 'rgba(45,0,77,0.3)' :
                                      (isActive ? '#7B3FA0' : 'rgba(45,0,77,0.55)'),
@@ -290,12 +281,11 @@ export default function AdminSidebar({ activePage }) {
             onClick={handleLogout}
             onKeyDown={e => handleKeyDown('#', handleLogout, e)}
             aria-label="Logout"
+            className="admin-logout-btn"
             style={{ background: 'transparent', border: 'none', borderRadius: '8px',
                      width: '28px', height: '28px', display: 'flex', alignItems: 'center',
                      justifyContent: 'center', color: '#8E6AA8', cursor: 'pointer',
                      transition: 'all 0.2s', outline: 'none', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#ef4444'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E6AA8'; }}
           >
             <LogOut size={15} />
           </button>

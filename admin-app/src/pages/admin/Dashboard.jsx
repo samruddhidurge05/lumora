@@ -673,6 +673,7 @@ export default function Dashboard() {
               {/* Close Button */}
               <button 
                 onClick={() => { sysSound.playTap(); setActiveModalCard(null); }}
+                aria-label="Close metrics modal"
                 className="absolute right-6 top-6 p-2 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors border-none cursor-pointer text-[#7B3FA0]"
               >
                 <Icon name="X" size={12} />
