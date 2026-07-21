@@ -516,17 +516,18 @@ async def add_security_headers(request: Request, call_next):
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Read allowed origins from the CORS_ORIGINS env var (comma-separated).
-# Falls back to all standard Vite dev ports (5173–5176) when the variable is not set.
-# Vite auto-increments ports when one is busy, so we cover the common range.
+# Falls back to standard Vite dev ports and production Vercel apps when variable is not set.
 _cors_origins_raw = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
+    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:3000,https://lumora-admin-nine.vercel.app,https://lumora.vercel.app"
 )
 origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+_cors_regex_raw = os.getenv("CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=_cors_regex_raw if _cors_regex_raw else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
