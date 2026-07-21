@@ -1,5 +1,5 @@
 """
-One-off script: re-sync ALL products from SQLite → Firestore with the corrected
+One-off script: re-sync ALL products from SQLite ? Firestore with the corrected
 sync logic (proper thumbnail, image_urls, features, whatYouGet, etc.)
 
 Run from the backend/ directory:
@@ -17,7 +17,7 @@ from admin.firestore.admin_firestore import sync_product_to_firestore, firebase_
 
 def main():
     if not firebase_connected:
-        print("❌  Firebase not connected — check serviceAccountKey.json / env vars")
+        print("?  Firebase not connected - check serviceAccountKey.json / env vars")
         return
 
     db = SessionLocal()
@@ -36,13 +36,13 @@ def main():
                     p.preview = p.image_urls[0]
 
                 sync_product_to_firestore(p)
-                print(f"  ✅  [{p.id}] {p.title[:50]!r}  |  thumbnail={p.thumbnail or 'none'}  |  image_urls={len(p.image_urls or [])}  |  features={len(p.features or [])}")
+                print(f"  ?  [{p.id}] {p.title[:50]!r}  |  thumbnail={p.thumbnail or 'none'}  |  image_urls={len(p.image_urls or [])}  |  features={len(p.features or [])}")
                 ok += 1
             except Exception as e:
-                print(f"  ❌  [{p.id}] {p.title[:50]!r}  →  {e}")
+                print(f"  ?  [{p.id}] {p.title[:50]!r}  ?  {e}")
                 fail += 1
 
-        print(f"\n✅  Done — {ok} synced, {fail} failed")
+        print(f"\n?  Done - {ok} synced, {fail} failed")
     finally:
         db.close()
 

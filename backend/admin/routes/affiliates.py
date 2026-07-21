@@ -37,7 +37,7 @@ def list_affiliates(admin_user = Depends(require_admin_role)):
                 UserModel.id.in_(profile_user_ids)
             ).all() if profile_user_ids else []
 
-            # Merge — deduplicate by id
+            # Merge - deduplicate by id
             seen = set()
             result = []
             for u in role_affiliates + profile_users:

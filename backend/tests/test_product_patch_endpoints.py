@@ -28,7 +28,7 @@ from app.db.session import get_db
 # Import all models so Base.metadata has every table definition before create_all
 import app.models  # noqa: F401  (side-effect import)
 
-# ── In-memory SQLite setup ────────────────────────────────────────────────────
+# -- In-memory SQLite setup ----------------------------------------------------
 # StaticPool forces all sessions/connections to share the same in-memory DB
 # so that Base.metadata.create_all and the test sessions see identical data.
 
@@ -51,7 +51,7 @@ def override_get_db():
         db.close()
 
 
-# ── Fake admin user returned by require_admin_role override ──────────────────
+# -- Fake admin user returned by require_admin_role override ------------------
 
 class _FakeAdmin:
     """Plain Python object that satisfies the admin_user dependency interface."""
@@ -64,16 +64,16 @@ class _FakeAdmin:
 FAKE_ADMIN = _FakeAdmin()
 
 
-# ── App factory ──────────────────────────────────────────────────────────────
+# -- App factory --------------------------------------------------------------
 
 def build_app(sync_mock: MagicMock) -> FastAPI:
     """
     Build a minimal FastAPI app with the products admin router mounted.
     All external dependencies are overridden or patched:
-      - get_db      → in-memory SQLite
-      - require_admin_role → returns FAKE_ADMIN (no auth)
-      - sync_product_to_firestore → provided sync_mock
-      - log_admin_action → no-op MagicMock
+      - get_db      ? in-memory SQLite
+      - require_admin_role ? returns FAKE_ADMIN (no auth)
+      - sync_product_to_firestore ? provided sync_mock
+      - log_admin_action ? no-op MagicMock
     """
     with patch(
         "admin.routes.products.sync_product_to_firestore", sync_mock
@@ -93,7 +93,7 @@ def build_app(sync_mock: MagicMock) -> FastAPI:
         return app
 
 
-# ── Fixtures ─────────────────────────────────────────────────────────────────
+# -- Fixtures -----------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
 def reset_db():
@@ -130,7 +130,7 @@ def client(sync_mock):
             yield c
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 def create_test_product(client: TestClient, **overrides) -> dict:
     """POST a minimal product and return the JSON response dict."""
@@ -146,14 +146,14 @@ def create_test_product(client: TestClient, **overrides) -> dict:
     return resp.json()
 
 
-# ── PATCH /status tests ───────────────────────────────────────────────────────
+# -- PATCH /status tests -------------------------------------------------------
 
 class TestPatchStatusEndpoint:
     """Tests for PATCH /{product_id}/status"""
 
     def test_patch_status_endpoint_200(self, client, sync_mock):
         """
-        POST a product then PATCH status to 'published' → HTTP 200
+        POST a product then PATCH status to 'published' ? HTTP 200
         and sync_product_to_firestore is called.
 
         Validates: Requirements 1.8, 3.1
@@ -173,7 +173,7 @@ class TestPatchStatusEndpoint:
 
     def test_patch_status_endpoint_draft(self, client, sync_mock):
         """
-        PATCH status to 'draft' → HTTP 200 and response body has status='draft'.
+        PATCH status to 'draft' ? HTTP 200 and response body has status='draft'.
 
         Validates: Requirements 1.8
         """
@@ -193,7 +193,7 @@ class TestPatchStatusEndpoint:
 
     def test_patch_status_endpoint_invalid_value(self, client, sync_mock):
         """
-        PATCH with status='pending' (not in Literal['published','draft']) → HTTP 422.
+        PATCH with status='pending' (not in Literal['published','draft']) ? HTTP 422.
 
         Validates: Requirements 1.8
         """
@@ -209,7 +209,7 @@ class TestPatchStatusEndpoint:
 
     def test_patch_status_endpoint_404(self, client, sync_mock):
         """
-        PATCH status for a non-existent product_id → HTTP 404.
+        PATCH status for a non-existent product_id ? HTTP 404.
 
         Validates: Requirements 1.8
         """
@@ -221,14 +221,14 @@ class TestPatchStatusEndpoint:
         sync_mock.assert_not_called()
 
 
-# ── PATCH /featured tests ─────────────────────────────────────────────────────
+# -- PATCH /featured tests -----------------------------------------------------
 
 class TestPatchFeaturedEndpoint:
     """Tests for PATCH /{product_id}/featured"""
 
     def test_patch_featured_endpoint_200(self, client, sync_mock):
         """
-        PATCH featured=true → HTTP 200 and sync_product_to_firestore is called.
+        PATCH featured=true ? HTTP 200 and sync_product_to_firestore is called.
 
         Validates: Requirements 1.8, 3.1
         """
@@ -245,7 +245,7 @@ class TestPatchFeaturedEndpoint:
 
     def test_patch_featured_endpoint_false(self, client, sync_mock):
         """
-        PATCH featured=false → HTTP 200 and response body has featured=false.
+        PATCH featured=false ? HTTP 200 and response body has featured=false.
 
         Validates: Requirements 1.8
         """
@@ -265,7 +265,7 @@ class TestPatchFeaturedEndpoint:
 
     def test_patch_featured_endpoint_404(self, client, sync_mock):
         """
-        PATCH featured for a non-existent product_id → HTTP 404.
+        PATCH featured for a non-existent product_id ? HTTP 404.
 
         Validates: Requirements 1.8
         """
@@ -277,14 +277,14 @@ class TestPatchFeaturedEndpoint:
         sync_mock.assert_not_called()
 
 
-# ── PUT regression test ───────────────────────────────────────────────────────
+# -- PUT regression test -------------------------------------------------------
 
 class TestPutEndpointRegression:
     """Confirm that the existing PUT endpoint still calls sync_product_to_firestore."""
 
     def test_put_endpoint_still_syncs_firestore(self, client, sync_mock):
         """
-        PUT a full product update → sync_product_to_firestore is still called
+        PUT a full product update ? sync_product_to_firestore is still called
         (no regression introduced by adding PATCH endpoints).
 
         Validates: Requirements 3.1, 3.2

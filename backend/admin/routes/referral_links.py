@@ -5,12 +5,12 @@ Admin Referral Links Management endpoints.
 
 All three endpoints are protected by require_admin_role.
 Every mutation writes an AuditLog row (non-blocking on failure).
-Firestore is required for these endpoints — returns HTTP 503 if unavailable.
+Firestore is required for these endpoints - returns HTTP 503 if unavailable.
 
 Routes:
-  POST   /               — Create admin referral link in Firestore
-  DELETE /{firestore_id} — Delete admin referral link from Firestore
-  PATCH  /{firestore_id}/status — Toggle status active/paused
+  POST   /               - Create admin referral link in Firestore
+  DELETE /{firestore_id} - Delete admin referral link from Firestore
+  PATCH  /{firestore_id}/status - Toggle status active/paused
 """
 
 import json
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ── Pydantic schemas ────────────────────────────────────────────────────────
+# -- Pydantic schemas --------------------------------------------------------
 
 
 class AdminReferralLinkCreate(BaseModel):
@@ -47,7 +47,7 @@ class AdminReferralLinkStatusUpdate(BaseModel):
     status: str  # "active" | "paused"
 
 
-# ── Audit helper ────────────────────────────────────────────────────────────
+# -- Audit helper ------------------------------------------------------------
 
 
 def _log_audit(
@@ -57,7 +57,7 @@ def _log_audit(
     target_id: str,
     metadata: dict | None = None,
 ):
-    """Insert an AuditLog row. Non-blocking — if it fails, log and continue."""
+    """Insert an AuditLog row. Non-blocking - if it fails, log and continue."""
     try:
         audit = AuditLog(
             admin_user_id=admin_user_id,
@@ -70,10 +70,10 @@ def _log_audit(
         db.commit()
     except Exception as exc:
         logger.error("[referral_links] AuditLog insert failed for action=%s: %s", action, exc)
-        # Do NOT re-raise — audit failure must never block the primary operation
+        # Do NOT re-raise - audit failure must never block the primary operation
 
 
-# ── POST / — Create referral link ──────────────────────────────────────────
+# -- POST / - Create referral link ------------------------------------------
 
 
 @router.post("/", status_code=201)
@@ -84,7 +84,7 @@ def create_referral_link(
 ):
     """
     Create an admin referral link template in Firestore adminReferralLinks.
-    Requires a live Firestore connection — returns HTTP 503 if unavailable.
+    Requires a live Firestore connection - returns HTTP 503 if unavailable.
     """
     if not firebase_connected or fdb is None:
         raise HTTPException(
@@ -131,7 +131,7 @@ def create_referral_link(
     return {"id": doc_ref.id, **document}
 
 
-# ── DELETE /{firestore_id} — Delete referral link ──────────────────────────
+# -- DELETE /{firestore_id} - Delete referral link --------------------------
 
 
 @router.delete("/{firestore_id}", status_code=200)
@@ -188,7 +188,7 @@ def delete_referral_link(
     return {"success": True, "id": firestore_id}
 
 
-# ── PATCH /{firestore_id}/status — Toggle status ───────────────────────────
+# -- PATCH /{firestore_id}/status - Toggle status ---------------------------
 
 
 @router.patch("/{firestore_id}/status", status_code=200)

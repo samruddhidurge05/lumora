@@ -1,9 +1,9 @@
 """
 Shared FastAPI dependencies for the Lumora backend.
 
-get_current_user_optional — returns User or None (never raises).
-get_current_user_required — returns User or raises 401.
-get_current_vendor        — requires a valid JWT with role='vendor' or 'admin'.
+get_current_user_optional - returns User or None (never raises).
+get_current_user_required - returns User or raises 401.
+get_current_vendor        - requires a valid JWT with role='vendor' or 'admin'.
                             Returns a dict with {uid, role, email, name}.
 """
 from fastapi import Depends, HTTPException, status
@@ -88,7 +88,7 @@ def get_current_vendor(
     Returns a dict: {uid: str(user.id), role: 'vendor', email: ..., name: ...}
 
     BUG-01 FIX: Dev mock fallback removed. A real JWT is always required.
-    The uid returned is now str(user.id) — the SQLite integer — which is what
+    The uid returned is now str(user.id) - the SQLite integer - which is what
     the frontend stores via firebase-sync. Vendor routes compare this uid
     against the vendor_id path param sent by the frontend.
     """

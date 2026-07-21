@@ -3,8 +3,8 @@ backend/admin/routes/auth.py
 ----------------------------
 Admin authentication endpoints:
 
-  POST /login        — Firebase ID token → JWT (rate-limited to 10/minute)
-  GET  /audit-logs   — Paginated audit log retrieval (admin-only)
+  POST /login        - Firebase ID token ? JWT (rate-limited to 10/minute)
+  GET  /audit-logs   - Paginated audit log retrieval (admin-only)
 """
 
 import logging
@@ -30,14 +30,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ── Request / Response schemas ─────────────────────────────────────────────
+# -- Request / Response schemas ---------------------------------------------
 
 
 class AdminLoginRequest(BaseModel):
     idToken: str
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# -- Helpers ----------------------------------------------------------------
 
 
 def _insert_audit_log(
@@ -63,7 +63,7 @@ def _insert_audit_log(
     db.commit()
 
 
-# ── POST /login ────────────────────────────────────────────────────────────
+# -- POST /login ------------------------------------------------------------
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -76,7 +76,7 @@ def admin_login(
     """
     Exchange a Firebase ID token for a Lumora admin JWT.
 
-    Identity resolution order (most → least specific):
+    Identity resolution order (most ? least specific):
       1. Exact firebase_uid match.
       2. Email match + firebase_uid reconciliation (provider switch or
          first-time Google sign-in after email/password registration).
@@ -85,11 +85,11 @@ def admin_login(
     """
     ip = request.client.host if request.client else None
 
-    # ── Step 1: Verify Firebase token ──────────────────────────────────────
+    # -- Step 1: Verify Firebase token --------------------------------------
     try:
         claims = verify_firebase_id_token(body.idToken, settings.FIREBASE_PROJECT_ID)
     except ValueError as exc:
-        logger.warning("Admin login: Firebase token verification failed — %s", exc)
+        logger.warning("Admin login: Firebase token verification failed - %s", exc)
         _insert_audit_log(
             db,
             action="admin_login_failure",
@@ -106,9 +106,9 @@ def admin_login(
     email: Optional[str] = claims.get("email")
     email_verified: bool = claims.get("email_verified", False)
 
-    logger.info("Admin login attempt — firebase_uid=%s email_verified=%s", firebase_uid, email_verified)
+    logger.info("Admin login attempt - firebase_uid=%s email_verified=%s", firebase_uid, email_verified)
 
-    # ── Step 2: Resolve user identity ──────────────────────────────────────
+    # -- Step 2: Resolve user identity --------------------------------------
     # Strategy: prefer exact firebase_uid match; fall back to verified email.
     # This handles the common post-invitation scenario where the user
     # registered with email/password (creating one firebase_uid) and later
@@ -116,17 +116,17 @@ def admin_login(
     # for the same verified email).
     user: Optional[User] = None
 
-    # 2a. Exact UID match — fastest, most specific
+    # 2a. Exact UID match - fastest, most specific
     if firebase_uid:
         user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
-    # 2b. Email fallback — covers provider switch (email/password → Google)
+    # 2b. Email fallback - covers provider switch (email/password ? Google)
     #     and first-time Google sign-in after invitation acceptance.
     #     Only allowed when Firebase has verified the email address, ensuring
     #     we cannot be spoofed by an unverified email claim.
     if user is None and email and email_verified:
         logger.info(
-            "Admin login: UID lookup missed — falling back to verified email=%s", email
+            "Admin login: UID lookup missed - falling back to verified email=%s", email
         )
         user = db.query(User).filter(User.email == email.lower()).first()
 
@@ -134,7 +134,7 @@ def admin_login(
     #     lookup so the role/active checks below produce the right error message)
     if user is None and email and not email_verified:
         logger.warning(
-            "Admin login: UID miss + unverified email=%s — attempting lookup anyway", email
+            "Admin login: UID miss + unverified email=%s - attempting lookup anyway", email
         )
         user = db.query(User).filter(User.email == email.lower()).first()
 
@@ -151,7 +151,7 @@ def admin_login(
             detail="No account found for this Google identity.",
         )
 
-    # ── Step 3: Authorisation checks ──────────────────────────────────────
+    # -- Step 3: Authorisation checks --------------------------------------
     if user.role != "admin":
         _insert_audit_log(
             db,
@@ -178,14 +178,14 @@ def admin_login(
             detail="Admin account is disabled.",
         )
 
-    # ── Step 4: firebase_uid binding / reconciliation ──────────────────────
+    # -- Step 4: firebase_uid binding / reconciliation ----------------------
     # At this point the user is confirmed admin and active.
-    # If the stored UID differs from the token UID, update it — Firebase has
+    # If the stored UID differs from the token UID, update it - Firebase has
     # already verified ownership of the email via OAuth, so this is safe.
     # This covers:
-    #   • First-time Google sign-in (user.firebase_uid is None)
-    #   • Provider switch: email/password → Google OAuth
-    #   • Concurrent duplicate request (same UID already written — no-op)
+    #   ? First-time Google sign-in (user.firebase_uid is None)
+    #   ? Provider switch: email/password ? Google OAuth
+    #   ? Concurrent duplicate request (same UID already written - no-op)
     if firebase_uid and user.firebase_uid != firebase_uid:
         logger.info(
             "[admin_login] Reconciling firebase_uid for user %s "
@@ -203,7 +203,7 @@ def admin_login(
                 # Re-check under lock: another concurrent request may have
                 # already written the correct UID.
                 if locked_user.firebase_uid == firebase_uid:
-                    # Already reconciled by a concurrent request — proceed.
+                    # Already reconciled by a concurrent request - proceed.
                     user = locked_user
                 elif locked_user.firebase_uid is None or (
                     email and locked_user.email.lower() == email.lower()
@@ -215,11 +215,11 @@ def admin_login(
                     db.refresh(locked_user)
                     user = locked_user
                     logger.info(
-                        "[admin_login] firebase_uid reconciled for user %s → %s",
+                        "[admin_login] firebase_uid reconciled for user %s ? %s",
                         user.id, firebase_uid,
                     )
                 else:
-                    # Different email under lock — genuine mismatch, reject.
+                    # Different email under lock - genuine mismatch, reject.
                     db.rollback()
                     logger.warning(
                         "[admin_login] firebase_uid mismatch under lock for user %s "
@@ -246,23 +246,23 @@ def admin_login(
                 user.id, exc,
             )
             # Non-fatal: proceed with login even if UID update failed.
-            # The user is already verified admin — don't block access for a
+            # The user is already verified admin - don't block access for a
             # transient DB error.
 
-    # ── Step 5: Issue JWT ──────────────────────────────────────────────────
+    # -- Step 5: Issue JWT --------------------------------------------------
     access_token = create_access_token(
         {"sub": str(user.id)},
         expires_delta=timedelta(hours=24),
     )
 
-    # ── Step 5a: Record last login timestamp (Req 9) ───────────────────────
+    # -- Step 5a: Record last login timestamp (Req 9) -----------------------
     try:
         user.last_login_at = datetime.now(timezone.utc)
         db.commit()
     except Exception:
-        db.rollback()  # non-fatal — proceed with login
+        db.rollback()  # non-fatal - proceed with login
 
-    # ── Step 6: Write success audit log ───────────────────────────────────
+    # -- Step 6: Write success audit log -----------------------------------
     _insert_audit_log(
         db,
         action="admin_login_success",
@@ -270,7 +270,7 @@ def admin_login(
         ip_address=ip,
     )
 
-    logger.info("Admin login success — user_id=%s", user.id)
+    logger.info("Admin login success - user_id=%s", user.id)
 
     return TokenResponse(
         access_token=access_token,
@@ -279,7 +279,7 @@ def admin_login(
     )
 
 
-# ── GET /audit-logs ────────────────────────────────────────────────────────
+# -- GET /audit-logs --------------------------------------------------------
 
 
 @router.get("/audit-logs")
@@ -293,9 +293,9 @@ def get_audit_logs(
     """
     Return paginated audit logs ordered by created_at descending.
 
-    page      — minimum 1 (clamped)
-    page_size — range [1, 200] (clamped)
-    action    — optional exact-match filter on AuditLog.action
+    page      - minimum 1 (clamped)
+    page_size - range [1, 200] (clamped)
+    action    - optional exact-match filter on AuditLog.action
     """
     # Clamp parameters
     page = max(1, page)

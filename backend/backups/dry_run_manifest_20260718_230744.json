@@ -1,0 +1,3378 @@
+{
+  "timestamp": "20260718_230744",
+  "total_deletions": 477,
+  "deletions_by_phase": {
+    "1_child_documents": [
+      "orders/27",
+      "orders/3N9QYofn3YfBpZ5dlpA1",
+      "orders/4K9JdRx1ykQecIo5DArL",
+      "orders/6yMAAVdvkQGJFB96yVQh",
+      "orders/7JtUoKMh6b7YJbpd9Min",
+      "orders/E25LV4JKJepEsZwVYlmw",
+      "orders/L04TmmLBCgflUHDE9f0b",
+      "orders/Lwkmfn9VQFIzez8Fip6p",
+      "orders/NXrIUAV2w0wkDWGlXzmx",
+      "orders/ORD-1",
+      "orders/ORD-1452BB",
+      "orders/ORD-2",
+      "orders/ORD-229B88",
+      "orders/ORD-28",
+      "orders/ORD-29",
+      "orders/ORD-30",
+      "orders/ORD-31",
+      "orders/ORD-32",
+      "orders/ORD-33",
+      "orders/ORD-34",
+      "orders/ORD-35",
+      "orders/ORD-36",
+      "orders/ORD-37",
+      "orders/ORD-38",
+      "orders/ORD-39",
+      "orders/ORD-40",
+      "orders/ORD-41",
+      "orders/ORD-42",
+      "orders/ORD-43",
+      "orders/ORD-44",
+      "orders/ORD-45",
+      "orders/ORD-46",
+      "orders/ORD-47",
+      "orders/ORD-48",
+      "orders/ORD-49",
+      "orders/ORD-51",
+      "orders/ORD-52",
+      "orders/ORD-53",
+      "orders/ORD-57",
+      "orders/ORD-59",
+      "orders/ORD-5B89DE",
+      "orders/ORD-61",
+      "orders/ORD-62",
+      "orders/ORD-63",
+      "orders/ORD-65",
+      "orders/ORD-66",
+      "orders/ORD-66DC47",
+      "orders/ORD-68",
+      "orders/ORD-7DE4DE",
+      "orders/ORD-8B20D8",
+      "orders/ORD-B1701E",
+      "orders/ORD-BD2493",
+      "orders/ORD-C55E74",
+      "orders/ORD-D6E680",
+      "orders/ORD-F05A5A",
+      "orders/ORD-FF7121",
+      "orders/R124WtZcOZiDdI155krR",
+      "orders/RTCvmcb9F2q3nIUDfaaS",
+      "orders/RxTjc3nAN795LuFywFMI",
+      "orders/StdknPvZuJWfOi0ifnE7",
+      "orders/TsxtMQbycSiKnZyaBgS6",
+      "orders/XJPJWKy7h6s5bUpeacJf",
+      "orders/XpjGhL3IiEyLWrKHG87O",
+      "orders/YVInTIidQRpnofZYBaW4",
+      "orders/caf1RU1CkUqmahmuywA7",
+      "orders/hx66PB93BlYstkHrqDYQ",
+      "orders/hxszFCqeVMF0IqoTWBoA",
+      "orders/oIFjIuNGYVfdMLOVjdvR",
+      "orders/ozCRLvqjVEziRATBF5tf",
+      "orders/s3OXELe6geNlRPEMs0GI",
+      "orders/tRooO5XjhcJqBoyfzuUx",
+      "orders/xJnkXGbveFo563nQL7RW",
+      "orders/zSj5xlpuKtmZUm3XZLEV",
+      "purchases/AeC68owpZfChyPEqN61k",
+      "purchases/LAH15apMAjaNxElQCU8k",
+      "purchases/M4mybSRB5go5QMEEx3nc",
+      "purchases/MFvK5JL8x5FnPCZOaqBC",
+      "purchases/NC9H10WqfQtppQKuNwUW",
+      "purchases/NETZyAw0V2khjzXK6HTF",
+      "purchases/SP9wpY8eW0LBZsTncHCv",
+      "purchases/UC8nDiOnyxIaJOdScbQm",
+      "purchases/aZtGjBxJDTluz274GtPc",
+      "purchases/vWSFi2xKmJ0y0NKMKygt",
+      "downloads/23_102",
+      "downloads/24_101",
+      "downloads/24_103",
+      "downloads/25_103",
+      "downloads/5_103",
+      "downloads/5_97",
+      "downloads/6_103",
+      "userNotifications/notif_1",
+      "userNotifications/notif_10",
+      "userNotifications/notif_100",
+      "userNotifications/notif_101",
+      "userNotifications/notif_102",
+      "userNotifications/notif_103",
+      "userNotifications/notif_104",
+      "userNotifications/notif_105",
+      "userNotifications/notif_106",
+      "userNotifications/notif_107",
+      "userNotifications/notif_108",
+      "userNotifications/notif_109",
+      "userNotifications/notif_11",
+      "userNotifications/notif_110",
+      "userNotifications/notif_111",
+      "userNotifications/notif_112",
+      "userNotifications/notif_113",
+      "userNotifications/notif_114",
+      "userNotifications/notif_115",
+      "userNotifications/notif_116",
+      "userNotifications/notif_117",
+      "userNotifications/notif_118",
+      "userNotifications/notif_119",
+      "userNotifications/notif_12",
+      "userNotifications/notif_120",
+      "userNotifications/notif_121",
+      "userNotifications/notif_122",
+      "userNotifications/notif_123",
+      "userNotifications/notif_124",
+      "userNotifications/notif_125",
+      "userNotifications/notif_126",
+      "userNotifications/notif_127",
+      "userNotifications/notif_128",
+      "userNotifications/notif_129",
+      "userNotifications/notif_13",
+      "userNotifications/notif_130",
+      "userNotifications/notif_131",
+      "userNotifications/notif_132",
+      "userNotifications/notif_133",
+      "userNotifications/notif_134",
+      "userNotifications/notif_135",
+      "userNotifications/notif_136",
+      "userNotifications/notif_137",
+      "userNotifications/notif_138",
+      "userNotifications/notif_139",
+      "userNotifications/notif_14",
+      "userNotifications/notif_140",
+      "userNotifications/notif_141",
+      "userNotifications/notif_143",
+      "userNotifications/notif_144",
+      "userNotifications/notif_145",
+      "userNotifications/notif_146",
+      "userNotifications/notif_147",
+      "userNotifications/notif_148",
+      "userNotifications/notif_149",
+      "userNotifications/notif_15",
+      "userNotifications/notif_150",
+      "userNotifications/notif_151",
+      "userNotifications/notif_152",
+      "userNotifications/notif_153",
+      "userNotifications/notif_154",
+      "userNotifications/notif_158",
+      "userNotifications/notif_159",
+      "userNotifications/notif_16",
+      "userNotifications/notif_160",
+      "userNotifications/notif_161",
+      "userNotifications/notif_162",
+      "userNotifications/notif_163",
+      "userNotifications/notif_164",
+      "userNotifications/notif_165",
+      "userNotifications/notif_166",
+      "userNotifications/notif_167",
+      "userNotifications/notif_168",
+      "userNotifications/notif_169",
+      "userNotifications/notif_17",
+      "userNotifications/notif_173",
+      "userNotifications/notif_174",
+      "userNotifications/notif_175",
+      "userNotifications/notif_179",
+      "userNotifications/notif_18",
+      "userNotifications/notif_180",
+      "userNotifications/notif_181",
+      "userNotifications/notif_185",
+      "userNotifications/notif_186",
+      "userNotifications/notif_187",
+      "userNotifications/notif_188",
+      "userNotifications/notif_189",
+      "userNotifications/notif_19",
+      "userNotifications/notif_190",
+      "userNotifications/notif_191",
+      "userNotifications/notif_192",
+      "userNotifications/notif_193",
+      "userNotifications/notif_197",
+      "userNotifications/notif_198",
+      "userNotifications/notif_199",
+      "userNotifications/notif_2",
+      "userNotifications/notif_20",
+      "userNotifications/notif_200",
+      "userNotifications/notif_201",
+      "userNotifications/notif_202",
+      "userNotifications/notif_206",
+      "userNotifications/notif_207",
+      "userNotifications/notif_208",
+      "userNotifications/notif_21",
+      "userNotifications/notif_22",
+      "userNotifications/notif_23",
+      "userNotifications/notif_24",
+      "userNotifications/notif_25",
+      "userNotifications/notif_26",
+      "userNotifications/notif_27",
+      "userNotifications/notif_28",
+      "userNotifications/notif_29",
+      "userNotifications/notif_3",
+      "userNotifications/notif_30",
+      "userNotifications/notif_31",
+      "userNotifications/notif_32",
+      "userNotifications/notif_33",
+      "userNotifications/notif_34",
+      "userNotifications/notif_35",
+      "userNotifications/notif_36",
+      "userNotifications/notif_37",
+      "userNotifications/notif_38",
+      "userNotifications/notif_39",
+      "userNotifications/notif_4",
+      "userNotifications/notif_40",
+      "userNotifications/notif_41",
+      "userNotifications/notif_42",
+      "userNotifications/notif_43",
+      "userNotifications/notif_44",
+      "userNotifications/notif_45",
+      "userNotifications/notif_46",
+      "userNotifications/notif_47",
+      "userNotifications/notif_48",
+      "userNotifications/notif_49",
+      "userNotifications/notif_5",
+      "userNotifications/notif_50",
+      "userNotifications/notif_51",
+      "userNotifications/notif_52",
+      "userNotifications/notif_53",
+      "userNotifications/notif_54",
+      "userNotifications/notif_55",
+      "userNotifications/notif_56",
+      "userNotifications/notif_57",
+      "userNotifications/notif_58",
+      "userNotifications/notif_59",
+      "userNotifications/notif_6",
+      "userNotifications/notif_60",
+      "userNotifications/notif_61",
+      "userNotifications/notif_62",
+      "userNotifications/notif_63",
+      "userNotifications/notif_64",
+      "userNotifications/notif_65",
+      "userNotifications/notif_66",
+      "userNotifications/notif_67",
+      "userNotifications/notif_68",
+      "userNotifications/notif_69",
+      "userNotifications/notif_7",
+      "userNotifications/notif_70",
+      "userNotifications/notif_71",
+      "userNotifications/notif_72",
+      "userNotifications/notif_73",
+      "userNotifications/notif_74",
+      "userNotifications/notif_75",
+      "userNotifications/notif_76",
+      "userNotifications/notif_77",
+      "userNotifications/notif_78",
+      "userNotifications/notif_79",
+      "userNotifications/notif_8",
+      "userNotifications/notif_80",
+      "userNotifications/notif_81",
+      "userNotifications/notif_82",
+      "userNotifications/notif_83",
+      "userNotifications/notif_84",
+      "userNotifications/notif_85",
+      "userNotifications/notif_86",
+      "userNotifications/notif_87",
+      "userNotifications/notif_88",
+      "userNotifications/notif_89",
+      "userNotifications/notif_9",
+      "userNotifications/notif_90",
+      "userNotifications/notif_91",
+      "userNotifications/notif_92",
+      "userNotifications/notif_93",
+      "userNotifications/notif_94",
+      "userNotifications/notif_95",
+      "userNotifications/notif_96",
+      "userNotifications/notif_97",
+      "userNotifications/notif_98",
+      "userNotifications/notif_99",
+      "vendorNotifications/0rzHRtBrRu6ydQtoqYs7",
+      "vendorNotifications/10qKAbe9spNEcyU4rT3P",
+      "vendorNotifications/2GkwR5FeQgkiTlnRoNgb",
+      "vendorNotifications/2HmjjARm66ODEdoD7Q2C",
+      "vendorNotifications/2d1pXdWeYqOAg19NnOu0",
+      "vendorNotifications/35N5SyKv0T8oU5tVPZTb",
+      "vendorNotifications/3vDi1sFr1nmcLln9Av70",
+      "vendorNotifications/6kcZU3w6TY31UJp3fAHa",
+      "vendorNotifications/7cd0a1PGa03BrYQ6I9GH",
+      "vendorNotifications/9TDjmTtkEs9TRskEG70z",
+      "vendorNotifications/AV23kWTrUZjXGm6YbgwB",
+      "vendorNotifications/ApBF7BNxxpNQnbTDNrwE",
+      "vendorNotifications/CJn5NDovC16g5ipbge9N",
+      "vendorNotifications/CoaOq6Zpbixq9cIkb5Hf",
+      "vendorNotifications/DU6JdnWl67twuznp3yFa",
+      "vendorNotifications/E4OfhL3wqEirawb5l5Ai",
+      "vendorNotifications/F8bhhYbQ9RWUxRJZAf0m",
+      "vendorNotifications/FHZKKVqLU3W8joH2sJ0h",
+      "vendorNotifications/FZ57DaUmHKtK5EPQcsFx",
+      "vendorNotifications/GmIlXOLz2h5Kx8Lcuwj0",
+      "vendorNotifications/ITOJrIateoJyDJ0HkpoV",
+      "vendorNotifications/IW7t3CqyLDyluio2f8IF",
+      "vendorNotifications/JV9lggGuol6I0IBJLRWl",
+      "vendorNotifications/JudfMe9L8v6kZJweJ5x4",
+      "vendorNotifications/JwSLykFeYW6BQm3820r7",
+      "vendorNotifications/Lroa2hqPrnpjnDeJB3JV",
+      "vendorNotifications/ODHUr87A0LoRuAfaAEni",
+      "vendorNotifications/OUFgENpnjmhaq5wXF7dk",
+      "vendorNotifications/OloCuqJUQoTXozcPjBHc",
+      "vendorNotifications/P4J5oFEJddoDIqzxJM8n",
+      "vendorNotifications/Qr7hLW4u2YDbCwIv1zEn",
+      "vendorNotifications/RVQt85sdp7jr5nxJZWaw",
+      "vendorNotifications/T06uaHFa33xFHZlR0ciT",
+      "vendorNotifications/TFWgH3Gi2icA9B0g6ofL",
+      "vendorNotifications/TqPMQMOQZc95iHMTYJcI",
+      "vendorNotifications/Ud04hqdIqnpJkB0BVQMO",
+      "vendorNotifications/Uztv7JDXWulqoWMBLosj",
+      "vendorNotifications/WEenrLPG29CXPM5PAmIS",
+      "vendorNotifications/WlaDPZjTye0BR4vMFINa",
+      "vendorNotifications/WmKlwYiVJYOKliI6Q6DT",
+      "vendorNotifications/Y3JmwrWX94RIxpfq9PUE",
+      "vendorNotifications/YHgGeZAlMjLBw8zC0oak",
+      "vendorNotifications/YjdIrogafjd6fsDRECKQ",
+      "vendorNotifications/aDG5HEewRdzJNP1jiqd3",
+      "vendorNotifications/bjEn0q6UN2sdGEoFiM90",
+      "vendorNotifications/bs1PIdjyh0xjRoZnRipO",
+      "vendorNotifications/c0fDrXTbaspeYllT7s0G",
+      "vendorNotifications/c5NBvgHCleaiz3RCI8Zr",
+      "vendorNotifications/dStF2h0c8dzPNpS20ejh",
+      "vendorNotifications/eVs3iUOHcaqIy8w99I1U",
+      "vendorNotifications/fOSL4Zmu9zoXXpN9gv7B",
+      "vendorNotifications/hniRDqN89GjjLMwd2RyI",
+      "vendorNotifications/kO5IaN5bM2cIsrY8EfWP",
+      "vendorNotifications/l6A8hBxr4eWS5GyA0CHK",
+      "vendorNotifications/lKb7XmlXxEqMY7sh9bN1",
+      "vendorNotifications/lj0OdzjLhoYfYUb1pZ5Q",
+      "vendorNotifications/luyCzSoevzFWPvQBn2kk",
+      "vendorNotifications/nzASdRgoDoECtDNSLigv",
+      "vendorNotifications/o5rODQuJM0TeG5Cg8wdY",
+      "vendorNotifications/ofRrii0WEOnWoDCqbFSb",
+      "vendorNotifications/pEsJ5oovBNZdHcxU2kUc",
+      "vendorNotifications/qNaZ7sFYflFd2ZeBgJJw",
+      "vendorNotifications/sNJGWT8dJsINbvLeWObd",
+      "vendorNotifications/sqENzcQHqGLfqyXKirEo",
+      "vendorNotifications/tNfxT2C3qizjQwQTgovZ",
+      "vendorNotifications/tbJQ5zFGJaFNZKwh5LJu",
+      "vendorNotifications/wuw9miS3bfUpyOS3jbiz",
+      "vendorNotifications/x5rpCC1gL0StTuKGPTvf",
+      "vendorNotifications/xdAIURqwIVwwU6yLmQcH",
+      "vendorNotifications/xml2zM5erDbwHw5yy64O",
+      "vendorNotifications/ySsrMg7bwnPbatuB3CFd",
+      "vendorNotifications/z0wEPMos3yIXoM7VT0De",
+      "vendorNotifications/zaAV5OUe9htR9CGVhnDS",
+      "vendorNotifications/zzBRZ3SkWJV3pWp2nubS",
+      "notifications/0iEjRX2JqA4aGc2RPCHD",
+      "notifications/1AsvvrvNCxAj75mqM7cM",
+      "notifications/1Wxy5qO5VvyLGUMKNq9y",
+      "notifications/3hq0sCdL96aV5kLTeOmt",
+      "notifications/9kRVsk4oj1YdoN3gtOSZ",
+      "notifications/Bnaga8aTZLvxUHOOiHvn",
+      "notifications/De8RtSDXzeLgRQULDZjb",
+      "notifications/DflQFaWTL4TPv7C6tPGn",
+      "notifications/HWAoI03w3MFNJN6clwHh",
+      "notifications/ID1ffnxXkuP32mg2ISLA",
+      "notifications/LFAh9J40NFJ2itYJTNr1",
+      "notifications/NrLtnihT2vch3frxCx2f",
+      "notifications/OcR9lQZWGrzhFNQmwzCY",
+      "notifications/UQ8JIS0BdIcw7QsqHsHS",
+      "notifications/VXwmwgD64h7H9MxbChFt",
+      "notifications/WKeXunmnxDaAugQXUyJy",
+      "notifications/Z0vEvulOlNIDFNQzi53i",
+      "notifications/fWixwEpHlmZOzNC8eFNd",
+      "notifications/hpMJHPvcdbU7cSfbQcU0",
+      "notifications/izBJRATXRDbBKRxEDykT",
+      "notifications/jEwE1e8XNpMt3zeyw4eF",
+      "notifications/jIxwxCJfvHI4rv3y4eCM",
+      "notifications/rqwYoXpeBFsW9JGM2Fno",
+      "notifications/tPnNsR5mv0MweiRtUqmr",
+      "notifications/zs6RhTgzmuEstCYEzF7m",
+      "conversations/5jfSYxCpb2WfLYxy4wM1",
+      "conversations/JdYkat6xmw14g4g0E0Pt",
+      "conversations/RAJv8pundu9R8OTTV7hv",
+      "conversations/Xlc6IwV4gDHOx0JXYp8x",
+      "conversations/cB4ht7lUnOtP09w1rVOA",
+      "conversations/jMAZCcjy1kUT11H9ZLNS",
+      "conversations/oh6qsEisiZG3fh3VD4WC",
+      "conversations/sbK46W9V4RkJGDiYsUao",
+      "reports/jNdHP2U3BQvNAUkoh3nA",
+      "promotionParticipants/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T",
+      "affiliateActivity/1rkkjJS25CNplX9OQxoF",
+      "affiliateActivity/A7xMADARrQ0hzwjSMpzK",
+      "affiliateActivity/ACT-3FA508",
+      "affiliateActivity/ACT-542864",
+      "affiliateActivity/ACT-77A5CC",
+      "affiliateActivity/ACT-9F6753",
+      "affiliateActivity/ACT-B7FC82",
+      "affiliateActivity/ACT-F21AEF",
+      "affiliateActivity/AuUMTtmdcXABMGf9mZZt",
+      "affiliateActivity/DXtBEXch97SdIz1JTkul",
+      "affiliateActivity/GG8KwoozVWvF9CeE70wG",
+      "affiliateActivity/NkkIv0zXtmd6RiP40PwL",
+      "affiliateActivity/PWqeewq7z774xwwbZfp0",
+      "affiliateActivity/VDomgGfgcv2hvM08G7ug",
+      "affiliateActivity/hmnynND9ffPKYR7yIesQ",
+      "affiliateActivity/kIAq5HpAcJ73FUUG1qie",
+      "affiliateActivity/yFVF8qW6owR1VjycoIiu",
+      "affiliateActivity/yRiOcHFkVQDzXoW1DkeB",
+      "affiliateConversions/0hxG6nWkNJUI4MvB8tUV",
+      "affiliateConversions/6iaUMB9HqAc43jlEZEl0",
+      "affiliateConversions/CONV-373FE2",
+      "affiliateConversions/CONV-5A7DFD",
+      "affiliateConversions/CONV-60091A",
+      "affiliateConversions/CONV-C86AA7",
+      "affiliateConversions/CONV-CE1A09",
+      "affiliateConversions/CONV-D6A2C1",
+      "affiliateConversions/FEvJWNPJBgcBs5DVvuEF",
+      "affiliateConversions/H4o3rxf8rdym7WB1rgM2",
+      "affiliateConversions/Ut2tQocfGhwroKr6gd9H",
+      "affiliateConversions/VeLdMLwkOnCofNd51GVO",
+      "affiliateConversions/Vv5TV31wzungQYrXhzIs",
+      "affiliateConversions/WW548kpBYzxNnNq74Cdw",
+      "affiliateConversions/bIxO3TCquZ2SOIvbHtJ1",
+      "affiliateConversions/e52giVxMOrYtbm1TIVhW",
+      "affiliateConversions/lloeRsTFA6HDTwCHI6SS",
+      "affiliateConversions/zJ7vU2QqrtokAkRnSZMm",
+      "affiliateLinks/DBytyJkJvqe5rlZHoYGyMitj5u22_demo-prod-001",
+      "affiliateLinks/IDkKwbr7W8fcumibqcUW",
+      "affiliateLinks/WtNTTFRsrOrtnjc1onq9",
+      "affiliateLinks/Y0yPaV34fdau2FKUnWYZ",
+      "affiliateLinks/Zx4v6smSjPg9iy2qhvL9",
+      "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-001",
+      "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-002",
+      "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-003",
+      "affiliateLinks/ehLRFHa2f2ocUTsAwDhX",
+      "affiliateLinks/sIpIjz6gf5u8fUXdA4fs"
+    ],
+    "2_aggregate_documents": [
+      "adminAffiliateOrders/ADM-ORD-08D15F",
+      "adminAnalytics/global",
+      "adminPromotions/Y2zAh65sIcmQOgsBSD8T",
+      "vendorAnalytics/h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "vendorAnalytics/i0B90UKivsfVDyXcj21R94xw4bs1",
+      "vendorAnalytics/vendor-mock-001",
+      "vendorStats/5",
+      "vendorStats/CreativeLab",
+      "vendorStats/marcus-kane",
+      "vendorStats/sophia-vance",
+      "affiliateEarnings/DBytyJkJvqe5rlZHoYGyMitj5u22",
+      "affiliateEarnings/JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "affiliateEarnings/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    ],
+    "3_parent_documents": [
+      "users/1ZDfg32JdiaPmM9lt94APeBt0yn2",
+      "users/7uctsb0MFQPq25UjtrGT1WRa2uj2",
+      "users/B5WZYQBhhcMz3vBJoCwX6LcDWZa2",
+      "users/GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2",
+      "users/LNseI0Yhz1TUP4vnDsKsQ732p8T2",
+      "users/bQ5AH9Dll5O0Z1NwB289XjNHVKb2",
+      "users/ea8dwVOko7MBVsI2NUPgrbzpzsA3",
+      "users/iKqbIkwTk5ebSTQNxnTzfHFqd6O2",
+      "users/lF54eq1qPDUDu9hzbt5T3h0U9CF3",
+      "users/lFDEyE0U2PSKqpGSK1hUqEyh5As1",
+      "users/oLcTCpo6IOaMlfTxRlEoJ11YUoQ2",
+      "users/w646Mo8LJNRAnZj4jk4bycwsJDK2",
+      "customers/1ZDfg32JdiaPmM9lt94APeBt0yn2",
+      "customers/7uctsb0MFQPq25UjtrGT1WRa2uj2",
+      "customers/B5WZYQBhhcMz3vBJoCwX6LcDWZa2",
+      "customers/GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2",
+      "customers/JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "customers/LNseI0Yhz1TUP4vnDsKsQ732p8T2",
+      "customers/customer-123",
+      "customers/ea8dwVOko7MBVsI2NUPgrbzpzsA3",
+      "customers/lFDEyE0U2PSKqpGSK1hUqEyh5As1",
+      "customers/oLcTCpo6IOaMlfTxRlEoJ11YUoQ2",
+      "customers/w646Mo8LJNRAnZj4jk4bycwsJDK2",
+      "vendors/iKqbIkwTk5ebSTQNxnTzfHFqd6O2",
+      "vendors/vendor-mock-001",
+      "affiliates/JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "affiliates/b9OVhgYBDybdx9NghCEj2fGTsNZ2",
+      "affiliates/bQ5AH9Dll5O0Z1NwB289XjNHVKb2",
+      "affiliates/oGefiwDGtmXdaZyfunbbTN8B5O03",
+      "customer /pQUAMbZGlmd1XpgXYJk9"
+    ]
+  },
+  "deletions_by_collection": {
+    "orders": 73,
+    "purchases": 10,
+    "downloads": 7,
+    "userNotifications": 189,
+    "vendorNotifications": 74,
+    "notifications": 25,
+    "conversations": 8,
+    "reports": 1,
+    "promotionParticipants": 1,
+    "affiliateActivity": 18,
+    "affiliateConversions": 18,
+    "affiliateLinks": 10,
+    "adminAffiliateOrders": 1,
+    "adminAnalytics": 1,
+    "adminPromotions": 1,
+    "vendorAnalytics": 3,
+    "vendorStats": 4,
+    "affiliateEarnings": 3,
+    "users": 12,
+    "customers": 11,
+    "vendors": 2,
+    "affiliates": 4,
+    "customer ": 1
+  },
+  "deletions_queue": [
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "27",
+      "path": "orders/27"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "3N9QYofn3YfBpZ5dlpA1",
+      "path": "orders/3N9QYofn3YfBpZ5dlpA1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "4K9JdRx1ykQecIo5DArL",
+      "path": "orders/4K9JdRx1ykQecIo5DArL"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "6yMAAVdvkQGJFB96yVQh",
+      "path": "orders/6yMAAVdvkQGJFB96yVQh"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "7JtUoKMh6b7YJbpd9Min",
+      "path": "orders/7JtUoKMh6b7YJbpd9Min"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "E25LV4JKJepEsZwVYlmw",
+      "path": "orders/E25LV4JKJepEsZwVYlmw"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "L04TmmLBCgflUHDE9f0b",
+      "path": "orders/L04TmmLBCgflUHDE9f0b"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "Lwkmfn9VQFIzez8Fip6p",
+      "path": "orders/Lwkmfn9VQFIzez8Fip6p"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "NXrIUAV2w0wkDWGlXzmx",
+      "path": "orders/NXrIUAV2w0wkDWGlXzmx"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-1",
+      "path": "orders/ORD-1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-1452BB",
+      "path": "orders/ORD-1452BB"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-2",
+      "path": "orders/ORD-2"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-229B88",
+      "path": "orders/ORD-229B88"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-28",
+      "path": "orders/ORD-28"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-29",
+      "path": "orders/ORD-29"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-30",
+      "path": "orders/ORD-30"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-31",
+      "path": "orders/ORD-31"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-32",
+      "path": "orders/ORD-32"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-33",
+      "path": "orders/ORD-33"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-34",
+      "path": "orders/ORD-34"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-35",
+      "path": "orders/ORD-35"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-36",
+      "path": "orders/ORD-36"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-37",
+      "path": "orders/ORD-37"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-38",
+      "path": "orders/ORD-38"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-39",
+      "path": "orders/ORD-39"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-40",
+      "path": "orders/ORD-40"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-41",
+      "path": "orders/ORD-41"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-42",
+      "path": "orders/ORD-42"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-43",
+      "path": "orders/ORD-43"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-44",
+      "path": "orders/ORD-44"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-45",
+      "path": "orders/ORD-45"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-46",
+      "path": "orders/ORD-46"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-47",
+      "path": "orders/ORD-47"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-48",
+      "path": "orders/ORD-48"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-49",
+      "path": "orders/ORD-49"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-51",
+      "path": "orders/ORD-51"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-52",
+      "path": "orders/ORD-52"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-53",
+      "path": "orders/ORD-53"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-57",
+      "path": "orders/ORD-57"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-59",
+      "path": "orders/ORD-59"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-5B89DE",
+      "path": "orders/ORD-5B89DE"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-61",
+      "path": "orders/ORD-61"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-62",
+      "path": "orders/ORD-62"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-63",
+      "path": "orders/ORD-63"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-65",
+      "path": "orders/ORD-65"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-66",
+      "path": "orders/ORD-66"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-66DC47",
+      "path": "orders/ORD-66DC47"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-68",
+      "path": "orders/ORD-68"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-7DE4DE",
+      "path": "orders/ORD-7DE4DE"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-8B20D8",
+      "path": "orders/ORD-8B20D8"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-B1701E",
+      "path": "orders/ORD-B1701E"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-BD2493",
+      "path": "orders/ORD-BD2493"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-C55E74",
+      "path": "orders/ORD-C55E74"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-D6E680",
+      "path": "orders/ORD-D6E680"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-F05A5A",
+      "path": "orders/ORD-F05A5A"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ORD-FF7121",
+      "path": "orders/ORD-FF7121"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "R124WtZcOZiDdI155krR",
+      "path": "orders/R124WtZcOZiDdI155krR"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "RTCvmcb9F2q3nIUDfaaS",
+      "path": "orders/RTCvmcb9F2q3nIUDfaaS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "RxTjc3nAN795LuFywFMI",
+      "path": "orders/RxTjc3nAN795LuFywFMI"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "StdknPvZuJWfOi0ifnE7",
+      "path": "orders/StdknPvZuJWfOi0ifnE7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "TsxtMQbycSiKnZyaBgS6",
+      "path": "orders/TsxtMQbycSiKnZyaBgS6"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "XJPJWKy7h6s5bUpeacJf",
+      "path": "orders/XJPJWKy7h6s5bUpeacJf"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "XpjGhL3IiEyLWrKHG87O",
+      "path": "orders/XpjGhL3IiEyLWrKHG87O"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "YVInTIidQRpnofZYBaW4",
+      "path": "orders/YVInTIidQRpnofZYBaW4"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "caf1RU1CkUqmahmuywA7",
+      "path": "orders/caf1RU1CkUqmahmuywA7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "hx66PB93BlYstkHrqDYQ",
+      "path": "orders/hx66PB93BlYstkHrqDYQ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "hxszFCqeVMF0IqoTWBoA",
+      "path": "orders/hxszFCqeVMF0IqoTWBoA"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "oIFjIuNGYVfdMLOVjdvR",
+      "path": "orders/oIFjIuNGYVfdMLOVjdvR"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "ozCRLvqjVEziRATBF5tf",
+      "path": "orders/ozCRLvqjVEziRATBF5tf"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "s3OXELe6geNlRPEMs0GI",
+      "path": "orders/s3OXELe6geNlRPEMs0GI"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "tRooO5XjhcJqBoyfzuUx",
+      "path": "orders/tRooO5XjhcJqBoyfzuUx"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "xJnkXGbveFo563nQL7RW",
+      "path": "orders/xJnkXGbveFo563nQL7RW"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "orders",
+      "doc_id": "zSj5xlpuKtmZUm3XZLEV",
+      "path": "orders/zSj5xlpuKtmZUm3XZLEV"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "AeC68owpZfChyPEqN61k",
+      "path": "purchases/AeC68owpZfChyPEqN61k"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "LAH15apMAjaNxElQCU8k",
+      "path": "purchases/LAH15apMAjaNxElQCU8k"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "M4mybSRB5go5QMEEx3nc",
+      "path": "purchases/M4mybSRB5go5QMEEx3nc"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "MFvK5JL8x5FnPCZOaqBC",
+      "path": "purchases/MFvK5JL8x5FnPCZOaqBC"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "NC9H10WqfQtppQKuNwUW",
+      "path": "purchases/NC9H10WqfQtppQKuNwUW"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "NETZyAw0V2khjzXK6HTF",
+      "path": "purchases/NETZyAw0V2khjzXK6HTF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "SP9wpY8eW0LBZsTncHCv",
+      "path": "purchases/SP9wpY8eW0LBZsTncHCv"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "UC8nDiOnyxIaJOdScbQm",
+      "path": "purchases/UC8nDiOnyxIaJOdScbQm"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "aZtGjBxJDTluz274GtPc",
+      "path": "purchases/aZtGjBxJDTluz274GtPc"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "purchases",
+      "doc_id": "vWSFi2xKmJ0y0NKMKygt",
+      "path": "purchases/vWSFi2xKmJ0y0NKMKygt"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "23_102",
+      "path": "downloads/23_102"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "24_101",
+      "path": "downloads/24_101"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "24_103",
+      "path": "downloads/24_103"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "25_103",
+      "path": "downloads/25_103"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "5_103",
+      "path": "downloads/5_103"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "5_97",
+      "path": "downloads/5_97"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "downloads",
+      "doc_id": "6_103",
+      "path": "downloads/6_103"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_1",
+      "path": "userNotifications/notif_1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_10",
+      "path": "userNotifications/notif_10"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_100",
+      "path": "userNotifications/notif_100"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_101",
+      "path": "userNotifications/notif_101"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_102",
+      "path": "userNotifications/notif_102"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_103",
+      "path": "userNotifications/notif_103"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_104",
+      "path": "userNotifications/notif_104"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_105",
+      "path": "userNotifications/notif_105"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_106",
+      "path": "userNotifications/notif_106"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_107",
+      "path": "userNotifications/notif_107"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_108",
+      "path": "userNotifications/notif_108"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_109",
+      "path": "userNotifications/notif_109"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_11",
+      "path": "userNotifications/notif_11"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_110",
+      "path": "userNotifications/notif_110"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_111",
+      "path": "userNotifications/notif_111"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_112",
+      "path": "userNotifications/notif_112"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_113",
+      "path": "userNotifications/notif_113"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_114",
+      "path": "userNotifications/notif_114"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_115",
+      "path": "userNotifications/notif_115"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_116",
+      "path": "userNotifications/notif_116"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_117",
+      "path": "userNotifications/notif_117"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_118",
+      "path": "userNotifications/notif_118"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_119",
+      "path": "userNotifications/notif_119"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_12",
+      "path": "userNotifications/notif_12"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_120",
+      "path": "userNotifications/notif_120"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_121",
+      "path": "userNotifications/notif_121"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_122",
+      "path": "userNotifications/notif_122"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_123",
+      "path": "userNotifications/notif_123"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_124",
+      "path": "userNotifications/notif_124"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_125",
+      "path": "userNotifications/notif_125"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_126",
+      "path": "userNotifications/notif_126"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_127",
+      "path": "userNotifications/notif_127"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_128",
+      "path": "userNotifications/notif_128"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_129",
+      "path": "userNotifications/notif_129"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_13",
+      "path": "userNotifications/notif_13"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_130",
+      "path": "userNotifications/notif_130"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_131",
+      "path": "userNotifications/notif_131"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_132",
+      "path": "userNotifications/notif_132"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_133",
+      "path": "userNotifications/notif_133"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_134",
+      "path": "userNotifications/notif_134"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_135",
+      "path": "userNotifications/notif_135"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_136",
+      "path": "userNotifications/notif_136"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_137",
+      "path": "userNotifications/notif_137"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_138",
+      "path": "userNotifications/notif_138"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_139",
+      "path": "userNotifications/notif_139"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_14",
+      "path": "userNotifications/notif_14"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_140",
+      "path": "userNotifications/notif_140"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_141",
+      "path": "userNotifications/notif_141"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_143",
+      "path": "userNotifications/notif_143"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_144",
+      "path": "userNotifications/notif_144"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_145",
+      "path": "userNotifications/notif_145"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_146",
+      "path": "userNotifications/notif_146"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_147",
+      "path": "userNotifications/notif_147"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_148",
+      "path": "userNotifications/notif_148"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_149",
+      "path": "userNotifications/notif_149"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_15",
+      "path": "userNotifications/notif_15"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_150",
+      "path": "userNotifications/notif_150"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_151",
+      "path": "userNotifications/notif_151"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_152",
+      "path": "userNotifications/notif_152"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_153",
+      "path": "userNotifications/notif_153"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_154",
+      "path": "userNotifications/notif_154"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_158",
+      "path": "userNotifications/notif_158"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_159",
+      "path": "userNotifications/notif_159"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_16",
+      "path": "userNotifications/notif_16"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_160",
+      "path": "userNotifications/notif_160"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_161",
+      "path": "userNotifications/notif_161"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_162",
+      "path": "userNotifications/notif_162"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_163",
+      "path": "userNotifications/notif_163"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_164",
+      "path": "userNotifications/notif_164"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_165",
+      "path": "userNotifications/notif_165"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_166",
+      "path": "userNotifications/notif_166"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_167",
+      "path": "userNotifications/notif_167"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_168",
+      "path": "userNotifications/notif_168"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_169",
+      "path": "userNotifications/notif_169"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_17",
+      "path": "userNotifications/notif_17"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_173",
+      "path": "userNotifications/notif_173"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_174",
+      "path": "userNotifications/notif_174"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_175",
+      "path": "userNotifications/notif_175"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_179",
+      "path": "userNotifications/notif_179"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_18",
+      "path": "userNotifications/notif_18"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_180",
+      "path": "userNotifications/notif_180"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_181",
+      "path": "userNotifications/notif_181"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_185",
+      "path": "userNotifications/notif_185"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_186",
+      "path": "userNotifications/notif_186"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_187",
+      "path": "userNotifications/notif_187"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_188",
+      "path": "userNotifications/notif_188"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_189",
+      "path": "userNotifications/notif_189"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_19",
+      "path": "userNotifications/notif_19"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_190",
+      "path": "userNotifications/notif_190"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_191",
+      "path": "userNotifications/notif_191"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_192",
+      "path": "userNotifications/notif_192"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_193",
+      "path": "userNotifications/notif_193"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_197",
+      "path": "userNotifications/notif_197"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_198",
+      "path": "userNotifications/notif_198"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_199",
+      "path": "userNotifications/notif_199"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_2",
+      "path": "userNotifications/notif_2"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_20",
+      "path": "userNotifications/notif_20"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_200",
+      "path": "userNotifications/notif_200"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_201",
+      "path": "userNotifications/notif_201"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_202",
+      "path": "userNotifications/notif_202"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_206",
+      "path": "userNotifications/notif_206"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_207",
+      "path": "userNotifications/notif_207"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_208",
+      "path": "userNotifications/notif_208"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_21",
+      "path": "userNotifications/notif_21"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_22",
+      "path": "userNotifications/notif_22"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_23",
+      "path": "userNotifications/notif_23"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_24",
+      "path": "userNotifications/notif_24"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_25",
+      "path": "userNotifications/notif_25"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_26",
+      "path": "userNotifications/notif_26"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_27",
+      "path": "userNotifications/notif_27"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_28",
+      "path": "userNotifications/notif_28"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_29",
+      "path": "userNotifications/notif_29"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_3",
+      "path": "userNotifications/notif_3"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_30",
+      "path": "userNotifications/notif_30"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_31",
+      "path": "userNotifications/notif_31"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_32",
+      "path": "userNotifications/notif_32"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_33",
+      "path": "userNotifications/notif_33"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_34",
+      "path": "userNotifications/notif_34"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_35",
+      "path": "userNotifications/notif_35"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_36",
+      "path": "userNotifications/notif_36"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_37",
+      "path": "userNotifications/notif_37"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_38",
+      "path": "userNotifications/notif_38"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_39",
+      "path": "userNotifications/notif_39"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_4",
+      "path": "userNotifications/notif_4"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_40",
+      "path": "userNotifications/notif_40"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_41",
+      "path": "userNotifications/notif_41"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_42",
+      "path": "userNotifications/notif_42"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_43",
+      "path": "userNotifications/notif_43"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_44",
+      "path": "userNotifications/notif_44"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_45",
+      "path": "userNotifications/notif_45"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_46",
+      "path": "userNotifications/notif_46"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_47",
+      "path": "userNotifications/notif_47"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_48",
+      "path": "userNotifications/notif_48"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_49",
+      "path": "userNotifications/notif_49"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_5",
+      "path": "userNotifications/notif_5"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_50",
+      "path": "userNotifications/notif_50"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_51",
+      "path": "userNotifications/notif_51"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_52",
+      "path": "userNotifications/notif_52"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_53",
+      "path": "userNotifications/notif_53"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_54",
+      "path": "userNotifications/notif_54"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_55",
+      "path": "userNotifications/notif_55"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_56",
+      "path": "userNotifications/notif_56"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_57",
+      "path": "userNotifications/notif_57"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_58",
+      "path": "userNotifications/notif_58"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_59",
+      "path": "userNotifications/notif_59"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_6",
+      "path": "userNotifications/notif_6"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_60",
+      "path": "userNotifications/notif_60"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_61",
+      "path": "userNotifications/notif_61"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_62",
+      "path": "userNotifications/notif_62"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_63",
+      "path": "userNotifications/notif_63"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_64",
+      "path": "userNotifications/notif_64"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_65",
+      "path": "userNotifications/notif_65"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_66",
+      "path": "userNotifications/notif_66"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_67",
+      "path": "userNotifications/notif_67"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_68",
+      "path": "userNotifications/notif_68"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_69",
+      "path": "userNotifications/notif_69"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_7",
+      "path": "userNotifications/notif_7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_70",
+      "path": "userNotifications/notif_70"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_71",
+      "path": "userNotifications/notif_71"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_72",
+      "path": "userNotifications/notif_72"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_73",
+      "path": "userNotifications/notif_73"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_74",
+      "path": "userNotifications/notif_74"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_75",
+      "path": "userNotifications/notif_75"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_76",
+      "path": "userNotifications/notif_76"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_77",
+      "path": "userNotifications/notif_77"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_78",
+      "path": "userNotifications/notif_78"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_79",
+      "path": "userNotifications/notif_79"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_8",
+      "path": "userNotifications/notif_8"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_80",
+      "path": "userNotifications/notif_80"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_81",
+      "path": "userNotifications/notif_81"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_82",
+      "path": "userNotifications/notif_82"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_83",
+      "path": "userNotifications/notif_83"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_84",
+      "path": "userNotifications/notif_84"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_85",
+      "path": "userNotifications/notif_85"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_86",
+      "path": "userNotifications/notif_86"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_87",
+      "path": "userNotifications/notif_87"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_88",
+      "path": "userNotifications/notif_88"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_89",
+      "path": "userNotifications/notif_89"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_9",
+      "path": "userNotifications/notif_9"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_90",
+      "path": "userNotifications/notif_90"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_91",
+      "path": "userNotifications/notif_91"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_92",
+      "path": "userNotifications/notif_92"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_93",
+      "path": "userNotifications/notif_93"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_94",
+      "path": "userNotifications/notif_94"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_95",
+      "path": "userNotifications/notif_95"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_96",
+      "path": "userNotifications/notif_96"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_97",
+      "path": "userNotifications/notif_97"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_98",
+      "path": "userNotifications/notif_98"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "userNotifications",
+      "doc_id": "notif_99",
+      "path": "userNotifications/notif_99"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "0rzHRtBrRu6ydQtoqYs7",
+      "path": "vendorNotifications/0rzHRtBrRu6ydQtoqYs7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "10qKAbe9spNEcyU4rT3P",
+      "path": "vendorNotifications/10qKAbe9spNEcyU4rT3P"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "2GkwR5FeQgkiTlnRoNgb",
+      "path": "vendorNotifications/2GkwR5FeQgkiTlnRoNgb"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "2HmjjARm66ODEdoD7Q2C",
+      "path": "vendorNotifications/2HmjjARm66ODEdoD7Q2C"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "2d1pXdWeYqOAg19NnOu0",
+      "path": "vendorNotifications/2d1pXdWeYqOAg19NnOu0"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "35N5SyKv0T8oU5tVPZTb",
+      "path": "vendorNotifications/35N5SyKv0T8oU5tVPZTb"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "3vDi1sFr1nmcLln9Av70",
+      "path": "vendorNotifications/3vDi1sFr1nmcLln9Av70"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "6kcZU3w6TY31UJp3fAHa",
+      "path": "vendorNotifications/6kcZU3w6TY31UJp3fAHa"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "7cd0a1PGa03BrYQ6I9GH",
+      "path": "vendorNotifications/7cd0a1PGa03BrYQ6I9GH"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "9TDjmTtkEs9TRskEG70z",
+      "path": "vendorNotifications/9TDjmTtkEs9TRskEG70z"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "AV23kWTrUZjXGm6YbgwB",
+      "path": "vendorNotifications/AV23kWTrUZjXGm6YbgwB"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "ApBF7BNxxpNQnbTDNrwE",
+      "path": "vendorNotifications/ApBF7BNxxpNQnbTDNrwE"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "CJn5NDovC16g5ipbge9N",
+      "path": "vendorNotifications/CJn5NDovC16g5ipbge9N"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "CoaOq6Zpbixq9cIkb5Hf",
+      "path": "vendorNotifications/CoaOq6Zpbixq9cIkb5Hf"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "DU6JdnWl67twuznp3yFa",
+      "path": "vendorNotifications/DU6JdnWl67twuznp3yFa"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "E4OfhL3wqEirawb5l5Ai",
+      "path": "vendorNotifications/E4OfhL3wqEirawb5l5Ai"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "F8bhhYbQ9RWUxRJZAf0m",
+      "path": "vendorNotifications/F8bhhYbQ9RWUxRJZAf0m"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "FHZKKVqLU3W8joH2sJ0h",
+      "path": "vendorNotifications/FHZKKVqLU3W8joH2sJ0h"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "FZ57DaUmHKtK5EPQcsFx",
+      "path": "vendorNotifications/FZ57DaUmHKtK5EPQcsFx"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "GmIlXOLz2h5Kx8Lcuwj0",
+      "path": "vendorNotifications/GmIlXOLz2h5Kx8Lcuwj0"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "ITOJrIateoJyDJ0HkpoV",
+      "path": "vendorNotifications/ITOJrIateoJyDJ0HkpoV"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "IW7t3CqyLDyluio2f8IF",
+      "path": "vendorNotifications/IW7t3CqyLDyluio2f8IF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "JV9lggGuol6I0IBJLRWl",
+      "path": "vendorNotifications/JV9lggGuol6I0IBJLRWl"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "JudfMe9L8v6kZJweJ5x4",
+      "path": "vendorNotifications/JudfMe9L8v6kZJweJ5x4"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "JwSLykFeYW6BQm3820r7",
+      "path": "vendorNotifications/JwSLykFeYW6BQm3820r7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "Lroa2hqPrnpjnDeJB3JV",
+      "path": "vendorNotifications/Lroa2hqPrnpjnDeJB3JV"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "ODHUr87A0LoRuAfaAEni",
+      "path": "vendorNotifications/ODHUr87A0LoRuAfaAEni"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "OUFgENpnjmhaq5wXF7dk",
+      "path": "vendorNotifications/OUFgENpnjmhaq5wXF7dk"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "OloCuqJUQoTXozcPjBHc",
+      "path": "vendorNotifications/OloCuqJUQoTXozcPjBHc"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "P4J5oFEJddoDIqzxJM8n",
+      "path": "vendorNotifications/P4J5oFEJddoDIqzxJM8n"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "Qr7hLW4u2YDbCwIv1zEn",
+      "path": "vendorNotifications/Qr7hLW4u2YDbCwIv1zEn"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "RVQt85sdp7jr5nxJZWaw",
+      "path": "vendorNotifications/RVQt85sdp7jr5nxJZWaw"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "T06uaHFa33xFHZlR0ciT",
+      "path": "vendorNotifications/T06uaHFa33xFHZlR0ciT"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "TFWgH3Gi2icA9B0g6ofL",
+      "path": "vendorNotifications/TFWgH3Gi2icA9B0g6ofL"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "TqPMQMOQZc95iHMTYJcI",
+      "path": "vendorNotifications/TqPMQMOQZc95iHMTYJcI"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "Ud04hqdIqnpJkB0BVQMO",
+      "path": "vendorNotifications/Ud04hqdIqnpJkB0BVQMO"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "Uztv7JDXWulqoWMBLosj",
+      "path": "vendorNotifications/Uztv7JDXWulqoWMBLosj"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "WEenrLPG29CXPM5PAmIS",
+      "path": "vendorNotifications/WEenrLPG29CXPM5PAmIS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "WlaDPZjTye0BR4vMFINa",
+      "path": "vendorNotifications/WlaDPZjTye0BR4vMFINa"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "WmKlwYiVJYOKliI6Q6DT",
+      "path": "vendorNotifications/WmKlwYiVJYOKliI6Q6DT"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "Y3JmwrWX94RIxpfq9PUE",
+      "path": "vendorNotifications/Y3JmwrWX94RIxpfq9PUE"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "YHgGeZAlMjLBw8zC0oak",
+      "path": "vendorNotifications/YHgGeZAlMjLBw8zC0oak"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "YjdIrogafjd6fsDRECKQ",
+      "path": "vendorNotifications/YjdIrogafjd6fsDRECKQ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "aDG5HEewRdzJNP1jiqd3",
+      "path": "vendorNotifications/aDG5HEewRdzJNP1jiqd3"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "bjEn0q6UN2sdGEoFiM90",
+      "path": "vendorNotifications/bjEn0q6UN2sdGEoFiM90"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "bs1PIdjyh0xjRoZnRipO",
+      "path": "vendorNotifications/bs1PIdjyh0xjRoZnRipO"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "c0fDrXTbaspeYllT7s0G",
+      "path": "vendorNotifications/c0fDrXTbaspeYllT7s0G"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "c5NBvgHCleaiz3RCI8Zr",
+      "path": "vendorNotifications/c5NBvgHCleaiz3RCI8Zr"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "dStF2h0c8dzPNpS20ejh",
+      "path": "vendorNotifications/dStF2h0c8dzPNpS20ejh"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "eVs3iUOHcaqIy8w99I1U",
+      "path": "vendorNotifications/eVs3iUOHcaqIy8w99I1U"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "fOSL4Zmu9zoXXpN9gv7B",
+      "path": "vendorNotifications/fOSL4Zmu9zoXXpN9gv7B"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "hniRDqN89GjjLMwd2RyI",
+      "path": "vendorNotifications/hniRDqN89GjjLMwd2RyI"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "kO5IaN5bM2cIsrY8EfWP",
+      "path": "vendorNotifications/kO5IaN5bM2cIsrY8EfWP"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "l6A8hBxr4eWS5GyA0CHK",
+      "path": "vendorNotifications/l6A8hBxr4eWS5GyA0CHK"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "lKb7XmlXxEqMY7sh9bN1",
+      "path": "vendorNotifications/lKb7XmlXxEqMY7sh9bN1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "lj0OdzjLhoYfYUb1pZ5Q",
+      "path": "vendorNotifications/lj0OdzjLhoYfYUb1pZ5Q"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "luyCzSoevzFWPvQBn2kk",
+      "path": "vendorNotifications/luyCzSoevzFWPvQBn2kk"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "nzASdRgoDoECtDNSLigv",
+      "path": "vendorNotifications/nzASdRgoDoECtDNSLigv"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "o5rODQuJM0TeG5Cg8wdY",
+      "path": "vendorNotifications/o5rODQuJM0TeG5Cg8wdY"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "ofRrii0WEOnWoDCqbFSb",
+      "path": "vendorNotifications/ofRrii0WEOnWoDCqbFSb"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "pEsJ5oovBNZdHcxU2kUc",
+      "path": "vendorNotifications/pEsJ5oovBNZdHcxU2kUc"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "qNaZ7sFYflFd2ZeBgJJw",
+      "path": "vendorNotifications/qNaZ7sFYflFd2ZeBgJJw"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "sNJGWT8dJsINbvLeWObd",
+      "path": "vendorNotifications/sNJGWT8dJsINbvLeWObd"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "sqENzcQHqGLfqyXKirEo",
+      "path": "vendorNotifications/sqENzcQHqGLfqyXKirEo"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "tNfxT2C3qizjQwQTgovZ",
+      "path": "vendorNotifications/tNfxT2C3qizjQwQTgovZ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "tbJQ5zFGJaFNZKwh5LJu",
+      "path": "vendorNotifications/tbJQ5zFGJaFNZKwh5LJu"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "wuw9miS3bfUpyOS3jbiz",
+      "path": "vendorNotifications/wuw9miS3bfUpyOS3jbiz"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "x5rpCC1gL0StTuKGPTvf",
+      "path": "vendorNotifications/x5rpCC1gL0StTuKGPTvf"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "xdAIURqwIVwwU6yLmQcH",
+      "path": "vendorNotifications/xdAIURqwIVwwU6yLmQcH"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "xml2zM5erDbwHw5yy64O",
+      "path": "vendorNotifications/xml2zM5erDbwHw5yy64O"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "ySsrMg7bwnPbatuB3CFd",
+      "path": "vendorNotifications/ySsrMg7bwnPbatuB3CFd"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "z0wEPMos3yIXoM7VT0De",
+      "path": "vendorNotifications/z0wEPMos3yIXoM7VT0De"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "zaAV5OUe9htR9CGVhnDS",
+      "path": "vendorNotifications/zaAV5OUe9htR9CGVhnDS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "vendorNotifications",
+      "doc_id": "zzBRZ3SkWJV3pWp2nubS",
+      "path": "vendorNotifications/zzBRZ3SkWJV3pWp2nubS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "0iEjRX2JqA4aGc2RPCHD",
+      "path": "notifications/0iEjRX2JqA4aGc2RPCHD"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "1AsvvrvNCxAj75mqM7cM",
+      "path": "notifications/1AsvvrvNCxAj75mqM7cM"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "1Wxy5qO5VvyLGUMKNq9y",
+      "path": "notifications/1Wxy5qO5VvyLGUMKNq9y"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "3hq0sCdL96aV5kLTeOmt",
+      "path": "notifications/3hq0sCdL96aV5kLTeOmt"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "9kRVsk4oj1YdoN3gtOSZ",
+      "path": "notifications/9kRVsk4oj1YdoN3gtOSZ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "Bnaga8aTZLvxUHOOiHvn",
+      "path": "notifications/Bnaga8aTZLvxUHOOiHvn"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "De8RtSDXzeLgRQULDZjb",
+      "path": "notifications/De8RtSDXzeLgRQULDZjb"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "DflQFaWTL4TPv7C6tPGn",
+      "path": "notifications/DflQFaWTL4TPv7C6tPGn"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "HWAoI03w3MFNJN6clwHh",
+      "path": "notifications/HWAoI03w3MFNJN6clwHh"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "ID1ffnxXkuP32mg2ISLA",
+      "path": "notifications/ID1ffnxXkuP32mg2ISLA"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "LFAh9J40NFJ2itYJTNr1",
+      "path": "notifications/LFAh9J40NFJ2itYJTNr1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "NrLtnihT2vch3frxCx2f",
+      "path": "notifications/NrLtnihT2vch3frxCx2f"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "OcR9lQZWGrzhFNQmwzCY",
+      "path": "notifications/OcR9lQZWGrzhFNQmwzCY"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "UQ8JIS0BdIcw7QsqHsHS",
+      "path": "notifications/UQ8JIS0BdIcw7QsqHsHS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "VXwmwgD64h7H9MxbChFt",
+      "path": "notifications/VXwmwgD64h7H9MxbChFt"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "WKeXunmnxDaAugQXUyJy",
+      "path": "notifications/WKeXunmnxDaAugQXUyJy"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "Z0vEvulOlNIDFNQzi53i",
+      "path": "notifications/Z0vEvulOlNIDFNQzi53i"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "fWixwEpHlmZOzNC8eFNd",
+      "path": "notifications/fWixwEpHlmZOzNC8eFNd"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "hpMJHPvcdbU7cSfbQcU0",
+      "path": "notifications/hpMJHPvcdbU7cSfbQcU0"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "izBJRATXRDbBKRxEDykT",
+      "path": "notifications/izBJRATXRDbBKRxEDykT"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "jEwE1e8XNpMt3zeyw4eF",
+      "path": "notifications/jEwE1e8XNpMt3zeyw4eF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "jIxwxCJfvHI4rv3y4eCM",
+      "path": "notifications/jIxwxCJfvHI4rv3y4eCM"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "rqwYoXpeBFsW9JGM2Fno",
+      "path": "notifications/rqwYoXpeBFsW9JGM2Fno"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "tPnNsR5mv0MweiRtUqmr",
+      "path": "notifications/tPnNsR5mv0MweiRtUqmr"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "notifications",
+      "doc_id": "zs6RhTgzmuEstCYEzF7m",
+      "path": "notifications/zs6RhTgzmuEstCYEzF7m"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "5jfSYxCpb2WfLYxy4wM1",
+      "path": "conversations/5jfSYxCpb2WfLYxy4wM1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "JdYkat6xmw14g4g0E0Pt",
+      "path": "conversations/JdYkat6xmw14g4g0E0Pt"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "RAJv8pundu9R8OTTV7hv",
+      "path": "conversations/RAJv8pundu9R8OTTV7hv"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "Xlc6IwV4gDHOx0JXYp8x",
+      "path": "conversations/Xlc6IwV4gDHOx0JXYp8x"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "cB4ht7lUnOtP09w1rVOA",
+      "path": "conversations/cB4ht7lUnOtP09w1rVOA"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "jMAZCcjy1kUT11H9ZLNS",
+      "path": "conversations/jMAZCcjy1kUT11H9ZLNS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "oh6qsEisiZG3fh3VD4WC",
+      "path": "conversations/oh6qsEisiZG3fh3VD4WC"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "conversations",
+      "doc_id": "sbK46W9V4RkJGDiYsUao",
+      "path": "conversations/sbK46W9V4RkJGDiYsUao"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "reports",
+      "doc_id": "jNdHP2U3BQvNAUkoh3nA",
+      "path": "reports/jNdHP2U3BQvNAUkoh3nA"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "promotionParticipants",
+      "doc_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T",
+      "path": "promotionParticipants/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "1rkkjJS25CNplX9OQxoF",
+      "path": "affiliateActivity/1rkkjJS25CNplX9OQxoF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "A7xMADARrQ0hzwjSMpzK",
+      "path": "affiliateActivity/A7xMADARrQ0hzwjSMpzK"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-3FA508",
+      "path": "affiliateActivity/ACT-3FA508"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-542864",
+      "path": "affiliateActivity/ACT-542864"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-77A5CC",
+      "path": "affiliateActivity/ACT-77A5CC"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-9F6753",
+      "path": "affiliateActivity/ACT-9F6753"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-B7FC82",
+      "path": "affiliateActivity/ACT-B7FC82"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "ACT-F21AEF",
+      "path": "affiliateActivity/ACT-F21AEF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "AuUMTtmdcXABMGf9mZZt",
+      "path": "affiliateActivity/AuUMTtmdcXABMGf9mZZt"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "DXtBEXch97SdIz1JTkul",
+      "path": "affiliateActivity/DXtBEXch97SdIz1JTkul"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "GG8KwoozVWvF9CeE70wG",
+      "path": "affiliateActivity/GG8KwoozVWvF9CeE70wG"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "NkkIv0zXtmd6RiP40PwL",
+      "path": "affiliateActivity/NkkIv0zXtmd6RiP40PwL"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "PWqeewq7z774xwwbZfp0",
+      "path": "affiliateActivity/PWqeewq7z774xwwbZfp0"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "VDomgGfgcv2hvM08G7ug",
+      "path": "affiliateActivity/VDomgGfgcv2hvM08G7ug"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "hmnynND9ffPKYR7yIesQ",
+      "path": "affiliateActivity/hmnynND9ffPKYR7yIesQ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "kIAq5HpAcJ73FUUG1qie",
+      "path": "affiliateActivity/kIAq5HpAcJ73FUUG1qie"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "yFVF8qW6owR1VjycoIiu",
+      "path": "affiliateActivity/yFVF8qW6owR1VjycoIiu"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateActivity",
+      "doc_id": "yRiOcHFkVQDzXoW1DkeB",
+      "path": "affiliateActivity/yRiOcHFkVQDzXoW1DkeB"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "0hxG6nWkNJUI4MvB8tUV",
+      "path": "affiliateConversions/0hxG6nWkNJUI4MvB8tUV"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "6iaUMB9HqAc43jlEZEl0",
+      "path": "affiliateConversions/6iaUMB9HqAc43jlEZEl0"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-373FE2",
+      "path": "affiliateConversions/CONV-373FE2"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-5A7DFD",
+      "path": "affiliateConversions/CONV-5A7DFD"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-60091A",
+      "path": "affiliateConversions/CONV-60091A"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-C86AA7",
+      "path": "affiliateConversions/CONV-C86AA7"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-CE1A09",
+      "path": "affiliateConversions/CONV-CE1A09"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "CONV-D6A2C1",
+      "path": "affiliateConversions/CONV-D6A2C1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "FEvJWNPJBgcBs5DVvuEF",
+      "path": "affiliateConversions/FEvJWNPJBgcBs5DVvuEF"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "H4o3rxf8rdym7WB1rgM2",
+      "path": "affiliateConversions/H4o3rxf8rdym7WB1rgM2"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "Ut2tQocfGhwroKr6gd9H",
+      "path": "affiliateConversions/Ut2tQocfGhwroKr6gd9H"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "VeLdMLwkOnCofNd51GVO",
+      "path": "affiliateConversions/VeLdMLwkOnCofNd51GVO"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "Vv5TV31wzungQYrXhzIs",
+      "path": "affiliateConversions/Vv5TV31wzungQYrXhzIs"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "WW548kpBYzxNnNq74Cdw",
+      "path": "affiliateConversions/WW548kpBYzxNnNq74Cdw"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "bIxO3TCquZ2SOIvbHtJ1",
+      "path": "affiliateConversions/bIxO3TCquZ2SOIvbHtJ1"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "e52giVxMOrYtbm1TIVhW",
+      "path": "affiliateConversions/e52giVxMOrYtbm1TIVhW"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "lloeRsTFA6HDTwCHI6SS",
+      "path": "affiliateConversions/lloeRsTFA6HDTwCHI6SS"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateConversions",
+      "doc_id": "zJ7vU2QqrtokAkRnSZMm",
+      "path": "affiliateConversions/zJ7vU2QqrtokAkRnSZMm"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "DBytyJkJvqe5rlZHoYGyMitj5u22_demo-prod-001",
+      "path": "affiliateLinks/DBytyJkJvqe5rlZHoYGyMitj5u22_demo-prod-001"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "IDkKwbr7W8fcumibqcUW",
+      "path": "affiliateLinks/IDkKwbr7W8fcumibqcUW"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "WtNTTFRsrOrtnjc1onq9",
+      "path": "affiliateLinks/WtNTTFRsrOrtnjc1onq9"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "Y0yPaV34fdau2FKUnWYZ",
+      "path": "affiliateLinks/Y0yPaV34fdau2FKUnWYZ"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "Zx4v6smSjPg9iy2qhvL9",
+      "path": "affiliateLinks/Zx4v6smSjPg9iy2qhvL9"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-001",
+      "path": "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-001"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-002",
+      "path": "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-002"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-003",
+      "path": "affiliateLinks/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_demo-prod-003"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "ehLRFHa2f2ocUTsAwDhX",
+      "path": "affiliateLinks/ehLRFHa2f2ocUTsAwDhX"
+    },
+    {
+      "phase": "1_child_documents",
+      "collection": "affiliateLinks",
+      "doc_id": "sIpIjz6gf5u8fUXdA4fs",
+      "path": "affiliateLinks/sIpIjz6gf5u8fUXdA4fs"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "adminAffiliateOrders",
+      "doc_id": "ADM-ORD-08D15F",
+      "path": "adminAffiliateOrders/ADM-ORD-08D15F"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "adminAnalytics",
+      "doc_id": "global",
+      "path": "adminAnalytics/global"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "adminPromotions",
+      "doc_id": "Y2zAh65sIcmQOgsBSD8T",
+      "path": "adminPromotions/Y2zAh65sIcmQOgsBSD8T"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorAnalytics",
+      "doc_id": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "path": "vendorAnalytics/h3qJW1wzs0PAAe2UAem10NGxbNu2"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorAnalytics",
+      "doc_id": "i0B90UKivsfVDyXcj21R94xw4bs1",
+      "path": "vendorAnalytics/i0B90UKivsfVDyXcj21R94xw4bs1"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorAnalytics",
+      "doc_id": "vendor-mock-001",
+      "path": "vendorAnalytics/vendor-mock-001"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorStats",
+      "doc_id": "5",
+      "path": "vendorStats/5"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorStats",
+      "doc_id": "CreativeLab",
+      "path": "vendorStats/CreativeLab"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorStats",
+      "doc_id": "marcus-kane",
+      "path": "vendorStats/marcus-kane"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "vendorStats",
+      "doc_id": "sophia-vance",
+      "path": "vendorStats/sophia-vance"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "affiliateEarnings",
+      "doc_id": "DBytyJkJvqe5rlZHoYGyMitj5u22",
+      "path": "affiliateEarnings/DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "affiliateEarnings",
+      "doc_id": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "path": "affiliateEarnings/JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    {
+      "phase": "2_aggregate_documents",
+      "collection": "affiliateEarnings",
+      "doc_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2",
+      "path": "affiliateEarnings/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "1ZDfg32JdiaPmM9lt94APeBt0yn2",
+      "path": "users/1ZDfg32JdiaPmM9lt94APeBt0yn2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "7uctsb0MFQPq25UjtrGT1WRa2uj2",
+      "path": "users/7uctsb0MFQPq25UjtrGT1WRa2uj2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "B5WZYQBhhcMz3vBJoCwX6LcDWZa2",
+      "path": "users/B5WZYQBhhcMz3vBJoCwX6LcDWZa2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2",
+      "path": "users/GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "LNseI0Yhz1TUP4vnDsKsQ732p8T2",
+      "path": "users/LNseI0Yhz1TUP4vnDsKsQ732p8T2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "bQ5AH9Dll5O0Z1NwB289XjNHVKb2",
+      "path": "users/bQ5AH9Dll5O0Z1NwB289XjNHVKb2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "ea8dwVOko7MBVsI2NUPgrbzpzsA3",
+      "path": "users/ea8dwVOko7MBVsI2NUPgrbzpzsA3"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "iKqbIkwTk5ebSTQNxnTzfHFqd6O2",
+      "path": "users/iKqbIkwTk5ebSTQNxnTzfHFqd6O2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "lF54eq1qPDUDu9hzbt5T3h0U9CF3",
+      "path": "users/lF54eq1qPDUDu9hzbt5T3h0U9CF3"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "lFDEyE0U2PSKqpGSK1hUqEyh5As1",
+      "path": "users/lFDEyE0U2PSKqpGSK1hUqEyh5As1"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "oLcTCpo6IOaMlfTxRlEoJ11YUoQ2",
+      "path": "users/oLcTCpo6IOaMlfTxRlEoJ11YUoQ2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "users",
+      "doc_id": "w646Mo8LJNRAnZj4jk4bycwsJDK2",
+      "path": "users/w646Mo8LJNRAnZj4jk4bycwsJDK2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "1ZDfg32JdiaPmM9lt94APeBt0yn2",
+      "path": "customers/1ZDfg32JdiaPmM9lt94APeBt0yn2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "7uctsb0MFQPq25UjtrGT1WRa2uj2",
+      "path": "customers/7uctsb0MFQPq25UjtrGT1WRa2uj2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "B5WZYQBhhcMz3vBJoCwX6LcDWZa2",
+      "path": "customers/B5WZYQBhhcMz3vBJoCwX6LcDWZa2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2",
+      "path": "customers/GxAQJ4xVM6Nb6Kg4y3BMlkSqGaT2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "path": "customers/JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "LNseI0Yhz1TUP4vnDsKsQ732p8T2",
+      "path": "customers/LNseI0Yhz1TUP4vnDsKsQ732p8T2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "customer-123",
+      "path": "customers/customer-123"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "ea8dwVOko7MBVsI2NUPgrbzpzsA3",
+      "path": "customers/ea8dwVOko7MBVsI2NUPgrbzpzsA3"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "lFDEyE0U2PSKqpGSK1hUqEyh5As1",
+      "path": "customers/lFDEyE0U2PSKqpGSK1hUqEyh5As1"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "oLcTCpo6IOaMlfTxRlEoJ11YUoQ2",
+      "path": "customers/oLcTCpo6IOaMlfTxRlEoJ11YUoQ2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customers",
+      "doc_id": "w646Mo8LJNRAnZj4jk4bycwsJDK2",
+      "path": "customers/w646Mo8LJNRAnZj4jk4bycwsJDK2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "vendors",
+      "doc_id": "iKqbIkwTk5ebSTQNxnTzfHFqd6O2",
+      "path": "vendors/iKqbIkwTk5ebSTQNxnTzfHFqd6O2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "vendors",
+      "doc_id": "vendor-mock-001",
+      "path": "vendors/vendor-mock-001"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "affiliates",
+      "doc_id": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "path": "affiliates/JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "affiliates",
+      "doc_id": "b9OVhgYBDybdx9NghCEj2fGTsNZ2",
+      "path": "affiliates/b9OVhgYBDybdx9NghCEj2fGTsNZ2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "affiliates",
+      "doc_id": "bQ5AH9Dll5O0Z1NwB289XjNHVKb2",
+      "path": "affiliates/bQ5AH9Dll5O0Z1NwB289XjNHVKb2"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "affiliates",
+      "doc_id": "oGefiwDGtmXdaZyfunbbTN8B5O03",
+      "path": "affiliates/oGefiwDGtmXdaZyfunbbTN8B5O03"
+    },
+    {
+      "phase": "3_parent_documents",
+      "collection": "customer ",
+      "doc_id": "pQUAMbZGlmd1XpgXYJk9",
+      "path": "customer /pQUAMbZGlmd1XpgXYJk9"
+    }
+  ]
+}

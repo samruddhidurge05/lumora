@@ -1,17 +1,17 @@
 """
 app/services/email_service.py
-──────────────────────────────
+------------------------------
 Thin SMTP / SendGrid email delivery service.
 
 Environment variables:
-    SMTP_ENABLED=true|false          (default: false — skips delivery in local dev)
+    SMTP_ENABLED=true|false          (default: false - skips delivery in local dev)
     SMTP_HOST=smtp.sendgrid.net
     SMTP_PORT=587
     SMTP_USER=apikey
     SMTP_PASSWORD=<sendgrid_api_key>
     SMTP_FROM=noreply@lumora.design
 
-All methods return bool (True = success) and NEVER raise — callers decide
+All methods return bool (True = success) and NEVER raise - callers decide
 whether to surface failures to the user.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# -- Config --------------------------------------------------------------------
 
 _SMTP_ENABLED  = os.getenv("SMTP_ENABLED", "false").lower() == "true"
 _SMTP_HOST     = os.getenv("SMTP_HOST", "smtp.sendgrid.net")
@@ -39,7 +39,7 @@ _SMTP_FROM     = os.getenv("SMTP_FROM", "noreply@lumora.design")
 def _send_raw(to_email: str, subject: str, text_body: str, html_body: str) -> bool:
     """Low-level SMTP send. Returns True on success, False on any failure."""
     if not _SMTP_ENABLED:
-        logger.debug("[email_service] SMTP disabled — would send '%s' to %s", subject, to_email)
+        logger.debug("[email_service] SMTP disabled - would send '%s' to %s", subject, to_email)
         return True
 
     try:
@@ -65,7 +65,7 @@ def _send_raw(to_email: str, subject: str, text_body: str, html_body: str) -> bo
         return False
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+# -- Public API ----------------------------------------------------------------
 
 def send_invitation_email(
     to_email: str,
@@ -99,7 +99,7 @@ Accept your invitation before it expires on {expiry_str}:
 This link is single-use and expires in 48 hours.
 If you did not expect this invitation, you can safely ignore this email.
 
-— The Lumora Team
+- The Lumora Team
 """
 
     html_body = f"""<!DOCTYPE html>
@@ -150,7 +150,7 @@ If you did not expect this invitation, you can safely ignore this email.
     </div>
 
     <p style="color: #8E6AA8; font-size: 0.75rem; margin: 0;">
-      This link expires on <strong>{expiry_str}</strong>. It is single-use — once accepted,
+      This link expires on <strong>{expiry_str}</strong>. It is single-use - once accepted,
       it cannot be reused. If you did not expect this invitation, ignore this email.
     </p>
   </div>

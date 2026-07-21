@@ -48,5 +48,5 @@ def post_moderate(
             metadata={"moderation_action": action},
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking - audit log failure never breaks the main operation
     return result

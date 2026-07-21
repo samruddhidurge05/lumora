@@ -1,7 +1,7 @@
 """
 app/api/payments/routes.py
 ----------------------------
-Production payment router — fully authenticated, idempotent, gateway-independent.
+Production payment router - fully authenticated, idempotent, gateway-independent.
 
 Endpoint map:
     POST   /api/payments/initiate                  Customer initiates checkout
@@ -13,7 +13,7 @@ Endpoint map:
     GET    /api/payments/vendor/transactions        Vendor revenue view
     GET    /api/payments/admin/all                  Admin full view
     POST   /api/payments/admin/{payment_ref}/refund Admin initiates refund
-    POST   /api/payments/webhook/razorpay           Razorpay webhook (stub — returns 200)
+    POST   /api/payments/webhook/razorpay           Razorpay webhook (stub - returns 200)
 
 Security:
     All customer / vendor / admin routes require a valid JWT.
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ─── Helper ───────────────────────────────────────────────────────────────────
+# --- Helper -------------------------------------------------------------------
 
 def _require_admin(current_user: User) -> None:
     if current_user.role != "admin":
@@ -73,7 +73,7 @@ def _build_vendor_ids(db: Session, items) -> str:
     return ",".join(sorted(vendor_ids))
 
 
-# ─── 1. Initiate ──────────────────────────────────────────────────────────────
+# --- 1. Initiate --------------------------------------------------------------
 
 @router.post(
     "/initiate",
@@ -100,7 +100,7 @@ def initiate_payment(
         2. Frontend calls POST /api/payments/initiate
         3. Backend creates PENDING payment + gateway order
         4. Frontend receives gateway_order_id and opens payment UI
-        5. Customer pays → frontend calls POST /api/payments/confirm
+        5. Customer pays ? frontend calls POST /api/payments/confirm
     """
     # Platform pause check (non-admin)
     import traceback
@@ -189,7 +189,7 @@ def initiate_payment(
     return result
 
 
-# ─── 2. Confirm ───────────────────────────────────────────────────────────────
+# --- 2. Confirm ---------------------------------------------------------------
 
 @router.post(
     "/confirm",
@@ -234,7 +234,7 @@ def confirm_payment(
 
     # Rebuild items from the payment record's stored items_json snapshot.
     # This is set at initiate time and contains the exact cart the customer paid for.
-    # Using CartItem table is wrong — the frontend never writes to it during checkout.
+    # Using CartItem table is wrong - the frontend never writes to it during checkout.
     import json as _json
 
     items_payload = []
@@ -305,7 +305,7 @@ def confirm_payment(
     }
 
 
-# ─── 3. Cancel ────────────────────────────────────────────────────────────────
+# --- 3. Cancel ----------------------------------------------------------------
 
 @router.post(
     "/{payment_ref}/cancel",
@@ -330,7 +330,7 @@ def cancel_payment(
     return payment
 
 
-# ─── 4. Retry ─────────────────────────────────────────────────────────────────
+# --- 4. Retry -----------------------------------------------------------------
 
 @router.post(
     "/{payment_ref}/retry",
@@ -354,7 +354,7 @@ def retry_payment(
     return result
 
 
-# ─── 5. Customer History ──────────────────────────────────────────────────────
+# --- 5. Customer History ------------------------------------------------------
 
 @router.get(
     "/history",
@@ -383,7 +383,7 @@ def get_payment_history(
     )
 
 
-# ─── 6. Single Payment Detail ─────────────────────────────────────────────────
+# --- 6. Single Payment Detail -------------------------------------------------
 
 @router.get(
     "/{payment_ref}",
@@ -420,12 +420,12 @@ def get_payment(
     return payment
 
 
-# ─── 7. Vendor Transactions ───────────────────────────────────────────────────
+# --- 7. Vendor Transactions ---------------------------------------------------
 
 @router.get(
     "/vendor/transactions",
     response_model=PaymentListResponse,
-    summary="Vendor revenue — payments containing vendor's products",
+    summary="Vendor revenue - payments containing vendor's products",
 )
 def get_vendor_transactions(
     skip: int = 0,
@@ -446,12 +446,12 @@ def get_vendor_transactions(
     return PaymentListResponse(payments=payments, total=len(payments), skip=skip, limit=limit)
 
 
-# ─── 8. Admin: All Payments ───────────────────────────────────────────────────
+# --- 8. Admin: All Payments ---------------------------------------------------
 
 @router.get(
     "/admin/all",
     response_model=PaymentListResponse,
-    summary="Admin — full payment history with filters",
+    summary="Admin - full payment history with filters",
 )
 def admin_get_all_payments(
     skip: int = 0,
@@ -472,12 +472,12 @@ def admin_get_all_payments(
     return PaymentListResponse(payments=payments, total=len(payments), skip=skip, limit=limit)
 
 
-# ─── 9. Admin: Refund ─────────────────────────────────────────────────────────
+# --- 9. Admin: Refund ---------------------------------------------------------
 
 @router.post(
     "/admin/{payment_ref}/refund",
     response_model=PaymentResponse,
-    summary="Admin — initiate a refund",
+    summary="Admin - initiate a refund",
 )
 def admin_refund_payment(
     payment_ref: str,
@@ -487,7 +487,7 @@ def admin_refund_payment(
 ):
     """
     Admin initiates a full or partial refund.
-    Transitions payment SUCCESS → REFUND_PENDING.
+    Transitions payment SUCCESS ? REFUND_PENDING.
     Gateway refund call is made here.
     """
     _require_admin(current_user)
@@ -501,7 +501,7 @@ def admin_refund_payment(
     return payment
 
 
-# ─── 10. Webhook (Production) ─────────────────────────────────────────────────
+# --- 10. Webhook (Production) -------------------------------------------------
 
 @router.post(
     "/webhook/razorpay",
@@ -528,11 +528,11 @@ async def razorpay_webhook(
         - Always returns 200 after processing so Razorpay does not retry
 
     Event handling:
-        payment.captured  → If payment still PENDING, complete the order
-        payment.failed    → Mark payment FAILED in database
-        payment.refunded  → Update payment status to REFUNDED
-        refund.processed  → Confirm refund settled by bank
-        payment.authorized → No-op (captured event follows with auto-capture)
+        payment.captured  ? If payment still PENDING, complete the order
+        payment.failed    ? Mark payment FAILED in database
+        payment.refunded  ? Update payment status to REFUNDED
+        refund.processed  ? Confirm refund settled by bank
+        payment.authorized ? No-op (captured event follows with auto-capture)
     """
     # Step 1: Read raw bytes BEFORE any JSON parsing
     raw_body = await request.body()
@@ -544,7 +544,7 @@ async def razorpay_webhook(
     # Step 3: Verify HMAC-SHA256 signature
     if not handler.verify_webhook_signature(raw_body, x_razorpay_signature or ""):
         logger.warning(
-            "[webhook/razorpay] Rejected — invalid signature. "
+            "[webhook/razorpay] Rejected - invalid signature. "
             "signature_header=%r",
             x_razorpay_signature,
         )
@@ -586,7 +586,7 @@ async def razorpay_webhook(
 
             if payment and payment.status == "PENDING":
                 logger.info(
-                    "[webhook/razorpay] payment.captured — fulfilling PENDING payment %s",
+                    "[webhook/razorpay] payment.captured - fulfilling PENDING payment %s",
                     payment.payment_ref,
                 )
                 try:
@@ -630,7 +630,7 @@ async def razorpay_webhook(
     return {"received": True}
 
 
-# ─── Private Helpers ──────────────────────────────────────────────────────────
+# --- Private Helpers ----------------------------------------------------------
 
 def _check_platform_not_paused() -> None:
     """Raise 403 if platform is paused (mirrors the check in orders/routes.py)."""
@@ -656,4 +656,4 @@ def _check_platform_not_paused() -> None:
                     message=_local_platform_state.get("pauseMessage") or "Platform is temporarily paused.",
                 )
     except Exception:
-        pass  # Firebase not connected — allow through
+        pass  # Firebase not connected - allow through

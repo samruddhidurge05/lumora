@@ -11,7 +11,7 @@ class Vendor(Base):
     bio        = Column(Text, nullable=True)
     banner     = Column(String(512), nullable=True)
     sales      = Column(String(30), default="0")
-    rating     = Column(String(10), default="5.0 ★")
+    rating     = Column(String(10), default="5.0 ?")
     status     = Column(String(50), default="active")
     
     # Store settings & contact details
@@ -32,7 +32,7 @@ class Vendor(Base):
     vacation_mode       = Column(Boolean, default=False)
     vacation_message    = Column(Text, nullable=True)
 
-    # Payment information — required for onboarding before product creation
+    # Payment information - required for onboarding before product creation
     upi_id              = Column(String(255), nullable=True)   # UPI option
     account_holder_name = Column(String(255), nullable=True)   # Bank option
     bank_name           = Column(String(255), nullable=True)

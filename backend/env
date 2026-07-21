@@ -1,0 +1,18 @@
+FIREBASE_PROJECT_ID=lumora-e6ddc
+DATABASE_URL=sqlite:///./test.db
+JWT_SECRET_KEY=super_secret_lumora_signing_key_at_least_32_characters_long
+STORAGE_PROVIDER=pcloud
+
+
+# ─── Razorpay Payment Gateway ────────────────────────────────────────────────
+# Set PAYMENT_GATEWAY=razorpay to go live. Keep as "mock" during development.
+PAYMENT_GATEWAY=razorpay
+PAYMENT_CURRENCY=INR
+
+# Replace with your actual Razorpay credentials from dashboard.razorpay.com
+RAZORPAY_KEY_ID=rzp_test_SgVvmqh7Fm5dya
+RAZORPAY_KEY_SECRET=wvo6KFHTSOkMtkVqQ5j8HoSq
+
+# Razorpay Webhook Secret — set this after configuring webhooks in Razorpay Dashboard
+RAZORPAY_WEBHOOK_SECRET=
+

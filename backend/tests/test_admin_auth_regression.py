@@ -16,7 +16,7 @@ from app.models.audit_log import AuditLog
 from app.db.session import get_db
 from app.core.security import create_access_token
 
-# ── In-memory SQLite test database ────────────────────────────────────────────
+# -- In-memory SQLite test database --------------------------------------------
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_admin_auth.db"
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -48,7 +48,7 @@ def setup_test_db():
             is_verified=True,
             firebase_uid="admin-uid-123",
         )
-        # Vendor user — use a pre-computed bcrypt hash to avoid passlib/bcrypt
+        # Vendor user - use a pre-computed bcrypt hash to avoid passlib/bcrypt
         # version incompatibilities in the test environment (Python 3.14).
         # Hash of "testpassword" generated with bcrypt cost=12.
         vendor = User(
@@ -95,10 +95,10 @@ def _vendor_token() -> str:
         db.close()
 
 
-# ── Tests ─────────────────────────────────────────────────────────────────────
+# -- Tests ---------------------------------------------------------------------
 
 def test_no_auth_returns_401(client):
-    """Req 14.1: GET /api/admin/orders/ with no header → 401."""
+    """Req 14.1: GET /api/admin/orders/ with no header ? 401."""
     response = client.get("/api/admin/orders/")
     assert response.status_code in (401, 403), (
         f"Expected 401 or 403, got {response.status_code}"
@@ -106,7 +106,7 @@ def test_no_auth_returns_401(client):
 
 
 def test_vendor_jwt_returns_403(client):
-    """Req 14.2: GET /api/admin/orders/ with vendor JWT → 403."""
+    """Req 14.2: GET /api/admin/orders/ with vendor JWT ? 403."""
     token = _vendor_token()
     response = client.get(
         "/api/admin/orders/",
@@ -118,7 +118,7 @@ def test_vendor_jwt_returns_403(client):
 
 
 def test_admin_login_success_writes_audit_log(client):
-    """Req 14.3: POST /api/admin/auth/login → 200 + access_token + admin_login_success audit log."""
+    """Req 14.3: POST /api/admin/auth/login ? 200 + access_token + admin_login_success audit log."""
     fake_claims = {
         "uid": "admin-uid-123",
         "email": "admin@test.com",
@@ -148,7 +148,7 @@ def test_admin_login_success_writes_audit_log(client):
 
 
 def test_non_admin_login_failure_writes_audit_log(client):
-    """Req 14.4: POST /api/admin/auth/login with customer email → 403 + admin_login_failure audit log."""
+    """Req 14.4: POST /api/admin/auth/login with customer email ? 403 + admin_login_failure audit log."""
     fake_claims = {
         "uid": "customer-uid-456",
         "email": "customer@test.com",

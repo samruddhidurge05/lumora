@@ -51,15 +51,15 @@ def update_vendor_rating(db: Session, vendor_id: str):
     products = db.query(Product).filter(Product.vendor_id == vendor_id).all()
     prod_ids = [p.id for p in products]
     if not prod_ids:
-        vendor.rating = "5.0 ★"
+        vendor.rating = "5.0 ?"
         db.add(vendor)
         return
     reviews = db.query(Review).filter(Review.product_id.in_(prod_ids)).all()
     if not reviews:
-        vendor.rating = "5.0 ★"
+        vendor.rating = "5.0 ?"
     else:
         avg_rating = sum(r.rating for r in reviews) / len(reviews)
-        vendor.rating = f"{avg_rating:.1f} ★"
+        vendor.rating = f"{avg_rating:.1f} ?"
     db.add(vendor)
 
 
@@ -151,8 +151,8 @@ def create_review(
             NotificationService.create_notification(
                 db=db,
                 user_id=vendor_user.id,
-                title="New Review Received ✦",
-                message=f"Your product '{prod.title}' received a {review.rating}★ review from {current_user.name}.",
+                title="New Review Received ?",
+                message=f"Your product '{prod.title}' received a {review.rating}? review from {current_user.name}.",
                 category="review"
             )
 
@@ -162,7 +162,7 @@ def create_review(
         db=db,
         user_id=current_user.id,
         activity_type="review_create",
-        details=f"Submitted {review.rating}★ review for product '{prod.title}' (ID {prod.id})."
+        details=f"Submitted {review.rating}? review for product '{prod.title}' (ID {prod.id})."
     )
 
     db.commit()

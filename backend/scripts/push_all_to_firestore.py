@@ -1,6 +1,6 @@
 """
 push_all_to_firestore.py
-─────────────────────────
+-------------------------
 One-time script: Sync ALL published SQLite products to Firestore so the
 Render backend can restore them on next deploy via restore_sqlite_products_from_firestore().
 
@@ -39,7 +39,7 @@ def push_all():
                 sync_product_to_firestore(p)
                 if str(p.id) not in existing:
                     pushed += 1
-                    print(f"[push]   NEW → {p.id}: {p.title}")
+                    print(f"[push]   NEW ? {p.id}: {p.title}")
                 else:
                     skipped += 1
             except Exception as e:

@@ -49,7 +49,7 @@ def resolve_report_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # ── Audit log ────────────────────────────────────────────────────────────
+    # -- Audit log ------------------------------------------------------------
     try:
         log_admin_action(
             db=db,
@@ -61,7 +61,7 @@ def resolve_report_endpoint(
     except Exception:
         pass  # Non-blocking
 
-    # ── Customer notification ─────────────────────────────────────────────────
+    # -- Customer notification -------------------------------------------------
     # Fetch the report doc from Firestore to get user_id and product title
     try:
         from app.shared.firebase.connection import db as fdb, firebase_connected
@@ -77,7 +77,7 @@ def resolve_report_endpoint(
                         NotificationService.create_notification(
                             db=db,
                             user_id=customer_id,
-                            title="Report Resolved ✓",
+                            title="Report Resolved OK",
                             message=f'Your report regarding "{product_title}" has been resolved. Thank you for helping improve Lumora.',
                             category="report",
                         )
@@ -102,7 +102,7 @@ def reject_report_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # ── Audit log ────────────────────────────────────────────────────────────
+    # -- Audit log ------------------------------------------------------------
     try:
         log_admin_action(
             db=db,
@@ -114,7 +114,7 @@ def reject_report_endpoint(
     except Exception:
         pass  # Non-blocking
 
-    # ── Customer notification ─────────────────────────────────────────────────
+    # -- Customer notification -------------------------------------------------
     try:
         from app.shared.firebase.connection import db as fdb, firebase_connected
         if firebase_connected and fdb is not None:

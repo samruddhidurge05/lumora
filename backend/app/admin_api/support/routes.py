@@ -1,5 +1,5 @@
 """
-Admin Support API — P3-M7
+Admin Support API - P3-M7
 =========================
 Endpoints for administrators to manage customer support tickets.
 All endpoints require admin role via require_admin_role dependency.
@@ -21,11 +21,11 @@ from app.services.audit_log_service import log_admin_action
 
 router = APIRouter()
 
-# ── Valid support ticket status values ────────────────────────────────────────
+# -- Valid support ticket status values ----------------------------------------
 VALID_STATUSES = ["open", "pending", "resolved", "closed"]
 
 
-# ── Request / Response Schemas ────────────────────────────────────────────────
+# -- Request / Response Schemas ------------------------------------------------
 
 class ReplyRequest(BaseModel):
     content: str
@@ -35,7 +35,7 @@ class StatusUpdateRequest(BaseModel):
     status: str
 
 
-# ── Helper ────────────────────────────────────────────────────────────────────
+# -- Helper --------------------------------------------------------------------
 
 def _get_ticket_or_404(ticket_id: int, db: Session) -> Conversation:
     ticket = (
@@ -51,7 +51,7 @@ def _get_ticket_or_404(ticket_id: int, db: Session) -> Conversation:
     return ticket
 
 
-# ── GET /tickets ──────────────────────────────────────────────────────────────
+# -- GET /tickets --------------------------------------------------------------
 
 @router.get("/tickets")
 def list_tickets(
@@ -96,7 +96,7 @@ def list_tickets(
     return {"total": total, "skip": skip, "limit": limit, "tickets": tickets}
 
 
-# ── GET /{ticket_id}/messages ─────────────────────────────────────────────────
+# -- GET /{ticket_id}/messages -------------------------------------------------
 
 @router.get("/{ticket_id}/messages")
 def get_ticket_messages(
@@ -146,7 +146,7 @@ def get_ticket_messages(
     }
 
 
-# ── POST /{ticket_id}/reply ───────────────────────────────────────────────────
+# -- POST /{ticket_id}/reply ---------------------------------------------------
 
 @router.post("/{ticket_id}/reply", status_code=status.HTTP_201_CREATED)
 def reply_to_ticket(
@@ -192,7 +192,7 @@ def reply_to_ticket(
             target_id=str(ticket_id),
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking - audit log failure never breaks the main operation
 
     return {
         "message_id": new_message.id,
@@ -204,7 +204,7 @@ def reply_to_ticket(
     }
 
 
-# ── PUT /{ticket_id}/status ───────────────────────────────────────────────────
+# -- PUT /{ticket_id}/status ---------------------------------------------------
 
 @router.put("/{ticket_id}/status")
 def update_ticket_status(
@@ -249,7 +249,7 @@ def update_ticket_status(
             metadata={"new_status": body.status},
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking - audit log failure never breaks the main operation
 
     return {
         "ticket_id": ticket_id,

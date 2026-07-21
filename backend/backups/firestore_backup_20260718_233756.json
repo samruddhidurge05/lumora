@@ -1,0 +1,1452 @@
+{
+  "orders": {
+    "27": {
+      "customerEmail": "durgemaitri2@gmail.com",
+      "createdAt": "2026-07-14T10:02:26.932197Z",
+      "status": "completed",
+      "price": 59.0,
+      "orderId": "ORD-27",
+      "paymentMethod": "upi_qr",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Motion Graphic Collection 7",
+            "price": 44.99,
+            "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"
+          },
+          "vendorId": "CreativeLab",
+          "productName": "Motion Graphic Collection 7",
+          "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+          "price": 44.99,
+          "productId": "97"
+        }
+      ],
+      "region": "India",
+      "vendorId": "CreativeLab",
+      "customerId": "5",
+      "totalINR": 4897.0,
+      "customerName": "Maitri Rajesh Durge",
+      "totalUSD": 59.0,
+      "created_at": "2026-07-14T10:02:26.932197Z",
+      "paymentStatus": "Paid"
+    },
+    "3N9QYofn3YfBpZ5dlpA1": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:39:39.418Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:39:39.418Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "4K9JdRx1ykQecIo5DArL": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:54:41.438Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:54:41.438Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "6yMAAVdvkQGJFB96yVQh": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-28T07:07:29.551Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-28T07:07:29.551Z",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    "7JtUoKMh6b7YJbpd9Min": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:46:01.358Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:46:01.358Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "E25LV4JKJepEsZwVYlmw": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Paid",
+      "status": "Completed",
+      "currency": "USD",
+      "platformFee": 0,
+      "orderId": "ORD-1781002235618",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": true,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-19T08:30:55.477Z",
+      "vendorEarnings": 0,
+      "discount": 0,
+      "subtotal": 407,
+      "createdAt": "2026-06-09T10:50:35.619Z"
+    },
+    "L04TmmLBCgflUHDE9f0b": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:53:45.378Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:53:45.378Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "Lwkmfn9VQFIzez8Fip6p": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:41:11.359Z",
+      "price": 4500,
+      "commissionPercent": 30,
+      "commissionAmount": 1350,
+      "vendorName": "Maitri Rajesh Durge",
+      "vendorId": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "productName": "Apex SaaS Starter Kit",
+      "productId": "demo-prod-002",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:41:11.359Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "NXrIUAV2w0wkDWGlXzmx": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:45:57.083Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:45:57.083Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "ORD-1": {
+      "items": [
+        {
+          "price": 249.0,
+          "productId": "121",
+          "productName": "The Wedding Planning Toolkit"
+        }
+      ],
+      "status": "completed",
+      "vendorId": "lumora-creator",
+      "totalAmount": 294.0,
+      "paymentMethod": "test_bypass",
+      "userId": "3",
+      "orderId": "ORD-1",
+      "createdAt": "2026-07-17T13:18:40.445178"
+    },
+    "ORD-1452BB": {
+      "customerEmail": "customer@example.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:00:28.716819+00:00",
+      "price": 1000.0,
+      "commissionPercent": 30,
+      "commissionAmount": 300,
+      "vendorName": "Lumina Creative",
+      "vendorId": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "productName": "Vibe UI Kit",
+      "productId": "demo-prod-001",
+      "customerName": "Test Customer",
+      "customerId": "customer-123",
+      "purchaseDate": "2026-06-29T10:00:28.716819+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Affiliate User",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-2": {
+      "items": [
+        {
+          "price": 249.0,
+          "productId": "121",
+          "productName": "The Wedding Planning Toolkit"
+        }
+      ],
+      "userId": "2",
+      "totalAmount": 294.0,
+      "vendorId": "lumora-creator",
+      "createdAt": "2026-07-17T13:34:56.279050",
+      "status": "completed",
+      "orderId": "ORD-2",
+      "paymentMethod": "test_bypass"
+    },
+    "ORD-229B88": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-07-01T09:26:46.572562+00:00",
+      "price": 1500.0,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-07-01T09:26:46.572562+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-5B89DE": {
+      "customerEmail": "customer@example.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:01:19.059787+00:00",
+      "price": 1000.0,
+      "commissionPercent": 30,
+      "commissionAmount": 300,
+      "vendorName": "Lumina Creative",
+      "vendorId": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "productName": "Vibe UI Kit",
+      "productId": "demo-prod-001",
+      "customerName": "Test Customer",
+      "customerId": "customer-123",
+      "purchaseDate": "2026-06-29T10:01:19.059787+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Incorrect Alphabetical Affiliate",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-61": {
+      "items": [
+        {
+          "productName": "UI Design Icon Pack & Guide",
+          "productId": "115",
+          "price": 2.0
+        }
+      ],
+      "userId": "5",
+      "totalAmount": 8.0,
+      "vendorId": "5",
+      "createdAt": "2026-07-16T08:51:01.174227",
+      "status": "completed",
+      "orderId": "ORD-61",
+      "paymentMethod": "test_bypass"
+    },
+    "ORD-62": {
+      "items": [
+        {
+          "productName": "The Personal Budget Planner",
+          "productId": "116",
+          "price": 2.0
+        }
+      ],
+      "userId": "5",
+      "totalAmount": 8.0,
+      "vendorId": "5",
+      "createdAt": "2026-07-16T08:51:27.053516",
+      "status": "completed",
+      "orderId": "ORD-62",
+      "paymentMethod": "test_bypass"
+    },
+    "ORD-65": {
+      "items": [
+        {
+          "productName": "Study Planner & Exam Organizer",
+          "productId": "117",
+          "price": 2.0
+        }
+      ],
+      "userId": "5",
+      "totalAmount": 8.0,
+      "vendorId": "5",
+      "createdAt": "2026-07-16T09:05:55.250736",
+      "status": "completed",
+      "orderId": "ORD-65",
+      "paymentMethod": "test_bypass"
+    },
+    "ORD-66DC47": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-28T08:18:30.957981+00:00",
+      "price": 1500.0,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-28T08:18:30.957981+00:00",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "ORD-68": {
+      "items": [
+        {
+          "productName": "The Small Business Startup Workbook",
+          "productId": "120",
+          "price": 2.0
+        }
+      ],
+      "userId": "5",
+      "totalAmount": 8.0,
+      "vendorId": "8",
+      "createdAt": "2026-07-16T11:14:20.391296",
+      "status": "completed",
+      "orderId": "ORD-68",
+      "paymentMethod": "test_bypass"
+    },
+    "ORD-7DE4DE": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-28T08:31:59.221707+00:00",
+      "price": 1500.0,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-28T08:31:59.221707+00:00",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "ORD-8B20D8": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:08:45.638585+00:00",
+      "price": 800.0,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "alok ki dukan",
+      "vendorId": "i0B90UKivsfVDyXcj21R94xw4bs1",
+      "productName": "Lumina Icon Set Vol. 1",
+      "productId": "demo-prod-003",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-29T10:08:45.638585+00:00",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "ORD-B1701E": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:16:40.054356+00:00",
+      "price": 4500.0,
+      "commissionPercent": 30,
+      "commissionAmount": 1350,
+      "vendorName": "Maitri Rajesh Durge",
+      "vendorId": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "productName": "Apex SaaS Starter Kit",
+      "productId": "demo-prod-002",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-29T10:16:40.054356+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-BD2493": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-28T08:32:31.838090+00:00",
+      "price": 1500.0,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-28T08:32:31.838090+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    "ORD-C55E74": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:17:15.801993+00:00",
+      "price": 800.0,
+      "commissionPercent": 30,
+      "commissionAmount": 240,
+      "vendorName": "alok ki dukan",
+      "vendorId": "i0B90UKivsfVDyXcj21R94xw4bs1",
+      "productName": "Lumina Icon Set Vol. 1",
+      "productId": "demo-prod-003",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-29T10:17:15.801993+00:00",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-D6E680": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-29T10:03:27.938784+00:00",
+      "price": 1500.0,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-29T10:03:27.938784+00:00",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "ORD-F05A5A": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-07-01T12:09:25.783631+00:00",
+      "price": 1500.0,
+      "campaignType": "admin",
+      "commissionPercent": 15,
+      "commissionAmount": 225,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-07-01T12:09:25.783631+00:00",
+      "affiliateCode": "AFF001",
+      "campaignId": "BvfVbRnYXpmjpjFlUzAN",
+      "affiliateName": "Lumora",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    },
+    "ORD-FF7121": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-28T08:19:21.513799+00:00",
+      "price": 1500.0,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-28T08:19:21.513799+00:00",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "R124WtZcOZiDdI155krR": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:39:07.293Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:39:07.293Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "RTCvmcb9F2q3nIUDfaaS": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:34:17.475Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:34:17.475Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "RxTjc3nAN795LuFywFMI": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Paid",
+      "status": "Completed",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1781009845598",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": true,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-12T10:14:19.803Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "createdAt": "2026-06-09T12:57:25.598Z"
+    },
+    "StdknPvZuJWfOi0ifnE7": {
+      "customerEmail": "avikapawar4@gmail.com",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Unpaid",
+      "createdAt": "2026-06-05T13:30:17.703Z",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1780666217703",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "",
+          "productId": "1"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "",
+          "productId": "2"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "",
+          "productId": "3"
+        }
+      ],
+      "downloadGranted": false,
+      "customerId": "zQrMwbynrsU07j8ysOqGgcduhDA3",
+      "tax": 33,
+      "customerInfo": {
+        "city": "mumbai",
+        "postal": "401203",
+        "phone": "+917840915365",
+        "state": "Maharashtra",
+        "country": "India",
+        "fullName": "Avika vinod pawar",
+        "email": "aditi17p9@gmail.com"
+      },
+      "customerName": "Avika vinod pawar",
+      "couponCode": null,
+      "vendorId": "",
+      "productId": "1",
+      "updatedAt": "2026-06-05T13:30:17.703Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "status": "Pending"
+    },
+    "TsxtMQbycSiKnZyaBgS6": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-27T06:31:38.305Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-27T06:31:38.305Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "XJPJWKy7h6s5bUpeacJf": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Unpaid",
+      "createdAt": "2026-06-08T08:00:09.929Z",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1780905609929",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": false,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-08T08:00:09.929Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "status": "Pending"
+    },
+    "XpjGhL3IiEyLWrKHG87O": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T14:39:20.590Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T14:39:20.590Z",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    "YVInTIidQRpnofZYBaW4": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Unpaid",
+      "createdAt": "2026-06-05T16:29:31.702Z",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1780676971702",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": false,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-05T16:29:31.702Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "status": "Pending"
+    },
+    "caf1RU1CkUqmahmuywA7": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:53:58.239Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:53:58.239Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "hx66PB93BlYstkHrqDYQ": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-27T06:31:15.554Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-27T06:31:15.554Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "hxszFCqeVMF0IqoTWBoA": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Unpaid",
+      "createdAt": "2026-06-08T08:02:08.091Z",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1780905728091",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": false,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-08T08:02:08.091Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "status": "Pending"
+    },
+    "oIFjIuNGYVfdMLOVjdvR": {
+      "customerEmail": "test@lumora.io",
+      "total": 452,
+      "productSnapshot": {
+        "title": "Aetherial Synth UI Kit",
+        "price": 129,
+        "category": "UI Kits",
+        "storagePath": null,
+        "fileName": null,
+        "thumbnail": "",
+        "downloadUrl": null,
+        "license": "Extended"
+      },
+      "price": 452,
+      "paymentStatus": "Unpaid",
+      "createdAt": "2026-06-05T16:59:51.541Z",
+      "currency": "USD",
+      "platformFee": 12,
+      "orderId": "ORD-1780678791541",
+      "paymentMethod": "card",
+      "items": [
+        {
+          "snapshot": {
+            "title": "Aetherial Synth UI Kit",
+            "price": 129,
+            "category": "UI Kits",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-001",
+          "productId": "TEST-001"
+        },
+        {
+          "snapshot": {
+            "title": "Lumora Motion Pack Vol.2",
+            "price": 79,
+            "category": "Motion",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Standard"
+          },
+          "vendorId": "vendor-002",
+          "productId": "TEST-002"
+        },
+        {
+          "snapshot": {
+            "title": "Crystal Dashboard System",
+            "price": 199,
+            "category": "Templates",
+            "storagePath": null,
+            "fileName": null,
+            "thumbnail": "",
+            "downloadUrl": null,
+            "license": "Extended"
+          },
+          "vendorId": "vendor-003",
+          "productId": "TEST-003"
+        }
+      ],
+      "downloadGranted": false,
+      "customerId": "test-user-verify",
+      "tax": 33,
+      "customerInfo": {
+        "city": "",
+        "postal": "",
+        "phone": "",
+        "state": "",
+        "country": "India",
+        "fullName": "Test Verifier",
+        "email": "test@lumora.io"
+      },
+      "customerName": "Test Verifier",
+      "couponCode": null,
+      "vendorId": "vendor-001",
+      "productId": "TEST-001",
+      "updatedAt": "2026-06-05T16:59:51.541Z",
+      "vendorEarnings": 429.4,
+      "discount": 0,
+      "subtotal": 407,
+      "status": "Pending"
+    },
+    "ozCRLvqjVEziRATBF5tf": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:33:25.913Z",
+      "price": 1500,
+      "commissionPercent": 0,
+      "commissionAmount": 0,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:33:25.913Z",
+      "affiliateCode": null,
+      "affiliateName": null,
+      "affiliateId": null
+    },
+    "s3OXELe6geNlRPEMs0GI": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:56:16.425Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:56:16.425Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    },
+    "tRooO5XjhcJqBoyfzuUx": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:45:15.868Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:45:15.868Z",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    "xJnkXGbveFo563nQL7RW": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:45:44.158Z",
+      "price": 1500,
+      "commissionPercent": 30,
+      "commissionAmount": 450,
+      "vendorName": "CodeForge Studio",
+      "vendorId": "vendor-mock-001",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:45:44.158Z",
+      "affiliateCode": "AFF001",
+      "affiliateName": "Avika Pawar",
+      "affiliateId": "DBytyJkJvqe5rlZHoYGyMitj5u22"
+    },
+    "zSj5xlpuKtmZUm3XZLEV": {
+      "customerEmail": "localadmin@lumora.com",
+      "status": "completed",
+      "createdAt": "2026-06-26T11:33:22.501Z",
+      "price": 4500,
+      "commissionPercent": 30,
+      "commissionAmount": 1350,
+      "vendorName": "Maitri Rajesh Durge",
+      "vendorId": "h3qJW1wzs0PAAe2UAem10NGxbNu2",
+      "productName": "Apex SaaS Starter Kit",
+      "productId": "demo-prod-002",
+      "customerName": "Local Admin",
+      "customerId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1",
+      "purchaseDate": "2026-06-26T11:33:22.501Z",
+      "affiliateCode": "AFF005",
+      "affiliateName": "Local Admin",
+      "affiliateId": "JJxBhNqyk8ZmTvG2vP8NJknLylg1"
+    }
+  },
+  "conversations": {
+    "5jfSYxCpb2WfLYxy4wM1": {
+      "seller_id": "pixelforge",
+      "buyer_id": "TB1HkPCUZnUWYMtmUDPVAfXWJCK2",
+      "seller_name": "PixelForge",
+      "unread_seller": 0,
+      "buyer_name": "alokparmar21@gmail.com",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-26T11:01:26.508Z",
+      "created_at": "2026-06-26T11:01:26.508Z",
+      "last_message": ""
+    },
+    "JdYkat6xmw14g4g0E0Pt": {
+      "seller_id": "lumora-",
+      "buyer_id": "m3jybuPp3JcZQLhRPDAy4npgcHt2",
+      "seller_name": "Lumora ",
+      "unread_seller": 0,
+      "buyer_name": "Vaiza Gupta",
+      "unread_buyer": 0,
+      "updated_at": "2026-07-15T11:32:50.585Z",
+      "created_at": "2026-07-15T11:32:50.585Z",
+      "last_message": ""
+    },
+    "RAJv8pundu9R8OTTV7hv": {
+      "seller_id": "lumora",
+      "buyer_id": "qq0MIJvCqIhrhPaUp9ULH7u2Mv43",
+      "seller_name": "Lumora",
+      "unread_seller": 0,
+      "buyer_name": "sara",
+      "unread_buyer": 0,
+      "updated_at": "2026-07-16T11:48:38.248Z",
+      "created_at": "2026-07-16T11:48:38.248Z",
+      "last_message": ""
+    },
+    "Xlc6IwV4gDHOx0JXYp8x": {
+      "seller_id": "TechReads",
+      "buyer_id": "fhnfziveROgRlOfQy4DpbhrQAYO2",
+      "seller_name": "TechReads",
+      "unread_seller": 0,
+      "buyer_name": "sam",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-21T06:18:01.970Z",
+      "created_at": "2026-06-21T06:18:01.970Z",
+      "last_message": ""
+    },
+    "cB4ht7lUnOtP09w1rVOA": {
+      "seller_id": "CodeForge",
+      "buyer_id": "fhnfziveROgRlOfQy4DpbhrQAYO2",
+      "seller_name": "CodeForge",
+      "unread_seller": 0,
+      "buyer_name": "sam",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-14T09:56:20.106Z",
+      "created_at": "2026-06-14T09:56:20.106Z",
+      "last_message": ""
+    },
+    "jMAZCcjy1kUT11H9ZLNS": {
+      "seller_id": "designhub",
+      "buyer_id": "TB1HkPCUZnUWYMtmUDPVAfXWJCK2",
+      "seller_name": "DesignHub",
+      "unread_seller": 0,
+      "buyer_name": "alokparmar21@gmail.com",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-26T11:01:08.282Z",
+      "created_at": "2026-06-26T11:01:08.282Z",
+      "last_message": ""
+    },
+    "oh6qsEisiZG3fh3VD4WC": {
+      "seller_id": "CodeForge",
+      "buyer_id": "yjzmxlzvoqO9aQyicNwOR3LW0wS2",
+      "seller_name": "CodeForge",
+      "unread_seller": 0,
+      "buyer_name": "Samruddhi Durge",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-19T07:51:29.554Z",
+      "created_at": "2026-06-19T07:51:29.554Z",
+      "last_message": ""
+    },
+    "sbK46W9V4RkJGDiYsUao": {
+      "seller_id": "designhub",
+      "buyer_id": "m3jybuPp3JcZQLhRPDAy4npgcHt2",
+      "seller_name": "DesignHub",
+      "unread_seller": 0,
+      "buyer_name": "Maitri Rajesh Durge",
+      "unread_buyer": 0,
+      "updated_at": "2026-06-26T11:45:54.855Z",
+      "created_at": "2026-06-26T11:45:54.855Z",
+      "last_message": ""
+    }
+  },
+  "reports": {
+    "jNdHP2U3BQvNAUkoh3nA": {
+      "status": "Resolved",
+      "assignee": "Unassigned",
+      "severity": "low",
+      "title": "help me",
+      "reporterEmail": "durgemaitri2@gmail.com",
+      "description": "you are very beautiful :)",
+      "category": "contact_request",
+      "reporter": "samruddhi",
+      "updatedAt": "2026-07-15T11:34:32.992860+00:00Z",
+      "resolvedAt": "2026-07-15T11:34:32.992877+00:00Z",
+      "createdAt": "2026-07-15T11:34:12.768682+00:00"
+    }
+  },
+  "promotionParticipants": {
+    "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T": {
+      "status": "joined",
+      "rewardValue": 1000,
+      "targetSales": 5,
+      "currentSales": 0,
+      "promotionTitle": "bhj",
+      "affiliateCode": "AFF001",
+      "updatedAt": "2026-07-01T11:48:23.622Z",
+      "joinedAt": "2026-07-01T11:48:23.622Z",
+      "affiliateName": "Affiliate Partner",
+      "promotionId": "Y2zAh65sIcmQOgsBSD8T",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    }
+  },
+  "adminAffiliateOrders": {
+    "ADM-ORD-08D15F": {
+      "commissionAmount": 225,
+      "status": "completed",
+      "createdAt": "2026-07-01T12:09:25.783631+00:00",
+      "productName": "Aetherial UI Kit Pro",
+      "productId": "demo-prod-001",
+      "customerName": "Local Admin",
+      "price": 1500.0,
+      "affiliateCode": "AFF001",
+      "campaignId": "BvfVbRnYXpmjpjFlUzAN",
+      "affiliateName": "Lumora",
+      "orderId": "ORD-F05A5A",
+      "affiliateId": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2"
+    }
+  },
+  "adminAnalytics": {
+    "global": {
+      "affiliateSales": 1,
+      "affiliateOrders": [
+        {
+          "price": 1500.0,
+          "productId": "demo-prod-001",
+          "purchaseDate": "2026-07-01T12:09:25.783631+00:00",
+          "productName": "Aetherial UI Kit Pro",
+          "affiliateCode": "AFF001",
+          "commissionAmount": 225,
+          "affiliateName": "Lumora",
+          "orderId": "ORD-F05A5A"
+        }
+      ],
+      "totalSales": 1500.0,
+      "affiliateRevenue": 1500.0
+    }
+  },
+  "adminPromotions": {
+    "Y2zAh65sIcmQOgsBSD8T": {
+      "createdAt": "2026-07-01T11:20:53.456Z",
+      "title": "bhj",
+      "updatedAt": "2026-07-01T11:20:53.456Z",
+      "rewardValue": 1000,
+      "targetSales": 5,
+      "description": "hhj",
+      "status": "active"
+    }
+  },
+  "customer ": {
+    "pQUAMbZGlmd1XpgXYJk9": {
+      "uid": "auth_uid_123",
+      "name": "Sam",
+      "accountstatus": "active",
+      "role": "customer",
+      "profileimage": "",
+      "lastlogin": "2026-06-03 10:40:29+00:00",
+      "created_at": "2026-06-03 10:32:17+00:00",
+      "email": "durgesamruddhi@gmail.com "
+    }
+  }
+}

@@ -113,7 +113,7 @@ def enable_vendor(
     NotificationService.create_notification(
         db=db,
         user_id=id,
-        title="Account Re-activated! ✦",
+        title="Account Re-activated! ?",
         message="Your vendor account has been re-activated by the administration.",
         category="account"
     )
@@ -162,7 +162,7 @@ def disable_vendor(
     NotificationService.create_notification(
         db=db,
         user_id=id,
-        title="Account Deactivated ✦",
+        title="Account Deactivated ?",
         message="Your vendor account has been deactivated by the administration.",
         category="account"
     )
@@ -211,7 +211,7 @@ def restrict_vendor(
     NotificationService.create_notification(
         db=db,
         user_id=id,
-        title="Account Restricted ✦",
+        title="Account Restricted ?",
         message="Your vendor account has been restricted by the administration.",
         category="account"
     )

@@ -11,7 +11,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
     page_size = max(1, min(200, page_size))
 
     # Always use SQLite as the primary source for the admin orders list.
-    # Firestore is the real-time mirror for customers — SQLite is the
+    # Firestore is the real-time mirror for customers - SQLite is the
     # source of truth for admin operations and is always available locally.
     db_s = SessionLocal()
     try:

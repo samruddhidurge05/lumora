@@ -12,7 +12,7 @@ def update_vendor_status_in_firestore(uid: str, status_val: str):
     When Firestore is unavailable, silently skips (SQLite sync still happens in services.py).
     """
     if not firebase_connected or db is None:
-        # No Firestore — SQLite-only mode; caller handles the DB update
+        # No Firestore - SQLite-only mode; caller handles the DB update
         return
     
     # Normalize inputs

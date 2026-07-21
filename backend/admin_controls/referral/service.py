@@ -97,7 +97,7 @@ def process_admin_referral(
         return
 
     if not firebase_connected or fdb is None:
-        logger.info("[admin_referral] Firestore unavailable — skipping admin referral conversion logging.")
+        logger.info("[admin_referral] Firestore unavailable - skipping admin referral conversion logging.")
         return
 
     try:
@@ -110,13 +110,13 @@ def process_admin_referral(
 
         # 3. Status Validation
         if campaign.get("status") != "active":
-            logger.info("[admin_referral] Campaign %s is inactive — conversion ignored.", code_upper)
+            logger.info("[admin_referral] Campaign %s is inactive - conversion ignored.", code_upper)
             return
 
         # 4. Self-Referral Prevention
         created_by = campaign.get("createdBy")
         if created_by and str(created_by) == str(user_id):
-            logger.info("[admin_referral] Self-referral detected (createdBy=%s, buyer=%s) — ignored.", created_by, user_id)
+            logger.info("[admin_referral] Self-referral detected (createdBy=%s, buyer=%s) - ignored.", created_by, user_id)
             return
 
         # 5. Idempotent Order Recording & Atomic Increments
@@ -133,7 +133,7 @@ def process_admin_referral(
             AdminReferralService.increment_conversion(campaign["ref"], order.total_amount or 0.0)
             logger.info("[admin_referral] Successfully recorded conversion for order %s", order_doc_id)
         else:
-            logger.info("[admin_referral] Order %s already logged — idempotent skip", order_doc_id)
+            logger.info("[admin_referral] Order %s already logged - idempotent skip", order_doc_id)
 
     except Exception as exc:
         logger.error("[admin_referral] Non-fatal error during admin referral processing: %s", exc)

@@ -7,7 +7,7 @@ Firebase-sync token for a valid Lumora backend JWT.
 Run once from the backend/ directory:
     python scripts/seed_admin.py
 
-The script is idempotent — it skips creation if the email already exists.
+The script is idempotent - it skips creation if the email already exists.
 
 Default credentials (override via env vars ADMIN_EMAIL / ADMIN_PASSWORD):
     email:    admin@lumora.co

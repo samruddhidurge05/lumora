@@ -2,7 +2,7 @@
 backend/app/core/firebase.py
 ----------------------------
 Firebase ID Token verification using Google's public keys.
-No firebase-admin SDK required — uses only httpx and python-jose
+No firebase-admin SDK required - uses only httpx and python-jose
 which are already in requirements.txt.
 
 Flow:
@@ -21,7 +21,7 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
-# ── Public key cache ──────────────────────────────────────────────────────────
+# -- Public key cache ----------------------------------------------------------
 # Stores {kid: pem_public_key_string} and the fetch timestamp.
 _key_cache: dict = {}
 _cache_ts: float = 0.0
@@ -66,7 +66,7 @@ async def _fetch_public_keys() -> dict:
 
 
 def _fetch_public_keys_sync() -> dict:
-    """Synchronous wrapper — runs the async fetch in the current event loop or a new one."""
+    """Synchronous wrapper - runs the async fetch in the current event loop or a new one."""
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
@@ -88,10 +88,10 @@ def verify_firebase_id_token(id_token: str, project_id: str) -> dict:
     Raises ValueError with a descriptive message on any failure.
 
     Returns dict with at minimum:
-      uid        — Firebase UID (str)
-      email      — user email (str | None)
-      name       — display name (str | None)
-      email_verified — bool
+      uid        - Firebase UID (str)
+      email      - user email (str | None)
+      name       - display name (str | None)
+      email_verified - bool
     """
     if not project_id:
         raise ValueError(

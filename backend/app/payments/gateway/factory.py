@@ -1,11 +1,11 @@
 """
 app/payments/gateway/factory.py
 ---------------------------------
-Gateway factory — selects the correct gateway based on environment.
+Gateway factory - selects the correct gateway based on environment.
 
 Environment variable: PAYMENT_GATEWAY
-  "mock"     → MockGateway      (default, no credentials needed)
-  "razorpay" → RazorpayGateway  (requires RAZORPAY_KEY_ID + RAZORPAY_KEY_SECRET)
+  "mock"     ? MockGateway      (default, no credentials needed)
+  "razorpay" ? RazorpayGateway  (requires RAZORPAY_KEY_ID + RAZORPAY_KEY_SECRET)
 
 Usage (in PaymentService):
     from app.payments.gateway.factory import get_gateway
@@ -22,11 +22,11 @@ def get_gateway() -> PaymentGateway:
 
     Selection priority:
     1. PAYMENT_GATEWAY env var (explicit)
-    2. If RAZORPAY_KEY_ID is set and is not "mock_key" → razorpay
-    3. Default → mock
+    2. If RAZORPAY_KEY_ID is set and is not "mock_key" ? razorpay
+    3. Default ? mock
 
     This function is called once per request inside PaymentService.
-    It is intentionally cheap — no heavy initialization on cold start.
+    It is intentionally cheap - no heavy initialization on cold start.
     """
     gateway_name = os.getenv("PAYMENT_GATEWAY", "").strip().lower()
 

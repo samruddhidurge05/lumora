@@ -72,7 +72,7 @@ class ProductService:
         seo_description: Optional[str] = None,
         visibility: str = "public",
         status: str = "published",
-        # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
+        # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------
         pcloud_download_link: Optional[str] = None,
         image_urls: Optional[list] = None,
     ) -> Product:
@@ -117,7 +117,7 @@ class ProductService:
             # External URLs (pCloud, S3, Firebase Storage, etc.) are stored as-is.
             if temp_file_url:
                 if _is_external_url(temp_file_url):
-                    # External URL — store directly; no local file movement needed
+                    # External URL - store directly; no local file movement needed
                     product.file_url = temp_file_url
                 else:
                     file_ext = _extract_file_extension(temp_file_url, default_ext=".bin")
@@ -226,10 +226,10 @@ class ProductService:
                 new_file = update_data["file_url"]
                 if new_file:
                     if _is_external_url(new_file):
-                        # External URL (pCloud, S3, etc.) — store directly
+                        # External URL (pCloud, S3, etc.) - store directly
                         product.file_url = new_file
                     elif "/products/" not in new_file:
-                        # New temporary local upload — move to permanent storage
+                        # New temporary local upload - move to permanent storage
                         if product.storage_path:
                             old_files_to_delete.append(product.storage_path)
                         file_ext = _extract_file_extension(new_file, default_ext=".bin")
@@ -307,7 +307,7 @@ class ProductService:
                 "affiliate_enabled", "commission_type", "commission_value",
                 "short_desc", "features", "system_requirements", "what_you_get", "installation_guide",
                 "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status",
-                # ── pCloud / External URL Delivery (temporary) ──
+                # -- pCloud / External URL Delivery (temporary) --
                 "pcloud_download_link", "image_urls",
             ):
                 if field in update_data:
@@ -325,11 +325,11 @@ class ProductService:
                 ).all()
                 
                 for alert in alerts:
-                    msg = f"'{product.title}' has dropped from ₹{int(old_price * 80)} to ₹{int(new_price * 80)} ({discount_percent}% OFF)."
+                    msg = f"'{product.title}' has dropped from ?{int(old_price * 80)} to ?{int(new_price * 80)} ({discount_percent}% OFF)."
                     NotificationService.create_notification(
                         db=db,
                         user_id=alert.user_id,
-                        title="Price Drop Alert! ✦",
+                        title="Price Drop Alert! ?",
                         message=msg,
                         category="price_drop"
                     )

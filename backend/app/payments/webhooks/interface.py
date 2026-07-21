@@ -7,11 +7,11 @@ When Razorpay sends an event (payment.captured, payment.failed, etc.)
 to your webhook endpoint, the concrete handler processes it.
 
 Webhook events supported by Razorpay (and prepared here):
-    payment.authorized      — Customer authorized payment (not yet captured)
-    payment.captured        — Payment captured (money received)
-    payment.failed          — Payment failed
-    payment.refunded        — Full refund processed
-    refund.processed        — Refund confirmed by bank
+    payment.authorized      - Customer authorized payment (not yet captured)
+    payment.captured        - Payment captured (money received)
+    payment.failed          - Payment failed
+    payment.refunded        - Full refund processed
+    refund.processed        - Refund confirmed by bank
 
 Implementation note:
     Webhooks are an alternative confirmation path to verify_signature().
@@ -48,7 +48,7 @@ class WebhookHandler(ABC):
     Abstract webhook handler.
 
     Concrete implementations:
-        RazorpayWebhookHandler — reads X-Razorpay-Signature header, verifies, dispatches
+        RazorpayWebhookHandler - reads X-Razorpay-Signature header, verifies, dispatches
     """
 
     @abstractmethod
@@ -73,7 +73,7 @@ class WebhookHandler(ABC):
 
     @abstractmethod
     def on_payment_captured(self, event: WebhookEvent) -> None:
-        """Payment captured — money received. Trigger order fulfillment if not already done."""
+        """Payment captured - money received. Trigger order fulfillment if not already done."""
         raise NotImplementedError
 
     @abstractmethod

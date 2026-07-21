@@ -1,16 +1,16 @@
 """
 Vendor API routes
 -----------------
-GET  /vendors/{vendor_id}/profile        → get vendor profile
-PUT  /vendors/{vendor_id}/profile        → save vendor profile
-PUT  /vendors/{vendor_id}/store-settings → save store settings
-GET  /vendors/{vendor_id}/stats          → dashboard stats
-GET  /vendors/{vendor_id}/withdrawals    → withdrawal history
-POST /vendors/{vendor_id}/withdrawals    → request withdrawal
-GET  /vendors/{vendor_id}/orders         → vendor order history
-POST /vendors/{vendor_id}/orders/{order_id}/fulfill  → mark order fulfilled
-GET  /vendors/{vendor_id}/reviews        → reviews on vendor products
-GET  /vendors/{vendor_id}/products       → products listed by this vendor
+GET  /vendors/{vendor_id}/profile        ? get vendor profile
+PUT  /vendors/{vendor_id}/profile        ? save vendor profile
+PUT  /vendors/{vendor_id}/store-settings ? save store settings
+GET  /vendors/{vendor_id}/stats          ? dashboard stats
+GET  /vendors/{vendor_id}/withdrawals    ? withdrawal history
+POST /vendors/{vendor_id}/withdrawals    ? request withdrawal
+GET  /vendors/{vendor_id}/orders         ? vendor order history
+POST /vendors/{vendor_id}/orders/{order_id}/fulfill  ? mark order fulfilled
+GET  /vendors/{vendor_id}/reviews        ? reviews on vendor products
+GET  /vendors/{vendor_id}/products       ? products listed by this vendor
 """
 from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies import get_current_vendor
@@ -40,12 +40,12 @@ class OrderStatusSchema(BaseModel):
 router = APIRouter(tags=["Vendors"])
 
 
-# ── Public endpoint (no auth) for CreatorProfile page ──────────────────────
+# -- Public endpoint (no auth) for CreatorProfile page ----------------------
 
 @router.get("/public/{vendor_id}/profile")
 def public_vendor_profile(vendor_id: str, db_session=None):
     """
-    Public vendor profile — no authentication required.
+    Public vendor profile - no authentication required.
     Used by marketplace CreatorProfile.jsx page.
     """
     from app.db.session import get_db as _get_db
@@ -96,7 +96,7 @@ def vendor_dashboard(
     """
     Single-call dashboard summary.
     Returns stats + recent_orders + recent_products + recent_reviews + activity + monthly_chart.
-    JWT required — vendor can only access their own dashboard.
+    JWT required - vendor can only access their own dashboard.
     Raises 403 if the vendor account is disabled.
     """
     if vendor.get("uid") != vendor_id:
@@ -156,7 +156,7 @@ def request_withdrawal(vendor_id: str, body: WithdrawalSchema, vendor: dict = De
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized to request withdrawal")
     if body.amount < 500:
-        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ₹500")
+        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ?500")
     return create_withdrawal({**body.model_dump(), "vendor_id": vendor_id})
 
 
@@ -192,7 +192,7 @@ def update_order_status(
     _active = Depends(verify_vendor_active)
 ):
     """Update order status to any valid value (pending/processing/completed/refunded/cancelled).
-    JWT required — vendor must own a product in the order."""
+    JWT required - vendor must own a product in the order."""
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     res = update_vendor_order_status(vendor_id, order_id, body.status)

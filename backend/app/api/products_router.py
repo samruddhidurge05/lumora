@@ -52,7 +52,7 @@ def resolve_media_url(url: str, category: str = None) -> Optional[str]:
 def resolve_products_media(products, db):
     return ProductService.resolve_products_media(products, db)
 
-# ── Public read endpoints (no auth) ──────────────────────────────────────────
+# -- Public read endpoints (no auth) ------------------------------------------
 
 @router.get("/", response_model=List[ProductResponse])
 def read_products(
@@ -62,7 +62,7 @@ def read_products(
     limit: int = 1000,
     db: Session = Depends(get_db)
 ):
-    """List all published products. Public — no authentication required."""
+    """List all published products. Public - no authentication required."""
     trigger_firestore_sync_if_needed(background_tasks)
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
@@ -158,7 +158,7 @@ def get_product_categories(db: Session = Depends(get_db)):
 
 @router.get("/{product_id}", response_model=ProductResponse)
 def read_product(product_id: str, db: Session = Depends(get_db)):
-    """Get a single product by ID. Public — no authentication required."""
+    """Get a single product by ID. Public - no authentication required."""
     try:
         pid = int(product_id)
     except ValueError:
@@ -564,7 +564,7 @@ def download_product_file(
 
 
 
-# ── Protected write endpoints (JWT required) ──────────────────────────────────
+# -- Protected write endpoints (JWT required) ----------------------------------
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(
@@ -612,7 +612,7 @@ def create_product(
                     detail="Fixed commission cannot exceed the product price."
                 )
 
-    # ── IDEMPOTENCY: Double-click / network-retry protection ──────────────────
+    # -- IDEMPOTENCY: Double-click / network-retry protection ------------------
     # Only deduplicate if same vendor, title, AND price > 0 within 10 seconds.
     # Zero-price products are excluded to avoid blocking legitimate re-submissions
     # after a failed form save.
@@ -669,7 +669,7 @@ def create_product(
         seo_description=product_in.seo_description,
         visibility=product_in.visibility or "public",
         status=initial_status,
-        # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
+        # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------
         pcloud_download_link=product_in.pcloud_download_link,
         image_urls=product_in.image_urls,
     )
@@ -697,7 +697,7 @@ def update_product(
     _active = Depends(verify_vendor_active)
 ):
     """
-    Update an existing product (partial update — only provided fields are changed).
+    Update an existing product (partial update - only provided fields are changed).
     Requires a valid JWT. Only product owner (vendor) or admin may update products.
     """
     if current_user.role not in ("vendor", "admin"):
@@ -872,7 +872,7 @@ def get_purchase_complete_popup(
             "continue_shopping": "/products"  # Continue shopping URL
         },
         "messages": {
-            "title": "🎉 Purchase Complete!",
+            "title": "? Purchase Complete!",
             "subtitle": f"Your {len(popup_products)} product{'s' if len(popup_products) > 1 else ''} {'are' if len(popup_products) > 1 else 'is'} ready for download",
             "download_message": "Your download will start automatically. You can also access all your purchases in the Downloads section.",
             "thank_you": "Thank you for your purchase!"

@@ -1,5 +1,5 @@
 """
-RC Fix Migration — adds missing columns to payments and conversations tables.
+RC Fix Migration - adds missing columns to payments and conversations tables.
 Run once: python migrate_rc_fix.py
 """
 import sqlite3
@@ -9,7 +9,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "lumora.db")
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-# ── payments migrations ───────────────────────────────────────────────────────
+# -- payments migrations -------------------------------------------------------
 payments_to_add = [
     ("payment_ref",        "TEXT"),
     ("vendor_ids",         "TEXT"),
@@ -48,7 +48,7 @@ cursor.execute(
 )
 print("  backfilled payment_ref for legacy rows")
 
-# ── conversations migrations ──────────────────────────────────────────────────
+# -- conversations migrations --------------------------------------------------
 conversations_to_add = [
     ("type",        "TEXT DEFAULT 'support_ticket'"),
     ("status",      "TEXT DEFAULT 'open'"),

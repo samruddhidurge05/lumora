@@ -6,7 +6,7 @@ Unit tests for `delete_product_from_firestore`.
 The function:
   - Always deletes the Firestore product document (admin has authority).
   - Collects cross-collection references (orders, reviews, downloads) and
-    returns them in the result for logging — they do NOT block deletion.
+    returns them in the result for logging - they do NOT block deletion.
   - Returns {"deleted": True, "references": [...]} on success.
   - Returns {"deleted": False, "reason": "..."} when Firestore is unavailable
     or an exception occurs.
@@ -20,7 +20,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 def make_order_doc(doc_id: str, product_id: str) -> MagicMock:
     """Build a mock Firestore order document referencing a given product_id."""
@@ -96,7 +96,7 @@ def call_delete(product_id: int, mock_db, firebase_connected: bool = True) -> di
         return delete_product_from_firestore(product_id)
 
 
-# ── Tests ────────────────────────────────────────────────────────────────────
+# -- Tests --------------------------------------------------------------------
 
 class TestDeleteFirestoreUnavailable:
     """When Firebase is not connected, return early without touching Firestore."""
@@ -142,7 +142,7 @@ class TestDeleteProceedsWithReferences:
             f"Expected deleted=True even when order reference exists, got: {result}"
         assert len(result["references"]) > 0, \
             f"Expected non-empty references list, got: {result['references']}"
-        # delete() MUST have been called — references do not block deletion
+        # delete() MUST have been called - references do not block deletion
         mock_product_doc_ref.delete.assert_called_once()
 
     def test_delete_proceeds_when_review_reference_exists(self):

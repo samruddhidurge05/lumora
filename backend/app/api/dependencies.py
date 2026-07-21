@@ -1,9 +1,9 @@
 """
 Shared FastAPI dependencies for the Lumora backend.
 
-get_current_user_optional — returns User or None (never raises).
-get_current_user_required — returns User or raises 401.
-get_current_vendor        — requires a valid JWT with role='vendor' or 'admin'.
+get_current_user_optional - returns User or None (never raises).
+get_current_user_required - returns User or raises 401.
+get_current_vendor        - requires a valid JWT with role='vendor' or 'admin'.
                             Returns a dict with {uid, role, email, name}.
 """
 from fastapi import Depends, HTTPException, status

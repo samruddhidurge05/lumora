@@ -1,0 +1,1149 @@
+{
+  "timestamp": "2026-07-19 00:04:29",
+  "reviews_count_before": 3,
+  "reviews_to_delete": [
+    "DBytyJkJvqe5rlZHoYGyMitj5u22_10",
+    "eKhujMHNCTMH4afXkaT8R22UFww2_10",
+    "zQrMwbynrsU07j8ysOqGgcduhDA3_1"
+  ],
+  "products_before": {
+    "1": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 353,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 353
+    },
+    "10": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 226,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 226
+    },
+    "100": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 36,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 36
+    },
+    "101": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 34,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 34
+    },
+    "102": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 22,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 22
+    },
+    "103": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 15,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 15
+    },
+    "104": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "105": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "106": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "107": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "108": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "109": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "11": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 281,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 281
+    },
+    "110": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "111": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "112": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "115": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "116": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "117": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "118": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "119": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "12": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 191,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 191
+    },
+    "120": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "121": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "122": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": null,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "13": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 114,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 114
+    },
+    "14": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 142,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 142
+    },
+    "15": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 258,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 258
+    },
+    "16": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 355,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 355
+    },
+    "17": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 157,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 157
+    },
+    "18": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 350,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 350
+    },
+    "19": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 182,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 182
+    },
+    "1T93dJYumFuqXp8josVc": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "2": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 174,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 174
+    },
+    "20": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 311,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 311
+    },
+    "21": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 348,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 348
+    },
+    "22": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 113,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 113
+    },
+    "23": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 329,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 329
+    },
+    "24": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 276,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 276
+    },
+    "25": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 201,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 201
+    },
+    "26": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 378,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 378
+    },
+    "27": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 224,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 224
+    },
+    "28": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 188,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 188
+    },
+    "29": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 100,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 100
+    },
+    "3": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 305,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 305
+    },
+    "30": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 35,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 35
+    },
+    "31": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 236,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 236
+    },
+    "32": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 373,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 373
+    },
+    "33": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 168,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 168
+    },
+    "34": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 48,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 48
+    },
+    "35": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 86,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 86
+    },
+    "36": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 376,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 376
+    },
+    "37": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 266,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 266
+    },
+    "38": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 34,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 34
+    },
+    "39": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 72,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 72
+    },
+    "4": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 376,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 376
+    },
+    "40": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 295,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 295
+    },
+    "41": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 278,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 278
+    },
+    "42": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 69,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 69
+    },
+    "43": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 368,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 368
+    },
+    "44": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 251,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 251
+    },
+    "45": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 324,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 324
+    },
+    "46": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 158,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 158
+    },
+    "47": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 49,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 49
+    },
+    "48": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 206,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 206
+    },
+    "49": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 45,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 45
+    },
+    "4oBMk7hK8ov6ht6qNxwz": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "5": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 36,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 36
+    },
+    "50": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 82,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 82
+    },
+    "51": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 386,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 386
+    },
+    "51wqGLoNRXjfW2gYIkWz": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "52": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 215,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 215
+    },
+    "53": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 168,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 168
+    },
+    "54": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 231,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 231
+    },
+    "55": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 79,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 79
+    },
+    "56": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 302,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 302
+    },
+    "57": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 240,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 240
+    },
+    "58": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 300,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 300
+    },
+    "59": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 290,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 290
+    },
+    "6": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 273,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 273
+    },
+    "60": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 376,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 376
+    },
+    "61": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 185,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 185
+    },
+    "62": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 222,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 222
+    },
+    "63": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 220,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 220
+    },
+    "64": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 226,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 226
+    },
+    "65": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 130,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 130
+    },
+    "66": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 82,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 82
+    },
+    "67": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 240,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 240
+    },
+    "68": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 177,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 177
+    },
+    "69": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 30,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 30
+    },
+    "7": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 246,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 246
+    },
+    "70": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 122,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 122
+    },
+    "71": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 124,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 124
+    },
+    "72": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 386,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 386
+    },
+    "73": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 312,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 312
+    },
+    "74": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 218,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 218
+    },
+    "75": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 50,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 50
+    },
+    "76": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 122,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 122
+    },
+    "77": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 307,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 307
+    },
+    "78": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 59,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 59
+    },
+    "79": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 170,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 170
+    },
+    "7I5OZU8Orh6ZKfw7RAk4": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "8": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 237,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 237
+    },
+    "80": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 274,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 274
+    },
+    "81": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 206,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 206
+    },
+    "82": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 73,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 73
+    },
+    "83": {
+      "source": "firestore",
+      "rating": 4.8,
+      "reviews": 258,
+      "starDistribution": null,
+      "sqlite_rating": 4.8,
+      "sqlite_reviews": 258
+    },
+    "84": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 40,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 40
+    },
+    "85": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 172,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 172
+    },
+    "86": {
+      "source": "firestore",
+      "rating": 4.6,
+      "reviews": 240,
+      "starDistribution": null,
+      "sqlite_rating": 4.6,
+      "sqlite_reviews": 240
+    },
+    "87": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 367,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 367
+    },
+    "88": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 310,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 310
+    },
+    "89": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 305,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 305
+    },
+    "8qXIdC8PnMgSwqYOgdi9": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "9": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 204,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 204
+    },
+    "90": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 140,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 140
+    },
+    "91": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 183,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 183
+    },
+    "92": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 200,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 200
+    },
+    "93": {
+      "source": "firestore",
+      "rating": 5.0,
+      "reviews": 124,
+      "starDistribution": null,
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 124
+    },
+    "94": {
+      "source": "firestore",
+      "rating": 4.5,
+      "reviews": 151,
+      "starDistribution": null,
+      "sqlite_rating": 4.5,
+      "sqlite_reviews": 151
+    },
+    "95": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 59,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 59
+    },
+    "96": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 387,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 387
+    },
+    "97": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 42,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 42
+    },
+    "98": {
+      "source": "firestore",
+      "rating": 4.7,
+      "reviews": 287,
+      "starDistribution": null,
+      "sqlite_rating": 4.7,
+      "sqlite_reviews": 287
+    },
+    "99": {
+      "source": "firestore",
+      "rating": 4.9,
+      "reviews": 93,
+      "starDistribution": null,
+      "sqlite_rating": 4.9,
+      "sqlite_reviews": 93
+    },
+    "9qxjxcW3wAkWunNTd83S": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "D8jPEl5KU8LWj3chnR2y": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "EJpctfaW9DmqgVEqvm6p": {
+      "source": "firestore",
+      "rating": 5,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "HMACkzePmz9t6may9eRl": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "KMB7keUmLrQv8lX6wZQR": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "MWHx1H1i5F4f8ue3O1U6": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "Nbfp60kic3sf2cNk1n98": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "QimcrCuxpbVEn9EvjI9q": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "SU746SlEeAOOfPeRTDjp": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "a4AYMUAzzMi3I3dLxtpU": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "dNTgHR24cWWqdU9UGgEL": {
+      "source": "firestore",
+      "rating": 5,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "demo-prod-001": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "demo-prod-002": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "demo-prod-003": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "i2oLJ9x1APksP2ZMmARb": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "j8gyrIcBYwdYSVATMZb5": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "jIP10OZEtowPA25TJER1": {
+      "source": "firestore",
+      "rating": null,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "jzKx5AUuEwsJXlwf98hk": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "kKx80rQigW9lyG431OtV": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "prod_cacm0mispwu": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "prod_qhduz660xni": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "x8W3sCLvrq5dU4caJWT2": {
+      "source": "firestore",
+      "rating": 0,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "yYs9gsFpI1zNSxQ0qyw9": {
+      "source": "firestore",
+      "rating": 5,
+      "reviews": null,
+      "starDistribution": null
+    },
+    "113": {
+      "source": "sqlite_only",
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    },
+    "114": {
+      "source": "sqlite_only",
+      "sqlite_rating": 5.0,
+      "sqlite_reviews": 0
+    }
+  }
+}

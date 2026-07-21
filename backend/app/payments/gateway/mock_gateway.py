@@ -1,16 +1,16 @@
 """
 app/payments/gateway/mock_gateway.py
 --------------------------------------
-Mock payment gateway — 100% in-process, no external calls.
+Mock payment gateway - 100% in-process, no external calls.
 
 Used when RAZORPAY_KEY_ID is not set or equals "mock_key".
 Suitable for development and integration testing.
 
 Mock behaviour:
-  - create_order()        → always succeeds, returns fake order_id
-  - verify_signature()    → always returns True (any signature accepted)
-  - capture_payment()     → always succeeds
-  - refund_payment()      → always succeeds
+  - create_order()        ? always succeeds, returns fake order_id
+  - verify_signature()    ? always returns True (any signature accepted)
+  - capture_payment()     ? always succeeds
+  - refund_payment()      ? always succeeds
 
 To simulate a failure in tests: call with amount_inr=-1.
 """
@@ -93,7 +93,7 @@ class MockGateway(PaymentGateway):
         signature: str,
     ) -> bool:
         """
-        Mock signature verification — always valid.
+        Mock signature verification - always valid.
         In real mode (Razorpay), HMAC-SHA256 is computed.
         """
         # Accept any signature string that is non-empty.
@@ -106,7 +106,7 @@ class MockGateway(PaymentGateway):
         amount_paise: Optional[int] = None,
     ) -> GatewayCaptureResult:
         """
-        Mock capture — always succeeds.
+        Mock capture - always succeeds.
         """
         return GatewayCaptureResult(
             success=True,
@@ -122,7 +122,7 @@ class MockGateway(PaymentGateway):
         reason: str = "Customer request",
     ) -> GatewayRefundResult:
         """
-        Mock refund — always succeeds immediately.
+        Mock refund - always succeeds immediately.
         """
         refund_id = f"mock_refund_{uuid.uuid4().hex[:10]}"
         return GatewayRefundResult(

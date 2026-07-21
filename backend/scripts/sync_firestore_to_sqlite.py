@@ -26,7 +26,7 @@ from admin.firestore.admin_firestore import restore_sqlite_products_from_firesto
 
 def main():
     print("=" * 55)
-    print("  Lumora: Firestore → SQLite Product Sync")
+    print("  Lumora: Firestore ? SQLite Product Sync")
     print("=" * 55)
 
     db = SessionLocal()

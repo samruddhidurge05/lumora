@@ -11,7 +11,7 @@ from app.dependencies import get_current_user_required
 from app.models.user import User
 from app.models.admin_role import AdminRole
 
-# ── Role → Permission Mapping ─────────────────────────────────────────────────
+# -- Role ? Permission Mapping -------------------------------------------------
 ROLE_PERMISSIONS: dict[str, list[str]] = {
     "super_admin": ["*"],  # all permissions
     "admin": [
@@ -50,7 +50,7 @@ def require_permission(permission: str):
     ) -> User:
         # Super admin shortcut via user.role
         if current_user.role == "admin":
-            return current_user  # legacy admin — always has all perms
+            return current_user  # legacy admin - always has all perms
 
         role_record = (
             db.query(AdminRole)

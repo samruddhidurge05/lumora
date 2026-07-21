@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 
-# ── Profile ────────────────────────────────────────────────────────────────────
+# -- Profile --------------------------------------------------------------------
 
 class AffiliateProfileResponse(BaseModel):
     id: int
@@ -59,7 +59,7 @@ class AffiliateProfileUpdate(BaseModel):
     email_notifications: Optional[bool] = None
 
 
-# ── Commission ─────────────────────────────────────────────────────────────────
+# -- Commission -----------------------------------------------------------------
 
 class CommissionResponse(BaseModel):
     id: int
@@ -82,7 +82,7 @@ class CommissionCreate(BaseModel):
     order_id: Optional[int] = None
 
 
-# ── Payout ─────────────────────────────────────────────────────────────────────
+# -- Payout ---------------------------------------------------------------------
 
 class PayoutResponse(BaseModel):
     id: int
@@ -102,7 +102,7 @@ class PayoutRequest(BaseModel):
     bank_account: Optional[str] = None
 
 
-# ── Stats ──────────────────────────────────────────────────────────────────────
+# -- Stats ----------------------------------------------------------------------
 
 class AffiliateStats(BaseModel):
     total_earnings: float
@@ -116,14 +116,14 @@ class AffiliateStats(BaseModel):
     referral_link: str
 
 
-# ── Click Tracking ─────────────────────────────────────────────────────────────
+# -- Click Tracking -------------------------------------------------------------
 
 class ClickTrackResponse(BaseModel):
     tracked: bool
     referral_code: str
 
 
-# ── Top Product (used in dashboard + analytics) ────────────────────────────────
+# -- Top Product (used in dashboard + analytics) --------------------------------
 
 class TopProductItem(BaseModel):
     product_name: str
@@ -132,7 +132,7 @@ class TopProductItem(BaseModel):
     revenue_generated: float
 
 
-# ── Monthly Earnings Item ──────────────────────────────────────────────────────
+# -- Monthly Earnings Item ------------------------------------------------------
 
 class MonthlyEarningsItem(BaseModel):
     month: str          # e.g. "Jun 2026"
@@ -140,7 +140,7 @@ class MonthlyEarningsItem(BaseModel):
     sales: int
 
 
-# ── Dashboard Summary ──────────────────────────────────────────────────────────
+# -- Dashboard Summary ----------------------------------------------------------
 
 class DashboardSummaryResponse(BaseModel):
     """Single-call response for the Affiliate Dashboard home tab."""
@@ -151,7 +151,7 @@ class DashboardSummaryResponse(BaseModel):
     monthly_earnings: List[MonthlyEarningsItem]
 
 
-# ── Analytics ─────────────────────────────────────────────────────────────────
+# -- Analytics -----------------------------------------------------------------
 
 class AnalyticsResponse(BaseModel):
     """Detailed analytics for the affiliate."""
@@ -166,7 +166,7 @@ class AnalyticsResponse(BaseModel):
     monthly_earnings: List[MonthlyEarningsItem]
 
 
-# ── Reports ───────────────────────────────────────────────────────────────────
+# -- Reports -------------------------------------------------------------------
 
 class CommissionReportItem(BaseModel):
     id: int
@@ -204,7 +204,7 @@ class ReportResponse(BaseModel):
     payouts: List[PayoutReportItem]
 
 
-# ── Referral Links ─────────────────────────────────────────────────────────────
+# -- Referral Links -------------------------------------------------------------
 
 class ReferralLinkCreate(BaseModel):
     product_id: int

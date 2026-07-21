@@ -1,0 +1,47 @@
+{
+  "DBytyJkJvqe5rlZHoYGyMitj5u22_10": {
+    "status": "visible",
+    "title": "goof",
+    "vendorId": "DesignHub",
+    "reviewId": "DBytyJkJvqe5rlZHoYGyMitj5u22_10",
+    "productId": "10",
+    "customerName": "Avika Pawar",
+    "verifiedPurchase": false,
+    "productTitle": "Portfolio Website Template",
+    "body": "nicee",
+    "customerId": "DBytyJkJvqe5rlZHoYGyMitj5u22",
+    "updatedAt": "2026-06-05T17:03:39.181Z",
+    "createdAt": "2026-06-05T17:03:39.181Z",
+    "rating": 5
+  },
+  "eKhujMHNCTMH4afXkaT8R22UFww2_10": {
+    "status": "visible",
+    "title": "good",
+    "vendorId": "DesignHub",
+    "reviewId": "eKhujMHNCTMH4afXkaT8R22UFww2_10",
+    "productId": "10",
+    "customerName": "Intership",
+    "verifiedPurchase": false,
+    "productTitle": "Portfolio Website Template",
+    "body": "working",
+    "customerId": "eKhujMHNCTMH4afXkaT8R22UFww2",
+    "updatedAt": "2026-06-08T08:38:07.003Z",
+    "createdAt": "2026-06-08T08:38:07.003Z",
+    "rating": 5
+  },
+  "zQrMwbynrsU07j8ysOqGgcduhDA3_1": {
+    "status": "visible",
+    "title": "good",
+    "vendorId": "DesignHub",
+    "reviewId": "zQrMwbynrsU07j8ysOqGgcduhDA3_1",
+    "productId": "1",
+    "customerName": "Avika vinod pawar",
+    "verifiedPurchase": false,
+    "productTitle": "Modern SaaS Dashboard UI Kit",
+    "body": "Amazing !! review is working successfully",
+    "customerId": "zQrMwbynrsU07j8ysOqGgcduhDA3",
+    "updatedAt": "2026-06-07T18:06:09.358Z",
+    "createdAt": "2026-06-07T18:06:09.358Z",
+    "rating": 5
+  }
+}

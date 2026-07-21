@@ -1,17 +1,17 @@
 """
 app/payments/webhooks/razorpay_webhook.py
 -------------------------------------------
-Razorpay webhook handler — PRODUCTION READY.
+Razorpay webhook handler - PRODUCTION READY.
 
 Handles asynchronous payment events sent by Razorpay to:
     POST /api/payments/webhook/razorpay
 
 Events handled:
-    payment.authorized  — authorized, pending capture (no-op with auto-capture)
-    payment.captured    — money received; trigger order fulfillment if not done
-    payment.failed      — mark payment FAILED
-    payment.refunded    — full refund processed
-    refund.processed    — bank confirmed refund
+    payment.authorized  - authorized, pending capture (no-op with auto-capture)
+    payment.captured    - money received; trigger order fulfillment if not done
+    payment.failed      - mark payment FAILED
+    payment.refunded    - full refund processed
+    refund.processed    - bank confirmed refund
 
 Security:
     Every request is authenticated via HMAC-SHA256 of raw payload bytes
@@ -19,7 +19,7 @@ Security:
     signatures are rejected with 400 before any processing occurs.
 
 Setup:
-    1. Go to Razorpay Dashboard → Settings → Webhooks
+    1. Go to Razorpay Dashboard ? Settings ? Webhooks
     2. Add webhook URL: https://yourdomain.com/api/payments/webhook/razorpay
     3. Select events: payment.captured, payment.failed, payment.refunded
     4. Copy the Webhook Secret and set RAZORPAY_WEBHOOK_SECRET in backend/.env
@@ -59,7 +59,7 @@ class RazorpayWebhookHandler(WebhookHandler):
                 "Webhook signature verification will be skipped (insecure)."
             )
 
-    # ── Signature Verification ────────────────────────────────────────────────
+    # -- Signature Verification ------------------------------------------------
 
     def verify_webhook_signature(self, payload_bytes: bytes, signature: str) -> bool:
         """
@@ -76,7 +76,7 @@ class RazorpayWebhookHandler(WebhookHandler):
             True if signature is valid, False otherwise.
         """
         if not self.webhook_secret:
-            # Secret not configured — log warning and allow through for initial setup
+            # Secret not configured - log warning and allow through for initial setup
             logger.warning(
                 "[RazorpayWebhookHandler] No webhook secret configured. "
                 "Accepting webhook without signature verification. "
@@ -101,7 +101,7 @@ class RazorpayWebhookHandler(WebhookHandler):
 
             if not is_valid:
                 logger.warning(
-                    "[RazorpayWebhookHandler] Signature mismatch — "
+                    "[RazorpayWebhookHandler] Signature mismatch - "
                     "possible spoofed webhook. expected=%s... received=%s...",
                     expected[:12],
                     signature[:12] if signature else "NONE",
@@ -112,7 +112,7 @@ class RazorpayWebhookHandler(WebhookHandler):
             logger.error("[RazorpayWebhookHandler] Signature verification error: %s", exc)
             return False
 
-    # ── Event Parsing ─────────────────────────────────────────────────────────
+    # -- Event Parsing ---------------------------------------------------------
 
     def parse_event(self, payload: Dict[str, Any]) -> WebhookEvent:
         """
@@ -155,7 +155,7 @@ class RazorpayWebhookHandler(WebhookHandler):
             raw=payload,
         )
 
-    # ── Dispatch ──────────────────────────────────────────────────────────────
+    # -- Dispatch --------------------------------------------------------------
 
     def dispatch(self, event: WebhookEvent) -> None:
         """Route an event to the correct handler method."""
@@ -177,11 +177,11 @@ class RazorpayWebhookHandler(WebhookHandler):
             handler(event)
         else:
             logger.info(
-                "[RazorpayWebhookHandler] Unhandled event type: %s — ignoring",
+                "[RazorpayWebhookHandler] Unhandled event type: %s - ignoring",
                 event.event_type,
             )
 
-    # ── Event Handlers ────────────────────────────────────────────────────────
+    # -- Event Handlers --------------------------------------------------------
 
     def on_payment_authorized(self, event: WebhookEvent) -> None:
         """
@@ -190,7 +190,7 @@ class RazorpayWebhookHandler(WebhookHandler):
         Captured event will follow immediately.
         """
         logger.info(
-            "[RazorpayWebhookHandler] payment.authorized — "
+            "[RazorpayWebhookHandler] payment.authorized - "
             "payment_id=%s order_id=%s (awaiting capture)",
             event.gateway_payment_id,
             event.gateway_order_id,
@@ -205,11 +205,11 @@ class RazorpayWebhookHandler(WebhookHandler):
         the frontend never called /confirm).
 
         Note: If the frontend already called /confirm successfully,
-        the payment will be in SUCCESS state — idempotency check prevents
+        the payment will be in SUCCESS state - idempotency check prevents
         double fulfillment.
         """
         logger.info(
-            "[RazorpayWebhookHandler] payment.captured — "
+            "[RazorpayWebhookHandler] payment.captured - "
             "payment_id=%s order_id=%s amount_paise=%d",
             event.gateway_payment_id,
             event.gateway_order_id,
@@ -227,7 +227,7 @@ class RazorpayWebhookHandler(WebhookHandler):
         The route (routes.py) uses this event to call PaymentService.
         """
         logger.warning(
-            "[RazorpayWebhookHandler] payment.failed — "
+            "[RazorpayWebhookHandler] payment.failed - "
             "payment_id=%s order_id=%s",
             event.gateway_payment_id,
             event.gateway_order_id,
@@ -236,7 +236,7 @@ class RazorpayWebhookHandler(WebhookHandler):
     def on_payment_refunded(self, event: WebhookEvent) -> None:
         """Full refund processed by Razorpay."""
         logger.info(
-            "[RazorpayWebhookHandler] payment.refunded — "
+            "[RazorpayWebhookHandler] payment.refunded - "
             "payment_id=%s amount_paise=%d",
             event.gateway_payment_id,
             event.amount_paise,
@@ -245,7 +245,7 @@ class RazorpayWebhookHandler(WebhookHandler):
     def on_refund_processed(self, event: WebhookEvent) -> None:
         """Refund confirmed by the bank (final state)."""
         logger.info(
-            "[RazorpayWebhookHandler] refund.processed — "
+            "[RazorpayWebhookHandler] refund.processed - "
             "payment_id=%s",
             event.gateway_payment_id,
         )

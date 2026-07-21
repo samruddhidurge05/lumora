@@ -27,8 +27,8 @@ class PurchaseService:
         Create an order and fulfil everything atomically.
 
         Called by:
-            - PaymentService.confirm_payment()  (primary path — payment verified first)
-            - POST /api/orders/                 (legacy path — for backward compatibility)
+            - PaymentService.confirm_payment()  (primary path - payment verified first)
+            - POST /api/orders/                 (legacy path - for backward compatibility)
 
         Does NOT touch Payment records. Payment lifecycle is owned by PaymentService.
         Does NOT verify gateway signatures. That is done before this call.
@@ -46,7 +46,7 @@ class PurchaseService:
                 user_id=user_id,
                 total_amount=total_amount,
                 payment_method=payment_method,
-                status="completed",  # Paid and verified — order is complete
+                status="completed",  # Paid and verified - order is complete
                 notes=notes,
             )
             db.add(order)
@@ -143,8 +143,8 @@ class PurchaseService:
                             NotificationService.create_notification(
                                 db=db,
                                 user_id=aff.user_id,
-                                title="Commission Earned! ✦",
-                                message=f"You earned a commission of ₹{commission_amt * 80:.2f} (referred purchase of '{prod.title}').",
+                                title="Commission Earned! ?",
+                                message=f"You earned a commission of ?{commission_amt * 80:.2f} (referred purchase of '{prod.title}').",
                                 category="commission"
                             )
 
@@ -153,7 +153,7 @@ class PurchaseService:
                                 db=db,
                                 user_id=aff.user_id,
                                 activity_type="commission_earned",
-                                details=f"Earned ₹{commission_amt * 80:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
+                                details=f"Earned ?{commission_amt * 80:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
                             )
 
             # 6b. Process Admin Referral Link Conversion (Isolated, Idempotent, Non-Blocking)
@@ -178,23 +178,23 @@ class PurchaseService:
             NotificationService.create_notification(
                 db=db,
                 user_id=user_id,
-                title="Purchase Confirmed ✦",
-                message=f"Thank you for your purchase! Order ORD-{order.id} for ₹{total_amount:.2f} is now active. Access assets via your vault.",
+                title="Purchase Confirmed ?",
+                message=f"Thank you for your purchase! Order ORD-{order.id} for ?{total_amount:.2f} is now active. Access assets via your vault.",
                 category="purchase"
             )
 
             NotificationService.create_notification(
                 db=db,
                 user_id=user_id,
-                title="Payment Success ✦",
-                message=f"Payment receipt for order ORD-{order.id} of ₹{total_amount:.2f} has been verified successfully.",
+                title="Payment Success ?",
+                message=f"Payment receipt for order ORD-{order.id} of ?{total_amount:.2f} has been verified successfully.",
                 category="payment"
             )
 
             NotificationService.create_notification(
                 db=db,
                 user_id=user_id,
-                title="Download Ready ✦",
+                title="Download Ready ?",
                 message=f"Your purchase items from order ORD-{order.id} are now ready for download in your vault.",
                 category="download"
             )

@@ -1,6 +1,6 @@
 """
 One-time migration: add missing columns to affiliate_profiles table.
-Safe to run multiple times — skips columns that already exist.
+Safe to run multiple times - skips columns that already exist.
 """
 from app.db.database import engine
 # pyrefly: ignore [missing-import]

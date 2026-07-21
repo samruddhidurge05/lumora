@@ -1,16 +1,16 @@
 """
 app/repositories/payment_repo.py
 ----------------------------------
-Payment repository — database queries ONLY.
+Payment repository - database queries ONLY.
 
 Rule: No business logic here. No HTTP exceptions. No gateway calls.
       Business logic belongs in PaymentService.
 
 Methods grouped by caller:
-    PaymentService   → create_payment, find_by_*, update_status, find_expired_pending
-    Customer routes  → customer_history
-    Vendor routes    → vendor_history
-    Admin routes     → admin_history, get_all_failed, get_all_pending
+    PaymentService   ? create_payment, find_by_*, update_status, find_expired_pending
+    Customer routes  ? customer_history
+    Vendor routes    ? vendor_history
+    Admin routes     ? admin_history, get_all_failed, get_all_pending
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class PaymentRepository(BaseRepository[Payment]):
     def __init__(self, db: Session):
         super().__init__(Payment, db)
 
-    # ─── Create ──────────────────────────────────────────────────────────────
+    # --- Create --------------------------------------------------------------
 
     def create_payment(
         self,
@@ -88,7 +88,7 @@ class PaymentRepository(BaseRepository[Payment]):
         self.db.add(payment)
         return payment
 
-    # ─── Find ────────────────────────────────────────────────────────────────
+    # --- Find ----------------------------------------------------------------
 
     def find_by_payment_ref(self, payment_ref: str) -> Optional[Payment]:
         """Look up a payment by its Lumora reference (LUM-YYYYMMDD-XXXXXXXX)."""
@@ -128,7 +128,7 @@ class PaymentRepository(BaseRepository[Payment]):
             .first()
         )
 
-    # ─── Update ──────────────────────────────────────────────────────────────
+    # --- Update --------------------------------------------------------------
 
     def update_status(
         self,
@@ -145,24 +145,24 @@ class PaymentRepository(BaseRepository[Payment]):
         Transition payment to a new status and stamp the relevant timestamp.
 
         Field update rules:
-            - Pass a value       → set field to that value
-            - Pass None          → do NOT touch this field (leave as-is)
-            - Pass CLEAR         → explicitly set field to NULL in the database
+            - Pass a value       ? set field to that value
+            - Pass None          ? do NOT touch this field (leave as-is)
+            - Pass CLEAR         ? explicitly set field to NULL in the database
 
         The CLEAR sentinel is used by retry_payment() to wipe stale
         gateway_payment_id and gateway_signature from a failed attempt.
 
         Valid transitions (enforced by PaymentService, not here):
-            PENDING     → PROCESSING | CANCELLED | EXPIRED
-            PROCESSING  → SUCCESS | FAILED
-            SUCCESS     → REFUND_PENDING
-            REFUND_PENDING → REFUNDED | PARTIALLY_REFUNDED
+            PENDING     ? PROCESSING | CANCELLED | EXPIRED
+            PROCESSING  ? SUCCESS | FAILED
+            SUCCESS     ? REFUND_PENDING
+            REFUND_PENDING ? REFUNDED | PARTIALLY_REFUNDED
         """
         now = datetime.utcnow()
         payment.status = new_status
         payment.updated_at = now
 
-        # failure_reason: None means clear (unique case — retry always clears it)
+        # failure_reason: None means clear (unique case - retry always clears it)
         # We treat explicit None as "clear" here since a PENDING payment should
         # never have a stale failure_reason from a previous FAILED state.
         payment.failure_reason = failure_reason
@@ -207,7 +207,7 @@ class PaymentRepository(BaseRepository[Payment]):
         self.db.add(payment)
         return payment
 
-    # ─── History Queries ─────────────────────────────────────────────────────
+    # --- History Queries -----------------------------------------------------
 
     def customer_history(
         self,
@@ -259,7 +259,7 @@ class PaymentRepository(BaseRepository[Payment]):
             q = q.filter(Payment.gateway == gateway.lower())
         return q.order_by(desc(Payment.created_at)).offset(skip).limit(limit).all()
 
-    # ─── Operational Queries ─────────────────────────────────────────────────
+    # --- Operational Queries -------------------------------------------------
 
     def get_expired_pending(self) -> List[Payment]:
         """
@@ -278,7 +278,7 @@ class PaymentRepository(BaseRepository[Payment]):
         )
 
     def get_all_failed(self, limit: int = 100) -> List[Payment]:
-        """Recent FAILED payments — used for admin monitoring."""
+        """Recent FAILED payments - used for admin monitoring."""
         return (
             self.db.query(Payment)
             .filter(Payment.status == "FAILED")
@@ -288,7 +288,7 @@ class PaymentRepository(BaseRepository[Payment]):
         )
 
     def get_all_pending(self, limit: int = 100) -> List[Payment]:
-        """Active PENDING payments — used for admin monitoring."""
+        """Active PENDING payments - used for admin monitoring."""
         return (
             self.db.query(Payment)
             .filter(Payment.status == "PENDING")

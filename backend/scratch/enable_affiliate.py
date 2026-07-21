@@ -3,12 +3,12 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 
-# ── Commission settings ──────────────────────────────────────────────────────
+# -- Commission settings ------------------------------------------------------
 PRODUCT_IDS   = [108, 109, 111, 112]
 COMMISSION_TYPE  = "percentage"
 COMMISSION_VALUE = 20.0   # 20% affiliate commission
 
-# ── SQLite ───────────────────────────────────────────────────────────────────
+# -- SQLite -------------------------------------------------------------------
 conn = sqlite3.connect('test.db')
 c = conn.cursor()
 
@@ -25,7 +25,7 @@ conn.commit()
 conn.close()
 print()
 
-# ── Firestore ─────────────────────────────────────────────────────────────────
+# -- Firestore -----------------------------------------------------------------
 cert_path = "app/shared/firebase/serviceAccountKey.json"
 if not firebase_admin._apps:
     cred = credentials.Certificate(cert_path)

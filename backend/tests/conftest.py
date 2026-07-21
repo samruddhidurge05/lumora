@@ -1,5 +1,5 @@
 """
-conftest.py — pytest configuration for backend tests.
+conftest.py - pytest configuration for backend tests.
 
 Adds the backend directory to sys.path so that modules like `admin`, `app`,
 etc. can be imported directly (e.g. `from admin.firestore.admin_firestore import ...`).
@@ -11,13 +11,13 @@ import sys
 import os
 from unittest.mock import MagicMock, patch
 
-# ── Add the backend directory to sys.path ────────────────────────────────────
+# -- Add the backend directory to sys.path ------------------------------------
 # This allows `import admin.firestore.admin_firestore` etc. to work.
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-# ── Pre-mock firebase_admin so it doesn't need real credentials ──────────────
+# -- Pre-mock firebase_admin so it doesn't need real credentials --------------
 # Prevents ImportError / initialization errors when production modules are
 # imported during test collection.
 firebase_admin_mock = MagicMock()

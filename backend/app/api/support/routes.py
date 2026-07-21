@@ -1,5 +1,5 @@
 """
-Customer Support API — /api/support
+Customer Support API - /api/support
 =====================================
 Endpoints for customers to create and manage support tickets.
 
@@ -65,7 +65,7 @@ def _get_ticket_or_403(ticket_id: int, current_user: User, db: Session) -> Conve
 
 
 # ---------------------------------------------------------------------------
-# POST /  — Create a new support ticket
+# POST /  - Create a new support ticket
 # ---------------------------------------------------------------------------
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -91,7 +91,7 @@ def create_support_ticket(
     if not description:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="description is required.")
 
-    # ── Rate limit: 5 tickets per customer per 24 h ─────────────────────────
+    # -- Rate limit: 5 tickets per customer per 24 h -------------------------
     cutoff = _utcnow() - timedelta(hours=24)
 
     # created_at may be timezone-aware or naive depending on DB driver; normalise
@@ -110,10 +110,10 @@ def create_support_ticket(
             detail="Rate limit exceeded: maximum 5 support tickets per 24 hours.",
         )
 
-    # ── Look up admin ───────────────────────────────────────────────────────
+    # -- Look up admin -------------------------------------------------------
     admin = _get_admin(db)
 
-    # ── Create Conversation (ticket) ────────────────────────────────────────
+    # -- Create Conversation (ticket) ----------------------------------------
     conv = Conversation(
         buyer_id=current_user.id,
         seller_id=admin.id,          # support tickets always target the admin
@@ -125,7 +125,7 @@ def create_support_ticket(
     db.add(conv)
     db.flush()  # get conv.id before committing
 
-    # ── Attach the opening message ──────────────────────────────────────────
+    # -- Attach the opening message ------------------------------------------
     first_msg = Message(
         conversation_id=conv.id,
         sender_id=current_user.id,
@@ -139,7 +139,7 @@ def create_support_ticket(
 
 
 # ---------------------------------------------------------------------------
-# GET /me  — List current customer's tickets
+# GET /me  - List current customer's tickets
 # ---------------------------------------------------------------------------
 
 @router.get("/me")
@@ -173,7 +173,7 @@ def get_my_tickets(
 
 
 # ---------------------------------------------------------------------------
-# GET /{ticket_id}/messages  — Thread view
+# GET /{ticket_id}/messages  - Thread view
 # ---------------------------------------------------------------------------
 
 @router.get("/{ticket_id}/messages")
@@ -209,7 +209,7 @@ def get_ticket_messages(
 
 
 # ---------------------------------------------------------------------------
-# POST /{ticket_id}/reply  — Customer reply
+# POST /{ticket_id}/reply  - Customer reply
 # ---------------------------------------------------------------------------
 
 @router.post("/{ticket_id}/reply", status_code=status.HTTP_201_CREATED)

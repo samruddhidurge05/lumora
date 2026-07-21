@@ -1,7 +1,7 @@
 """
 app/payments/gateway/razorpay_gateway.py
 ------------------------------------------
-Razorpay gateway implementation — PRODUCTION READY.
+Razorpay gateway implementation - PRODUCTION READY.
 
 To activate:
     1. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend/.env
@@ -31,9 +31,9 @@ class RazorpayGateway(PaymentGateway):
     Production Razorpay payment gateway.
 
     Reads credentials from environment variables:
-        RAZORPAY_KEY_ID     — public key  (rzp_test_... or rzp_live_...)
-        RAZORPAY_KEY_SECRET — secret key
-        PAYMENT_CURRENCY    — currency code (default: INR)
+        RAZORPAY_KEY_ID     - public key  (rzp_test_... or rzp_live_...)
+        RAZORPAY_KEY_SECRET - secret key
+        PAYMENT_CURRENCY    - currency code (default: INR)
     """
 
     GATEWAY_NAME = "razorpay"
@@ -49,7 +49,7 @@ class RazorpayGateway(PaymentGateway):
                 "when PAYMENT_GATEWAY=razorpay"
             )
 
-        # Lazy import — razorpay package only required when live gateway is active
+        # Lazy import - razorpay package only required when live gateway is active
         try:
             import razorpay as _rzp_sdk
             self._client = _rzp_sdk.Client(auth=(self.key_id, self.key_secret))
@@ -65,7 +65,7 @@ class RazorpayGateway(PaymentGateway):
             self.currency,
         )
 
-    # ── 1. Create Order ───────────────────────────────────────────────────────
+    # -- 1. Create Order -------------------------------------------------------
 
     def create_order(
         self,
@@ -77,15 +77,15 @@ class RazorpayGateway(PaymentGateway):
         Create a Razorpay order and return the gateway_order_id.
 
         Args:
-            amount_inr: Total amount in INR (e.g. 999.0 for ₹999)
-            currency:   Currency code — always INR for Indian payments
+            amount_inr: Total amount in INR (e.g. 999.0 for ?999)
+            currency:   Currency code - always INR for Indian payments
             receipt:    Internal receipt ID for audit trail
 
         Returns:
             GatewayOrder with gateway_order_id used by the frontend
             to open the Razorpay Checkout popup.
         """
-        # Razorpay requires amount in paise (₹1 = 100 paise)
+        # Razorpay requires amount in paise (?1 = 100 paise)
         amount_paise = int(round(amount_inr * 100))
 
         try:
@@ -111,7 +111,7 @@ class RazorpayGateway(PaymentGateway):
             logger.error("[RazorpayGateway] create_order failed: %s", exc)
             raise
 
-    # ── 2. Verify Signature ───────────────────────────────────────────────────
+    # -- 2. Verify Signature ---------------------------------------------------
 
     def verify_signature(
         self,
@@ -139,7 +139,7 @@ class RazorpayGateway(PaymentGateway):
             return False
 
         try:
-            # Use the official SDK utility — it does the HMAC internally
+            # Use the official SDK utility - it does the HMAC internally
             params = {
                 "razorpay_order_id": gateway_order_id,
                 "razorpay_payment_id": gateway_payment_id,
@@ -161,7 +161,7 @@ class RazorpayGateway(PaymentGateway):
             )
             return False
 
-    # ── 3. Capture Payment ────────────────────────────────────────────────────
+    # -- 3. Capture Payment ----------------------------------------------------
 
     def capture_payment(
         self,
@@ -182,7 +182,7 @@ class RazorpayGateway(PaymentGateway):
             # If already captured, return success immediately (idempotent)
             if current_status == "captured":
                 logger.info(
-                    "[RazorpayGateway] Payment %s already captured — idempotent return",
+                    "[RazorpayGateway] Payment %s already captured - idempotent return",
                     gateway_payment_id,
                 )
                 return GatewayCaptureResult(
@@ -225,7 +225,7 @@ class RazorpayGateway(PaymentGateway):
                 raw={"error": str(exc)},
             )
 
-    # ── 4. Refund Payment ─────────────────────────────────────────────────────
+    # -- 4. Refund Payment -----------------------------------------------------
 
     def refund_payment(
         self,
@@ -236,8 +236,8 @@ class RazorpayGateway(PaymentGateway):
         """
         Initiate a full or partial refund.
 
-        If amount_paise is None → full refund.
-        If amount_paise < original amount → partial refund.
+        If amount_paise is None ? full refund.
+        If amount_paise < original amount ? partial refund.
         """
         try:
             # Razorpay SDK: refund is accessed via payment.refund(payment_id, data)
@@ -278,7 +278,7 @@ class RazorpayGateway(PaymentGateway):
                 raw={"error": str(exc)},
             )
 
-    # ── 5. UPI QR (optional override) ─────────────────────────────────────────
+    # -- 5. UPI QR (optional override) -----------------------------------------
 
     def create_upi_qr(
         self,
@@ -295,7 +295,7 @@ class RazorpayGateway(PaymentGateway):
         try:
             # Create a standard order first and use the order ID as the QR reference
             order = self.create_order(amount_inr, currency, receipt)
-            # Return UPI QR intent — Razorpay order link is used for QR generation
+            # Return UPI QR intent - Razorpay order link is used for QR generation
             return {
                 "gateway_order_id": order.gateway_order_id,
                 "amount_paise": order.amount_paise,

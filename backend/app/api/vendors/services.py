@@ -1,5 +1,5 @@
 """
-Vendor service layer — SQLAlchemy database operations.
+Vendor service layer - SQLAlchemy database operations.
 All functions accept vendor_id (str) which maps to Product.vendor_id.
 """
 from datetime import datetime, timezone
@@ -23,7 +23,7 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# ── Vendor Profile ────────────────────────────────────────────────────────────
+# -- Vendor Profile ------------------------------------------------------------
 
 def get_vendor_profile(vendor_id: str) -> Optional[dict]:
     db = _get_db()
@@ -66,7 +66,7 @@ def get_or_create_vendor_profile(vendor_id: str, vendor_info: dict = None) -> di
     """
     Get the vendor profile, auto-creating the Vendor row if it doesn't exist.
     Called on GET /vendors/{id}/profile so the profile is always available
-    after first login — no explicit save required to unblock the module.
+    after first login - no explicit save required to unblock the module.
     """
     db = _get_db()
     try:
@@ -121,7 +121,7 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
             v.name   = data.get("storeName", data.get("displayName", data.get("name", v.name)))
             v.bio    = data.get("storeBio",    data.get("bio",  v.bio))
             v.avatar = data.get("avatar", v.avatar)
-            # Payment fields — only overwrite when the key is explicitly present
+            # Payment fields - only overwrite when the key is explicitly present
             if "upiId" in data:
                 v.upi_id = data["upiId"] or None
             if "accountHolderName" in data:
@@ -212,7 +212,7 @@ def save_store_settings(vendor_id: str, settings: dict) -> dict:
         db.close()
 
 
-# ── Withdrawals ───────────────────────────────────────────────────────────────
+# -- Withdrawals ---------------------------------------------------------------
 # Persisted to the `withdrawals` table via the Withdrawal SQLAlchemy model.
 # The old in-memory _WITHDRAWALS dict has been removed.
 
@@ -237,7 +237,7 @@ def create_withdrawal(data: dict) -> dict:
     try:
         vendor_id = data["vendor_id"]
 
-        # ── IDEMPOTENCY GUARD ─────────────────────────────────────────────
+        # -- IDEMPOTENCY GUARD ---------------------------------------------
         # Prevent duplicate pending withdrawal requests from the same vendor.
         existing_pending = db.query(Withdrawal).filter(
             Withdrawal.vendor_id == vendor_id,
@@ -248,7 +248,7 @@ def create_withdrawal(data: dict) -> dict:
             raise _HTTPException(
                 status_code=409,
                 detail=(
-                    f"You already have a pending withdrawal of ₹{existing_pending.amount:.2f}. "
+                    f"You already have a pending withdrawal of ?{existing_pending.amount:.2f}. "
                     "Please wait for it to be processed before submitting a new request."
                 )
             )
@@ -274,7 +274,7 @@ def create_withdrawal(data: dict) -> dict:
                 db=db,
                 user_id=user.id,
                 activity_type="withdrawal_request",
-                details=f"Requested withdrawal of ₹{w.amount:.2f} via {w.method}."
+                details=f"Requested withdrawal of ?{w.amount:.2f} via {w.method}."
             )
 
             # Notify admins
@@ -284,8 +284,8 @@ def create_withdrawal(data: dict) -> dict:
                 NotificationService.create_notification(
                     db=db,
                     user_id=admin.id,
-                    title="New Withdrawal Request ✦",
-                    message=f"Vendor '{user.name}' has requested a withdrawal of ₹{w.amount:.2f}.",
+                    title="New Withdrawal Request ?",
+                    message=f"Vendor '{user.name}' has requested a withdrawal of ?{w.amount:.2f}.",
                     category="withdrawal"
                 )
 
@@ -304,7 +304,7 @@ def create_withdrawal(data: dict) -> dict:
             action="withdrawal_requested",
             module="vendors",
             status="success",
-            details=f"Withdrawal request submitted: ₹{w.amount:.2f} via {w.method}",
+            details=f"Withdrawal request submitted: ?{w.amount:.2f} via {w.method}",
         )
 
         return _withdrawal_to_dict(w)
@@ -329,7 +329,7 @@ def _withdrawal_to_dict(w: Withdrawal) -> dict:
     }
 
 
-# ── Dashboard Stats ───────────────────────────────────────────────────────────
+# -- Dashboard Stats -----------------------------------------------------------
 
 def get_vendor_stats(vendor_id: str) -> dict:
     db = _get_db()
@@ -388,7 +388,7 @@ def get_vendor_stats(vendor_id: str) -> dict:
         db.close()
 
 
-# ── Vendor Orders ─────────────────────────────────────────────────────────────
+# -- Vendor Orders -------------------------------------------------------------
 
 def get_vendor_orders(vendor_id: str) -> list[dict]:
     """Return all orders that contain at least one product from this vendor."""
@@ -408,7 +408,7 @@ def get_vendor_orders(vendor_id: str) -> list[dict]:
         if not order_ids:
             return []
 
-        # ── FIX: JOIN User to get real customer name (Issue 2) ───────────────
+        # -- FIX: JOIN User to get real customer name (Issue 2) ---------------
         orders = (
             db.query(Order)
             .filter(Order.id.in_(order_ids))
@@ -416,7 +416,7 @@ def get_vendor_orders(vendor_id: str) -> list[dict]:
             .all()
         )
 
-        # Build a user_id → display_name map from a single batch query
+        # Build a user_id ? display_name map from a single batch query
         user_ids = {o.user_id for o in orders}
         users    = db.query(User).filter(User.id.in_(user_ids)).all()
         user_map = {
@@ -433,8 +433,8 @@ def get_vendor_orders(vendor_id: str) -> list[dict]:
                 "orderId":      o.id,
                 "customer":     customer_name,
                 "customerName": customer_name,
-                "product":      prod_map.get(order_items[0].product_id, "Product") if order_items else "—",
-                "productName":  prod_map.get(order_items[0].product_id, "Product") if order_items else "—",
+                "product":      prod_map.get(order_items[0].product_id, "Product") if order_items else "-",
+                "productName":  prod_map.get(order_items[0].product_id, "Product") if order_items else "-",
                 "amount":       float(o.total_amount or 0),
                 "status":       o.status or "completed",
                 "date":         o.created_at.isoformat() if o.created_at else None,
@@ -443,7 +443,7 @@ def get_vendor_orders(vendor_id: str) -> list[dict]:
                 "items":        [
                     {
                         "productId":   i.product_id,
-                        "productName": prod_map.get(i.product_id, "—"),
+                        "productName": prod_map.get(i.product_id, "-"),
                         "pricePaid":   float(i.price_paid or 0),
                         "downloadUrl": i.download_url,
                     }
@@ -497,7 +497,7 @@ def update_vendor_order_status(vendor_id: str, order_id: int, new_status: str) -
         if not order:
             return {"success": False, "detail": "Order not found"}
 
-        # Ownership check — vendor must own a product in this order
+        # Ownership check - vendor must own a product in this order
         products = db.query(Product.id).filter(
             (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
         ).all()
@@ -515,7 +515,7 @@ def update_vendor_order_status(vendor_id: str, order_id: int, new_status: str) -
         db.close()
 
 
-# ── Vendor Reviews ────────────────────────────────────────────────────────────
+# -- Vendor Reviews ------------------------------------------------------------
 
 def get_vendor_reviews(vendor_id: str) -> list[dict]:
     """Return all reviews on products belonging to this vendor."""
@@ -535,8 +535,8 @@ def get_vendor_reviews(vendor_id: str) -> list[dict]:
             {
                 "id":          r.id,
                 "productId":   r.product_id,
-                "productName": prod_map.get(r.product_id, "—"),
-                "product":     prod_map.get(r.product_id, "—"),
+                "productName": prod_map.get(r.product_id, "-"),
+                "product":     prod_map.get(r.product_id, "-"),
                 "rating":      float(r.rating or 0),
                 "comment":     r.comment or "",
                 "userId":      r.user_id,
@@ -576,7 +576,7 @@ def reply_to_vendor_review(vendor_id: str, review_id: int, reply_text: str) -> d
         db.close()
 
 
-# ── Dashboard Summary ────────────────────────────────────────────────────────
+# -- Dashboard Summary --------------------------------------------------------
 
 def get_vendor_dashboard(vendor_id: str) -> dict:
     """
@@ -586,7 +586,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
     """
     db = _get_db()
     try:
-        # ── Products ──────────────────────────────────────────────────────────
+        # -- Products ----------------------------------------------------------
         products = db.query(Product).filter(
             (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
         ).all()
@@ -594,7 +594,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         prod_map  = {p.id: (p.title or p.name or f"Product {p.id}") for p in products}
         prod_list_map = {p.id: p for p in products}
 
-        # ── Orders & Revenue ──────────────────────────────────────────────────
+        # -- Orders & Revenue --------------------------------------------------
         total_sales   = 0
         total_revenue = 0.0
         items_all     = []
@@ -608,7 +608,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         if order_ids:
             all_orders = db.query(Order).filter(Order.id.in_(order_ids)).order_by(Order.created_at.desc()).all()
 
-        # ── FIX Issue 2: Build user_id → display name map ────────────────────
+        # -- FIX Issue 2: Build user_id ? display name map --------------------
         user_ids_in_orders = {o.user_id for o in all_orders}
         users_in_orders    = db.query(User).filter(User.id.in_(user_ids_in_orders)).all()
         user_name_map = {
@@ -616,7 +616,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             for u in users_in_orders
         }
 
-        # Recent orders (last 5) — with real customer names
+        # Recent orders (last 5) - with real customer names
         recent_orders = []
         for o in all_orders[:5]:
             o_items       = [i for i in items_all if i.order_id == o.id]
@@ -624,14 +624,14 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             recent_orders.append({
                 "id":       f"ORD-{o.id}",
                 "customer": customer_name,
-                "product":  prod_map.get(o_items[0].product_id, "Product") if o_items else "—",
+                "product":  prod_map.get(o_items[0].product_id, "Product") if o_items else "-",
                 "amount":   float(o.total_amount or 0),
                 "status":   o.status or "completed",
                 "date":     o.created_at.isoformat() if o.created_at else None,
             })
 
-        # ── Stats ─────────────────────────────────────────────────────────────
-        # Count all vendor products that are not archived — includes pending_review,
+        # -- Stats -------------------------------------------------------------
+        # Count all vendor products that are not archived - includes pending_review,
         # draft, published, and active so the count always matches Manage Products.
         ACTIVE_STATUSES = {"published", "active", "pending_review", "draft"}
         active_count = sum(1 for p in products if (p.status or "published") in ACTIVE_STATUSES)
@@ -676,7 +676,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         net_revenue = total_revenue * 0.85
         available_balance = max(0.0, net_revenue - withdrawn_sum)
 
-        # ── Reviews ───────────────────────────────────────────────────────────
+        # -- Reviews -----------------------------------------------------------
         recent_reviews = []
         if prod_ids:
             reviews = db.query(Review).filter(
@@ -685,7 +685,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             recent_reviews = [
                 {
                     "id":          r.id,
-                    "productName": prod_map.get(r.product_id, "—"),
+                    "productName": prod_map.get(r.product_id, "-"),
                     "rating":      float(r.rating or 0),
                     "comment":     (r.comment or "")[:120],
                     "date":        r.created_at.isoformat() if r.created_at else None,
@@ -694,14 +694,14 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
                 for r in reviews
             ]
 
-        # ── Recent Products ───────────────────────────────────────────────────
+        # -- Recent Products ---------------------------------------------------
         sorted_products = sorted(products, key=lambda p: p.created_at or datetime.min, reverse=True)
         recent_products = [
             {
                 "id":        str(p.id),
                 "title":     p.title or p.name or "Untitled",
                 "price":     float(p.price or 0),
-                "category":  p.category or "—",
+                "category":  p.category or "-",
                 "status":    p.status or "published",
                 "downloads": p.downloads or 0,
                 "rating":    float(p.rating or 0),
@@ -710,7 +710,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             for p in sorted_products[:5]
         ]
 
-        # ── Activity feed (merged orders + reviews, sorted by date) ──────────
+        # -- Activity feed (merged orders + reviews, sorted by date) ----------
         activity = []
         for o in all_orders[:4]:
             o_items       = [i for i in items_all if i.order_id == o.id]
@@ -725,7 +725,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         for r in recent_reviews[:4]:
             activity.append({
                 "type": "review",
-                "text": f"{r['productName']} got a {r['rating']}★ review",
+                "text": f"{r['productName']} got a {r['rating']}? review",
                 "sub":  (r["comment"] or "")[:60],
                 "time": r["date"],
             })
@@ -733,7 +733,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         activity.sort(key=lambda x: x["time"] or "", reverse=True)
         activity = activity[:8]
 
-        # ── FIX Issue 3: Always return all 12 months ─────────────────────────
+        # -- FIX Issue 3: Always return all 12 months -------------------------
         # Aggregate actual revenue by month abbreviation
         monthly_raw = {}
         for o in all_orders:
@@ -775,7 +775,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         db.close()
 
 
-# ── Vendor Products ───────────────────────────────────────────────────────────
+# -- Vendor Products -----------------------------------------------------------
 
 def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
                         status_filter: str = "", sort: str = "newest",
@@ -838,7 +838,7 @@ def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
                     "new_arrival": p.new_arrival or False,
                     "badge":       p.badge,
                     "version":     p.version or "v1.0.0",
-                    "file_size":   p.file_size or "—",
+                    "file_size":   p.file_size or "-",
                     "license":     p.license,
                     "tags":        p.tags if p.tags else [],
                     "highlights":  p.highlights if p.highlights else [],

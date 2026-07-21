@@ -10,17 +10,17 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFUND_WINDOW_DAYS: int = Field(14, env='REFUND_WINDOW_DAYS')
 
-    # Firebase project — used for verifying Firebase ID tokens
+    # Firebase project - used for verifying Firebase ID tokens
     FIREBASE_PROJECT_ID: str = Field("", env="FIREBASE_PROJECT_ID")
 
-    # Firebase Admin SDK service account key path (optional — enables Firestore admin features)
+    # Firebase Admin SDK service account key path (optional - enables Firestore admin features)
     FIREBASE_SERVICE_ACCOUNT_JSON: Optional[str] = Field(None, env="FIREBASE_SERVICE_ACCOUNT_JSON")
 
     # Payment Gateway
     PAYMENT_GATEWAY: str = Field("mock", env="PAYMENT_GATEWAY")  # "mock" | "razorpay"
     PAYMENT_CURRENCY: str = Field("INR", env="PAYMENT_CURRENCY")
 
-    # Razorpay — only required when PAYMENT_GATEWAY=razorpay
+    # Razorpay - only required when PAYMENT_GATEWAY=razorpay
     RAZORPAY_KEY_ID: Optional[str] = Field(None, env="RAZORPAY_KEY_ID")
     RAZORPAY_KEY_SECRET: Optional[str] = Field(None, env="RAZORPAY_KEY_SECRET")
     RAZORPAY_WEBHOOK_SECRET: Optional[str] = Field(None, env="RAZORPAY_WEBHOOK_SECRET")
@@ -35,10 +35,10 @@ class Settings(BaseSettings):
     # Public URL for signed downloads
     PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
-    # Frontend URL — used to generate shareable links (invitations, etc.)
+    # Frontend URL - used to generate shareable links (invitations, etc.)
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-    # Admin Frontend URL — used to generate invitation links
+    # Admin Frontend URL - used to generate invitation links
     ADMIN_FRONTEND_URL: str = Field("http://localhost:5174", env="ADMIN_FRONTEND_URL")
 
     class Config:

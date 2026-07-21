@@ -37,7 +37,7 @@ def _get_cutoff(date_range: str) -> datetime | None:
         return now - timedelta(days=30)
     elif date_range == "90d":
         return now - timedelta(days=90)
-    return None  # "all" — no filter
+    return None  # "all" - no filter
 
 def calculate_kpis(orders, products_count, vendors_count, reviews):
     total_revenue = paid = completed = refunded = 0
@@ -539,7 +539,7 @@ def get_full_dashboard_data():
                     "text":     f"{user} purchased {item}",
                     "category": "purchase",
                     "time":     time_label,
-                    "value":    f"+₹{round(amt)}",
+                    "value":    f"+?{round(amt)}",
                 })
 
             prod_sales = {}
@@ -762,7 +762,7 @@ def get_full_dashboard_data():
             "text":     f"{user} purchased {item}",
             "category": "purchase",
             "time":     time_label,
-            "value":    f"+₹{round(amt)}",
+            "value":    f"+?{round(amt)}",
         })
 
     prod_sales = {}

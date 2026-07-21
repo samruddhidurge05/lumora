@@ -1,6 +1,6 @@
 """
 One-time migration: add any missing columns to vendors and other tables.
-Safe to run multiple times — skips columns that already exist.
+Safe to run multiple times - skips columns that already exist.
 """
 from app.db.database import engine
 from sqlalchemy import text, inspect

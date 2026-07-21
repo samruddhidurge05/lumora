@@ -39,7 +39,7 @@ def sync_product_to_firestore(product):
             "reviews": int(product.reviews or 0),
             "review_count": int(product.reviews or 0),
             "downloads": int(product.downloads or 0),
-            # ── Image URLs ──────────────────────────────────────────────────────
+            # -- Image URLs ------------------------------------------------------
             "thumbnail": _best_image(product.thumbnail),
             "preview": _best_image(product.preview),
             "imageUrl": _best_image(product.thumbnail),   # alias used by some customer views
@@ -53,7 +53,7 @@ def sync_product_to_firestore(product):
             "isFeatured": bool(product.featured),
             "status": product.status or "published",
             "tags": tags,
-            # ── Features & specs (single occurrence of each key) ────────────────
+            # -- Features & specs (single occurrence of each key) ----------------
             "highlights": highlights,
             "features": product.features if isinstance(product.features, list) else [],
             "systemRequirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
@@ -62,7 +62,7 @@ def sync_product_to_firestore(product):
             "what_you_get": product.what_you_get if isinstance(product.what_you_get, list) else [],
             "installationGuide": product.installation_guide or "",
             "installation_guide": product.installation_guide or "",
-            # ── Metadata ────────────────────────────────────────────────────────
+            # -- Metadata --------------------------------------------------------
             "version": product.version or "v1.0.0",
             "fileSize": product.file_size or "48 MB",
             "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
@@ -70,32 +70,32 @@ def sync_product_to_firestore(product):
             "vendor_id": str(product.vendor_id) if product.vendor_id else None,
             "subcategory": product.subcategory or "",
             "discount": float(product.discount or 0.0),
-            # ── Gallery arrays ──────────────────────────────────────────────────
+            # -- Gallery arrays --------------------------------------------------
             "image_urls": image_urls_list,
             "previewImages": image_urls_list if image_urls_list else preview_images_list,
             "preview_images": preview_images_list,
             "previewVideo": product.preview_video or "",
-            # ── SEO ─────────────────────────────────────────────────────────────
+            # -- SEO -------------------------------------------------------------
             "seoTitle": product.seo_title or "",
             "seoDescription": product.seo_description or "",
             "visibility": product.visibility or "public",
             "license": product.license or "Personal Use",
-            # ── Affiliate ───────────────────────────────────────────────────────
+            # -- Affiliate -------------------------------------------------------
             "affiliate_enabled": bool(product.affiliate_enabled),
             "commission_type": product.commission_type or "percentage",
             "commission_value": float(product.commission_value or 0.0),
-            # ── Download URLs — both naming conventions for full compatibility ──
+            # -- Download URLs - both naming conventions for full compatibility --
             "pcloud_download_link": product.pcloud_download_link,
             "pcloudDownloadLink": product.pcloud_download_link,
             "file_url": product.file_url or None,
             "fileUrl": product.file_url or None,
-            # ── Integer primary key ─────────────────────────────────────────────
+            # -- Integer primary key ---------------------------------------------
             "product_id": int(product.id),
         }, merge=True)
         _logger.info("[firestore-sync] Product %s synced to Firestore (status=%s)", product.id, product.status)
     except Exception as e:
         _logger.error("[firestore-sync] ERROR syncing product %s to Firestore: %s", product.id, e, exc_info=True)
-        # Do NOT re-raise — SQLite is the canonical source of truth.
+        # Do NOT re-raise - SQLite is the canonical source of truth.
         # Log the error clearly so operators can detect and investigate failures.
 
 def delete_product_from_firestore(product_id: int) -> dict:
@@ -104,12 +104,12 @@ def delete_product_from_firestore(product_id: int) -> dict:
 
     Checks for cross-collection references (orders, reviews, downloads) and
     logs them as warnings, but ALWAYS deletes the product document.  Referential
-    integrity in Firestore is informational — SQLite is the canonical source and
+    integrity in Firestore is informational - SQLite is the canonical source and
     the admin has authority to delete.
 
     Returns:
-        {"deleted": True, "references": [...]}    — deleted, references logged
-        {"deleted": False, "reason": "..."}        — Firestore unavailable or exception
+        {"deleted": True, "references": [...]}    - deleted, references logged
+        {"deleted": False, "reason": "..."}        - Firestore unavailable or exception
     """
     if not firebase_connected or db is None:
         return {"deleted": False, "reason": "firestore_unavailable", "references": []}
@@ -138,7 +138,7 @@ def delete_product_from_firestore(product_id: int) -> dict:
                 product_id, len(references), references,
             )
 
-        # Always delete — admin has authority; references are logged above
+        # Always delete - admin has authority; references are logged above
         db.collection("products").document(pid).delete()
         _logger.info("[firestore-sync] Product %s deleted from Firestore", product_id)
         return {"deleted": True, "references": references}
@@ -155,7 +155,7 @@ def get_platform_settings():
         if snap.exists:
             return snap.to_dict()
     except Exception:
-        # Silently swallow quota/offline errors — platform settings are non-critical.
+        # Silently swallow quota/offline errors - platform settings are non-critical.
         # Caller falls back to local state or defaults.
         pass
     return {}
@@ -167,7 +167,7 @@ def sync_order_to_firestore(order):
     The document shape matches what every admin page (Dashboard, Analytics,
     Orders Management, Payments) expects.  Uses ``set(..., merge=True)`` keyed
     on ``orderId`` so calling this function multiple times with the same order
-    is idempotent — subsequent calls update the existing document rather than
+    is idempotent - subsequent calls update the existing document rather than
     creating duplicates (Property 4: Order sync is idempotent).
 
     This sync is **best-effort**: callers must wrap the call in try/except and
@@ -340,7 +340,7 @@ def restore_sqlite_products_from_firestore(db_session):
             is_broken_thumb = thumbnail and "localhost" in thumbnail
 
             if not exists:
-                # New product from Firestore — import it
+                # New product from Firestore - import it
                 product = ProductModel(
                     id=prod_id,
                     title=data.get("title", data.get("name", "Product")),
@@ -462,7 +462,7 @@ def restore_sqlite_products_from_firestore(db_session):
 
 
 
-# ── Team Management Firestore Sync ────────────────────────────────────────────
+# -- Team Management Firestore Sync --------------------------------------------
 # All three helpers are best-effort: they never raise and never block the
 # SQLite commit that precedes them.
 
@@ -570,7 +570,7 @@ def write_admin_notification_to_firestore(user, invitation) -> None:
     """
     Write a new admin notification when a team member accepts an invitation.
     Path: admin/notifications/{uuid}
-    Only super_admins read this collection — no ACL changes needed here.
+    Only super_admins read this collection - no ACL changes needed here.
     """
     if not firebase_connected or db is None:
         return

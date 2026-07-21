@@ -6,7 +6,7 @@ Property-based tests for the fixed sync_product_to_firestore function.
 Uses Hypothesis to verify that sync field correctness properties hold across
 a wide range of generated inputs.
 
-Properties 1–5 cover the five sync field fixes from Tasks 3.1–3.5 of the
+Properties 1-5 cover the five sync field fixes from Tasks 3.1-3.5 of the
 firestore-product-sync-cleanup spec.
 
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5**
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 utc = timezone.utc
 
 
-# ── Helpers (mirrored from test_firestore_sync_unit.py) ──────────────────────
+# -- Helpers (mirrored from test_firestore_sync_unit.py) ----------------------
 
 def make_product(**overrides):
     """
@@ -99,7 +99,7 @@ def run_sync_and_capture(product):
     return captured
 
 
-# ── Property 1 — updatedAt always matches product.updated_at ─────────────────
+# -- Property 1 - updatedAt always matches product.updated_at -----------------
 
 @settings(max_examples=50)
 @given(updated_at=st.datetimes(timezones=st.just(utc)))
@@ -119,7 +119,7 @@ def test_pbt_property1_updated_at_always_matches_product_timestamp(updated_at):
     )
 
 
-# ── Property 2 — product_id is always the integer product ID ─────────────────
+# -- Property 2 - product_id is always the integer product ID -----------------
 
 @settings(max_examples=50)
 @given(product_id=st.integers(min_value=1, max_value=10_000_000))
@@ -142,7 +142,7 @@ def test_pbt_property2_product_id_always_integer(product_id):
     )
 
 
-# ── Property 3 — file_url / fileUrl always written correctly ─────────────────
+# -- Property 3 - file_url / fileUrl always written correctly -----------------
 
 @settings(max_examples=50)
 @given(
@@ -187,7 +187,7 @@ def test_pbt_property3_file_url_always_written_correctly(file_url):
         )
 
 
-# ── Property 4 — review_count / reviews dual-key invariant ───────────────────
+# -- Property 4 - review_count / reviews dual-key invariant -------------------
 
 @settings(max_examples=50)
 @given(reviews=st.one_of(st.none(), st.integers(min_value=0, max_value=100_000)))
@@ -216,7 +216,7 @@ def test_pbt_property4_review_count_dual_key_invariant(reviews):
     )
 
 
-# ── Property 5 — creatorAvatar never contains unsplash.com ───────────────────
+# -- Property 5 - creatorAvatar never contains unsplash.com -------------------
 
 @settings(max_examples=50)
 @given(creator_avatar=st.one_of(st.none(), st.text(min_size=0, max_size=500)))
@@ -247,14 +247,14 @@ def test_pbt_property5_creator_avatar_never_contains_unsplash(creator_avatar):
         )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Properties 7–9 (Preservation)
-# Task 8.2 — firestore-product-sync-cleanup spec
+# ??????????????????????????????????????????????????????????????????????????????
+# Properties 7-9 (Preservation)
+# Task 8.2 - firestore-product-sync-cleanup spec
 # **Validates: Requirements 3.2, 3.3, 3.7, 3.8, 3.9**
-# ══════════════════════════════════════════════════════════════════════════════
+# ??????????????????????????????????????????????????????????????????????????????
 
 
-# ── Property 7 — Idempotency: N sync calls produce identical stable payloads ──
+# -- Property 7 - Idempotency: N sync calls produce identical stable payloads --
 
 def _run_sync_n_times_capture_all(product, n):
     """
@@ -300,7 +300,7 @@ _STABLE_FIELDS = [
 @settings(max_examples=20)
 def test_pbt_property7_idempotency_n_calls_produce_identical_payloads(n):
     """
-    For any N ≥ 1, calling sync_product_to_firestore(p) N times with the
+    For any N ? 1, calling sync_product_to_firestore(p) N times with the
     same product:
     - Calls Firestore set() exactly N times.
     - Uses merge=True on every call.
@@ -332,7 +332,7 @@ def test_pbt_property7_idempotency_n_calls_produce_identical_payloads(n):
             )
 
 
-# ── Property 8 — pCloud dual-key invariant ────────────────────────────────────
+# -- Property 8 - pCloud dual-key invariant ------------------------------------
 
 @given(
     link=st.one_of(
@@ -375,7 +375,7 @@ def test_pbt_property8_pcloud_dual_key_invariant(link):
     )
 
 
-# ── Property 9 — Thumbnail chain priority unchanged ───────────────────────────
+# -- Property 9 - Thumbnail chain priority unchanged ---------------------------
 #
 # Priority chain (per design doc):
 #   1. non-Unsplash product.thumbnail
@@ -384,10 +384,10 @@ def test_pbt_property8_pcloud_dual_key_invariant(link):
 #   4. None                   (all sources exhausted/Unsplash)
 #
 # The @given decorator covers all 8 combinations:
-#   thumbnail  × image_urls           × preview_images
+#   thumbnail  ? image_urls           ? preview_images
 #   (real url    | "https://unsplash.com/fake" | None)
-#   × (["https://img.example.com/first.jpg"] | [])
-#   × (["https://preview.example.com/p1.jpg"] | [])
+#   ? (["https://img.example.com/first.jpg"] | [])
+#   ? (["https://preview.example.com/p1.jpg"] | [])
 #
 # With max_examples=24 the library will explore all meaningful combinations.
 
@@ -398,7 +398,7 @@ def _expected_thumbnail(thumbnail, image_urls, preview_images):
     """
     if thumbnail and "unsplash.com" not in thumbnail:
         return thumbnail
-    # Thumbnail is absent or Unsplash — fall through
+    # Thumbnail is absent or Unsplash - fall through
     if isinstance(image_urls, list) and image_urls:
         return image_urls[0]
     if isinstance(preview_images, list) and preview_images:
@@ -433,7 +433,7 @@ def test_pbt_property9_thumbnail_chain_unchanged(thumbnail, image_urls, preview_
       preview_images (non-empty / empty)
 
     the sync function SHALL resolve thumbnail using the documented priority chain:
-      non-Unsplash thumbnail → image_urls[0] → preview_images[0] → None
+      non-Unsplash thumbnail ? image_urls[0] ? preview_images[0] ? None
 
     **Validates: Requirements 3.9**
     """
@@ -449,6 +449,6 @@ def test_pbt_property9_thumbnail_chain_unchanged(thumbnail, image_urls, preview_
     assert captured["thumbnail"] == expected, (
         f"Thumbnail chain mismatch: "
         f"thumbnail={thumbnail!r}, image_urls={image_urls!r}, "
-        f"preview_images={preview_images!r} → "
+        f"preview_images={preview_images!r} ? "
         f"expected={expected!r}, got={captured.get('thumbnail')!r}"
     )

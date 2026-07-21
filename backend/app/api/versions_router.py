@@ -53,7 +53,7 @@ def create_version(
     for cust in customers:
         notif = Notification(
             user_id=cust.id,
-            title="Product Update Available ✦",
+            title="Product Update Available ?",
             message=f"Version {version_in.version_number} of '{product.title}' is now ready. Changelog: {version_in.changelog}",
             category="update",
             is_read=False

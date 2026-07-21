@@ -59,7 +59,7 @@ def approve_product(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin_role),
 ):
-    """Approve a pending product — sets status to published."""
+    """Approve a pending product - sets status to published."""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

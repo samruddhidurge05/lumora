@@ -54,7 +54,7 @@ product_id = int(p['id'])
 price = float(p['price'])
 print(f'Product: id={product_id} title={p["title"]} price={price}')
 
-# Step 3: Initiate payment — sends items in payload
+# Step 3: Initiate payment - sends items in payload
 ikey = f'test_ikey_{int(time.time())}'
 init_payload = {
     'items': [{'product_id': product_id, 'price_paid': price}],

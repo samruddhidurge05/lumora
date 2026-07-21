@@ -1,4 +1,4 @@
-"""Debug: test the full initiate→confirm flow via Python (no HTTP)"""
+"""Debug: test the full initiate?confirm flow via Python (no HTTP)"""
 from app.db.database import SessionLocal
 from app.services.payment_service import payment_service
 from app.models.payment import Payment
@@ -52,7 +52,7 @@ try:
         for item in order.items:
             print(f'  OrderItem product_id={item.product_id} price={item.price_paid}')
     else:
-        print('ERROR: items_payload is empty — items_json not stored!')
+        print('ERROR: items_payload is empty - items_json not stored!')
 
 except Exception as e:
     import traceback

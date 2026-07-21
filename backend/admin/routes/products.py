@@ -220,10 +220,10 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
         product.preview_path
     ]
 
-    # ── Delete from Firestore BEFORE removing the SQLite row ──────────────────
+    # -- Delete from Firestore BEFORE removing the SQLite row ------------------
     # This ensures no orphan Firestore documents are left when the product has
     # cross-collection references. delete_product_from_firestore always deletes
-    # and logs reference warnings — it never blocks the admin delete.
+    # and logs reference warnings - it never blocks the admin delete.
     result = delete_product_from_firestore(product_id)
     if not result.get("deleted") and result.get("reason") != "firestore_unavailable":
         logger.warning(

@@ -6,18 +6,18 @@ from the Firestore ``products`` collection using a multi-signal approach.
 
 A product document is flagged as a seed/mock candidate when it satisfies
 AT LEAST TWO of the five detection signals:
-  1. ``unsplash_thumbnail``  — thumbnail URL contains "unsplash.com"
-  2. ``generic_title``       — title/name matches generic seed-script pattern
-  3. ``seed_vendor``         — vendor_id is a known seed-script vendor
-  4. ``lorem_description``   — description contains filler/placeholder text
-  5. ``batch_timestamp``     — doc shares the same UTC minute with 3+ other docs
+  1. ``unsplash_thumbnail``  - thumbnail URL contains "unsplash.com"
+  2. ``generic_title``       - title/name matches generic seed-script pattern
+  3. ``seed_vendor``         - vendor_id is a known seed-script vendor
+  4. ``lorem_description``   - description contains filler/placeholder text
+  5. ``batch_timestamp``     - doc shares the same UTC minute with 3+ other docs
                                (second-pass cluster detection across all candidates)
 
 Guards (applied AFTER signal detection):
-  • Recency protection: docs created within 30 calendar days are never deleted (task 6.2) [done]
-  • Referential integrity: docs referenced in orders/reviews/downloads/analytics/
+  ? Recency protection: docs created within 30 calendar days are never deleted (task 6.2) [done]
+  ? Referential integrity: docs referenced in orders/reviews/downloads/analytics/
     customer collections are never deleted (task 6.3)
-  • Dry-run mode: default True — nothing is deleted unless --no-dry-run passed (task 6.4)
+  ? Dry-run mode: default True - nothing is deleted unless --no-dry-run passed (task 6.4)
 
 Usage:
     python cleanup_firestore_mock_products.py           # dry-run (safe)
@@ -32,7 +32,7 @@ import os
 from datetime import date, datetime, timezone
 
 # ---------------------------------------------------------------------------
-# Firestore connection — imported from shared module (no SQLite dependency)
+# Firestore connection - imported from shared module (no SQLite dependency)
 # ---------------------------------------------------------------------------
 # Add the backend package root to sys.path so ``app`` is importable when this
 # script is run directly from the backend/scripts/ directory.
@@ -48,11 +48,11 @@ from app.shared.firebase.connection import db, firebase_connected  # noqa: E402
 # ---------------------------------------------------------------------------
 # These are the vendor_id values that seed/test/demo scripts are known to
 # produce.  The set is intentionally broad to catch variants:
-#   • Literal strings used in ad-hoc seed scripts ("seed_vendor_1" etc.)
-#   • Generic placeholder names that seeding utilities generate
-#   • Normalized (lowercase, hyphenated) forms of the products.json vendors
+#   ? Literal strings used in ad-hoc seed scripts ("seed_vendor_1" etc.)
+#   ? Generic placeholder names that seeding utilities generate
+#   ? Normalized (lowercase, hyphenated) forms of the products.json vendors
 #     used by backend/scripts/seed_products.py
-#     (e.g. "DesignHub" → "designhub" and "design-hub")
+#     (e.g. "DesignHub" ? "designhub" and "design-hub")
 #
 # IMPORTANT: Do NOT add real production vendor IDs here.
 # Scanning at runtime (see _load_seed_vendor_ids_from_json) supplements this
@@ -61,7 +61,7 @@ from app.shared.firebase.connection import db, firebase_connected  # noqa: E402
 # ---------------------------------------------------------------------------
 
 KNOWN_SEED_VENDOR_IDS: set[str] = {
-    # ── Explicit test/seed/demo identifiers ───────────────────────────────
+    # -- Explicit test/seed/demo identifiers -------------------------------
     "seed_vendor",
     "seed_vendor_1",
     "seed_vendor_2",
@@ -74,19 +74,19 @@ KNOWN_SEED_VENDOR_IDS: set[str] = {
     "mock_vendor_1",
     "placeholder_vendor",
     "sample_vendor",
-    # ── Generic numeric patterns (vendor_1, vendor_2, …) ──────────────────
+    # -- Generic numeric patterns (vendor_1, vendor_2, ?) ------------------
     "vendor_1",
     "vendor_2",
     "vendor_3",
     "vendor_4",
     "vendor_5",
-    # ── Dev / local / CI placeholder values ───────────────────────────────
+    # -- Dev / local / CI placeholder values -------------------------------
     "dev_vendor",
     "local_vendor",
     "ci_vendor",
     "generated_vendor",
     "filler_vendor",
-    # ── Normalized seed_products.py vendor names (products.json origin) ───
+    # -- Normalized seed_products.py vendor names (products.json origin) ---
     # seed_products.py normalises: str(seller_name).lower().replace(" ", "-")
     # These are the sellers defined in frontend/src/data/products.json that
     # are used purely as seeding fixtures during development.
@@ -205,21 +205,21 @@ def evaluate_signals(doc) -> list[str]:
     data: dict = doc.to_dict() or {}
     signals: list[str] = []
 
-    # ── Signal 1: Unsplash thumbnail ──────────────────────────────────────
+    # -- Signal 1: Unsplash thumbnail --------------------------------------
     thumbnail: str = data.get("thumbnail") or ""
     if "unsplash.com" in thumbnail:
         signals.append("unsplash_thumbnail")
 
-    # ── Signal 2: Generic / seeded title ─────────────────────────────────
+    # -- Signal 2: Generic / seeded title ---------------------------------
     title: str = data.get("title") or data.get("name") or ""
     if _RE_GENERIC_TITLE.match(title):
         signals.append("generic_title")
 
-    # ── Signal 3: Known seed-script vendor ID ────────────────────────────
+    # -- Signal 3: Known seed-script vendor ID ----------------------------
     if data.get("vendor_id") in KNOWN_SEED_VENDOR_IDS:
         signals.append("seed_vendor")
 
-    # ── Signal 4: Lorem-ipsum / filler description ───────────────────────
+    # -- Signal 4: Lorem-ipsum / filler description -----------------------
     description: str = data.get("description") or ""
     if _RE_LOREM_DESCRIPTION.search(description):
         signals.append("lorem_description")
@@ -253,7 +253,7 @@ def evaluate_batch_timestamp_signal(
     """
     from collections import defaultdict
 
-    # Map from "YYYY-MM-DDTHH:MM" UTC minute string → list of doc_ids
+    # Map from "YYYY-MM-DDTHH:MM" UTC minute string ? list of doc_ids
     minute_buckets: dict[str, list[str]] = defaultdict(list)
 
     for doc_id, data, _signals in candidates:
@@ -266,7 +266,7 @@ def evaluate_batch_timestamp_signal(
         try:
             dt = datetime.fromisoformat(normalised).replace(tzinfo=timezone.utc)
         except ValueError:
-            # Unparseable timestamp — skip
+            # Unparseable timestamp - skip
             continue
 
         # Floor to UTC minute: "YYYY-MM-DDTHH:MM"
@@ -327,14 +327,14 @@ def check_references(pid: str) -> list[dict]:
     Check whether the given Firestore product document ID is referenced in any
     of the following collections:
 
-      • ``orders``          — items array contains an element with ``productId == pid``
-      • ``reviews``         — documents where ``productId == pid``
-      • ``downloads``       — documents where ``productId == pid``
-      • ``analytics``       — documents where ``productId == pid``
-      • ``wishlist``        — documents where ``productId == pid``
-      • ``favorites``       — documents where ``productId == pid``
-      • ``bookmarks``       — documents where ``productId == pid``
-      • ``recommendations`` — documents where ``productId == pid``
+      ? ``orders``          - items array contains an element with ``productId == pid``
+      ? ``reviews``         - documents where ``productId == pid``
+      ? ``downloads``       - documents where ``productId == pid``
+      ? ``analytics``       - documents where ``productId == pid``
+      ? ``wishlist``        - documents where ``productId == pid``
+      ? ``favorites``       - documents where ``productId == pid``
+      ? ``bookmarks``       - documents where ``productId == pid``
+      ? ``recommendations`` - documents where ``productId == pid``
 
     Parameters
     ----------
@@ -345,20 +345,20 @@ def check_references(pid: str) -> list[dict]:
     Returns
     -------
     list[dict]
-        List of ``{"collection": <name>, "doc_id": <id>}`` dicts — one entry per
+        List of ``{"collection": <name>, "doc_id": <id>}`` dicts - one entry per
         referencing document found across all queried collections.  An empty list
         means the product is safe to delete.
     """
     references: list[dict] = []
 
-    # ── Orders: items is an array of objects; each element may have productId ──
+    # -- Orders: items is an array of objects; each element may have productId --
     for doc in db.collection("orders").stream():
         data: dict = doc.to_dict() or {}
         items = data.get("items") or []
         if any(str(item.get("productId", "")) == pid for item in items):
             references.append({"collection": "orders", "doc_id": doc.id})
 
-    # ── Collections that store productId as a top-level field ────────────────
+    # -- Collections that store productId as a top-level field ----------------
     _direct_collections = [
         "reviews",
         "downloads",
@@ -379,7 +379,7 @@ def check_references(pid: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Entry-point stub (deletion, recency guard, and reporting in tasks 6.2–6.4)
+# Entry-point stub (deletion, recency guard, and reporting in tasks 6.2-6.4)
 # ---------------------------------------------------------------------------
 
 def run_cleanup(dry_run: bool = True) -> None:
@@ -398,24 +398,24 @@ def run_cleanup(dry_run: bool = True) -> None:
         report.
     """
     if not firebase_connected or db is None:
-        print("[cleanup] Firestore is unavailable — aborting.")
+        print("[cleanup] Firestore is unavailable - aborting.")
         return
 
-    print(f"[cleanup] Starting Firestore mock-product cleanup (dry_run={dry_run}) …")
+    print(f"[cleanup] Starting Firestore mock-product cleanup (dry_run={dry_run}) ?")
 
-    # ── Step 1: Fetch all product documents ──────────────────────────────
+    # -- Step 1: Fetch all product documents ------------------------------
     all_docs = list(db.collection("products").stream())
     total_before = len(all_docs)
     print(f"[cleanup] Total product documents fetched: {total_before}")
 
-    # ── Step 2: First pass — per-document signal evaluation ──────────────
+    # -- Step 2: First pass - per-document signal evaluation --------------
     initial_candidates: list[tuple[str, dict, list[str]]] = []
     for doc in all_docs:
         signals = evaluate_signals(doc)
         if signals:
             initial_candidates.append((doc.id, doc.to_dict() or {}, signals))
 
-    # ── Step 3: Second pass — batch timestamp cluster detection ──────────
+    # -- Step 3: Second pass - batch timestamp cluster detection ----------
     batch_signal_ids = evaluate_batch_timestamp_signal(initial_candidates)
 
     # Enrich candidates: append "batch_timestamp" signal where applicable
@@ -426,7 +426,7 @@ def run_cleanup(dry_run: bool = True) -> None:
             enriched_signals.append("batch_timestamp")
         enriched_candidates.append((doc_id, data, enriched_signals))
 
-    # ── Step 4: Filter to documents with >= 2 signals ────────────────────
+    # -- Step 4: Filter to documents with >= 2 signals --------------------
     flagged_candidates: list[tuple[str, dict, list[str]]] = [
         (doc_id, data, signals)
         for doc_id, data, signals in enriched_candidates
@@ -436,13 +436,13 @@ def run_cleanup(dry_run: bool = True) -> None:
     print(f"[cleanup] Candidates flagged (>= 2 signals): {len(flagged_candidates)}")
     for doc_id, data, signals in flagged_candidates:
         title = data.get("title") or data.get("name") or "<no title>"
-        print(f"[cleanup]   · {doc_id!r} — {title!r} — signals: {signals}")
+        print(f"[cleanup]   ? {doc_id!r} - {title!r} - signals: {signals}")
 
-    # ── Step 5: Recency guard (30-day protection) ─────────────────────────
+    # -- Step 5: Recency guard (30-day protection) -------------------------
     # Documents created within the last 30 calendar days (UTC) are never
     # eligible for deletion, regardless of how many seed signals they match.
-    # Boundary rule: (run_date - created_date).days < 30 → protected.
-    #                (run_date - created_date).days >= 30 → eligible.
+    # Boundary rule: (run_date - created_date).days < 30 ? protected.
+    #                (run_date - created_date).days >= 30 ? eligible.
     run_date: date = datetime.now(timezone.utc).date()
 
     blocked_recent: list[str] = []
@@ -467,7 +467,7 @@ def run_cleanup(dry_run: bool = True) -> None:
         f"eligible after recency guard: {len(eligible_candidates)}"
     )
 
-    # ── Step 6: Referential integrity checks ──────────────────────────────
+    # -- Step 6: Referential integrity checks ------------------------------
     # For each candidate that survived the recency guard, query all dependent
     # collections.  A non-empty reference set blocks deletion unconditionally.
     blocked_referenced: list[dict] = []   # {doc_id: refs} for blocked candidates
@@ -480,7 +480,7 @@ def run_cleanup(dry_run: bool = True) -> None:
             blocked_referenced.append({"doc_id": doc_id, "references": refs})
             title = data.get("title") or data.get("name") or "<no title>"
             print(
-                f"[cleanup]   ✗ {doc_id!r} — {title!r} — BLOCKED (referenced): "
+                f"[cleanup]   X {doc_id!r} - {title!r} - BLOCKED (referenced): "
                 f"{refs}"
             )
         else:
@@ -492,25 +492,25 @@ def run_cleanup(dry_run: bool = True) -> None:
         f"{len(deletion_queue)} in deletion queue."
     )
 
-    # ── Step 7: Deletion execution and report (task 6.4) ──────────────────
+    # -- Step 7: Deletion execution and report (task 6.4) ------------------
     # For each document in the deletion queue:
-    #   • Log the candidate (ID, title, signals) before acting.
-    #   • If dry_run=False: call Firestore delete.
-    #   • If dry_run=True: log the would-be deletion without touching Firestore.
+    #   ? Log the candidate (ID, title, signals) before acting.
+    #   ? If dry_run=False: call Firestore delete.
+    #   ? If dry_run=True: log the would-be deletion without touching Firestore.
     deleted: list[str] = []
 
     for doc_id, data, signals in deletion_queue:
         title = data.get("title") or data.get("name") or "<no title>"
         print(
             f"[cleanup]   {'[DRY-RUN] would delete' if dry_run else 'deleting'} "
-            f"{doc_id!r} — {title!r} — signals: {signals}"
+            f"{doc_id!r} - {title!r} - signals: {signals}"
         )
         if not dry_run:
             db.collection("products").document(doc_id).delete()
         deleted.append(doc_id)
 
-    # ── Step 8: Build report ──────────────────────────────────────────────
-    # (a) Deleted IDs — those actually removed (or would be in dry-run)
+    # -- Step 8: Build report ----------------------------------------------
+    # (a) Deleted IDs - those actually removed (or would be in dry-run)
     # (b) 50 most recent preserved product IDs by createdAt descending
     # (c) Blocked IDs with reference details
     # (d) Total counts before / after
@@ -537,7 +537,7 @@ def run_cleanup(dry_run: bool = True) -> None:
     )
     top_50_preserved: list[str] = [doc.id for doc in preserved_docs_sorted[:50]]
 
-    # ── Print structured report ───────────────────────────────────────────
+    # -- Print structured report -------------------------------------------
     separator = "=" * 70
 
     print()
@@ -589,7 +589,7 @@ def run_cleanup(dry_run: bool = True) -> None:
             ref_summary = ", ".join(
                 f"{r['collection']}:{r['doc_id']}" for r in refs
             )
-            print(f"      ✗ {b_doc_id}  [references: {ref_summary}]")
+            print(f"      X {b_doc_id}  [references: {ref_summary}]")
 
     if not blocked_recent and not blocked_referenced:
         print("    (none)")
@@ -600,7 +600,7 @@ def run_cleanup(dry_run: bool = True) -> None:
     print(f"    Before : {total_before}")
     if dry_run:
         print(
-            f"    After  : {total_before} (unchanged — dry-run mode; "
+            f"    After  : {total_before} (unchanged - dry-run mode; "
             f"{len(deleted)} would be removed)"
         )
     else:

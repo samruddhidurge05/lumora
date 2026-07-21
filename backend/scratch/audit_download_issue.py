@@ -61,7 +61,7 @@ def audit_download_chain():
                         print(f"  [Disk Check] Absolute Path: {abs_disk_path}")
                         print(f"  [Disk Check] Exists on Disk? {exists_on_disk}")
                         if not exists_on_disk:
-                            print(f"  ⚠️ ALERT: Physical file MISSING on disk! Calling get_stream WILL GENERATE DUMMY README ZIP!")
+                            print(f"  ?? ALERT: Physical file MISSING on disk! Calling get_stream WILL GENERATE DUMMY README ZIP!")
 
         # Also check Orders to see what products customers have purchased
         print("\n=================================================================")

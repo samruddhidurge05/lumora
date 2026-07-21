@@ -11,7 +11,7 @@ class Conversation(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # P3-M5: Support schema migration — new columns
+    # P3-M5: Support schema migration - new columns
     type        = Column(String(50),  nullable=False, default="vendor_chat", server_default="vendor_chat")
     status      = Column(String(50),  nullable=False, default="open",        server_default="open")
     category    = Column(String(100), nullable=True)

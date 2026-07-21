@@ -1,0 +1,745 @@
+{
+  "timestamp": "2026-07-18 23:37:07",
+  "total_deletions": 58,
+  "manifest_entries": [
+    {
+      "document_id": "27",
+      "collection": "orders",
+      "reason": "orders without customer UID",
+      "dependency_chain": [
+        "Order 27 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "3N9QYofn3YfBpZ5dlpA1",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order 3N9QYofn3YfBpZ5dlpA1 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "4K9JdRx1ykQecIo5DArL",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order 4K9JdRx1ykQecIo5DArL -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "6yMAAVdvkQGJFB96yVQh",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order 6yMAAVdvkQGJFB96yVQh -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "7JtUoKMh6b7YJbpd9Min",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order 7JtUoKMh6b7YJbpd9Min -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "E25LV4JKJepEsZwVYlmw",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order E25LV4JKJepEsZwVYlmw -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "L04TmmLBCgflUHDE9f0b",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order L04TmmLBCgflUHDE9f0b -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "Lwkmfn9VQFIzez8Fip6p",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order Lwkmfn9VQFIzez8Fip6p -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "NXrIUAV2w0wkDWGlXzmx",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order NXrIUAV2w0wkDWGlXzmx -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-1",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-1 -> User 3"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-1452BB",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-1452BB -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-2",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-2 -> User 2"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-229B88",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-229B88 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-5B89DE",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-5B89DE -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-61",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-61 -> User 5"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-62",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-62 -> User 5"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-65",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-65 -> User 5"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-66DC47",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-66DC47 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-68",
+      "collection": "orders",
+      "reason": "orders using test_bypass",
+      "dependency_chain": [
+        "Order ORD-68 -> User 5"
+      ],
+      "evidence": [
+        "orders using test_bypass"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-7DE4DE",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-7DE4DE -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-8B20D8",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-8B20D8 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-B1701E",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-B1701E -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-BD2493",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-BD2493 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-C55E74",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-C55E74 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-D6E680",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-D6E680 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-F05A5A",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-F05A5A -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ORD-FF7121",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ORD-FF7121 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "R124WtZcOZiDdI155krR",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order R124WtZcOZiDdI155krR -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "RTCvmcb9F2q3nIUDfaaS",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order RTCvmcb9F2q3nIUDfaaS -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "RxTjc3nAN795LuFywFMI",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order RxTjc3nAN795LuFywFMI -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "StdknPvZuJWfOi0ifnE7",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount)",
+      "dependency_chain": [
+        "Order StdknPvZuJWfOi0ifnE7 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "TsxtMQbycSiKnZyaBgS6",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order TsxtMQbycSiKnZyaBgS6 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "XJPJWKy7h6s5bUpeacJf",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order XJPJWKy7h6s5bUpeacJf -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "XpjGhL3IiEyLWrKHG87O",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order XpjGhL3IiEyLWrKHG87O -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "YVInTIidQRpnofZYBaW4",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order YVInTIidQRpnofZYBaW4 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "caf1RU1CkUqmahmuywA7",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order caf1RU1CkUqmahmuywA7 -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "hx66PB93BlYstkHrqDYQ",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order hx66PB93BlYstkHrqDYQ -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "hxszFCqeVMF0IqoTWBoA",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order hxszFCqeVMF0IqoTWBoA -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "oIFjIuNGYVfdMLOVjdvR",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders using card bypass (no amount); orders with TEST-001/demo-prod products",
+      "dependency_chain": [
+        "Order oIFjIuNGYVfdMLOVjdvR -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders using card bypass (no amount)",
+        "orders with TEST-001/demo-prod products"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ozCRLvqjVEziRATBF5tf",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order ozCRLvqjVEziRATBF5tf -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "s3OXELe6geNlRPEMs0GI",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order s3OXELe6geNlRPEMs0GI -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "tRooO5XjhcJqBoyfzuUx",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order tRooO5XjhcJqBoyfzuUx -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "xJnkXGbveFo563nQL7RW",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order xJnkXGbveFo563nQL7RW -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "zSj5xlpuKtmZUm3XZLEV",
+      "collection": "orders",
+      "reason": "orders without customer UID; orders created by automated seed scripts (empty payment)",
+      "dependency_chain": [
+        "Order zSj5xlpuKtmZUm3XZLEV -> User None"
+      ],
+      "evidence": [
+        "orders without customer UID",
+        "orders created by automated seed scripts (empty payment)"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "5jfSYxCpb2WfLYxy4wM1",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/5jfSYxCpb2WfLYxy4wM1"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "JdYkat6xmw14g4g0E0Pt",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/JdYkat6xmw14g4g0E0Pt"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "RAJv8pundu9R8OTTV7hv",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/RAJv8pundu9R8OTTV7hv"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "Xlc6IwV4gDHOx0JXYp8x",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/Xlc6IwV4gDHOx0JXYp8x"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "cB4ht7lUnOtP09w1rVOA",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/cB4ht7lUnOtP09w1rVOA"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "jMAZCcjy1kUT11H9ZLNS",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/jMAZCcjy1kUT11H9ZLNS"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "oh6qsEisiZG3fh3VD4WC",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/oh6qsEisiZG3fh3VD4WC"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "sbK46W9V4RkJGDiYsUao",
+      "collection": "conversations",
+      "reason": "Admin testing document in conversations",
+      "dependency_chain": [
+        "Document conversations/sbK46W9V4RkJGDiYsUao"
+      ],
+      "evidence": [
+        "Admin testing document in conversations"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "jNdHP2U3BQvNAUkoh3nA",
+      "collection": "reports",
+      "reason": "Admin testing document in reports",
+      "dependency_chain": [
+        "Document reports/jNdHP2U3BQvNAUkoh3nA"
+      ],
+      "evidence": [
+        "Admin testing document in reports"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T",
+      "collection": "promotionParticipants",
+      "reason": "Admin testing document in promotionParticipants",
+      "dependency_chain": [
+        "Document promotionParticipants/cdl6EnWQtKQ1fV4xpY7c3hCTLGZ2_Y2zAh65sIcmQOgsBSD8T"
+      ],
+      "evidence": [
+        "Admin testing document in promotionParticipants"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "ADM-ORD-08D15F",
+      "collection": "adminAffiliateOrders",
+      "reason": "Admin testing document in adminAffiliateOrders",
+      "dependency_chain": [
+        "Document adminAffiliateOrders/ADM-ORD-08D15F"
+      ],
+      "evidence": [
+        "Admin testing document in adminAffiliateOrders"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "global",
+      "collection": "adminAnalytics",
+      "reason": "Admin testing document in adminAnalytics",
+      "dependency_chain": [
+        "Document adminAnalytics/global"
+      ],
+      "evidence": [
+        "Admin testing document in adminAnalytics"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "Y2zAh65sIcmQOgsBSD8T",
+      "collection": "adminPromotions",
+      "reason": "Admin testing document in adminPromotions",
+      "dependency_chain": [
+        "Document adminPromotions/Y2zAh65sIcmQOgsBSD8T"
+      ],
+      "evidence": [
+        "Admin testing document in adminPromotions"
+      ],
+      "confidence": "100%"
+    },
+    {
+      "document_id": "pQUAMbZGlmd1XpgXYJk9",
+      "collection": "customer ",
+      "reason": "Admin testing document in customer_space",
+      "dependency_chain": [
+        "Document customer /pQUAMbZGlmd1XpgXYJk9"
+      ],
+      "evidence": [
+        "Admin testing document in customer_space"
+      ],
+      "confidence": "100%"
+    }
+  ]
+}

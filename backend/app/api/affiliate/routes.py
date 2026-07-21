@@ -195,7 +195,7 @@ def _build_monthly_earnings(commissions: list, months: int = 12) -> list[Monthly
     return result
 
 
-# ── Profile ────────────────────────────────────────────────────────────────────
+# -- Profile --------------------------------------------------------------------
 
 @router.get("/profile", response_model=AffiliateProfileResponse)
 def get_profile(
@@ -224,7 +224,7 @@ def update_profile(
     return profile
 
 
-# ── Stats ──────────────────────────────────────────────────────────────────────
+# -- Stats ----------------------------------------------------------------------
 
 @router.get("/stats", response_model=AffiliateStats)
 def get_stats(
@@ -240,7 +240,7 @@ def get_stats(
     return _build_stats(profile, commissions)
 
 
-# ── Dashboard Summary ──────────────────────────────────────────────────────────
+# -- Dashboard Summary ----------------------------------------------------------
 
 @router.get("/dashboard", response_model=DashboardSummaryResponse)
 def get_dashboard(
@@ -277,7 +277,7 @@ def get_dashboard(
     )
 
 
-# ── Commissions ────────────────────────────────────────────────────────────────
+# -- Commissions ----------------------------------------------------------------
 
 @router.get("/commissions", response_model=List[CommissionResponse])
 def get_commissions(
@@ -299,7 +299,7 @@ def get_commissions(
 @router.post("/commissions", response_model=CommissionResponse, status_code=201)
 def create_commission(data: CommissionCreate, db: Session = Depends(get_db)):
     """
-    Internal endpoint — called by the orders service when a purchase
+    Internal endpoint - called by the orders service when a purchase
     is traced to an affiliate referral code.
     """
     commission = AffiliateCommission(**data.model_dump())
@@ -318,7 +318,7 @@ def create_commission(data: CommissionCreate, db: Session = Depends(get_db)):
     return commission
 
 
-# ── Payouts ────────────────────────────────────────────────────────────────────
+# -- Payouts --------------------------------------------------------------------
 
 @router.get("/payouts", response_model=List[PayoutResponse])
 def get_payouts(
@@ -347,26 +347,26 @@ def request_payout(
     Submit a payout / withdrawal request.
 
     Validations:
-    ① Amount must be positive.
-    ② Amount must be ≥ MIN_PAYOUT_INR (₹500).
-    ③ No other pending payout must already exist (duplicate prevention).
-    ④ Requested amount must not exceed the available approved balance.
+    ? Amount must be positive.
+    ? Amount must be ? MIN_PAYOUT_INR (?500).
+    ? No other pending payout must already exist (duplicate prevention).
+    ? Requested amount must not exceed the available approved balance.
     """
-    # ① Positive amount (also enforced by Pydantic gt=0)
+    # ? Positive amount (also enforced by Pydantic gt=0)
     if data.amount <= 0:
         raise HTTPException(status_code=400, detail="Payout amount must be positive.")
 
-    # ② Minimum payout threshold
+    # ? Minimum payout threshold
     if data.amount < MIN_PAYOUT_INR:
         raise HTTPException(
             status_code=400,
-            detail=f"Minimum payout amount is ₹{int(MIN_PAYOUT_INR)}. "
-                   f"Requested: ₹{data.amount:.0f}",
+            detail=f"Minimum payout amount is ?{int(MIN_PAYOUT_INR)}. "
+                   f"Requested: ?{data.amount:.0f}",
         )
 
     profile = _get_affiliate_profile(current_user, db)
 
-    # ③ Duplicate pending payout prevention
+    # ? Duplicate pending payout prevention
     existing_pending = db.query(AffiliatePayout).filter(
         AffiliatePayout.affiliate_id == profile.id,
         AffiliatePayout.status == "pending",
@@ -375,12 +375,12 @@ def request_payout(
         raise HTTPException(
             status_code=409,
             detail=(
-                f"You already have a pending payout of ₹{existing_pending.amount:.0f}. "
+                f"You already have a pending payout of ?{existing_pending.amount:.0f}. "
                 "Please wait for it to be processed before requesting another."
             ),
         )
 
-    # ④ Check available approved balance
+    # ? Check available approved balance
     approved_commissions = db.query(AffiliateCommission).filter(
         AffiliateCommission.affiliate_id == profile.id,
         AffiliateCommission.status == "approved",
@@ -391,8 +391,8 @@ def request_payout(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"Requested ₹{data.amount:.0f} exceeds available approved "
-                f"balance of ₹{available:.0f}."
+                f"Requested ?{data.amount:.0f} exceeds available approved "
+                f"balance of ?{available:.0f}."
             ),
         )
 
@@ -423,13 +423,13 @@ def request_payout(
         action="payout_requested",
         module="affiliate",
         status="success",
-        details=f"Affiliate payout requested: ₹{payout.amount:.2f} via {payout.method}",
+        details=f"Affiliate payout requested: ?{payout.amount:.2f} via {payout.method}",
     )
 
     return payout
 
 
-# ── Analytics ─────────────────────────────────────────────────────────────────
+# -- Analytics -----------------------------------------------------------------
 
 @router.get("/analytics", response_model=AnalyticsResponse)
 def get_analytics(
@@ -470,7 +470,7 @@ def get_analytics(
     )
 
 
-# ── Reports ───────────────────────────────────────────────────────────────────
+# -- Reports -------------------------------------------------------------------
 
 @router.get("/reports", response_model=ReportResponse)
 def get_reports(
@@ -509,7 +509,7 @@ def get_reports(
             sale_amount=c.sale_amount,
             commission_amt=c.commission_amt,
             status=c.status,
-            date=c.created_at.strftime("%Y-%m-%d") if c.created_at else "—",
+            date=c.created_at.strftime("%Y-%m-%d") if c.created_at else "-",
         )
         for c in commissions
     ]
@@ -520,7 +520,7 @@ def get_reports(
             amount=p.amount,
             method=p.method,
             status=p.status,
-            date=p.created_at.strftime("%Y-%m-%d") if p.created_at else "—",
+            date=p.created_at.strftime("%Y-%m-%d") if p.created_at else "-",
         )
         for p in payouts
     ]
@@ -538,7 +538,7 @@ def get_reports(
     )
 
 
-# ── Referral Links ─────────────────────────────────────────────────────────────
+# -- Referral Links -------------------------------------------------------------
 
 @router.get("/referral-links", response_model=List[ReferralLinkResponse])
 def get_referral_links(
@@ -627,7 +627,7 @@ def delete_referral_link(
     return
 
 
-# ── Click Tracking ─────────────────────────────────────────────────────────────
+# -- Click Tracking -------------------------------------------------------------
 
 @router.post("/track-click/{referral_code}", response_model=ClickTrackResponse)
 def track_click(
@@ -639,7 +639,7 @@ def track_click(
     """
     Increment click counter when a visitor lands via a referral link.
     Tracks both default affiliate codes and custom referral link codes.
-    No auth required — called client-side when ?ref=CODE is detected.
+    No auth required - called client-side when ?ref=CODE is detected.
     Includes 24-hour IP deduplication.
     """
     code_upper = referral_code.upper()

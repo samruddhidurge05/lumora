@@ -6,10 +6,10 @@ Property-based tests for the cleanup script:
 
 Covers four cleanup correctness properties using Hypothesis:
 
-  Property 10 — Signal threshold: flagged iff >= 2 signals
-  Property 11 — Recency protection: docs < 30 days old are NEVER deleted
-  Property 12 — Referential integrity: any reference blocks deletion
-  Property 13 — SQLite untouched: zero SQLAlchemy calls for any N candidates
+  Property 10 - Signal threshold: flagged iff >= 2 signals
+  Property 11 - Recency protection: docs < 30 days old are NEVER deleted
+  Property 12 - Referential integrity: any reference blocks deletion
+  Property 13 - SQLite untouched: zero SQLAlchemy calls for any N candidates
 
 **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 3.6**
 """
@@ -22,7 +22,7 @@ from unittest.mock import MagicMock, patch
 
 from hypothesis import given, settings, strategies as st
 
-# ── Path setup ────────────────────────────────────────────────────────────────
+# -- Path setup ----------------------------------------------------------------
 _TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 _BACKEND_DIR = os.path.dirname(_TESTS_DIR)
 if _BACKEND_DIR not in sys.path:
@@ -32,7 +32,7 @@ _SCRIPTS_DIR = os.path.join(_BACKEND_DIR, "scripts")
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-# Import the module (no real Firebase credentials required — module-level
+# Import the module (no real Firebase credentials required - module-level
 # firebase import is only executed at startup; tests patch db/firebase_connected
 # via unittest.mock)
 from scripts.cleanup_firestore_mock_products import (  # noqa: E402
@@ -44,7 +44,7 @@ from scripts.cleanup_firestore_mock_products import (  # noqa: E402
 utc = timezone.utc
 
 
-# ── Shared helpers ────────────────────────────────────────────────────────────
+# -- Shared helpers ------------------------------------------------------------
 
 def _make_doc(data: dict) -> MagicMock:
     """Return a mock Firestore DocumentSnapshot backed by *data*."""
@@ -72,7 +72,7 @@ def _build_mock_db(
     Build a mock Firestore *db* that routes ``collection(name)`` to the
     appropriate mock collection.  Returns ``(mock_db, mock_product_doc_ref)``.
 
-    *extra_ref_collections* maps collection-name → list-of-docs and is used
+    *extra_ref_collections* maps collection-name ? list-of-docs and is used
     by Property 12 to inject references into arbitrary collections.
     """
     mock_db = MagicMock()
@@ -102,7 +102,7 @@ def _build_mock_db(
 
 def _make_seed_doc(doc_id: str, days_old: int = 60, signals_count: int = 2) -> MagicMock:
     """
-    Build a product doc that fires exactly *signals_count* signals (0–4).
+    Build a product doc that fires exactly *signals_count* signals (0-4).
 
     Signal assignment order (easiest to add/remove):
       0: (no signals)
@@ -133,10 +133,10 @@ def _make_seed_doc(doc_id: str, days_old: int = 60, signals_count: int = 2) -> M
     return _make_doc(data)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Property 10 — Signal threshold: flagged iff len(signals) >= 2
+# ??????????????????????????????????????????????????????????????????????????????
+# Property 10 - Signal threshold: flagged iff len(signals) >= 2
 # **Validates: Requirements 2.1**
-# ══════════════════════════════════════════════════════════════════════════════
+# ??????????????????????????????????????????????????????????????????????????????
 
 @given(signal_count=st.integers(min_value=0, max_value=5))
 @settings(max_examples=30)
@@ -147,9 +147,9 @@ def test_pbt_property10_flagged_iff_two_or_more_signals(signal_count):
     flagged as a seed/mock candidate if and only if len(signals) >= 2.
 
     Specifically:
-      - signal_count == 0 → 0 signals → NOT flagged
-      - signal_count == 1 → 1 signal  → NOT flagged
-      - signal_count >= 2 → 2+ signals → flagged
+      - signal_count == 0 ? 0 signals ? NOT flagged
+      - signal_count == 1 ? 1 signal  ? NOT flagged
+      - signal_count >= 2 ? 2+ signals ? flagged
 
     Note: signal_count > 4 exercises the 4-signal maximum (all per-doc
     signals present) and is treated identically to signal_count == 4
@@ -181,18 +181,18 @@ def test_pbt_property10_flagged_iff_two_or_more_signals(signal_count):
     )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Property 11 — Recency protection: docs < 30 days old are NEVER deleted
+# ??????????????????????????????????????????????????????????????????????????????
+# Property 11 - Recency protection: docs < 30 days old are NEVER deleted
 # **Validates: Requirements 2.2**
-# ══════════════════════════════════════════════════════════════════════════════
+# ??????????????????????????????????????????????????????????????????????????????
 
 @given(days_ago=st.integers(min_value=0, max_value=89))
 @settings(max_examples=30)
 def test_pbt_property11_recency_protection_no_deletion_under_30_days(days_ago):
     """
     For any days_ago in [0, 89]:
-      - If days_ago < 30  → Firestore delete() is NEVER called (recency-protected).
-      - If days_ago >= 30 → the document IS eligible (delete() called when
+      - If days_ago < 30  ? Firestore delete() is NEVER called (recency-protected).
+      - If days_ago >= 30 ? the document IS eligible (delete() called when
                             all reference collections are empty and dry_run=False).
 
     The candidate always carries 2+ signals so it would be flagged if not
@@ -212,7 +212,7 @@ def test_pbt_property11_recency_protection_no_deletion_under_30_days(days_ago):
     }
     doc = _make_doc(data)
 
-    # All reference collections are empty → no referential-integrity block
+    # All reference collections are empty ? no referential-integrity block
     mock_db, mock_doc_ref = _build_mock_db(product_docs=[doc])
 
     with patch("scripts.cleanup_firestore_mock_products.db", mock_db), \
@@ -233,10 +233,10 @@ def test_pbt_property11_recency_protection_no_deletion_under_30_days(days_ago):
         )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Property 12 — Referential integrity: any reference blocks deletion
+# ??????????????????????????????????????????????????????????????????????????????
+# Property 12 - Referential integrity: any reference blocks deletion
 # **Validates: Requirements 2.3**
-# ══════════════════════════════════════════════════════════════════════════════
+# ??????????????????????????????????????????????????????????????????????????????
 
 @given(
     collections_with_refs=st.lists(
@@ -302,10 +302,10 @@ def test_pbt_property12_any_reference_blocks_deletion(collections_with_refs):
     )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Property 13 — SQLite untouched for any N candidates
+# ??????????????????????????????????????????????????????????????????????????????
+# Property 13 - SQLite untouched for any N candidates
 # **Validates: Requirements 2.4, 3.6**
-# ══════════════════════════════════════════════════════════════════════════════
+# ??????????????????????????????????????????????????????????????????????????????
 
 @given(n=st.integers(min_value=1, max_value=10))
 @settings(max_examples=10)

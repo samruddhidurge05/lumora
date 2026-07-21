@@ -28,7 +28,7 @@ async def upload_product_file(
 ):
     """
     Upload a vendor product file (ZIP, PDF, Figma, etc.).
-    Returns { filename, url, size } — store `url` in products.file_url.
+    Returns { filename, url, size } - store `url` in products.file_url.
     JWT required (vendor or admin only).
     """
     if current_user.role not in ("vendor", "admin"):
@@ -69,7 +69,7 @@ async def upload_product_image(
 ):
     """
     Upload a product preview image (PNG, JPG, WEBP, etc.).
-    Returns { filename, url, size } — store `url` in products.preview / products.thumbnail.
+    Returns { filename, url, size } - store `url` in products.preview / products.thumbnail.
     JWT required.
     """
     data = await file.read()

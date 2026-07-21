@@ -20,14 +20,14 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
-# ─── Nested schemas ───────────────────────────────────────────────────────────
+# --- Nested schemas -----------------------------------------------------------
 
 class CartItem(BaseModel):
     product_id: int
     price_paid: float = Field(gt=0, description="Price paid for this item in INR")
 
 
-# ─── Request schemas ──────────────────────────────────────────────────────────
+# --- Request schemas ----------------------------------------------------------
 
 class InitiatePaymentRequest(BaseModel):
     """
@@ -74,17 +74,17 @@ class ConfirmPaymentRequest(BaseModel):
 
 
 class CancelPaymentRequest(BaseModel):
-    """POST /api/payments/{payment_ref}/cancel — optional body for future reason tracking."""
+    """POST /api/payments/{payment_ref}/cancel - optional body for future reason tracking."""
     reason: Optional[str] = None
 
 
 class AdminRefundRequest(BaseModel):
-    """POST /api/payments/{payment_ref}/refund — admin only."""
+    """POST /api/payments/{payment_ref}/refund - admin only."""
     amount:  Optional[float] = Field(default=None, gt=0, description="Partial refund amount in INR. Omit for full refund.")
     reason:  str             = Field(default="Admin initiated refund")
 
 
-# ─── Response schemas ─────────────────────────────────────────────────────────
+# --- Response schemas ---------------------------------------------------------
 
 class InitiatePaymentResponse(BaseModel):
     """Response from POST /api/payments/initiate and POST /api/payments/{ref}/retry."""

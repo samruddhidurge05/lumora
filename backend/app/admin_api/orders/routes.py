@@ -54,7 +54,7 @@ def put_status(
         order = db.query(Order).filter(Order.id == int(order_id)).first()
         old_status = order.status if order else None
     except (ValueError, TypeError):
-        # order_id is non-numeric — Firestore may still accept it; proceed without SQLite lookup
+        # order_id is non-numeric - Firestore may still accept it; proceed without SQLite lookup
         pass
 
     # 2. Update Firestore (existing behaviour)
@@ -63,7 +63,7 @@ def put_status(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # 3. Update SQLite to match (bidirectional sync — Req 3.1, 3.2)
+    # 3. Update SQLite to match (bidirectional sync - Req 3.1, 3.2)
     if order is not None:
         order.status = status
         try:
@@ -94,7 +94,7 @@ def put_status(
             metadata={"old_status": old_status, "new_status": status},
         )
     except Exception:
-        pass  # Non-blocking — audit log failure never breaks the main operation
+        pass  # Non-blocking - audit log failure never breaks the main operation
 
     return result
 

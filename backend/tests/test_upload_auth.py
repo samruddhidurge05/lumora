@@ -16,7 +16,7 @@ from app.models.user import Base, User
 from app.db.session import get_db
 from app.core.security import create_access_token, get_password_hash
 
-# ── In-memory SQLite test database ────────────────────────────────────────────
+# -- In-memory SQLite test database --------------------------------------------
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_upload_auth.db"
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -124,10 +124,10 @@ def _fake_file(filename: str = "test.zip", content: bytes = _REAL_ZIP_BYTES):
     return ("file", (filename, io.BytesIO(content), "application/zip"))
 
 
-# ── Tests ─────────────────────────────────────────────────────────────────────
+# -- Tests ---------------------------------------------------------------------
 
 def test_admin_can_upload_file(client):
-    """Req 16: Admin JWT → POST /api/uploads/ → 200 with url in response."""
+    """Req 16: Admin JWT ? POST /api/uploads/ ? 200 with url in response."""
     token = _token_for_role("admin")
     response = client.post(
         "/api/uploads/",
@@ -142,7 +142,7 @@ def test_admin_can_upload_file(client):
 
 
 def test_admin_can_upload_image(client):
-    """Req 16: Admin JWT → POST /api/uploads/image → 200."""
+    """Req 16: Admin JWT ? POST /api/uploads/image ? 200."""
     token = _token_for_role("admin")
     response = client.post(
         "/api/uploads/image",
@@ -155,7 +155,7 @@ def test_admin_can_upload_image(client):
 
 
 def test_unauthenticated_upload_rejected(client):
-    """Req 16: No JWT → POST /api/uploads/ → 401 or 422."""
+    """Req 16: No JWT ? POST /api/uploads/ ? 401 or 422."""
     response = client.post(
         "/api/uploads/",
         files=[_fake_file()],
@@ -166,7 +166,7 @@ def test_unauthenticated_upload_rejected(client):
 
 
 def test_customer_upload_rejected(client):
-    """Req 16: Customer JWT → POST /api/uploads/ → 403."""
+    """Req 16: Customer JWT ? POST /api/uploads/ ? 403."""
     token = _token_for_role("customer")
     response = client.post(
         "/api/uploads/",

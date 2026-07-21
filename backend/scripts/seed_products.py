@@ -55,7 +55,7 @@ def seed():
                         bio=f"Expert creator specialising in premium {p.get('category', 'digital')} assets.",
                         banner="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
                         sales="1.5K+",
-                        rating=f"{p.get('rating', 4.8)} ★"
+                        rating=f"{p.get('rating', 4.8)} ?"
                     )
                     db.add(vendor)
                     print(f"Added Vendor: {seller_name} ({vendor_id})")

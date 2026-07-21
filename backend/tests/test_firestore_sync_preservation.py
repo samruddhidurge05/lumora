@@ -9,10 +9,10 @@ any fix is applied.
 
 The four observed behaviors tested here:
 
-  Property 2a — Thumbnail chain priority is preserved
-  Property 2b — pCloud dual-key invariant is preserved
-  Property 2c — Idempotency: identical calls produce identical payloads
-  Property 2d — Firestore unavailable results in a clean no-op
+  Property 2a - Thumbnail chain priority is preserved
+  Property 2b - pCloud dual-key invariant is preserved
+  Property 2c - Idempotency: identical calls produce identical payloads
+  Property 2d - Firestore unavailable results in a clean no-op
 
 **Validates: Requirements 3.2, 3.3, 3.4, 3.7, 3.8, 3.9**
 """
@@ -26,7 +26,7 @@ from hypothesis import given, settings, strategies as st
 utc = timezone.utc
 
 
-# ── Minimal product fixture ──────────────────────────────────────────────────
+# -- Minimal product fixture --------------------------------------------------
 
 def make_product(**overrides):
     """
@@ -80,7 +80,7 @@ def make_product(**overrides):
     return p
 
 
-# ── Helper: call sync and capture the dict passed to Firestore set() ─────────
+# -- Helper: call sync and capture the dict passed to Firestore set() ---------
 
 def run_sync_and_capture(product, mock_db=None):
     """
@@ -108,21 +108,21 @@ def run_sync_and_capture(product, mock_db=None):
     return captured, mock_doc_ref
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# OBSERVATION 1 — Thumbnail chain
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
+# OBSERVATION 1 - Thumbnail chain
+# ???????????????????????????????????????????????????????????????????????????????
 #
 # Observed behavior (unfixed code):
 #   thumbnail priority chain = non-Unsplash product.thumbnail
-#                              → image_urls[0]
-#                              → preview_images[0]
-#                              → None
+#                              ? image_urls[0]
+#                              ? preview_images[0]
+#                              ? None
 #
-# All 8 combinations of (thumbnail presence) × (image_urls presence)
-# × (preview_images presence) are tested below.
+# All 8 combinations of (thumbnail presence) ? (image_urls presence)
+# ? (preview_images presence) are tested below.
 #
 # Validates: Requirements 3.9
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 
 class TestThumbnailChain:
     """
@@ -133,7 +133,7 @@ class TestThumbnailChain:
     """
 
     def test_real_thumbnail_takes_priority_over_image_urls_and_preview(self):
-        """T, I, P → product.thumbnail (chain stops at first valid source)."""
+        """T, I, P ? product.thumbnail (chain stops at first valid source)."""
         p = make_product(
             thumbnail="https://real.cdn.com/img.jpg",
             image_urls=["https://img.example.com/first.jpg"],
@@ -145,7 +145,7 @@ class TestThumbnailChain:
         )
 
     def test_real_thumbnail_takes_priority_when_no_image_urls(self):
-        """T, _, P → product.thumbnail."""
+        """T, _, P ? product.thumbnail."""
         p = make_product(
             thumbnail="https://real.cdn.com/img.jpg",
             image_urls=[],
@@ -155,7 +155,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://real.cdn.com/img.jpg"
 
     def test_real_thumbnail_takes_priority_when_no_previews(self):
-        """T, I, _ → product.thumbnail."""
+        """T, I, _ ? product.thumbnail."""
         p = make_product(
             thumbnail="https://real.cdn.com/img.jpg",
             image_urls=["https://img.example.com/first.jpg"],
@@ -165,7 +165,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://real.cdn.com/img.jpg"
 
     def test_real_thumbnail_only(self):
-        """T, _, _ → product.thumbnail."""
+        """T, _, _ ? product.thumbnail."""
         p = make_product(
             thumbnail="https://real.cdn.com/img.jpg",
             image_urls=[],
@@ -175,7 +175,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://real.cdn.com/img.jpg"
 
     def test_unsplash_thumbnail_falls_through_to_image_urls(self):
-        """U, I, P → image_urls[0] (Unsplash is rejected, falls through)."""
+        """U, I, P ? image_urls[0] (Unsplash is rejected, falls through)."""
         p = make_product(
             thumbnail="https://images.unsplash.com/photo-xyz?w=800",
             image_urls=["https://real.cdn.com/first.jpg"],
@@ -187,7 +187,7 @@ class TestThumbnailChain:
         )
 
     def test_unsplash_thumbnail_falls_through_to_preview_images_when_no_image_urls(self):
-        """U, _, P → preview_images[0]."""
+        """U, _, P ? preview_images[0]."""
         p = make_product(
             thumbnail="https://images.unsplash.com/photo-xyz?w=800",
             image_urls=[],
@@ -199,7 +199,7 @@ class TestThumbnailChain:
         )
 
     def test_unsplash_thumbnail_with_image_urls_ignores_preview_images(self):
-        """U, I, _ → image_urls[0] (preview_images not needed)."""
+        """U, I, _ ? image_urls[0] (preview_images not needed)."""
         p = make_product(
             thumbnail="https://images.unsplash.com/photo-xyz?w=800",
             image_urls=["https://real.cdn.com/first.jpg"],
@@ -209,7 +209,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://real.cdn.com/first.jpg"
 
     def test_all_absent_or_unsplash_resolves_to_none(self):
-        """U, _, _ → None (all sources exhausted)."""
+        """U, _, _ ? None (all sources exhausted)."""
         p = make_product(
             thumbnail="https://images.unsplash.com/photo-xyz?w=800",
             image_urls=[],
@@ -221,7 +221,7 @@ class TestThumbnailChain:
         )
 
     def test_no_thumbnail_falls_to_image_urls(self):
-        """None, I, P → image_urls[0]."""
+        """None, I, P ? image_urls[0]."""
         p = make_product(
             thumbnail=None,
             image_urls=["https://real.cdn.com/first.jpg"],
@@ -231,7 +231,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://real.cdn.com/first.jpg"
 
     def test_no_thumbnail_no_image_urls_falls_to_preview(self):
-        """None, _, P → preview_images[0]."""
+        """None, _, P ? preview_images[0]."""
         p = make_product(
             thumbnail=None,
             image_urls=[],
@@ -241,7 +241,7 @@ class TestThumbnailChain:
         assert captured["thumbnail"] == "https://preview.example.com/p1.jpg"
 
     def test_completely_empty_product_thumbnail_is_none(self):
-        """None, _, _ → None."""
+        """None, _, _ ? None."""
         p = make_product(
             thumbnail=None,
             image_urls=[],
@@ -251,16 +251,16 @@ class TestThumbnailChain:
         assert captured["thumbnail"] is None
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# OBSERVATION 2 — pCloud dual-key invariant
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
+# OBSERVATION 2 - pCloud dual-key invariant
+# ???????????????????????????????????????????????????????????????????????????????
 #
 # Observed behavior (unfixed code):
 #   Both "pcloud_download_link" and "pcloudDownloadLink" are ALWAYS written
 #   with the SAME value as product.pcloud_download_link (including None).
 #
 # Validates: Requirements 3.7, 3.8
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 
 class TestPCloudDualKey:
 
@@ -324,9 +324,9 @@ class TestPCloudDualKey:
         )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# OBSERVATION 3 — Idempotency
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
+# OBSERVATION 3 - Idempotency
+# ???????????????????????????????????????????????????????????????????????????????
 #
 # Observed behavior (unfixed code):
 #   Calling sync_product_to_firestore(p) N times with identical data:
@@ -336,11 +336,11 @@ class TestPCloudDualKey:
 #
 # Note: The UNFIXED code writes wall-clock time for updatedAt, so the payload
 # will differ across calls for that one field. We test that all OTHER fields
-# are stable across calls — i.e., the function is deterministic for non-time fields.
+# are stable across calls - i.e., the function is deterministic for non-time fields.
 # After the fix, even updatedAt will be stable (it'll use product.updated_at).
 #
 # Validates: Requirements 3.2, 3.3
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 
 class TestIdempotency:
 
@@ -431,7 +431,7 @@ class TestIdempotency:
         for c in mock_db.collection.call_args_list:
             assert c.args[0] == "products"
 
-        # document("99") called 3 times — same path every time
+        # document("99") called 3 times - same path every time
         assert mock_coll.document.call_count == 3
         for c in mock_coll.document.call_args_list:
             assert c.args[0] == "99"
@@ -442,7 +442,7 @@ class TestIdempotency:
         """
         **Validates: Requirements 3.2, 3.3**
 
-        Property 2c (PBT): For any N ≥ 1, calling sync N times results in
+        Property 2c (PBT): For any N ? 1, calling sync N times results in
         exactly N Firestore set() calls, all with merge=True.
         """
         p = make_product()
@@ -457,9 +457,9 @@ class TestIdempotency:
             )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# OBSERVATION 4 — Firestore unavailable no-op
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
+# OBSERVATION 4 - Firestore unavailable no-op
+# ???????????????????????????????????????????????????????????????????????????????
 #
 # Observed behavior (unfixed code):
 #   When firebase_connected is False (or db is None):
@@ -468,7 +468,7 @@ class TestIdempotency:
 #   - The calling code can proceed normally
 #
 # Validates: Requirements 3.4, 1.6 (AC 14)
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 
 class TestFirestoreUnavailableNoOp:
 
@@ -509,7 +509,7 @@ class TestFirestoreUnavailableNoOp:
         p = make_product()
         sentinel = MagicMock()
 
-        # Patch db to None — no call should land on sentinel
+        # Patch db to None - no call should land on sentinel
         with patch("admin.firestore.admin_firestore.db", None), \
              patch("admin.firestore.admin_firestore.firebase_connected", True):
             from admin.firestore.admin_firestore import sync_product_to_firestore
@@ -564,10 +564,10 @@ class TestFirestoreUnavailableNoOp:
             mock_db.collection.assert_not_called()
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 # ADDITIONAL PRESERVATION: pCloud dual-key also works post-sync correctly
 # (cross-checks that pcloud fields survive regardless of file_url and thumbnail)
-# ═══════════════════════════════════════════════════════════════════════════════
+# ???????????????????????????????????????????????????????????????????????????????
 
 class TestPCloudAndThumbnailCombinations:
 

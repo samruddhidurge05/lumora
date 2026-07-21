@@ -1,7 +1,7 @@
 """
 app/services/payment_service.py
 ---------------------------------
-Payment service — business logic and state machine.
+Payment service - business logic and state machine.
 
 Rule: No raw SQL here. Use PaymentRepository.
       No gateway imports here. Use get_gateway().
@@ -9,20 +9,20 @@ Rule: No raw SQL here. Use PaymentRepository.
 
 Payment State Machine:
     PENDING
-        → PROCESSING   (customer confirms payment, signature valid)
-        → CANCELLED    (customer cancels before paying)
-        → EXPIRED      (30-minute timeout, no action taken)
+        ? PROCESSING   (customer confirms payment, signature valid)
+        ? CANCELLED    (customer cancels before paying)
+        ? EXPIRED      (30-minute timeout, no action taken)
 
     PROCESSING
-        → SUCCESS      (PurchaseService completed successfully)
-        → FAILED       (PurchaseService raised exception, or gateway capture failed)
+        ? SUCCESS      (PurchaseService completed successfully)
+        ? FAILED       (PurchaseService raised exception, or gateway capture failed)
 
     SUCCESS
-        → REFUND_PENDING  (admin initiates refund)
+        ? REFUND_PENDING  (admin initiates refund)
 
     REFUND_PENDING
-        → REFUNDED           (full refund confirmed)
-        → PARTIALLY_REFUNDED (partial refund confirmed)
+        ? REFUNDED           (full refund confirmed)
+        ? PARTIALLY_REFUNDED (partial refund confirmed)
 
 Idempotency:
     initiate_payment() checks idempotency_key before creating a new Payment.
@@ -45,13 +45,13 @@ from app.models.payment import Payment
 
 logger = logging.getLogger(__name__)
 
-# Valid state transitions — enforced on every update
+# Valid state transitions - enforced on every update
 _VALID_TRANSITIONS: Dict[str, set] = {
     "PENDING":          {"PROCESSING", "CANCELLED", "EXPIRED"},
     "PROCESSING":       {"SUCCESS", "FAILED"},
     "SUCCESS":          {"REFUND_PENDING"},
     "REFUND_PENDING":   {"REFUNDED", "PARTIALLY_REFUNDED"},
-    # Terminal states — no further transitions
+    # Terminal states - no further transitions
     "FAILED":           set(),
     "CANCELLED":        set(),
     "EXPIRED":          set(),
@@ -62,7 +62,7 @@ _VALID_TRANSITIONS: Dict[str, set] = {
 
 class PaymentService:
     """
-    Payment service — owns the full payment lifecycle.
+    Payment service - owns the full payment lifecycle.
 
     Each method receives a db Session and creates its own
     PaymentRepository and gateway instance. This makes the service
@@ -70,7 +70,7 @@ class PaymentService:
     per request.
     """
 
-    # ─── Initiate ────────────────────────────────────────────────────────────
+    # --- Initiate ------------------------------------------------------------
 
     def initiate_payment(
         self,
@@ -99,7 +99,7 @@ class PaymentService:
         """
         repo = PaymentRepository(db)
 
-        # ── Idempotency check ────────────────────────────────────────────────
+        # -- Idempotency check ------------------------------------------------
         if idempotency_key:
             existing = repo.find_by_idempotency_key(idempotency_key)
             if existing:
@@ -109,7 +109,7 @@ class PaymentService:
                 )
                 return self._to_initiate_response(existing)
 
-        # ── Gateway: create order ────────────────────────────────────────────
+        # -- Gateway: create order --------------------------------------------
         gateway = get_gateway()
         receipt = f"lum_{uuid.uuid4().hex[:8]}"
 
@@ -135,7 +135,7 @@ class PaymentService:
                 detail=f"Payment gateway error: {exc}",
             )
 
-        # ── Create PENDING payment record ────────────────────────────────────
+        # -- Create PENDING payment record ------------------------------------
         payment = repo.create_payment(
             customer_id=customer_id,
             amount=amount,
@@ -154,12 +154,12 @@ class PaymentService:
         payment.payment_method = payment_method
         db.flush()  # Populate payment.id without committing
 
-        # ── Audit log ────────────────────────────────────────────────────────
+        # -- Audit log --------------------------------------------------------
         ActivityLogService.log_user_activity(
             db=db,
             user_id=customer_id,
             activity_type="payment_initiated",
-            details=f"Payment {payment.payment_ref} initiated for ₹{amount:.2f} via {gateway.GATEWAY_NAME}.",
+            details=f"Payment {payment.payment_ref} initiated for ?{amount:.2f} via {gateway.GATEWAY_NAME}.",
         )
 
         logger.info("Payment initiated: %s gateway_order=%s", payment.payment_ref, gateway_order.gateway_order_id)
@@ -170,7 +170,7 @@ class PaymentService:
             
         return response
 
-    # ─── Confirm ─────────────────────────────────────────────────────────────
+    # --- Confirm -------------------------------------------------------------
 
     def confirm_payment(
         self,
@@ -184,11 +184,11 @@ class PaymentService:
         skip_signature_verify: bool = False,
     ) -> Any:  # Returns Order
         """
-        FRONTEND CONFIRMATION PATH — Step 2 of checkout.
+        FRONTEND CONFIRMATION PATH - Step 2 of checkout.
 
         Called after the customer completes payment in the gateway UI.
         The AUTHORITATIVE path (when Razorpay is live) is the webhook:
-            POST /api/payments/webhook/razorpay → _handle_webhook_capture()
+            POST /api/payments/webhook/razorpay ? _handle_webhook_capture()
         This method handles the common case where the browser is still open.
 
         TRANSACTION SAFETY:
@@ -201,11 +201,11 @@ class PaymentService:
 
         IDEMPOTENCY:
         If payment is already SUCCESS, returns the existing order immediately.
-        Safe to call multiple times — only processes once.
+        Safe to call multiple times - only processes once.
 
         Steps:
         1. Verify signature (SECURITY: always backend, never trust frontend)
-        2. Transition PENDING → PROCESSING  [outer transaction flush]
+        2. Transition PENDING ? PROCESSING  [outer transaction flush]
         3. Open SAVEPOINT for PurchaseService
         4.   Create Order
         5.   Create Order Items + unlock Downloads
@@ -214,15 +214,15 @@ class PaymentService:
         8.   Create Notifications (customer, vendor, affiliate)
         9.   Create Activity Logs
         10.  Sync to Firestore mirror
-        11. If steps 4-10 ALL succeed → RELEASE SAVEPOINT → PROCESSING → SUCCESS
-        12. If ANY step fails → ROLLBACK TO SAVEPOINT → PROCESSING → FAILED
+        11. If steps 4-10 ALL succeed ? RELEASE SAVEPOINT ? PROCESSING ? SUCCESS
+        12. If ANY step fails ? ROLLBACK TO SAVEPOINT ? PROCESSING ? FAILED
             The outer transaction commits FAILED status cleanly.
 
         Returns: Order object
         """
         repo = PaymentRepository(db)
 
-        # ── Fetch payment ────────────────────────────────────────────────────
+        # -- Fetch payment ----------------------------------------------------
         payment = repo.find_by_payment_ref(payment_ref)
         if not payment:
             raise HTTPException(
@@ -230,18 +230,18 @@ class PaymentService:
                 detail=f"Payment {payment_ref} not found.",
             )
 
-        # ── Ownership check ──────────────────────────────────────────────────
+        # -- Ownership check --------------------------------------------------
         if payment.customer_id != customer_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Payment does not belong to this customer.",
             )
 
-        # ── IDEMPOTENCY: already SUCCESS — return existing order immediately ──
+        # -- IDEMPOTENCY: already SUCCESS - return existing order immediately --
         # Safe to call multiple times. Webhook and frontend can both call this.
         if payment.status == "SUCCESS":
             logger.info(
-                "confirm_payment: payment %s already SUCCESS — idempotent return",
+                "confirm_payment: payment %s already SUCCESS - idempotent return",
                 payment_ref,
             )
             if payment.order_id:
@@ -252,7 +252,7 @@ class PaymentService:
                 detail="Payment already completed but order link is missing. Contact support.",
             )
 
-        # ── IDEMPOTENCY: PROCESSING guard ────────────────────────────────────
+        # -- IDEMPOTENCY: PROCESSING guard ------------------------------------
         # Another request (duplicate tab, webhook) may be processing concurrently.
         # Do not allow two simultaneous confirms on the same payment.
         if payment.status == "PROCESSING":
@@ -261,16 +261,16 @@ class PaymentService:
                 detail="Payment is already being processed. Please wait and check your order history.",
             )
 
-        # ── State check ──────────────────────────────────────────────────────
+        # -- State check ------------------------------------------------------
         if payment.status not in ("PENDING",):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Payment is in state '{payment.status}' and cannot be confirmed.",
             )
 
-        # ── Signature verification ───────────────────────────────────────────
+        # -- Signature verification -------------------------------------------
         # SECURITY: Signature is always verified on the backend.
-        # The frontend only forwards what the gateway returned — we verify it here.
+        # The frontend only forwards what the gateway returned - we verify it here.
         if not skip_signature_verify:
             gateway = get_gateway()
             is_valid = gateway.verify_signature(
@@ -279,7 +279,7 @@ class PaymentService:
                 signature=gateway_signature,
             )
             if not is_valid:
-                # Mark FAILED — customer can retry via POST /{payment_ref}/retry
+                # Mark FAILED - customer can retry via POST /{payment_ref}/retry
                 repo.update_status(
                     payment,
                     new_status="FAILED",
@@ -299,7 +299,7 @@ class PaymentService:
                     detail="Payment signature verification failed.",
                 )
 
-        # ── Transition → PROCESSING ──────────────────────────────────────────
+        # -- Transition ? PROCESSING ------------------------------------------
         # Flush to DB immediately. Any concurrent request will now see PROCESSING
         # and be rejected by the guard above (no duplicate processing).
         self._assert_transition(payment, "PROCESSING")
@@ -312,28 +312,28 @@ class PaymentService:
         )
         db.flush()  # Persist PROCESSING status without committing outer transaction
 
-        # ── PurchaseService — SAVEPOINT (nested transaction) ──────────────────
+        # -- PurchaseService - SAVEPOINT (nested transaction) ------------------
         # TRANSACTION SAFETY MECHANISM:
         #
         # We use db.begin_nested() to create a SAVEPOINT within the outer
         # transaction. This means:
         #
         #   OUTER TRANSACTION (started by FastAPI dependency injection)
-        #   │
-        #   ├── flush: payment status = PROCESSING
-        #   │
-        #   └── SAVEPOINT
-        #       ├── Order
-        #       ├── OrderItems
-        #       ├── Downloads
-        #       ├── Vendor Revenue
-        #       ├── Affiliate Commissions
-        #       ├── Notifications
-        #       ├── Activity Logs
-        #       └── Firestore Sync
+        #   ?
+        #   ?-- flush: payment status = PROCESSING
+        #   ?
+        #   ?-- SAVEPOINT
+        #       ?-- Order
+        #       ?-- OrderItems
+        #       ?-- Downloads
+        #       ?-- Vendor Revenue
+        #       ?-- Affiliate Commissions
+        #       ?-- Notifications
+        #       ?-- Activity Logs
+        #       ?-- Firestore Sync
         #
-        # If the SAVEPOINT succeeds → RELEASE → payment = SUCCESS → outer COMMIT
-        # If the SAVEPOINT fails   → ROLLBACK TO SAVEPOINT → payment = FAILED → outer COMMIT
+        # If the SAVEPOINT succeeds ? RELEASE ? payment = SUCCESS ? outer COMMIT
+        # If the SAVEPOINT fails   ? ROLLBACK TO SAVEPOINT ? payment = FAILED ? outer COMMIT
         #
         # Result: payment status is ALWAYS persisted correctly.
         # Payment can NEVER be stuck in PROCESSING after a crash or exception.
@@ -353,7 +353,7 @@ class PaymentService:
                 discount_amount=payment.discount_amount or 0.0,
                 affiliate_code=payment.affiliate_code,
             )
-            nested.commit()  # RELEASE SAVEPOINT — all order data is now part of outer transaction
+            nested.commit()  # RELEASE SAVEPOINT - all order data is now part of outer transaction
 
         except HTTPException as http_exc:
             # Business rule rejection (e.g. product archived, vendor suspended)
@@ -376,7 +376,7 @@ class PaymentService:
         except Exception as exc:
             # Unexpected infrastructure error (DB crash, Firestore timeout, etc.)
             try:
-                nested.rollback()  # Rollback to SAVEPOINT — no partial order data
+                nested.rollback()  # Rollback to SAVEPOINT - no partial order data
             except Exception:
                 pass
             failure_reason = f"Internal error: {type(exc).__name__}: {exc}"
@@ -396,7 +396,7 @@ class PaymentService:
                 detail="Order processing failed. Your payment has not been captured. Please retry.",
             )
 
-        # ── Transition → SUCCESS ─────────────────────────────────────────────
+        # -- Transition ? SUCCESS ---------------------------------------------
         # PurchaseService succeeded. Link the order and mark complete.
         self._assert_transition(payment, "SUCCESS")
         repo.update_status(
@@ -405,18 +405,18 @@ class PaymentService:
             order_id=order.id,
         )
 
-        # ── Audit log ────────────────────────────────────────────────────────
+        # -- Audit log --------------------------------------------------------
         ActivityLogService.log_user_activity(
             db=db, user_id=customer_id,
             activity_type="payment_success",
             details=f"Payment {payment_ref} succeeded. Order ORD-{order.id} created.",
         )
 
-        db.commit()  # Final commit — payment=SUCCESS, order fully persisted
+        db.commit()  # Final commit - payment=SUCCESS, order fully persisted
         logger.info("Payment %s -> SUCCESS, Order ORD-%s", payment_ref, order.id)
         return order
 
-    # ─── Cancel ──────────────────────────────────────────────────────────────
+    # --- Cancel --------------------------------------------------------------
 
     def cancel_payment(
         self,
@@ -449,7 +449,7 @@ class PaymentService:
         db.commit()
         return payment
 
-    # ─── Expire (background-safe) ─────────────────────────────────────────────
+    # --- Expire (background-safe) ---------------------------------------------
 
     def expire_pending_payments(self, db: Session) -> int:
         """
@@ -471,7 +471,7 @@ class PaymentService:
 
         return count
 
-    # ─── Retry ───────────────────────────────────────────────────────────────
+    # --- Retry ---------------------------------------------------------------
 
     def retry_payment(
         self,
@@ -480,7 +480,7 @@ class PaymentService:
         customer_id: int,
     ) -> Dict[str, Any]:
         """
-        RETRY SAFETY — Retry a FAILED payment.
+        RETRY SAFETY - Retry a FAILED payment.
 
         GUARANTEES:
         - NEVER creates a duplicate Order
@@ -504,18 +504,18 @@ class PaymentService:
         repo = PaymentRepository(db)
         payment = self._get_owned_payment(repo, payment_ref, customer_id)
 
-        # ── IDEMPOTENCY: SUCCESS guard ────────────────────────────────────────
+        # -- IDEMPOTENCY: SUCCESS guard ----------------------------------------
         # If the payment already succeeded (e.g. webhook confirmed it while
         # customer was looking at the "retry" screen), return success immediately.
         # No new gateway order needed.
         if payment.status == "SUCCESS":
             logger.info(
-                "retry_payment: payment %s already SUCCESS — returning existing data",
+                "retry_payment: payment %s already SUCCESS - returning existing data",
                 payment_ref,
             )
             return self._to_initiate_response(payment)
 
-        # ── IDEMPOTENCY: PROCESSING guard ─────────────────────────────────────
+        # -- IDEMPOTENCY: PROCESSING guard -------------------------------------
         # A confirm() call is already in progress for this payment.
         # Retrying now would create a race condition.
         if payment.status == "PROCESSING":
@@ -524,7 +524,7 @@ class PaymentService:
                 detail="Payment is currently being processed. Please wait and check your order history.",
             )
 
-        # ── Only FAILED payments can be retried ───────────────────────────────
+        # -- Only FAILED payments can be retried -------------------------------
         if payment.status != "FAILED":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -535,10 +535,10 @@ class PaymentService:
                 ),
             )
 
-        # ── Create new gateway order ───────────────────────────────────────────
+        # -- Create new gateway order -------------------------------------------
         # We create a new gateway order (new gateway_order_id) because the old
         # gateway order may have expired or been marked failed on the provider side.
-        # We do NOT create a new Payment record — retry_count is incremented instead.
+        # We do NOT create a new Payment record - retry_count is incremented instead.
         gateway = get_gateway()
         receipt = f"lum_retry_{payment.payment_ref.lower()}_{payment.retry_count + 1}"
 
@@ -554,8 +554,8 @@ class PaymentService:
                 detail=f"Payment gateway error during retry: {exc}",
             )
 
-        # ── Reset the SAME payment record to PENDING ───────────────────────────
-        # Clear old gateway_payment_id and gateway_signature — they belong to
+        # -- Reset the SAME payment record to PENDING ---------------------------
+        # Clear old gateway_payment_id and gateway_signature - they belong to
         # the failed attempt and must not be reused for verification.
         repo.update_status(
             payment,
@@ -583,7 +583,7 @@ class PaymentService:
         )
         return self._to_initiate_response(payment)
 
-    # ─── Refund (stub — admin only) ───────────────────────────────────────────
+    # --- Refund (stub - admin only) -------------------------------------------
 
     def initiate_refund(
         self,
@@ -595,7 +595,7 @@ class PaymentService:
     ) -> Payment:
         """
         Initiate a refund for a SUCCESS payment.
-        Transitions SUCCESS → REFUND_PENDING.
+        Transitions SUCCESS ? REFUND_PENDING.
 
         Full refund: amount=None
         Partial refund: amount=<less than original>
@@ -630,7 +630,7 @@ class PaymentService:
                 reason=reason,
             )
         except NotImplementedError:
-            # Gateway not yet implemented — mark REFUND_PENDING and process manually
+            # Gateway not yet implemented - mark REFUND_PENDING and process manually
             result = None
 
         if result and not result.success:
@@ -645,13 +645,13 @@ class PaymentService:
         ActivityLogService.log_user_activity(
             db=db, user_id=admin_user_id,
             activity_type="payment_refund_initiated",
-            details=f"Refund initiated for payment {payment_ref} by admin. Amount: {'full' if not amount else f'₹{amount:.2f}'}.",
+            details=f"Refund initiated for payment {payment_ref} by admin. Amount: {'full' if not amount else f'?{amount:.2f}'}.",
         )
 
         db.commit()
         return payment
 
-    # ─── Webhook Entry Point (Idempotent) ────────────────────────────────────
+    # --- Webhook Entry Point (Idempotent) ------------------------------------
 
     def handle_webhook_capture(
         self,
@@ -661,7 +661,7 @@ class PaymentService:
         amount_paise: int,
     ) -> bool:
         """
-        WEBHOOK AUTHORITATIVE PATH — called by RazorpayWebhookHandler.on_payment_captured().
+        WEBHOOK AUTHORITATIVE PATH - called by RazorpayWebhookHandler.on_payment_captured().
 
         This is the idempotent entry point for webhook-driven payment confirmation.
         Designed to be called multiple times safely (Razorpay may retry webhooks).
@@ -670,7 +670,7 @@ class PaymentService:
         - If payment is already SUCCESS: logs and returns True immediately. No action.
         - If payment is FAILED or CANCELLED: logs and returns False. No resurrection.
         - If payment is PENDING: transitions to PROCESSING, then calls confirm logic.
-        - If payment is PROCESSING: another request is in progress — returns False safely.
+        - If payment is PROCESSING: another request is in progress - returns False safely.
 
         ARCHITECTURE NOTE:
         When Razorpay is live, this method is the AUTHORITATIVE confirmation source.
@@ -708,31 +708,31 @@ class PaymentService:
             )
             return False
 
-        # ── IDEMPOTENCY: already SUCCESS ─────────────────────────────────────
+        # -- IDEMPOTENCY: already SUCCESS -------------------------------------
         if payment.status == "SUCCESS":
             logger.info(
-                "[webhook] Payment %s already SUCCESS — idempotent no-op for gateway_order=%s",
+                "[webhook] Payment %s already SUCCESS - idempotent no-op for gateway_order=%s",
                 payment.payment_ref, gateway_order_id,
             )
             return True  # Already done, report success to Razorpay
 
-        # ── Terminal failure states — do not resurrect ────────────────────────
+        # -- Terminal failure states - do not resurrect ------------------------
         if payment.status in ("FAILED", "CANCELLED", "EXPIRED"):
             logger.warning(
-                "[webhook] Payment %s is in terminal state '%s' — cannot capture via webhook.",
+                "[webhook] Payment %s is in terminal state '%s' - cannot capture via webhook.",
                 payment.payment_ref, payment.status,
             )
             return False
 
-        # ── PROCESSING guard — concurrent confirm in progress ─────────────────
+        # -- PROCESSING guard - concurrent confirm in progress -----------------
         if payment.status == "PROCESSING":
             logger.info(
-                "[webhook] Payment %s is PROCESSING — frontend confirm already in progress.",
+                "[webhook] Payment %s is PROCESSING - frontend confirm already in progress.",
                 payment.payment_ref,
             )
             return False  # Let the in-flight confirm complete
 
-        # ── PENDING → confirm via webhook (browser-close scenario) ────────────
+        # -- PENDING ? confirm via webhook (browser-close scenario) ------------
         if payment.status == "PENDING":
             logger.info(
                 "[webhook] Confirming payment %s via webhook (browser may have closed).",
@@ -745,7 +745,7 @@ class PaymentService:
             # customer's cart BEFORE calling this method.
             #
             # Webhook signature for this scenario uses gateway_payment_id as
-            # the verified proof — skip frontend signature (gateway already verified).
+            # the verified proof - skip frontend signature (gateway already verified).
             # TODO: Implement full webhook-driven confirm when Razorpay is ready.
             logger.warning(
                 "[webhook] Full webhook-driven fulfillment not yet implemented. "
@@ -756,7 +756,7 @@ class PaymentService:
 
         return False
 
-    # ─── History ─────────────────────────────────────────────────────────────
+    # --- History -------------------------------------------------------------
 
     def customer_history(
         self, db: Session, customer_id: int, skip: int = 0, limit: int = 20
@@ -774,7 +774,7 @@ class PaymentService:
     ) -> List[Payment]:
         return PaymentRepository(db).admin_history(skip=skip, limit=limit, status=status, gateway=gateway)
 
-    # ─── Internal Helpers ────────────────────────────────────────────────────
+    # --- Internal Helpers ----------------------------------------------------
 
     def _get_owned_payment(
         self, repo: PaymentRepository, payment_ref: str, customer_id: int
@@ -799,7 +799,7 @@ class PaymentService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=(
                     f"Invalid payment state transition: "
-                    f"'{payment.status}' → '{target_status}'. "
+                    f"'{payment.status}' ? '{target_status}'. "
                     f"Allowed transitions from '{payment.status}': {sorted(allowed) or 'none (terminal state)'}."
                 ),
             )
@@ -820,6 +820,6 @@ class PaymentService:
         }
 
 
-# ── Module-level singleton ───────────────────────────────────────────────────
+# -- Module-level singleton ---------------------------------------------------
 # Import this wherever needed: from app.services.payment_service import payment_service
 payment_service = PaymentService()

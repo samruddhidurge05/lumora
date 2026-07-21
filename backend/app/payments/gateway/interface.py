@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
-# ─── Result Dataclasses ───────────────────────────────────────────────────────
+# --- Result Dataclasses -------------------------------------------------------
 
 @dataclass
 class GatewayOrder:
@@ -57,7 +57,7 @@ class GatewayRefundResult:
     raw: dict = field(default_factory=dict)
 
 
-# ─── Abstract Gateway Interface ───────────────────────────────────────────────
+# --- Abstract Gateway Interface -----------------------------------------------
 
 class PaymentGateway(ABC):
     """

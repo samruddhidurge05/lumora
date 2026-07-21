@@ -69,7 +69,7 @@ def verify_vendor_active(current_user: User = Depends(get_current_user_required)
         from admin_controls.vendor.firestore import get_vendor_status_from_firestore
         if not current_user.firebase_uid:
             logger.warning(
-                "verify_vendor_active: user %s has no firebase_uid — skipping Firestore status check",
+                "verify_vendor_active: user %s has no firebase_uid - skipping Firestore status check",
                 current_user.id,
             )
             status_val = None
@@ -110,7 +110,7 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
         from admin_controls.affiliate.firestore import get_affiliate_status_from_firestore
         if not current_user.firebase_uid:
             logger.warning(
-                "verify_affiliate_active: user %s has no firebase_uid — skipping Firestore status check",
+                "verify_affiliate_active: user %s has no firebase_uid - skipping Firestore status check",
                 current_user.id,
             )
             status_val = None
@@ -134,7 +134,7 @@ def verify_upload_allowed(current_user: User = Depends(get_current_user_required
     - All other roles are rejected.
     """
     if current_user.role == "admin":
-        return  # admin bypass — no vendor status check needed
+        return  # admin bypass - no vendor status check needed
 
     if current_user.role == "vendor":
         # Delegate to full vendor active check (SQLite + Firestore + platform pause)

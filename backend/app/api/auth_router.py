@@ -35,7 +35,7 @@ class MsgResponse(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
-# ── Firebase sync request body ────────────────────────────────────────────────
+# -- Firebase sync request body ------------------------------------------------
 class FirebaseSyncRequest(BaseModel):
     idToken: str
     role: Optional[str] = "customer"   # role the user chose at registration/login
@@ -65,7 +65,7 @@ def get_current_user(
     check_user_active(user)
     return user
 
-# ── /register ─────────────────────────────────────────────────────────────────
+# -- /register -----------------------------------------------------------------
 @router.post(
     "/register",
     response_model=UserResponse,
@@ -140,7 +140,7 @@ def check_user_active(user):
         import logging
         logging.warning(f"Firestore check failed for user {user.id}, falling back to SQLite: {e}")
 
-# ── /login ────────────────────────────────────────────────────────────────────
+# -- /login --------------------------------------------------------------------
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
 def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
@@ -149,7 +149,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
-    # Firebase-managed accounts have a sentinel hash — they cannot use /login.
+    # Firebase-managed accounts have a sentinel hash - they cannot use /login.
     # They must authenticate via /firebase-sync (Firebase ID token exchange).
     if user.password_hash == "firebase_managed":
         raise HTTPException(
@@ -159,7 +159,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     try:
         password_valid = verify_password(body.password, user.password_hash)
     except Exception:
-        # Malformed hash — never crash as 500
+        # Malformed hash - never crash as 500
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
@@ -208,7 +208,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         "user": user_dict
     }
 
-# ── /me ───────────────────────────────────────────────────────────────────────
+# -- /me -----------------------------------------------------------------------
 @router.get("/me")
 def read_me(
     current_user: User = Depends(get_current_user),
@@ -267,7 +267,7 @@ def update_me(
     return current_user
 
 
-# ── /firebase-sync ────────────────────────────────────────────────────────────
+# -- /firebase-sync ------------------------------------------------------------
 @router.post("/firebase-sync", response_model=TokenResponse)
 @limiter.limit("10/minute")
 def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Depends(get_db)):
@@ -277,11 +277,11 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     Flow:
     1. Verify the Firebase ID Token with Google's RS256 public keys.
     2. Look up User by email in SQLite.
-    3. If not found → create User automatically (firebase_managed account).
-    4. If found → update is_verified if Firebase says email is verified.
+    3. If not found ? create User automatically (firebase_managed account).
+    4. If found ? update is_verified if Firebase says email is verified.
     5. Return a Lumora JWT identical in structure to /login.
     """
-    # Step 1 — verify Firebase token
+    # Step 1 - verify Firebase token
     try:
         claims = verify_firebase_id_token(body.idToken, settings.FIREBASE_PROJECT_ID)
     except ValueError as exc:
@@ -299,15 +299,15 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     if role == "user":
         role = "customer"
 
-    # Step 2 — look up or create user
+    # Step 2 - look up or create user
     if normalized_email:
         user = db.query(User).filter(User.email == normalized_email).first()
     else:
-        # Rare: GitHub accounts with hidden email — use Firebase UID as identifier
+        # Rare: GitHub accounts with hidden email - use Firebase UID as identifier
         user = None
 
     if user is None:
-        # Step 3 — auto-create backend user for this Firebase account
+        # Step 3 - auto-create backend user for this Firebase account
         if not normalized_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -335,8 +335,8 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
                     detail="Failed to sync user with database."
                 )
     else:
-        # Step 4 — update verification status; only set role if not already assigned
-        # (never downgrade vendor/affiliate → customer on re-login from the wrong tile)
+        # Step 4 - update verification status; only set role if not already assigned
+        # (never downgrade vendor/affiliate ? customer on re-login from the wrong tile)
         changed = False
         if email_verified and not user.is_verified:
             user.is_verified = True
@@ -387,7 +387,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         status="success",
         details=f"User '{user.email}' authenticated via Firebase. Role: {user.role or 'customer'}",
     )
-    # Step 5 — issue backend JWT with the active role, strictly validated against SQLite role (Source of Truth)
+    # Step 5 - issue backend JWT with the active role, strictly validated against SQLite role (Source of Truth)
     db_role = user.role or "customer"
     active_role = role or "customer"
     
@@ -418,7 +418,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         "user": user_dict
     }
 
-# ── /forgot-password ──────────────────────────────────────────────────────────
+# -- /forgot-password ----------------------------------------------------------
 @router.post("/forgot-password", response_model=MsgResponse)
 @limiter.limit("10/minute")
 def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
@@ -429,13 +429,13 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
         )
     return MsgResponse(message="Cryptographic reset link dispatched to your email registry.")
 
-# ── /verify-email ─────────────────────────────────────────────────────────────
+# -- /verify-email -------------------------------------------------------------
 @router.post("/verify-email", response_model=MsgResponse)
 @limiter.limit("10/minute")
 def verify_email(request: Request):
     return MsgResponse(message="Email verified successfully.")
 
-# ── /resend-verification ──────────────────────────────────────────────────────
+# -- /resend-verification ------------------------------------------------------
 @router.post("/resend-verification", response_model=MsgResponse)
 @limiter.limit("10/minute")
 def resend_verification(request: Request):

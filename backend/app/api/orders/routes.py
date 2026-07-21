@@ -19,7 +19,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
     in this order that was referred by the given affiliate_code.
 
     Idempotency: if a commission already exists for (affiliate_id, order_id)
-    we skip creation — safe to call multiple times for the same order.
+    we skip creation - safe to call multiple times for the same order.
 
     Self-referral prevention: if the affiliate IS the buyer, no commission
     is created.
@@ -42,7 +42,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
     ).first()
 
     if not profile:
-        return  # Unknown or inactive affiliate code — skip silently
+        return  # Unknown or inactive affiliate code - skip silently
 
     # 2. Self-referral prevention
     if profile.user_id == buyer_user_id:
@@ -54,7 +54,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
         AffiliateCommission.order_id == order.id,
     ).first()
     if existing:
-        return  # Already processed — prevent duplicates
+        return  # Already processed - prevent duplicates
 
     # 4. Create one commission record per order item
     total_commission = 0.0
@@ -71,7 +71,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
         # Calculate commission amount.
         # If the vendor configured a custom commission (affiliate_enabled + value > 0),
         # use that. Otherwise fall back to the affiliate profile's default rate.
-        # Note: we always create a commission when a referral code is present —
+        # Note: we always create a commission when a referral code is present -
         # the platform earns commission on every referred sale.
         if (
             product.affiliate_enabled
@@ -127,7 +127,7 @@ def create_new_order(
             detail="Order must contain at least one item."
         )
 
-    # ── Check Platform Pause State (Admin bypasses it) ─────────────────────
+    # -- Check Platform Pause State (Admin bypasses it) ---------------------
     if current_user.role != "admin":
         is_paused = False
         pause_msg = "Platform is temporarily paused."
@@ -221,7 +221,7 @@ def create_new_order(
             detail=f"Payment status is '{payment.status}'. Orders can only be completed for successful payments."
         )
 
-    # ── Affiliate Commission Creation ───────────────────────────────────────
+    # -- Affiliate Commission Creation ---------------------------------------
     # If this payment was made via an affiliate referral, create commission
     # records in SQLite so the affiliate dashboard reflects real earnings.
     # This is idempotent: we check for existing commissions for this order
@@ -233,17 +233,17 @@ def create_new_order(
             import logging
             _aff_logger = logging.getLogger(__name__)
             _aff_logger.error(
-                "Affiliate commission creation failed for order %s (code %s): %s — order preserved",
+                "Affiliate commission creation failed for order %s (code %s): %s - order preserved",
                 order.id, payment.affiliate_code, aff_err,
             )
-    # ────────────────────────────────────────────────────────────────────────
+    # ------------------------------------------------------------------------
 
-    # ── Best-effort Firestore sync ───────────────────────────────────────────
+    # -- Best-effort Firestore sync -------------------------------------------
     # Platform Pause policy (Option A / Requirement 13): checkout is blocked
     # when `isPlatformPaused` is true (see check above); only orders that pass
     # that gate reach this point.  We mirror every committed order to Firestore
     # so the admin RC console (Dashboard, Analytics, Orders, Payments) sees it
-    # in real time.  SQLite is the canonical source of truth — a sync failure
+    # in real time.  SQLite is the canonical source of truth - a sync failure
     # must never roll back the committed order (Requirements 2.1, 2.3, 12.2).
     try:
         from admin.firestore.admin_firestore import sync_order_to_firestore
@@ -252,7 +252,7 @@ def create_new_order(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(
-            "Firestore order sync failed for order %s: %s — order preserved in SQLite",
+            "Firestore order sync failed for order %s: %s - order preserved in SQLite",
             order.id,
             fs_err,
         )

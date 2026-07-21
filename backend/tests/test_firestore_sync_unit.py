@@ -4,7 +4,7 @@ test_firestore_sync_unit.py
 Unit tests for the fixed sync_product_to_firestore function.
 
 These tests verify the CORRECT behavior of all six sync field fixes applied
-in Tasks 3.1–3.5 of the firestore-product-sync-cleanup spec.
+in Tasks 3.1-3.5 of the firestore-product-sync-cleanup spec.
 
 Each test uses the same make_product() / run_sync_and_capture() helper pattern
 established in test_firestore_sync_bug_condition.py so that the test surface is
@@ -28,7 +28,7 @@ _ISO8601_RE = re.compile(
 )
 
 
-# ── Minimal product fixture ──────────────────────────────────────────────────
+# -- Minimal product fixture --------------------------------------------------
 
 def make_product(**overrides):
     """
@@ -86,7 +86,7 @@ def make_product(**overrides):
     return p
 
 
-# ── Helper: call sync and capture the dict passed to Firestore set() ─────────
+# -- Helper: call sync and capture the dict passed to Firestore set() ---------
 
 def run_sync_and_capture(product):
     """
@@ -113,7 +113,7 @@ def run_sync_and_capture(product):
     return captured
 
 
-# ── Requirement 1.1 — updatedAt correctness ──────────────────────────────────
+# -- Requirement 1.1 - updatedAt correctness ----------------------------------
 
 def test_updated_at_uses_product_timestamp():
     """
@@ -136,7 +136,7 @@ def test_updated_at_fallback_when_none():
     """
     WHEN product.updated_at is None
     THEN captured["updatedAt"] is a valid ISO-8601 string (not None, not the
-         product timestamp — a fallback wall-clock value is used).
+         product timestamp - a fallback wall-clock value is used).
 
     Validates: Requirements 1.1 AC 2
     """
@@ -151,7 +151,7 @@ def test_updated_at_fallback_when_none():
     )
 
 
-# ── Requirement 1.2 — product_id integer field ────────────────────────────────
+# -- Requirement 1.2 - product_id integer field --------------------------------
 
 def test_product_id_integer_field():
     """
@@ -172,7 +172,7 @@ def test_product_id_integer_field():
     )
 
 
-# ── Requirement 1.3 — file_url / fileUrl fields ───────────────────────────────
+# -- Requirement 1.3 - file_url / fileUrl fields -------------------------------
 
 def test_file_url_written_when_set():
     """
@@ -236,7 +236,7 @@ def test_file_url_written_as_none_when_empty_string():
     )
 
 
-# ── Requirement 1.4 — review_count / reviews dual keys ───────────────────────
+# -- Requirement 1.4 - review_count / reviews dual keys -----------------------
 
 def test_review_count_dual_key():
     """
@@ -278,7 +278,7 @@ def test_review_count_zero_when_none():
     )
 
 
-# ── Requirement 1.5 — creatorAvatar: no hardcoded Unsplash URL ───────────────
+# -- Requirement 1.5 - creatorAvatar: no hardcoded Unsplash URL ---------------
 
 def test_creator_avatar_no_unsplash_when_no_avatar():
     """
@@ -317,7 +317,7 @@ def test_creator_avatar_unsplash_filtered_to_none():
     """
     WHEN product.creator_avatar = "https://images.unsplash.com/photo-xxx"
     THEN captured["creatorAvatar"] is None
-    (Unsplash URLs are filtered out — they represent placeholder/seed data)
+    (Unsplash URLs are filtered out - they represent placeholder/seed data)
 
     Validates: Requirements 1.5 AC 10, 11
     """

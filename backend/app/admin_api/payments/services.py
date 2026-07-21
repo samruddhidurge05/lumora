@@ -287,8 +287,8 @@ def process_vendor_payout(vendor_id: str, amount: float):
             NotificationService.create_notification(
                 db=db_s,
                 user_id=payee_user.id,
-                title="Payout Completed ✦",
-                message=f"Your payout of ₹{amount * 80:.2f} has been processed successfully.",
+                title="Payout Completed ?",
+                message=f"Your payout of ?{amount * 80:.2f} has been processed successfully.",
                 category="payout"
             )
             from app.services.activity_log_service import ActivityLogService
@@ -296,7 +296,7 @@ def process_vendor_payout(vendor_id: str, amount: float):
                 db=db_s,
                 user_id=payee_user.id,
                 activity_type="payout_complete",
-                details=f"Received payout of ₹{amount * 80:.2f} via UPI/Bank."
+                details=f"Received payout of ?{amount * 80:.2f} via UPI/Bank."
             )
 
         db_s.commit()

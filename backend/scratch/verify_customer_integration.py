@@ -17,7 +17,7 @@ from app.api.products_router import resolve_media_url
 
 def test_customer_integration():
     print("=================================================================")
-    print("     CUSTOMER INTEGRATION AUDIT — IMAGES & SECURE DOWNLOADS      ")
+    print("     CUSTOMER INTEGRATION AUDIT - IMAGES & SECURE DOWNLOADS      ")
     print("=================================================================")
 
     db = SessionLocal()
@@ -26,7 +26,7 @@ def test_customer_integration():
     try:
         p123 = db.query(Product).filter(Product.id == 123).first()
         if not p123:
-            print("❌ Product 123 not found in database!")
+            print("? Product 123 not found in database!")
             return
 
         print("\n1. BACKEND PRODUCT API METADATA (PRODUCT ID 123):")

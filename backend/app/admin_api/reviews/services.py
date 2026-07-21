@@ -125,7 +125,7 @@ _firestore_broken = False
 def _compute_sentiment_trend(reviews_list: list) -> list:
     """
     Group reviews by day (last 6 days that have data) and return
-    a list of positive-percentage values — one per day bucket.
+    a list of positive-percentage values - one per day bucket.
     If there are fewer than 2 days of data, returns [] so the frontend
     shows the "Not enough data" empty state instead of a flat line.
     """

@@ -38,13 +38,13 @@ class ProductCreate(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: str = "public"
-    # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────────
+    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
     pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
 
 
 class ProductUpdate(BaseModel):
-    """Partial update schema — all fields optional so PATCH-style updates work."""
+    """Partial update schema - all fields optional so PATCH-style updates work."""
     title: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
@@ -77,7 +77,7 @@ class ProductUpdate(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: Optional[str] = None
-    # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────────
+    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
     pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
 
@@ -121,7 +121,7 @@ class ProductResponse(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: str = "public"
-    # ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────────
+    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
     pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
     created_at: Optional[datetime] = None

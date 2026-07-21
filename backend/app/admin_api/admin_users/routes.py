@@ -50,20 +50,20 @@ TEAM_AUDIT_ACTIONS = {
 }
 
 
-# ── Request schemas ────────────────────────────────────────────────────────────
+# -- Request schemas ------------------------------------------------------------
 
 class InviteRequest(BaseModel):
     email: str
     role_level: str = "admin"
-    invited_name: Optional[str] = None   # Req 8 — optional display name (max 150)
-    message: Optional[str] = None        # Req 8 — optional personal message (max 300)
+    invited_name: Optional[str] = None   # Req 8 - optional display name (max 150)
+    message: Optional[str] = None        # Req 8 - optional personal message (max 300)
 
 
 class ChangeRoleRequest(BaseModel):
     role_level: str
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# -- Helpers --------------------------------------------------------------------
 
 def _is_super_admin(user: User, db: Session) -> bool:
     """Returns True if user is legacy admin or has super_admin role record."""
@@ -113,7 +113,7 @@ def _send_email_async(to_email, invited_name, role_level, accept_url, expires_at
             if not ok:
                 import logging
                 logging.getLogger(__name__).warning(
-                    "[team] Email delivery failed for %s — invitation still valid", to_email
+                    "[team] Email delivery failed for %s - invitation still valid", to_email
                 )
         except Exception as exc:
             import logging
@@ -137,8 +137,8 @@ def _invitation_payload(inv, now: datetime) -> dict:
     }
 
 
-# ── GET /me ───────────────────────────────────────────────────────────────────
-# Req 4 — exposes role_level + permissions for RBAC-gated sidebar
+# -- GET /me -------------------------------------------------------------------
+# Req 4 - exposes role_level + permissions for RBAC-gated sidebar
 
 @router.get("/me")
 def get_admin_me(
@@ -160,7 +160,7 @@ def get_admin_me(
     }
 
 
-# ── GET /team ─────────────────────────────────────────────────────────────────
+# -- GET /team -----------------------------------------------------------------
 
 @router.get("/team")
 def list_team_members(
@@ -195,7 +195,7 @@ def list_team_members(
                 "is_active":    r.is_active,
                 "activated_at": r.activated_at.isoformat() if r.activated_at else None,
                 "created_at":   r.created_at.isoformat() if r.created_at else None,
-                # Req 9 — last login timestamp
+                # Req 9 - last login timestamp
                 "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
             })
     # Sort: last_login_at desc, nulls last
@@ -204,7 +204,7 @@ def list_team_members(
     return result
 
 
-# ── POST /team/invite ──────────────────────────────────────────────────────────
+# -- POST /team/invite ----------------------------------------------------------
 
 @router.post("/team/invite", status_code=status.HTTP_201_CREATED)
 def invite_admin(
@@ -244,7 +244,7 @@ def invite_admin(
     except Exception:
         pass
 
-    # Req 1 — send email in background thread (non-blocking)
+    # Req 1 - send email in background thread (non-blocking)
     _send_email_async(
         to_email=body.email,
         invited_name=body.invited_name,
@@ -254,7 +254,7 @@ def invite_admin(
         message=body.message,
     )
 
-    # Req 5 — sync to Firestore
+    # Req 5 - sync to Firestore
     try:
         from admin.firestore.admin_firestore import sync_invitation_to_firestore
         sync_invitation_to_firestore(invitation)
@@ -272,7 +272,7 @@ def invite_admin(
     }
 
 
-# ── POST /team/invitations/{invitation_id}/resend ─────────────────────────────
+# -- POST /team/invitations/{invitation_id}/resend -----------------------------
 
 @router.post("/team/invitations/{invitation_id}/resend")
 def resend_invitation(
@@ -334,7 +334,7 @@ def resend_invitation(
     }
 
 
-# ── POST /team/{user_id}/activate ─────────────────────────────────────────────
+# -- POST /team/{user_id}/activate ---------------------------------------------
 
 @router.post("/team/{user_id}/activate")
 def activate_admin(
@@ -342,7 +342,7 @@ def activate_admin(
     token: str = Body(..., embed=True),
     db: Session = Depends(get_db),
 ):
-    """Legacy activate endpoint — kept for backward compatibility."""
+    """Legacy activate endpoint - kept for backward compatibility."""
     now = datetime.now(timezone.utc)
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
@@ -390,7 +390,7 @@ def activate_admin(
     return {"message": "Admin role activated.", "role_level": invitation.role_level}
 
 
-# ── POST /team/accept-invite ──────────────────────────────────────────────────
+# -- POST /team/accept-invite --------------------------------------------------
 
 @router.post("/team/accept-invite")
 def accept_invite(
@@ -400,8 +400,8 @@ def accept_invite(
 ):
     """
     Production accept-invite flow.
-    Auth: regular customer JWT — invitation token is the security credential.
-    (Req 3 — checks revoked_at; Req 5, 7 — Firestore writes)
+    Auth: regular customer JWT - invitation token is the security credential.
+    (Req 3 - checks revoked_at; Req 5, 7 - Firestore writes)
     """
     now = datetime.now(timezone.utc)
 
@@ -455,7 +455,7 @@ def accept_invite(
     except Exception:
         pass
 
-    # Req 5 — real-time Firestore updates
+    # Req 5 - real-time Firestore updates
     try:
         from admin.firestore.admin_firestore import (
             sync_team_member_to_firestore,
@@ -465,7 +465,7 @@ def accept_invite(
         role_rec = db.query(AdminRole).filter(AdminRole.user_id == current_user.id).first()
         sync_team_member_to_firestore(current_user, role_rec)
         sync_invitation_to_firestore(invitation)
-        # Req 7 — in-app notification for super_admin
+        # Req 7 - in-app notification for super_admin
         write_admin_notification_to_firestore(current_user, invitation)
     except Exception:
         pass
@@ -477,7 +477,7 @@ def accept_invite(
     }
 
 
-# ── POST /team/{user_id}/deactivate ──────────────────────────────────────────
+# -- POST /team/{user_id}/deactivate ------------------------------------------
 
 @router.post("/team/{user_id}/deactivate")
 def deactivate_admin(
@@ -504,7 +504,7 @@ def deactivate_admin(
     except Exception:
         pass
 
-    # Req 5 — sync to Firestore
+    # Req 5 - sync to Firestore
     try:
         user = db.query(User).filter(User.id == user_id).first()
         if user:
@@ -516,7 +516,7 @@ def deactivate_admin(
     return {"message": "Admin access revoked.", "user_id": user_id}
 
 
-# ── PUT /team/{user_id}/role ──────────────────────────────────────────────────
+# -- PUT /team/{user_id}/role --------------------------------------------------
 
 @router.put("/team/{user_id}/role")
 def change_admin_role(
@@ -545,7 +545,7 @@ def change_admin_role(
     except Exception:
         pass
 
-    # Req 5 — sync to Firestore
+    # Req 5 - sync to Firestore
     try:
         user = db.query(User).filter(User.id == user_id).first()
         if user:
@@ -557,7 +557,7 @@ def change_admin_role(
     return {"message": "Role updated.", "user_id": user_id, "role_level": body.role_level}
 
 
-# ── GET /team/invitations ─────────────────────────────────────────────────────
+# -- GET /team/invitations -----------------------------------------------------
 
 @router.get("/team/invitations")
 def list_invitations(
@@ -565,7 +565,7 @@ def list_invitations(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin_role),
 ):
-    """List invitations — includes revoked status. (Req 3)"""
+    """List invitations - includes revoked status. (Req 3)"""
     import os
     from app.db.database import engine as _engine
     db_file_path = str(_engine.url).replace("sqlite:///", "")
@@ -593,7 +593,7 @@ def list_invitations(
     return res
 
 
-# ── DELETE /team/invitations/{invitation_id} ──────────────────────────────────
+# -- DELETE /team/invitations/{invitation_id} ----------------------------------
 
 @router.delete("/team/invitations/{invitation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def cancel_invitation(
@@ -629,14 +629,14 @@ def cancel_invitation(
     return None
 
 
-# ── GET /team/invitations/verify ──────────────────────────────────────────────
+# -- GET /team/invitations/verify ----------------------------------------------
 
 @router.get("/team/invitations/verify")
 def verify_invitation(
     token: str = Query(...),
     db: Session = Depends(get_db),
 ):
-    """Public endpoint — verify a token before showing the accept UI. (Req 3)"""
+    """Public endpoint - verify a token before showing the accept UI. (Req 3)"""
     now = datetime.now(timezone.utc)
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
@@ -659,7 +659,7 @@ def verify_invitation(
     }
 
 
-# ── GET /team/audit-log ───────────────────────────────────────────────────────
+# -- GET /team/audit-log -------------------------------------------------------
 
 @router.get("/team/audit-log")
 def get_team_audit_log(

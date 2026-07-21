@@ -5,16 +5,16 @@ Bug condition exploration tests for Task 1 of the firestore-product-sync-cleanup
 
 CRITICAL: These tests are EXPECTED TO FAIL on the UNFIXED code.
 Failure of each test CONFIRMS the corresponding defect exists.
-DO NOT fix the code or the tests — these are exploratory probes.
+DO NOT fix the code or the tests - these are exploratory probes.
 
 Each test corresponds to one of six identified defects in admin_firestore.py:
 
-  Defect 1 — updatedAt skew (wall-clock used instead of product.updated_at)
-  Defect 2 — product_id field absent from Firestore payload
-  Defect 3 — file_url / fileUrl absent from Firestore payload
-  Defect 4 — review_count absent (only "reviews" key written)
-  Defect 5 — creatorAvatar hardcoded to Unsplash URL
-  Defect 6 — delete proceeds without referential-integrity check
+  Defect 1 - updatedAt skew (wall-clock used instead of product.updated_at)
+  Defect 2 - product_id field absent from Firestore payload
+  Defect 3 - file_url / fileUrl absent from Firestore payload
+  Defect 4 - review_count absent (only "reviews" key written)
+  Defect 5 - creatorAvatar hardcoded to Unsplash URL
+  Defect 6 - delete proceeds without referential-integrity check
 
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.7**
 """
@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 utc = timezone.utc
 
 
-# ── Minimal product fixture ──────────────────────────────────────────────────
+# -- Minimal product fixture --------------------------------------------------
 
 def make_product(**overrides):
     """
@@ -82,7 +82,7 @@ def make_product(**overrides):
     return p
 
 
-# ── Helper: call sync and capture the dict passed to Firestore set() ─────────
+# -- Helper: call sync and capture the dict passed to Firestore set() ---------
 
 def run_sync_and_capture(product):
     """
@@ -109,7 +109,7 @@ def run_sync_and_capture(product):
     return captured
 
 
-# ── Defect 1: updatedAt skew ─────────────────────────────────────────────────
+# -- Defect 1: updatedAt skew -------------------------------------------------
 
 def test_defect1_updated_at_should_match_product_timestamp():
     """
@@ -130,7 +130,7 @@ def test_defect1_updated_at_should_match_product_timestamp():
     captured = run_sync_and_capture(product)
 
     expected_updated_at = "2024-06-01T00:00:00+00:00Z"
-    # The unfixed code uses datetime.now(timezone.utc) — not the product's timestamp.
+    # The unfixed code uses datetime.now(timezone.utc) - not the product's timestamp.
     # The correct value should match product.updated_at.isoformat() + "Z"
     expected = product.updated_at.isoformat() + "Z"
     assert captured["updatedAt"] == expected, (
@@ -140,7 +140,7 @@ def test_defect1_updated_at_should_match_product_timestamp():
     )
 
 
-# ── Defect 2: product_id absent ───────────────────────────────────────────────
+# -- Defect 2: product_id absent -----------------------------------------------
 
 def test_defect2_product_id_must_be_present_in_firestore_payload():
     """
@@ -166,7 +166,7 @@ def test_defect2_product_id_must_be_present_in_firestore_payload():
     )
 
 
-# ── Defect 3: file_url / fileUrl absent ───────────────────────────────────────
+# -- Defect 3: file_url / fileUrl absent ---------------------------------------
 
 def test_defect3_file_url_must_be_written_when_product_has_file_url():
     """
@@ -201,7 +201,7 @@ def test_defect3_file_url_must_be_written_when_product_has_file_url():
     )
 
 
-# ── Defect 4: review_count absent ─────────────────────────────────────────────
+# -- Defect 4: review_count absent ---------------------------------------------
 
 def test_defect4_review_count_must_be_present_in_firestore_payload():
     """
@@ -227,7 +227,7 @@ def test_defect4_review_count_must_be_present_in_firestore_payload():
     )
 
 
-# ── Defect 5: creatorAvatar hardcoded to Unsplash URL ────────────────────────
+# -- Defect 5: creatorAvatar hardcoded to Unsplash URL ------------------------
 
 def test_defect5_creator_avatar_must_not_contain_unsplash_url():
     """
@@ -254,7 +254,7 @@ def test_defect5_creator_avatar_must_not_contain_unsplash_url():
     )
 
 
-# ── Defect 6: unsafe delete (no referential integrity check) ─────────────────
+# -- Defect 6: unsafe delete (no referential integrity check) -----------------
 
 def test_defect6_delete_checks_references_and_always_proceeds():
     """
@@ -266,7 +266,7 @@ def test_defect6_delete_checks_references_and_always_proceeds():
     1. delete() IS called even when an order reference exists.
     2. The returned references list contains the order reference.
 
-    Validates: Requirements 1.7 AC 15–20
+    Validates: Requirements 1.7 AC 15-20
     """
     mock_db = MagicMock()
 
@@ -317,5 +317,5 @@ def test_defect6_delete_checks_references_and_always_proceeds():
     assert any(r["collection"] == "orders" for r in refs), (
         f"Expected 'orders' collection in references list, got: {refs}"
     )
-    # delete() MUST have been called — admin authority overrides reference check
+    # delete() MUST have been called - admin authority overrides reference check
     mock_product_doc_ref.delete.assert_called_once()

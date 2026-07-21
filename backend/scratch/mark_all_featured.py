@@ -33,7 +33,7 @@ def main():
                 p.badge = BADGE_CYCLE[i % len(BADGE_CYCLE)]
 
         db.commit()
-        print("SQLite updated — all products are now featured & trending.")
+        print("SQLite updated - all products are now featured & trending.")
 
         # Sync to Firestore
         errors = 0
@@ -48,11 +48,11 @@ def main():
     finally:
         db.close()
 
-    # ── Update products.json ─────────────────────────────────────────────────
+    # -- Update products.json -------------------------------------------------
     root_dir = os.path.dirname(backend_dir)
     json_path = os.path.join(root_dir, "frontend", "src", "data", "products.json")
     if not os.path.exists(json_path):
-        print("products.json not found — skipping JSON update.")
+        print("products.json not found - skipping JSON update.")
         return
 
     with open(json_path, "r", encoding="utf-8") as f:
@@ -73,7 +73,7 @@ def main():
                 item["badge"] = db_p.badge or BADGE_CYCLE[list(db_map.keys()).index(pid) % len(BADGE_CYCLE)]
                 updated += 1
             else:
-                # JSON-only product (no SQLite record) — still mark it
+                # JSON-only product (no SQLite record) - still mark it
                 item["featured"] = True
                 item["trending"]  = True
                 if not item.get("badge") or str(item.get("badge")).strip() in ("", "0", "None"):
@@ -83,7 +83,7 @@ def main():
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-        print(f"products.json updated — {updated} products marked as featured & trending.")
+        print(f"products.json updated - {updated} products marked as featured & trending.")
     finally:
         db2.close()
 

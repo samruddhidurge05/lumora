@@ -59,11 +59,11 @@ def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
         finally:
             db_s.close()
 
-    # Firestore path — native paginated database queries with robust fallback
+    # Firestore path - native paginated database queries with robust fallback
     from firebase_admin import firestore
     query_ref = db.collection("users").where("role", "in", ["customer", "user", ""])
     # Note: when search is active we still need the role filter.
-    # Fetch all matching-role docs and apply text filter in memory — Firestore
+    # Fetch all matching-role docs and apply text filter in memory - Firestore
     # does not support compound inequality queries so this is the correct approach.
 
     try:

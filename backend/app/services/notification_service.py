@@ -60,12 +60,12 @@ class NotificationService:
         from app.models.user import User
         vendor_user = db.query(User).filter(User.firebase_uid == vendor_firebase_uid).first()
         
-        msg = f"New Sale! {buyer_name} purchased your product '{product_name}' for ₹{amount:.2f}."
+        msg = f"New Sale! {buyer_name} purchased your product '{product_name}' for ?{amount:.2f}."
         if vendor_user:
             NotificationService.create_notification(
                 db=db,
                 user_id=vendor_user.id,
-                title="Product Sold ✦",
+                title="Product Sold ?",
                 message=msg,
                 category="purchase"
             )

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# ── In-process fallback store — last resort when both Firestore and SQLite are unavailable ──
+# -- In-process fallback store - last resort when both Firestore and SQLite are unavailable --
 # Kept as final fallback only; SQLite is the authoritative source of truth.
 _local_platform_state: dict = {
     "isPlatformPaused": False,
@@ -26,7 +26,7 @@ _local_platform_state: dict = {
 }
 
 
-# ── Private helpers ──────────────────────────────────────────────────────────
+# -- Private helpers ----------------------------------------------------------
 
 def _get_platform_setting(db: Session, key: str, default=None):
     """Read a value from the SQLite platform_settings table.
@@ -72,7 +72,7 @@ def _set_platform_setting(db: Session, key: str, value, admin_user_id: int):
         raise
 
 
-# ── Routes ───────────────────────────────────────────────────────────────────
+# -- Routes -------------------------------------------------------------------
 
 @router.get("/")
 def get_settings(
@@ -158,11 +158,11 @@ def pause_platform(
               "Lumora is temporarily paused by the platform administrators"
     now = datetime.now(timezone.utc).isoformat() + "Z"
 
-    # ── SQLite is authoritative — write and commit first ─────────────────────
+    # -- SQLite is authoritative - write and commit first ---------------------
     _set_platform_setting(db, "isPlatformPaused", True, admin_user.id)
     _set_platform_setting(db, "pauseMessage", message, admin_user.id)
 
-    # ── Audit log (non-blocking — failure must not prevent the primary action) ─
+    # -- Audit log (non-blocking - failure must not prevent the primary action) -
     try:
         log_admin_action(
             db=db,
@@ -176,7 +176,7 @@ def pause_platform(
         logger.error("[settings] audit_log insert failed on pause: %s", exc)
         # Requirements 10.6, 10.14: audit failure must not roll back the authoritative write.
 
-    # ── Best-effort Firestore sync ────────────────────────────────────────────
+    # -- Best-effort Firestore sync --------------------------------------------
     if firebase_connected and fdb is not None:
         try:
             doc_ref = fdb.collection("platformSettings").document("global")
@@ -190,7 +190,7 @@ def pause_platform(
                 merge=True,
             )
         except Exception as exc:
-            # SQLite commit already happened — log but do NOT raise.
+            # SQLite commit already happened - log but do NOT raise.
             logger.error(
                 "[settings] Firestore pause sync failed (SQLite write already committed): %s",
                 exc,
@@ -206,10 +206,10 @@ def resume_platform(
 ):
     now = datetime.now(timezone.utc).isoformat() + "Z"
 
-    # ── SQLite is authoritative — write and commit first ─────────────────────
+    # -- SQLite is authoritative - write and commit first ---------------------
     _set_platform_setting(db, "isPlatformPaused", False, admin_user.id)
 
-    # ── Audit log (non-blocking — failure must not prevent the primary action) ─
+    # -- Audit log (non-blocking - failure must not prevent the primary action) -
     try:
         log_admin_action(
             db=db,
@@ -223,7 +223,7 @@ def resume_platform(
         logger.error("[settings] audit_log insert failed on resume: %s", exc)
         # Requirements 10.7, 10.14: audit failure must not roll back the authoritative write.
 
-    # ── Best-effort Firestore sync ────────────────────────────────────────────
+    # -- Best-effort Firestore sync --------------------------------------------
     if firebase_connected and fdb is not None:
         try:
             doc_ref = fdb.collection("platformSettings").document("global")
