@@ -77,7 +77,7 @@ def toggle_price_alert(
 
 @router.post("/trigger", status_code=status.HTTP_200_OK)
 def trigger_price_alerts(
-    product_id: str,
+    product_id: int,
     new_price: float,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)

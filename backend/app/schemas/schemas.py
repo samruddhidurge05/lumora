@@ -206,7 +206,7 @@ class NotificationResponse(NotificationBase):
 # RecentlyViewed Schemas
 class RecentlyViewedBase(BaseModel):
     user_id: int
-    product_id: Union[int, str]
+    product_id: int
 
 class RecentlyViewedCreate(RecentlyViewedBase):
     pass
@@ -221,7 +221,7 @@ class RecentlyViewedResponse(RecentlyViewedBase):
 # PriceAlert Schemas
 class PriceAlertBase(BaseModel):
     user_id: int
-    product_id: Union[int, str]
+    product_id: int
     original_price: float
     target_price: Optional[float] = None
     active: bool = True
