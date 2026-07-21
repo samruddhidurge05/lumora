@@ -21,26 +21,26 @@ class RefundRequestResponse(BaseModel):
     order_id: int
     user_id: int
     reason_category: str
-    details: Optional[str]
+    details: Optional[str] = None
     status: str
-    requested_amount: float
-    currency: str
-    payment_id: str
-    gateway_refund_id: Optional[str]
-    admin_notes: Optional[str]
-    created_at: datetime
-    updated_at: datetime
+    requested_amount: float = 0.0
+    currency: str = "INR"
+    payment_id: Optional[str] = None        # may be NULL on older records
+    gateway_refund_id: Optional[str] = None
+    admin_notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     admin_decision_at: Optional[str] = None
     reviewed_by: Optional[int] = None
     decision_reason: Optional[str] = None
     last_updated_by: Optional[int] = None
-    last_updated_at: datetime
+    last_updated_at: Optional[datetime] = None  # may be NULL on older records
 
-    # Snapshot
-    product_name: str
-    order_total: float
-    payment_method: str
-    purchase_date: datetime
+    # Snapshot - all Optional so older records (pre-snapshot columns) don't fail
+    product_name: Optional[str] = None
+    order_total: Optional[float] = None
+    payment_method: Optional[str] = None
+    purchase_date: Optional[datetime] = None
 
     # Diagnostic Metrics
     is_downloaded: bool = False
