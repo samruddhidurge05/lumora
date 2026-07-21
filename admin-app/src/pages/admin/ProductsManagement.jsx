@@ -1952,63 +1952,100 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
           </div>
 
           {/* REAL INTERACTIONS & ACTION BUTTONS */}
-          <div className="grid grid-cols-6 gap-1.5">
-            
-            {/* Play/Inspect detail */}
-            <button 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
+
+            {/* Inspect / Preview */}
+            <button
               onClick={() => { sysSound.playTap(); onPreview(); }}
-              className="col-span-1 p-2.5 rounded-xl border border-[#F5E9DD]/80 hover:bg-white text-[#7B3FA0] hover:text-[#2D004D] transition-all flex items-center justify-center"
-              title="Inspect Artifact Blueprint"
+              title="Inspect"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px', borderRadius: '10px', cursor: 'pointer',
+                border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
+                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
+                transition: 'all 0.18s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
             >
               <Icon name="Eye" size={14} />
             </button>
 
-            {/* Edit details */}
-            <button 
+            {/* Edit */}
+            <button
               onClick={() => { sysSound.playTap(); onEdit(); }}
-              className="col-span-1 p-2.5 rounded-xl border border-[#F5E9DD]/80 hover:bg-white text-[#7B3FA0] hover:text-[#2D004D] transition-all flex items-center justify-center"
-              title="Edit Node Parameters"
+              title="Edit"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px', borderRadius: '10px', cursor: 'pointer',
+                border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
+                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
+                transition: 'all 0.18s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
             >
               <Icon name="Edit2" size={14} />
             </button>
 
             {/* QR Code */}
-            <div className="col-span-1 flex items-center justify-center">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ProductQrButton product={{ id: product.id, title: product.name || product.title, price: product.price }} />
             </div>
 
-            {/* Toggle Publication State */}
-            <button 
+            {/* Toggle Publish State */}
+            <button
               onClick={() => { sysSound.playTap(); onTogglePublish(); }}
-              className={`col-span-1 p-2.5 rounded-xl border transition-all flex items-center justify-center ${
-                product.status === 'Published' 
-                  ? 'border-emerald-100 bg-emerald-50/40 text-emerald-600 hover:bg-emerald-50' 
-                  : 'border-[#F5E9DD]/80 hover:bg-white text-[#7B3FA0]'
-              }`}
-              title={product.status === 'Published' ? "Suspend/Unpublish" : "Launch/Publish"}
+              title={product.status === 'Published' ? 'Unpublish' : 'Publish'}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px', borderRadius: '10px', cursor: 'pointer',
+                border: product.status === 'Published' ? '1px solid #d1fae5' : '1px solid rgba(245,233,221,0.8)',
+                background: product.status === 'Published' ? 'rgba(209,250,229,0.4)' : 'transparent',
+                color: product.status === 'Published' ? '#059669' : '#7B3FA0',
+                height: 'auto', minHeight: 'unset',
+                transition: 'all 0.18s',
+              }}
             >
               <Icon name="Globe" size={14} />
             </button>
 
-            {/* Copy / Duplicate Node */}
-            <button 
+            {/* Duplicate */}
+            <button
               onClick={() => { sysSound.playTap(); onDuplicate(); }}
-              className="col-span-1 p-2.5 rounded-xl border border-[#F5E9DD]/80 hover:bg-white text-[#7B3FA0] hover:text-[#2D004D] transition-all flex items-center justify-center"
-              title="Duplicate Ecosystem Node"
+              title="Duplicate"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px', borderRadius: '10px', cursor: 'pointer',
+                border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
+                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
+                transition: 'all 0.18s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
             >
               <Icon name="Copy" size={14} />
             </button>
 
-            {/* Delete Node */}
-            <button 
+            {/* Delete */}
+            <button
               onClick={() => { sysSound.playTap(); onDelete(); }}
-              className="col-span-1 p-2.5 rounded-xl border border-red-100 hover:bg-red-50 text-red-400 hover:text-red-600 transition-all flex items-center justify-center"
-              title="Decommission Node"
+              title="Delete"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px', borderRadius: '10px', cursor: 'pointer',
+                border: '1px solid #fee2e2', background: 'transparent',
+                color: '#f87171', height: 'auto', minHeight: 'unset',
+                transition: 'all 0.18s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff1f2'; e.currentTarget.style.color = '#dc2626'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f87171'; }}
             >
               <Icon name="Trash2" size={14} />
             </button>
 
           </div>
+
         </div>
 
       </div>
