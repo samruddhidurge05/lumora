@@ -170,6 +170,10 @@ def _run_schema_migrations() -> None:
     Safe, idempotent column additions for SQLite.
     Uses PRAGMA table_info to check before adding — never fails if column exists.
     """
+    if engine.dialect.name != "sqlite":
+        _logger.info("[startup] Database dialect is '%s' — skipping SQLite PRAGMA migrations.", engine.dialect.name)
+        return
+
     from sqlalchemy import text as _text
     try:
         with engine.connect() as conn:
@@ -189,6 +193,7 @@ def _run_schema_migrations() -> None:
         _logger.warning("[startup] Schema migration warning (non-fatal): %s", _mig_err)
 
 _run_schema_migrations()
+
 
 # ── Seed Admin Users ──────────────────────────────────────────────────────────
 from app.db.database import SessionLocal
