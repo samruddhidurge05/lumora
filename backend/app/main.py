@@ -217,16 +217,41 @@ def _run_schema_migrations() -> None:
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
         ]
+        
+        # PostgreSQL primary key sequence resynchronization
+        # Fixes duplicate key value violates unique constraint "products_pkey" (Key id=X already exists)
+        # when records were previously inserted with explicit IDs during database seeding or migrations.
+        pg_sequence_syncs = [
+            "SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1))",
+            "SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1))",
+            "SELECT setval(pg_get_serial_sequence('orders', 'id'), COALESCE((SELECT MAX(id) FROM orders), 1))",
+            "SELECT setval(pg_get_serial_sequence('order_items', 'id'), COALESCE((SELECT MAX(id) FROM order_items), 1))",
+            "SELECT setval(pg_get_serial_sequence('reviews', 'id'), COALESCE((SELECT MAX(id) FROM reviews), 1))",
+            "SELECT setval(pg_get_serial_sequence('coupons', 'id'), COALESCE((SELECT MAX(id) FROM coupons), 1))",
+            "SELECT setval(pg_get_serial_sequence('payments', 'id'), COALESCE((SELECT MAX(id) FROM payments), 1))",
+            "SELECT setval(pg_get_serial_sequence('vendors', 'id'), COALESCE((SELECT MAX(id) FROM vendors), 1))",
+            "SELECT setval(pg_get_serial_sequence('wishlist_items', 'id'), COALESCE((SELECT MAX(id) FROM wishlist_items), 1))",
+            "SELECT setval(pg_get_serial_sequence('cart_items', 'id'), COALESCE((SELECT MAX(id) FROM cart_items), 1))",
+            "SELECT setval(pg_get_serial_sequence('audit_logs', 'id'), COALESCE((SELECT MAX(id) FROM audit_logs), 1))",
+            "SELECT setval(pg_get_serial_sequence('product_versions', 'id'), COALESCE((SELECT MAX(id) FROM product_versions), 1))",
+        ]
+
         try:
             with engine.connect() as conn:
                 for sql in pg_migrations:
                     try:
                         conn.execute(_text(sql))
                     except Exception as col_err:
-                        # Log but never crash — column may already exist with different syntax
                         _logger.debug("[startup] PG migration skipped: %s | %s", sql.strip()[:60], col_err)
+                
+                for seq_sql in pg_sequence_syncs:
+                    try:
+                        conn.execute(_text(seq_sql))
+                    except Exception as seq_err:
+                        _logger.debug("[startup] PG sequence sync skipped: %s | %s", seq_sql[:60], seq_err)
+
                 conn.commit()
-            _logger.info("[startup] PostgreSQL schema migrations applied OK")
+            _logger.info("[startup] PostgreSQL schema migrations and sequence sync applied OK")
         except Exception as _mig_err:
             _logger.warning("[startup] PostgreSQL migration warning (non-fatal): %s", _mig_err)
         return
