@@ -380,41 +380,23 @@ export default function ProductPage() {
     setReportError('');
     setReportSubmitting(true);
     try {
-      const token =
-        (typeof window !== 'undefined' &&
-          (localStorage.getItem('lumora_backend_token') || sessionStorage.getItem('lumora_backend_token'))) || '';
-      const BASE =
-        (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
-          ? import.meta.env.VITE_API_URL
-          : 'http://localhost:8000';
-      const res = await fetch(`${BASE}/api/reports/`, {
+      await backendFetch('/reports/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
+        body: {
           product_id: String(product.id),
           category: reportCategory,
           description: reportDescription.trim(),
-        }),
+        },
       });
-      if (res.status === 429) {
-        setReportError('You have already submitted 3 reports for this product in the last 24 hours.');
-        return;
-      }
-      if (res.status === 503) {
-        setReportError('Report service is temporarily unavailable. Please try again later.');
-        return;
-      }
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setReportError(data?.detail || data?.error?.message || 'Failed to submit report. Please try again.');
-        return;
-      }
       setReportSubmitted(true);
     } catch (err) {
-      setReportError('Network error. Please check your connection and try again.');
+      if (err.status === 429) {
+        setReportError('You have already submitted 3 reports for this product in the last 24 hours.');
+      } else if (err.status === 503) {
+        setReportError('Report service is temporarily unavailable. Please try again later.');
+      } else {
+        setReportError(err.message || 'Failed to submit report. Please try again.');
+      }
     } finally {
       setReportSubmitting(false);
     }
