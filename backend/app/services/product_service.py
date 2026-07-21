@@ -11,19 +11,17 @@ from admin.firestore.admin_firestore import sync_product_to_firestore, delete_pr
 
 def _is_external_url(url: Optional[str]) -> bool:
     """
-    Returns True if the URL is an external link (Cloudflare R2, AWS S3, Firebase Storage,
-    Unsplash, etc.) that should be stored as-is and NOT passed through move_to_permanent().
+    Returns True if the URL is an external link (HTTP/HTTPS, data URI, blob URL, Cloudflare R2,
+    AWS S3, Firebase Storage, Unsplash, pCloud, etc.) that should be stored as-is and
+    NOT passed through move_to_permanent() as a local disk path.
     """
     if not url:
         return False
-    external_markers = (
-        'cloudflare',      # Cloudflare R2
-        's3.amazonaws.com',# AWS S3
-        'firebasestorage.googleapis.com',  # Firebase Storage
-        'https://images.unsplash.com',     # Unsplash
-        'https://source.unsplash.com',     # Unsplash source
-    )
-    return any(marker in url for marker in external_markers)
+    if url.startswith(("http://", "https://", "data:", "blob:", "gs://", "b2://")):
+        if "/uploads/" not in url:
+            return True
+    return False
+
 
 
 class ProductService:

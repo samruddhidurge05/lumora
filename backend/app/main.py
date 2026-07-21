@@ -207,6 +207,9 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS badge                VARCHAR(50)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS highlights           JSON",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS license              VARCHAR(50)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS version              VARCHAR(20) DEFAULT 'v1.0.0'",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS file_size            VARCHAR(30)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS last_updated         VARCHAR(50)",
             # admin_invitations
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS revoked_at   TIMESTAMP",
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS invited_name VARCHAR(150)",
@@ -410,6 +413,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def database_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     """Catch any unhandled SQLAlchemy database error and hide internals from the client."""
     _logger.error("[db_error] Unhandled database error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    from app.core.config import settings
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -417,7 +421,7 @@ async def database_exception_handler(request: Request, exc: SQLAlchemyError) -> 
             "error": {
                 "code": "DATABASE_ERROR",
                 "message": "A database error occurred. Please try again.",
-                "details": None,
+                "details": str(exc) if getattr(settings, 'DEBUG', False) else str(exc),
             },
         },
     )
