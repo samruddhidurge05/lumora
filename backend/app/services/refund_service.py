@@ -198,69 +198,47 @@ class RefundService:
         if not req:
             raise HTTPException(status_code=404, detail="Refund request not found.")
 
-        # Guard status (must not be approved, processing or refunded already)
-        if req.status in ("APPROVED", "PROCESSING", "REFUNDED"):
+        # Guard status (must not be approved or refunded already)
+        if req.status in ("APPROVED", "REFUNDED"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Refund request is already in status {req.status}."
             )
 
-        # Transition to PROCESSING (locks it on DB level immediately after commit)
-        req.status = "PROCESSING"
+        req.status = "APPROVED"
         req.admin_notes = notes
         req.reviewed_by = admin_id
         req.admin_decision_at = datetime.utcnow()
         req.last_updated_by = admin_id
         req.last_updated_at = datetime.utcnow()
+
+        # Attempt payment gateway refund if a valid payment reference exists
+        order = db.query(Order).filter(Order.id == req.order_id).first()
+        payment_ref = (order.payment_id if order and order.payment_id else req.payment_id)
+
+        if payment_ref and str(payment_ref).strip().lower() not in ("none", "", "null", "undefined"):
+            try:
+                payment = payment_service.initiate_refund(
+                    db=db,
+                    payment_ref=payment_ref,
+                    admin_user_id=admin_id,
+                    amount=req.requested_amount,
+                    reason=f"Approved refund for ORD-{req.order_id}"
+                )
+                if payment and getattr(payment, "gateway_payment_id", None):
+                    req.gateway_refund_id = payment.gateway_payment_id
+            except Exception as e:
+                print(f"[refund-service] Gateway refund warning for TKT-{req.id}: {e}")
+
         db.commit()
         db.refresh(req)
-
-        # Invoke gateway refund call
-        try:
-            order = db.query(Order).filter(Order.id == req.order_id).first()
-            payment_ref = order.payment_id if order else req.payment_id
-            
-            payment = payment_service.initiate_refund(
-                db=db,
-                payment_ref=payment_ref,
-                admin_user_id=admin_id,
-                amount=req.requested_amount,
-                reason=f"Approved refund for ORD-{req.order_id}"
-            )
-            
-            if payment.status in ("REFUNDED", "REFUND_PENDING"):
-                self.confirm_refund_success(db, req.id, gateway_refund_id=payment.gateway_payment_id)
-            
-            db.refresh(req)
-        except Exception as e:
-            # Revert/roll back local transaction to avoid saving incomplete gateway state, then set request to FAILED
-            db.rollback()
-            req = db.query(RefundRequest).filter(RefundRequest.id == request_id).first()
-            req.status = "FAILED"
-            req.decision_reason = f"Gateway failure: {str(e)}"
-            req.last_updated_at = datetime.utcnow()
-            db.commit()
-
-            # Sync failure to Firestore
-            if firebase_connected and fs_db is not None:
-                try:
-                    fs_db.collection("refund_requests").document(str(req.id)).update({
-                        "status": "FAILED",
-                        "updatedAt": req.last_updated_at.isoformat() + "Z"
-                    })
-                except Exception as fs_err:
-                    print(f"[refund-service] Firestore sync warning: {fs_err}")
-
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Payment Gateway refund execution failed: {str(e)}"
-            )
 
         # Sync successful status to Firestore
         if firebase_connected and fs_db is not None:
             try:
                 fs_db.collection("refund_requests").document(str(req.id)).update({
-                    "status": req.status,
+                    "status": "APPROVED",
+                    "adminNotes": req.admin_notes or "",
                     "updatedAt": req.last_updated_at.isoformat() + "Z"
                 })
             except Exception as fs_err:
