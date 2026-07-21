@@ -41,11 +41,21 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
   const token = localStorage.getItem('lumora_backend_token');
 
   const headers = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  if (options.body instanceof FormData) {
+  let body = options.body;
+
+  if (body !== undefined && body !== null) {
+    if (body instanceof FormData) {
+      delete headers['Content-Type'];
+    } else if (typeof body === 'object' && !(body instanceof Blob) && !(body instanceof ArrayBuffer)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+      body = JSON.stringify(body);
+    } else if (typeof body === 'string') {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+  } else {
     delete headers['Content-Type'];
   }
 
@@ -53,10 +63,18 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BACKEND_URL}${endpoint}`, {
+  const fetchOptions = {
     ...options,
     headers,
-  });
+  };
+
+  if (body !== undefined && body !== null) {
+    fetchOptions.body = body;
+  } else {
+    delete fetchOptions.body;
+  }
+
+  const res = await fetch(`${BACKEND_URL}${endpoint}`, fetchOptions);
 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {

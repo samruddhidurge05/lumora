@@ -577,12 +577,14 @@ export default function CustomerPurchases() {
                               try {
                                 setRefundSubmitting(true);
                                 setRefundError(null);
+                                const rawId = selectedOrder?.id;
+                                const orderId = typeof rawId === 'number' ? rawId : parseInt(String(rawId || '').replace(/\D/g, ''), 10);
                                 await backendFetch('/refunds/request', {
                                   method: 'POST',
                                   body: {
-                                    order_id: selectedOrder.id,
-                                    reason_category: refundReason,
-                                    details: refundDetails
+                                    order_id: orderId,
+                                    reason_category: refundReason || 'duplicate_charge',
+                                    details: refundDetails || ''
                                   }
                                 });
                                 setRefundSuccess('Refund request submitted successfully.');

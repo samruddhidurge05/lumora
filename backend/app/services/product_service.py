@@ -24,6 +24,22 @@ def _is_external_url(url: Optional[str]) -> bool:
 
 
 
+def _extract_file_extension(source_path: Optional[str], default_ext: str = ".bin") -> str:
+    """
+    Safely extract the file extension from a temporary file path or URL.
+    Preserves original extensions like .pdf, .zip, .docx, .xlsx, .pptx, .mp4, .png, etc.
+    Falls back to default_ext if no extension is found or if path traversal characters are present.
+    """
+    if not source_path:
+        return default_ext
+    clean_path = source_path.split('?')[0].split('#')[0]
+    ext = os.path.splitext(clean_path)[1].lower()
+    clean_ext = "".join(c for c in ext if c.isalnum() or c == '.')
+    if not clean_ext or clean_ext.startswith("..") or "/" in clean_ext or "\\" in clean_ext:
+        return default_ext
+    return clean_ext
+
+
 class ProductService:
     @staticmethod
     def create_product(
@@ -104,11 +120,12 @@ class ProductService:
                     # External URL — store directly; no local file movement needed
                     product.file_url = temp_file_url
                 else:
+                    file_ext = _extract_file_extension(temp_file_url, default_ext=".bin")
                     storage_path, perm_url = storage_service.move_to_permanent(
                         source_path=temp_file_url,
                         vendor_id=vendor_id,
                         product_id=product.id,
-                        filename=f"product-{product.id}.zip",
+                        filename=f"product-{product.id}{file_ext}",
                         is_image=False,
                         asset_type="file"
                     )
@@ -215,11 +232,12 @@ class ProductService:
                         # New temporary local upload — move to permanent storage
                         if product.storage_path:
                             old_files_to_delete.append(product.storage_path)
+                        file_ext = _extract_file_extension(new_file, default_ext=".bin")
                         new_storage_path, perm_url = storage_service.move_to_permanent(
                             source_path=new_file,
                             vendor_id=vendor_id,
                             product_id=product_id,
-                            filename=f"product-{product_id}.zip",
+                            filename=f"product-{product_id}{file_ext}",
                             is_image=False,
                             asset_type="file"
                         )

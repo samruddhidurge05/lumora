@@ -5,10 +5,20 @@ import shutil
 import hashlib
 import urllib.parse
 import requests
+from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Generator, Dict, Any, Tuple, Optional
 from fastapi import HTTPException, status
 from app.core.config import settings
+
+# Load .env file automatically if present
+try:
+    from dotenv import load_dotenv
+    _env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+    if _env_file.exists():
+        load_dotenv(dotenv_path=str(_env_file))
+except Exception:
+    pass
 
 # Isolated run namespace for automated testing safety
 TEST_RUN_ID = str(uuid.uuid4())
@@ -467,8 +477,8 @@ class StorageService:
         bucket_name = os.getenv("R2_BUCKET_NAME") or os.getenv("FIREBASE_STORAGE_BUCKET") or "lumora-e6ddc.appspot.com"
         self.firebase_provider = FirebaseStorageProvider(bucket_name)
         
-        # Determine provider preference
-        pref = os.getenv("STORAGE_PROVIDER", "firebase").lower()
+        # Determine provider preference (defaults to Backblaze B2 for production binary storage)
+        pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
         if pref == "b2" and self.b2_provider.is_available():
             self.provider = self.b2_provider
             print("[StorageService] Active Provider: Backblaze B2 Storage")
