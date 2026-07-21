@@ -1,6 +1,6 @@
 import { backendFetch } from '../utils/api';
 import { db } from './firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 export const getReportAnalytics = async () => {
   return await backendFetch('/admin/reports/analytics');
@@ -8,12 +8,20 @@ export const getReportAnalytics = async () => {
 
 export const subscribeToReports = (callback) => {
   try {
-    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+    // NOTE: Do NOT use orderBy('createdAt') here.
+    // Firestore silently excludes documents that are missing the ordered field.
+    // Older reports only have `created_at` (snake_case), so they would vanish
+    // from the snapshot entirely. We fetch all docs and sort client-side instead.
+    const q = query(collection(db, 'reports'));
     return onSnapshot(q, (snapshot) => {
-      const reports = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const reports = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => {
+          // Support both camelCase and snake_case timestamp fields
+          const aTime = a.createdAt || a.created_at || '';
+          const bTime = b.createdAt || b.created_at || '';
+          return bTime.localeCompare(aTime); // descending (newest first)
+        });
       callback(reports);
     }, (err) => {
       console.warn('[reportsService] Real-time reports subscription error:', err);

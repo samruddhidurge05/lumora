@@ -75,7 +75,11 @@ def get_reports_list(page: int = 1, page_size: int = 50, status: str = None, sea
         return {"total": 0, "page": page, "page_size": page_size, "items": []}
 
     try:
-        all_reports = [_map_report(d) for d in db.collection("reports").stream()]
+        all_reports = sorted(
+            [_map_report(d) for d in db.collection("reports").stream()],
+            key=lambda r: r.get("createdAt") or r.get("created_at") or "",
+            reverse=True,  # newest first
+        )
     except Exception as e:
         print(f"[reports] Firestore stream error in get_reports_list: {e}")
         all_reports = []
