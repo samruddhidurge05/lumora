@@ -514,9 +514,9 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
+# -- CORS ---------------------------------------------------------------------------
 # IMPORTANT: The Vercel production origins below are ALWAYS included as a
-# guaranteed baseline — even if the CORS_ORIGINS env var on Render is set to
+# guaranteed baseline - even if the CORS_ORIGINS env var on Render is set to
 # an older value that omits them. This prevents stale env vars from silently
 # blocking the admin portal.
 _GUARANTEED_ORIGINS = [
