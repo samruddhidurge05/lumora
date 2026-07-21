@@ -321,7 +321,6 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 20px;
 }
 
-/* Horizontal scroll carousel on mobile - don't stack */
 .lumora-home-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
@@ -329,15 +328,44 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 640px) {
-  /* Two columns on mobile — premium app feel */
-  .home-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .lumora-home-products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  /* ── Horizontal scroll carousel — cards side by side, swipe to browse ── */
+  .home-product-grid,
+  .lumora-home-products-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 12px !important;
+    /* Bleed the carousel edge-to-edge past the section's side padding */
+    margin-left: calc(-1 * var(--mob-pad)) !important;
+    margin-right: calc(-1 * var(--mob-pad)) !important;
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+    padding-bottom: 8px !important; /* room for scrollbar on some browsers */
+    /* Hide scrollbar but keep scrollability */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  .home-product-grid::-webkit-scrollbar,
+  .lumora-home-products-grid::-webkit-scrollbar { display: none; }
 
-  /* PCard image: compact height via className="pcard-img" added to Home.jsx */
+  /* Each card: fixed width so two peek on screen */
+  .home-product-grid > *,
+  .lumora-home-products-grid > * {
+    flex: 0 0 72vw !important;
+    max-width: 72vw !important;
+    min-width: 0 !important;
+    scroll-snap-align: start !important;
+  }
+
+  /* PCard image: compact height */
   .pcard-img {
-    height: 130px !important;
-    min-height: 130px !important;
-    max-height: 130px !important;
+    height: 160px !important;
+    min-height: 160px !important;
+    max-height: 160px !important;
   }
 
   /* Section padding reduced on mobile */
@@ -345,9 +373,12 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 360px) {
-  .home-product-grid { grid-template-columns: 1fr; }
-  .lumora-home-products-grid { grid-template-columns: 1fr; }
-  .pcard-img { height: 120px !important; max-height: 120px !important; }
+  .home-product-grid > *,
+  .lumora-home-products-grid > * {
+    flex: 0 0 80vw !important;
+    max-width: 80vw !important;
+  }
+  .pcard-img { height: 140px !important; max-height: 140px !important; }
 }
 
 
