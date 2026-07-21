@@ -515,13 +515,23 @@ async def add_security_headers(request: Request, call_next):
 
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# Read allowed origins from the CORS_ORIGINS env var (comma-separated).
-# Falls back to standard Vite dev ports and production Vercel apps when variable is not set.
-_cors_origins_raw = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:3000,https://lumora-admin-nine.vercel.app,https://lumora.vercel.app"
-)
-origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+# IMPORTANT: The Vercel production origins below are ALWAYS included as a
+# guaranteed baseline — even if the CORS_ORIGINS env var on Render is set to
+# an older value that omits them. This prevents stale env vars from silently
+# blocking the admin portal.
+_GUARANTEED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176",
+    "http://localhost:3000",
+    "https://lumora-admin-nine.vercel.app",
+    "https://lumora.vercel.app",
+]
+_cors_origins_raw = os.getenv("CORS_ORIGINS", "")
+_env_origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+# Merge: guaranteed baseline + any extra origins from env var (deduplicated)
+origins = list(dict.fromkeys(_GUARANTEED_ORIGINS + _env_origins))
 _cors_regex_raw = os.getenv("CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app")
 
 app.add_middleware(
