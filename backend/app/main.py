@@ -27,7 +27,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 
 from sqlalchemy.exc import SQLAlchemyError
 from slowapi.errors import RateLimitExceeded
@@ -492,18 +492,68 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
+# -- Exception Handlers --------------------------------------------------------
+
+@app.exception_handler(ResponseValidationError)
+async def response_validation_exception_handler(request: Request, exc: ResponseValidationError) -> JSONResponse:
+    """Handle response serialization mismatches cleanly with structured error response."""
+    _logger.error(
+        "[response_validation_error] Response schema mismatch on %s %s: %s",
+        request.method, request.url.path, exc, exc_info=True
+    )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error": {
+                "code": "RESPONSE_VALIDATION_ERROR",
+                "message": "Response serialization failed due to data schema mismatch.",
+                "details": str(exc),
+            },
+        },
+    )
+
+
 # -- Duplicate API Prefix Fix --------------------------------------------------
 @app.middleware("http")
 async def fix_duplicate_api_prefix(request: Request, call_next):
     if request.url.path.startswith("/api/api/"):
         request.scope["path"] = request.url.path.replace("/api/api/", "/api/", 1)
-    return await call_next(request)
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        _logger.error("[middleware_error] Exception in fix_duplicate_api_prefix: %s", exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": "An unexpected error occurred.",
+                    "details": str(exc),
+                },
+            },
+        )
 
 
 # -- Security Headers ----------------------------------------------------------
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        _logger.error("[middleware_error] Exception in add_security_headers: %s", exc)
+        response = JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": "An unexpected error occurred.",
+                    "details": str(exc),
+                },
+            },
+        )
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
