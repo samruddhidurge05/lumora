@@ -133,7 +133,7 @@ class ProductResponse(BaseModel):
 
 # ProductVersion Schemas
 class ProductVersionBase(BaseModel):
-    product_id: str
+    product_id: Union[int, str]
     version_number: str
     changelog: Optional[str] = None
     is_major: bool = False
@@ -206,7 +206,7 @@ class NotificationResponse(NotificationBase):
 # RecentlyViewed Schemas
 class RecentlyViewedBase(BaseModel):
     user_id: int
-    product_id: str
+    product_id: Union[int, str]
 
 class RecentlyViewedCreate(RecentlyViewedBase):
     pass
@@ -221,7 +221,7 @@ class RecentlyViewedResponse(RecentlyViewedBase):
 # PriceAlert Schemas
 class PriceAlertBase(BaseModel):
     user_id: int
-    product_id: str
+    product_id: Union[int, str]
     original_price: float
     target_price: Optional[float] = None
     active: bool = True

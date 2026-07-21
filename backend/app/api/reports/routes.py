@@ -41,7 +41,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
@@ -74,7 +74,7 @@ RATE_LIMIT_HOURS = 24         # rolling window in hours
 # ?? Pydantic schemas ??????????????????????????????????????????????????????????
 
 class ReportCreateRequest(BaseModel):
-    product_id:  str = Field(..., description="Product identifier")
+    product_id:  Union[int, str] = Field(..., description="Product identifier")
     category:    str = Field(..., description=f"One of: {VALID_CATEGORIES}")
     description: str = Field(..., min_length=10, max_length=2000,
                              description="Describe the issue (10-2000 characters)")
@@ -95,9 +95,9 @@ class ReportCreateRequest(BaseModel):
 
 
 class ReportResponse(BaseModel):
-    id:          str
-    user_id:     str
-    product_id:  str
+    id:          Union[int, str]
+    user_id:     Union[int, str]
+    product_id:  Union[int, str]
     category:    str
     description: str
     created_at:  str
