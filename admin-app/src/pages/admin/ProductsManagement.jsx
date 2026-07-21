@@ -1962,13 +1962,15 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '8px', borderRadius: '10px', cursor: 'pointer',
                 border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
-                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
-                transition: 'all 0.18s',
+                height: 'auto', minHeight: 'unset', transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <Icon name="Eye" size={14} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style={{ fill: 'none', stroke: '#7B3FA0', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', flexShrink: 0 }}>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
             </button>
 
             {/* Edit */}
@@ -1979,13 +1981,15 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '8px', borderRadius: '10px', cursor: 'pointer',
                 border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
-                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
-                transition: 'all 0.18s',
+                height: 'auto', minHeight: 'unset', transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <Icon name="Edit2" size={14} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style={{ fill: 'none', stroke: '#7B3FA0', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', flexShrink: 0 }}>
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
             </button>
 
             {/* QR Code */}
@@ -2002,12 +2006,13 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
                 padding: '8px', borderRadius: '10px', cursor: 'pointer',
                 border: product.status === 'Published' ? '1px solid #d1fae5' : '1px solid rgba(245,233,221,0.8)',
                 background: product.status === 'Published' ? 'rgba(209,250,229,0.4)' : 'transparent',
-                color: product.status === 'Published' ? '#059669' : '#7B3FA0',
-                height: 'auto', minHeight: 'unset',
-                transition: 'all 0.18s',
+                height: 'auto', minHeight: 'unset', transition: 'all 0.18s',
               }}
             >
-              <Icon name="Globe" size={14} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style={{ fill: 'none', stroke: product.status === 'Published' ? '#059669' : '#7B3FA0', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
             </button>
 
             {/* Duplicate */}
@@ -2018,13 +2023,15 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '8px', borderRadius: '10px', cursor: 'pointer',
                 border: '1px solid rgba(245,233,221,0.8)', background: 'transparent',
-                color: '#7B3FA0', height: 'auto', minHeight: 'unset',
-                transition: 'all 0.18s',
+                height: 'auto', minHeight: 'unset', transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2D004D'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7B3FA0'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <Icon name="Copy" size={14} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style={{ fill: 'none', stroke: '#7B3FA0', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', flexShrink: 0 }}>
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
             </button>
 
             {/* Delete */}
@@ -2035,16 +2042,19 @@ function ProductCard({ product, onPreview, onEdit, onTogglePublish, onDuplicate,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '8px', borderRadius: '10px', cursor: 'pointer',
                 border: '1px solid #fee2e2', background: 'transparent',
-                color: '#f87171', height: 'auto', minHeight: 'unset',
-                transition: 'all 0.18s',
+                height: 'auto', minHeight: 'unset', transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff1f2'; e.currentTarget.style.color = '#dc2626'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f87171'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fff1f2'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <Icon name="Trash2" size={14} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style={{ fill: 'none', stroke: '#ef4444', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', flexShrink: 0 }}>
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
             </button>
 
           </div>
+
 
         </div>
 
