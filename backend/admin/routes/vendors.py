@@ -226,10 +226,11 @@ def restrict_vendor(
 
     if firebase_connected and fdb is not None and user.firebase_uid:
         try:
-            fdb.collection("vendors").document(user.firebase_uid).set(
-                {"status": "restricted"}, merge=True
+            fdb.collection("users").document(user.firebase_uid).set(
+                {"accountStatus": "restricted"}, merge=True
             )
         except Exception as exc:
             logger.error("[vendor_restrict] Firestore write failed for uid=%s: %s", user.firebase_uid, exc)
+
 
     return {"success": True, "message": f"Vendor {id} has been restricted."}

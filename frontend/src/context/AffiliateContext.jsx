@@ -92,8 +92,12 @@ export function AffiliateProvider({ children }) {
       if (snap.exists()) {
         const data = snap.data();
         setIsApproved(data.isApproved || data.role === 'Affiliate' || data.role === 'Admin');
-        setIsSuspended(data.isSuspended ?? false);
+        // Derive isSuspended from accountStatus (written by admin backend) rather than
+        // the isSuspended field which is never written by the admin permission system.
+        const acctStatus = (data.accountStatus || data.status || 'active').toLowerCase();
+        setIsSuspended(acctStatus !== 'active');
         setCanPromote(data.canPromote ?? true);
+
       }
       userDocLoaded = true;
       checkLoadingDone();
