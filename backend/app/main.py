@@ -164,35 +164,94 @@ _validate_startup_config()
 # ── Database Table Creation ───────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
-# ── Schema Migrations (idempotent ALTER TABLE for SQLite) ─────────────────────
+# ── Schema Migrations (idempotent ALTER TABLE for SQLite AND PostgreSQL) ────────
 def _run_schema_migrations() -> None:
     """
-    Safe, idempotent column additions for SQLite.
-    Uses PRAGMA table_info to check before adding — never fails if column exists.
+    Safe, idempotent column additions.
+    - SQLite : uses PRAGMA table_info() to check before adding
+    - PostgreSQL: uses ADD COLUMN IF NOT EXISTS (supported since PG 9.1)
+    Never fails if the column already exists.
     """
-    if engine.dialect.name != "sqlite":
-        _logger.info("[startup] Database dialect is '%s' — skipping SQLite PRAGMA migrations.", engine.dialect.name)
+    from sqlalchemy import text as _text
+    dialect = engine.dialect.name
+
+    # ── PostgreSQL migrations (Render production) ─────────────────────────────
+    if dialect == "postgresql":
+        _logger.info("[startup] Running PostgreSQL schema migrations…")
+        pg_migrations = [
+            # products — extended metadata columns added after initial deploy
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS pcloud_download_link VARCHAR(512)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls           JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS storage_path         VARCHAR(512)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS thumbnail_path       VARCHAR(512)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS preview_path         VARCHAR(512)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS content_type         VARCHAR(100)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS hash                 VARCHAR(128)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS short_desc           VARCHAR(255)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS features             JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS system_requirements  JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS what_you_get         JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS installation_guide   TEXT",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory          VARCHAR(100)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS discount             FLOAT DEFAULT 0.0",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS preview_images       JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS preview_video        VARCHAR(512)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_title            VARCHAR(150)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_description      TEXT",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS visibility           VARCHAR(50) DEFAULT 'public'",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS affiliate_enabled    BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS commission_type      VARCHAR(20) DEFAULT 'percentage'",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS commission_value     FLOAT DEFAULT 0.0",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS trending             BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS new_arrival          BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS badge                VARCHAR(50)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS highlights           JSON",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS license              VARCHAR(50)",
+            # admin_invitations
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS revoked_at   TIMESTAMP",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS invited_name VARCHAR(150)",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS message      TEXT",
+            # users
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
+        ]
+        try:
+            with engine.connect() as conn:
+                for sql in pg_migrations:
+                    try:
+                        conn.execute(_text(sql))
+                    except Exception as col_err:
+                        # Log but never crash — column may already exist with different syntax
+                        _logger.debug("[startup] PG migration skipped: %s | %s", sql.strip()[:60], col_err)
+                conn.commit()
+            _logger.info("[startup] PostgreSQL schema migrations applied OK")
+        except Exception as _mig_err:
+            _logger.warning("[startup] PostgreSQL migration warning (non-fatal): %s", _mig_err)
         return
 
-    from sqlalchemy import text as _text
-    try:
-        with engine.connect() as conn:
-            # admin_invitations — add revoked_at, invited_name, message
-            inv_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(admin_invitations)"))}
-            if "revoked_at"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
-            if "invited_name" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
-            if "message"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
+    # ── SQLite migrations (local dev) ─────────────────────────────────────────
+    if dialect == "sqlite":
+        try:
+            with engine.connect() as conn:
+                # admin_invitations — add revoked_at, invited_name, message
+                inv_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(admin_invitations)"))}
+                if "revoked_at"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
+                if "invited_name" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
+                if "message"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
 
-            # users — add last_login_at
-            user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
-            if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+                # users — add last_login_at
+                user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
+                if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
 
-            conn.commit()
-        _logger.info("[startup] Schema migrations applied OK")
-    except Exception as _mig_err:
-        _logger.warning("[startup] Schema migration warning (non-fatal): %s", _mig_err)
+                conn.commit()
+            _logger.info("[startup] SQLite schema migrations applied OK")
+        except Exception as _mig_err:
+            _logger.warning("[startup] SQLite migration warning (non-fatal): %s", _mig_err)
+        return
+
+    _logger.info("[startup] Dialect '%s' — no custom migrations defined, skipping.", dialect)
 
 _run_schema_migrations()
+
 
 
 # ── Seed Admin Users ──────────────────────────────────────────────────────────
