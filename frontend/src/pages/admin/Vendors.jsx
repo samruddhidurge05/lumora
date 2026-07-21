@@ -59,6 +59,15 @@ function StatusBadge({ label, statusType }) {
   let color = '#7B3FA0';
   let dot = '#B886D0';
 
+// ── Helper to derive display name across all user name fields ────────────────
+const getUserName = (u, fallback = '—') => {
+  if (!u) return fallback;
+  const name = u.name || u.fullName || u.displayName || u.full_name;
+  if (name && name.trim()) return name.trim();
+  if (u.email && u.email.includes('@')) return u.email.split('@')[0];
+  return fallback;
+};
+
   if (statusType === 'restricted') {
     bg = 'rgba(245,158,11,0.10)';
     border = 'rgba(245,158,11,0.30)';
@@ -455,10 +464,10 @@ export default function Vendors() {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0,
                                   }}>
-                                    {(vendor.name || 'V')[0].toUpperCase()}
+                                    {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
                                   </div>
                                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>
-                                    {vendor.name || '—'}
+                                    {getUserName(vendor, '—')}
                                   </span>
                                 </div>
                               </td>
@@ -568,10 +577,10 @@ export default function Vendors() {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0,
                                   }}>
-                                    {(affiliate.name || 'A')[0].toUpperCase()}
+                                    {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
                                   </div>
                                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>
-                                    {affiliate.name || '—'}
+                                    {getUserName(affiliate, '—')}
                                   </span>
                                 </div>
                               </td>

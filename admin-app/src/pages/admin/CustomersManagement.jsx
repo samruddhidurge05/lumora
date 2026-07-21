@@ -210,7 +210,7 @@ export default function CustomersManagement() {
 
       return {
         ...user,
-        name: user.displayName || user.name || 'Unnamed Customer',
+        name: user.name || user.fullName || user.displayName || user.full_name || (user.email ? user.email.split('@')[0] : 'Unnamed Customer'),
         totalOrders,
         totalSpent,
         recentPurchases,
