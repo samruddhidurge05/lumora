@@ -156,7 +156,24 @@ class PurchaseService:
                                 details=f"Earned ₹{commission_amt * 80:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
                             )
 
+            # 6b. Process Admin Referral Link Conversion (Isolated, Idempotent, Non-Blocking)
+            if affiliate_code:
+                try:
+                    from admin_controls.referral.service import process_admin_referral
+                    # Pass 'aff' (if found above) to avoid duplicate SQL query
+                    process_admin_referral(
+                        db=db,
+                        order=order,
+                        user_id=user_id,
+                        affiliate_code=affiliate_code,
+                        affiliate_profile=locals().get('aff')
+                    )
+                except Exception as _admin_ref_exc:
+                    import logging
+                    logging.getLogger(__name__).error("[PurchaseService] Non-fatal admin referral error: %s", _admin_ref_exc)
+
             # 7. Generate User notifications
+
             # Customer Notification
             NotificationService.create_notification(
                 db=db,

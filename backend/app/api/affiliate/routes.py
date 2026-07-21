@@ -723,8 +723,37 @@ def track_click(
         db.commit()
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
-    # 3. Code not found
+    # 3. Fallback: Check Firestore adminReferralLinks
+    if not firebase_connected or fdb is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Referral service temporarily unavailable."
+        )
+
+    try:
+        from admin_controls.referral.service import AdminReferralService
+        campaign = AdminReferralService.find_campaign(code_upper)
+        if campaign:
+            if campaign.get("status") == "active":
+                AdminReferralService.increment_click(campaign["ref"])
+                return ClickTrackResponse(tracked=True, referral_code=code_upper)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Referral link is inactive."
+                )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("[track_click] AdminReferralService fallback failed for code=%s: %s", code_upper, exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Referral service temporarily unavailable."
+        )
+
+    # 4. Code not found anywhere
     raise HTTPException(
-        status_code=http_status.HTTP_404_NOT_FOUND,
+        status_code=status.HTTP_404_NOT_FOUND,
         detail="Referral code not found.",
     )
+
