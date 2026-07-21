@@ -22,9 +22,11 @@ from app.models.verification import Verification
 from app.models.admin_role import AdminRole
 from app.models.admin_invitation import AdminInvitation
 from app.models.refund_request import RefundRequest
+from app.models.report import SQLReport
 
 __all__ = [
     "Base",
+    "SQLReport",
     "RefundRequest",
     "User",
     "AuditLog",

@@ -71,33 +71,79 @@ def _map_report(doc):
     }
 
 def get_reports_list(page: int = 1, page_size: int = 50, status: str = None, search: str = None):
-    if not firebase_connected or db is None:
-        return {"total": 0, "page": page, "page_size": page_size, "items": []}
+    all_reports = []
 
-    try:
-        all_reports = sorted(
-            [_map_report(d) for d in db.collection("reports").stream()],
-            key=lambda r: r.get("createdAt") or r.get("created_at") or "",
-            reverse=True,  # newest first
-        )
-    except Exception as e:
-        print(f"[reports] Firestore stream error in get_reports_list: {e}")
-        all_reports = []
+    # 1. Try Firestore first
+    if firebase_connected and db is not None:
+        try:
+            all_reports = sorted(
+                [_map_report(d) for d in db.collection("reports").stream()],
+                key=lambda r: r.get("createdAt") or r.get("created_at") or "",
+                reverse=True,  # newest first
+            )
+        except Exception as e:
+            print(f"[reports] Firestore stream error in get_reports_list: {e}")
 
-    # Filter by status (case-insensitive)
-    if status:
-        all_reports = [r for r in all_reports if r["status"].lower() == status.lower()]
+    # 2. Fall back to SQL Database reports
+    if not all_reports:
+        from app.db.session import SessionLocal
+        from app.models.report import SQLReport
+        db_s = SessionLocal()
+        try:
+            query = db_s.query(SQLReport)
+            if status:
+                query = query.filter(SQLReport.status.ilike(status))
+            if search:
+                term = f"%{search}%"
+                query = query.filter(
+                    SQLReport.title.ilike(term) |
+                    SQLReport.reporter.ilike(term) |
+                    SQLReport.category.ilike(term) |
+                    SQLReport.description.ilike(term)
+                )
+            sql_reps = query.order_by(SQLReport.created_at.desc()).all()
+            
+            for r in sql_reps:
+                # Resolve product
+                from app.models.product import Product
+                prod = db_s.query(Product).filter(Product.id == int(r.product_id)).first() if r.product_id.isdigit() else None
+                product_title = prod.title if prod else "Deleted Product"
+                product_thumbnail = (prod.thumbnail or "") if prod else ""
 
-    # Filter by search term (title, reporter, category, description)
-    if search:
-        term = search.lower()
-        all_reports = [
-            r for r in all_reports
-            if term in r["title"].lower()
-            or term in r["reporter"].lower()
-            or term in r["category"].lower()
-            or term in r["description"].lower()
-        ]
+                all_reports.append({
+                    "id":               str(r.id),
+                    "title":            r.title or f"Report: {r.category}",
+                    "reporter":         r.reporter or "Anonymous",
+                    "status":           r.status or "Pending",
+                    "severity":         r.severity or "medium",
+                    "category":         r.category or "General",
+                    "createdAt":        r.created_at.isoformat() + "Z",
+                    "resolvedAt":       r.resolved_at.isoformat() + "Z" if r.resolved_at else None,
+                    "assignee":         r.assignee or "Unassigned",
+                    "description":      r.description or "",
+                    "productId":        r.product_id,
+                    "productTitle":     product_title,
+                    "productThumbnail": product_thumbnail,
+                    "user_id":          r.user_id,
+                })
+        except Exception as sql_err:
+            print(f"[reports] SQL read error in get_reports_list: {sql_err}")
+        finally:
+            db_s.close()
+
+    # Filter status and search locally for Firestore fetched reports (safeguard)
+    if firebase_connected and db is not None:
+        if status:
+            all_reports = [r for r in all_reports if r["status"].lower() == status.lower()]
+        if search:
+            term = search.lower()
+            all_reports = [
+                r for r in all_reports
+                if term in r["title"].lower()
+                or term in r["reporter"].lower()
+                or term in r["category"].lower()
+                or term in r["description"].lower()
+            ]
 
     total = len(all_reports)
     start = (page - 1) * page_size
@@ -106,39 +152,50 @@ def get_reports_list(page: int = 1, page_size: int = 50, status: str = None, sea
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 def get_reports_analytics_data():
-    if not firebase_connected or db is None:
-        today = datetime.utcnow()
-        reports_per_day = []
-        for i in range(4, -1, -1):
-            d = today - timedelta(days=i)
-            reports_per_day.append({
-                "label": d.strftime("%a"),
-                "date":  d.strftime("%Y-%m-%d"),
-                "count": 0,
-            })
-        return {
-            "total":              0,
-            "openCount":          0,
-            "resolvedCount":      0,
-            "criticalCount":      0,
-            "rejectedCount":      0,
-            "avgResolutionHours": 0,
-            "reportsPerDay":      reports_per_day,
-            "mostReportedProducts": [],
-            "categoryBreakdown": [],
-            "insights": [
-                {"type": "info", "text": "No reports submitted yet."}
-            ],
-            "reports": [],
-        }
+    reports_list = []
 
-    try:
-        docs = list(db.collection("reports").stream())
-        reports_list = [_map_report(d) for d in docs]
-    except Exception as e:
-        print(f"[reports] Firestore stream error in get_reports_analytics_data: {e}")
-        docs = []
-        reports_list = []
+    # 1. Try Firestore first
+    if firebase_connected and db is not None:
+        try:
+            docs = list(db.collection("reports").stream())
+            reports_list = [_map_report(d) for d in docs]
+        except Exception as e:
+            print(f"[reports] Firestore stream error in get_reports_analytics_data: {e}")
+
+    # 2. Fall back to SQL Database
+    if not reports_list:
+        from app.db.session import SessionLocal
+        from app.models.report import SQLReport
+        db_s = SessionLocal()
+        try:
+            sql_reps = db_s.query(SQLReport).order_by(SQLReport.created_at.desc()).all()
+            for r in sql_reps:
+                # Resolve product
+                from app.models.product import Product
+                prod = db_s.query(Product).filter(Product.id == int(r.product_id)).first() if r.product_id.isdigit() else None
+                product_title = prod.title if prod else "Deleted Product"
+                product_thumbnail = (prod.thumbnail or "") if prod else ""
+
+                reports_list.append({
+                    "id":               str(r.id),
+                    "title":            r.title or f"Report: {r.category}",
+                    "reporter":         r.reporter or "Anonymous",
+                    "status":           r.status or "Pending",
+                    "severity":         r.severity or "medium",
+                    "category":         r.category or "General",
+                    "createdAt":        r.created_at.isoformat() + "Z",
+                    "resolvedAt":       r.resolved_at.isoformat() + "Z" if r.resolved_at else None,
+                    "assignee":         r.assignee or "Unassigned",
+                    "description":      r.description or "",
+                    "productId":        r.product_id,
+                    "productTitle":     product_title,
+                    "productThumbnail": product_thumbnail,
+                    "user_id":          r.user_id,
+                })
+        except Exception as sql_err:
+            print(f"[reports] SQL read error in get_reports_analytics_data: {sql_err}")
+        finally:
+            db_s.close()
 
     total = resolved = open_count = rejected = critical = 0
     resolution_hours = []
@@ -221,27 +278,86 @@ def get_reports_analytics_data():
     }
 
 def update_report_status(report_id: str, status: str, note: str = None):
-    if not firebase_connected or db is None:
-        return {"success": True, "id": report_id, "status": status}
-    update_data = {"status": status, "updatedAt": datetime.now(timezone.utc).isoformat() + "Z"}
-    if status in ("Resolved", "Rejected"):
-        update_data["resolvedAt"] = datetime.now(timezone.utc).isoformat() + "Z"
-    if note:
-        update_data["resolution_note"] = note
-    db.collection("reports").document(report_id).update(update_data)
+    # 1. Update SQL Database (always)
+    from app.db.session import SessionLocal
+    from app.models.report import SQLReport
+    db_s = SessionLocal()
+    try:
+        if report_id.isdigit():
+            rep = db_s.query(SQLReport).filter(SQLReport.id == int(report_id)).first()
+            if rep:
+                rep.status = status
+                if status in ("Resolved", "Rejected"):
+                    rep.resolved_at = datetime.utcnow()
+                db_s.commit()
+    except Exception as sql_err:
+        print(f"[reports] SQL update status error: {sql_err}")
+    finally:
+        db_s.close()
+
+    # 2. Try Firestore
+    if firebase_connected and db is not None:
+        try:
+            update_data = {"status": status, "updatedAt": datetime.now(timezone.utc).isoformat() + "Z"}
+            if status in ("Resolved", "Rejected"):
+                update_data["resolvedAt"] = datetime.now(timezone.utc).isoformat() + "Z"
+            if note:
+                update_data["resolution_note"] = note
+            db.collection("reports").document(report_id).update(update_data)
+        except Exception as fs_err:
+            print(f"[reports] Firestore update status error (non-blocking): {fs_err}")
+
     return {"success": True, "id": report_id, "status": status}
 
 def assign_report_moderator(report_id: str, assignee: str):
-    if not firebase_connected or db is None:
-        return {"success": True, "id": report_id, "assignee": assignee}
-    db.collection("reports").document(report_id).update({
-        "assignee":  assignee,
-        "updatedAt": datetime.utcnow().isoformat() + "Z",
-    })
+    # 1. Update SQL
+    from app.db.session import SessionLocal
+    from app.models.report import SQLReport
+    db_s = SessionLocal()
+    try:
+        if report_id.isdigit():
+            rep = db_s.query(SQLReport).filter(SQLReport.id == int(report_id)).first()
+            if rep:
+                rep.assignee = assignee
+                db_s.commit()
+    except Exception as sql_err:
+        print(f"[reports] SQL assign error: {sql_err}")
+    finally:
+        db_s.close()
+
+    # 2. Try Firestore
+    if firebase_connected and db is not None:
+        try:
+            db.collection("reports").document(report_id).update({
+                "assignee":  assignee,
+                "updatedAt": datetime.utcnow().isoformat() + "Z",
+            })
+        except Exception as fs_err:
+            print(f"[reports] Firestore assign error (non-blocking): {fs_err}")
+
     return {"success": True, "id": report_id, "assignee": assignee}
 
 def remove_report(report_id: str):
-    if not firebase_connected or db is None:
-        return {"success": True, "id": report_id}
-    db.collection("reports").document(report_id).delete()
+    # 1. Update SQL
+    from app.db.session import SessionLocal
+    from app.models.report import SQLReport
+    db_s = SessionLocal()
+    try:
+        if report_id.isdigit():
+            rep = db_s.query(SQLReport).filter(SQLReport.id == int(report_id)).first()
+            if rep:
+                db_s.delete(rep)
+                db_s.commit()
+    except Exception as sql_err:
+        print(f"[reports] SQL delete error: {sql_err}")
+    finally:
+        db_s.close()
+
+    # 2. Try Firestore
+    if firebase_connected and db is not None:
+        try:
+            db.collection("reports").document(report_id).delete()
+        except Exception as fs_err:
+            print(f"[reports] Firestore delete error (non-blocking): {fs_err}")
+
     return {"success": True, "id": report_id}
