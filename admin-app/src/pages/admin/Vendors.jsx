@@ -52,13 +52,6 @@ const Icon = ({ name, size = 16, className = '' }) => {
   );
 };
 
-// ── Status badge ───────────────────────────────────────────────────────────────
-function StatusBadge({ label, statusType }) {
-  let bg = 'rgba(123,63,160,0.10)';
-  let border = 'rgba(184,134,208,0.30)';
-  let color = '#7B3FA0';
-  let dot = '#B886D0';
-
 // ── Helper to derive display name across all user name fields ────────────────
 const getUserName = (u, fallback = '—') => {
   if (!u) return fallback;
@@ -67,6 +60,13 @@ const getUserName = (u, fallback = '—') => {
   if (u.email && u.email.includes('@')) return u.email.split('@')[0];
   return fallback;
 };
+
+// ── Status badge ───────────────────────────────────────────────────────────────
+function StatusBadge({ label, statusType }) {
+  let bg = 'rgba(123,63,160,0.10)';
+  let border = 'rgba(184,134,208,0.30)';
+  let color = '#7B3FA0';
+  let dot = '#B886D0';
 
   if (statusType === 'restricted') {
     bg = 'rgba(245,158,11,0.10)';
