@@ -220,6 +220,12 @@ def submit_report(
         )
     except Exception as exc:
         _logger.error("[reports] Firestore write failed: %s", exc, exc_info=True)
+        exc_str = str(exc).lower()
+        if "quota" in exc_str or "exhausted" in exc_str or "429" in exc_str:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Report service quota limit reached. Please try again tomorrow.",
+            )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Failed to save report. Please try again later.",
@@ -244,10 +250,11 @@ def get_my_reports(
     Return all reports submitted by the current authenticated user.
 
     - Requires valid JWT — 401 if missing/invalid.
-    - Returns HTTP 503 if Firebase is unavailable.
-    - Returns an empty list if the user has no reports.
+    - Falls back gracefully to returning an empty list if Firestore is unavailable or quota is exceeded.
     """
-    _require_firebase()
+    if not firebase_connected or firestore_db is None:
+        _logger.warning("[reports] Firestore not available. Returning empty list.")
+        return []
 
     user_id = str(current_user.id)
 
@@ -276,8 +283,5 @@ def get_my_reports(
         return results
 
     except Exception as exc:
-        _logger.error("[reports] Firestore read failed for user %s: %s", user_id, exc, exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Failed to retrieve reports. Please try again later.",
-        ) from exc
+        _logger.warning("[reports] Firestore read failed for user %s (quota limits or connection issues): %s", user_id, exc)
+        return []
