@@ -1088,8 +1088,8 @@ function MyReports() {
         setReports(items);
         setLoading(false);
       })
-      .catch(() => {
-        setError('Failed to load your reports.');
+      .catch((err) => {
+        setError(err.message || 'Failed to load your reports.');
         setLoading(false);
       });
   }, []);
