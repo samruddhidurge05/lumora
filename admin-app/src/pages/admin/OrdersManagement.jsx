@@ -207,10 +207,11 @@ export default function OrdersManagement() {
 
   // --- FIRESTORE DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
+    const validPage = (typeof page === 'number' && !isNaN(page) && page >= 1) ? Math.floor(page) : 1;
     setLoading(true);
     setLoadError('');
     try {
-      const params = new URLSearchParams({ page, page_size: ORDER_PAGE_SIZE });
+      const params = new URLSearchParams({ page: validPage, page_size: ORDER_PAGE_SIZE });
       if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
       const data = await backendFetch(`/admin/orders/?${params}`);
       // Handle both paginated shape {total, items} and legacy bare array
@@ -218,7 +219,7 @@ export default function OrdersManagement() {
       setOrders(items);
       setOrderTotal(Array.isArray(data) ? items.length : (data.total || items.length));
       setOrderTotalPages(Array.isArray(data) ? 1 : Math.max(1, Math.ceil((data.total || items.length) / ORDER_PAGE_SIZE)));
-      setOrderPage(page);
+      setOrderPage(validPage);
       if (items.length > 0) setSelectedOrderId(items[0].id);
     } catch (err) {
       console.error('Failed to load orders:', err);
@@ -706,7 +707,7 @@ export default function OrdersManagement() {
         {!loading && loadError && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <p className="text-sm font-bold text-red-400">{loadError}</p>
-            <button onClick={loadOrders} className="px-5 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold">Retry</button>
+            <button onClick={() => loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null)} className="px-5 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold">Retry</button>
           </div>
         )}
 
