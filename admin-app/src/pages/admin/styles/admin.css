@@ -411,26 +411,102 @@
   outline-offset: 2px !important;
 }
 
-/* --- Responsive & Structural Overrides --- */
+/* --- Comprehensive Responsive & Structural System (320px - 1920px+) --- */
+
+/* Ultra-Wide Monitors (>= 1728px) */
+@media (min-width: 1728px) {
+  .admin-layout-grid {
+    max-width: 1680px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop & Laptop (1025px - 1440px) */
+@media (max-width: 1280px) {
+  .admin-layout-grid {
+    padding: 0 var(--admin-spacing-24);
+    gap: var(--admin-spacing-24);
+  }
+}
+
+/* Tablet & Mobile Breakpoints (< 1024px) */
 @media (max-width: 1024px) {
   .admin-layout-grid {
     flex-direction: column;
     padding: 0 var(--admin-spacing-16);
-    gap: var(--admin-spacing-24);
+    gap: var(--admin-spacing-16);
   }
   .admin-sidebar {
-    width: 100% !important;
-    height: auto !important;
     position: relative !important;
     top: 0 !important;
-    margin-bottom: var(--admin-spacing-16) !important;
+    margin-bottom: 0 !important;
   }
 }
 
-/* Navbar legacy — nav-menu hidden on mobile (Navbar.jsx is currently unused
-   but the rule is retained in CSS so the file can be restored without side-effects) */
+/* Mobile Devices & Small Tablets (< 768px) */
 @media (max-width: 768px) {
-  .nav-menu {
-    display: none !important;
+  .admin-layout-grid {
+    padding: 0 var(--admin-spacing-8);
+  }
+
+  /* Responsive Stats & Metric Cards */
+  .admin-main-content .grid-cols-4,
+  .admin-main-content .grid-cols-3,
+  .admin-main-content .stats-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    gap: var(--admin-spacing-16) !important;
+  }
+
+  .admin-main-content .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Filter and Action Header Flex Wrapping */
+  .admin-main-content .flex-wrap-mobile,
+  .admin-main-content div[class*="justify-between"] {
+    flex-wrap: wrap;
+    gap: var(--admin-spacing-12, 12px);
+  }
+
+  /* Table horizontal scroll container */
+  .admin-main-content .overflow-x-auto {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--admin-radius-input);
+    margin-bottom: var(--admin-spacing-16);
+  }
+
+  /* Touch target sizes (>= 44px) on mobile */
+  .admin-main-content button,
+  .admin-main-content a.admin-nav-item,
+  .admin-main-content input,
+  .admin-main-content select {
+    min-height: 44px !important;
   }
 }
+
+/* Extra Small Mobile Devices (< 480px / 320px - 390px) */
+@media (max-width: 480px) {
+  .admin-main-content {
+    gap: var(--admin-spacing-16);
+  }
+
+  .admin-main-content h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .admin-main-content th,
+  .admin-main-content td {
+    padding: var(--admin-spacing-8) !important;
+    font-size: 0.75rem !important;
+  }
+
+  .admin-main-content .glass-surface,
+  .admin-main-content .glass-card,
+  .admin-main-content .premium-flat-card {
+    padding: var(--admin-spacing-16) !important;
+    border-radius: 16px !important;
+  }
+}
+
