@@ -415,3 +415,208 @@ class ProductService:
         except Exception as e:
             db.rollback()
             raise e
+
+    @staticmethod
+    def _is_image_url(url: Optional[str]) -> bool:
+        if not url:
+            return False
+        
+        # Check scheme first
+        low_url = url.lower()
+        if not (low_url.startswith("http://") or low_url.startswith("https://") or 
+                low_url.startswith("b2://") or low_url.startswith("gs://")):
+            return False
+            
+        # Parse query params out of path for extension check
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(url)
+            path = parsed.path.lower()
+        except Exception:
+            return False
+            
+        # Reject known non-image extensions
+        non_image_exts = (
+            ".pdf", ".zip", ".mp4", ".mov", ".docx", ".xlsx", ".pptx", ".tar", 
+            ".gz", ".rar", ".7z", ".fig", ".sketch", ".xd", ".psd", ".ai", 
+            ".epub", ".mp3", ".wav", ".ttf", ".otf"
+        )
+        if any(path.endswith(ext) for ext in non_image_exts):
+            return False
+            
+        return True
+
+    @staticmethod
+    def _resolve_media_url(url: Optional[str], category: str = None) -> Optional[str]:
+        if not url:
+            return None
+            
+        # Handle B2 scheme or configuration-driven Backblaze absolute URLs
+        from app.services.storage_service import storage_service
+        from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+        
+        b2 = storage_service.b2_provider
+        bucket_name = getattr(b2, "bucket_name", None) or "lumora-products"
+        download_domain = getattr(b2, "download_url", None) or "https://f005.backblazeb2.com"
+        
+        is_b2 = False
+        file_path = None
+        
+        if url.startswith("b2://"):
+            clean_path = url.replace("b2://", "")
+            parts = clean_path.split("/", 1)
+            if len(parts) == 2:
+                bucket_name, file_path = parts
+                is_b2 = True
+        elif url.startswith("http://") or url.startswith("https://"):
+            try:
+                parsed_url = urlparse(url)
+                parsed_download = urlparse(download_domain)
+                # Check if it belongs to Backblaze and matches the bucket
+                if parsed_url.netloc and (parsed_url.netloc == parsed_download.netloc or "backblazeb2.com" in parsed_url.netloc):
+                    bucket_marker = f"/file/{bucket_name}/"
+                    if bucket_marker in parsed_url.path:
+                        file_path = parsed_url.path.split(bucket_marker, 1)[1]
+                        is_b2 = True
+            except Exception:
+                pass
+                
+        if is_b2 and file_path:
+            # PRIVATE assets must NEVER be converted to public direct URLs!
+            if file_path.startswith("private/"):
+                return url
+                
+            # Construct base URL without authorization token
+            base_url = f"{download_domain}/file/{bucket_name}/{file_path}"
+            
+            # Derive prefix dynamically from file path
+            prefix = "public/"
+            if "/" in file_path:
+                prefix = file_path.split("/", 1)[0] + "/"
+                
+            try:
+                pub_token = b2.get_public_download_token(prefix)
+            except Exception:
+                pub_token = None
+                
+            if pub_token:
+                # Safely parse and insert/overwrite Authorization parameter
+                try:
+                    parsed_url = urlparse(url)
+                    query_params = dict(parse_qsl(parsed_url.query))
+                    query_params["Authorization"] = pub_token
+                    
+                    # Reassemble with the new/updated query parameter
+                    new_query = urlencode(query_params)
+                    base_parsed = urlparse(base_url)
+                    reassembled = base_parsed._replace(query=new_query)
+                    return urlunparse(reassembled)
+                except Exception:
+                    # Graceful fallback
+                    return f"{base_url}?Authorization={pub_token}"
+            else:
+                return base_url
+                
+        # Fallback to local files resolution
+        url_lower = url.lower()
+        if "/uploads/" in url_lower:
+            try:
+                # Local uploads path resolution
+                # Ensure the file exists
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                path_part = url.split("/uploads/", 1)[1]
+                relative_filepath = os.path.join("uploads", path_part)
+                absolute_filepath = os.path.abspath(os.path.join(base_dir, relative_filepath))
+                if not os.path.exists(absolute_filepath):
+                    return None
+            except Exception:
+                pass
+                
+        return url
+
+    @staticmethod
+    def resolve_product_media(product, db) -> Any:
+        # Expunge/transient helper to prevent database write conflicts
+        from sqlalchemy.orm import make_transient
+        try:
+            db.expunge(product)
+            make_transient(product)
+        except Exception:
+            pass
+            
+        stored_thumb = product.thumbnail
+        stored_preview = product.preview
+        image_urls = product.image_urls if isinstance(product.image_urls, list) else []
+        
+        resolved_thumb = None
+        resolved_preview = None
+        
+        # 1. Resolve stored thumbnail
+        if stored_thumb:
+            if ProductService._is_image_url(stored_thumb):
+                resolved_thumb = ProductService._resolve_media_url(stored_thumb, product.category)
+                if resolved_thumb and not ProductService._is_image_url(resolved_thumb):
+                    resolved_thumb = None
+                    
+        # 2. Resolve stored preview
+        if stored_preview:
+            if ProductService._is_image_url(stored_preview):
+                resolved_preview = ProductService._resolve_media_url(stored_preview, product.category)
+                if resolved_preview and not ProductService._is_image_url(resolved_preview):
+                    resolved_preview = None
+                    
+        # 3. Fallbacks
+        if not resolved_thumb and image_urls:
+            for first in image_urls:
+                if ProductService._is_image_url(first):
+                    resolved_thumb = ProductService._resolve_media_url(first, product.category)
+                    if resolved_thumb:
+                        break
+        if not resolved_preview and image_urls:
+            for first in image_urls:
+                if ProductService._is_image_url(first):
+                    resolved_preview = ProductService._resolve_media_url(first, product.category)
+                    if resolved_preview:
+                        break
+                        
+        product.thumbnail = resolved_thumb
+        product.preview = resolved_preview
+        
+        # 4. Resolve file_url
+        if product.file_url:
+            if "/uploads/" in product.file_url:
+                product.file_url = ProductService._resolve_media_url(product.file_url, product.category)
+                
+        # 5. Resolve gallery / image_urls / preview_images
+        if product.image_urls:
+            resolved_images = []
+            for img in product.image_urls:
+                if ProductService._is_image_url(img):
+                    r = ProductService._resolve_media_url(img, product.category)
+                    if r:
+                        resolved_images.append(r)
+                else:
+                    resolved_images.append(img)
+            product.image_urls = resolved_images
+            
+        if product.preview_images:
+            resolved_pi = []
+            for img in product.preview_images:
+                if ProductService._is_image_url(img):
+                    r = ProductService._resolve_media_url(img, product.category)
+                    if r:
+                        resolved_pi.append(r)
+                else:
+                    resolved_pi.append(img)
+            product.preview_images = resolved_pi
+            
+        return product
+
+    @staticmethod
+    def resolve_products_media(products, db) -> Any:
+        if isinstance(products, list):
+            return [ProductService.resolve_product_media(p, db) for p in products]
+        elif products:
+            return ProductService.resolve_product_media(products, db)
+        return products
+

@@ -9,6 +9,8 @@ from app.shared.firebase.connection import db as firestore_db, firebase_connecte
 from datetime import datetime, timezone
 from typing import Optional
 
+from app.services.product_service import ProductService
+
 router = APIRouter()
 
 
@@ -28,6 +30,7 @@ def list_pending_products(
         .limit(limit)
         .all()
     )
+    ProductService.resolve_products_media(products, db)
     total = db.query(Product).filter(Product.status == "pending_review").count()
     return {
         "total": total,

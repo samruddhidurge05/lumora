@@ -44,6 +44,7 @@ def get_products(
         q = q.filter(Product.category.ilike(f"%{category}%"))
     total = q.count()
     items = q.offset((page - 1) * page_size).limit(page_size).all()
+    ProductService.resolve_products_media(items, db)
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
 
