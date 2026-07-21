@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -28,25 +28,25 @@ class RefundRequestResponse(BaseModel):
     payment_id: Optional[str] = None        # may be NULL on older records
     gateway_refund_id: Optional[str] = None
     admin_notes: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    admin_decision_at: Optional[str] = None
+    created_at: Optional[Union[datetime, str]] = None
+    updated_at: Optional[Union[datetime, str]] = None
+    admin_decision_at: Optional[Union[datetime, str]] = None
     reviewed_by: Optional[int] = None
     decision_reason: Optional[str] = None
     last_updated_by: Optional[int] = None
-    last_updated_at: Optional[datetime] = None  # may be NULL on older records
+    last_updated_at: Optional[Union[datetime, str]] = None  # may be NULL on older records
 
     # Snapshot - all Optional so older records (pre-snapshot columns) don't fail
     product_name: Optional[str] = None
     order_total: Optional[float] = None
     payment_method: Optional[str] = None
-    purchase_date: Optional[datetime] = None
+    purchase_date: Optional[Union[datetime, str]] = None
 
     # Diagnostic Metrics
     is_downloaded: bool = False
     download_count: int = 0
-    first_download_at: Optional[datetime] = None
-    last_download_at: Optional[datetime] = None
+    first_download_at: Optional[Union[datetime, str]] = None
+    last_download_at: Optional[Union[datetime, str]] = None
     ip_address: Optional[str] = None
     device_details: Optional[str] = None
     previous_refund_count: int = 0
