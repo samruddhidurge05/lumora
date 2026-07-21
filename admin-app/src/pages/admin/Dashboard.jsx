@@ -436,301 +436,11 @@ export default function Dashboard() {
           />
         </StatsGrid>
 
-        {/* --- LAYER 3: REVENUE INTELLIGENCE CORE --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-10 gap-8 mb-12">
+        {/* --- OPERATIONAL COMMAND CENTER LAYER --- */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
           
-          {/* Revenue Chart Engine (70%) */}
-          <div className="lg:col-span-7 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6">
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Financial Stream Matrix</h4>
-                <h2 className="text-lg font-serif font-black text-[#2D004D] mt-0.5">Revenue Chart Engine</h2>
-              </div>
-
-              {/* Timeframe toggle buttons */}
-              <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-xl border border-stone-200/50 flex items-center gap-1.5">
-                {['daily', 'weekly', 'monthly'].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => { sysSound.playTap(); setTimeframe(t); }}
-                    className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-widest uppercase transition-colors ${
-                      timeframe === t ? 'bg-[#2D004D] text-white' : 'text-[#7B3FA0] hover:text-[#2D004D]'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Main Interactive SVG Line Chart — driven by real revenueChart data */}
-            <div className="h-[280px] w-full relative pt-4">
-              {isLoading ? (
-                <div className="w-full h-full flex flex-col justify-between animate-pulse">
-                  <div className="flex justify-between items-end h-[220px] px-4">
-                    <div className="w-8 h-[20%] bg-[#381347]/10 rounded-t" />
-                    <div className="w-8 h-[40%] bg-[#381347]/10 rounded-t" />
-                    <div className="w-8 h-[35%] bg-[#381347]/10 rounded-t" />
-                    <div className="w-8 h-[60%] bg-[#381347]/10 rounded-t" />
-                    <div className="w-8 h-[55%] bg-[#381347]/10 rounded-t" />
-                    <div className="w-8 h-[80%] bg-[#381347]/10 rounded-t" />
-                  </div>
-                  <div className="h-1 bg-[#381347]/10 w-full" />
-                  <div className="flex justify-between text-[9px] text-[#7B3FA0] px-4 mt-2">
-                    <div className="w-12 h-3 bg-[#381347]/10 rounded" />
-                    <div className="w-12 h-3 bg-[#381347]/10 rounded" />
-                    <div className="w-12 h-3 bg-[#381347]/10 rounded" />
-                  </div>
-                </div>
-              ) : (() => {
-                const chartData = dashData?.revenueChart?.[timeframe] || [];
-                const n = chartData.length;
-                if (n === 0) return (
-                  <div className="flex items-center justify-center h-full text-[11px] text-[#7B3FA0]">
-                    No revenue data yet.
-                  </div>
-                );
-                const maxGross = Math.max(...chartData.map(d => d.gross), 1);
-                const W = 540, H = 200, padL = 40, padT = 20, padB = 30;
-                // Map each data point to SVG coords
-                const toX = i => padL + (i / Math.max(n - 1, 1)) * W;
-                const toY = v => padT + (1 - v / maxGross) * H;
-                // Build polyline points
-                const grossPts  = chartData.map((d, i) => `${toX(i)},${toY(d.gross)}`).join(' ');
-                const netPts    = chartData.map((d, i) => `${toX(i)},${toY(d.net)}`).join(' ');
-                const areaClose = `${toX(n-1)},${padT + H} ${padL},${padT + H}`;
-                return (
-                  <svg viewBox={`0 0 ${W + padL + 20} ${H + padT + padB}`} className="w-full h-full overflow-visible">
-                    <defs>
-                      <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.25" />
-                        <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
-                      </linearGradient>
-                      <linearGradient id="accentGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#D8BFE3" stopOpacity="0.2" />
-                        <stop offset="100%" stopColor="#D8BFE3" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    {/* Grid lines */}
-                    {[0,1,2,3,4].map(idx => (
-                      <line key={idx} x1={padL} y1={padT + idx * (H/4)} x2={W + padL} y2={padT + idx * (H/4)}
-                        stroke="rgba(90,30,126,0.05)" strokeDasharray="4" />
-                    ))}
-                    {/* Area fill — gross */}
-                    <polygon
-                      points={`${grossPts} ${areaClose}`}
-                      fill="url(#chartGradient)"
-                    />
-                    {/* Gross line */}
-                    <polyline points={grossPts} fill="none" stroke="#B886D0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    {/* Net line (dashed) */}
-                    <polyline points={netPts} fill="none" stroke="#D8BFE3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" />
-                    {/* Data points + tooltips */}
-                    {chartData.map((d, i) => (
-                      <g key={i}>
-                        <circle cx={toX(i)} cy={toY(d.gross)} r="4.5" fill="#B886D0" stroke="white" strokeWidth="1.5" className="cursor-pointer" />
-                        <text x={toX(i)} y={padT + H + 16} fill="#7B3FA0" fontSize="7.5" fontWeight="bold" textAnchor="middle">
-                          {d.label}
-                        </text>
-                      </g>
-                    ))}
-                  </svg>
-                );
-              })()}
-            </div>
-
-            <div className="flex items-center gap-6 text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider pl-10">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#B886D0]" />
-                Gross Creator Revenue
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D8BFE3]" />
-                Net Settled Earnings
-              </div>
-            </div>
-
-          </div>
-
-          {/* Business Insight Panel (30%) */}
-          <div className="lg:col-span-3 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-5 justify-between">
-            <div>
-              <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Neural Diagnostics</h4>
-              <h2 className="text-lg font-serif font-black text-[#2D004D] mt-0.5">SaaS System Insights</h2>
-            </div>
-
-            {/* Insights — generated from real Firestore data */}
-            <div className="flex flex-col gap-4">
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="p-3.5 bg-white border border-stone-200/20 rounded-2xl flex flex-col gap-1.5 animate-pulse">
-                    <div className="h-2 bg-[#381347]/10 rounded-full w-1/4" />
-                    <div className="h-3 bg-[#381347]/15 rounded-md w-full" />
-                  </div>
-                ))
-              ) : insights.length === 0 ? (
-                <div className="p-3.5 bg-white border border-stone-200/20 rounded-2xl flex flex-col gap-1.5">
-                  <span className="text-[8px] font-extrabold tracking-widest text-[#D8BFE3] uppercase">Status</span>
-                  <p className="text-[10px] text-[#2D004D] font-medium leading-relaxed">
-                    No data yet. Insights will appear as orders, reviews, and products are added.
-                  </p>
-                </div>
-              ) : insights.map((ins, i) => (
-                <div key={i} className="p-3.5 bg-white border border-stone-200/20 rounded-2xl flex flex-col gap-1.5 hover:shadow-inner transition-shadow duration-300">
-                  <span className="text-[8px] font-extrabold tracking-widest text-[#D8BFE3] uppercase">{ins.label}</span>
-                  <p className="text-[10px] text-[#2D004D] font-medium leading-relaxed">{ins.text}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Marketplace Health Score — real computed value */}
-            <div className="bg-white p-4 rounded-2xl border border-stone-200/20 flex flex-col gap-2 shadow-sm mt-2">
-              <div className="flex justify-between text-[8px] font-extrabold text-[#7B3FA0] uppercase tracking-wider">
-                <span>Marketplace Health</span>
-                <span>{isLoading ? '...' : `${healthScore}/100 — ${healthStatus || '...'}`}</span>
-              </div>
-              <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    isLoading ? 'bg-[#381347]/10 w-full animate-pulse' :
-                    healthScore >= 85 ? 'bg-gradient-to-r from-[#B886D0] to-[#a2d8b1]' :
-                    healthScore >= 65 ? 'bg-gradient-to-r from-[#B886D0] to-[#D8BFE3]' :
-                    healthScore >= 40 ? 'bg-gradient-to-r from-[#ffb685] to-[#D8BFE3]' :
-                    'bg-gradient-to-r from-[#FF8597] to-[#ffb685]'
-                  }`}
-                  style={{ width: isLoading ? '100%' : `${healthScore}%` }}
-                />
-              </div>
-              <span className="text-[8px] text-[#7B3FA0] mt-0.5">
-                {isLoading ? 'Assessing platform health...' : (
-                  healthScore >= 85 ? 'Excellent — Platform operating at peak performance' :
-                  healthScore >= 65 ? 'Healthy — All systems normal' :
-                  healthScore >= 40 ? 'Warning — Review flagged metrics' :
-                  'Critical — Immediate action required'
-                )}
-              </span>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* --- LAYER 4: ECOSYSTEM PERFORMANCE LAYER --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-10 gap-8 mb-12 items-start">
-          
-          {/* A. Product Performance Matrix (60%) */}
-          <GlassCard title="Product Performance Matrix" subtitle="Asset Telemetry" className="lg:col-span-6">
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-stone-200/40 pb-2">
-                    <th className="py-2.5 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Asset Name</th>
-                    <th className="py-2.5 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Revenue</th>
-                    <th className="py-2.5 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Orders</th>
-                    <th className="py-2.5 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Conversion</th>
-                    <th className="py-2.5 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Engagement</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
-                      <tr key={i} className="border-b border-stone-100/40 animate-pulse">
-                        <td className="py-3"><div className="h-4 bg-[#381347]/10 rounded w-2/3" /></td>
-                        <td className="py-3"><div className="h-4 bg-[#381347]/15 rounded w-1/2 ml-auto" /></td>
-                        <td className="py-3"><div className="h-4 bg-[#381347]/10 rounded w-1/3 mx-auto" /></td>
-                        <td className="py-3"><div className="h-4 bg-[#381347]/10 rounded w-1/3 mx-auto" /></td>
-                        <td className="py-3"><div className="h-4 bg-[#381347]/15 rounded w-1/2 mx-auto" /></td>
-                      </tr>
-                    ))
-                  ) : ecosystemProducts.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-[11px] text-[#7B3FA0]">No published products with orders yet.</td>
-                    </tr>
-                  ) : ecosystemProducts.map((p) => (
-                    <tr key={p.id} className="border-b border-stone-100/40 hover:bg-white/40 transition-colors">
-                      <td className="py-3 text-xs font-bold text-[#2D004D]">{p.name}</td>
-                      <td className="py-3 text-xs font-black text-right text-[#2D004D]">{currencySymbol}{formatValue(p.revenue)}</td>
-                      <td className="py-3 text-xs font-bold text-[#7B3FA0] text-center">{p.orders}</td>
-                      <td className="py-3 text-xs font-bold text-[#7B3FA0] text-center">{p.conversion}%</td>
-                      <td className="py-3 text-center">
-                        <div className="flex items-center gap-1.5 justify-center w-20 mx-auto">
-                          <span className="text-[10px] font-black text-[#2D004D]">{p.engagement}%</span>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            p.status === 'growth' ? 'bg-[#B886D0] shadow-[0_0_6px_#B886D0]' :
-                            p.status === 'caution' ? 'bg-[#D8BFE3] shadow-[0_0_6px_#D8BFE3]' :
-                            'bg-[#D8BFE3] shadow-[0_0_6px_#D8BFE3]'
-                          }`} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-
-          {/* B. Customer Behavior Insight Panel (40%) */}
-          <GlassCard title="Customer Behavior Insights" subtitle="Client Intelligence" className="lg:col-span-4 flex flex-col justify-between">
-            <div className="flex flex-col gap-3.5 flex-1 justify-center my-3">
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-white/60 border border-[#F3EAF8] rounded-2xl animate-pulse">
-                    <div className="flex items-center gap-3 w-2/3">
-                      <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-[10px]" />
-                      <div className="flex-grow">
-                        <div className="h-3 bg-[#381347]/15 rounded w-3/4 mb-1.5" />
-                        <div className="h-2 bg-[#381347]/10 rounded w-1/2" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end w-1/4">
-                      <div className="h-3 bg-[#381347]/15 rounded w-full mb-1.5" />
-                      <div className="h-2 bg-[#381347]/10 rounded w-2/3" />
-                    </div>
-                  </div>
-                ))
-              ) : customerInsights.topCustomers.length === 0 ? (
-                <p className="text-[11px] text-[#7B3FA0] text-center py-4">No customer data yet.</p>
-              ) : customerInsights.topCustomers.map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-white/60 border border-[#F3EAF8] rounded-2xl hover:bg-white hover:shadow-sm transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0]">
-                      {c.name.slice(0, 2)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#2D004D]">{c.name}</span>
-                      <span className="text-[9px] text-[#7B3FA0] leading-none mt-0.5">{c.email}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-serif font-black text-[#2D004D]">{currencySymbol}{formatValue(c.spend)}</span>
-                    <span className="text-[8px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mt-0.5">{c.purchases} orders</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Geo distribution from real order data */}
-            <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-200/50">
-              {isLoading ? (
-                <div className="h-4 bg-[#381347]/10 animate-pulse rounded-md w-1/3" />
-              ) : customerInsights.geoDistribution.length === 0 ? (
-                <span className="text-[9px] font-bold text-[#7B3FA0] bg-white border border-stone-200/30 px-2.5 py-1 rounded-xl">No geo data yet</span>
-              ) : customerInsights.geoDistribution.map((g, i) => (
-                <span key={i} className="text-[9px] font-bold text-[#7B3FA0] bg-white border border-stone-200/30 px-2.5 py-1 rounded-xl">
-                  {g.country}: {g.share}%
-                </span>
-              ))}
-            </div>
-          </GlassCard>
-
-        </section>
-
-        {/* --- LAYER 5: LIVE EVENTS & LEADERS & RISK --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* 5. Live Activity Stream (Event Log) - 4 cols */}
-          <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[360px] overflow-hidden flex flex-col justify-between">
+          {/* 1. Live Activity Stream (Event Log) - 4 cols */}
+          <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
             {/* Vertical scrolling event containers */}
             <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin">
               {isLoading ? (
@@ -787,57 +497,11 @@ export default function Dashboard() {
             </div>
           </GlassCard>
 
-          {/* 6. Creator Economy Panel (Leaderboard) - 4 cols */}
-          <GlassCard title="Creator Leaderboard" subtitle="Marketplace Leaders" className="lg:col-span-4 h-[360px] flex flex-col justify-between">
-            <div className="flex flex-col gap-3.5 flex-1 justify-center my-1">
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-2.5 bg-white/50 rounded-2xl border border-[#F3EAF8] animate-pulse">
-                    <div className="flex items-center gap-3 w-2/3">
-                      <div className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-[10px]" />
-                      <div className="flex-1">
-                        <div className="h-3 bg-[#381347]/15 rounded w-3/4 mb-1.5" />
-                        <div className="h-2 bg-[#381347]/10 rounded w-1/2" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end w-1/4">
-                      <div className="h-3 bg-[#381347]/15 rounded w-full" />
-                    </div>
-                  </div>
-                ))
-              ) : leaderboardCreators.length === 0 ? (
-                <p className="text-[11px] text-[#7B3FA0] text-center py-4">No vendor data yet.</p>
-              ) : leaderboardCreators.map((c, idx) => (
-                <div 
-                  key={idx} 
-                  className="flex items-center justify-between p-2.5 bg-white/50 hover:bg-white rounded-2xl hover:shadow-sm border border-transparent hover:border-[#F3EAF8] transition-all duration-300"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl overflow-hidden border border-stone-200 shadow-sm bg-stone-100 flex items-center justify-center text-[10px] font-black text-[#7B3FA0] uppercase">
-                      {c.avatar
-                        ? <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
-                        : c.name.slice(0, 2)
-                      }
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#2D004D]">{c.name}</span>
-                      <span className="text-[8px] text-[#8E6AA8] uppercase tracking-wider font-bold">{c.orders} orders</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs font-serif font-black text-[#2D004D]">{currencySymbol}{formatValue(c.sales)}</span>
-                    <span className="text-[8px] font-extrabold text-[#B886D0] bg-[#B886D0]/10 px-1.5 py-0.5 rounded mt-0.5">{c.trend}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          {/* C. Risk & Fraud Intelligence (4 cols) */}
+          {/* 2. Risk & Fraud Intelligence (4 cols) */}
           <GlassCard 
             title="Risk & Fraud Audit" 
             subtitle="SECURITY LEDGER" 
-            className="lg:col-span-4 h-[360px] flex flex-col justify-between relative overflow-hidden"
+            className="lg:col-span-4 h-[380px] flex flex-col justify-between relative overflow-hidden"
             headerActions={
               <button 
                 onClick={handleTriggerSecurityScan}
@@ -852,7 +516,7 @@ export default function Dashboard() {
             {/* Scanning line sweep visual overlay */}
             {isScanning && (
               <motion.div 
-                animate={{ y: [0, 360, 0] }}
+                animate={{ y: [0, 380, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF8597] to-transparent shadow-[0_0_12px_#FF8597] z-10 pointer-events-none"
               />
@@ -900,6 +564,89 @@ export default function Dashboard() {
               <span>{isScanning ? `Auditing Ledger (${scanProgress}%)` : "Synaptic logs fully certified"}</span>
               <span className="font-bold text-[#B886D0] bg-[#B886D0]/10 px-1.5 py-0.5 rounded">SECURED</span>
             </div>
+          </GlassCard>
+
+          {/* 3. Quick Actions & Platform Health Deck (4 cols) */}
+          <GlassCard title="Operational Control & Health" subtitle="SYSTEM DIRECTIVES & SUBSYSTEM STATUS" className="lg:col-span-4 h-[380px] flex flex-col justify-between">
+            
+            {/* Quick Actions Deck */}
+            <div className="flex flex-col gap-2.5">
+              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Quick Directives</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => { sysSound.playTap(); navigate('/admin/products'); }}
+                  className="p-2.5 bg-white/80 hover:bg-white border border-[#F3EAF8] rounded-xl text-left transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                >
+                  <Icon name="Package" size={13} className="text-[#B886D0]" />
+                  <span className="text-[10px] font-bold text-[#2D004D]">Add Product</span>
+                </button>
+                <button
+                  onClick={() => { sysSound.playTap(); navigate('/admin/orders'); }}
+                  className="p-2.5 bg-white/80 hover:bg-white border border-[#F3EAF8] rounded-xl text-left transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                >
+                  <Icon name="Activity" size={13} className="text-[#B886D0]" />
+                  <span className="text-[10px] font-bold text-[#2D004D]">View Orders</span>
+                </button>
+                <button
+                  onClick={() => { sysSound.playTap(); navigate('/admin/users'); }}
+                  className="p-2.5 bg-white/80 hover:bg-white border border-[#F3EAF8] rounded-xl text-left transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                >
+                  <Icon name="Users" size={13} className="text-[#B886D0]" />
+                  <span className="text-[10px] font-bold text-[#2D004D]">Team Management</span>
+                </button>
+                <button
+                  onClick={() => { sysSound.playTap(); navigate('/admin/support'); }}
+                  className="p-2.5 bg-white/80 hover:bg-white border border-[#F3EAF8] rounded-xl text-left transition-all duration-200 hover:shadow-sm flex items-center gap-2"
+                >
+                  <Icon name="AlertTriangle" size={13} className="text-[#B886D0]" />
+                  <span className="text-[10px] font-bold text-[#2D004D]">Support Inbox</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Platform Subsystem Health Indicators */}
+            <div className="flex flex-col gap-2 pt-3 border-t border-stone-200/50">
+              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Subsystem Telemetry</span>
+              <div className="grid grid-cols-2 gap-2 text-[9px]">
+                <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
+                  <span className="font-medium text-[#7B3FA0]">PostgreSQL DB</span>
+                  <span className="font-bold text-[#2563eb]">ONLINE</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
+                  <span className="font-medium text-[#7B3FA0]">Firestore Sync</span>
+                  <span className="font-bold text-[#2563eb]">ACTIVE</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
+                  <span className="font-medium text-[#7B3FA0]">Storage (B2)</span>
+                  <span className="font-bold text-[#2563eb]">READY</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
+                  <span className="font-medium text-[#7B3FA0]">Payment Gateway</span>
+                  <span className="font-bold text-[#2563eb]">READY</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Overall Platform Health Score Bar */}
+            <div className="bg-white p-2.5 rounded-xl border border-stone-200/20 flex flex-col gap-1 shadow-sm">
+              <div className="flex justify-between text-[8px] font-extrabold text-[#7B3FA0] uppercase tracking-wider">
+                <span>Overall Platform Health</span>
+                <span>{isLoading ? '...' : `${healthScore}/100 — ${healthStatus || 'Healthy'}`}</span>
+              </div>
+              <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    isLoading ? 'bg-[#381347]/10 w-full animate-pulse' :
+                    healthScore >= 85 ? 'bg-gradient-to-r from-[#B886D0] to-[#a2d8b1]' :
+                    healthScore >= 65 ? 'bg-gradient-to-r from-[#B886D0] to-[#D8BFE3]' :
+                    healthScore >= 40 ? 'bg-gradient-to-r from-[#ffb685] to-[#D8BFE3]' :
+                    'bg-gradient-to-r from-[#FF8597] to-[#ffb685]'
+                  }`}
+                  style={{ width: isLoading ? '100%' : `${healthScore}%` }}
+                />
+              </div>
+            </div>
+
           </GlassCard>
 
         </section>

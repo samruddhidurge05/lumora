@@ -503,7 +503,8 @@ def health_check():
         import sqlalchemy
         with _engine.connect() as conn:
             conn.execute(sqlalchemy.text("SELECT 1"))
-        report["services"]["database"] = {"status": "ok", "provider": "SQLite"}
+        db_provider = "PostgreSQL" if _engine.dialect.name == "postgresql" else "SQLite"
+        report["services"]["database"] = {"status": "ok", "provider": db_provider}
     except Exception:
         report["services"]["database"] = {"status": "error", "detail": "Database connection verification failed"}
         overall_ok = False

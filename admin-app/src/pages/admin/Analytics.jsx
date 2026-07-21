@@ -1075,7 +1075,8 @@ export default function Analytics() {
 
                       {/* Interactive hover points */}
                       {data.revenueAnalytics.timeline[timeframe].map((pt, idx) => {
-                        const segmentWidth = 540 / (data.revenueAnalytics.timeline[timeframe].length - 1);
+                        const len = data.revenueAnalytics.timeline[timeframe]?.length || 0;
+                        const segmentWidth = len > 1 ? 540 / (len - 1) : 540;
                         const x = 30 + idx * segmentWidth;
                         // Approximate height values for visuals
                         const yGross = timeframe === 'daily' 
@@ -1140,7 +1141,8 @@ export default function Analytics() {
 
                       {/* X Axis Labels */}
                       {data.revenueAnalytics.timeline[timeframe].map((pt, idx) => {
-                        const segmentWidth = 540 / (data.revenueAnalytics.timeline[timeframe].length - 1);
+                        const len = data.revenueAnalytics.timeline[timeframe]?.length || 0;
+                        const segmentWidth = len > 1 ? 540 / (len - 1) : 540;
                         return (
                           <text
                             key={idx}
