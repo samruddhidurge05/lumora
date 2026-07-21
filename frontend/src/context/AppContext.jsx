@@ -901,11 +901,15 @@ export function AppContextProvider({ children }) {
                 u => u && !u.startsWith('data:') && !u.includes('unsplash.com') && !u.includes('localhost')
               ).map(_resolveProductImageUrl).filter(Boolean);
               const fsPcloud = fd.pcloud_download_link || fd.pcloudDownloadLink || null;
+              
+              // Only override image fields when base doesn't already have a valid signed URL
+              const shouldOverrideImage = fsImg && (!base.preview || (!base.preview.includes('Authorization=') && !base.preview.includes('/uploads/')));
+
               return {
                 ...base,
-                // Only override image fields when Firestore has a real (non-Unsplash) URL
-                ...(fsImg ? { preview: fsImg, thumbnail: fsImg } : {}),
-                ...(fsImageUrls.length ? { image_urls: fsImageUrls, preview_images: fsImageUrls } : {}),
+                // Only override image fields when Firestore has a real URL and base needs it
+                ...(shouldOverrideImage ? { preview: fsImg, thumbnail: fsImg } : {}),
+                ...(fsImageUrls.length && (!base.image_urls || !base.image_urls.length) ? { image_urls: fsImageUrls, preview_images: fsImageUrls } : {}),
                 // Always take pCloud download link from Firestore if present
                 ...(fsPcloud ? { pcloud_download_link: fsPcloud, pcloudDownloadLink: fsPcloud } : {}),
               };

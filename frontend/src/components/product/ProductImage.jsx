@@ -53,8 +53,6 @@ async function resolvePCloudLink(shareUrl) {
  */
 function isDirectlyLoadable(url) {
   if (!url || typeof url !== 'string') return false;
-  if (url.startsWith('/') || url.includes('localhost')) return false;
-  // Expired pCloud CDN URLs — skip them, prefer resolving the share link
   if (/p-lux\d*\.pcloud\.com/.test(url)) return false;
   return true;
 }
