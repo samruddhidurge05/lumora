@@ -49,7 +49,7 @@ def _map_report(doc):
 
     # If pid is empty or we have a snapshot title we want to preserve
     if not product_title:
-        product_title = r.get("productTitle") or r.get("productName") or "—"
+        product_title = r.get("productTitle") or r.get("productName") or "-"
     if not product_thumbnail:
         product_thumbnail = r.get("productThumbnail") or r.get("thumbnail") or ""
 

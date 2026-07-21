@@ -28,7 +28,7 @@ Firestore document schema (collection: reports)
     "user_id":     str,       # SQLite user.id as string
     "product_id":  str,       # product identifier as string
     "category":    str,       # one of VALID_CATEGORIES
-    "description": str,       # user-provided text (10–2000 chars)
+    "description": str,       # user-provided text (10-2000 chars)
     "created_at":  str,       # ISO-8601 UTC timestamp
     "status":      "pending", # always "pending" on creation
     "reporter":    str,       # user display name or email prefix
@@ -57,7 +57,7 @@ _logger = logging.getLogger("lumora.reports")
 
 router = APIRouter()
 
-# ── Constants ─────────────────────────────────────────────────────────────────
+# ?? Constants ?????????????????????????????????????????????????????????????????
 
 VALID_CATEGORIES: List[str] = [
     "spam",
@@ -71,13 +71,13 @@ RATE_LIMIT_MAX   = 3          # max reports per user per product per window
 RATE_LIMIT_HOURS = 24         # rolling window in hours
 
 
-# ── Pydantic schemas ──────────────────────────────────────────────────────────
+# ?? Pydantic schemas ??????????????????????????????????????????????????????????
 
 class ReportCreateRequest(BaseModel):
     product_id:  str = Field(..., description="Product identifier")
     category:    str = Field(..., description=f"One of: {VALID_CATEGORIES}")
     description: str = Field(..., min_length=10, max_length=2000,
-                             description="Describe the issue (10–2000 characters)")
+                             description="Describe the issue (10-2000 characters)")
 
     @field_validator("category")
     @classmethod
@@ -104,7 +104,7 @@ class ReportResponse(BaseModel):
     status:      str
 
 
-# ── Helper ────────────────────────────────────────────────────────────────────
+# ?? Helper ????????????????????????????????????????????????????????????????????
 
 def _require_firebase() -> None:
     """Raise HTTP 503 when Firestore is not available."""
@@ -118,7 +118,7 @@ def _require_firebase() -> None:
 def _check_rate_limit(user_id: str, product_id: str) -> None:
     """
     Query Firestore to count how many reports this user has submitted for this
-    product in the last 24 hours.  Raises HTTP 429 if ≥ RATE_LIMIT_MAX.
+    product in the last 24 hours.  Raises HTTP 429 if ? RATE_LIMIT_MAX.
     """
     cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=RATE_LIMIT_HOURS)
     cutoff_iso = cutoff.isoformat()
@@ -126,7 +126,7 @@ def _check_rate_limit(user_id: str, product_id: str) -> None:
     try:
         # Firestore does not support compound inequality queries on different fields,
         # so we filter by user_id + product_id first, then apply the time filter
-        # in Python — safe because we expect a small number (< 100) of results.
+        # in Python - safe because we expect a small number (< 100) of results.
         docs = (
             firestore_db.collection("reports")
             .where("user_id", "==", user_id)
@@ -168,7 +168,7 @@ def _check_rate_limit(user_id: str, product_id: str) -> None:
         # If we can't check, allow the request through rather than blocking users
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ?? Routes ????????????????????????????????????????????????????????????????????
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def submit_report(

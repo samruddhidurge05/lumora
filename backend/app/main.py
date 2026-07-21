@@ -1,14 +1,14 @@
 """
-Lumora Digital Marketplace — FastAPI Application Entry Point
+Lumora Digital Marketplace - FastAPI Application Entry Point
 ============================================================
 Production-hardened startup with:
-  • Fail-fast startup configuration validation
-  • Centralized global exception handlers (no raw tracebacks exposed to client)
-  • Standardized JSON error response envelope
-  • Health-check endpoints  (/health  /ready  /live)
-  • Structured logging configuration
+  ? Fail-fast startup configuration validation
+  ? Centralized global exception handlers (no raw tracebacks exposed to client)
+  ? Standardized JSON error response envelope
+  ? Health-check endpoints  (/health  /ready  /live)
+  ? Structured logging configuration
 """
-# Load .env variables FIRST — before any module that reads os.getenv() at import time
+# Load .env variables FIRST - before any module that reads os.getenv() at import time
 import os
 from pathlib import Path
 _env_file = Path(__file__).resolve().parent.parent / ".env"
@@ -17,7 +17,7 @@ if _env_file.exists():
         from dotenv import load_dotenv as _load_dotenv
         _load_dotenv(dotenv_path=str(_env_file), override=True)
     except ImportError:
-        pass  # python-dotenv not installed — env vars must be set externally
+        pass  # python-dotenv not installed - env vars must be set externally
 
 import sys
 import logging
@@ -37,15 +37,15 @@ from app.models import Base
 from app.middleware.rate_limit import limiter, _rate_limit_handler
 from app.core.exceptions import LumoraException
 
-# ── Logging Configuration ─────────────────────────────────────────────────────
+# -- Logging Configuration -----------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 _logger = logging.getLogger("lumora.main")
 
-# ── Import Routers ────────────────────────────────────────────────────────────
+# -- Import Routers ------------------------------------------------------------
 from app.api.auth_router import router as auth_router
 from app.api.products_router import router as products_router
 from app.api.orders import router as orders_router
@@ -73,7 +73,7 @@ from app.admin_api.products.routes import router as admin_products_router
 from app.admin_api.admin_users.routes import router as admin_users_router
 from app.api.refunds_router import router as refunds_router
 
-# ── Startup Configuration Validation ─────────────────────────────────────────
+# -- Startup Configuration Validation -----------------------------------------
 def _validate_startup_config() -> None:
     """
     Fail-fast validation: checks critical environment variables and services.
@@ -82,7 +82,7 @@ def _validate_startup_config() -> None:
     """
     errors = []
 
-    # 1. JWT Secret Key — hard-fail if weak or default
+    # 1. JWT Secret Key - hard-fail if weak or default
     # The project uses JWT_SECRET_KEY (from app/core/config.py).
     # Exit immediately if the secret is the insecure default or shorter than 32 chars.
     jwt_secret = os.getenv("JWT_SECRET_KEY", "secret")
@@ -116,7 +116,7 @@ def _validate_startup_config() -> None:
     except Exception as db_err:
         errors.append(f"Database connection failed: {db_err}")
 
-    # 5. Firebase credentials (non-fatal warning — Firebase connection is optional)
+    # 5. Firebase credentials (non-fatal warning - Firebase connection is optional)
     cert_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if not cert_path:
         base_dir = os.path.dirname(os.path.abspath(__file__)) # backend/app
@@ -161,10 +161,10 @@ def _validate_startup_config() -> None:
 # Run validation before table creation so we catch DB issues early
 _validate_startup_config()
 
-# ── Database Table Creation ───────────────────────────────────────────────────
+# -- Database Table Creation ---------------------------------------------------
 Base.metadata.create_all(bind=engine)
 
-# ── Schema Migrations (idempotent ALTER TABLE for SQLite AND PostgreSQL) ────────
+# -- Schema Migrations (idempotent ALTER TABLE for SQLite AND PostgreSQL) --------
 def _run_schema_migrations() -> None:
     """
     Safe, idempotent column additions.
@@ -175,11 +175,11 @@ def _run_schema_migrations() -> None:
     from sqlalchemy import text as _text
     dialect = engine.dialect.name
 
-    # ── PostgreSQL migrations (Render production) ─────────────────────────────
+    # -- PostgreSQL migrations (Render production) -----------------------------
     if dialect == "postgresql":
-        _logger.info("[startup] Running PostgreSQL schema migrations…")
+        _logger.info("[startup] Running PostgreSQL schema migrations?")
         pg_migrations = [
-            # products — extended metadata columns added after initial deploy
+            # products - extended metadata columns added after initial deploy
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS pcloud_download_link VARCHAR(512)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls           JSON",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS storage_path         VARCHAR(512)",
@@ -256,17 +256,17 @@ def _run_schema_migrations() -> None:
             _logger.warning("[startup] PostgreSQL migration warning (non-fatal): %s", _mig_err)
         return
 
-    # ── SQLite migrations (local dev) ─────────────────────────────────────────
+    # -- SQLite migrations (local dev) -----------------------------------------
     if dialect == "sqlite":
         try:
             with engine.connect() as conn:
-                # admin_invitations — add revoked_at, invited_name, message
+                # admin_invitations - add revoked_at, invited_name, message
                 inv_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(admin_invitations)"))}
                 if "revoked_at"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
                 if "invited_name" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
                 if "message"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
 
-                # users — add last_login_at
+                # users - add last_login_at
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
                 if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
 
@@ -276,13 +276,13 @@ def _run_schema_migrations() -> None:
             _logger.warning("[startup] SQLite migration warning (non-fatal): %s", _mig_err)
         return
 
-    _logger.info("[startup] Dialect '%s' — no custom migrations defined, skipping.", dialect)
+    _logger.info("[startup] Dialect '%s' - no custom migrations defined, skipping.", dialect)
 
 _run_schema_migrations()
 
 
 
-# ── Seed Admin Users ──────────────────────────────────────────────────────────
+# -- Seed Admin Users ----------------------------------------------------------
 from app.db.database import SessionLocal
 from app.models.user import User
 
@@ -307,7 +307,7 @@ except Exception as seed_err:
 finally:
     db_session.close()
 
-# ── FastAPI App ───────────────────────────────────────────────────────────────
+# -- FastAPI App ---------------------------------------------------------------
 # Re-read DEBUG from .env directly to ensure it's picked up regardless of
 # environment variable inheritance order in the uvicorn worker process.
 _debug_raw = os.getenv("DEBUG", "False")
@@ -355,7 +355,7 @@ def restore_products():
         _logger.info("[startup] Syncing and restoring any missing published products from Firestore to SQLite...")
         restore_sqlite_products_from_firestore(db)
 
-        # ── Forward-sync: push any SQLite products missing from Firestore ────
+        # -- Forward-sync: push any SQLite products missing from Firestore ----
         # This catches products created while Firebase was temporarily offline.
         if _fs_ok and _fs_db is not None:
             try:
@@ -366,7 +366,7 @@ def restore_products():
                 missing = [p for p in all_active if str(p.id) not in existing_ids]
                 if missing:
                     _logger.info(
-                        "[startup] Found %d product(s) in SQLite not yet in Firestore — syncing now: %s",
+                        "[startup] Found %d product(s) in SQLite not yet in Firestore - syncing now: %s",
                         len(missing), [p.id for p in missing],
                     )
                     for p in missing:
@@ -376,7 +376,7 @@ def restore_products():
                             _logger.error("[startup] Failed to sync product %s: %s", p.id, _sync_err)
                     _logger.info("[startup] Missing-product forward-sync complete.")
                 else:
-                    _logger.info("[startup] All SQLite products are already in Firestore. ✓")
+                    _logger.info("[startup] All SQLite products are already in Firestore. ?")
             except Exception as _fwd_err:
                 _logger.warning("[startup] Forward-sync check failed (non-fatal): %s", _fwd_err)
 
@@ -385,18 +385,18 @@ def restore_products():
     finally:
         db.close()
 
-# ── Rate Limiting ─────────────────────────────────────────────────────────────
+# -- Rate Limiting -------------------------------------------------------------
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 
-# ═════════════════════════════════════════════════════════════════════════════
+# ?????????????????????????????????????????????????????????????????????????????
 # GLOBAL EXCEPTION HANDLERS
 # All errors are returned in a consistent JSON envelope:
 #
 #   { "success": false, "error": { "code": "...", "message": "...", "details": null } }
 #
 # No raw Python tracebacks, SQLAlchemy errors, or Firebase errors are exposed.
-# ═════════════════════════════════════════════════════════════════════════════
+# ?????????????????????????????????????????????????????????????????????????????
 
 @app.exception_handler(LumoraException)
 async def lumora_exception_handler(request: Request, exc: LumoraException) -> JSONResponse:
@@ -415,7 +415,7 @@ async def lumora_exception_handler(request: Request, exc: LumoraException) -> JS
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Handle Pydantic validation errors — return field-level details without exposing internals."""
+    """Handle Pydantic validation errors - return field-level details without exposing internals."""
     field_errors = []
     for error in exc.errors():
         loc = " -> ".join(str(loc) for loc in error.get("loc", []) if loc != "body")
@@ -455,7 +455,7 @@ async def database_exception_handler(request: Request, exc: SQLAlchemyError) -> 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
-    Catch-all handler — hides raw Python tracebacks from API consumers.
+    Catch-all handler - hides raw Python tracebacks from API consumers.
     Logs the full traceback internally for debugging.
     Does NOT intercept HTTPException (FastAPI handles those natively).
     """
@@ -475,7 +475,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         )
 
     _logger.error(
-        "[unhandled_error] %s %s → %s: %s",
+        "[unhandled_error] %s %s ? %s: %s",
         request.method, request.url.path, type(exc).__name__, exc,
         exc_info=True,
     )
@@ -492,7 +492,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
-# ── Duplicate API Prefix Fix ──────────────────────────────────────────────────
+# -- Duplicate API Prefix Fix --------------------------------------------------
 @app.middleware("http")
 async def fix_duplicate_api_prefix(request: Request, call_next):
     if request.url.path.startswith("/api/api/"):
@@ -500,7 +500,7 @@ async def fix_duplicate_api_prefix(request: Request, call_next):
     return await call_next(request)
 
 
-# ── Security Headers ──────────────────────────────────────────────────────────
+# -- Security Headers ----------------------------------------------------------
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -543,7 +543,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Mount API Routers ─────────────────────────────────────────────────────────
+# -- Mount API Routers ---------------------------------------------------------
 app.include_router(auth_router,          prefix="/api/auth",         tags=["Auth"])
 app.include_router(products_router,      prefix="/api/products",     tags=["Products"])
 app.include_router(orders_router,        prefix="/api/orders",       tags=["Orders"])
@@ -571,16 +571,16 @@ app.include_router(admin_products_router,      prefix="/api/admin/products",    
 app.include_router(admin_users_router,         prefix="/api/admin",                tags=["Admin Team"])
 app.include_router(refunds_router,             prefix="/api/refunds",              tags=["Refund Requests"])
 
-# ── Static files ──────────────────────────────────────────────────────────────
+# -- Static files --------------------------------------------------------------
 _UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 os.makedirs(_UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
 
 
-# ═════════════════════════════════════════════════════════════════════════════
+# ?????????????????????????????????????????????????????????????????????????????
 # HEALTH CHECK ENDPOINTS
 # Designed for load-balancers, container orchestrators (K8s), and monitoring.
-# ═════════════════════════════════════════════════════════════════════════════
+# ?????????????????????????????????????????????????????????????????????????????
 
 @app.get("/health", tags=["Health"], summary="Full health check")
 def health_check():
@@ -637,7 +637,7 @@ def health_check():
 @app.get("/ready", tags=["Health"], summary="Readiness probe")
 def readiness_probe():
     """
-    Kubernetes readiness probe — indicates the pod is ready to receive traffic.
+    Kubernetes readiness probe - indicates the pod is ready to receive traffic.
     Checks that the database is reachable.
     """
     try:
@@ -657,13 +657,13 @@ def readiness_probe():
 @app.get("/live", tags=["Health"], summary="Liveness probe")
 def liveness_probe():
     """
-    Kubernetes liveness probe — indicates the process is alive.
+    Kubernetes liveness probe - indicates the process is alive.
     Always returns 200 as long as the Python process is running.
     """
     return {"status": "alive", "timestamp": datetime.utcnow().isoformat() + "Z"}
 
 
-# ── Platform Status (existing public endpoint) ────────────────────────────────
+# -- Platform Status (existing public endpoint) --------------------------------
 
 @app.get("/api/public/platform/status")
 def get_public_platform_status():
