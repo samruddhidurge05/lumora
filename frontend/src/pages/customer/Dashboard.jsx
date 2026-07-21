@@ -936,7 +936,7 @@ function DashboardHome({
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '18px' }}>
+            <div className="dash-product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '18px' }}>
               {recentlyAdded.map(p => (
                 <DashboardProductCard
                   key={p.id}
@@ -996,7 +996,7 @@ function DashboardHome({
         </div>
 
         {/* Product grid — all products */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '20px' }}>
+        <div className="dash-product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '20px' }}>
           {visibleProducts.map(p => {
             const isWished = wishlist.some(w => String(w.id) === String(p.id));
             return (
