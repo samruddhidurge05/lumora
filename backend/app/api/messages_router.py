@@ -23,6 +23,14 @@ def get_conversations(
             Conversation.seller_id == current_user.id
         )
     ).order_by(Conversation.updated_at.desc()).all()
+    
+    # Attach names dynamically
+    for conv in conversations:
+        buyer = db.query(User).filter(User.id == conv.buyer_id).first()
+        seller = db.query(User).filter(User.id == conv.seller_id).first()
+        conv.buyer_name = buyer.name if buyer else "Customer"
+        conv.seller_name = seller.name if seller else "Creator"
+        
     return conversations
 
 @router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
@@ -44,12 +52,24 @@ def create_conversation(
         Conversation.seller_id == conv_in.seller_id
     ).first()
     if existing:
+        # Attach names dynamically for existing
+        buyer = db.query(User).filter(User.id == existing.buyer_id).first()
+        seller = db.query(User).filter(User.id == existing.seller_id).first()
+        existing.buyer_name = buyer.name if buyer else "Customer"
+        existing.seller_name = seller.name if seller else "Creator"
         return existing
         
     conversation = Conversation(buyer_id=conv_in.buyer_id, seller_id=conv_in.seller_id)
     db.add(conversation)
     db.commit()
     db.refresh(conversation)
+    
+    # Attach names dynamically
+    buyer = db.query(User).filter(User.id == conversation.buyer_id).first()
+    seller = db.query(User).filter(User.id == conversation.seller_id).first()
+    conversation.buyer_name = buyer.name if buyer else "Customer"
+    conversation.seller_name = seller.name if seller else "Creator"
+    
     return conversation
 
 @router.get("/conversations/{conversation_id}/messages", response_model=List[MessageResponse])

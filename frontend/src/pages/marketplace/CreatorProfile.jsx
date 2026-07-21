@@ -100,13 +100,6 @@ export default function CreatorProfile() {
               <h1 className="text-editorial" style={{ fontSize: '2.5rem', fontWeight: 400, color: 'var(--color-espresso)' }}>{creator.name}</h1>
               <p style={{ color: 'var(--color-mocha)', fontSize: '0.85rem', marginTop: '4px', maxWidth: '600px', lineHeight: 1.5 }}>{creator.bio}</p>
             </div>
-            <button
-              onClick={handleContactCreator}
-              className="btn-premium btn-premium-solid"
-              style={{ padding: '8px 16px', fontSize: '0.75rem', borderRadius: '10px', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <MessageSquare size={13} /> Message Creator
-            </button>
           </div>
           <div style={{ display: 'flex', gap: '16px', paddingBottom: '8px' }}>
             <div className="glass-card" style={{ padding: '12px 20px', textAlign: 'center' }}>

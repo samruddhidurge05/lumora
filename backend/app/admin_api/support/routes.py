@@ -40,13 +40,13 @@ class StatusUpdateRequest(BaseModel):
 def _get_ticket_or_404(ticket_id: int, db: Session) -> Conversation:
     ticket = (
         db.query(Conversation)
-        .filter(Conversation.id == ticket_id, Conversation.type == "support_ticket")
+        .filter(Conversation.id == ticket_id, Conversation.type.in_(["support_ticket", "vendor_chat"]))
         .first()
     )
     if not ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Support ticket {ticket_id} not found.",
+            detail=f"Support ticket/conversation {ticket_id} not found.",
         )
     return ticket
 
@@ -62,13 +62,13 @@ def list_tickets(
     admin_user: User = Depends(require_admin_role),
 ):
     """
-    List all support tickets with buyer names.
+    List all support tickets and vendor chats with buyer names.
     Optional ?status= filter. Paginated (default 20 per page).
     """
     query = (
         db.query(Conversation, User.name.label("buyer_name"))
         .join(User, Conversation.buyer_id == User.id)
-        .filter(Conversation.type == "support_ticket")
+        .filter(Conversation.type.in_(["support_ticket", "vendor_chat"]))
     )
 
     if status_filter:
@@ -82,8 +82,8 @@ def list_tickets(
         tickets.append(
             {
                 "id": conv.id,
-                "title": conv.title,
-                "category": conv.category,
+                "title": conv.title or f"Chat with {buyer_name}",
+                "category": conv.category or "Direct Message",
                 "status": conv.status,
                 "buyer_id": conv.buyer_id,
                 "buyer_name": buyer_name,

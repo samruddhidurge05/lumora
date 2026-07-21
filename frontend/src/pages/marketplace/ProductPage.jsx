@@ -317,8 +317,8 @@ export default function ProductPage() {
       // Resolve seller_id (integer from product.vendor_id)
       let sellerId = parseInt(product.vendor_id, 10);
       if (isNaN(sellerId)) {
-        // Fallback to vendor user 5 if product vendor is not a valid integer ID
-        sellerId = 5; 
+        // Fallback to admin user 1 (Platform Admin) if product vendor is not a valid integer ID
+        sellerId = 1; 
       }
 
       // Try creating conversation on backend first
@@ -1013,12 +1013,8 @@ export default function ProductPage() {
               {/* Secondary actions */}
               <div className="product-tag-grid">
                 <button onClick={() => toggleWishlist(product)} className="btn-premium"
-                  style={{ justifyContent: 'center', padding: '10px', fontSize: '0.75rem', borderRadius: '12px', cursor: 'pointer', color: isWishlisted ? '#E11D48' : undefined, borderColor: isWishlisted ? 'rgba(225,29,72,0.30)' : undefined, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.75rem', borderRadius: '12px', cursor: 'pointer', color: isWishlisted ? '#E11D48' : undefined, borderColor: isWishlisted ? 'rgba(225,29,72,0.30)' : undefined, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Heart size={13} fill={isWishlisted ? '#E11D48' : 'none'} /> {isWishlisted ? 'Saved' : 'Wishlist'}
-                </button>
-                <button onClick={handleContactCreator} className="btn-premium"
-                  style={{ justifyContent: 'center', padding: '10px', fontSize: '0.75rem', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <MessageSquare size={13} /> Message
                 </button>
               </div>
             </div>

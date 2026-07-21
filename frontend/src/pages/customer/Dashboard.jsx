@@ -12,7 +12,6 @@ import Notifications from './Notifications';
 import Settings from './Settings';
 import Orders from './Orders';
 import SupportCenter from './SupportCenter';
-import MessagesCenter from './MessagesCenter';
 import PriceAlerts from './PriceAlerts';
 import ProductUpdates from './ProductUpdates';
 import RecentlyViewed from './RecentlyViewed';
@@ -34,7 +33,6 @@ const PRIMARY_NAV = [
 const MORE_NAV = [
   { name: 'Recent Purchases', icon: <ShoppingBag size={14} /> },
   { name: 'Orders',          icon: <CreditCard size={14} /> },
-  { name: 'Messages Center', icon: <MessageSquare size={14} /> },
   { name: 'Notifications',   icon: <Bell size={14} />, badge: true },
   { name: 'Settings',        icon: <SettingsIcon size={14} /> },
   { name: 'Recently Viewed', icon: <Eye size={14} /> },
@@ -341,7 +339,6 @@ export default function Dashboard() {
       case 'Price Alerts':     return <PriceAlerts />;
       case 'Product Updates':  return <ProductUpdates />;
       case 'Reviews Manager':  return <ReviewsManager />;
-      case 'Messages Center':  return <MessagesCenter />;
       case 'Support Center':   return <SupportCenter />;
       case 'My Reports':       return <MyReports />;
       default:

@@ -161,6 +161,8 @@ class ConversationResponse(ConversationBase):
     id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    buyer_name: Optional[str] = None
+    seller_name: Optional[str] = None
 
     class Config:
         from_attributes = True
