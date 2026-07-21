@@ -215,7 +215,14 @@ export default function CustomersManagement() {
         totalSpent,
         recentPurchases,
         lastActive,
-        joinedDate: user.createdAt || new Date().toISOString()
+        joinedDate: (() => {
+          const raw = user.createdAt;
+          if (!raw) return new Date().toISOString();
+          if (raw?.toDate) return raw.toDate().toISOString();
+          if (raw?.seconds) return new Date(raw.seconds * 1000).toISOString();
+          return raw;
+        })()
+
       };
     });
   }, [users, orders]);
@@ -275,14 +282,17 @@ export default function CustomersManagement() {
   const custTotalPages = Math.max(1, Math.ceil(filteredCustomers.length / CUST_PAGE_SIZE));
   const pagedCustomers = filteredCustomers.slice((custPage - 1) * CUST_PAGE_SIZE, custPage * CUST_PAGE_SIZE);
 
-  // Format Helper for joined dates
+  // Format Helper for joined dates — handles Firestore Timestamps, ISO strings, and null
   const formatJoinedDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    // Firestore Timestamp object
+    if (dateStr?.toDate) return dateStr.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (dateStr?.seconds) return new Date(dateStr.seconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    // ISO string or plain date string
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
   };
 
   const isPageLoading = loadingUsers || loadingOrders;

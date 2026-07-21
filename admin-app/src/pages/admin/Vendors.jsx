@@ -431,9 +431,17 @@ export default function Vendors() {
                       ? vendors.map((vendor, idx) => {
                           const uid = vendor.uid || vendor.id;
                           const busy = !!actionLoading[uid];
-                          const joinedDate = vendor.createdAt
-                            ? new Date(vendor.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                            : '—';
+                          const rawCreatedAt = vendor.createdAt;
+                          const joinedDate = (() => {
+                            if (!rawCreatedAt) return '—';
+                            // Firestore Timestamp object
+                            if (rawCreatedAt?.toDate) return rawCreatedAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                            if (rawCreatedAt?.seconds) return new Date(rawCreatedAt.seconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                            // ISO string or plain date string
+                            const d = new Date(rawCreatedAt);
+                            if (isNaN(d.getTime())) return '—';
+                            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                          })();
 
                           return (
                             <tr
