@@ -6,7 +6,8 @@ class ProductVersion(Base):
     __tablename__ = "product_versions"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(String, ForeignKey("products.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
     version_number = Column(String, nullable=False)  # e.g., "v1.1"
     changelog = Column(Text, nullable=True)
     is_major = Column(Boolean, default=False)

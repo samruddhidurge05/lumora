@@ -7,7 +7,7 @@ class PriceAlert(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    product_id = Column(String, ForeignKey("products.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     original_price = Column(Float, nullable=False)
     target_price = Column(Float, nullable=True)
     active = Column(Boolean, default=True)
