@@ -245,175 +245,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
 }
 
 
-/* ─── PREVIEW BUTTON COMPONENT ───────────────────────────────── */
-function PreviewButton({ productId, productName }) {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
 
-  const handleOpenPreview = async () => {
-    setIsPreviewOpen(true);
-    setLoading(true);
-    setErrorMsg(null);
-    setPreviewUrl(null);
-
-    const numericId = parseInt(productId, 10);
-    if (isNaN(numericId)) {
-      setErrorMsg('Invalid product ID');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await backendFetch(`/products/${numericId}/download`);
-      if (res?.download_available === false) {
-        setErrorMsg('The creator has not uploaded a previewable file for this product yet.');
-        setLoading(false);
-        return;
-      }
-
-      if (res && res.download_url) {
-        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
-        const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
-        const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
-        setPreviewUrl(fullUrl);
-      } else {
-        setErrorMsg('Could not resolve secure preview link');
-      }
-    } catch (err) {
-      setErrorMsg('Failed to authorize preview session');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      <button
-        onClick={handleOpenPreview}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          padding: '8px 14px', borderRadius: '12px',
-          background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)',
-          border: '1px solid rgba(78,59,49,0.12)',
-          fontSize: '0.75rem', fontWeight: 700,
-          cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
-        <BookOpen size={13} />
-        Preview
-      </button>
-
-      {isPreviewOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '16px'
-        }}>
-          <div style={{
-            background: '#FFFDF9', borderRadius: '24px', width: '95vw', maxWidth: '1200px', height: '90vh',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            boxShadow: '0 30px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.4)',
-            animation: 'dl-fadein 0.3s ease-out'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: '14px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.95)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)' }}>
-                  <BookOpen size={18} />
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    ✦ Lumora Online PDF Viewer
-                  </span>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
-                    {productName}
-                  </h3>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(61,184,119,0.2)' }}>
-                  ✓ Refund Eligibility Intact (Online View Only)
-                </span>
-                <button
-                  onClick={() => setIsPreviewOpen(false)}
-                  style={{
-                    background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
-                    width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', color: 'var(--color-espresso)'
-                  }}
-                  title="Close Viewer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Viewer Content Container */}
-            <div style={{ flex: 1, position: 'relative', background: '#525659', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {loading && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#FFFDF9', fontSize: '0.9rem' }}>
-                  <Clock size={24} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
-                  <span>Authorizing secure online PDF stream...</span>
-                </div>
-              )}
-
-              {errorMsg && (
-                <div style={{ padding: '32px', textAlign: 'center', color: '#EF4444', background: '#FFFDF9', borderRadius: '16px', maxWidth: '420px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
-                  <AlertCircle size={40} style={{ margin: '0 auto 12px', color: '#DC2626' }} />
-                  <p style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.5, color: '#1F2937' }}>{errorMsg}</p>
-                </div>
-              )}
-
-              {previewUrl && !loading && (
-                <object
-                  data={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-                  type="application/pdf"
-                  width="100%"
-                  height="100%"
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                >
-                  <iframe
-                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-                    title={`PDF Preview ${productName}`}
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                  />
-                </object>
-              )}
-            </div>
-
-            {/* Footer Bar */}
-            <div style={{
-              padding: '12px 24px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-mocha)'
-            }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Shield size={14} style={{ color: '#3DB877' }} />
-                <span>Online Web Viewer — This PDF is rendered in your browser. It has <strong>NOT</strong> been downloaded to your computer device.</span>
-              </span>
-              <button
-                onClick={() => setIsPreviewOpen(false)}
-                style={{
-                  padding: '6px 16px', borderRadius: '8px', background: 'var(--color-espresso)',
-                  color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem'
-                }}
-              >
-                Close Viewer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 /* ─── MAIN COMPONENT ─────────────────────────────────────────── */
 export default function CustomerDownloads() {
@@ -931,174 +763,326 @@ function VaultCard({ product, isHovered, onHover }) {
     onHover(null);
   };
 
-  const handleOpen = () => {
-    const numericId = parseInt(product.id, 10);
-    if (isNaN(numericId)) return;
+/* ─── VAULT PRODUCT CARD ─────────────────────────────────────── */
+function VaultCard({ product, isHovered, onHover }) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const cardRef = useRef(null);
 
-    (async () => {
-      try {
-        const res = await backendFetch(`/products/${numericId}/download`);
-        if (res?.download_available === false) {
-          alert('The creator has not yet uploaded the downloadable asset.');
-          return;
-        }
-        const activeUrl = res?.download_url || product.downloadUrl;
-        if (activeUrl) {
-          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-          const fileCheckUrl = activeUrl.startsWith('/api') ? activeUrl.replace('/api', '') : activeUrl;
-          window.open(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, '_blank');
-        }
-      } catch (err) {
-        console.warn('[OpenButton] Failed to resolve download link:', err);
-        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        const fallbackUrl = product.downloadUrl?.startsWith('http')
-          ? product.downloadUrl
-          : `${BACKEND_URL}${product.downloadUrl?.startsWith('/') ? product.downloadUrl : '/' + product.downloadUrl}`;
-        window.open(fallbackUrl, '_blank');
+  const handleMouseMove = (e) => {
+    const rect = cardRef.current.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const x = e.clientX - rect.left - cx;
+    const y = e.clientY - rect.top - cy;
+    setTilt({ x: (y / cy) * 4, y: -(x / cx) * 4 });
+  };
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+    onHover(null);
+  };
+
+  const handleOpenPreview = async () => {
+    setIsPreviewOpen(true);
+    setLoading(true);
+    setErrorMsg(null);
+    setPreviewUrl(null);
+
+    const numericId = parseInt(product.id, 10);
+    if (isNaN(numericId)) {
+      setErrorMsg('Invalid product ID');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await backendFetch(`/products/${numericId}/download`);
+      if (res?.download_available === false) {
+        setErrorMsg('The creator has not uploaded a previewable file for this product yet.');
+        setLoading(false);
+        return;
       }
-    })();
+
+      if (res && res.download_url) {
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
+        const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
+        const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
+        setPreviewUrl(fullUrl);
+      } else {
+        setErrorMsg('Could not resolve secure preview link');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to authorize preview session');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => onHover(product.id)}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        borderRadius: 20, overflow: 'hidden',
-        background: 'rgba(255,255,255,0.72)',
-        border: isHovered ? '1px solid rgba(255,255,255,0.95)' : '1px solid rgba(255,255,255,0.75)',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: isHovered
-          ? `0 24px 60px rgba(78,59,49,0.12), 0 0 0 1px rgba(255,255,255,0.6), 0 8px 20px ${product.accentColor}18`
-          : '0 6px 24px rgba(78,59,49,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
-        transform: isHovered
-          ? `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-6px) scale(1.01)`
-          : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
-        transition: isHovered
-          ? 'box-shadow 0.3s ease, border-color 0.3s ease'
-          : 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        willChange: 'transform',
-      }}
-    >
-      {/* Thumbnail */}
-      <div 
-        onClick={handleOpen}
-        title="Click to download / open product file"
-        style={{ position: 'relative', height: 180, overflow: 'hidden', cursor: 'pointer' }}
+    <>
+      <div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => onHover(product.id)}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          borderRadius: 20, overflow: 'hidden',
+          background: 'rgba(255,255,255,0.72)',
+          border: isHovered ? '1px solid rgba(255,255,255,0.95)' : '1px solid rgba(255,255,255,0.75)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: isHovered
+            ? `0 24px 60px rgba(78,59,49,0.12), 0 0 0 1px rgba(255,255,255,0.6), 0 8px 20px ${product.accentColor}18`
+            : '0 6px 24px rgba(78,59,49,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+          transform: isHovered
+            ? `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-6px) scale(1.01)`
+            : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
+          transition: isHovered
+            ? 'box-shadow 0.3s ease, border-color 0.3s ease'
+            : 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          willChange: 'transform',
+        }}
       >
-        <img
-          src={product.thumbnail}
-          alt={product.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover',
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-            transition: 'transform 0.5s ease' }}
-        />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.15) 100%)' }} />
+        {/* Thumbnail */}
+        <div 
+          onClick={handleOpenPreview}
+          title="Click to preview PDF online"
+          style={{ position: 'relative', height: 180, overflow: 'hidden', cursor: 'pointer' }}
+        >
+          <img
+            src={product.thumbnail}
+            alt={product.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+              transition: 'transform 0.5s ease' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.15) 100%)' }} />
 
-        {/* Category badge */}
-        <span style={{
-          position: 'absolute', top: 12, left: 12,
-          fontSize: '0.6rem', fontWeight: 800, padding: '4px 10px',
-          borderRadius: 20, background: 'rgba(255,255,255,0.92)',
-          color: 'var(--color-espresso)', backdropFilter: 'blur(8px)',
-          letterSpacing: '0.05em',
-        }}>{product.category}</span>
-
-        {/* Update badge */}
-        {product.hasUpdate && (
+          {/* Category badge */}
           <span style={{
-            position: 'absolute', top: 12, right: 12,
-            fontSize: '0.58rem', fontWeight: 800, padding: '4px 10px',
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, rgba(155,121,255,0.9), rgba(125,95,240,0.9))',
-            color: '#fff', backdropFilter: 'blur(8px)',
-            animation: 'pulse-badge 2s ease-in-out infinite',
-          }}>✦ Update</span>
-        )}
+            position: 'absolute', top: 12, left: 12,
+            fontSize: '0.6rem', fontWeight: 800, padding: '4px 10px',
+            borderRadius: 20, background: 'rgba(255,255,255,0.92)',
+            color: 'var(--color-espresso)', backdropFilter: 'blur(8px)',
+            letterSpacing: '0.05em',
+          }}>{product.category}</span>
 
-        {/* Rating */}
-        <div style={{
-          position: 'absolute', bottom: 12, right: 12,
-          display: 'flex', alignItems: 'center', gap: 4,
-          background: 'rgba(255,255,255,0.92)', padding: '3px 8px',
-          borderRadius: 20, backdropFilter: 'blur(8px)',
-        }}>
-          <Star size={9} fill="#F0B429" stroke="#F0B429" />
-          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{product.rating}</span>
-        </div>
-      </div>
+          {/* Update badge */}
+          {product.hasUpdate && (
+            <span style={{
+              position: 'absolute', top: 12, right: 12,
+              fontSize: '0.58rem', fontWeight: 800, padding: '4px 10px',
+              borderRadius: 20,
+              background: 'linear-gradient(135deg, rgba(155,121,255,0.9), rgba(125,95,240,0.9))',
+              color: '#fff', backdropFilter: 'blur(8px)',
+              animation: 'pulse-badge 2s ease-in-out infinite',
+            }}>✦ Update</span>
+          )}
 
-      {/* Card body */}
-      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Title + version */}
-        <div>
-          <h3 
-            onClick={handleOpen}
-            title="Click to download / open product file"
-            style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', lineHeight: 1.2, cursor: 'pointer' }}
-          >
-            {product.name}
-          </h3>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 5, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', fontWeight: 700, background: 'rgba(78,59,49,0.05)', padding: '2px 8px', borderRadius: 6 }}>
-              {product.version}
-            </span>
-            <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <HardDrive size={9} /> {product.fileSize}
-            </span>
-            <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Clock size={9} /> {product.lastUpdated}
-            </span>
+          {/* Rating */}
+          <div style={{
+            position: 'absolute', bottom: 12, right: 12,
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'rgba(255,255,255,0.92)', padding: '3px 8px',
+            borderRadius: 20, backdropFilter: 'blur(8px)',
+          }}>
+            <Star size={9} fill="#F0B429" stroke="#F0B429" />
+            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{product.rating}</span>
           </div>
         </div>
 
-        {/* Compatibility tags */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {product.compatibility.map(tag => (
-            <span key={tag} style={{
-              fontSize: '0.58rem', fontWeight: 700, padding: '3px 8px',
-              borderRadius: 6, background: 'rgba(78,59,49,0.04)',
-              color: 'var(--color-mocha)', border: '1px solid rgba(78,59,49,0.08)',
-            }}>{tag}</span>
-          ))}
-        </div>
+        {/* Card body */}
+        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Title + version */}
+          <div>
+            <h3 
+              onClick={handleOpenPreview}
+              title="Click to preview PDF online"
+              style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', lineHeight: 1.2, cursor: 'pointer' }}
+            >
+              {product.name}
+            </h3>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 5, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', fontWeight: 700, background: 'rgba(78,59,49,0.05)', padding: '2px 8px', borderRadius: 6 }}>
+                {product.version}
+              </span>
+              <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <HardDrive size={9} /> {product.fileSize}
+              </span>
+              <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Clock size={9} /> {product.lastUpdated}
+              </span>
+            </div>
+          </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingTop: 4, borderTop: '1px solid rgba(78,59,49,0.06)' }}>
-          {product.downloadAvailable === false ? (
-            /* ── Download Pending: asset not yet uploaded by creator ──────────
-               Never removes the card from the vault. Ownership is preserved.
-               The message is production-friendly — no technical errors shown. */
-            <div style={{
-              flex: 1,
-              padding: '10px 14px',
-              borderRadius: 12,
-              background: 'rgba(123,63,160,0.05)',
-              border: '1px solid rgba(123,63,160,0.15)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 3,
-            }}>
-              <span style={{
-                fontSize: '0.72rem', fontWeight: 800, color: '#5A1E7E',
-                display: 'flex', alignItems: 'center', gap: 5,
+          {/* Compatibility tags */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {product.compatibility.map(tag => (
+              <span key={tag} style={{
+                fontSize: '0.58rem', fontWeight: 700, padding: '3px 8px',
+                borderRadius: 6, background: 'rgba(78,59,49,0.04)',
+                color: 'var(--color-mocha)', border: '1px solid rgba(78,59,49,0.08)',
+              }}>{tag}</span>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingTop: 4, borderTop: '1px solid rgba(78,59,49,0.06)' }}>
+            {product.downloadAvailable === false ? (
+              <div style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: 12,
+                background: 'rgba(123,63,160,0.05)',
+                border: '1px solid rgba(123,63,160,0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
               }}>
-                ⏳ Download Pending
-              </span>
-              <span style={{ fontSize: '0.66rem', color: '#7B3FA0', lineHeight: 1.5, fontWeight: 400 }}>
-                The creator has not yet uploaded the downloadable asset. Your ownership is verified — the file will appear here automatically once available.
-              </span>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <PreviewButton productId={product.id} productName={product.name} />
-              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
-            </div>
-          )}
+                <span style={{
+                  fontSize: '0.72rem', fontWeight: 800, color: '#5A1E7E',
+                  display: 'flex', alignItems: 'center', gap: 5,
+                }}>
+                  ⏳ Download Pending
+                </span>
+                <span style={{ fontSize: '0.66rem', color: '#7B3FA0', lineHeight: 1.5, fontWeight: 400 }}>
+                  The creator has not yet uploaded the downloadable asset. Your ownership is verified — the file will appear here automatically once available.
+                </span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <button
+                  onClick={handleOpenPreview}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 14px', borderRadius: '12px',
+                    background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)',
+                    border: '1px solid rgba(78,59,49,0.12)',
+                    fontSize: '0.75rem', fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                >
+                  <BookOpen size={13} />
+                  Preview
+                </button>
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Online PDF Viewer Modal */}
+      {isPreviewOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#FFFDF9', borderRadius: '24px', width: '95vw', maxWidth: '1200px', height: '90vh',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: '0 30px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.4)',
+            animation: 'dl-fadein 0.3s ease-out'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '14px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'rgba(255,255,255,0.95)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)' }}>
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    ✦ Lumora Online PDF Viewer
+                  </span>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                    {product.name}
+                  </h3>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(61,184,119,0.2)' }}>
+                  ✓ Refund Eligibility Intact (Online View Only)
+                </span>
+                <button
+                  onClick={() => setIsPreviewOpen(false)}
+                  style={{
+                    background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
+                    width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'var(--color-espresso)'
+                  }}
+                  title="Close Viewer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Viewer Content Container */}
+            <div style={{ flex: 1, position: 'relative', background: '#525659', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {loading && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#FFFDF9', fontSize: '0.9rem' }}>
+                  <Clock size={24} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
+                  <span>Authorizing secure online PDF stream...</span>
+                </div>
+              )}
+
+              {errorMsg && (
+                <div style={{ padding: '32px', textAlign: 'center', color: '#EF4444', background: '#FFFDF9', borderRadius: '16px', maxWidth: '420px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
+                  <AlertCircle size={40} style={{ margin: '0 auto 12px', color: '#DC2626' }} />
+                  <p style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.5, color: '#1F2937' }}>{errorMsg}</p>
+                </div>
+              )}
+
+              {previewUrl && !loading && (
+                <object
+                  data={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  type="application/pdf"
+                  width="100%"
+                  height="100%"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                >
+                  <iframe
+                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                    title={`PDF Preview ${product.name}`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                </object>
+              )}
+            </div>
+
+            {/* Footer Bar */}
+            <div style={{
+              padding: '12px 24px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-mocha)'
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Shield size={14} style={{ color: '#3DB877' }} />
+                <span>Online Web Viewer — This PDF is rendered in your browser. It has <strong>NOT</strong> been downloaded to your computer device.</span>
+              </span>
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                style={{
+                  padding: '6px 16px', borderRadius: '8px', background: 'var(--color-espresso)',
+                  color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem'
+                }}
+              >
+                Close Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
   );
 }
