@@ -35,6 +35,7 @@ const AdminCustomersManagement = safeLazy(() => import('./pages/admin/CustomersM
 const AdminReviews = safeLazy(() => import('./pages/admin/Reviews'));
 const AdminReports = safeLazy(() => import('./pages/admin/Reports'));
 const AdminCampaignManager = safeLazy(() => import('./pages/admin/CampaignManager'));
+const AdminAffiliateManagement = safeLazy(() => import('./pages/admin/AffiliateManagement'));
 const PlatformSettings = safeLazy(() => import('./pages/admin/platform/PlatformSettings'));
 const AdminSettings = safeLazy(() => import('./pages/admin/Settings'));
 const AdminAuditLogs = safeLazy(() => import('./pages/admin/AuditLogs'));
@@ -135,6 +136,9 @@ function AppContent() {
           />
           <Route path="/admin/campaign-manager"
             element={<ProtectedRoute requiredRole="admin"><AdminCampaignManager /></ProtectedRoute>}
+          />
+          <Route path="/admin/affiliate-management"
+            element={<ProtectedRoute requiredRole="admin"><AdminAffiliateManagement /></ProtectedRoute>}
           />
           <Route path="/admin/platform"
             element={<ProtectedRoute requiredRole="admin"><PlatformSettings /></ProtectedRoute>}

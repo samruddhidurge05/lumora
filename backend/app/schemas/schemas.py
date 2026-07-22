@@ -25,7 +25,11 @@ class ProductCreate(BaseModel):
     license: Optional[str] = None
     affiliate_enabled: Optional[bool] = False
     commission_type: Optional[str] = "percentage"
+    commission_mode: Optional[str] = "percentage"
     commission_value: Optional[float] = 0.0
+    affiliate_cookie_days: Optional[int] = 30
+    affiliate_visibility: Optional[str] = "public"
+    affiliate_program_status: Optional[str] = "active"
     short_desc: Optional[str] = None
     features: Optional[list] = None
     system_requirements: Optional[list] = None
@@ -64,7 +68,11 @@ class ProductUpdate(BaseModel):
     license: Optional[str] = None
     affiliate_enabled: Optional[bool] = None
     commission_type: Optional[str] = None
+    commission_mode: Optional[str] = None
     commission_value: Optional[float] = None
+    affiliate_cookie_days: Optional[int] = None
+    affiliate_visibility: Optional[str] = None
+    affiliate_program_status: Optional[str] = None
     short_desc: Optional[str] = None
     features: Optional[list] = None
     system_requirements: Optional[list] = None
@@ -108,7 +116,11 @@ class ProductResponse(BaseModel):
     license: Optional[str] = None
     affiliate_enabled: Optional[bool] = False
     commission_type: Optional[str] = "percentage"
+    commission_mode: Optional[str] = "percentage"
     commission_value: Optional[float] = 0.0
+    affiliate_cookie_days: Optional[int] = 30
+    affiliate_visibility: Optional[str] = "public"
+    affiliate_program_status: Optional[str] = "active"
     short_desc: Optional[str] = None
     features: Optional[list] = None
     system_requirements: Optional[list] = None

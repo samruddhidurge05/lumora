@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, ShoppingBag, Compass, Users, CreditCard,
   MessageSquare, FileText, ShieldCheck, Settings, User, LogOut,
-  ChevronLeft, ChevronRight, ShieldAlert, Sparkles, Bell,
+  ChevronLeft, ChevronRight, ShieldAlert, Sparkles, Bell, Share2
 } from 'lucide-react';
 import useAuth from '../../../hooks/useAuth';
 import { backendFetch } from '../../../utils/api';
@@ -95,8 +95,9 @@ export default function AdminSidebar({ activePage }) {
       title: 'Platform',
       items: [
         { id: 'reviews',          label: 'Reviews',         icon: <MessageSquare size={18} />, path: '/admin/reviews',          requiredPermission: 'write:reviews' },
-        { id: 'reports',          label: 'Reports',         icon: <FileText size={18} />,      path: '/admin/reports',          requiredPermission: 'read:reports' },
-        { id: 'admin-campaigns',  label: 'Admin Referrals', icon: <Compass size={18} />,       path: '/admin/campaign-manager', requiredPermission: 'write:referral_links' },
+        { id: 'reports',              label: 'Reports',           icon: <FileText size={18} />,      path: '/admin/reports',              requiredPermission: 'read:reports' },
+        { id: 'admin-campaigns',      label: 'Admin Referrals',   icon: <Compass size={18} />,       path: '/admin/campaign-manager',     requiredPermission: 'write:referral_links' },
+        { id: 'affiliate-management', label: 'Affiliate Program', icon: <Share2 size={18} />,        path: '/admin/affiliate-management', requiredPermission: 'write:referral_links' },
         { id: 'platform',         label: 'Platform Status', icon: <ShieldAlert size={18} />,   path: '/admin/platform',         requiredPermission: 'write:platform_settings' },
         { id: 'settings',         label: 'Settings',        icon: <Settings size={18} />,      path: '/admin/settings',         requiredPermission: 'write:platform_settings' },
         { id: 'audit-logs',       label: 'Audit Logs',      icon: <ShieldCheck size={18} />,   path: '/admin/audit-logs',       requiredPermission: 'read:audit_logs' },

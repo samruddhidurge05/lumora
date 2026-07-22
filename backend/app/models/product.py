@@ -33,9 +33,13 @@ class Product(Base):
     license      = Column(String(50), nullable=True)  # Personal Use / Commercial Use / Extended License
     
     # Affiliate Settings
-    affiliate_enabled = Column(Boolean, default=False)
-    commission_type   = Column(String(20), default="percentage")  # "percentage" or "fixed"
-    commission_value  = Column(Float, default=0.0)
+    affiliate_enabled        = Column(Boolean, default=False, index=True)
+    commission_type          = Column(String(20), default="percentage")  # "percentage" or "fixed"
+    commission_mode          = Column(String(20), default="percentage")  # alias for commission_type
+    commission_value         = Column(Float, default=0.0)
+    affiliate_cookie_days    = Column(Integer, default=30)
+    affiliate_visibility     = Column(String(20), default="public")
+    affiliate_program_status = Column(String(20), default="active")     # "active", "paused", "draft", "archived"
 
     # Extended Metadata
     short_desc          = Column(String(255), nullable=True)

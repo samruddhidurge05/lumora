@@ -22,13 +22,11 @@
  */
 import React, { useState, useCallback } from 'react';
 import { Download, Link2, Check, QrCode, X } from 'lucide-react';
+import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 
 /* ── Build the product URL ─────────────────────────────────────── */
 function buildProductUrl(product) {
-  const base = window.location.origin;
-  // The SPA uses hash-based routing: /#product/<id>
-  // AppContext.jsx parses hash.startsWith('#product/') → 'product-detail' view
-  return `${base}/#product/${product.id}`;
+  return buildAffiliateReferralLink(product, product?.refCode || product?.referralCode || '');
 }
 
 /* ── Build QR image URL via free public API (no key needed) ──── */

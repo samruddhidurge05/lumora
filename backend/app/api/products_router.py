@@ -58,6 +58,8 @@ def resolve_products_media(products, db):
 def read_products(
     background_tasks: BackgroundTasks,
     category: Optional[str] = None,
+    affiliate_only: Optional[bool] = None,
+    affiliate_enabled: Optional[bool] = None,
     skip: int = 0,
     limit: int = 1000,
     db: Session = Depends(get_db)
@@ -67,9 +69,12 @@ def read_products(
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
-    ).order_by(Product.id.desc())
+    )
+    if affiliate_only or affiliate_enabled is True:
+        query = query.filter(Product.affiliate_enabled == True)
     if category and category != "All":
         query = query.filter(Product.category == category)
+    query = query.order_by(Product.id.desc())
     results = query.offset(skip).limit(limit).all()
     return resolve_products_media(results, db)
 
@@ -872,9 +877,81 @@ def get_purchase_complete_popup(
             "continue_shopping": "/products"  # Continue shopping URL
         },
         "messages": {
-            "title": "? Purchase Complete!",
+            "title": "Purchase Complete!",
             "subtitle": f"Your {len(popup_products)} product{'s' if len(popup_products) > 1 else ''} {'are' if len(popup_products) > 1 else 'is'} ready for download",
             "download_message": "Your download will start automatically. You can also access all your purchases in the Downloads section.",
             "thank_you": "Thank you for your purchase!"
         }
     }
+
+
+@router.post("/bulk-affiliate")
+def bulk_update_affiliate_settings(
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
+    """
+    Bulk update product affiliate settings.
+    Requires Admin privileges.
+    Payload:
+      {
+        "product_ids": [1, 2, 3],
+        "affiliate_enabled": bool,
+        "commission_mode": "percentage" | "fixed",
+        "commission_value": float,
+        "cookie_days": int,
+        "status": "active" | "paused"
+      }
+    """
+    if current_user.role not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Admin permissions required")
+
+    product_ids = payload.get("product_ids", [])
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="No product_ids provided")
+
+    enabled = payload.get("affiliate_enabled", True)
+    mode = payload.get("commission_mode", "percentage")
+    value = float(payload.get("commission_value", 0.0))
+    cookie_days = int(payload.get("cookie_days", 30))
+    status_val = payload.get("status", "active")
+
+    if enabled:
+        if value <= 0:
+            raise HTTPException(status_code=422, detail="Commission value must be greater than 0 when enabling affiliate program.")
+        if mode == "percentage" and value > 100:
+            raise HTTPException(status_code=422, detail="Percentage commission cannot exceed 100%.")
+
+    updated_count = 0
+    try:
+        products = db.query(Product).filter(Product.id.in_(product_ids)).all()
+        for p in products:
+            p.affiliate_enabled = enabled
+            p.commission_mode = mode
+            p.commission_type = mode
+            p.commission_value = value
+            p.affiliate_cookie_days = cookie_days
+            p.affiliate_program_status = status_val
+            updated_count += 1
+        db.commit()
+
+        from app.services.activity_log_service import ActivityLogService
+        ActivityLogService.log_admin_audit(
+            db=db,
+            admin_user_id=current_user.id,
+            action="bulk_affiliate_update",
+            target_type="products",
+            target_id=str(product_ids),
+            metadata_dict={
+                "enabled": enabled,
+                "mode": mode,
+                "value": value,
+                "count": updated_count
+            }
+        )
+
+        return {"success": True, "updated_count": updated_count}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Bulk update failed: {str(e)}")

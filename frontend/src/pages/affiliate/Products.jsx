@@ -3,6 +3,7 @@ import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, Shopping
 import { useApp } from '../../context/AppContext';
 import { useAffiliateCart } from '../../context/AffiliateCartContext';
 import AffiliateProductDetail from './ProductDetail';
+import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
 
 const COMMISSION_RATES = {
   'Website Templates': 20,
@@ -25,21 +26,17 @@ const COMMISSION_RATES = {
 
 export default function AffiliateProducts({ profile, stats, commissions }) {
   const { products, formatPrice } = useApp();
-  const { addToAffCart } = useAffiliateCart();
-  const [search, setSearch] = useState('');
+  const { addToAffCart, isProductInAffCart } = useAffiliateCart();
   const [activeCategory, setActiveCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('popular');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('commission');
   const [copiedId, setCopiedId] = useState(null);
   const [addedId, setAddedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showCount, setShowCount] = useState(48);
+  const [showCount, setShowCount] = useState(24);
 
-  const REFERRAL_CODE = stats?.referral_code || profile?.referral_code || 'AFF001';
-  const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
-
-  // Build dynamic categories from all products in AppContext
-  const CATEGORIES = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
+  const REFERRAL_CODE = profile?.referral_code || 'AFF0001';
 
   // If a product is selected, show its detail page
   if (selectedProduct) {
@@ -55,7 +52,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   }
 
   const filtered = products
-    .filter(p => !p.status || p.status === 'published' || p.status === 'active') // All published products
+    .filter(p => (!p.status || p.status === 'published' || p.status === 'active') && p.affiliate_enabled !== false) // Only affiliate-enabled published products
     .filter(p => activeCategory === 'All' || p.category === activeCategory)
     .filter(p =>
       p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -63,8 +60,8 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     )
     .sort((a, b) => {
       if (sortBy === 'commission') {
-        const ca = a.commission_type === 'fixed' ? (a.commission_value) : ((a.price) * (a.commission_value !== undefined ? a.commission_value : (COMMISSION_RATES[a.category] || 15)) / 100);
-        const cb = b.commission_type === 'fixed' ? (b.commission_value) : ((b.price) * (b.commission_value !== undefined ? b.commission_value : (COMMISSION_RATES[b.category] || 15)) / 100);
+        const ca = calculateCommission(a.price, a.commission_mode || a.commission_type, a.commission_value);
+        const cb = calculateCommission(b.price, b.commission_mode || b.commission_type, b.commission_value);
         return cb - ca;
       }
       if (sortBy === 'price-desc') return b.price - a.price;
@@ -73,12 +70,13 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       return b.reviews - a.reviews;
     });
 
-  const buildAffLink = (productId) =>
-    `${SITE_URL}/#product/${productId}?ref=${REFERRAL_CODE}`;
+  const buildAffLink = (prod) =>
+    buildAffiliateReferralLink(prod, REFERRAL_CODE);
 
-  const handleCopy = (productId) => {
-    navigator.clipboard.writeText(buildAffLink(productId)).catch(() => {});
-    setCopiedId(productId);
+  const handleCopy = (prod) => {
+    const link = buildAffLink(prod);
+    navigator.clipboard.writeText(link).catch(() => {});
+    setCopiedId(prod.id || prod);
     setToast('Referral link copied to clipboard!');
     setTimeout(() => { setCopiedId(null); setToast(null); }, 2400);
   };
