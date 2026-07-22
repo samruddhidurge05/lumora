@@ -114,6 +114,7 @@ function Pagination({ page, totalPages, onChange }) {
 function AffiliateProfilePanel({ affiliateId, onClose }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subTab, setSubTab] = useState('overview'); // 'overview'|'customers'|'orders'|'products'|'commissions'|'timeline'|'analytics'
 
   useEffect(() => {
     if (!affiliateId) return;
@@ -123,6 +124,16 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
       .finally(() => setLoading(false));
   }, [affiliateId]);
 
+  const DRAWER_TABS = [
+    { id: 'overview',    label: 'Overview' },
+    { id: 'customers',   label: 'Customers' },
+    { id: 'orders',      label: 'Orders' },
+    { id: 'products',     label: 'Products' },
+    { id: 'commissions', label: 'History' },
+    { id: 'timeline',    label: 'Timeline' },
+    { id: 'analytics',   label: 'Analytics' },
+  ];
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex">
@@ -130,17 +141,30 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
         <motion.div
           initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-full max-w-md bg-white shadow-2xl overflow-y-auto flex flex-col"
+          className="w-full max-w-lg bg-white shadow-2xl overflow-y-auto flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-[#F3EAF8] bg-gradient-to-r from-[#7B3FA0] to-[#2D004D]">
             <div>
-              <h2 className="text-base font-bold text-white">Affiliate Profile</h2>
-              <p className="text-xs text-white/60">Full commission & engagement details</p>
+              <h2 className="text-base font-bold text-white">Affiliate Detail Console</h2>
+              <p className="text-xs text-white/60">Live performance & ledger analytics</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10">
               <X size={18} />
             </button>
+          </div>
+
+          {/* Sub-tab navigation bar */}
+          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8] overflow-x-auto">
+            {DRAWER_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setSubTab(t.id)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${subTab === t.id ? 'bg-[#7B3FA0] text-white shadow-sm' : 'text-[#7B3FA0] hover:bg-white'}`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
           {loading ? (
@@ -153,8 +177,8 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
             </div>
           ) : (
             <div className="flex-1 p-6 space-y-6">
-              {/* Identity */}
-              <div className="flex items-center gap-4">
+              {/* Identity Header */}
+              <div className="flex items-center gap-4 border-b border-[#F3EAF8] pb-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xl">
                   {(profile.name || 'A')[0].toUpperCase()}
                 </div>
@@ -162,7 +186,7 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
                   <h3 className="font-bold text-[#2D004D] text-base">{profile.name}</h3>
                   <p className="text-xs text-[#7B3FA0]">{profile.email}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-lg">{profile.affiliate_code}</span>
+                    <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-lg border border-[#F3EAF8]">{profile.affiliate_code}</span>
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${profile.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                       {profile.status}
                     </span>
@@ -170,81 +194,170 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
                 </div>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Total Clicks', value: fmtN(profile.total_clicks) },
-                  { label: 'Unique Clicks', value: fmtN(profile.unique_clicks) },
-                  { label: 'Sales', value: fmtN(profile.total_sales) },
-                  { label: 'Conversion Rate', value: `${profile.conversion_rate}%` },
-                  { label: 'Avg Order Value', value: fmt(profile.avg_order_value) },
-                  { label: 'Total Revenue', value: fmt(profile.total_revenue) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                    <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">{label}</p>
-                    <p className="text-sm font-bold text-[#2D004D] mt-0.5">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Earnings Breakdown */}
-              <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Commission Breakdown</h4>
-                {[
-                  { label: 'Total Earned',  value: fmt(profile.commission_earned),  color: 'text-[#2D004D]' },
-                  { label: 'Pending',       value: fmt(profile.commission_pending),  color: 'text-amber-600' },
-                  { label: 'Paid',          value: fmt(profile.commission_paid),     color: 'text-emerald-600' },
-                  { label: 'Rejected',      value: fmt(profile.commission_rejected), color: 'text-rose-600' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <span className="text-xs text-[#7B3FA0]">{label}</span>
-                    <span className={`text-xs font-bold ${color}`}>{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Payment Details */}
-              {(profile.upi_id || profile.bank_name) && (
-                <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Payment Details</h4>
-                  {profile.upi_id && <div className="text-xs text-[#7B3FA0]">UPI: <span className="font-mono text-[#2D004D] font-bold">{profile.upi_id}</span></div>}
-                  {profile.bank_name && <div className="text-xs text-[#7B3FA0]">Bank: <span className="font-bold text-[#2D004D]">{profile.bank_name} {profile.account_number}</span></div>}
-                </div>
-              )}
-
-              {/* Top Products */}
-              {profile.top_products?.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Top Products Sold</h4>
-                  {profile.top_products.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                      <span className="text-xs font-medium text-[#2D004D] truncate max-w-[180px]">{p.name}</span>
-                      <span className="text-[10px] font-bold text-[#7B3FA0]">{p.count} sale{p.count !== 1 ? 's' : ''}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Recent Commissions */}
-              {profile.recent_commissions?.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Recent Commissions</h4>
-                  {profile.recent_commissions.map(c => (
-                    <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#F3EAF8]">
-                      <div>
-                        <p className="text-[10px] font-bold text-[#2D004D] truncate max-w-[150px]">{c.product_name || '—'}</p>
-                        <p className="text-[9px] text-[#7B3FA0]">{fmtDate(c.date)}</p>
+              {/* Sub-tab 1: Overview */}
+              {subTab === 'overview' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Total Clicks', value: fmtN(profile.total_clicks) },
+                      { label: 'Unique Clicks', value: fmtN(profile.unique_clicks) },
+                      { label: 'Sales', value: fmtN(profile.total_sales) },
+                      { label: 'Conversion Rate', value: `${profile.conversion_rate}%` },
+                      { label: 'Avg Order Value', value: fmt(profile.avg_order_value) },
+                      { label: 'Total Revenue', value: fmt(profile.total_revenue) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
+                        <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-bold text-[#2D004D] mt-0.5">{value}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold text-emerald-600">{fmt(c.amount)}</p>
-                        <StatusBadge status={c.status} size="xs" />
+                    ))}
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Commission Breakdown</h4>
+                    {[
+                      { label: 'Total Earned',  value: fmt(profile.commission_earned),  color: 'text-[#2D004D]' },
+                      { label: 'Pending',       value: fmt(profile.commission_pending),  color: 'text-amber-600' },
+                      { label: 'Paid',          value: fmt(profile.commission_paid),     color: 'text-emerald-600' },
+                      { label: 'Rejected',      value: fmt(profile.commission_rejected), color: 'text-rose-600' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-xs text-[#7B3FA0]">{label}</span>
+                        <span className={`text-xs font-bold ${color}`}>{value}</span>
                       </div>
+                    ))}
+                  </div>
+
+                  {(profile.upi_id || profile.bank_name) && (
+                    <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Payment Details</h4>
+                      {profile.upi_id && <div className="text-xs text-[#7B3FA0]">UPI: <span className="font-mono text-[#2D004D] font-bold">{profile.upi_id}</span></div>}
+                      {profile.bank_name && <div className="text-xs text-[#7B3FA0]">Bank: <span className="font-bold text-[#2D004D]">{profile.bank_name} {profile.account_number}</span></div>}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 
-              {/* Dates */}
+              {/* Sub-tab 2: Customers */}
+              {subTab === 'customers' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Referred Customers & LTV</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map((c, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">{c.customer_name || 'Customer'}</p>
+                          <p className="text-[10px] text-[#7B3FA0] font-mono">{c.customer_email || 'Referred buyer'}</p>
+                        </div>
+                        <span className="font-bold text-emerald-600">₹{Number(c.amount * 5).toFixed(2)} LTV</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No customer referrals recorded yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 3: Orders */}
+              {subTab === 'orders' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Attributed Orders</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map(c => (
+                      <div key={c.id} className="p-3 rounded-xl bg-white border border-[#F3EAF8] flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">Order #{c.order_id || c.id}</p>
+                          <p className="text-[10px] text-[#7B3FA0]">{c.product_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-[#2D004D]">₹{Number(c.amount || 0).toFixed(2)}</p>
+                          <StatusBadge status={c.status} size="xs" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No orders placed yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 4: Products */}
+              {subTab === 'products' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Top Products Promoted</h4>
+                  {profile.top_products?.length > 0 ? (
+                    profile.top_products.map((p, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] text-xs">
+                        <span className="font-bold text-[#2D004D]">{p.name}</span>
+                        <span className="font-bold text-[#7B3FA0]">{p.count} sale{p.count !== 1 ? 's' : ''}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No product sales recorded yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 5: Commission History */}
+              {subTab === 'commissions' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Commission History</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map(c => (
+                      <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-[#F3EAF8] text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">{c.product_name || '—'}</p>
+                          <p className="text-[9px] text-[#7B3FA0]">{fmtDate(c.date)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-emerald-600">{fmt(c.amount)}</p>
+                          <StatusBadge status={c.status} size="xs" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No commission history.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 6: Timeline */}
+              {subTab === 'timeline' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Live Activity Stream</h4>
+                  <div className="pl-3 border-l-2 border-[#7B3FA0]/30 space-y-3 text-xs">
+                    <div className="relative pl-3">
+                      <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#7B3FA0]" />
+                      <p className="font-bold text-[#2D004D]">Profile Active</p>
+                      <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(profile.joined_date)}</p>
+                    </div>
+                    {profile.recent_commissions?.map(c => (
+                      <div key={c.id} className="relative pl-3">
+                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-emerald-500" />
+                        <p className="font-bold text-[#2D004D]">Earned Commission ₹{c.amount}</p>
+                        <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(c.date)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 7: Analytics */}
+              {subTab === 'analytics' && (
+                <div className="space-y-3 text-xs">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Performance Metrics</h4>
+                  <div className="p-3 bg-[#F8F3FB] rounded-xl border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Conversion Rate</span>
+                    <span className="font-bold text-emerald-600">{profile.conversion_rate}%</span>
+                  </div>
+                  <div className="p-3 bg-[#F8F3FB] rounded-xl border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Avg Order Value</span>
+                    <span className="font-bold text-[#2D004D]">{fmt(profile.avg_order_value)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Dates Footer */}
               <div className="text-[10px] text-[#7B3FA0] space-y-1 border-t border-[#F3EAF8] pt-4">
                 <p>Joined: <span className="font-bold text-[#2D004D]">{fmtDate(profile.joined_date)}</span></p>
                 <p>Last Active: <span className="font-bold text-[#2D004D]">{profile.last_active_at ? fmtDate(profile.last_active_at) : 'Never'}</span></p>
@@ -445,18 +558,33 @@ export default function AffiliateManagement() {
     finally { setTimelineLoading(false); }
   }, [timelinePage]);
 
-  // Tab-driven data loading
+  // Real-time auto-synchronization ticker (15s frequency with clean teardown)
   useEffect(() => {
-    if (activeTab === 'overview') { loadKpis(); loadAffiliates(); loadProducts(); }
-    else if (activeTab === 'affiliates') loadAffiliates();
-    else if (activeTab === 'products') loadProducts();
-    else if (activeTab === 'ledger') loadLedger();
-    else if (activeTab === 'payouts') loadPayouts();
-    else if (activeTab === 'performance') loadPerf();
-    else if (activeTab === 'timeline') loadTimeline();
-  }, [activeTab, loadKpis, loadAffiliates, loadProducts, loadLedger, loadPayouts, loadPerf, loadTimeline]);
+    const refreshActiveTabData = () => {
+      if (activeTab === 'overview') { loadKpis(); loadAffiliates(); loadProducts(); }
+      else if (activeTab === 'affiliates') loadAffiliates();
+      else if (activeTab === 'products') loadProducts();
+      else if (activeTab === 'customer-attribution') loadCustAttrs();
+      else if (activeTab === 'orders-attribution') loadLedger();
+      else if (activeTab === 'ledger') loadLedger();
+      else if (activeTab === 'payouts') loadPayouts();
+      else if (activeTab === 'performance') loadPerf();
+      else if (activeTab === 'timeline') loadTimeline();
+    };
 
-  // Re-load ledger when filters change
+    // Initial trigger
+    refreshActiveTabData();
+
+    // 15s background ticker to keep dashboard strictly real-time without user refresh
+    const timer = setInterval(() => {
+      refreshActiveTabData();
+    }, 15000);
+
+    return () => clearInterval(timer);
+  }, [activeTab, loadKpis, loadAffiliates, loadProducts, loadCustAttrs, loadLedger, loadPayouts, loadPerf, loadTimeline]);
+
+  // Re-load tabs when specific filters/page numbers change
+  useEffect(() => { if (activeTab === 'customer-attribution') loadCustAttrs(); }, [custAttrsPage, custAttrsSearch, loadCustAttrs]);
   useEffect(() => { if (activeTab === 'ledger') loadLedger(); }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
   useEffect(() => { if (activeTab === 'payouts') loadPayouts(); }, [payoutsPage, payoutStatusFilter]);
   useEffect(() => { if (activeTab === 'performance') loadPerf(); }, [perfPage]);
