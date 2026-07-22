@@ -157,8 +157,124 @@ const getProductType = (o) => {
 // Helper: get effective price for display (supports both new `total` and old `price` fields)
 const getOrderPrice = (o) => o.total ?? o.price ?? 0;
 
-// Helper: riskScore — Firestore orders don't have one, default to 0
-const getRiskScore = (o) => o.riskScore ?? 0;
+// --- AFFILIATE ATTRIBUTION CARD COMPONENT ---
+function AffiliateAttributionCard({ orderId }) {
+  const [trace, setTrace] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    if (!orderId) return;
+    setLoading(true);
+    setMsg(null);
+    backendFetch(`/admin/affiliates/orders/${orderId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setTrace(d))
+      .catch(() => setTrace(null))
+      .finally(() => setLoading(false));
+  }, [orderId]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const r = await backendFetch(`/admin/affiliates/orders/${orderId}/regenerate-commission?force=true`, { method: 'POST' });
+      const data = await r.json();
+      if (r.ok) {
+        setMsg({ type: 'success', text: data.message || 'Commission regenerated successfully!' });
+        const ref = await backendFetch(`/admin/affiliates/orders/${orderId}`);
+        if (ref.ok) setTrace(await ref.json());
+      } else {
+        setMsg({ type: 'error', text: data.detail || 'Failed to regenerate commission.' });
+      }
+    } catch (e) {
+      setMsg({ type: 'error', text: 'Error connecting to server.' });
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  if (loading) return (
+    <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex items-center justify-center text-xs text-[#7B3FA0]">
+      <svg className="animate-spin h-4 w-4 text-[#7B3FA0] mr-2" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+      Loading affiliate trace...
+    </div>
+  );
+
+  const attr = trace?.attribution;
+  const comm = trace?.commission;
+
+  if (!trace || (!attr?.affiliate_name && !attr?.affiliate_code)) return (
+    <div className="flex flex-col gap-2">
+      <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Affiliate Attribution</h4>
+      <div className="bg-stone-50 border border-stone-200/60 p-4 rounded-2xl flex items-center justify-between text-xs text-[#7B3FA0]">
+        <span className="text-[10px] font-medium text-stone-500">Direct Purchase (No Affiliate Referred)</span>
+        <button onClick={handleRegenerate} disabled={regenerating} className="px-3 py-1 rounded-lg bg-[#7B3FA0]/10 hover:bg-[#7B3FA0]/20 text-[#7B3FA0] text-[10px] font-bold transition-all">
+          {regenerating ? 'Checking...' : 'Check / Regenerate'}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Affiliate Attribution</h4>
+        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          ✓ Referred Sale
+        </span>
+      </div>
+
+      <div className="bg-white/80 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-3 shadow-sm">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] text-[#7B3FA0] font-medium">Referring Affiliate</span>
+          <span className="font-bold text-[#2D004D]">{attr.affiliate_name || 'Affiliate'}</span>
+        </div>
+
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] text-[#7B3FA0] font-medium">Referral Code Used</span>
+          <span className="font-mono text-[10px] font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-md border border-[#F3EAF8]">
+            {attr.affiliate_code}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] text-[#7B3FA0] font-medium">Referral Link / Campaign</span>
+          <span className="text-[10px] font-bold text-[#2D004D]">{attr.referral_link_name || 'Default Code'}</span>
+        </div>
+
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] text-[#7B3FA0] font-medium">Commission Earned</span>
+          <span className="font-bold text-emerald-600 text-xs">₹{Number(comm?.amount || 0).toFixed(2)}</span>
+        </div>
+
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[10px] text-[#7B3FA0] font-medium">Commission Status</span>
+          <span className="capitalize font-bold text-[10px] text-[#7B3FA0]">{comm?.status || 'Pending'}</span>
+        </div>
+
+        {attr.device_type && (
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-[10px] text-[#7B3FA0] font-medium">Device & Browser</span>
+            <span className="text-[9px] text-[#2D004D] font-mono">{attr.device_type} • {attr.browser}</span>
+          </div>
+        )}
+
+        {msg && (
+          <div className={`p-2 rounded-xl text-[10px] font-bold ${msg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+            {msg.text}
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-[#F3EAF8] flex justify-end">
+          <button onClick={handleRegenerate} disabled={regenerating} className="px-3 py-1.5 rounded-xl bg-[#7B3FA0] hover:bg-[#5C2B7C] text-white text-[10px] font-bold transition-all shadow-sm">
+            {regenerating ? 'Regenerating...' : 'Regenerate Commission'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState([]);
@@ -1458,6 +1574,9 @@ export default function OrdersManagement() {
 
                   </div>
                 </div>
+
+                {/* Affiliate Attribution Card */}
+                <AffiliateAttributionCard orderId={selectedOrder.id || selectedOrder.orderId} />
 
                 {/* Security Anomaly Analysis */}
                 <div className="flex flex-col gap-3">

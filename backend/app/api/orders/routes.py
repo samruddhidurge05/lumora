@@ -112,7 +112,6 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
 
         commission_amt = max(0.0, commission_amt)
 
-<<<<<<< HEAD
         try:
             # 7. Insert ReferralAttribution Immutable Ledger
             attribution = ReferralAttribution(
@@ -154,6 +153,26 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
             total_commission += commission_amt
             commissions_created += 1
 
+            # Update legacy AffiliateReferral record if present
+            try:
+                from app.models.affiliate import AffiliateReferral
+                referral = db.query(AffiliateReferral).filter(
+                    AffiliateReferral.affiliate_id == profile.id,
+                    AffiliateReferral.product_id == item.product_id,
+                    (
+                        (AffiliateReferral.customer_id == buyer_user_id) |
+                        (AffiliateReferral.referral_code == code_upper)
+                    )
+                ).order_by(AffiliateReferral.created_at.desc()).first()
+
+                if referral:
+                    referral.customer_id = buyer_user_id
+                    referral.order_id = order.id
+                    referral.status = "PURCHASED"
+                    referral.converted_at = datetime.utcnow()
+            except Exception as ref_err:
+                logger.warning(f"[_create_affiliate_commissions] Warning updating AffiliateReferral: {ref_err}")
+
             # 9. Atomic SQL Aggregate Update for Profile metrics
             db.query(AffiliateProfile).filter(AffiliateProfile.id == profile.id).update({
                 AffiliateProfile.total_earnings: AffiliateProfile.total_earnings + commission_amt,
@@ -182,47 +201,6 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
             db.rollback()
             logger.error(f"[_create_affiliate_commissions] Failed to create commission: {ex}")
             raise
-=======
-        commission = AffiliateCommission(
-            affiliate_id=profile.id,
-            order_id=order.id,
-            product_id=item.product_id,
-            product_name=product.title or product.name or f"Product {item.product_id}",
-            sale_amount=sale_amount,
-            commission_amt=commission_amt,
-            status="pending",
-        )
-        db.add(commission)
-
-        # Update persistent AffiliateReferral status in PostgreSQL
-        try:
-            from app.models.affiliate import AffiliateReferral
-            referral = db.query(AffiliateReferral).filter(
-                AffiliateReferral.affiliate_id == profile.id,
-                AffiliateReferral.product_id == item.product_id,
-                (
-                    (AffiliateReferral.customer_id == buyer_user_id) |
-                    (AffiliateReferral.referral_code == code_upper)
-                )
-            ).order_by(AffiliateReferral.created_at.desc()).first()
-
-            if referral:
-                referral.customer_id = buyer_user_id
-                referral.order_id = order.id
-                referral.status = "PURCHASED"
-                referral.converted_at = datetime.utcnow()
-        except Exception as ref_err:
-            print(f"[ReferralUpdate] Warning: Failed to update AffiliateReferral for order {order.id}: {ref_err}")
-
-        total_commission += commission_amt
-        commissions_created += 1
-
-    if commissions_created > 0:
-        profile.total_sales = (profile.total_sales or 0) + commissions_created
-        profile.total_earnings = round((profile.total_earnings or 0.0) + total_commission, 2)
-        profile.pending_earnings = round((profile.pending_earnings or 0.0) + total_commission, 2)
-        db.commit()
->>>>>>> 50a8a47 (feat: Implement persistent affiliate referral login gate, exact product redirect, and PostgreSQL purchase attribution)
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_new_order(

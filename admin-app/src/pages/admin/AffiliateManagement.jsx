@@ -506,17 +506,46 @@ export default function AffiliateManagement() {
     } catch(e) {}
   };
 
+  // ── Customer Attribution (LTV) state ──────────────────────────────────────
+  const [custAttrs, setCustAttrs] = useState([]);
+  const [custAttrsLoading, setCustAttrsLoading] = useState(false);
+  const [custAttrsTotal, setCustAttrsTotal] = useState(0);
+  const [custAttrsPage, setCustAttrsPage] = useState(1);
+  const [custAttrsSearch, setCustAttrsSearch] = useState('');
+  const [selectedTraceOrderId, setSelectedTraceOrderId] = useState(null);
+
+  const loadCustAttrs = useCallback(async () => {
+    setCustAttrsLoading(true);
+    try {
+      const q = new URLSearchParams({ page: custAttrsPage, page_size: 50 });
+      if (custAttrsSearch) q.append('search', custAttrsSearch);
+      const r = await backendFetch(`/admin/affiliates/customer-attributions?${q}`);
+      if (r.ok) {
+        const d = await r.json();
+        setCustAttrs(d.items || []);
+        setCustAttrsTotal(d.total || 0);
+      }
+    } catch(e) {}
+    finally { setCustAttrsLoading(false); }
+  }, [custAttrsPage, custAttrsSearch]);
+
+  const handleExportCustAttrsCSV = () => {
+    window.open('/api/admin/affiliates/customer-attributions/export/csv', '_blank');
+  };
+
   // ── Tab definitions ────────────────────────────────────────────────────────
   const TABS = [
-    { id: 'overview',     label: 'Overview',       icon: BarChart3 },
-    { id: 'products',     label: 'Products',       icon: ShoppingBag },
-    { id: 'affiliates',   label: 'Promoters',      icon: Users },
-    { id: 'ledger',       label: 'Sales Ledger',   icon: Receipt },
-    { id: 'payouts',      label: 'Payout Queue',   icon: Wallet },
-    { id: 'performance',  label: 'Product Perf.',  icon: Target },
-    { id: 'timeline',     label: 'Activity',       icon: Activity },
-    { id: 'rules',        label: 'Rules',          icon: Sliders },
-    { id: 'analytics',    label: 'Analytics',      icon: PieChart },
+    { id: 'overview',             label: 'Overview',              icon: BarChart3 },
+    { id: 'products',             label: 'Products',              icon: ShoppingBag },
+    { id: 'affiliates',           label: 'Promoters',             icon: Users },
+    { id: 'customer-attribution', label: 'Customer Attribution',  icon: UserCheck },
+    { id: 'orders-attribution',   label: 'Orders Attribution',    icon: ShoppingBag },
+    { id: 'ledger',               label: 'Sales Ledger',          icon: Receipt },
+    { id: 'payouts',              label: 'Payout Queue',          icon: Wallet },
+    { id: 'performance',          label: 'Product Perf.',         icon: Target },
+    { id: 'timeline',             label: 'Activity',              icon: Activity },
+    { id: 'rules',                label: 'Rules',                 icon: Sliders },
+    { id: 'analytics',            label: 'Analytics',             icon: PieChart },
   ];
 
   return (
@@ -983,6 +1012,132 @@ export default function AffiliateManagement() {
             </div>
           </div>
         )}
+        {/* ═══════════════════════════════════════════════════════════════════
+            TAB 10: CUSTOMER ATTRIBUTION (LTV) (NEW)
+        ═══════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'customer-attribution' && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+              <div className="relative w-full sm:w-80">
+                <Search size={15} className="absolute left-3 top-2.5 text-[#7B3FA0]/60" />
+                <input type="text" value={custAttrsSearch} onChange={e => setCustAttrsSearch(e.target.value)} placeholder="Search customer, email, code..."
+                  className="w-full pl-9 pr-4 py-2 text-xs bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-[#2D004D] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30" />
+              </div>
+              <button onClick={handleExportCustAttrsCSV} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all">
+                <ArrowDownToLine size={13} /> Export LTV CSV
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+              <DataTable loading={custAttrsLoading} empty={custAttrs.length === 0}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">
+                        <th className="py-3 px-4">Customer</th>
+                        <th className="py-3 px-4">Referred By Affiliate</th>
+                        <th className="py-3 px-4">Referral Code</th>
+                        <th className="py-3 px-4 text-center">Orders</th>
+                        <th className="py-3 px-4 text-right">Customer LTV</th>
+                        <th className="py-3 px-4">First Purchase</th>
+                        <th className="py-3 px-4">Device / Browser</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3EAF8] text-xs font-medium text-[#2D004D]">
+                      {custAttrs.map(item => (
+                        <tr key={item.attribution_id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="py-3 px-4 font-bold">
+                            <p>{item.customer_name}</p>
+                            <p className="text-[10px] text-[#7B3FA0] font-mono">{item.customer_email}</p>
+                          </td>
+                          <td className="py-3 px-4 font-bold text-[#7B3FA0]">{item.affiliate_name}</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-[10px] font-bold bg-[#F8F3FB] text-[#7B3FA0] px-2 py-0.5 rounded border border-[#F3EAF8]">
+                              {item.affiliate_code}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold">{item.order_count}</td>
+                          <td className="py-3 px-4 text-right font-bold text-emerald-600">₹{item.customer_ltv?.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-[10px] text-[#7B3FA0]">{fmtDate(item.first_purchase_date)}</td>
+                          <td className="py-3 px-4 text-[10px] font-mono text-[#7B3FA0]">{item.device} • {item.browser}</td>
+                          <td className="py-3 px-4 text-center">
+                            <StatusBadge status={item.status === 'attributed' ? 'approved' : item.status} size="xs" />
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button onClick={() => setSelectedTraceOrderId(item.order_id)} className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] font-bold text-[10px]">
+                              View Trace
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </DataTable>
+            </div>
+            <Pagination page={custAttrsPage} totalPages={Math.ceil(custAttrsTotal / 50)} onChange={setCustAttrsPage} />
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            TAB 11: ORDERS ATTRIBUTION (NEW)
+        ═══════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'orders-attribution' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+              <DataTable loading={ledgerLoading} empty={ledger.length === 0}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">
+                        <th className="py-3 px-4">Order ID</th>
+                        <th className="py-3 px-4">Customer</th>
+                        <th className="py-3 px-4">Affiliate</th>
+                        <th className="py-3 px-4">Product</th>
+                        <th className="py-3 px-4 text-right">Order Value</th>
+                        <th className="py-3 px-4 text-right">Commission</th>
+                        <th className="py-3 px-4 text-center">Commission Status</th>
+                        <th className="py-3 px-4 text-center">Date</th>
+                        <th className="py-3 px-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3EAF8] text-xs font-medium text-[#2D004D]">
+                      {ledger.map(row => (
+                        <tr key={row.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="py-3 px-4 font-mono font-bold text-[#7B3FA0]">#{row.order_id || row.id}</td>
+                          <td className="py-3 px-4 font-bold">{row.customer_name || 'Customer'}</td>
+                          <td className="py-3 px-4 font-bold text-[#7B3FA0]">{row.affiliate_name}</td>
+                          <td className="py-3 px-4 max-w-[160px] truncate">{row.product_name || 'Product'}</td>
+                          <td className="py-3 px-4 text-right font-bold">₹{row.sale_amount?.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right font-bold text-emerald-600">₹{row.commission_earned?.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-center">
+                            <StatusBadge status={row.commission_status || row.status} size="xs" />
+                          </td>
+                          <td className="py-3 px-4 text-center text-[10px] text-[#7B3FA0]">{fmtDate(row.date)}</td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-2 py-1 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-[10px] font-bold">
+                                Trace
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </DataTable>
+            </div>
+            <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / 50)} onChange={setLedgerPage} />
+          </div>
+        )}
+
+        {/* ── Order Trace Modal ── */}
+        <AnimatePresence>
+          {selectedTraceOrderId && <OrderTraceModal orderId={selectedTraceOrderId} onClose={() => setSelectedTraceOrderId(null)} />}
+        </AnimatePresence>
 
         {/* ── Bulk Update Modal ── */}
         <AnimatePresence>
