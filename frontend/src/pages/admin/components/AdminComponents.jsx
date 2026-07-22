@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, RefreshCw, AlertCircle, Inbox } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid, Filter, Layers, Sparkles } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
@@ -315,6 +315,109 @@ export function LoadingState({ type = "table", count = 3 }) {
     <div className="w-full flex flex-col gap-4 animate-pulse">
       <div className="h-[42px] bg-[#381347]/5 rounded-xl w-1/4 mb-2" />
       <div className="h-[300px] bg-white/40 border border-white/50 rounded-3xl w-full" />
+    </div>
+  );
+}
+
+// ─── 9. ADMIN SELECT (PREMIUM GLASS POPOVER DROPDOWN) ─────────────────────
+// Custom popover dropdown panel with floating glass container, option icons, and checkmarks
+export function AdminSelect({ 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "Select...", 
+  icon: LeadIcon,
+  className = "" 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  // Close on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Format options if passed as raw strings or objects
+  const parsedOptions = options.map(opt => {
+    if (typeof opt === 'object' && opt !== null) {
+      return { value: opt.value, label: opt.label || opt.value, icon: opt.icon };
+    }
+    return { value: opt, label: opt, icon: null };
+  });
+
+  const selectedOpt = parsedOptions.find(o => String(o.value) === String(value)) || {
+    value,
+    label: value || placeholder,
+    icon: null
+  };
+
+  const handleSelect = (optValue) => {
+    setIsOpen(false);
+    if (onChange) {
+      // Fire synthetic event for 100% backwards compatibility with e.target.value handlers
+      onChange({ target: { value: optValue } });
+    }
+  };
+
+  return (
+    <div ref={containerRef} className={`relative inline-block text-left min-w-[150px] ${className}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full h-[42px] px-3.5 rounded-xl bg-white/80 backdrop-blur-md border border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60 hover:bg-white shadow-sm flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30"
+      >
+        <div className="flex items-center gap-2 truncate">
+          {LeadIcon ? (
+            <LeadIcon size={14} className="text-[#7B3FA0] flex-shrink-0" />
+          ) : selectedOpt.icon ? (
+            <selectedOpt.icon size={14} className="text-[#7B3FA0] flex-shrink-0" />
+          ) : (
+            <Grid size={14} className="text-[#7B3FA0]/70 flex-shrink-0" />
+          )}
+          <span className="truncate">{selectedOpt.label}</span>
+        </div>
+        <ChevronDown 
+          size={14} 
+          className={`text-[#7B3FA0] transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[300px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_16px_40px_rgba(90,30,126,0.18)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
+          {parsedOptions.map((opt) => {
+            const isSelected = String(opt.value) === String(value);
+            const OptionIcon = opt.icon;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => handleSelect(opt.value)}
+                className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 ${
+                  isSelected
+                    ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold'
+                    : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/06 hover:text-[#5A1E7E]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  {OptionIcon ? (
+                    <OptionIcon size={14} className={isSelected ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />
+                  ) : (
+                    <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-[#7B3FA0]' : 'bg-[#D8BFE3]/50'}`} />
+                  )}
+                  <span className="truncate">{opt.label}</span>
+                </div>
+                {isSelected && <Check size={14} className="text-[#7B3FA0] flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
 import {
   fetchAllOrders,
@@ -841,73 +841,68 @@ export default function OrdersManagement() {
               searchPlaceholder="Search by customer, email, product..."
               filters={[
                 // Sort control dropdown
-                <div key="sort" className="flex items-center gap-3">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] tracking-wider uppercase">Sort:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => {
-                      sysSound.playTap();
-                      setSortBy(e.target.value);
-                    }}
-                    className="bg-white/60 border border-stone-200 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#2D004D] focus:outline-none"
-                  >
-                    <option value="newest">Newest Logged</option>
-                    <option value="value-desc">Highest Revenue</option>
-                    <option value="risk-desc">Highest Risk Index</option>
-                  </select>
-                </div>,
+                <AdminSelect
+                  key="sort"
+                  value={sortBy}
+                  onChange={(e) => {
+                    sysSound.playTap();
+                    setSortBy(e.target.value);
+                  }}
+                  options={[
+                    { value: 'newest', label: 'Newest Logged' },
+                    { value: 'value-desc', label: 'Highest Revenue' },
+                    { value: 'risk-desc', label: 'Highest Risk Index' }
+                  ]}
+                />,
                 // Status selector dropdown
-                <div key="status" className="relative">
-                  <select 
-                    value={selectedStatus}
-                    onChange={(e) => {
-                      sysSound.playTap();
-                      setSelectedStatus(e.target.value);
-                    }}
-                    className="bg-stone-100/50 border border-stone-200/50 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#7B3FA0] focus:outline-none cursor-pointer"
-                  >
-                    <option value="All">Status: All</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Failed">Failed</option>
-                    <option value="Refunded">Refunded</option>
-                    <option value="Disputed">Disputed</option>
-                  </select>
-                </div>,
+                <AdminSelect 
+                  key="status"
+                  value={selectedStatus}
+                  onChange={(e) => {
+                    sysSound.playTap();
+                    setSelectedStatus(e.target.value);
+                  }}
+                  options={[
+                    { value: 'All', label: 'Status: All' },
+                    { value: 'Pending', label: 'Pending' },
+                    { value: 'Processing', label: 'Processing' },
+                    { value: 'Completed', label: 'Completed' },
+                    { value: 'Failed', label: 'Failed' },
+                    { value: 'Refunded', label: 'Refunded' },
+                    { value: 'Disputed', label: 'Disputed' }
+                  ]}
+                />,
                 // Payment status selector dropdown
-                <div key="paymentStatus" className="relative">
-                  <select 
-                    value={selectedPaymentStatus}
-                    onChange={(e) => {
-                      sysSound.playTap();
-                      setSelectedPaymentStatus(e.target.value);
-                    }}
-                    className="bg-stone-100/50 border border-stone-200/50 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#7B3FA0] focus:outline-none cursor-pointer"
-                  >
-                    <option value="All">Payment: All</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                    <option value="Refunded">Refunded</option>
-                  </select>
-                </div>,
+                <AdminSelect 
+                  key="paymentStatus"
+                  value={selectedPaymentStatus}
+                  onChange={(e) => {
+                    sysSound.playTap();
+                    setSelectedPaymentStatus(e.target.value);
+                  }}
+                  options={[
+                    { value: 'All', label: 'Payment: All' },
+                    { value: 'Paid', label: 'Paid' },
+                    { value: 'Unpaid', label: 'Unpaid' },
+                    { value: 'Refunded', label: 'Refunded' }
+                  ]}
+                />,
                 // Product Type selector dropdown
-                <div key="type" className="relative">
-                  <select 
-                    value={selectedProductType}
-                    onChange={(e) => {
-                      sysSound.playTap();
-                      setSelectedProductType(e.target.value);
-                    }}
-                    className="bg-stone-100/50 border border-stone-200/50 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#7B3FA0] focus:outline-none cursor-pointer"
-                  >
-                    <option value="All">Type: All</option>
-                    <option value="Asset">Asset</option>
-                    <option value="Template">Template</option>
-                    <option value="Course">Course</option>
-                    <option value="UI Kit">UI Kit</option>
-                  </select>
-                </div>
+                <AdminSelect 
+                  key="type"
+                  value={selectedProductType}
+                  onChange={(e) => {
+                    sysSound.playTap();
+                    setSelectedProductType(e.target.value);
+                  }}
+                  options={[
+                    { value: 'All', label: 'Type: All' },
+                    { value: 'Asset', label: 'Asset' },
+                    { value: 'Template', label: 'Template' },
+                    { value: 'Course', label: 'Course' },
+                    { value: 'UI Kit', label: 'UI Kit' }
+                  ]}
+                />
               ]}
               actions={
                 (selectedStatus !== "All" || selectedPaymentStatus !== "All" || selectedProductType !== "All" || searchQuery) && (

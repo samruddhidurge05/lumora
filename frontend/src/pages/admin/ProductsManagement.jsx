@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect } from './components/AdminComponents';
 import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } from 'lucide-react';
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
 import { backendFetch } from '../../utils/api';
@@ -1354,58 +1354,50 @@ export default function App() {
           searchPlaceholder="Query names, tags, creators..."
           filters={[
             // Category Dropdown
-            <div key="category" className="relative">
-              <select 
-                value={selectedCategory}
-                onChange={(e) => { setSelectedCategory(e.target.value); sysSound.playTap(); }}
-                className="w-full bg-white/50 border border-[#F5E9DD]/80 rounded-xl pl-3 pr-8 h-[42px] text-xs font-semibold text-[#2D004D] focus:outline-none"
-              >
-                <option value="All">All Categories</option>
-                {categoriesList.filter(c => c !== 'All').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>,
+            <AdminSelect 
+              key="category"
+              value={selectedCategory}
+              onChange={(e) => { setSelectedCategory(e.target.value); sysSound.playTap(); }}
+              options={[
+                { value: 'All', label: 'All Categories' },
+                ...categoriesList.filter(c => c !== 'All').map(c => ({ value: c, label: c }))
+              ]}
+            />,
             // Status Dropdown
-            <div key="status" className="relative">
-              <select 
-                value={selectedStatus}
-                onChange={(e) => { setSelectedStatus(e.target.value); sysSound.playTap(); }}
-                className="w-full bg-white/50 border border-[#F5E9DD]/80 rounded-xl pl-3 pr-8 h-[42px] text-xs font-semibold text-[#2D004D] focus:outline-none"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Published">Published</option>
-                <option value="Draft">Draft</option>
-                <option value="Pending Review">Pending Review</option>
-              </select>
-            </div>,
+            <AdminSelect 
+              key="status"
+              value={selectedStatus}
+              onChange={(e) => { setSelectedStatus(e.target.value); sysSound.playTap(); }}
+              options={[
+                { value: 'All', label: 'All Statuses' },
+                { value: 'Published', label: 'Published' },
+                { value: 'Draft', label: 'Draft' },
+                { value: 'Pending Review', label: 'Pending Review' }
+              ]}
+            />,
             // Creator Dropdown
-            <div key="creator" className="relative">
-              <select 
-                value={creatorFilter}
-                onChange={(e) => { setCreatorFilter(e.target.value); sysSound.playTap(); }}
-                className="w-full bg-white/50 border border-[#F5E9DD]/80 rounded-xl pl-3 pr-8 h-[42px] text-xs font-semibold text-[#2D004D] focus:outline-none"
-              >
-                <option value="All">All Creators</option>
-                {creatorsList.filter(c => c !== 'All').map(creator => (
-                  <option key={creator} value={creator}>{creator}</option>
-                ))}
-              </select>
-            </div>,
+            <AdminSelect 
+              key="creator"
+              value={creatorFilter}
+              onChange={(e) => { setCreatorFilter(e.target.value); sysSound.playTap(); }}
+              options={[
+                { value: 'All', label: 'All Creators' },
+                ...creatorsList.filter(c => c !== 'All').map(creator => ({ value: creator, label: creator }))
+              ]}
+            />,
             // Sort Dropdown
-            <div key="sort" className="relative">
-              <select 
-                value={sortBy}
-                onChange={(e) => { setSortBy(e.target.value); sysSound.playTap(); }}
-                className="w-full bg-white/50 border border-[#F5E9DD]/80 rounded-xl pl-3 pr-8 h-[42px] text-xs font-semibold text-[#2D004D] focus:outline-none"
-              >
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price: Low-High</option>
-                <option value="price-desc">Price: High-Low</option>
-                <option value="revenue">Top Revenue</option>
-                <option value="downloads">Top Downloads</option>
-              </select>
-            </div>
+            <AdminSelect 
+              key="sort"
+              value={sortBy}
+              onChange={(e) => { setSortBy(e.target.value); sysSound.playTap(); }}
+              options={[
+                { value: 'newest', label: 'Newest' },
+                { value: 'price-asc', label: 'Price: Low-High' },
+                { value: 'price-desc', label: 'Price: High-Low' },
+                { value: 'revenue', label: 'Top Revenue' },
+                { value: 'downloads', label: 'Top Downloads' }
+              ]}
+            />
           ]}
           actions={
             <div className="flex flex-wrap items-center gap-4">
