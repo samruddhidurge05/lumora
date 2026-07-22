@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Download, RefreshCw, ExternalLink, Search, Filter,
   Sparkles, Star, Clock, HardDrive, Tag, Shield,
@@ -186,42 +187,43 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
       </button>
 
       {/* Pre-Download Confirmation Modal */}
-      {showConfirmModal && (
+      {showConfirmModal && createPortal(
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 999999,
+          background: 'rgba(12, 10, 18, 0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
         }}>
           <div style={{
-            background: '#FFFDF9', borderRadius: '20px', padding: '24px 28px', maxWidth: '460px', width: '100%',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid rgba(78,59,49,0.15)',
+            background: '#FFFDF9', borderRadius: '24px', padding: '28px 32px', maxWidth: '480px', width: '100%',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.35)', border: '1px solid rgba(220,198,255,0.3)',
             animation: 'dl-fadein 0.25s ease-out'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <div style={{ padding: '8px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', color: 'var(--color-espresso)' }}>
-                <Shield size={20} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', color: 'var(--color-espresso)' }}>
+                <Shield size={22} />
               </div>
               <div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   ✦ Lumora Digital Vault
                 </span>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
-                  Confirm Product Download
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                  Confirm Device Download
                 </h3>
               </div>
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', lineHeight: 1.55, marginBottom: '20px', background: 'rgba(78,59,49,0.03)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(78,59,49,0.06)' }}>
-              You are about to download <strong>{productName}</strong> to your device.<br/><br/>
-              After the product is downloaded, the purchase may no longer qualify for a standard refund under Lumora's digital-product refund policy, except where applicable.
+            <p style={{ fontSize: '0.84rem', color: 'var(--color-mocha)', lineHeight: 1.6, marginBottom: '24px', background: 'rgba(78,59,49,0.04)', padding: '14px 18px', borderRadius: '14px', border: '1px solid rgba(78,59,49,0.08)' }}>
+              You are about to download <strong>{productName}</strong> to your computer device.<br/><br/>
+              After downloading, the purchase may no longer qualify for a standard refund under Lumora's digital-product policy, except where applicable.
             </p>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowConfirmModal(false)}
                 style={{
-                  padding: '9px 18px', borderRadius: '10px', background: 'rgba(78,59,49,0.08)',
-                  border: 'none', color: 'var(--color-espresso)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer'
+                  padding: '10px 20px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)',
+                  border: 'none', color: 'var(--color-espresso)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
                 }}
               >
                 Cancel
@@ -229,16 +231,17 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
               <button
                 onClick={() => { setShowConfirmModal(false); handleDownload(); }}
                 style={{
-                  padding: '9px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)',
-                  border: 'none', color: '#FFFDF9', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(45,30,24,0.2)'
+                  padding: '10px 22px', borderRadius: '12px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)',
+                  border: 'none', color: '#FFFDF9', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(45,30,24,0.25)'
                 }}
               >
                 Download Product
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -849,7 +852,7 @@ function VaultCard({ product, isHovered, onHover }) {
         {/* Thumbnail */}
         <div 
           onClick={handleOpenPreview}
-          title="Click to preview PDF online"
+          title="Click to preview document online"
           style={{ position: 'relative', height: 180, overflow: 'hidden', cursor: 'pointer' }}
         >
           <img
@@ -900,7 +903,7 @@ function VaultCard({ product, isHovered, onHover }) {
           <div>
             <h3 
               onClick={handleOpenPreview}
-              title="Click to preview PDF online"
+              title="Click to preview document online"
               style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', lineHeight: 1.2, cursor: 'pointer' }}
             >
               {product.name}
@@ -975,114 +978,112 @@ function VaultCard({ product, isHovered, onHover }) {
         </div>
       </div>
 
-      {/* Online PDF Viewer Modal */}
-      {isPreviewOpen && (
+      {/* Online PDF Viewer Modal — Rendered at Body Portal Root */}
+      {isPreviewOpen && createPortal(
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 999999,
+          background: 'rgba(12, 10, 18, 0.88)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           padding: '16px'
         }}>
           <div style={{
-            background: '#FFFDF9', borderRadius: '24px', width: '95vw', maxWidth: '1200px', height: '90vh',
+            background: '#FFFDF9', borderRadius: '24px', width: '92vw', maxWidth: '1200px', height: '88vh',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            boxShadow: '0 30px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.4)',
-            animation: 'dl-fadein 0.3s ease-out'
+            boxShadow: '0 30px 90px rgba(0,0,0,0.6)', border: '1px solid rgba(220,198,255,0.3)',
+            animation: 'dl-fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
             {/* Header */}
             <div style={{
-              padding: '14px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
+              padding: '16px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.95)'
+              background: 'linear-gradient(135deg, rgba(250,247,242,0.98), rgba(255,255,255,0.95))'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)' }}>
-                  <BookOpen size={18} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)', color: '#FFFDF9', boxShadow: '0 4px 12px rgba(45,30,24,0.2)' }}>
+                  <BookOpen size={20} />
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    ✦ Lumora Online PDF Viewer
-                  </span>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      ✦ Lumora Web Document Viewer
+                    </span>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.12)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(61,184,119,0.25)' }}>
+                      Online View Only
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-espresso)', margin: '2px 0 0' }}>
                     {product.name}
                   </h3>
                 </div>
               </div>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(61,184,119,0.2)' }}>
-                  ✓ Refund Eligibility Intact (Online View Only)
-                </span>
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
                 <button
                   onClick={() => setIsPreviewOpen(false)}
                   style={{
                     background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
-                    width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', color: 'var(--color-espresso)'
+                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'var(--color-espresso)', transition: 'all 0.2s ease'
                   }}
                   title="Close Viewer"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
             </div>
 
-            {/* Viewer Content Container */}
-            <div style={{ flex: 1, position: 'relative', background: '#525659', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {/* Viewer Body Content */}
+            <div style={{ flex: 1, position: 'relative', background: '#323639', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {loading && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#FFFDF9', fontSize: '0.9rem' }}>
-                  <Clock size={24} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
-                  <span>Authorizing secure online PDF stream...</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', color: '#FFFDF9', fontSize: '0.92rem' }}>
+                  <Clock size={28} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
+                  <span style={{ fontWeight: 600, letterSpacing: '0.02em' }}>Loading secure online PDF viewer...</span>
                 </div>
               )}
 
               {errorMsg && (
-                <div style={{ padding: '32px', textAlign: 'center', color: '#EF4444', background: '#FFFDF9', borderRadius: '16px', maxWidth: '420px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
-                  <AlertCircle size={40} style={{ margin: '0 auto 12px', color: '#DC2626' }} />
-                  <p style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.5, color: '#1F2937' }}>{errorMsg}</p>
+                <div style={{ padding: '36px 40px', textAlign: 'center', color: '#DC2626', background: '#FFFDF9', borderRadius: '20px', maxWidth: '440px', boxShadow: '0 15px 40px rgba(0,0,0,0.2)' }}>
+                  <AlertCircle size={44} style={{ margin: '0 auto 14px', color: '#DC2626' }} />
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-espresso)', marginBottom: '8px' }}>Preview Notice</h4>
+                  <p style={{ fontWeight: 600, fontSize: '0.86rem', lineHeight: 1.5, color: 'var(--color-mocha)', margin: 0 }}>{errorMsg}</p>
                 </div>
               )}
 
               {previewUrl && !loading && (
-                <object
-                  data={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-                  type="application/pdf"
-                  width="100%"
-                  height="100%"
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                >
-                  <iframe
-                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-                    title={`PDF Preview ${product.name}`}
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                  />
-                </object>
+                <iframe
+                  src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  title={`PDF Web Viewer ${product.name}`}
+                  style={{ width: '100%', height: '100%', border: 'none', background: '#FFFFFF' }}
+                />
               )}
             </div>
 
-            {/* Footer Bar */}
+            {/* Footer Status Bar */}
             <div style={{
               padding: '12px 24px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-mocha)'
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--color-mocha)'
             }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Shield size={14} style={{ color: '#3DB877' }} />
-                <span>Online Web Viewer — This PDF is rendered in your browser. It has <strong>NOT</strong> been downloaded to your computer device.</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Shield size={16} style={{ color: '#3DB877' }} />
+                <span><strong>Online Inspection Mode:</strong> Viewing this PDF online preserves your standard refund eligibility until you download the file to your computer device.</span>
               </span>
               <button
                 onClick={() => setIsPreviewOpen(false)}
                 style={{
-                  padding: '6px 16px', borderRadius: '8px', background: 'var(--color-espresso)',
-                  color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem'
+                  padding: '7px 18px', borderRadius: '10px', background: 'var(--color-espresso)',
+                  color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.76rem',
+                  boxShadow: '0 2px 8px rgba(45,30,24,0.15)'
                 }}
               >
                 Close Viewer
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
-  );
-}
   );
 }
