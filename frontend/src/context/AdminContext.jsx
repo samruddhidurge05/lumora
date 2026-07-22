@@ -43,6 +43,9 @@ export function AdminContextProvider({ children }) {
   const [loadError, setLoadError]       = useState(false);
 
   useEffect(() => {
+    if (localStorage.getItem('lumora_active_role') !== 'admin') {
+      return;
+    }
     backendFetch('/admin/me')
       .then(data => {
         setAdminProfile(data);

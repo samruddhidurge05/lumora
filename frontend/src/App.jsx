@@ -589,19 +589,13 @@ function AppContent() {
 // from firing /api/admin/* requests that return 403 errors in the console.
 function AdminBoundary({ children }) {
   const { userRole, loading } = useAuth();
-  const isAdmin = userRole === 'admin';
-
-  // While auth is loading we don't yet know the role — don't mount admin context.
-  // Once resolved: mount for admins, skip entirely for everyone else.
-  if (loading || !isAdmin) {
-    return <>{children}</>;
-  }
+  const isAdmin = !loading && userRole === 'admin';
 
   return (
-    <AdminContextProvider>
-      <AdminNotificationBanner />
+    <>
+      {isAdmin && <AdminNotificationBanner />}
       {children}
-    </AdminContextProvider>
+    </>
   );
 }
 
@@ -610,9 +604,11 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <AppContextProvider>
-          <AdminBoundary>
-            <AppContent />
-          </AdminBoundary>
+          <AdminContextProvider>
+            <AdminBoundary>
+              <AppContent />
+            </AdminBoundary>
+          </AdminContextProvider>
         </AppContextProvider>
       </AuthProvider>
     </ErrorBoundary>
