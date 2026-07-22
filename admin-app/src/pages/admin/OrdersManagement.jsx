@@ -155,7 +155,10 @@ const getProductType = (o) => {
 };
 
 // Helper: get effective price for display (supports both new `total` and old `price` fields)
-const getOrderPrice = (o) => o.total ?? o.price ?? 0;
+const getOrderPrice = (o) => o?.total ?? o?.price ?? 0;
+
+// Helper: riskScore — Firestore orders don't have one, default to 0
+const getRiskScore = (o) => o?.riskScore ?? 0;
 
 // --- AFFILIATE ATTRIBUTION CARD COMPONENT ---
 function AffiliateAttributionCard({ orderId }) {
