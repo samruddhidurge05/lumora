@@ -370,6 +370,12 @@ class B2StorageProvider(BaseStorageProvider):
         src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
         file_id = self._get_file_id_by_name(src_clean)
         if not file_id:
+            # Check if target file ALREADY exists in B2 (idempotency fallback)
+            if self.exists(target_path):
+                return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
+            # Check if source file is already at a permanent location
+            if src_clean.startswith("public/") or src_clean.startswith("private/"):
+                return f"{download_domain}/file/{self.bucket_name}/{src_clean}"
             if _is_test_environment():
                 return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
             raise HTTPException(status_code=404, detail=f"B2 source object '{src_clean}' not found.")
@@ -384,6 +390,18 @@ class B2StorageProvider(BaseStorageProvider):
             },
             timeout=15
         )
+        if copy_res.status_code == 401:  # Token expired — re-authorize and retry
+            self._authorize()
+            copy_res = requests.post(
+                copy_endpoint,
+                headers={"Authorization": self.auth_token},
+                json={
+                    "sourceFileId": file_id,
+                    "fileName": dest_clean,
+                },
+                timeout=15
+            )
+
         if copy_res.status_code != 200:
             raise HTTPException(status_code=500, detail=f"B2 copy failed: {copy_res.text}")
 
@@ -413,6 +431,18 @@ class B2StorageProvider(BaseStorageProvider):
             },
             timeout=10
         )
+        if res.status_code == 401:  # Token expired — re-authorize and retry
+            self._authorize()
+            res = requests.post(
+                endpoint,
+                headers={"Authorization": self.auth_token},
+                json={
+                    "bucketId": self.bucket_id,
+                    "startFileName": file_name,
+                    "maxFileCount": 1
+                },
+                timeout=10
+            )
         if res.status_code == 200:
             files = res.json().get("files", [])
             if files and files[0].get("fileName") == file_name:
@@ -430,6 +460,14 @@ class B2StorageProvider(BaseStorageProvider):
             json={"fileId": file_id, "fileName": file_name},
             timeout=10
         )
+        if res.status_code == 401:  # Token expired — re-authorize and retry
+            self._authorize()
+            res = requests.post(
+                endpoint,
+                headers={"Authorization": self.auth_token},
+                json={"fileId": file_id, "fileName": file_name},
+                timeout=10
+            )
         return res.status_code == 200
 
     def delete_file(self, storage_path: str) -> bool:
@@ -446,6 +484,9 @@ class B2StorageProvider(BaseStorageProvider):
         clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
         file_url = f"{self.download_url}/file/{self.bucket_name}/{clean_name}"
         res = requests.get(file_url, headers={"Authorization": self.auth_token}, stream=True, timeout=30)
+        if res.status_code == 401:  # Token expired — re-authorize and retry
+            self._authorize()
+            res = requests.get(file_url, headers={"Authorization": self.auth_token}, stream=True, timeout=30)
         if res.status_code != 200:
             raise HTTPException(status_code=404, detail="File not found in Backblaze B2 storage")
         for chunk in res.iter_content(chunk_size=8192):
@@ -463,7 +504,6 @@ def _is_test_environment() -> bool:
     return (
         os.getenv("TESTING") == "True"
         or "PYTEST_CURRENT_TEST" in os.environ
-        or os.getenv("ENV") == "test"
     )
 
 
@@ -733,7 +773,22 @@ class StorageService:
             target_path = f"local://uploads/{rel_folder}/{unique_name}"
 
         if target_path.startswith("b2://"):
-            new_url = self.b2_provider.move_file(resolved_src, target_path)
+            try:
+                new_url = self.b2_provider.move_file(resolved_src, target_path)
+            except HTTPException as exc:
+                if exc.status_code == 404:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning("[storage-service] move_to_permanent 404 for source '%s' - falling back to direct source URL", resolved_src)
+                    clean_src = resolved_src.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+                    download_domain = self.b2_provider.download_url or "https://f005.backblazeb2.com"
+                    if source_path.startswith("http://") or source_path.startswith("https://"):
+                        new_url = source_path
+                    else:
+                        new_url = f"{download_domain}/file/{self.b2_provider.bucket_name}/{clean_src}"
+                    target_path = resolved_src
+                else:
+                    raise exc
         elif target_path.startswith("gs://"):
             new_url = self.firebase_provider.move_file(resolved_src, target_path)
         else:
