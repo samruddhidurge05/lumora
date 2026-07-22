@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid, Filter, Layers, Sparkles } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
@@ -327,10 +327,19 @@ export function AdminSelect({
   options = [], 
   placeholder = "Select...", 
   icon: LeadIcon,
-  className = "" 
+  className = "",
+  disabled = false,
+  name = "",
+  id = "",
+  ariaLabel = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  const optionRefs = useRef([]);
+  const generatedId = useId();
+  const listboxId = `admin-select-listbox-${id || generatedId}`;
 
   // Close on click outside
   useEffect(() => {
@@ -343,34 +352,100 @@ export function AdminSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Format options if passed as raw strings or objects
+  // Format options if passed as raw strings, numbers or objects
   const parsedOptions = options.map(opt => {
     if (typeof opt === 'object' && opt !== null) {
-      return { value: opt.value, label: opt.label || opt.value, icon: opt.icon };
+      return { 
+        value: opt.value, 
+        label: opt.label !== undefined ? opt.label : String(opt.value), 
+        icon: opt.icon || null,
+        disabled: Boolean(opt.disabled)
+      };
     }
-    return { value: opt, label: opt, icon: null };
+    return { value: opt, label: String(opt), icon: null, disabled: false };
   });
 
   const selectedOpt = parsedOptions.find(o => String(o.value) === String(value)) || {
-    value,
-    label: value || placeholder,
+    value: value !== undefined && value !== null ? value : '',
+    label: value !== undefined && value !== null && value !== '' ? String(value) : placeholder,
     icon: null
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const selectedIndex = parsedOptions.findIndex(o => String(o.value) === String(value));
+      setFocusedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    }
+  }, [isOpen, value]);
+
+  useEffect(() => {
+    if (isOpen && focusedIndex >= 0 && optionRefs.current[focusedIndex]) {
+      optionRefs.current[focusedIndex]?.focus();
+    }
+  }, [isOpen, focusedIndex]);
+
   const handleSelect = (optValue) => {
     setIsOpen(false);
+    if (buttonRef.current) buttonRef.current.focus();
     if (onChange) {
       // Fire synthetic event for 100% backwards compatibility with e.target.value handlers
-      onChange({ target: { value: optValue } });
+      const event = {
+        target: { value: optValue, name },
+        currentTarget: { value: optValue, name },
+        preventDefault: () => {},
+        stopPropagation: () => {},
+      };
+      onChange(event);
+    }
+  };
+
+  const handleKeyDownToggle = (e) => {
+    if (disabled) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  const handleKeyDownOption = (e, index) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextIndex = (index + 1) % parsedOptions.length;
+      setFocusedIndex(nextIndex);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prevIndex = (index - 1 + parsedOptions.length) % parsedOptions.length;
+      setFocusedIndex(prevIndex);
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!parsedOptions[index].disabled) {
+        handleSelect(parsedOptions[index].value);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+      if (buttonRef.current) buttonRef.current.focus();
+    } else if (e.key === "Tab") {
+      setIsOpen(false);
     }
   };
 
   return (
     <div ref={containerRef} className={`relative inline-block text-left min-w-[150px] ${className}`}>
       <button
+        ref={buttonRef}
         type="button"
+        id={id || undefined}
+        name={name || undefined}
+        disabled={disabled}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
+        aria-label={ariaLabel || placeholder || name || "Select option"}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[42px] px-3.5 rounded-xl bg-white/80 backdrop-blur-md border border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60 hover:bg-white shadow-sm flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30"
+        onKeyDown={handleKeyDownToggle}
+        className="w-full h-[42px] px-3.5 rounded-xl bg-white/80 backdrop-blur-md border border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60 hover:bg-white shadow-sm flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2 truncate">
           {LeadIcon ? (
@@ -389,18 +464,32 @@ export function AdminSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[300px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_16px_40px_rgba(90,30,126,0.18)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
-          {parsedOptions.map((opt) => {
+        <div 
+          id={listboxId}
+          role="listbox"
+          tabIndex={-1}
+          aria-label={ariaLabel || placeholder || name}
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[300px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_16px_40px_rgba(90,30,126,0.18)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+        >
+          {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);
+            const isFocused = index === focusedIndex;
             const OptionIcon = opt.icon;
             return (
               <button
-                key={String(opt.value)}
+                key={`${opt.value}-${index}`}
+                ref={(el) => (optionRefs.current[index] = el)}
                 type="button"
-                onClick={() => handleSelect(opt.value)}
-                className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 ${
+                role="option"
+                aria-selected={isSelected}
+                disabled={opt.disabled}
+                onClick={() => !opt.disabled && handleSelect(opt.value)}
+                onKeyDown={(e) => handleKeyDownOption(e, index)}
+                className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 outline-none ${
                   isSelected
                     ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold'
+                    : isFocused
+                    ? 'bg-[#7B3FA0]/08 text-[#5A1E7E] font-semibold'
                     : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/06 hover:text-[#5A1E7E]'
                 }`}
               >
