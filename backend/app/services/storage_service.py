@@ -343,15 +343,20 @@ class B2StorageProvider(BaseStorageProvider):
         if upload_res.status_code != 200:
             raise HTTPException(status_code=500, detail=f"B2 upload failed: {upload_res.text}")
 
-        public_url = f"{self.download_url}/file/{self.bucket_name}/{b2_file_path}"
-        storage_path = f"b2://{self.bucket_name}/{b2_file_path}"
-
-        # Verify the uploaded object exists in B2
-        if self.is_available() and not self.exists(storage_path):
+        # B2 verifies the SHA1 hash server-side during upload.
+        # A HTTP 200 response from b2_upload_file guarantees the object is durably stored.
+        # We do NOT call self.exists() here because b2_list_file_names has eventual-consistency
+        # lag of up to a few seconds — causing false "not found" errors right after upload.
+        upload_data_resp = upload_res.json()
+        reported_sha1 = upload_data_resp.get("contentSha1", "")
+        if reported_sha1 and reported_sha1 != "none" and reported_sha1 != file_sha1:
             raise HTTPException(
                 status_code=500,
-                detail=f"B2 upload verification failed: Upload reported success, but object '{storage_path}' was not found in bucket."
+                detail=f"B2 upload integrity check failed: SHA1 mismatch (expected {file_sha1}, got {reported_sha1})."
             )
+
+        public_url = f"{self.download_url}/file/{self.bucket_name}/{b2_file_path}"
+        storage_path = f"b2://{self.bucket_name}/{b2_file_path}"
 
         return {
             "storage_path": storage_path,
@@ -405,12 +410,9 @@ class B2StorageProvider(BaseStorageProvider):
         if copy_res.status_code != 200:
             raise HTTPException(status_code=500, detail=f"B2 copy failed: {copy_res.text}")
 
-        # Verify the new object exists after copy
-        if self.is_available() and not self.exists(target_path):
-            raise HTTPException(
-                status_code=500,
-                detail=f"B2 move verification failed: Copy returned HTTP 200, but destination object '{target_path}' was not found in bucket."
-            )
+        # b2_copy_file HTTP 200 guarantees the destination object is durably written.
+        # Calling exists() immediately after copy risks a false 404 due to B2 eventual consistency.
+        # Trust the HTTP 200 response and proceed to delete the source.
 
         # Clean up old source object
         self.delete_file_id(file_id, src_clean)
