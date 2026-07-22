@@ -249,12 +249,20 @@ function AppContent() {
         }).then(() => {
           localStorage.removeItem('lumora_pending_referral');
           if (pending.product_id) {
-            window.location.href = `/#product/${pending.product_id}`;
+            // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
+            // window.location.href would bypass the SPA state and show the home page.
+            navigateTo('product-detail', pending.product_id);
           }
-        }).catch(() => {});
+        }).catch(() => {
+          // Attribution failed silently — still open the product so the user isn't stuck
+          if (pending.product_id) {
+            navigateTo('product-detail', pending.product_id);
+          }
+        });
       });
     } catch (_) {}
   }, [user?.uid]);
+
 
   const handleGoToDownloads = () => {
     setShowDownloadPopup(false);

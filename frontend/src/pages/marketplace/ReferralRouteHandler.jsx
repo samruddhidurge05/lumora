@@ -66,8 +66,9 @@ export default function ReferralRouteHandler() {
         if (!user) {
           // Unauthenticated customer -> Route to Login page with redirect query param
           setStatusMsg('Redirecting to secure login...');
-          const targetRedirect = validProdId ? `/product/${validProdId}` : '/#products';
-          navigate(`/auth/login?redirect=${encodeURIComponent(targetRedirect)}&ref=${encodeURIComponent(refCode)}`, { replace: true });
+          // Use hash-based SPA URL so the product loads correctly after login
+          const targetRedirect = validProdId ? `/#product/${validProdId}` : '/#products';
+          navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}&ref=${encodeURIComponent(refCode)}`, { replace: true });
           return;
         }
 

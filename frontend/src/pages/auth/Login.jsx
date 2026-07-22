@@ -62,6 +62,7 @@ export default function Login() {
   const role = searchParams.get('role');
   const justRegistered = searchParams.get('registered') === 'true';
   const nextUrl = searchParams.get('next') || null; // invite redirect support
+  const redirectUrl = searchParams.get('redirect') || null; // referral/post-auth redirect
   const validRoles = ['customer', 'affiliate', 'vendor', 'admin'];
 
   // All hooks must be unconditional — declared before any early return
@@ -127,10 +128,16 @@ export default function Login() {
       await login(normalizedEmail, password, rememberMe, role);
       if (auth.currentUser && !auth.currentUser.emailVerified) {
         const nextParam = nextUrl ? `&next=${encodeURIComponent(nextUrl)}` : '';
-        navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${role}${nextParam}`);
+        const redirectParam = redirectUrl ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';
+        navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${role}${nextParam}${redirectParam}`);
       } else {
+        // Priority: nextUrl (invite) > redirectUrl (referral product) > role dashboard
         if (nextUrl) {
           navigate(nextUrl, { replace: true });
+        } else if (redirectUrl) {
+          // redirectUrl from ReferralRouteHandler is a path like /product/123
+          // Navigate using react-router so the SPA hash state updates correctly
+          navigate(redirectUrl, { replace: true });
         } else {
           navigate(`/${role}/dashboard`);
         }
@@ -147,9 +154,11 @@ export default function Login() {
     setIsLoading(true);
     setAuthStatus(null);
     try {
-      const user = await googleSignIn(rememberMe, role);
+      await googleSignIn(rememberMe, role);
       if (nextUrl) {
         navigate(nextUrl, { replace: true });
+      } else if (redirectUrl) {
+        navigate(redirectUrl, { replace: true });
       } else {
         navigate(`/${role}/dashboard`);
       }
@@ -165,9 +174,11 @@ export default function Login() {
     setIsLoading(true);
     setAuthStatus(null);
     try {
-      const user = await githubSignIn(rememberMe, role);
+      await githubSignIn(rememberMe, role);
       if (nextUrl) {
         navigate(nextUrl, { replace: true });
+      } else if (redirectUrl) {
+        navigate(redirectUrl, { replace: true });
       } else {
         navigate(`/${role}/dashboard`);
       }
