@@ -751,24 +751,6 @@ export default function CustomerDownloads() {
 /* ─── VAULT PRODUCT CARD ─────────────────────────────────────── */
 function VaultCard({ product, isHovered, onHover }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const cardRef = useRef(null);
-
-  const handleMouseMove = (e) => {
-    const rect = cardRef.current.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const x = e.clientX - rect.left - cx;
-    const y = e.clientY - rect.top - cy;
-    setTilt({ x: (y / cy) * 4, y: -(x / cx) * 4 });
-  };
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-    onHover(null);
-  };
-
-/* ─── VAULT PRODUCT CARD ─────────────────────────────────────── */
-function VaultCard({ product, isHovered, onHover }) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
