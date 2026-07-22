@@ -22,7 +22,10 @@ export function calculateCommission(price, mode = 'percentage', value = 0) {
 export function getCustomerBaseUrl() {
   if (typeof window !== 'undefined' && window.location) {
     const envUrl = 
-      (import.meta.env && (import.meta.env.VITE_CUSTOMER_URL || import.meta.env.VITE_FRONTEND_URL || import.meta.env.VITE_SITE_URL || import.meta.env.VITE_MARKETPLACE_URL));
+      import.meta.env?.VITE_CUSTOMER_URL || 
+      import.meta.env?.VITE_FRONTEND_URL || 
+      import.meta.env?.VITE_SITE_URL || 
+      import.meta.env?.VITE_MARKETPLACE_URL;
 
     if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
       return envUrl.replace(/\/+$/, '');

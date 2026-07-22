@@ -2195,6 +2195,14 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     whatsIncluded:       Array.isArray(product?.whatYouGet)          ? product.whatYouGet          : [],
     systemRequirements:  Array.isArray(product?.systemRequirements)  ? product.systemRequirements  : [],
     installationGuide:   product?.installationGuide                  || product?.installation_guide || '',
+
+    // ── Section 3: Affiliate Program ─────────────────────────────────────────
+    affiliate_enabled:       Boolean(product?.affiliate_enabled || false),
+    commission_mode:         product?.commission_mode || product?.commission_type || 'percentage',
+    commission_value:        product?.commission_value != null ? product.commission_value : '',
+    affiliate_cookie_days:   product?.affiliate_cookie_days ?? 30,
+    affiliate_visibility:    product?.affiliate_visibility || 'public',
+    affiliate_program_status: product?.affiliate_program_status || 'active',
   });
 
   const [thumbPreview, setThumbPreview] = useState(form.thumbnail);
