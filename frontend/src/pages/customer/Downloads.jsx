@@ -32,20 +32,11 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, pcloudDownloadLink }) {
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
 
   const handleDownload = async () => {
     if (state !== 'idle') return;
-
-    // ── Fast path: pCloud link → open instantly, no API round-trip ────────────
-    if (pcloudDownloadLink) {
-      window.open(pcloudDownloadLink, '_blank');
-      setState('downloading');
-      setTimeout(() => setState('done'), 600);
-      setTimeout(() => setState('idle'), 4000);
-      return;
-    }
 
     setState('downloading');
     
@@ -63,13 +54,6 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
           return;
         }
 
-        // Handle pCloud / external redirect (temporary dev/testing implementation)
-        if (res?.type === 'external' && res?.redirect_url) {
-          window.open(res.redirect_url, '_blank');
-          setTimeout(() => setState('done'), 400);
-          setTimeout(() => setState('idle'), 4500);
-          return;
-        }
         if (res && res.download_url) {
           activeUrl = res.download_url;
         }
@@ -102,12 +86,6 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
           const fileRespJson = await fileResp.json();
           if (fileRespJson?.type === 'pending') {
             setState('pending');
-            return;
-          }
-          if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-            window.open(fileRespJson.redirect_url, '_blank');
-            setTimeout(() => setState('done'), 400);
-            setTimeout(() => setState('idle'), 4500);
             return;
           }
         } else {
@@ -276,7 +254,7 @@ export default function CustomerDownloads() {
               accentColor: '#4E3B31',
               downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
               downloadAvailable,
-              pcloud_download_link: prod?.pcloud_download_link || null,
+              pcloud_download_link: null,
               verified: true,
             });
           });
@@ -306,7 +284,7 @@ export default function CustomerDownloads() {
     gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
     accentColor: '#4E3B31',
     downloadUrl: `/downloads/product-${p.id}.zip`,
-    pcloud_download_link: p.pcloud_download_link || null,
+    pcloud_download_link: null,
     verified: true,
   }));
 
@@ -665,7 +643,7 @@ export default function CustomerDownloads() {
                   <p style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', marginTop: 3 }}>{product.updateNote}</p>
                   <p style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.7 }}>{product.version} → {product.newVersion}</p>
                 </div>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
               </div>
             ))}
           </div>
@@ -726,14 +704,6 @@ function VaultCard({ product, isHovered, onHover }) {
   };
 
   const handleOpen = () => {
-    // ── Fast path: open pCloud link instantly, no API needed ─────────────────
-    const quickUrl = product.pcloud_download_link || product.downloadUrl;
-    if (quickUrl && (quickUrl.includes('pcloud') || quickUrl.includes('publink'))) {
-      window.open(quickUrl, '_blank');
-      return;
-    }
-
-    // ── Fallback: resolve via backend for non-pCloud products ─────────────────
     const numericId = parseInt(product.id, 10);
     if (isNaN(numericId)) return;
 
@@ -742,10 +712,6 @@ function VaultCard({ product, isHovered, onHover }) {
         const res = await backendFetch(`/products/${numericId}/download`);
         if (res?.download_available === false) {
           alert('The creator has not yet uploaded the downloadable asset.');
-          return;
-        }
-        if (res?.type === 'external' && res?.redirect_url) {
-          window.open(res.redirect_url, '_blank');
           return;
         }
         const activeUrl = res?.download_url || product.downloadUrl;
@@ -898,7 +864,7 @@ function VaultCard({ product, isHovered, onHover }) {
               </span>
             </div>
           ) : (
-            <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />
+            <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
           )}
         </div>
       </div>

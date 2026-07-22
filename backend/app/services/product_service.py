@@ -118,8 +118,8 @@ class ProductService:
                 seo_title=seo_title,
                 seo_description=seo_description,
                 visibility=visibility,
-                pcloud_download_link=pcloud_download_link,
-                image_urls=image_urls or [],
+                pcloud_download_link=None,
+                image_urls=[],
             )
             db.add(product)
             db.flush() # Populate product.id
@@ -319,9 +319,7 @@ class ProductService:
                 "affiliate_enabled", "commission_type", "commission_mode", "commission_value",
                 "affiliate_cookie_days", "affiliate_visibility", "affiliate_program_status",
                 "short_desc", "features", "system_requirements", "what_you_get", "installation_guide",
-                "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status",
-                # -- pCloud / External URL Delivery (temporary) --
-                "pcloud_download_link", "image_urls",
+                "subcategory", "discount", "preview_images", "preview_video", "seo_title", "seo_description", "visibility", "status"
             ):
                 if field in update_data:
                     setattr(product, field, update_data[field])

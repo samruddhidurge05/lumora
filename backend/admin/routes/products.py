@@ -112,8 +112,8 @@ def create_product(product_in: ProductCreate, db: Session = Depends(get_db), adm
         seo_description=product_in.seo_description,
         visibility=product_in.visibility or "public",
         status=data.get("status") or "published",
-        pcloud_download_link=product_in.pcloud_download_link,
-        image_urls=image_urls,
+        pcloud_download_link=None,
+        image_urls=[],
     )
 
     try:

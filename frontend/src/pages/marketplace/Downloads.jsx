@@ -108,14 +108,6 @@ export default function Downloads() {
 
   const handleDownload = async (product) => {
     const directUrl = getDownloadUrl(product.id);
-    const externalLink = product.pcloud_download_link || product.file_url;
-    
-    // 1. Instant check for direct public external link
-    if (externalLink && String(externalLink).startsWith('http')) {
-      window.open(externalLink, '_blank');
-      setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
-      return;
-    }
 
     setDownloadingId(product.id);
     setDownloadToast(null);
@@ -134,12 +126,7 @@ export default function Downloads() {
             return;
           }
 
-          // Handle pCloud / external redirect
-          if (resp?.type === 'external' && resp?.redirect_url) {
-            window.open(resp.redirect_url, '_blank');
-            setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
-            return;
-          } else if (resp?.download_url) {
+          if (resp?.download_url) {
             // Internal token-based URL — call the download-file endpoint
             const fileCheckUrl = resp.download_url.replace('/api', '');
             const token = localStorage.getItem('lumora_backend_token');
@@ -157,12 +144,6 @@ export default function Downloads() {
               const fileRespJson = await fileResp.json();
               if (fileRespJson?.type === 'pending') {
                 setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
-                return;
-              }
-              if (fileRespJson?.type === 'external' && fileRespJson?.redirect_url) {
-                window.open(fileRespJson.redirect_url, '_blank');
-                setDownloadToast({ id: product.id, msg: '✓ Download link opened in a new tab!', ok: true });
-                window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
                 return;
               }
             } else {
@@ -304,7 +285,7 @@ export default function Downloads() {
                         className="btn-premium btn-premium-solid"
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.78rem', borderRadius: '10px', flexShrink: 0, opacity: isDownloading ? 0.7 : 1, cursor: isDownloading ? 'not-allowed' : 'pointer' }}>
                         {isDownloading ? <RefreshCw size={13} style={{ animation: 'spin 1.2s linear infinite' }} /> : <Download size={13} />}
-                        {isDownloading ? 'Preparing…' : (p.pcloud_download_link || p.file_url ? 'Open' : 'Download')}
+                        {isDownloading ? 'Preparing…' : 'Download'}
                       </button>
                     </div>
                   </div>

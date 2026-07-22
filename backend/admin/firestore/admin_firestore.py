@@ -85,8 +85,8 @@ def sync_product_to_firestore(product):
             "commission_type": product.commission_type or "percentage",
             "commission_value": float(product.commission_value or 0.0),
             # -- Download URLs - both naming conventions for full compatibility --
-            "pcloud_download_link": product.pcloud_download_link,
-            "pcloudDownloadLink": product.pcloud_download_link,
+            "pcloud_download_link": None,
+            "pcloudDownloadLink": None,
             "file_url": product.file_url or None,
             "fileUrl": product.file_url or None,
             # -- Integer primary key ---------------------------------------------
@@ -230,86 +230,9 @@ def sync_order_to_firestore(order):
 
 def _refresh_pcloud_images_for_product(product_model, pcloud_share_url: str) -> bool:
     """
-    Fetch fresh direct p-lux pCloud image URLs from a shared folder.
-    Returns True if images were updated, False otherwise.
+    Disabled pCloud direct link fetching.
     """
-    import urllib.request
-    import json as _json
-
-    def _extract_code(url):
-        if not url or "code=" not in url:
-            return None
-        return url.split("code=")[1].split("&")[0].split("#")[0]
-
-    def _get_files(code):
-        req = urllib.request.Request(
-            f"https://api.pcloud.com/showpublink?code={code}",
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = _json.loads(r.read().decode())
-        if data.get("result") != 0:
-            return {}
-        return {f["name"]: f["fileid"] for f in data["metadata"].get("contents", []) if not f.get("isfolder")}
-
-    def _get_link(code, fid):
-        req = urllib.request.Request(
-            f"https://api.pcloud.com/getpublinkdownload?code={code}&fileid={fid}",
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = _json.loads(r.read().decode())
-        if data.get("result") == 0:
-            hosts = data.get("hosts", [])
-            path = data.get("path", "")
-            if hosts and path:
-                return f"https://{hosts[0]}{path}"
-        return None
-
-    try:
-        code = _extract_code(pcloud_share_url)
-        if not code:
-            return False
-        files = _get_files(code)
-        if not files:
-            return False
-
-        png_files = [n for n in files if n.lower().endswith(".png")]
-        if not png_files:
-            return False
-
-        def pick(names, kw):
-            for n in names:
-                if kw in n.lower():
-                    return n
-            return names[0] if names else None
-
-        thumb_name    = pick(png_files, "thumbnail") or pick(png_files, "cover")
-        cover_name    = pick(png_files, "cover")
-        featured_name = pick(png_files, "featured")
-        preview_name  = pick(png_files, "preview")
-
-        fresh = {}
-        for n in set(filter(None, [thumb_name, cover_name, featured_name, preview_name])):
-            link = _get_link(code, files[n])
-            if link:
-                fresh[n] = link
-
-        if not fresh:
-            return False
-
-        img_list = []
-        for n in [cover_name, featured_name, preview_name, thumb_name]:
-            if n and n in fresh and fresh[n] not in img_list:
-                img_list.append(fresh[n])
-
-        product_model.thumbnail  = fresh.get(thumb_name) or fresh.get(cover_name) or img_list[0]
-        product_model.preview    = fresh.get(preview_name) or fresh.get(featured_name) or product_model.thumbnail
-        product_model.image_urls = img_list or [product_model.thumbnail]
-        return True
-    except Exception as e:
-        print(f"[firestore-sync] pCloud image refresh failed: {e}")
-        return False
+    return False
 
 
 def restore_sqlite_products_from_firestore(db_session):
@@ -352,7 +275,7 @@ def restore_sqlite_products_from_firestore(db_session):
                     downloads=int(data.get("downloads", 0)),
                     thumbnail=None if is_broken_thumb else thumbnail,
                     preview=None if is_broken_thumb else (data.get("preview") or thumbnail),
-                    file_url=data.get("file_url") or data.get("fileUrl") or pcloud_link,
+                    file_url=data.get("file_url") or data.get("fileUrl"),
                     seller=data.get("creatorName", data.get("seller", "Lumora")),
                     vendor_id=data.get("vendor_id"),
                     featured=bool(data.get("featured", data.get("isFeatured", False))),
@@ -381,17 +304,13 @@ def restore_sqlite_products_from_firestore(db_session):
                     preview_video=data.get("previewVideo") or data.get("preview_video"),
                     seo_title=data.get("seoTitle") or data.get("seo_title"),
                     seo_description=data.get("seoDescription") or data.get("seo_description"),
-                    pcloud_download_link=pcloud_link,
+                    pcloud_download_link=None,
                     image_urls=[] if is_broken_thumb else (data.get("image_urls") or data.get("imageUrls") or []),
                 )
                 db_session.add(product)
                 db_session.flush()  # get product into session so we can update it
 
-                # Refresh pCloud images if thumbnail was broken or missing
-                if pcloud_link and (is_broken_thumb or not product.thumbnail):
-                    refreshed = _refresh_pcloud_images_for_product(product, pcloud_link)
-                    if refreshed:
-                        fixed += 1
+                # Refresh pCloud images disabled
 
                 added += 1
             else:
@@ -412,7 +331,7 @@ def restore_sqlite_products_from_firestore(db_session):
                     if data.get("image_urls") or data.get("imageUrls"):
                         exists.image_urls = data.get("image_urls") or data.get("imageUrls") or []
 
-                exists.file_url = data.get("file_url") or data.get("fileUrl") or pcloud_link or exists.file_url
+                exists.file_url = data.get("file_url") or data.get("fileUrl") or exists.file_url
                 exists.seller = data.get("creatorName", data.get("seller", exists.seller))
                 exists.vendor_id = data.get("vendor_id") or exists.vendor_id
                 exists.featured = bool(data.get("featured", data.get("isFeatured", exists.featured)))
@@ -438,12 +357,7 @@ def restore_sqlite_products_from_firestore(db_session):
                 exists.preview_video = data.get("previewVideo") or data.get("preview_video") or exists.preview_video
                 exists.seo_title = data.get("seoTitle") or data.get("seo_title") or exists.seo_title
                 exists.seo_description = data.get("seoDescription") or data.get("seo_description") or exists.seo_description
-                exists.pcloud_download_link = pcloud_link or exists.pcloud_download_link
-
-                if pcloud_link and (is_broken_thumb or not exists.thumbnail):
-                    refreshed = _refresh_pcloud_images_for_product(exists, pcloud_link)
-                    if refreshed:
-                        fixed += 1
+                exists.pcloud_download_link = None
                 
                 added += 1
 

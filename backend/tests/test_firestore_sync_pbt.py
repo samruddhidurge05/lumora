@@ -366,12 +366,12 @@ def test_pbt_property8_pcloud_dual_key_invariant(link):
         f"Dual-key mismatch: snake={captured['pcloud_download_link']!r} "
         f"camel={captured['pcloudDownloadLink']!r} (link={link!r})"
     )
-    # Both keys must equal the original input value
-    assert captured["pcloud_download_link"] == link, (
-        f"pcloud_download_link wrong: expected {link!r}, got {captured['pcloud_download_link']!r}"
+    # Both keys must equal None under pCloud-free delivery
+    assert captured["pcloud_download_link"] is None, (
+        f"pcloud_download_link wrong: expected None, got {captured['pcloud_download_link']!r}"
     )
-    assert captured["pcloudDownloadLink"] == link, (
-        f"pcloudDownloadLink wrong: expected {link!r}, got {captured['pcloudDownloadLink']!r}"
+    assert captured["pcloudDownloadLink"] is None, (
+        f"pcloudDownloadLink wrong: expected None, got {captured['pcloudDownloadLink']!r}"
     )
 
 

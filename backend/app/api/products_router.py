@@ -25,7 +25,6 @@ router = APIRouter()
 import urllib.parse as urlparse
 import requests
 
-_PCLOUD_URL_CACHE = {}
 _LAST_FIRESTORE_SYNC_TIME = 0.0
 
 def _bg_sync_firestore():
@@ -263,12 +262,12 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
     }
     preview = resolve_media_url(product.preview or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85', product.category)
 
-    # Prefer explicitly stored pCloud/external image URLs list
+    # Prefer explicitly stored image URLs list, excluding pCloud links
     extra_images = []
     if product.image_urls:
-        extra_images = [resolve_media_url(url, product.category) for url in product.image_urls if url]
+        extra_images = [resolve_media_url(url, product.category) for url in product.image_urls if url and "pcloud" not in url.lower() and "publink" not in url.lower()]
     elif product.preview_images:
-        extra_images = [resolve_media_url(url, product.category) for url in product.preview_images if url]
+        extra_images = [resolve_media_url(url, product.category) for url in product.preview_images if url and "pcloud" not in url.lower() and "publink" not in url.lower()]
 
     if extra_images:
         all_images = [preview] + [img for img in extra_images if img != preview]
@@ -361,18 +360,9 @@ def download_product(
     token = generate_download_token(current_user.id, product_id)
     
     # Determine if the download asset is actually available
-    pcloud_link = product.pcloud_download_link
     has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
-    has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2
-    has_file = bool(product.storage_path or product.file_url)
-    
-    # If the external pCloud link has expired and there is no local file on disk,
-    # set a fallback storage path so that we can stream a dynamically-generated ZIP file locally
-    if not has_pcloud and not has_file:
-        product.storage_path = f"pcloud://uploads/products/{product_id}/product.zip"
-        has_file = True
-        
-    download_available = has_b2 or has_pcloud or has_file
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    download_available = has_b2 or has_local
     
     response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
@@ -395,10 +385,6 @@ def download_product(
         },
         "token_expires_in": "15 minutes"
     }
-
-    if has_pcloud:
-        response_data["type"] = "external"
-        response_data["redirect_url"] = pcloud_link
 
     return response_data
 
@@ -431,15 +417,9 @@ def get_download_center(
         token = generate_download_token(current_user.id, product.id)
         
         # Determine if the download asset is actually available
-        pcloud_link = product.pcloud_download_link
         has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
-        has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2
-        has_file = bool(product.storage_path or product.file_url)
-        
-        if not has_pcloud and not has_file:
-            has_file = True
-            
-        download_available = has_b2 or has_pcloud or has_file
+        has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+        download_available = has_b2 or has_local
         
         downloads.append({
             "order_id": order.id,
@@ -518,10 +498,13 @@ def download_product_file(
         )
 
     storage_path = product.storage_path or product.file_url
-    if not storage_path:
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    
+    if not storage_path or not (has_b2 or has_local):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product file path is missing or unavailable."
+            detail="Product file is currently unavailable."
         )
 
     if owned:
@@ -675,8 +658,8 @@ def create_product(
         visibility=product_in.visibility or "public",
         status=initial_status,
         # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------
-        pcloud_download_link=product_in.pcloud_download_link,
-        image_urls=product_in.image_urls,
+        pcloud_download_link=None,
+        image_urls=[],
     )
 
     # Structured log

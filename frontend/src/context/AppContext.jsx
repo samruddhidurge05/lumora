@@ -644,7 +644,8 @@ const _BACKEND_ORIGIN = (() => {
 })();
 
 function _resolveProductImageUrl(url) {
-  if (!url) return null;
+  if (!url || typeof url !== 'string') return null;
+  if (url.includes('pcloud') || url.includes('publink')) return null;
   // Reject base64 data URIs — they are test/temp uploads and should never be used as display images
   if (url.startsWith('data:')) return null;
   // Strip localhost origins so the Vite proxy forwards /uploads/... to the backend.
@@ -654,13 +655,13 @@ function _resolveProductImageUrl(url) {
   if (localhostPattern.test(url)) {
     url = url.replace(localhostPattern, '');
   }
-  if (url.startsWith('http')) return url; // external CDN (pCloud, etc.) — pass through unchanged
+  if (url.startsWith('http')) return url; // external CDN — pass through unchanged
   // Relative path like /uploads/vendors/1/products/5/images/uuid.png
   return `${_BACKEND_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 // Pick the best image URL from a Firestore product document.
-// Priority: pCloud CDN > non-Unsplash https > image_urls array > null
+// Priority: non-Unsplash https > image_urls array > null
 function _bestFirestoreImage(fd) {
   const candidates = [
     fd.thumbnail,
@@ -800,14 +801,9 @@ function dedupeById(arr) {
   });
 }
 
-// Products that must always appear first everywhere (real pCloud products)
-const PINNED_IDS = new Set([108, 109, 111, 112, 115, 116, 117, 118, 119, 120, 121, 122]);
-
-// Helper: sort pinned products to front, keep relative order within each group
+// Helper: sort pinned products to front (disabled)
 function pinnedFirst(arr) {
-  const pinned = arr.filter(p => PINNED_IDS.has(Number(p.id)));
-  const rest   = arr.filter(p => !PINNED_IDS.has(Number(p.id)));
-  return [...pinned, ...rest];
+  return arr;
 }
 
 export function AppContextProvider({ children }) {
@@ -893,14 +889,13 @@ export function AppContextProvider({ children }) {
             const firestoreById = {};
             firestoreDocs.forEach(fd => { firestoreById[String(fd.id)] = fd; });
 
-            // Helper: merge pCloud/image fields from a Firestore doc into a product
+            // Helper: merge image fields from a Firestore doc into a product
             const _mergeFirestoreImages = (base, fd) => {
               if (!fd) return base;
               const fsImg = _bestFirestoreImage(fd);
               const fsImageUrls = (fd.image_urls || []).filter(
                 u => u && !u.startsWith('data:') && !u.includes('unsplash.com') && !u.includes('localhost')
               ).map(_resolveProductImageUrl).filter(Boolean);
-              const fsPcloud = fd.pcloud_download_link || fd.pcloudDownloadLink || null;
               
               // Only override image fields when base doesn't already have a valid signed URL
               const shouldOverrideImage = fsImg && (!base.preview || (!base.preview.includes('Authorization=') && !base.preview.includes('/uploads/')));
@@ -910,8 +905,6 @@ export function AppContextProvider({ children }) {
                 // Only override image fields when Firestore has a real URL and base needs it
                 ...(shouldOverrideImage ? { preview: fsImg, thumbnail: fsImg } : {}),
                 ...(fsImageUrls.length && (!base.image_urls || !base.image_urls.length) ? { image_urls: fsImageUrls, preview_images: fsImageUrls } : {}),
-                // Always take pCloud download link from Firestore if present
-                ...(fsPcloud ? { pcloud_download_link: fsPcloud, pcloudDownloadLink: fsPcloud } : {}),
               };
             };
 

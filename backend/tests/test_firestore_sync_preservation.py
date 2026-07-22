@@ -275,8 +275,8 @@ class TestPCloudDualKey:
         assert "pcloudDownloadLink" in captured, (
             "'pcloudDownloadLink' key missing from Firestore payload"
         )
-        assert captured["pcloud_download_link"] == "https://pcloud.example.com/dl/abc"
-        assert captured["pcloudDownloadLink"] == "https://pcloud.example.com/dl/abc"
+        assert captured["pcloud_download_link"] is None
+        assert captured["pcloudDownloadLink"] is None
         assert captured["pcloud_download_link"] == captured["pcloudDownloadLink"], (
             "Both pCloud keys must be identical"
         )
@@ -319,8 +319,8 @@ class TestPCloudDualKey:
             f"Dual-key mismatch: snake={captured['pcloud_download_link']!r} "
             f"camel={captured['pcloudDownloadLink']!r} (link={link!r})"
         )
-        assert captured["pcloud_download_link"] == link, (
-            f"pcloud_download_link value wrong: expected {link!r}, got {captured['pcloud_download_link']!r}"
+        assert captured["pcloud_download_link"] is None, (
+            f"pcloud_download_link value wrong: expected None, got {captured['pcloud_download_link']!r}"
         )
 
 
@@ -572,19 +572,19 @@ class TestFirestoreUnavailableNoOp:
 class TestPCloudAndThumbnailCombinations:
 
     def test_pcloud_preserved_with_real_thumbnail(self):
-        """pCloud dual-key is present and correct even when thumbnail is a real URL."""
+        """pCloud dual-key is present as None even when thumbnail is a real URL."""
         p = make_product(
             pcloud_download_link="https://pcloud.example.com/dl/abc",
             thumbnail="https://real.cdn.com/img.jpg",
         )
         captured, _ = run_sync_and_capture(p)
 
-        assert captured["pcloud_download_link"] == "https://pcloud.example.com/dl/abc"
-        assert captured["pcloudDownloadLink"] == "https://pcloud.example.com/dl/abc"
+        assert captured["pcloud_download_link"] is None
+        assert captured["pcloudDownloadLink"] is None
         assert captured["thumbnail"] == "https://real.cdn.com/img.jpg"
 
     def test_pcloud_preserved_when_thumbnail_is_none(self):
-        """pCloud dual-key is present even when thumbnail is None."""
+        """pCloud dual-key is present as None even when thumbnail is None."""
         p = make_product(
             pcloud_download_link="https://pcloud.example.com/dl/abc",
             thumbnail=None,
@@ -593,6 +593,6 @@ class TestPCloudAndThumbnailCombinations:
         )
         captured, _ = run_sync_and_capture(p)
 
-        assert captured["pcloud_download_link"] == "https://pcloud.example.com/dl/abc"
-        assert captured["pcloudDownloadLink"] == "https://pcloud.example.com/dl/abc"
+        assert captured["pcloud_download_link"] is None
+        assert captured["pcloudDownloadLink"] is None
         assert captured["thumbnail"] is None

@@ -74,12 +74,11 @@ export const onPurchaseComplete = async (uid, items, totalUSD, affCode) => {
 
   // ── 2. Record purchase + download for every item
   for (const item of items) {
-    // Prefer pCloud download link, then file_url/fileUrl — all are set by enrichRawProducts() spread.
+    // Prefer file_url/fileUrl — all are set by enrichRawProducts() spread.
     // Do NOT fall back to a placeholder Firebase Storage URL; that would record a wrong file
     // in the downloads collection. Use null instead — Downloads.jsx fetches the real URL
     // fresh from the backend /products/{id}/download endpoint at download time.
-    const fileUrl = item.pcloud_download_link || item.pcloudDownloadLink ||
-      item.fileUrl || item.file_url || item.file_url || null;
+    const fileUrl = item.fileUrl || item.file_url || null;
 
     await safeRun(`recordPurchase(${item.id})`, () =>
       recordPurchase(uid, String(item.id))

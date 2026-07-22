@@ -32,17 +32,17 @@ const CAT_GALLERY = {
 };
 
 function getGallery(product) {
-  // Prefer explicitly stored pCloud/external image URLs (image_urls column)
-  const pcloudImages = Array.isArray(product.image_urls || product.imageUrls)
-    ? (product.image_urls || product.imageUrls).filter(Boolean)
+  // Prefer explicitly stored image URLs, filtering out pCloud links
+  const extraUrls = Array.isArray(product.image_urls || product.imageUrls)
+    ? (product.image_urls || product.imageUrls).filter(url => url && !url.includes('pcloud') && !url.includes('publink'))
     : [];
 
   const extraImages = Array.isArray(product.previewImages || product.preview_images)
-    ? (product.previewImages || product.preview_images).filter(Boolean)
+    ? (product.previewImages || product.preview_images).filter(url => url && !url.includes('pcloud') && !url.includes('publink'))
     : [];
 
-  // Build the full gallery pool — pCloud images take priority over preview/thumbnail
-  const allGallery = pcloudImages.length > 0 ? pcloudImages : extraImages;
+  // Build the full gallery pool
+  const allGallery = extraUrls.length > 0 ? extraUrls : extraImages;
 
   // Pick the best single primary: prefer non-Unsplash thumbnail/preview, else first gallery image
   const rawPrimary = product.preview || product.thumbnail || null;
@@ -176,7 +176,7 @@ export default function ProductPage() {
             what_you_get: data.what_you_get || [],
             system_requirements: data.system_requirements || [],
             installation_guide: data.installation_guide || '',
-            pcloud_download_link: data.pcloud_download_link || null
+            pcloud_download_link: null
           };
           setFetchedProduct(mapped);
         } else {

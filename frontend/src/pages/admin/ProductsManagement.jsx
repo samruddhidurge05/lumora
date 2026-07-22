@@ -238,14 +238,10 @@ function mapAdminProductToApi(uiForm) {
     // Media
     thumbnail:         (uiForm.thumbnail && !uiForm.thumbnail.includes('unsplash.com') && !uiForm.thumbnail.includes('temp/'))
                          ? uiForm.thumbnail
-                         : (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)
-                           ? uiForm.pcloudImageUrls[0]
-                           : uiForm.thumbnail || null,
+                         : uiForm.thumbnail || null,
     preview:           (uiForm.thumbnail && !uiForm.thumbnail.includes('unsplash.com') && !uiForm.thumbnail.includes('temp/'))
                          ? uiForm.thumbnail
-                         : (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)
-                           ? uiForm.pcloudImageUrls[0]
-                           : uiForm.thumbnail || null,
+                         : uiForm.thumbnail || null,
 
     // File delivery
     file_url:          uiForm.downloadUrl || uiForm.file_url || null,  // downloadUrl → file_url
@@ -291,15 +287,11 @@ function mapAdminProductToApi(uiForm) {
 
     // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
     // Future migration: only the stored URLs need to change. No frontend redesign.
-    pcloud_download_link: uiForm.pcloudDownloadLink || null,
-    image_urls:           Array.isArray(uiForm.pcloudImageUrls)
-                            ? uiForm.pcloudImageUrls.filter(Boolean)
-                            : [],
+    pcloud_download_link: null,
+    image_urls:           [],
 
     // Also populate preview_images with the same gallery URLs for backward compat
-    preview_images:       Array.isArray(uiForm.pcloudImageUrls) && uiForm.pcloudImageUrls.length > 0
-                            ? uiForm.pcloudImageUrls.filter(Boolean)
-                            : (uiForm.galleryInput
+    preview_images:       (uiForm.galleryInput
                                 ? uiForm.galleryInput.split(',').map(s => s.trim()).filter(Boolean)
                                 : []),
   };
@@ -359,7 +351,7 @@ export default function App() {
               image_urls:  Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : [],
               downloadUrl: p.file_url || null,
               file_url:    p.file_url || null,
-              pcloud_download_link: p.pcloud_download_link || null,
+              pcloud_download_link: null,
               tags:        Array.isArray(p.tags) ? p.tags : [],
               downloads:   p.downloads || 0,
               revenue:     0,
@@ -770,8 +762,8 @@ export default function App() {
         previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
         downloadUrl: saved.file_url    || null,
         file_url:    saved.file_url    || null,
-        pcloud_download_link: saved.pcloud_download_link || null,
-        pcloudDownloadLink:   saved.pcloud_download_link || null,
+        pcloud_download_link: null,
+        pcloudDownloadLink:   null,
         tags:        saved.tags        || [],
         downloads:   saved.downloads   || 0,
         dateAdded:   saved.created_at  ? saved.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -838,8 +830,8 @@ export default function App() {
           previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
           downloadUrl:  saved.file_url     || updatedProductData.file_url  || null,
           file_url:     saved.file_url     || null,
-          pcloud_download_link: saved.pcloud_download_link || null,
-          pcloudDownloadLink:   saved.pcloud_download_link || null,
+          pcloud_download_link: null,
+          pcloudDownloadLink:   null,
           fileSize:     saved.file_size    || updatedProductData.file_size  || null,
           dateAdded:    saved.updated_at   ? saved.updated_at.split('T')[0] : updatedProductData.dateAdded,
           // Features & specs
@@ -2133,7 +2125,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     status: product?.status || 'Published',
     tagsInput: product?.tags?.join(', ') || '',
     thumbnail: product?.thumbnail || null,
-    galleryInput: product?.gallery?.join(', ') || '',
+    galleryInput: (product?.gallery || product?.previewImages || product?.image_urls || []).join(', '),
     videoUrl: product?.videoUrl || '',
     zipName: product?.zipName || '',
     seoTitle: product?.seoTitle || '',
@@ -2184,7 +2176,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   });
 
   const [galleryPreviews, setGalleryPreviews] = useState(
-    product?.gallery || []
+    product?.gallery || product?.previewImages || product?.image_urls || []
   );
 
   // ── pCloud Image URLs — dynamic list input ───────────────────────────────
@@ -3013,117 +3005,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* ── Section 3b: pCloud Download Link (Temporary — Dev/Testing Only) ─── */}
-          <div style={{ border: '1px solid #F0E6FA', borderRadius: 16, padding: '16px 20px', background: 'rgba(248,243,251,0.6)' }}>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1 flex items-center gap-2">
-              <Icon name="Download" size={13} className="text-[#7B3FA0]" />
-              Product Download Link
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#B97FD6', background: '#F3EAF8', borderRadius: 6, padding: '1px 7px', marginLeft: 4, textTransform: 'uppercase' }}>
-                Temporary · pCloud
-              </span>
-            </h3>
-            <p className="text-[9px] text-[#8E6AA8] mb-3 leading-relaxed">
-              Paste a public pCloud link to the downloadable product file. This is stored in SQLite and returned securely after purchase verification. Migration-ready — only the URL needs to change when moving to R2 / S3.
-            </p>
-            <input
-              type="url"
-              placeholder="https://u.pcloud.link/publink/show?code=XXXXXXXX"
-              value={form.pcloudDownloadLink}
-              onChange={(e) => handleChange('pcloudDownloadLink', e.target.value)}
-              className="w-full bg-white border border-[#F5E9DD]/80 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
-            />
-            {form.pcloudDownloadLink && (
-              <p className="text-[9px] text-emerald-600 mt-1.5 flex items-center gap-1">
-                <span>✓</span> Download link stored — returned to customer only after purchase.
-              </p>
-            )}
-          </div>
 
-          {/* ── Section 3c: pCloud Image Links (Temporary — Dev/Testing Only) ──── */}
-          <div style={{ border: '1px solid #F0E6FA', borderRadius: 16, padding: '16px 20px', background: 'rgba(248,243,251,0.6)' }}>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-1 flex items-center gap-2">
-              <Icon name="Layers" size={13} className="text-[#7B3FA0]" />
-              Product Image Links
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#B97FD6', background: '#F3EAF8', borderRadius: 6, padding: '1px 7px', marginLeft: 4, textTransform: 'uppercase' }}>
-                Temporary · pCloud
-              </span>
-            </h3>
-            <p className="text-[9px] text-[#8E6AA8] mb-3 leading-relaxed">
-              Add multiple image URLs. These are displayed in the marketplace gallery and product detail page. Supports unlimited URLs.
-            </p>
-
-            {/* Existing image URLs list */}
-            {form.pcloudImageUrls.length > 0 && (
-              <ul className="mb-3 space-y-1.5">
-                {form.pcloudImageUrls.map((url, idx) => (
-                  <li key={url} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#F3EAF8] group">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-[#F8F3FB]">
-                      <img
-                        src={url}
-                        alt={`Image ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                    </div>
-                    <span className="flex-1 text-[10px] text-[#2D004D] truncate font-medium">
-                      Image {idx + 1}
-                    </span>
-                    <span className="text-[9px] text-[#8E6AA8] truncate max-w-[140px] hidden sm:block">
-                      {url.length > 40 ? url.slice(0, 40) + '…' : url}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleChange('pcloudImageUrls', form.pcloudImageUrls.filter((_, i) => i !== idx))}
-                      className="text-[#C4A4D8] hover:text-red-500 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
-                      aria-label="Remove image link"
-                    >
-                      <Icon name="X" size={13} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Add new image URL input */}
-            <div className="flex gap-2">
-              <input
-                type="url"
-                placeholder="https://u.pcloud.link/publink/show?code=… or any image URL"
-                value={pcloudImageInput}
-                onChange={(e) => setPcloudImageInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const trimmed = pcloudImageInput.trim();
-                    if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {
-                      handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);
-                      setPcloudImageInput('');
-                    }
-                  }
-                }}
-                className="flex-1 bg-white border border-[#F5E9DD]/80 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const trimmed = pcloudImageInput.trim();
-                  if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {
-                    handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);
-                    setPcloudImageInput('');
-                  }
-                }}
-                className="px-4 py-2.5 bg-[#F3EAF8] hover:bg-[#E9D8F4] text-[#7B3FA0] text-[10px] font-bold uppercase tracking-widest rounded-xl transition-colors flex-shrink-0"
-              >
-                Add Image
-              </button>
-            </div>
-            {form.pcloudImageUrls.length === 0 && (
-              <p className="text-[9px] text-[#C4A4D8] mt-2">No image links added yet. Press Enter or click Add Image.</p>
-            )}
-            {form.pcloudImageUrls.length > 0 && (
-              <p className="text-[9px] text-[#8E6AA8] mt-2">{form.pcloudImageUrls.length} image{form.pcloudImageUrls.length > 1 ? 's' : ''} added — displayed in marketplace gallery.</p>
-            )}
-          </div>
 
           {/* Section: Search Engine Optimizations & Tags */}
           <div>

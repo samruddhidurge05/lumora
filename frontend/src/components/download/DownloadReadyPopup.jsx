@@ -17,14 +17,9 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
       origin: { y: 0.6 },
     });
 
-    // Auto-trigger downloads or open pCloud links for all purchased items
+    // Auto-trigger downloads for all purchased items
     purchasedItems.forEach((item, index) => {
       setTimeout(() => {
-        const directLink = item.redirect_url;
-        if (directLink) {
-          window.open(directLink, '_blank');
-          return;
-        }
 
         if (item.download_url) {
           const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';

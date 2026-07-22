@@ -192,13 +192,8 @@ export default function Home() {
     return true;
   });
 
-  // ── Pin the real pCloud products ALWAYS first ────────────────────────────
-  // These are the products you assigned pCloud folders to. They must always
-  // appear at the top of the Featured section and never be displaced.
-  const PINNED_IDS = new Set([108, 109, 111, 112, 115, 116, 117, 118, 119, 120, 121, 122]);
-  const pinned = uniqueProducts.filter(p => PINNED_IDS.has(Number(p.id)));
-  const rest   = uniqueProducts.filter(p => !PINNED_IDS.has(Number(p.id)));
-  const ordered = [...pinned, ...rest]; // pinned always first
+  // ── Order: use default unique products order ──
+  const ordered = uniqueProducts;
 
   // ── Partition into non-overlapping sections of 8 ──
   // Featured always shows the pinned pCloud products (up to first 8).

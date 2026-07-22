@@ -106,8 +106,8 @@ def get_product_by_id(db_session, product_id: int) -> Product:
             seo_title=data.get("seoTitle") or data.get("seo_title"),
             seo_description=data.get("seoDescription") or data.get("seo_description"),
             visibility=data.get("visibility") or "public",
-            pcloud_download_link=data.get("pcloud_download_link") or data.get("pcloudDownloadLink"),
-            image_urls=image_urls,
+            pcloud_download_link=None,
+            image_urls=[],
             created_at=created_at or datetime.utcnow(),
             updated_at=updated_at or datetime.utcnow()
         )
