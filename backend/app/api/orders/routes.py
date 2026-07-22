@@ -15,100 +15,172 @@ router = APIRouter()
 
 def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer_user_id: int) -> None:
     """
-    Create AffiliateCommission records in SQLite for each eligible product
-    in this order that was referred by the given affiliate_code.
+    Enterprise-grade, idempotent affiliate attribution and commission creation.
 
-    Idempotency: if a commission already exists for (affiliate_id, order_id)
-    we skip creation - safe to call multiple times for the same order.
-
-    Self-referral prevention: if the affiliate IS the buyer, no commission
-    is created.
-
-    Business rules:
-    - Commission rate: uses product.commission_value if affiliate_enabled,
-      falls back to the affiliate profile's default commission_rate.
-    - Commission type: "fixed" or "percentage" per product setting.
-    - Products with affiliate_enabled=False are skipped.
+    Guarantees:
+    - Feature flag AFFILIATE_V2_ENABLED check (default: True).
+    - Idempotency via DB UNIQUE(order_id) constraint & pre-query check.
+    - Code resolution: resolves both base AffiliateProfile.referral_code and custom ReferralLink.referral_code.
+    - Product eligibility re-validation: product.affiliate_enabled == True and product.status == 'published'.
+    - Affiliate eligibility re-validation: profile.is_active == True and profile.status == 'active'.
+    - Self-referral handling: flags commission as 'pending_review' with fraud_flags without blocking purchase.
+    - Atomic SQL updates: updates aggregate profile totals safely without in-memory increments.
+    - Dual-layer auditability: inserts immutable ReferralAttribution ledger row.
     """
-    from app.models.affiliate import AffiliateProfile, AffiliateCommission
-    from app.models.product import Product
+    import os
+    import logging
+    from datetime import datetime
+    from sqlalchemy.exc import IntegrityError
+    from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralAttribution, ReferralLink, ReferralClick
+    from app.models.user import User
+    from app.models.audit_log import AuditLog
+    from app.utils.db_sync import get_product_by_id
 
-    code_upper = affiliate_code.strip().upper()
+    logger = logging.getLogger(__name__)
 
-    # 1. Find the AffiliateProfile by referral_code
-    profile = db.query(AffiliateProfile).filter(
-        AffiliateProfile.referral_code == code_upper,
-        AffiliateProfile.is_active == True,
-    ).first()
-
-    if not profile:
-        return  # Unknown or inactive affiliate code - skip silently
-
-    # 2. Self-referral prevention
-    if profile.user_id == buyer_user_id:
+    v2_enabled = os.getenv("AFFILIATE_V2_ENABLED", "true").lower() == "true"
+    if not v2_enabled:
+        logger.info("[_create_affiliate_commissions] AFFILIATE_V2_ENABLED is false; skipping attribution.")
         return
 
-    # 3. Idempotency: if ANY commission already exists for this affiliate+order, abort
-    existing = db.query(AffiliateCommission).filter(
-        AffiliateCommission.affiliate_id == profile.id,
-        AffiliateCommission.order_id == order.id,
-    ).first()
-    if existing:
-        return  # Already processed - prevent duplicates
+    code_upper = affiliate_code.strip().upper()
+    referral_link_id = None
+    profile = None
 
-    # 4. Create one commission record per order item
+    # 1. Resolve referral code: first try custom ReferralLink, then base AffiliateProfile
+    custom_link = db.query(ReferralLink).filter(ReferralLink.referral_code == code_upper, ReferralLink.is_active == True).first()
+    if custom_link:
+        referral_link_id = custom_link.id
+        profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == custom_link.affiliate_id).first()
+    else:
+        profile = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == code_upper).first()
+
+    # 2. Re-validate affiliate status
+    if not profile or not profile.is_active or (profile.status and profile.status not in ("active", "approved")):
+        logger.info(f"[_create_affiliate_commissions] Inactive or missing affiliate profile for code={code_upper}")
+        return
+
+    # 3. Permanent Order tagging
+    order.affiliate_id = profile.id
+    order.referral_link_id = referral_link_id
+    order.referral_code_used = code_upper
+
+    # 4. Idempotency check: if commission already exists for order_id, abort safely
+    existing_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order.id).first()
+    if existing_comm:
+        logger.info(f"[_create_affiliate_commissions] Commission already exists for order_id={order.id}")
+        return
+
+    # 5. Fraud Detection: Self-referral check
+    is_self_referral = (profile.user_id == buyer_user_id)
+    fraud_flags = {"self_referral": True} if is_self_referral else None
+    comm_initial_status = "pending_review" if is_self_referral else "pending"
+
+    # 6. Calculate commission per eligible product item
     total_commission = 0.0
+    total_sale_amount = 0.0
     commissions_created = 0
+    buyer_user = db.query(User).filter(User.id == buyer_user_id).first()
+    customer_name = buyer_user.name if buyer_user else "Customer"
+    customer_email = buyer_user.email if buyer_user else ""
 
     for item in order.items:
-        from app.utils.db_sync import get_product_by_id
         product = get_product_by_id(db, item.product_id)
         if not product:
             continue
 
-        sale_amount = float(item.price_paid or 0)
+        # Product eligibility check
+        is_published = (getattr(product, "status", "published") == "published")
+        is_affiliate_enabled = getattr(product, "affiliate_enabled", True)
+        if not is_published or not is_affiliate_enabled:
+            continue
 
-        # Calculate commission amount.
-        # If the vendor configured a custom commission (affiliate_enabled + value > 0),
-        # use that. Otherwise fall back to the affiliate profile's default rate.
-        # Note: we always create a commission when a referral code is present -
-        # the platform earns commission on every referred sale.
-        if (
-            product.affiliate_enabled
-            and product.commission_value is not None
-            and float(product.commission_value) > 0
-        ):
-            if product.commission_type == "fixed":
-                commission_amt = float(product.commission_value)
+        sale_amount = float(item.price_paid or 0)
+        total_sale_amount += sale_amount
+
+        # Custom vs Default commission calculation
+        comm_value = getattr(product, "commission_value", None)
+        comm_mode = getattr(product, "commission_mode", None) or getattr(product, "commission_type", None) or "percentage"
+
+        if comm_value is not None and float(comm_value) > 0:
+            if comm_mode == "fixed":
+                commission_amt = float(comm_value)
             else:
-                commission_amt = round(sale_amount * float(product.commission_value) / 100, 2)
+                commission_amt = round(sale_amount * float(comm_value) / 100.0, 2)
         else:
-            # Use the affiliate profile's platform default commission rate
-            commission_amt = round(sale_amount * float(profile.commission_rate) / 100, 2)
+            commission_amt = round(sale_amount * float(profile.commission_rate or 20.0) / 100.0, 2)
 
         commission_amt = max(0.0, commission_amt)
 
-        commission = AffiliateCommission(
-            affiliate_id=profile.id,
-            order_id=order.id,
-            product_id=item.product_id,
-            product_name=product.title or product.name or f"Product {item.product_id}",
-            sale_amount=sale_amount,
-            commission_amt=commission_amt,
-            status="pending",
-        )
-        db.add(commission)
-        total_commission += commission_amt
-        commissions_created += 1
+        try:
+            # 7. Insert ReferralAttribution Immutable Ledger
+            attribution = ReferralAttribution(
+                order_id=order.id,
+                customer_id=buyer_user_id,
+                affiliate_id=profile.id,
+                affiliate_code=code_upper,
+                referral_link_id=referral_link_id,
+                product_id=item.product_id,
+                status="pending_review" if is_self_referral else "attributed",
+                fraud_flags=fraud_flags,
+                created_at=datetime.utcnow()
+            )
+            db.add(attribution)
+            db.flush()
 
-    if commissions_created == 0:
-        return  # No eligible products in this order
+            # 8. Create AffiliateCommission
+            commission = AffiliateCommission(
+                affiliate_id=profile.id,
+                order_id=order.id,
+                product_id=item.product_id,
+                product_name=product.title or getattr(product, "name", f"Product {item.product_id}"),
+                sale_amount=sale_amount,
+                commission_amt=commission_amt,
+                commission_type=comm_mode,
+                commission_rate=float(comm_value or profile.commission_rate or 20.0),
+                customer_name=customer_name,
+                customer_email=customer_email,
+                commission_status=comm_initial_status,
+                status=comm_initial_status,
+                referral_attribution_id=attribution.id,
+                referral_link_id=referral_link_id,
+                created_at=datetime.utcnow()
+            )
+            db.add(commission)
+            db.flush()
 
-    # 5. Update aggregate totals on the affiliate profile
-    profile.total_earnings += total_commission
-    profile.total_sales += commissions_created
+            attribution.commission_id = commission.id
+            total_commission += commission_amt
+            commissions_created += 1
 
-    db.commit()
+            # 9. Atomic SQL Aggregate Update for Profile metrics
+            db.query(AffiliateProfile).filter(AffiliateProfile.id == profile.id).update({
+                AffiliateProfile.total_earnings: AffiliateProfile.total_earnings + commission_amt,
+                AffiliateProfile.total_sales: AffiliateProfile.total_sales + 1,
+                AffiliateProfile.pending_earnings: AffiliateProfile.pending_earnings + commission_amt,
+            }, synchronize_session=False)
+
+            # 10. Audit Logging
+            db.add(AuditLog(
+                admin_user_id=1,
+                action="Commission Created",
+                target_type="affiliate_commission",
+                target_id=str(commission.id),
+                metadata_json=f'{{"order_id": {order.id}, "amount": {commission_amt}, "status": "{comm_initial_status}"}}'
+            ))
+
+            db.commit()
+            logger.info(f"[_create_affiliate_commissions] Created commission #{commission.id} for order #{order.id}")
+            break # 1 commission per order
+
+        except IntegrityError as ie:
+            db.rollback()
+            logger.warning(f"[_create_affiliate_commissions] IntegrityError caught (duplicate order_id={order.id}): {ie}")
+            return
+        except Exception as ex:
+            db.rollback()
+            logger.error(f"[_create_affiliate_commissions] Failed to create commission: {ex}")
+            raise
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_new_order(

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.models.user import Base
 from datetime import datetime
@@ -61,20 +61,66 @@ class AffiliateProfile(Base):
     payouts     = relationship("AffiliatePayout",     back_populates="affiliate", cascade="all, delete-orphan")
 
 
+class ReferralAttribution(Base):
+    """
+    Immutable accounting ledger record for affiliate referral purchases.
+    Identity and event metadata are PERMANENTLY IMMUTABLE once created.
+    Only status, fraud_flags, and commission_id may be updated.
+    """
+    __tablename__ = "referral_attributions"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    order_id         = Column(Integer, ForeignKey("orders.id"), nullable=False, unique=True, index=True)
+    customer_id      = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    affiliate_id     = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
+    affiliate_code   = Column(String(50), nullable=False, index=True)
+    referral_link_id = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
+    product_id       = Column(Integer, ForeignKey("products.id"), nullable=True, index=True)
+    vendor_id        = Column(Integer, nullable=True, index=True)
+    click_id         = Column(Integer, ForeignKey("referral_clicks.id"), nullable=True)
+
+    # Mutable linkage & status fields
+    commission_id    = Column(Integer, ForeignKey("affiliate_commissions.id", use_alter=True, name="fk_ref_attr_commission_id"), nullable=True)
+    status           = Column(String(30), default="attributed", index=True) # attributed | commissioned | pending_review | recovered | flagged
+    fraud_flags      = Column(JSON, nullable=True)
+
+    # Immutable metadata fields
+    device_type      = Column(String(50), nullable=True)
+    browser          = Column(String(100), nullable=True)
+    ip_address       = Column(String(45), nullable=True)
+    referral_url     = Column(String(500), nullable=True)
+    created_at       = Column(DateTime, default=datetime.utcnow, index=True)
+
+    order        = relationship("Order")
+    customer     = relationship("User", foreign_keys=[customer_id])
+    affiliate    = relationship("AffiliateProfile")
+    referral_link = relationship("ReferralLink")
+
+
 class AffiliateCommission(Base):
     """A commission earned when a referred user purchases a product."""
     __tablename__ = "affiliate_commissions"
+    __table_args__ = (
+        UniqueConstraint("order_id", name="uq_affiliate_commission_order_id"),
+    )
 
     id              = Column(Integer, primary_key=True, index=True)
     affiliate_id    = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
-    order_id        = Column(Integer, ForeignKey("orders.id"), nullable=True)
-    product_id      = Column(Integer, nullable=True)
+    order_id        = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)
+    product_id      = Column(Integer, nullable=True, index=True)
     product_name    = Column(String(255), nullable=True)
     sale_amount     = Column(Float, nullable=False)      # original sale price
     commission_amt  = Column(Float, nullable=False)      # amount earned
     status          = Column(String(20), default="pending")  # legacy field kept for backward compat
 
-    # Phase 2: Full Commission Lifecycle Fields
+    # Phase 2 & Enterprise Attribution Fields
+    referral_attribution_id = Column(Integer, ForeignKey("referral_attributions.id"), nullable=True)
+    referral_link_id        = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
+    device_type             = Column(String(50), nullable=True)
+    browser                 = Column(String(100), nullable=True)
+    ip_address              = Column(String(45), nullable=True)
+    referral_url_used       = Column(String(500), nullable=True)
+
     commission_type     = Column(String(20), default="percentage")  # percentage | fixed
     commission_rate     = Column(Float, default=0.0)                # rate used (% or INR)
     customer_name       = Column(String(255), nullable=True)        # buyer display name
@@ -82,7 +128,7 @@ class AffiliateCommission(Base):
     cookie_attr_date    = Column(DateTime, nullable=True)           # when referral cookie was first set
     last_click_at       = Column(DateTime, nullable=True)           # last referral click before purchase
     gateway_tx_id       = Column(String(255), nullable=True)        # Razorpay payment_id
-    commission_status   = Column(String(30), default="pending")     # pending|approved|ready_for_payout|paid|reversed|rejected|archived
+    commission_status   = Column(String(30), default="pending", index=True) # pending|approved|ready_for_payout|paid|reversed|rejected|archived
     purchase_status     = Column(String(20), default="completed")   # completed|refunded|cancelled
     refund_status       = Column(String(20), default="none")        # none|partial|full
     admin_notes         = Column(Text, nullable=True)               # admin review notes
@@ -91,7 +137,7 @@ class AffiliateCommission(Base):
     approved_at         = Column(DateTime, nullable=True)
     paid_at             = Column(DateTime, nullable=True)
 
-    created_at      = Column(DateTime, default=datetime.utcnow)
+    created_at      = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at      = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     affiliate = relationship("AffiliateProfile", back_populates="commissions")

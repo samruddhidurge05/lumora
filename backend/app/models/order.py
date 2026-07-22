@@ -20,6 +20,11 @@ class Order(Base):
     created_at     = Column(DateTime, default=datetime.utcnow)
     updated_at     = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Permanent Affiliate Attribution Fields
+    affiliate_id       = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=True, index=True)
+    referral_link_id   = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
+    referral_code_used = Column(String(50), nullable=True, index=True)
+
     user  = relationship("User",      back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 

@@ -1,0 +1,23 @@
+{
+  "dialect": "sqlite",
+  "total": 1,
+  "products": [
+    {
+      "id": 1,
+      "status": "published",
+      "title": "E2E Test Product",
+      "file_url": null,
+      "file_url_type": "NULL",
+      "storage_path": null,
+      "has_storage_path": false,
+      "thumbnail": null,
+      "thumb_type": "NULL",
+      "preview": null,
+      "flags": [
+        "WARN: NULL file_url",
+        "WARN: no storage_path + no B2 file_url"
+      ],
+      "b2_check": {}
+    }
+  ]
+}
