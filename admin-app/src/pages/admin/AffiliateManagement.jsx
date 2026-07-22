@@ -484,6 +484,14 @@ export default function AffiliateManagement() {
   const [timelineTotal, setTimelineTotal] = useState(0);
   const [timelinePage, setTimelinePage] = useState(1);
 
+  // ── Customer Attribution (LTV) state ──────────────────────────────────────
+  const [custAttrs, setCustAttrs] = useState([]);
+  const [custAttrsLoading, setCustAttrsLoading] = useState(false);
+  const [custAttrsTotal, setCustAttrsTotal] = useState(0);
+  const [custAttrsPage, setCustAttrsPage] = useState(1);
+  const [custAttrsSearch, setCustAttrsSearch] = useState('');
+  const [selectedTraceOrderId, setSelectedTraceOrderId] = useState(null);
+
   // ── Data loaders ──────────────────────────────────────────────────────────
   const loadKpis = useCallback(async () => {
     setKpisLoading(true);
@@ -503,6 +511,21 @@ export default function AffiliateManagement() {
       }
     } catch(e) {}
   }, []);
+
+  const loadCustAttrs = useCallback(async () => {
+    setCustAttrsLoading(true);
+    try {
+      const q = new URLSearchParams({ page: custAttrsPage, page_size: 50 });
+      if (custAttrsSearch) q.append('search', custAttrsSearch);
+      const r = await backendFetch(`/admin/affiliates/customer-attributions?${q}`);
+      if (r.ok) {
+        const d = await r.json();
+        setCustAttrs(d.items || []);
+        setCustAttrsTotal(d.total || 0);
+      }
+    } catch(e) {}
+    finally { setCustAttrsLoading(false); }
+  }, [custAttrsPage, custAttrsSearch]);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -633,29 +656,6 @@ export default function AffiliateManagement() {
       if (r.ok) loadPayouts();
     } catch(e) {}
   };
-
-  // ── Customer Attribution (LTV) state ──────────────────────────────────────
-  const [custAttrs, setCustAttrs] = useState([]);
-  const [custAttrsLoading, setCustAttrsLoading] = useState(false);
-  const [custAttrsTotal, setCustAttrsTotal] = useState(0);
-  const [custAttrsPage, setCustAttrsPage] = useState(1);
-  const [custAttrsSearch, setCustAttrsSearch] = useState('');
-  const [selectedTraceOrderId, setSelectedTraceOrderId] = useState(null);
-
-  const loadCustAttrs = useCallback(async () => {
-    setCustAttrsLoading(true);
-    try {
-      const q = new URLSearchParams({ page: custAttrsPage, page_size: 50 });
-      if (custAttrsSearch) q.append('search', custAttrsSearch);
-      const r = await backendFetch(`/admin/affiliates/customer-attributions?${q}`);
-      if (r.ok) {
-        const d = await r.json();
-        setCustAttrs(d.items || []);
-        setCustAttrsTotal(d.total || 0);
-      }
-    } catch(e) {}
-    finally { setCustAttrsLoading(false); }
-  }, [custAttrsPage, custAttrsSearch]);
 
   const handleExportCustAttrsCSV = () => {
     window.open('/api/admin/affiliates/customer-attributions/export/csv', '_blank');
