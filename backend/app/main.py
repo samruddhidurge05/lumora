@@ -274,6 +274,52 @@ def _run_schema_migrations() -> None:
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
                 if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
 
+                # products - extended metadata + affiliate columns
+                prod_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(products)"))}
+                prod_additions = [
+                    ("pcloud_download_link",   "VARCHAR(512)"),
+                    ("image_urls",             "JSON"),
+                    ("storage_path",           "VARCHAR(512)"),
+                    ("thumbnail_path",         "VARCHAR(512)"),
+                    ("preview_path",           "VARCHAR(512)"),
+                    ("content_type",           "VARCHAR(100)"),
+                    ("hash",                   "VARCHAR(128)"),
+                    ("short_desc",             "VARCHAR(255)"),
+                    ("features",               "JSON"),
+                    ("system_requirements",    "JSON"),
+                    ("what_you_get",           "JSON"),
+                    ("installation_guide",     "TEXT"),
+                    ("subcategory",            "VARCHAR(100)"),
+                    ("discount",               "FLOAT DEFAULT 0.0"),
+                    ("preview_images",         "JSON"),
+                    ("preview_video",          "VARCHAR(512)"),
+                    ("seo_title",              "VARCHAR(150)"),
+                    ("seo_description",        "TEXT"),
+                    ("visibility",             "VARCHAR(50) DEFAULT 'public'"),
+                    ("affiliate_enabled",      "BOOLEAN DEFAULT 0"),
+                    ("commission_type",        "VARCHAR(20) DEFAULT 'percentage'"),
+                    ("commission_mode",        "VARCHAR(20) DEFAULT 'percentage'"),
+                    ("commission_value",       "FLOAT DEFAULT 0.0"),
+                    ("affiliate_cookie_days",  "INTEGER DEFAULT 30"),
+                    ("affiliate_visibility",   "VARCHAR(20) DEFAULT 'public'"),
+                    ("affiliate_program_status", "VARCHAR(20) DEFAULT 'active'"),
+                    ("trending",               "BOOLEAN DEFAULT 0"),
+                    ("new_arrival",            "BOOLEAN DEFAULT 0"),
+                    ("badge",                  "VARCHAR(50)"),
+                    ("highlights",             "JSON"),
+                    ("license",                "VARCHAR(50)"),
+                    ("version",                "VARCHAR(20) DEFAULT 'v1.0.0'"),
+                    ("file_size",              "VARCHAR(30)"),
+                    ("last_updated",           "VARCHAR(50)"),
+                ]
+                for col_name, col_def in prod_additions:
+                    if col_name not in prod_cols:
+                        try:
+                            conn.execute(_text(f"ALTER TABLE products ADD COLUMN {col_name} {col_def}"))
+                            _logger.debug("[startup] SQLite products.%s added OK", col_name)
+                        except Exception as _col_err:
+                            _logger.debug("[startup] SQLite products.%s skipped: %s", col_name, _col_err)
+
                 conn.commit()
             _logger.info("[startup] SQLite schema migrations applied OK")
         except Exception as _mig_err:
