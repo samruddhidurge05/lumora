@@ -149,8 +149,8 @@ export function FilterBar({
   actions 
 }) {
   return (
-    <div className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-30 overflow-visible">
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3 relative z-30 overflow-visible">
         {onSearchChange !== undefined && (
           <div className="relative flex-1 min-w-[200px] md:max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" size={15} />
@@ -166,7 +166,7 @@ export function FilterBar({
         
         {/* Render optional selector panels */}
         {filters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 relative z-30 overflow-visible">
             {filters}
           </div>
         )}
@@ -431,7 +431,7 @@ export function AdminSelect({
   };
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left min-w-[160px] ${className}`}>
+    <div ref={containerRef} className={`relative inline-block text-left min-w-[120px] ${isOpen ? 'z-50' : 'z-10'} ${className}`}>
       <button
         ref={buttonRef}
         type="button"
@@ -473,7 +473,7 @@ export function AdminSelect({
           role="listbox"
           tabIndex={-1}
           aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[280px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_20px_50px_rgba(45,0,77,0.22)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] w-max max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
         >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);
