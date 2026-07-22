@@ -96,9 +96,6 @@ def sync_product_to_firestore(product):
             # -- Affiliate -------------------------------------------------------
             "affiliate_enabled": bool(resolved_product.affiliate_enabled),
             "commission_type": resolved_product.commission_type or "percentage",
-            "commission_value": float(resolved_product.commission_value or 0.0),
-            "pcloud_download_link": None,
-            "pcloudDownloadLink": None,
             "file_url": resolved_product.file_url or None,
             "fileUrl": resolved_product.file_url or None,
             # -- Integer primary key ---------------------------------------------

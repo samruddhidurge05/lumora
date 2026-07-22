@@ -479,7 +479,10 @@ class StorageService:
         
         # Determine provider preference (defaults to Backblaze B2 for production binary storage)
         pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
-        if pref == "b2" and self.b2_provider.is_available():
+        if _is_test_environment() and not os.getenv("FORCE_B2_TESTS"):
+            self.provider = self.local_provider
+            print("[StorageService] Active Provider: Local Disk (Test Environment)")
+        elif pref == "b2" and self.b2_provider.is_available():
             self.provider = self.b2_provider
             print("[StorageService] Active Provider: Backblaze B2 Storage")
         elif pref == "firebase" and self.firebase_provider.is_available():
@@ -655,22 +658,29 @@ class StorageService:
     def resolve_storage_path_from_url(self, url: str) -> str:
         if not url:
             return ""
-        if url.startswith("gs://") or url.startswith("local://") or url.startswith("b2://"):
-            return url
-        if "storage.googleapis.com" in url:
-            parts = url.split("storage.googleapis.com/")[1].split("/")
+        # Strip query parameters and fragment anchors
+        clean_url = url.split("?")[0].split("#")[0]
+        if clean_url.startswith("gs://") or clean_url.startswith("local://") or clean_url.startswith("b2://"):
+            return clean_url
+        if "storage.googleapis.com" in clean_url:
+            parts = clean_url.split("storage.googleapis.com/")[1].split("/")
             bucket = parts[0]
             blob_path = "/".join(parts[1:])
             return f"gs://{bucket}/{blob_path}"
-        elif self.b2_provider.download_url and self.b2_provider.download_url in url:
-            parts = url.split(f"{self.b2_provider.download_url}/file/")[1].split("/")
+        elif "backblazeb2.com/file/" in clean_url:
+            parts = clean_url.split("backblazeb2.com/file/")[1].split("/")
             bucket = parts[0]
             file_path = "/".join(parts[1:])
             return f"b2://{bucket}/{file_path}"
-        elif "/uploads/" in url:
-            rel_path = url.split("/uploads/")[1]
+        elif self.b2_provider.download_url and f"{self.b2_provider.download_url}/file/" in clean_url:
+            parts = clean_url.split(f"{self.b2_provider.download_url}/file/")[1].split("/")
+            bucket = parts[0]
+            file_path = "/".join(parts[1:])
+            return f"b2://{bucket}/{file_path}"
+        elif "/uploads/" in clean_url:
+            rel_path = clean_url.split("/uploads/")[1]
             return f"local://uploads/{rel_path}"
-        return url
+        return clean_url
 
     def move_to_permanent(
         self,
