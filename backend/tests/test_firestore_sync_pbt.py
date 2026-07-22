@@ -346,33 +346,14 @@ def test_pbt_property7_idempotency_n_calls_produce_identical_payloads(n):
 @settings(max_examples=50)
 def test_pbt_property8_pcloud_dual_key_invariant(link):
     """
-    For any pcloud_download_link value (including None and any URL string),
-    the sync function SHALL write both pcloud_download_link (snake_case) and
-    pcloudDownloadLink (camelCase) with the same value as the input.
-
-    **Validates: Requirements 3.7, 3.8**
+    Under B2-only storage migration, pCloud dual-keys are obsolete and omitted
+    from Firestore payload.
     """
     product = make_product(pcloud_download_link=link)
     captured = run_sync_and_capture(product)
 
-    assert "pcloud_download_link" in captured, (
-        f"'pcloud_download_link' key missing from Firestore payload (link={link!r})"
-    )
-    assert "pcloudDownloadLink" in captured, (
-        f"'pcloudDownloadLink' key missing from Firestore payload (link={link!r})"
-    )
-    # Both keys must carry the same value
-    assert captured["pcloud_download_link"] == captured["pcloudDownloadLink"], (
-        f"Dual-key mismatch: snake={captured['pcloud_download_link']!r} "
-        f"camel={captured['pcloudDownloadLink']!r} (link={link!r})"
-    )
-    # Both keys must equal None under pCloud-free delivery
-    assert captured["pcloud_download_link"] is None, (
-        f"pcloud_download_link wrong: expected None, got {captured['pcloud_download_link']!r}"
-    )
-    assert captured["pcloudDownloadLink"] is None, (
-        f"pcloudDownloadLink wrong: expected None, got {captured['pcloudDownloadLink']!r}"
-    )
+    assert "pcloud_download_link" not in captured
+    assert "pcloudDownloadLink" not in captured
 
 
 # -- Property 9 - Thumbnail chain priority unchanged ---------------------------

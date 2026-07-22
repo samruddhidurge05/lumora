@@ -265,31 +265,20 @@ class TestThumbnailChain:
 class TestPCloudDualKey:
 
     def test_pcloud_both_keys_written_with_same_value(self):
-        """Both snake_case and camelCase keys written when a URL is set."""
+        """pCloud keys omitted under B2-only storage provider mode."""
         p = make_product(pcloud_download_link="https://pcloud.example.com/dl/abc")
         captured, _ = run_sync_and_capture(p)
 
-        assert "pcloud_download_link" in captured, (
-            "'pcloud_download_link' key missing from Firestore payload"
-        )
-        assert "pcloudDownloadLink" in captured, (
-            "'pcloudDownloadLink' key missing from Firestore payload"
-        )
-        assert captured["pcloud_download_link"] is None
-        assert captured["pcloudDownloadLink"] is None
-        assert captured["pcloud_download_link"] == captured["pcloudDownloadLink"], (
-            "Both pCloud keys must be identical"
-        )
+        assert "pcloud_download_link" not in captured
+        assert "pcloudDownloadLink" not in captured
 
     def test_pcloud_both_keys_written_as_none_when_absent(self):
-        """Both keys are present and set to None when pcloud_download_link is None."""
+        """pCloud keys omitted under B2-only storage provider mode."""
         p = make_product(pcloud_download_link=None)
         captured, _ = run_sync_and_capture(p)
 
-        assert "pcloud_download_link" in captured
-        assert "pcloudDownloadLink" in captured
-        assert captured["pcloud_download_link"] is None
-        assert captured["pcloudDownloadLink"] is None
+        assert "pcloud_download_link" not in captured
+        assert "pcloudDownloadLink" not in captured
 
     @given(
         link=st.one_of(
@@ -300,28 +289,13 @@ class TestPCloudDualKey:
     @settings(max_examples=50)
     def test_pcloud_dual_key_invariant_property(self, link):
         """
-        **Validates: Requirements 3.7, 3.8**
-
-        Property 2b (PBT): For ANY pcloud_download_link value (including None),
-        both pcloud_download_link and pcloudDownloadLink are ALWAYS written with
-        identical values.
+        Under B2-only storage migration, pCloud dual-keys are omitted.
         """
         p = make_product(pcloud_download_link=link)
         captured, _ = run_sync_and_capture(p)
 
-        assert "pcloud_download_link" in captured, (
-            f"pcloud_download_link missing from payload (link={link!r})"
-        )
-        assert "pcloudDownloadLink" in captured, (
-            f"pcloudDownloadLink missing from payload (link={link!r})"
-        )
-        assert captured["pcloud_download_link"] == captured["pcloudDownloadLink"], (
-            f"Dual-key mismatch: snake={captured['pcloud_download_link']!r} "
-            f"camel={captured['pcloudDownloadLink']!r} (link={link!r})"
-        )
-        assert captured["pcloud_download_link"] is None, (
-            f"pcloud_download_link value wrong: expected None, got {captured['pcloud_download_link']!r}"
-        )
+        assert "pcloud_download_link" not in captured
+        assert "pcloudDownloadLink" not in captured
 
 
 # ???????????????????????????????????????????????????????????????????????????????
@@ -572,19 +546,19 @@ class TestFirestoreUnavailableNoOp:
 class TestPCloudAndThumbnailCombinations:
 
     def test_pcloud_preserved_with_real_thumbnail(self):
-        """pCloud dual-key is present as None even when thumbnail is a real URL."""
+        """pCloud keys omitted under B2-only storage provider mode."""
         p = make_product(
             pcloud_download_link="https://pcloud.example.com/dl/abc",
             thumbnail="https://real.cdn.com/img.jpg",
         )
         captured, _ = run_sync_and_capture(p)
 
-        assert captured["pcloud_download_link"] is None
-        assert captured["pcloudDownloadLink"] is None
+        assert "pcloud_download_link" not in captured
+        assert "pcloudDownloadLink" not in captured
         assert captured["thumbnail"] == "https://real.cdn.com/img.jpg"
 
     def test_pcloud_preserved_when_thumbnail_is_none(self):
-        """pCloud dual-key is present as None even when thumbnail is None."""
+        """pCloud keys omitted under B2-only storage provider mode."""
         p = make_product(
             pcloud_download_link="https://pcloud.example.com/dl/abc",
             thumbnail=None,
@@ -593,6 +567,6 @@ class TestPCloudAndThumbnailCombinations:
         )
         captured, _ = run_sync_and_capture(p)
 
-        assert captured["pcloud_download_link"] is None
-        assert captured["pcloudDownloadLink"] is None
+        assert "pcloud_download_link" not in captured
+        assert "pcloudDownloadLink" not in captured
         assert captured["thumbnail"] is None

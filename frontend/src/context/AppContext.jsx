@@ -645,7 +645,6 @@ const _BACKEND_ORIGIN = (() => {
 
 function _resolveProductImageUrl(url) {
   if (!url || typeof url !== 'string') return null;
-  if (url.includes('pcloud') || url.includes('publink')) return null;
   // Reject base64 data URIs — they are test/temp uploads and should never be used as display images
   if (url.startsWith('data:')) return null;
   // Strip localhost origins so the Vite proxy forwards /uploads/... to the backend.

@@ -262,12 +262,12 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
     }
     preview = resolve_media_url(product.preview or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85', product.category)
 
-    # Prefer explicitly stored image URLs list, excluding pCloud links
+    # Prefer explicitly stored image URLs list
     extra_images = []
     if product.image_urls:
-        extra_images = [resolve_media_url(url, product.category) for url in product.image_urls if url and "pcloud" not in url.lower() and "publink" not in url.lower()]
+        extra_images = [resolve_media_url(url, product.category) for url in product.image_urls if url]
     elif product.preview_images:
-        extra_images = [resolve_media_url(url, product.category) for url in product.preview_images if url and "pcloud" not in url.lower() and "publink" not in url.lower()]
+        extra_images = [resolve_media_url(url, product.category) for url in product.preview_images if url]
 
     if extra_images:
         all_images = [preview] + [img for img in extra_images if img != preview]
@@ -657,8 +657,6 @@ def create_product(
         seo_description=product_in.seo_description,
         visibility=product_in.visibility or "public",
         status=initial_status,
-        # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------
-        pcloud_download_link=None,
         image_urls=[],
     )
 

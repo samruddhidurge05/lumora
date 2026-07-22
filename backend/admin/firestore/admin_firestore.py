@@ -85,8 +85,6 @@ def sync_product_to_firestore(product):
             "commission_type": product.commission_type or "percentage",
             "commission_value": float(product.commission_value or 0.0),
             # -- Download URLs - both naming conventions for full compatibility --
-            "pcloud_download_link": None,
-            "pcloudDownloadLink": None,
             "file_url": product.file_url or None,
             "fileUrl": product.file_url or None,
             # -- Integer primary key ---------------------------------------------
@@ -304,7 +302,6 @@ def restore_sqlite_products_from_firestore(db_session):
                     preview_video=data.get("previewVideo") or data.get("preview_video"),
                     seo_title=data.get("seoTitle") or data.get("seo_title"),
                     seo_description=data.get("seoDescription") or data.get("seo_description"),
-                    pcloud_download_link=None,
                     image_urls=[] if is_broken_thumb else (data.get("image_urls") or data.get("imageUrls") or []),
                 )
                 db_session.add(product)
@@ -357,7 +354,6 @@ def restore_sqlite_products_from_firestore(db_session):
                 exists.preview_video = data.get("previewVideo") or data.get("preview_video") or exists.preview_video
                 exists.seo_title = data.get("seoTitle") or data.get("seo_title") or exists.seo_title
                 exists.seo_description = data.get("seoDescription") or data.get("seo_description") or exists.seo_description
-                exists.pcloud_download_link = None
                 
                 added += 1
 

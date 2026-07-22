@@ -32,13 +32,12 @@ const CAT_GALLERY = {
 };
 
 function getGallery(product) {
-  // Prefer explicitly stored image URLs, filtering out pCloud links
   const extraUrls = Array.isArray(product.image_urls || product.imageUrls)
-    ? (product.image_urls || product.imageUrls).filter(url => url && !url.includes('pcloud') && !url.includes('publink'))
+    ? (product.image_urls || product.imageUrls).filter(url => Boolean(url))
     : [];
 
   const extraImages = Array.isArray(product.previewImages || product.preview_images)
-    ? (product.previewImages || product.preview_images).filter(url => url && !url.includes('pcloud') && !url.includes('publink'))
+    ? (product.previewImages || product.preview_images).filter(url => Boolean(url))
     : [];
 
   // Build the full gallery pool
@@ -176,7 +175,6 @@ export default function ProductPage() {
             what_you_get: data.what_you_get || [],
             system_requirements: data.system_requirements || [],
             installation_guide: data.installation_guide || '',
-            pcloud_download_link: null
           };
           setFetchedProduct(mapped);
         } else {

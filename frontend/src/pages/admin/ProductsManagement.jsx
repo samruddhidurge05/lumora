@@ -287,7 +287,6 @@ function mapAdminProductToApi(uiForm) {
 
     // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────
     // Future migration: only the stored URLs need to change. No frontend redesign.
-    pcloud_download_link: null,
     image_urls:           [],
 
     // Also populate preview_images with the same gallery URLs for backward compat
@@ -762,8 +761,6 @@ export default function App() {
         previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
         downloadUrl: saved.file_url    || null,
         file_url:    saved.file_url    || null,
-        pcloud_download_link: null,
-        pcloudDownloadLink:   null,
         tags:        saved.tags        || [],
         downloads:   saved.downloads   || 0,
         dateAdded:   saved.created_at  ? saved.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -830,8 +827,6 @@ export default function App() {
           previewImages: Array.isArray(saved.preview_images) ? saved.preview_images.map(resolveImageUrl) : [],
           downloadUrl:  saved.file_url     || updatedProductData.file_url  || null,
           file_url:     saved.file_url     || null,
-          pcloud_download_link: null,
-          pcloudDownloadLink:   null,
           fileSize:     saved.file_size    || updatedProductData.file_size  || null,
           dateAdded:    saved.updated_at   ? saved.updated_at.split('T')[0] : updatedProductData.dateAdded,
           // Features & specs
@@ -2138,7 +2133,6 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     fileName:     product?.fileName     || null,   // original filename
 
     // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
-    pcloudDownloadLink: product?.pcloud_download_link || product?.pcloudDownloadLink || '',
     pcloudImageUrls:    Array.isArray(product?.image_urls)
       ? product.image_urls
       : Array.isArray(product?.imageUrls)

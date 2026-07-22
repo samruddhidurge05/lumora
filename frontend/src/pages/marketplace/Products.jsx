@@ -391,9 +391,8 @@ const CAT_IMAGES = {
 function getExtraImages(product) {
   const preview = product.preview || product.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
 
-  // Prefer explicitly stored image URLs, filtering out pCloud links
   const extraUrls = Array.isArray(product.image_urls || product.imageUrls)
-    ? (product.image_urls || product.imageUrls).filter(url => url && !url.includes('pcloud') && !url.includes('publink'))
+    ? (product.image_urls || product.imageUrls).filter(url => Boolean(url))
     : [];
 
   if (extraUrls.length > 0) {

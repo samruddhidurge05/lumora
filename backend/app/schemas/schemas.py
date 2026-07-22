@@ -42,8 +42,6 @@ class ProductCreate(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: str = "public"
-    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
-    pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
 
 
@@ -85,8 +83,6 @@ class ProductUpdate(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: Optional[str] = None
-    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
-    pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
 
 
@@ -133,8 +129,6 @@ class ProductResponse(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     visibility: str = "public"
-    # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------
-    pcloud_download_link: Optional[str] = None
     image_urls: Optional[list] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

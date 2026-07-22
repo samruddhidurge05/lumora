@@ -93,8 +93,6 @@ class ProductService:
         seo_description: Optional[str] = None,
         visibility: str = "public",
         status: str = "published",
-        # -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------
-        pcloud_download_link: Optional[str] = None,
         image_urls: Optional[list] = None,
     ) -> Product:
         # We start an atomic transaction block
@@ -131,7 +129,6 @@ class ProductService:
                 seo_title=seo_title,
                 seo_description=seo_description,
                 visibility=visibility,
-                pcloud_download_link=None,
                 image_urls=[],
             )
             db.add(product)

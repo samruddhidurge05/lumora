@@ -254,7 +254,6 @@ export default function CustomerDownloads() {
               accentColor: '#4E3B31',
               downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
               downloadAvailable,
-              pcloud_download_link: null,
               verified: true,
             });
           });
@@ -284,7 +283,6 @@ export default function CustomerDownloads() {
     gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
     accentColor: '#4E3B31',
     downloadUrl: `/downloads/product-${p.id}.zip`,
-    pcloud_download_link: null,
     verified: true,
   }));
 
