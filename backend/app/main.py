@@ -472,6 +472,12 @@ app = FastAPI(
 
 @app.on_event("startup")
 def restore_products():
+    try:
+        from scripts.migrate_affiliate_attribution import run_migration
+        run_migration()
+    except Exception as mig_err:
+        print(f"[startup] Migration hook notice: {mig_err}")
+
     from app.db.database import SessionLocal
     from app.models.product import Product as ProductModel
     from admin.firestore.admin_firestore import (
