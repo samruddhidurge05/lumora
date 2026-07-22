@@ -25,7 +25,7 @@ class AffiliateProfile(Base):
     bank_name       = Column(String(120), nullable=True)
     account_number  = Column(String(50), nullable=True)
     ifsc_code       = Column(String(20), nullable=True)
-    
+
     # Phase 1 UI New Fields
     display_name         = Column(String(150), nullable=True)
     short_bio            = Column(Text, nullable=True)
@@ -41,6 +41,14 @@ class AffiliateProfile(Base):
     preferred_currency   = Column(String(10), nullable=True)
     timezone             = Column(String(50), nullable=True)
     email_notifications  = Column(Boolean, default=True)
+
+    # Phase 2: Operations Console — earnings breakdown & engagement metrics
+    pending_earnings     = Column(Float, default=0.0)    # commissions not yet approved
+    paid_earnings        = Column(Float, default=0.0)    # commissions fully paid out
+    rejected_earnings    = Column(Float, default=0.0)    # commissions rejected/reversed
+    unique_clicks        = Column(Integer, default=0)    # deduplicated click count
+    avg_order_value      = Column(Float, default=0.0)    # average sale amount they generate
+    last_active_at       = Column(DateTime, nullable=True) # last click or sale event
 
     # Status
     is_active       = Column(Boolean, default=True)
@@ -64,7 +72,25 @@ class AffiliateCommission(Base):
     product_name    = Column(String(255), nullable=True)
     sale_amount     = Column(Float, nullable=False)      # original sale price
     commission_amt  = Column(Float, nullable=False)      # amount earned
-    status          = Column(String(20), default="pending")  # pending | approved | paid
+    status          = Column(String(20), default="pending")  # legacy field kept for backward compat
+
+    # Phase 2: Full Commission Lifecycle Fields
+    commission_type     = Column(String(20), default="percentage")  # percentage | fixed
+    commission_rate     = Column(Float, default=0.0)                # rate used (% or INR)
+    customer_name       = Column(String(255), nullable=True)        # buyer display name
+    customer_email      = Column(String(255), nullable=True)        # buyer email (masked in UI)
+    cookie_attr_date    = Column(DateTime, nullable=True)           # when referral cookie was first set
+    last_click_at       = Column(DateTime, nullable=True)           # last referral click before purchase
+    gateway_tx_id       = Column(String(255), nullable=True)        # Razorpay payment_id
+    commission_status   = Column(String(30), default="pending")     # pending|approved|ready_for_payout|paid|reversed|rejected|archived
+    purchase_status     = Column(String(20), default="completed")   # completed|refunded|cancelled
+    refund_status       = Column(String(20), default="none")        # none|partial|full
+    admin_notes         = Column(Text, nullable=True)               # admin review notes
+    reversed_at         = Column(DateTime, nullable=True)           # timestamp when commission was reversed
+    refund_deduction    = Column(Float, default=0.0)                # amount deducted due to refund
+    approved_at         = Column(DateTime, nullable=True)
+    paid_at             = Column(DateTime, nullable=True)
+
     created_at      = Column(DateTime, default=datetime.utcnow)
     updated_at      = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

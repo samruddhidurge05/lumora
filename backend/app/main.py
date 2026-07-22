@@ -220,7 +220,31 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS message      TEXT",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
+            # affiliate_profiles — Phase 2 earnings breakdown
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS pending_earnings   FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS paid_earnings      FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS rejected_earnings  FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS unique_clicks      INTEGER DEFAULT 0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS avg_order_value    FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS last_active_at     TIMESTAMP",
+            # affiliate_commissions — Phase 2 full lifecycle fields
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS commission_type  VARCHAR(20) DEFAULT 'percentage'",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS commission_rate  FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS customer_name    VARCHAR(255)",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS customer_email   VARCHAR(255)",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS cookie_attr_date TIMESTAMP",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS last_click_at    TIMESTAMP",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS gateway_tx_id    VARCHAR(255)",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS commission_status VARCHAR(30) DEFAULT 'pending'",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS purchase_status  VARCHAR(20) DEFAULT 'completed'",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS refund_status    VARCHAR(20) DEFAULT 'none'",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS admin_notes      TEXT",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS reversed_at      TIMESTAMP",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS refund_deduction FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS approved_at      TIMESTAMP",
+            "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS paid_at          TIMESTAMP",
         ]
+
         
         # PostgreSQL primary key sequence resynchronization
         # Fixes duplicate key value violates unique constraint "products_pkey" (Key id=X already exists)
@@ -336,6 +360,51 @@ def _run_schema_migrations() -> None:
                             _logger.debug("[startup] SQLite products.%s added OK", col_name)
                         except Exception as _col_err:
                             _logger.debug("[startup] SQLite products.%s skipped: %s", col_name, _col_err)
+
+                # affiliate_profiles — Phase 2 earnings breakdown
+                aff_prof_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(affiliate_profiles)"))}
+                aff_prof_additions = [
+                    ("pending_earnings",   "FLOAT DEFAULT 0.0"),
+                    ("paid_earnings",      "FLOAT DEFAULT 0.0"),
+                    ("rejected_earnings",  "FLOAT DEFAULT 0.0"),
+                    ("unique_clicks",      "INTEGER DEFAULT 0"),
+                    ("avg_order_value",    "FLOAT DEFAULT 0.0"),
+                    ("last_active_at",     "DATETIME"),
+                ]
+                for col_name, col_def in aff_prof_additions:
+                    if col_name not in aff_prof_cols:
+                        try:
+                            conn.execute(_text(f"ALTER TABLE affiliate_profiles ADD COLUMN {col_name} {col_def}"))
+                            _logger.debug("[startup] SQLite affiliate_profiles.%s added OK", col_name)
+                        except Exception as _col_err:
+                            _logger.debug("[startup] SQLite affiliate_profiles.%s skipped: %s", col_name, _col_err)
+
+                # affiliate_commissions — Phase 2 lifecycle fields
+                aff_comm_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(affiliate_commissions)"))}
+                aff_comm_additions = [
+                    ("commission_type",   "VARCHAR(20) DEFAULT 'percentage'"),
+                    ("commission_rate",   "FLOAT DEFAULT 0.0"),
+                    ("customer_name",     "VARCHAR(255)"),
+                    ("customer_email",    "VARCHAR(255)"),
+                    ("cookie_attr_date",  "DATETIME"),
+                    ("last_click_at",     "DATETIME"),
+                    ("gateway_tx_id",     "VARCHAR(255)"),
+                    ("commission_status", "VARCHAR(30) DEFAULT 'pending'"),
+                    ("purchase_status",   "VARCHAR(20) DEFAULT 'completed'"),
+                    ("refund_status",     "VARCHAR(20) DEFAULT 'none'"),
+                    ("admin_notes",       "TEXT"),
+                    ("reversed_at",       "DATETIME"),
+                    ("refund_deduction",  "FLOAT DEFAULT 0.0"),
+                    ("approved_at",       "DATETIME"),
+                    ("paid_at",           "DATETIME"),
+                ]
+                for col_name, col_def in aff_comm_additions:
+                    if col_name not in aff_comm_cols:
+                        try:
+                            conn.execute(_text(f"ALTER TABLE affiliate_commissions ADD COLUMN {col_name} {col_def}"))
+                            _logger.debug("[startup] SQLite affiliate_commissions.%s added OK", col_name)
+                        except Exception as _col_err:
+                            _logger.debug("[startup] SQLite affiliate_commissions.%s skipped: %s", col_name, _col_err)
 
                 conn.commit()
             _logger.info("[startup] SQLite schema migrations applied OK")
