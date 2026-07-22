@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { useAffiliateCart } from '../../context/AffiliateCartContext';
 import AffiliateProductDetail from './ProductDetail';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
+import { PRODUCT_CATEGORIES as CATEGORIES } from '../../config/constants';
 
 const COMMISSION_RATES = {
   'Website Templates': 20,
