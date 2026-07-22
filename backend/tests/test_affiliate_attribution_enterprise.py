@@ -1,8 +1,4 @@
-"""
-Enterprise Affiliate Attribution & Analytics Unit Tests
-Tests idempotency, referral link resolution, customer LTV, commission recovery, and trace API.
-"""
-
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -24,17 +20,20 @@ def db_session():
 
 def test_idempotent_commission_creation(db_session: Session):
     """Test that creating a commission for the same order twice is idempotent."""
+    uid = uuid.uuid4().hex[:6].upper()
+    code = f"AFFIDEM{uid}"
+
     # Setup test affiliate user
-    aff_user = User(email="test_aff_1@lumora.com", name="Test Affiliate", role="affiliate", is_active=True, password_hash="mock_hash")
+    aff_user = User(email=f"aff_{uid.lower()}@lumora.com", name="Test Affiliate", role="affiliate", is_active=True, password_hash="mock_hash")
     db_session.add(aff_user)
     db_session.flush()
 
-    profile = AffiliateProfile(user_id=aff_user.id, referral_code="AFFTEST100", commission_rate=20.0, is_active=True, status="active")
+    profile = AffiliateProfile(user_id=aff_user.id, referral_code=code, commission_rate=20.0, is_active=True, status="active")
     db_session.add(profile)
     db_session.flush()
 
     # Buyer user
-    buyer = User(email="test_buyer_1@lumora.com", name="Test Buyer", role="customer", is_active=True, password_hash="mock_hash")
+    buyer = User(email=f"buyer_{uid.lower()}@lumora.com", name="Test Buyer", role="customer", is_active=True, password_hash="mock_hash")
     db_session.add(buyer)
     db_session.flush()
 
@@ -53,7 +52,7 @@ def test_idempotent_commission_creation(db_session: Session):
     db_session.commit()
 
     # First call -> creates commission & attribution
-    _create_affiliate_commissions(db_session, order, "AFFTEST100", buyer.id)
+    _create_affiliate_commissions(db_session, order, code, buyer.id)
 
     comm_count_1 = db_session.query(AffiliateCommission).filter(AffiliateCommission.order_id == order.id).count()
     attr_count_1 = db_session.query(ReferralAttribution).filter(ReferralAttribution.order_id == order.id).count()
@@ -62,7 +61,7 @@ def test_idempotent_commission_creation(db_session: Session):
     assert attr_count_1 == 1
 
     # Second call for SAME order -> MUST NOT create duplicate
-    _create_affiliate_commissions(db_session, order, "AFFTEST100", buyer.id)
+    _create_affiliate_commissions(db_session, order, code, buyer.id)
 
     comm_count_2 = db_session.query(AffiliateCommission).filter(AffiliateCommission.order_id == order.id).count()
     attr_count_2 = db_session.query(ReferralAttribution).filter(ReferralAttribution.order_id == order.id).count()
@@ -72,11 +71,14 @@ def test_idempotent_commission_creation(db_session: Session):
 
 def test_self_referral_fraud_flagging(db_session: Session):
     """Test that self-referral flags commission as pending_review without throwing an error."""
-    aff_user = User(email="test_self_ref@lumora.com", name="Self Ref Affiliate", role="affiliate", is_active=True, password_hash="mock_hash")
+    uid = uuid.uuid4().hex[:6].upper()
+    code = f"AFFSELF{uid}"
+
+    aff_user = User(email=f"selfref_{uid.lower()}@lumora.com", name="Self Ref Affiliate", role="affiliate", is_active=True, password_hash="mock_hash")
     db_session.add(aff_user)
     db_session.flush()
 
-    profile = AffiliateProfile(user_id=aff_user.id, referral_code="AFFSELFREF", commission_rate=15.0, is_active=True, status="active")
+    profile = AffiliateProfile(user_id=aff_user.id, referral_code=code, commission_rate=15.0, is_active=True, status="active")
     db_session.add(profile)
     db_session.flush()
 
@@ -93,7 +95,7 @@ def test_self_referral_fraud_flagging(db_session: Session):
     db_session.add(item)
     db_session.commit()
 
-    _create_affiliate_commissions(db_session, order, "AFFSELFREF", aff_user.id)
+    _create_affiliate_commissions(db_session, order, code, aff_user.id)
 
     comm = db_session.query(AffiliateCommission).filter(AffiliateCommission.order_id == order.id).first()
     attr = db_session.query(ReferralAttribution).filter(ReferralAttribution.order_id == order.id).first()
