@@ -155,10 +155,7 @@ const getProductType = (o) => {
 };
 
 // Helper: get effective price for display (supports both new `total` and old `price` fields)
-const getOrderPrice = (o) => o?.total ?? o?.price ?? 0;
-
-// Helper: riskScore — Firestore orders don't have one, default to 0
-const getRiskScore = (o) => o?.riskScore ?? 0;
+const getOrderPrice = (o) => o.total ?? o.price ?? 0;
 
 // --- AFFILIATE ATTRIBUTION CARD COMPONENT ---
 function AffiliateAttributionCard({ orderId }) {
@@ -199,7 +196,7 @@ function AffiliateAttributionCard({ orderId }) {
 
   if (loading) return (
     <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex items-center justify-center text-xs text-[#7B3FA0]">
-      <svg className="animate-spin h-4 w-4 text-[#7B3FA0] mr-2" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+      <svg className="animate-spin h-4 w-4 text-[#7B3FA0] mr-2" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
       Loading affiliate trace...
     </div>
   );
@@ -319,7 +316,7 @@ export default function OrdersManagement() {
 
   // Download state — keyed by order Firestore doc ID
   const [downloadLoading, setDownloadLoading] = useState({});   // { [orderId]: boolean }
-  const [downloadError, setDownloadError]     = useState({});   // { [orderId]: string|null }
+  const [downloadError, setDownloadError] = useState({});   // { [orderId]: string|null }
 
   // Responsive Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -389,15 +386,15 @@ export default function OrdersManagement() {
 
   // --- ORDER INTELLIGENCE COMPUTATIONS (Phase D: real Firestore data) ---
   const statistics = useMemo(() => {
-    let totalRevenue    = 0;
-    let refundedAmount  = 0;
-    let pendingOrders   = 0;
+    let totalRevenue = 0;
+    let refundedAmount = 0;
+    let pendingOrders = 0;
     let completedOrders = 0;
-    let highRiskCount   = 0;
+    let highRiskCount = 0;
 
     orders.forEach(o => {
       const price = getOrderPrice(o);
-      const risk  = getRiskScore(o);
+      const risk = getRiskScore(o);
 
       // Revenue: only count Paid orders that haven't been refunded
       if (o.paymentStatus === "Paid" && o.status !== "Refunded") {
@@ -541,12 +538,12 @@ export default function OrdersManagement() {
       if (o.id === orderId) {
         let paymentStat = o.paymentStatus;
         if (newStatus === "Completed") paymentStat = "Paid";
-        if (newStatus === "Refunded")  paymentStat = "Refunded";
+        if (newStatus === "Refunded") paymentStat = "Refunded";
         return {
           ...o,
-          status:         newStatus,
-          paymentStatus:  paymentStat,
-          revenue:        newStatus === "Refunded" ? 0 : getOrderPrice(o),
+          status: newStatus,
+          paymentStatus: paymentStat,
+          revenue: newStatus === "Refunded" ? 0 : getOrderPrice(o),
           vendorEarnings: newStatus === "Refunded" ? 0 : parseFloat((getOrderPrice(o) * 0.95).toFixed(2)),
         };
       }
@@ -570,10 +567,10 @@ export default function OrdersManagement() {
       if (o.id === orderId) {
         return {
           ...o,
-          status:         "Refunded",
-          paymentStatus:  "Refunded",
-          revenue:        0,
-          platformFee:    0,
+          status: "Refunded",
+          paymentStatus: "Refunded",
+          revenue: 0,
+          platformFee: 0,
           vendorEarnings: 0,
         };
       }
@@ -614,10 +611,10 @@ export default function OrdersManagement() {
       if (o.id === orderId) {
         return {
           ...o,
-          status:         "Completed",
-          paymentStatus:  "Paid",
-          revenue:        getOrderPrice(o),
-          platformFee:    parseFloat((getOrderPrice(o) * 0.05).toFixed(2)),
+          status: "Completed",
+          paymentStatus: "Paid",
+          revenue: getOrderPrice(o),
+          platformFee: parseFloat((getOrderPrice(o) * 0.05).toFixed(2)),
           vendorEarnings: parseFloat((getOrderPrice(o) * 0.95).toFixed(2)),
         };
       }
@@ -654,11 +651,11 @@ export default function OrdersManagement() {
       const result = await backendFetch(`/orders/${orderId}/download-info`);
 
       // Trigger browser download via a temporary anchor element
-      const a      = document.createElement('a');
-      a.href       = result.downloadUrl;
-      a.download   = result.fileName || 'product.zip';
-      a.target     = '_blank';
-      a.rel        = 'noreferrer';
+      const a = document.createElement('a');
+      a.href = result.downloadUrl;
+      a.download = result.fileName || 'product.zip';
+      a.target = '_blank';
+      a.rel = 'noreferrer';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -739,7 +736,7 @@ export default function OrdersManagement() {
   };
 
   const handleToggleRowSelection = (id) => {
-    setSelectedRowIds(prev => 
+    setSelectedRowIds(prev =>
       prev.includes(id) ? prev.filter(rId => rId !== id) : [...prev, id]
     );
   };
@@ -752,10 +749,10 @@ export default function OrdersManagement() {
       if (selectedRowIds.includes(o.id)) {
         return {
           ...o,
-          status:         "Refunded",
-          paymentStatus:  "Refunded",
-          revenue:        0,
-          platformFee:    0,
+          status: "Refunded",
+          paymentStatus: "Refunded",
+          revenue: 0,
+          platformFee: 0,
           vendorEarnings: 0,
         };
       }
@@ -795,17 +792,16 @@ export default function OrdersManagement() {
       {/* TOAST SYSTEM */}
       <AnimatePresence>
         {notification && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-8 left-8 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_12px_40px_rgba(90,30,126,0.08)]"
           >
-            <div className={`w-2.5 h-2.5 rounded-full ${
-              notification.type === 'warning' ? 'bg-[#D8BFE3] shadow-[0_0_8px_#D8BFE3]' :
-              notification.type === 'info' ? 'bg-[#D8BFE3] shadow-[0_0_8px_#D8BFE3]' :
-              'bg-[#B886D0] shadow-[0_0_8px_#B886D0]'
-            }`} />
+            <div className={`w-2.5 h-2.5 rounded-full ${notification.type === 'warning' ? 'bg-[#D8BFE3] shadow-[0_0_8px_#D8BFE3]' :
+                notification.type === 'info' ? 'bg-[#D8BFE3] shadow-[0_0_8px_#D8BFE3]' :
+                  'bg-[#B886D0] shadow-[0_0_8px_#B886D0]'
+              }`} />
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">{notification.text}</span>
           </motion.div>
         )}
@@ -831,914 +827,905 @@ export default function OrdersManagement() {
         )}
 
         {!loading && !loadError && (
-        <>
+          <>
 
-        {/* --- PAGE HEADER --- */}
-        <PageHeader
-          title="Order Command Board"
-          subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
-        />
-
-        {/* --- VIEW MODE TOGGLE --- */}
-        <div className="flex gap-3 mb-6 p-1 bg-stone-100/50 rounded-2xl border border-stone-200/30 w-fit">
-          <button
-            onClick={() => { sysSound.playTap(); setViewMode("orders"); }}
-            className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 ${
-              viewMode === "orders"
-                ? "bg-[#2D004D] text-white shadow-md"
-                : "hover:bg-white/60 text-[#7B3FA0]"
-            }`}
-          >
-            Transactions Ledger
-          </button>
-          <button
-            onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
-            className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center gap-2 ${
-              viewMode === "tickets"
-                ? "bg-[#2D004D] text-white shadow-md"
-                : "hover:bg-white/60 text-[#7B3FA0]"
-            }`}
-          >
-            Refund Tickets Queue
-            {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
-              <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
-                {refundTickets.filter(t => t.status === "PENDING").length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* --- TOP CONTROL STRIP (Metrics Engine) --- */}
-        <StatsGrid columns={4}>
-          
-          {/* CARD 1: REVENUE */}
-          <DashboardCard
-            title="Total Revenue"
-            value={`₹${statistics.totalRevenue.toLocaleString()}`}
-            icon={<Icon name="DollarSign" size={14} />}
-            trend={statistics.totalOrders > 0 ? `${statistics.totalOrders} orders` : 'No orders yet'}
-            trendLabel=""
-            chart={
-              <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-                <path 
-                  d="M0,15 Q15,5 30,12 T60,4 T90,14 L100,10" 
-                  fill="none" 
-                  stroke="#D8BFE3" 
-                  strokeWidth="2" 
-                  strokeLinecap="round"
-                />
-                <circle cx="100" cy="10" r="2.5" fill="#B886D0" />
-              </svg>
-            }
-          />
-
-          {/* CARD 2: ACTIVE VOLUME */}
-          <DashboardCard
-            title="Active Volume"
-            value={statistics.totalOrders}
-            icon={<Icon name="Activity" size={14} />}
-            trend={`${statistics.pendingOrders} pending`}
-            trendLabel=""
-            chart={
-              <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-                <path 
-                  d="M0,18 L15,14 L30,16 L45,8 L60,12 L75,4 L90,10 L100,6" 
-                  fill="none" 
-                  stroke="#D8BFE3" 
-                  strokeWidth="2" 
-                  strokeLinecap="round"
-                />
-                <circle cx="100" cy="6" r="2.5" fill="#D8BFE3" />
-              </svg>
-            }
-          />
-
-          {/* CARD 3: FULFILLMENT */}
-          <DashboardCard
-            title="Fulfillment"
-            value={`${statistics.successRate}%`}
-            icon={<Icon name="CheckCircle" size={14} />}
-            trend={`₹${statistics.refundedAmount} refunded`}
-            trendLabel=""
-            chart={
-              <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-                <path 
-                  d="M0,5 L20,6 L40,4 L60,8 L80,10 L100,12" 
-                  fill="none" 
-                  stroke="#B886D0" 
-                  strokeWidth="2" 
-                  strokeLinecap="round"
-                />
-                <circle cx="100" cy="12" r="2.5" fill="#B886D0" />
-              </svg>
-            }
-          />
-
-          {/* CARD 4: RISK ALERTS */}
-          <DashboardCard
-            title="Risk Alerts"
-            value={statistics.highRiskCount}
-            icon={
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${statistics.highRiskCount > 0 ? 'bg-[#D8BFE3]/40 text-[#FF8597] animate-pulse' : 'text-[#7B3FA0]'}`}>
-                <Icon name="AlertTriangle" size={14} />
-              </div>
-            }
-            trend="risk score >75"
-            trendLabel=""
-          />
-        </StatsGrid>
-
-        {/* --- GRID SYSTEM: LEDGER & INSIGHTS --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-start">
-          
-          {/* LEFT 60% PANEL: THE LEDGER */}
-          <div className="lg:col-span-6 flex flex-col gap-6">
-
-            {/* FILTER STRIP & SEARCH CONTROL */}
-            <FilterBar
-              searchValue={searchQuery}
-              onSearchChange={setSearchQuery}
-              searchPlaceholder="Search by customer, email, product..."
-              filters={[
-                <AdminSelect
-                  key="sort"
-                  value={sortBy}
-                  onChange={(e) => {
-                    sysSound.playTap();
-                    setSortBy(e.target.value);
-                  }}
-                  options={[
-                    { value: 'newest', label: 'Newest Logged' },
-                    { value: 'value-desc', label: 'Highest Revenue' },
-                    { value: 'risk-desc', label: 'Highest Risk Index' }
-                  ]}
-                />,
-                <AdminSelect 
-                  key="status"
-                  value={selectedStatus}
-                  onChange={(e) => {
-                    sysSound.playTap();
-                    setSelectedStatus(e.target.value);
-                  }}
-                  options={[
-                    { value: 'All', label: 'Status: All' },
-                    { value: 'Pending', label: 'Pending' },
-                    { value: 'Processing', label: 'Processing' },
-                    { value: 'Completed', label: 'Completed' },
-                    { value: 'Failed', label: 'Failed' },
-                    { value: 'Refunded', label: 'Refunded' },
-                    { value: 'Disputed', label: 'Disputed' }
-                  ]}
-                />,
-                <AdminSelect 
-                  key="paymentStatus"
-                  value={selectedPaymentStatus}
-                  onChange={(e) => {
-                    sysSound.playTap();
-                    setSelectedPaymentStatus(e.target.value);
-                  }}
-                  options={[
-                    { value: 'All', label: 'Payment: All' },
-                    { value: 'Paid', label: 'Paid' },
-                    { value: 'Unpaid', label: 'Unpaid' },
-                    { value: 'Refunded', label: 'Refunded' }
-                  ]}
-                />,
-                <AdminSelect 
-                  key="type"
-                  value={selectedProductType}
-                  onChange={(e) => {
-                    sysSound.playTap();
-                    setSelectedProductType(e.target.value);
-                  }}
-                  options={[
-                    { value: 'All', label: 'Type: All' },
-                    { value: 'Asset', label: 'Asset' },
-                    { value: 'License', label: 'License' },
-                    { value: 'Subscription', label: 'Subscription' }
-                  ]}
-                />
-              ]}
-              actions={
-                (selectedStatus !== "All" || selectedPaymentStatus !== "All" || selectedProductType !== "All" || searchQuery) && (
-                  <button 
-                    onClick={() => {
-                      sysSound.playTap();
-                      setSearchQuery("");
-                      setSelectedStatus("All");
-                      setSelectedPaymentStatus("All");
-                      setSelectedProductType("All");
-                    }}
-                    className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
-                  >
-                    <Icon name="RefreshCw" size={9} />
-                    Reset Parameters
-                  </button>
-                )
-              }
+            {/* --- PAGE HEADER --- */}
+            <PageHeader
+              title="Order Command Board"
+              subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
             />
 
-            {/* THE LEDGER RECORD TABLE OR REFUND TICKETS QUEUE */}
-            <TableContainer>
-              
-              <div className="overflow-x-auto w-full">
+            {/* --- VIEW MODE TOGGLE --- */}
+            <div className="flex gap-3 mb-6 p-1 bg-stone-100/50 rounded-2xl border border-stone-200/30 w-fit">
+              <button
+                onClick={() => { sysSound.playTap(); setViewMode("orders"); }}
+                className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 ${viewMode === "orders"
+                    ? "bg-[#2D004D] text-white shadow-md"
+                    : "hover:bg-white/60 text-[#7B3FA0]"
+                  }`}
+              >
+                Transactions Ledger
+              </button>
+              <button
+                onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
+                className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center gap-2 ${viewMode === "tickets"
+                    ? "bg-[#2D004D] text-white shadow-md"
+                    : "hover:bg-white/60 text-[#7B3FA0]"
+                  }`}
+              >
+                Refund Tickets Queue
+                {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
+                  <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
+                    {refundTickets.filter(t => t.status === "PENDING").length}
+                  </span>
+                )}
+              </button>
+            </div>
 
-                {viewMode === "tickets" ? (
-                  /* ── REFUND TICKETS TABLE ── */
-                  refundTickets.length > 0 ? (
-                    <table className="w-full border-collapse text-left">
-                      <thead>
-                        <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                          <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
-                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
-                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
-                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
-                          <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
-                          <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {refundTickets.map((t) => {
-                          const isFocused = selectedTicketId === t.id;
-                          const ticketStatusStyles = {
-                            PENDING: "bg-amber-100/70 text-amber-700 border-amber-200",
-                            UNDER_REVIEW: "bg-blue-100/70 text-blue-700 border-blue-200",
-                            APPROVED: "bg-green-100/70 text-green-700 border-green-200",
-                            PROCESSING: "bg-green-100/70 text-green-700 border-green-200 animate-pulse",
-                            REFUNDED: "bg-green-100/70 text-green-700 border-green-200",
-                            FAILED: "bg-red-100/70 text-red-700 border-red-200",
-                            REJECTED: "bg-red-100/70 text-red-700 border-red-200",
-                            CANCELLED: "bg-stone-100 text-stone-500 border-stone-200"
-                          };
-                          return (
-                            <motion.tr
-                              key={t.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
-                                isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
-                              }`}
-                              onClick={() => { sysSound.playTap(); setSelectedTicketId(t.id); }}
-                            >
-                              <td className="py-4 px-5 font-mono text-[11px] font-bold text-[#2D004D]">TKT-{t.id}</td>
-                              <td className="py-4 px-4">
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
-                                  <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
-                                </div>
-                              </td>
-                              <td className="py-4 px-4 text-[11px] text-[#2D004D] max-w-[140px] truncate">{t.product_name}</td>
-                              <td className="py-4 px-4 text-right font-black text-[#2D004D] text-xs">₹{t.requested_amount?.toFixed(2)}</td>
-                              <td className="py-4 px-4 text-center">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
-                                  {t.status}
-                                </span>
-                              </td>
-                              <td className="py-4 px-4 text-center">
-                                <span className={`text-[10px] font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
-                                  {t.is_downloaded ? '🚨 YES' : '✅ NO'}
-                                </span>
-                              </td>
-                              <td className="py-4 px-5 text-center text-[10px] text-[#7B3FA0]">
-                                {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
-                              </td>
-                            </motion.tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="py-20 flex flex-col items-center justify-center text-center px-6">
-                      <div className="w-16 h-16 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-4">
-                        <span className="text-[#7B3FA0] text-2xl">✓</span>
-                      </div>
-                      <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">No refund requests pending</h4>
-                      <p className="text-[10px] text-[#7B3FA0] max-w-sm">All customer refund requests have been resolved or none have been submitted.</p>
-                    </div>
-                  )
-                ) : (
-                /* ── ORDERS TABLE ── */
-                processedOrders.length > 0 ? (
+            {/* --- TOP CONTROL STRIP (Metrics Engine) --- */}
+            <StatsGrid columns={4}>
 
-                  <table className="w-full border-collapse text-left">
-                    <thead>
-                      <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                        <th className="py-4 px-5 w-10">
-                          <input 
-                            type="checkbox"
-                            checked={selectedRowIds.length === processedOrders.length}
-                            onChange={(e) => {
-                              sysSound.playTap();
-                              if (e.target.checked) {
-                                setSelectedRowIds(processedOrders.map(o => o.id));
-                              } else {
-                                setSelectedRowIds([]);
-                              }
-                            }}
-                            className="rounded border-stone-300 accent-[#D8BFE3]"
-                          />
-                        </th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
-                        <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence initial={false}>
-                        {processedOrders.map((o) => {
-                          const isFocused = selectedOrder?.id === o.id;
-                          const isChecked = selectedRowIds.includes(o.id);
-                          
-                          // Custom status colors
-                          const statusStyles = {
-                            Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                            Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                            Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                            Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                            Refunded: "bg-stone-100 text-stone-500 border-stone-200",
-                            Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
-                          };
+              {/* CARD 1: REVENUE */}
+              <DashboardCard
+                title="Total Revenue"
+                value={`₹${statistics.totalRevenue.toLocaleString()}`}
+                icon={<Icon name="DollarSign" size={14} />}
+                trend={statistics.totalOrders > 0 ? `${statistics.totalOrders} orders` : 'No orders yet'}
+                trendLabel=""
+                chart={
+                  <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
+                    <path
+                      d="M0,15 Q15,5 30,12 T60,4 T90,14 L100,10"
+                      fill="none"
+                      stroke="#D8BFE3"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="100" cy="10" r="2.5" fill="#B886D0" />
+                  </svg>
+                }
+              />
 
-                          return (
-                            <motion.tr
-                              key={o.id}
-                              layoutId={`row-${o.id}`}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
-                                isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
-                              }`}
-                              onClick={() => {
-                                sysSound.playTap();
-                                setSelectedOrderId(o.id);
-                              }}
-                            >
-                              {/* Checkbox select */}
-                              <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
-                                <input 
+              {/* CARD 2: ACTIVE VOLUME */}
+              <DashboardCard
+                title="Active Volume"
+                value={statistics.totalOrders}
+                icon={<Icon name="Activity" size={14} />}
+                trend={`${statistics.pendingOrders} pending`}
+                trendLabel=""
+                chart={
+                  <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
+                    <path
+                      d="M0,18 L15,14 L30,16 L45,8 L60,12 L75,4 L90,10 L100,6"
+                      fill="none"
+                      stroke="#D8BFE3"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="100" cy="6" r="2.5" fill="#D8BFE3" />
+                  </svg>
+                }
+              />
+
+              {/* CARD 3: FULFILLMENT */}
+              <DashboardCard
+                title="Fulfillment"
+                value={`${statistics.successRate}%`}
+                icon={<Icon name="CheckCircle" size={14} />}
+                trend={`₹${statistics.refundedAmount} refunded`}
+                trendLabel=""
+                chart={
+                  <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
+                    <path
+                      d="M0,5 L20,6 L40,4 L60,8 L80,10 L100,12"
+                      fill="none"
+                      stroke="#B886D0"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="100" cy="12" r="2.5" fill="#B886D0" />
+                  </svg>
+                }
+              />
+
+              {/* CARD 4: RISK ALERTS */}
+              <DashboardCard
+                title="Risk Alerts"
+                value={statistics.highRiskCount}
+                icon={
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${statistics.highRiskCount > 0 ? 'bg-[#D8BFE3]/40 text-[#FF8597] animate-pulse' : 'text-[#7B3FA0]'}`}>
+                    <Icon name="AlertTriangle" size={14} />
+                  </div>
+                }
+                trend="risk score >75"
+                trendLabel=""
+              />
+            </StatsGrid>
+
+            {/* --- GRID SYSTEM: LEDGER & INSIGHTS --- */}
+            <section className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-start">
+
+              {/* LEFT 60% PANEL: THE LEDGER */}
+              <div className="lg:col-span-6 flex flex-col gap-6">
+
+                {/* FILTER STRIP & SEARCH CONTROL */}
+                <FilterBar
+                  searchValue={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  searchPlaceholder="Search by customer, email, product..."
+                  filters={[
+                    <AdminSelect
+                      key="sort"
+                      value={sortBy}
+                      onChange={(e) => {
+                        sysSound.playTap();
+                        setSortBy(e.target.value);
+                      }}
+                      options={[
+                        { value: 'newest', label: 'Newest Logged' },
+                        { value: 'value-desc', label: 'Highest Revenue' },
+                        { value: 'risk-desc', label: 'Highest Risk Index' }
+                      ]}
+                    />,
+                    <AdminSelect
+                      key="status"
+                      value={selectedStatus}
+                      onChange={(e) => {
+                        sysSound.playTap();
+                        setSelectedStatus(e.target.value);
+                      }}
+                      options={[
+                        { value: 'All', label: 'Status: All' },
+                        { value: 'Pending', label: 'Pending' },
+                        { value: 'Processing', label: 'Processing' },
+                        { value: 'Completed', label: 'Completed' },
+                        { value: 'Failed', label: 'Failed' },
+                        { value: 'Refunded', label: 'Refunded' },
+                        { value: 'Disputed', label: 'Disputed' }
+                      ]}
+                    />,
+                    <AdminSelect
+                      key="paymentStatus"
+                      value={selectedPaymentStatus}
+                      onChange={(e) => {
+                        sysSound.playTap();
+                        setSelectedPaymentStatus(e.target.value);
+                      }}
+                      options={[
+                        { value: 'All', label: 'Payment: All' },
+                        { value: 'Paid', label: 'Paid' },
+                        { value: 'Unpaid', label: 'Unpaid' },
+                        { value: 'Refunded', label: 'Refunded' }
+                      ]}
+                    />,
+                    <AdminSelect
+                      key="type"
+                      value={selectedProductType}
+                      onChange={(e) => {
+                        sysSound.playTap();
+                        setSelectedProductType(e.target.value);
+                      }}
+                      options={[
+                        { value: 'All', label: 'Type: All' },
+                        { value: 'Asset', label: 'Asset' },
+                        { value: 'License', label: 'License' },
+                        { value: 'Subscription', label: 'Subscription' }
+                      ]}
+                    />
+                  ]}
+                  actions={
+                    (selectedStatus !== "All" || selectedPaymentStatus !== "All" || selectedProductType !== "All" || searchQuery) && (
+                      <button
+                        onClick={() => {
+                          sysSound.playTap();
+                          setSearchQuery("");
+                          setSelectedStatus("All");
+                          setSelectedPaymentStatus("All");
+                          setSelectedProductType("All");
+                        }}
+                        className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                      >
+                        <Icon name="RefreshCw" size={9} />
+                        Reset Parameters
+                      </button>
+                    )
+                  }
+                />
+
+                {/* THE LEDGER RECORD TABLE OR REFUND TICKETS QUEUE */}
+                <TableContainer>
+
+                  <div className="overflow-x-auto w-full">
+
+                    {viewMode === "tickets" ? (
+                      /* ── REFUND TICKETS TABLE ── */
+                      refundTickets.length > 0 ? (
+                        <table className="w-full border-collapse text-left">
+                          <thead>
+                            <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
+                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {refundTickets.map((t) => {
+                              const isFocused = selectedTicketId === t.id;
+                              const ticketStatusStyles = {
+                                PENDING: "bg-amber-100/70 text-amber-700 border-amber-200",
+                                UNDER_REVIEW: "bg-blue-100/70 text-blue-700 border-blue-200",
+                                APPROVED: "bg-green-100/70 text-green-700 border-green-200",
+                                PROCESSING: "bg-green-100/70 text-green-700 border-green-200 animate-pulse",
+                                REFUNDED: "bg-green-100/70 text-green-700 border-green-200",
+                                FAILED: "bg-red-100/70 text-red-700 border-red-200",
+                                REJECTED: "bg-red-100/70 text-red-700 border-red-200",
+                                CANCELLED: "bg-stone-100 text-stone-500 border-stone-200"
+                              };
+                              return (
+                                <motion.tr
+                                  key={t.id}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
+                                    }`}
+                                  onClick={() => { sysSound.playTap(); setSelectedTicketId(t.id); }}
+                                >
+                                  <td className="py-4 px-5 font-mono text-[11px] font-bold text-[#2D004D]">TKT-{t.id}</td>
+                                  <td className="py-4 px-4">
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
+                                      <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4 text-[11px] text-[#2D004D] max-w-[140px] truncate">{t.product_name}</td>
+                                  <td className="py-4 px-4 text-right font-black text-[#2D004D] text-xs">₹{t.requested_amount?.toFixed(2)}</td>
+                                  <td className="py-4 px-4 text-center">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
+                                      {t.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-4 px-4 text-center">
+                                    <span className={`text-[10px] font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                                      {t.is_downloaded ? '🚨 YES' : '✅ NO'}
+                                    </span>
+                                  </td>
+                                  <td className="py-4 px-5 text-center text-[10px] text-[#7B3FA0]">
+                                    {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
+                                  </td>
+                                </motion.tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <div className="py-20 flex flex-col items-center justify-center text-center px-6">
+                          <div className="w-16 h-16 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-4">
+                            <span className="text-[#7B3FA0] text-2xl">✓</span>
+                          </div>
+                          <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">No refund requests pending</h4>
+                          <p className="text-[10px] text-[#7B3FA0] max-w-sm">All customer refund requests have been resolved or none have been submitted.</p>
+                        </div>
+                      )
+                    ) : (
+                      /* ── ORDERS TABLE ── */
+                      processedOrders.length > 0 ? (
+
+                        <table className="w-full border-collapse text-left">
+                          <thead>
+                            <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                              <th className="py-4 px-5 w-10">
+                                <input
                                   type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
+                                  checked={selectedRowIds.length === processedOrders.length}
+                                  onChange={(e) => {
                                     sysSound.playTap();
-                                    handleToggleRowSelection(o.id);
+                                    if (e.target.checked) {
+                                      setSelectedRowIds(processedOrders.map(o => o.id));
+                                    } else {
+                                      setSelectedRowIds([]);
+                                    }
                                   }}
                                   className="rounded border-stone-300 accent-[#D8BFE3]"
                                 />
-                              </td>
+                              </th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
+                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <AnimatePresence initial={false}>
+                              {processedOrders.map((o) => {
+                                const isFocused = selectedOrder?.id === o.id;
+                                const isChecked = selectedRowIds.includes(o.id);
 
-                              {/* Order ID */}
-                              <td className="py-4 px-4 font-mono text-[11px] font-bold text-[#2D004D]">
-                                {o.id}
-                              </td>
+                                // Custom status colors
+                                const statusStyles = {
+                                  Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                  Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                  Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                  Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                  Refunded: "bg-stone-100 text-stone-500 border-stone-200",
+                                  Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
+                                };
 
-                              {/* Customer name / email summary */}
-                              <td className="py-4 px-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-7 h-7 rounded-full bg-white border border-stone-200/50 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner">
-                                    {o.customerName.slice(0, 2)}
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-[#2D004D]">{o.customerName}</span>
-                                    <span className="text-[10px] text-[#7B3FA0] leading-none mt-0.5">{o.customerEmail}</span>
-                                  </div>
-                                </div>
-                              </td>
-
-                              {/* Price */}
-                              <td className="py-4 px-4 text-right">
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
-                                  <span className="text-[8px] text-[#8E6AA8] uppercase font-bold tracking-widest">{getProductType(o)}</span>
-                                </div>
-                              </td>
-
-                              {/* Status pill with animated glow sweep */}
-                              <td className="py-4 px-4 text-center">
-                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-[9px] font-extrabold uppercase tracking-widest transition-all duration-300 ${statusStyles[o.status] || "bg-stone-100"}`}>
-                                  {o.status}
-                                </span>
-                              </td>
-
-                              {/* Risk bar */}
-                              <td className="py-4 px-4 text-center w-24">
-                                <div className="flex flex-col gap-1 w-full max-w-[80px] mx-auto">
-                                  <div className="flex justify-between text-[8px] font-bold text-[#7B3FA0]">
-                                    <span>RISK INDEX</span>
-                                    <span className={getRiskScore(o) >= 75 ? 'text-[#FF8597]' : ''}>{getRiskScore(o)}%</span>
-                                  </div>
-                                  <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden border border-stone-200/20">
-                                    <div 
-                                      className={`h-full rounded-full transition-all duration-500 ${
-                                        getRiskScore(o) >= 75 ? 'bg-gradient-to-r from-[#FF8597] to-[#FF556B]' :
-                                        getRiskScore(o) >= 40 ? 'bg-gradient-to-r from-[#D8BFE3] to-[#ffb685]' :
-                                        'bg-gradient-to-r from-[#B886D0] to-[#a2d8b1]'
+                                return (
+                                  <motion.tr
+                                    key={o.id}
+                                    layoutId={`row-${o.id}`}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
                                       }`}
-                                      style={{ width: `${getRiskScore(o)}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
+                                    onClick={() => {
+                                      sysSound.playTap();
+                                      setSelectedOrderId(o.id);
+                                    }}
+                                  >
+                                    {/* Checkbox select */}
+                                    <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          sysSound.playTap();
+                                          handleToggleRowSelection(o.id);
+                                        }}
+                                        className="rounded border-stone-300 accent-[#D8BFE3]"
+                                      />
+                                    </td>
 
-                              {/* Quick Row Actions Dropdown */}
-                              <td className="py-4 px-5 text-center" onClick={(e) => e.stopPropagation()}>
-                                <div className="relative group/actions inline-block">
-                                  <button className="p-1 rounded-lg hover:bg-stone-100 text-[#7B3FA0] hover:text-[#2D004D] transition-colors">
-                                    <Icon name="Sliders" size={13} />
-                                  </button>
-                                  <div className="absolute right-0 top-6 w-36 bg-white/95 backdrop-blur-xl border border-stone-200/50 shadow-xl rounded-xl py-2 hidden group-hover/actions:block z-20 pointer-events-auto">
-                                    <button 
-                                      onClick={() => handleUpdateStatus(o.id, "Processing")}
-                                      className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#7B3FA0] hover:text-[#2D004D]"
-                                    >
-                                      Mark Processing
-                                    </button>
-                                    <button 
-                                      onClick={() => handleUpdateStatus(o.id, "Completed")}
-                                      className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#7B3FA0] hover:text-[#2D004D]"
-                                    >
-                                      Mark Completed
-                                    </button>
-                                    <button 
-                                      onClick={() => handleFlagDispute(o.id)}
-                                      className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#FF8597]"
-                                    >
-                                      Flag Dispute
-                                    </button>
-                                    <button 
-                                      onClick={() => handleRefundOrder(o.id)}
-                                      className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-stone-500 border-t border-stone-100"
-                                    >
-                                      Refund Transaction
-                                    </button>
-                                  </div>
-                                </div>
-                              </td>
-                            </motion.tr>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                ) : (
-                  
-                  // Empty state visual system
-                  <div className="py-20 flex flex-col items-center justify-center text-center px-6">
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-                      className="w-20 h-20 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-6"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#D8BFE3]/30 to-[#D8BFE3]/30 backdrop-blur-md flex items-center justify-center">
-                        <span className="text-[#7B3FA0] text-lg">✧</span>
-                      </div>
-                    </motion.div>
-                    <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">Your order universe is quiet... for now</h4>
-                    <p className="text-[10px] text-[#7B3FA0] max-w-sm mb-6 leading-relaxed">No matching transactions detected. Clear your filters or reload orders.</p>
-                    <button 
-                      onClick={() => {
-                        sysSound.playSuccess();
-                        loadOrders();
-                      }}
-                      className="btn-premium px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase border-none cursor-pointer"
-                    >
-                      Reload Orders from Firestore
-                    </button>
+                                    {/* Order ID */}
+                                    <td className="py-4 px-4 font-mono text-[11px] font-bold text-[#2D004D]">
+                                      {o.id}
+                                    </td>
+
+                                    {/* Customer name / email summary */}
+                                    <td className="py-4 px-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-7 h-7 rounded-full bg-white border border-stone-200/50 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner">
+                                          {o.customerName.slice(0, 2)}
+                                        </div>
+                                        <div className="flex flex-col">
+                                          <span className="text-xs font-bold text-[#2D004D]">{o.customerName}</span>
+                                          <span className="text-[10px] text-[#7B3FA0] leading-none mt-0.5">{o.customerEmail}</span>
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* Price */}
+                                    <td className="py-4 px-4 text-right">
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
+                                        <span className="text-[8px] text-[#8E6AA8] uppercase font-bold tracking-widest">{getProductType(o)}</span>
+                                      </div>
+                                    </td>
+
+                                    {/* Status pill with animated glow sweep */}
+                                    <td className="py-4 px-4 text-center">
+                                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-[9px] font-extrabold uppercase tracking-widest transition-all duration-300 ${statusStyles[o.status] || "bg-stone-100"}`}>
+                                        {o.status}
+                                      </span>
+                                    </td>
+
+                                    {/* Risk bar */}
+                                    <td className="py-4 px-4 text-center w-24">
+                                      <div className="flex flex-col gap-1 w-full max-w-[80px] mx-auto">
+                                        <div className="flex justify-between text-[8px] font-bold text-[#7B3FA0]">
+                                          <span>RISK INDEX</span>
+                                          <span className={getRiskScore(o) >= 75 ? 'text-[#FF8597]' : ''}>{getRiskScore(o)}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden border border-stone-200/20">
+                                          <div
+                                            className={`h-full rounded-full transition-all duration-500 ${getRiskScore(o) >= 75 ? 'bg-gradient-to-r from-[#FF8597] to-[#FF556B]' :
+                                                getRiskScore(o) >= 40 ? 'bg-gradient-to-r from-[#D8BFE3] to-[#ffb685]' :
+                                                  'bg-gradient-to-r from-[#B886D0] to-[#a2d8b1]'
+                                              }`}
+                                            style={{ width: `${getRiskScore(o)}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* Quick Row Actions Dropdown */}
+                                    <td className="py-4 px-5 text-center" onClick={(e) => e.stopPropagation()}>
+                                      <div className="relative group/actions inline-block">
+                                        <button className="p-1 rounded-lg hover:bg-stone-100 text-[#7B3FA0] hover:text-[#2D004D] transition-colors">
+                                          <Icon name="Sliders" size={13} />
+                                        </button>
+                                        <div className="absolute right-0 top-6 w-36 bg-white/95 backdrop-blur-xl border border-stone-200/50 shadow-xl rounded-xl py-2 hidden group-hover/actions:block z-20 pointer-events-auto">
+                                          <button
+                                            onClick={() => handleUpdateStatus(o.id, "Processing")}
+                                            className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#7B3FA0] hover:text-[#2D004D]"
+                                          >
+                                            Mark Processing
+                                          </button>
+                                          <button
+                                            onClick={() => handleUpdateStatus(o.id, "Completed")}
+                                            className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#7B3FA0] hover:text-[#2D004D]"
+                                          >
+                                            Mark Completed
+                                          </button>
+                                          <button
+                                            onClick={() => handleFlagDispute(o.id)}
+                                            className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-[#FF8597]"
+                                          >
+                                            Flag Dispute
+                                          </button>
+                                          <button
+                                            onClick={() => handleRefundOrder(o.id)}
+                                            className="w-full text-left px-4 py-1.5 text-[10px] font-bold hover:bg-stone-50 text-stone-500 border-t border-stone-100"
+                                          >
+                                            Refund Transaction
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </motion.tr>
+                                );
+                              })}
+                            </AnimatePresence>
+                          </tbody>
+                        </table>
+                      ) : (
+
+                        // Empty state visual system
+                        <div className="py-20 flex flex-col items-center justify-center text-center px-6">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+                            className="w-20 h-20 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-6"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#D8BFE3]/30 to-[#D8BFE3]/30 backdrop-blur-md flex items-center justify-center">
+                              <span className="text-[#7B3FA0] text-lg">✧</span>
+                            </div>
+                          </motion.div>
+                          <h4 className="text-sm font-serif font-bold text-[#2D004D] mb-1">Your order universe is quiet... for now</h4>
+                          <p className="text-[10px] text-[#7B3FA0] max-w-sm mb-6 leading-relaxed">No matching transactions detected. Clear your filters or reload orders.</p>
+                          <button
+                            onClick={() => {
+                              sysSound.playSuccess();
+                              loadOrders();
+                            }}
+                            className="btn-premium px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest uppercase border-none cursor-pointer"
+                          >
+                            Reload Orders from Firestore
+                          </button>
+                        </div>
+
+                      )
+
+                    )} {/* end viewMode === 'tickets' ? ... : ... */}
+
                   </div>
 
-                )
 
+                </TableContainer>
+
+                {/* ── Pagination controls (M6) ── */}
+                {!loading && !loadError && orderTotalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 px-1">
+                    <span className="text-[9px] text-[#7B3FA0] font-bold">
+                      Page {orderPage} of {orderTotalPages} &bull; {orderTotal} orders total
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => loadOrders(orderPage - 1, selectedStatus !== 'All' ? selectedStatus : null)}
+                        disabled={orderPage === 1}
+                        className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => loadOrders(orderPage + 1, selectedStatus !== 'All' ? selectedStatus : null)}
+                        disabled={orderPage === orderTotalPages}
+                        className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {/* RIGHT 40% PANEL: TRANSACTION DETAILS & ANOMALY ANALYSIS */}
+              <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 sticky top-24">
+
+                {viewMode === "tickets" ? (
+                  /* ── REFUND TICKET DETAIL PANEL ── */
+                  selectedTicket ? (
+                    <div className="flex flex-col gap-5">
+
+                      {/* Ticket Header */}
+                      <div className="flex justify-between items-start border-b border-stone-200/50 pb-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Refund Ticket</span>
+                          <span className="text-base font-black text-[#2D004D] font-mono">TKT-{selectedTicket.id}</span>
+                          <span className="text-[10px] text-[#8E6AA8]">ORD-{selectedTicket.order_id} · Customer #{selectedTicket.user_id}</span>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-[9px] font-extrabold uppercase border tracking-widest ${selectedTicket.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                            selectedTicket.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                              selectedTicket.status === 'PROCESSING' ? 'bg-green-100 text-green-700 border-green-200 animate-pulse' :
+                                selectedTicket.status === 'REFUNDED' ? 'bg-green-100 text-green-700 border-green-200' :
+                                  selectedTicket.status === 'FAILED' ? 'bg-red-100 text-red-700 border-red-200' :
+                                    selectedTicket.status === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' :
+                                      selectedTicket.status === 'CANCELLED' ? 'bg-stone-100 text-stone-500 border-stone-200' :
+                                        'bg-stone-100 text-stone-600 border-stone-200'
+                          }`}>
+                          {selectedTicket.status}
+                        </div>
+                      </div>
+
+                      {/* Order Snapshot */}
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order Snapshot</h4>
+                        <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2 shadow-sm text-[10px]">
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Product</span><span className="font-bold text-[#2D004D] text-right max-w-[160px] truncate">{selectedTicket.product_name}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Order Total</span><span className="font-black text-[#2D004D]">₹{selectedTicket.order_total?.toFixed(2)}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Refund Amount</span><span className="font-black text-[#5A1E7E]">₹{selectedTicket.requested_amount?.toFixed(2)}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Payment Method</span><span className="font-bold text-[#2D004D]">{selectedTicket.payment_method}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Reason</span><span className="font-bold text-[#2D004D] capitalize">{(selectedTicket.reason_category || '').replace(/_/g, ' ')}</span></div>
+                          {selectedTicket.details && (
+                            <div className="flex justify-between"><span className="text-[#7B3FA0]">Details</span><span className="font-medium text-[#2D004D] text-right max-w-[160px]">{selectedTicket.details}</span></div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Download Abuse Diagnostic */}
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Download Abuse Diagnostic</h4>
+                        <div className={`bg-white/60 border p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm text-[10px] ${selectedTicket.is_downloaded ? 'border-red-200/60' : 'border-[#F3EAF8]'}`}>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#7B3FA0]">Downloaded</span>
+                            <span className={`font-black ${selectedTicket.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                              {selectedTicket.is_downloaded ? '🚨 YES — High Risk' : '✅ NO'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Download Count</span><span className="font-bold text-[#2D004D]">{selectedTicket.download_count ?? 0}×</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">First Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.first_download_at ? new Date(selectedTicket.first_download_at).toLocaleString() : '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Last Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.last_download_at ? new Date(selectedTicket.last_download_at).toLocaleString() : '—'}</span></div>
+                          <div className="h-px bg-stone-200/40 my-0.5" />
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">IP Address</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.ip_address || '—'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#7B3FA0]">Device</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.device_details || '—'}</span></div>
+                          <div className="h-px bg-stone-200/40 my-0.5" />
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#7B3FA0]">Prior Refunds</span>
+                            <span className={`font-black ${selectedTicket.previous_refund_count > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              {selectedTicket.previous_refund_count} previous refund{selectedTicket.previous_refund_count !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Admin Notes (if already reviewed) */}
+                      {selectedTicket.admin_notes && (
+                        <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-[10px]">
+                          <span className="font-bold text-amber-700">Admin Note: </span>
+                          <span className="text-amber-800">{selectedTicket.admin_notes}</span>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      {['PENDING', 'UNDER_REVIEW'].includes(selectedTicket.status) && (
+                        <div className="flex gap-3 pt-3 border-t border-stone-200/50">
+                          <button
+                            onClick={() => { sysSound.playTap(); setShowApproveModal(true); }}
+                            className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
+                          >
+                            ✓ Approve Refund
+                          </button>
+                          <button
+                            onClick={() => { sysSound.playTap(); setShowRejectModal(true); }}
+                            className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
+                          >
+                            ✕ Reject
+                          </button>
+                        </div>
+                      )}
+
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center text-[#7B3FA0]">
+                      <p className="text-xs">No ticket selected.</p>
+                      <p className="text-[10px] mt-1">Click a row in the tickets table to review its details.</p>
+                    </div>
+                  )
+                ) : (
+                  /* ── ORDER DETAIL PANEL ── */
+                  selectedOrder ? (
+                    <div className="flex flex-col gap-6">
+
+                      {/* Customer Profile Header Section */}
+
+                      <div className="flex justify-between items-start border-b border-stone-200/50 pb-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D8BFE3] to-[#D8BFE3] flex items-center justify-center text-sm font-black text-[#2D004D] shadow-[0_4px_12px_rgba(216,191,227,0.25)]">
+                            {(selectedOrder.customerName || 'UN').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-serif font-black text-[#2D004D] tracking-wide">{selectedOrder.customerName}</span>
+                            <span className="text-[10px] text-[#7B3FA0] font-mono mt-0.5">{selectedOrder.customerEmail}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[10px] font-mono font-bold text-[#7B3FA0]">{selectedOrder.orderId || selectedOrder.id}</span>
+                          <span className="text-[8px] text-[#8E6AA8] font-bold mt-1 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded">
+                            {selectedOrder.customerInfo?.country || selectedOrder.region || 'Global'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Delivery Information Section */}
+                      <div className="flex flex-col gap-3">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Fulfillment Logistics</h4>
+                        <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-3.5 shadow-sm">
+
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-[#7B3FA0] font-medium">Delivery Type</span>
+                            <span className="font-bold text-[#2D004D] text-[10px] uppercase tracking-wider">{selectedOrder.deliveryType || 'Instant Download'}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-[#7B3FA0] font-medium">Product License</span>
+                            <span className="font-mono text-[10px] text-[#2D004D] bg-white border border-stone-200/50 px-2 py-0.5 rounded shadow-sm">
+                              LUM-KEY-{(selectedOrder.orderId || selectedOrder.id || '').slice(-4)}-{(selectedOrder.createdAt || '').slice(5, 7)}
+                            </span>
+                          </div>
+
+                          {selectedOrder.status !== "Refunded" && selectedOrder.status !== "Failed" ? (
+                            <div className="flex flex-col gap-2 mt-2">
+                              {/* Download access gate: only show active buttons when payment is confirmed */}
+                              {selectedOrder.downloadGranted && selectedOrder.paymentStatus === "Paid" ? (
+                                <div className="flex gap-2.5">
+                                  <button
+                                    onClick={() => {
+                                      // Copy the real Storage downloadUrl if available, otherwise a placeholder note
+                                      const url = selectedOrder.items?.[0]
+                                        ? `Order ${selectedOrder.orderId || selectedOrder.id} — use Download button to access file`
+                                        : '';
+                                      handleCopyLink(url || selectedOrder.orderId || selectedOrder.id);
+                                    }}
+                                    className="flex-1 py-2 bg-white hover:bg-stone-50 border border-stone-200/70 hover:border-[#D8BFE3] rounded-xl text-[10px] font-bold text-[#2D004D] flex items-center justify-center gap-1.5 transition-colors"
+                                  >
+                                    <Icon name="Copy" size={11} />
+                                    Copy Order ID
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownload(selectedOrder)}
+                                    disabled={downloadLoading[selectedOrder.id]}
+                                    className="flex-1 py-2 bg-[#2D004D] hover:bg-[#7B3FA0] disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl text-[10px] font-bold text-white flex items-center justify-center gap-1.5 transition-colors"
+                                  >
+                                    {downloadLoading[selectedOrder.id] ? (
+                                      <>
+                                        <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                        </svg>
+                                        Verifying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Icon name="Download" size={11} />
+                                        Download File
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              ) : (
+                                /* Payment not confirmed — download locked */
+                                <div className="py-2.5 px-4 bg-amber-50 border border-amber-200/60 rounded-xl text-center text-[10px] font-bold text-amber-700 mt-1">
+                                  🔒 Download locked — payment not confirmed.
+                                </div>
+                              )}
+
+                              {/* Download error message */}
+                              {downloadError[selectedOrder.id] && (
+                                <div className="py-2 px-3 bg-red-50 border border-red-200/60 rounded-xl text-[9px] font-bold text-red-600">
+                                  ⚠ {downloadError[selectedOrder.id]}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="py-2.5 px-4 bg-[#D8BFE3]/20 border border-[#D8BFE3]/40 rounded-xl text-center text-[10px] font-bold text-[#8C4854] mt-1">
+                              Delivery disabled: Transaction is not active.
+                            </div>
+                          )}
+
+                        </div>
+                      </div>
+
+                      {/* Financial Ledger Details */}
+                      <div className="flex flex-col gap-3">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Transaction Ledger</h4>
+                        <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
+
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-[#7B3FA0]">Gross Product Value</span>
+                            <span className="font-bold text-[#2D004D]">₹{getOrderPrice(selectedOrder).toFixed(2)}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-[#7B3FA0]">Lumora Platform Fee (5%)</span>
+                            <span className="font-bold text-[#8C4854]">-₹{(selectedOrder.platformFee ?? parseFloat((getOrderPrice(selectedOrder) * 0.05).toFixed(2))).toFixed(2)}</span>
+                          </div>
+
+                          <div className="h-px bg-stone-200/50 my-1" />
+
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-[10px] text-[#7B3FA0] font-bold">Net Creator Earnings</span>
+                            <span className="font-black text-[#5A1E7E] text-sm">₹{(selectedOrder.vendorEarnings ?? parseFloat((getOrderPrice(selectedOrder) * 0.95).toFixed(2))).toFixed(2)}</span>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Affiliate Attribution Card */}
+                      <AffiliateAttributionCard orderId={selectedOrder.id || selectedOrder.orderId} />
+
+                      {/* Security Anomaly Analysis */}
+                      <div className="flex flex-col gap-3">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Security & Risk Matrix</h4>
+                        <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex items-center justify-between shadow-sm">
+
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-[#2D004D]">
+                              {getRiskScore(selectedOrder) >= 75 ? "⚠️ Extreme Anomaly Flagged" :
+                                getRiskScore(selectedOrder) >= 40 ? "⚡ Moderate Suspicion" :
+                                  "✓ Secured Account Node"}
+                            </span>
+                            <span className="text-[8px] text-[#7B3FA0] mt-0.5">
+                              {getRiskScore(selectedOrder) >= 75 ? "Calibrated via high disputed region patterns." :
+                                getRiskScore(selectedOrder) >= 40 ? "Card coordinates display offset markers." :
+                                  "Payment authorization matches client IP."}
+                            </span>
+                          </div>
+
+                          <div className="relative w-12 h-12 flex items-center justify-center">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle cx="24" cy="24" r="20" stroke="#f1f1f1" strokeWidth="3" fill="transparent" />
+                              <circle
+                                cx="24"
+                                cy="24"
+                                r="20"
+                                stroke={getRiskScore(selectedOrder) >= 75 ? "#FF8597" : getRiskScore(selectedOrder) >= 40 ? "#D8BFE3" : "#B886D0"}
+                                strokeWidth="3.5"
+                                fill="transparent"
+                                strokeDasharray={2 * Math.PI * 20}
+                                strokeDashoffset={((100 - getRiskScore(selectedOrder)) / 100) * (2 * Math.PI * 20)}
+                                strokeLinecap="round"
+                                className="transition-all duration-1000"
+                              />
+                            </svg>
+                            <span className="absolute text-[9px] font-black text-[#2D004D]">{getRiskScore(selectedOrder)}%</span>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Interactive Transaction Event Timeline */}
+                      <div className="flex flex-col gap-4">
+                        <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Lifecycle Event Timeline</h4>
+                        <div className="relative pl-6 flex flex-col gap-6 before:absolute before:left-2.5 before:top-1.5 before:bottom-1.5 before:w-0.5 before:bg-stone-200/70">
+
+                          {/* Node 1: Created */}
+                          <div className="relative flex justify-between items-start">
+                            <div className="absolute -left-5 top-1 w-2.5 h-2.5 rounded-full bg-[#B886D0] shadow-[0_0_6px_#B886D0] border-2 border-white" />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-[#2D004D]">Order placed</span>
+                              <span className="text-[8px] text-[#7B3FA0] mt-0.5">Customer checkout completed.</span>
+                            </div>
+                            <span className="text-[8px] font-mono text-[#7B3FA0]">
+                              {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </span>
+                          </div>
+
+                          {/* Node 2: Paid */}
+                          <div className="relative flex justify-between items-start">
+                            <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${selectedOrder.paymentStatus === "Paid" ? 'bg-[#B886D0] shadow-[0_0_6px_#B886D0]' : 'bg-stone-200'
+                              }`} />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-[#2D004D]">Payment confirmed</span>
+                              <span className="text-[8px] text-[#7B3FA0] mt-0.5">
+                                {selectedOrder.paymentStatus === "Paid" ? "Payment verified and settled." : "Awaiting payment confirmation."}
+                              </span>
+                            </div>
+                            <span className="text-[8px] font-mono text-[#7B3FA0]">
+                              {selectedOrder.paymentStatus === "Paid" && selectedOrder.createdAt
+                                ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : '—'}
+                            </span>
+                          </div>
+
+                          {/* Node 3: Processing */}
+                          <div className="relative flex justify-between items-start">
+                            <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${selectedOrder.status === "Processing" || selectedOrder.status === "Completed" ? 'bg-[#D8BFE3] shadow-[0_0_6px_#D8BFE3]' : 'bg-stone-200'
+                              }`} />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-[#2D004D]">Order processing</span>
+                              <span className="text-[8px] text-[#7B3FA0] mt-0.5">Digital asset prepared for delivery.</span>
+                            </div>
+                            <span className="text-[8px] font-mono text-[#7B3FA0]">
+                              {(selectedOrder.status === "Processing" || selectedOrder.status === "Completed") && selectedOrder.createdAt
+                                ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : '—'}
+                            </span>
+                          </div>
+
+                          {/* Node 4: Completed / Refunded / Disputed */}
+                          <div className="relative flex justify-between items-start">
+                            <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${selectedOrder.status === "Completed" ? 'bg-[#B886D0] shadow-[0_0_8px_#B886D0]' :
+                                selectedOrder.status === "Refunded" ? 'bg-stone-300' :
+                                  selectedOrder.status === "Disputed" ? 'bg-[#FF8597] animate-ping' :
+                                    'bg-stone-200'
+                              }`} />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-[#2D004D]">
+                                {selectedOrder.status === "Refunded" ? "Order refunded" :
+                                  selectedOrder.status === "Disputed" ? "Dispute raised" :
+                                    selectedOrder.status === "Completed" ? "Delivery complete" :
+                                      "Pending completion"}
+                              </span>
+                              <span className="text-[8px] text-[#7B3FA0] mt-0.5">
+                                {selectedOrder.status === "Refunded" ? "Funds returned to customer." :
+                                  selectedOrder.status === "Disputed" ? "Awaiting dispute resolution." :
+                                    selectedOrder.status === "Completed" ? "All assets delivered successfully." :
+                                      "Order has not yet completed."}
+                              </span>
+                            </div>
+                            <span className="text-[8px] font-mono text-[#7B3FA0]">
+                              {selectedOrder.status === "Completed" && selectedOrder.createdAt
+                                ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                : '—'}
+                            </span>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Invoice Generation Trigger */}
+                      <div className="flex gap-3 mt-4 border-t border-stone-200/50 pt-5">
+                        <button
+                          onClick={() => {
+                            sysSound.playTap();
+                            setInvoiceOrder(selectedOrder);
+                          }}
+                          className="flex-1 py-2.5 bg-white hover:bg-[#F5E9DD] border border-stone-200/70 rounded-2xl text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] transition-colors"
+                        >
+                          Generate Invoice Receipt
+                        </button>
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center text-[#7B3FA0]">
+                      <p className="text-xs">No active ledger entry focused.</p>
+                      <p className="text-[10px] mt-1">Select an order row from the grid ledger to parse deep metrics.</p>
+                    </div>
+                  )
                 )} {/* end viewMode === 'tickets' ? ... : ... */}
 
               </div>
 
+            </section>
 
-            </TableContainer>
-
-            {/* ── Pagination controls (M6) ── */}
-            {!loading && !loadError && orderTotalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 px-1">
-                <span className="text-[9px] text-[#7B3FA0] font-bold">
-                  Page {orderPage} of {orderTotalPages} &bull; {orderTotal} orders total
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => loadOrders(orderPage - 1, selectedStatus !== 'All' ? selectedStatus : null)}
-                    disabled={orderPage === 1}
-                    className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    onClick={() => loadOrders(orderPage + 1, selectedStatus !== 'All' ? selectedStatus : null)}
-                    disabled={orderPage === orderTotalPages}
-                    className="px-3 py-1.5 rounded-xl border border-[#F5E9DD] text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] hover:bg-[#F5E9DD]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* RIGHT 40% PANEL: TRANSACTION DETAILS & ANOMALY ANALYSIS */}
-          <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 sticky top-24">
-            
-            {viewMode === "tickets" ? (
-              /* ── REFUND TICKET DETAIL PANEL ── */
-              selectedTicket ? (
-                <div className="flex flex-col gap-5">
-
-                  {/* Ticket Header */}
-                  <div className="flex justify-between items-start border-b border-stone-200/50 pb-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Refund Ticket</span>
-                      <span className="text-base font-black text-[#2D004D] font-mono">TKT-{selectedTicket.id}</span>
-                      <span className="text-[10px] text-[#8E6AA8]">ORD-{selectedTicket.order_id} · Customer #{selectedTicket.user_id}</span>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-[9px] font-extrabold uppercase border tracking-widest ${
-                      selectedTicket.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                      selectedTicket.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                      selectedTicket.status === 'PROCESSING' ? 'bg-green-100 text-green-700 border-green-200 animate-pulse' :
-                      selectedTicket.status === 'REFUNDED' ? 'bg-green-100 text-green-700 border-green-200' :
-                      selectedTicket.status === 'FAILED' ? 'bg-red-100 text-red-700 border-red-200' :
-                      selectedTicket.status === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' :
-                      selectedTicket.status === 'CANCELLED' ? 'bg-stone-100 text-stone-500 border-stone-200' :
-                      'bg-stone-100 text-stone-600 border-stone-200'
-                    }`}>
-                      {selectedTicket.status}
-                    </div>
-                  </div>
-
-                  {/* Order Snapshot */}
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order Snapshot</h4>
-                    <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2 shadow-sm text-[10px]">
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Product</span><span className="font-bold text-[#2D004D] text-right max-w-[160px] truncate">{selectedTicket.product_name}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Order Total</span><span className="font-black text-[#2D004D]">₹{selectedTicket.order_total?.toFixed(2)}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Refund Amount</span><span className="font-black text-[#5A1E7E]">₹{selectedTicket.requested_amount?.toFixed(2)}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Payment Method</span><span className="font-bold text-[#2D004D]">{selectedTicket.payment_method}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Reason</span><span className="font-bold text-[#2D004D] capitalize">{(selectedTicket.reason_category || '').replace(/_/g, ' ')}</span></div>
-                      {selectedTicket.details && (
-                        <div className="flex justify-between"><span className="text-[#7B3FA0]">Details</span><span className="font-medium text-[#2D004D] text-right max-w-[160px]">{selectedTicket.details}</span></div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Download Abuse Diagnostic */}
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Download Abuse Diagnostic</h4>
-                    <div className={`bg-white/60 border p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm text-[10px] ${selectedTicket.is_downloaded ? 'border-red-200/60' : 'border-[#F3EAF8]'}`}>
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#7B3FA0]">Downloaded</span>
-                        <span className={`font-black ${selectedTicket.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
-                          {selectedTicket.is_downloaded ? '🚨 YES — High Risk' : '✅ NO'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Download Count</span><span className="font-bold text-[#2D004D]">{selectedTicket.download_count ?? 0}×</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">First Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.first_download_at ? new Date(selectedTicket.first_download_at).toLocaleString() : '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Last Download</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.last_download_at ? new Date(selectedTicket.last_download_at).toLocaleString() : '—'}</span></div>
-                      <div className="h-px bg-stone-200/40 my-0.5" />
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">IP Address</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.ip_address || '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-[#7B3FA0]">Device</span><span className="font-mono text-[9px] text-[#2D004D]">{selectedTicket.device_details || '—'}</span></div>
-                      <div className="h-px bg-stone-200/40 my-0.5" />
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#7B3FA0]">Prior Refunds</span>
-                        <span className={`font-black ${selectedTicket.previous_refund_count > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                          {selectedTicket.previous_refund_count} previous refund{selectedTicket.previous_refund_count !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Admin Notes (if already reviewed) */}
-                  {selectedTicket.admin_notes && (
-                    <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-[10px]">
-                      <span className="font-bold text-amber-700">Admin Note: </span>
-                      <span className="text-amber-800">{selectedTicket.admin_notes}</span>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  {['PENDING', 'UNDER_REVIEW'].includes(selectedTicket.status) && (
-                    <div className="flex gap-3 pt-3 border-t border-stone-200/50">
-                      <button
-                        onClick={() => { sysSound.playTap(); setShowApproveModal(true); }}
-                        className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
-                      >
-                        ✓ Approve Refund
-                      </button>
-                      <button
-                        onClick={() => { sysSound.playTap(); setShowRejectModal(true); }}
-                        className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
-                      >
-                        ✕ Reject
-                      </button>
-                    </div>
-                  )}
-
-                </div>
-              ) : (
-                <div className="py-20 text-center text-[#7B3FA0]">
-                  <p className="text-xs">No ticket selected.</p>
-                  <p className="text-[10px] mt-1">Click a row in the tickets table to review its details.</p>
-                </div>
-              )
-            ) : (
-            /* ── ORDER DETAIL PANEL ── */
-            selectedOrder ? (
-              <div className="flex flex-col gap-6">
-                
-                {/* Customer Profile Header Section */}
-
-                <div className="flex justify-between items-start border-b border-stone-200/50 pb-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D8BFE3] to-[#D8BFE3] flex items-center justify-center text-sm font-black text-[#2D004D] shadow-[0_4px_12px_rgba(216,191,227,0.25)]">
-                      {(selectedOrder.customerName || 'UN').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-serif font-black text-[#2D004D] tracking-wide">{selectedOrder.customerName}</span>
-                      <span className="text-[10px] text-[#7B3FA0] font-mono mt-0.5">{selectedOrder.customerEmail}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-mono font-bold text-[#7B3FA0]">{selectedOrder.orderId || selectedOrder.id}</span>
-                    <span className="text-[8px] text-[#8E6AA8] font-bold mt-1 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded">
-                      {selectedOrder.customerInfo?.country || selectedOrder.region || 'Global'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Delivery Information Section */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Fulfillment Logistics</h4>
-                  <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-3.5 shadow-sm">
-                    
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[10px] text-[#7B3FA0] font-medium">Delivery Type</span>
-                      <span className="font-bold text-[#2D004D] text-[10px] uppercase tracking-wider">{selectedOrder.deliveryType || 'Instant Download'}</span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[10px] text-[#7B3FA0] font-medium">Product License</span>
-                      <span className="font-mono text-[10px] text-[#2D004D] bg-white border border-stone-200/50 px-2 py-0.5 rounded shadow-sm">
-                        LUM-KEY-{(selectedOrder.orderId || selectedOrder.id || '').slice(-4)}-{(selectedOrder.createdAt || '').slice(5, 7)}
-                      </span>
-                    </div>
-
-                    {selectedOrder.status !== "Refunded" && selectedOrder.status !== "Failed" ? (
-                      <div className="flex flex-col gap-2 mt-2">
-                        {/* Download access gate: only show active buttons when payment is confirmed */}
-                        {selectedOrder.downloadGranted && selectedOrder.paymentStatus === "Paid" ? (
-                          <div className="flex gap-2.5">
-                            <button 
-                              onClick={() => {
-                                // Copy the real Storage downloadUrl if available, otherwise a placeholder note
-                                const url = selectedOrder.items?.[0]
-                                  ? `Order ${selectedOrder.orderId || selectedOrder.id} — use Download button to access file`
-                                  : '';
-                                handleCopyLink(url || selectedOrder.orderId || selectedOrder.id);
-                              }}
-                              className="flex-1 py-2 bg-white hover:bg-stone-50 border border-stone-200/70 hover:border-[#D8BFE3] rounded-xl text-[10px] font-bold text-[#2D004D] flex items-center justify-center gap-1.5 transition-colors"
-                            >
-                              <Icon name="Copy" size={11} />
-                              Copy Order ID
-                            </button>
-                            <button
-                              onClick={() => handleDownload(selectedOrder)}
-                              disabled={downloadLoading[selectedOrder.id]}
-                              className="flex-1 py-2 bg-[#2D004D] hover:bg-[#7B3FA0] disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl text-[10px] font-bold text-white flex items-center justify-center gap-1.5 transition-colors"
-                            >
-                              {downloadLoading[selectedOrder.id] ? (
-                                <>
-                                  <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                                  </svg>
-                                  Verifying...
-                                </>
-                              ) : (
-                                <>
-                                  <Icon name="Download" size={11} />
-                                  Download File
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        ) : (
-                          /* Payment not confirmed — download locked */
-                          <div className="py-2.5 px-4 bg-amber-50 border border-amber-200/60 rounded-xl text-center text-[10px] font-bold text-amber-700 mt-1">
-                            🔒 Download locked — payment not confirmed.
-                          </div>
-                        )}
-
-                        {/* Download error message */}
-                        {downloadError[selectedOrder.id] && (
-                          <div className="py-2 px-3 bg-red-50 border border-red-200/60 rounded-xl text-[9px] font-bold text-red-600">
-                            ⚠ {downloadError[selectedOrder.id]}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="py-2.5 px-4 bg-[#D8BFE3]/20 border border-[#D8BFE3]/40 rounded-xl text-center text-[10px] font-bold text-[#8C4854] mt-1">
-                        Delivery disabled: Transaction is not active.
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Financial Ledger Details */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Transaction Ledger</h4>
-                  <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
-                    
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[10px] text-[#7B3FA0]">Gross Product Value</span>
-                      <span className="font-bold text-[#2D004D]">₹{getOrderPrice(selectedOrder).toFixed(2)}</span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[10px] text-[#7B3FA0]">Lumora Platform Fee (5%)</span>
-                      <span className="font-bold text-[#8C4854]">-₹{(selectedOrder.platformFee ?? parseFloat((getOrderPrice(selectedOrder) * 0.05).toFixed(2))).toFixed(2)}</span>
-                    </div>
-
-                    <div className="h-px bg-stone-200/50 my-1" />
-
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[10px] text-[#7B3FA0] font-bold">Net Creator Earnings</span>
-                      <span className="font-black text-[#5A1E7E] text-sm">₹{(selectedOrder.vendorEarnings ?? parseFloat((getOrderPrice(selectedOrder) * 0.95).toFixed(2))).toFixed(2)}</span>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Affiliate Attribution Card */}
-                <AffiliateAttributionCard orderId={selectedOrder.id || selectedOrder.orderId} />
-
-                {/* Security Anomaly Analysis */}
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Security & Risk Matrix</h4>
-                  <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex items-center justify-between shadow-sm">
-                    
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-[#2D004D]">
-                        {getRiskScore(selectedOrder) >= 75 ? "⚠️ Extreme Anomaly Flagged" :
-                         getRiskScore(selectedOrder) >= 40 ? "⚡ Moderate Suspicion" :
-                         "✓ Secured Account Node"}
-                      </span>
-                      <span className="text-[8px] text-[#7B3FA0] mt-0.5">
-                        {getRiskScore(selectedOrder) >= 75 ? "Calibrated via high disputed region patterns." :
-                         getRiskScore(selectedOrder) >= 40 ? "Card coordinates display offset markers." :
-                         "Payment authorization matches client IP."}
-                      </span>
-                    </div>
-
-                    <div className="relative w-12 h-12 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="24" cy="24" r="20" stroke="#f1f1f1" strokeWidth="3" fill="transparent" />
-                        <circle 
-                          cx="24" 
-                          cy="24" 
-                          r="20" 
-                          stroke={getRiskScore(selectedOrder) >= 75 ? "#FF8597" : getRiskScore(selectedOrder) >= 40 ? "#D8BFE3" : "#B886D0"} 
-                          strokeWidth="3.5" 
-                          fill="transparent" 
-                          strokeDasharray={2 * Math.PI * 20}
-                          strokeDashoffset={((100 - getRiskScore(selectedOrder)) / 100) * (2 * Math.PI * 20)}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <span className="absolute text-[9px] font-black text-[#2D004D]">{getRiskScore(selectedOrder)}%</span>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Interactive Transaction Event Timeline */}
-                <div className="flex flex-col gap-4">
-                  <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Lifecycle Event Timeline</h4>
-                  <div className="relative pl-6 flex flex-col gap-6 before:absolute before:left-2.5 before:top-1.5 before:bottom-1.5 before:w-0.5 before:bg-stone-200/70">
-                    
-                    {/* Node 1: Created */}
-                    <div className="relative flex justify-between items-start">
-                      <div className="absolute -left-5 top-1 w-2.5 h-2.5 rounded-full bg-[#B886D0] shadow-[0_0_6px_#B886D0] border-2 border-white" />
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Order placed</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Customer checkout completed.</span>
-                      </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">
-                        {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
-                      </span>
-                    </div>
-
-                    {/* Node 2: Paid */}
-                    <div className="relative flex justify-between items-start">
-                      <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${
-                        selectedOrder.paymentStatus === "Paid" ? 'bg-[#B886D0] shadow-[0_0_6px_#B886D0]' : 'bg-stone-200'
-                      }`} />
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Payment confirmed</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">
-                          {selectedOrder.paymentStatus === "Paid" ? "Payment verified and settled." : "Awaiting payment confirmation."}
-                        </span>
-                      </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">
-                        {selectedOrder.paymentStatus === "Paid" && selectedOrder.createdAt
-                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
-                      </span>
-                    </div>
-
-                    {/* Node 3: Processing */}
-                    <div className="relative flex justify-between items-start">
-                      <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${
-                        selectedOrder.status === "Processing" || selectedOrder.status === "Completed" ? 'bg-[#D8BFE3] shadow-[0_0_6px_#D8BFE3]' : 'bg-stone-200'
-                      }`} />
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">Order processing</span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">Digital asset prepared for delivery.</span>
-                      </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">
-                        {(selectedOrder.status === "Processing" || selectedOrder.status === "Completed") && selectedOrder.createdAt
-                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
-                      </span>
-                    </div>
-
-                    {/* Node 4: Completed / Refunded / Disputed */}
-                    <div className="relative flex justify-between items-start">
-                      <div className={`absolute -left-5 top-1 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-500 ${
-                        selectedOrder.status === "Completed" ? 'bg-[#B886D0] shadow-[0_0_8px_#B886D0]' : 
-                        selectedOrder.status === "Refunded" ? 'bg-stone-300' :
-                        selectedOrder.status === "Disputed" ? 'bg-[#FF8597] animate-ping' :
-                        'bg-stone-200'
-                      }`} />
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#2D004D]">
-                          {selectedOrder.status === "Refunded" ? "Order refunded" :
-                           selectedOrder.status === "Disputed" ? "Dispute raised" :
-                           selectedOrder.status === "Completed" ? "Delivery complete" :
-                           "Pending completion"}
-                        </span>
-                        <span className="text-[8px] text-[#7B3FA0] mt-0.5">
-                          {selectedOrder.status === "Refunded" ? "Funds returned to customer." :
-                           selectedOrder.status === "Disputed" ? "Awaiting dispute resolution." :
-                           selectedOrder.status === "Completed" ? "All assets delivered successfully." :
-                           "Order has not yet completed."}
-                        </span>
-                      </div>
-                      <span className="text-[8px] font-mono text-[#7B3FA0]">
-                        {selectedOrder.status === "Completed" && selectedOrder.createdAt
-                          ? new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
-                      </span>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Invoice Generation Trigger */}
-                <div className="flex gap-3 mt-4 border-t border-stone-200/50 pt-5">
-                  <button 
-                    onClick={() => {
-                      sysSound.playTap();
-                      setInvoiceOrder(selectedOrder);
-                    }}
-                    className="flex-1 py-2.5 bg-white hover:bg-[#F5E9DD] border border-stone-200/70 rounded-2xl text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] transition-colors"
-                  >
-                    Generate Invoice Receipt
-                  </button>
-                </div>
-
-              </div>
-            ) : (
-              <div className="py-20 text-center text-[#7B3FA0]">
-                <p className="text-xs">No active ledger entry focused.</p>
-                <p className="text-[10px] mt-1">Select an order row from the grid ledger to parse deep metrics.</p>
-              </div>
-            )
-            )} {/* end viewMode === 'tickets' ? ... : ... */}
-
-          </div>
-
-        </section>
-
-      </> )} {/* end !loading && !loadError */}
+          </>)} {/* end !loading && !loadError */}
       </main>
 
       {/* --- FLOATING COMMAND HUD SYSTEM --- */}
       <div className="fixed bottom-8 right-8 z-40 flex items-center gap-3 bg-white/70 backdrop-blur-xl border border-white/50 p-2.5 rounded-2xl shadow-[0_12px_32px_rgba(90,30,126,0.06)] pointer-events-auto">
-        
+
         {/* Bulk action indicator */}
         {selectedRowIds.length > 0 && (
-          <button 
+          <button
             onClick={() => {
               sysSound.playTap();
               setBulkRefundOpen(true);
@@ -1749,7 +1736,7 @@ export default function OrdersManagement() {
           </button>
         )}
 
-        <button 
+        <button
           onClick={handleExportCSV}
           disabled={exporting}
           className="p-3 bg-white hover:bg-[#F5E9DD] text-[#2D004D] rounded-xl transition-colors border border-stone-200/50 flex items-center justify-center"
@@ -1762,14 +1749,13 @@ export default function OrdersManagement() {
           )}
         </button>
 
-        <button 
+        <button
           onClick={handleTriggerScan}
           disabled={isScanning}
-          className={`flex items-center gap-2 px-5 py-2.5 font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all duration-300 border ${
-            isScanning 
-              ? 'bg-[#D8BFE3] text-[#2D004D] border-[#B886D0]' 
+          className={`flex items-center gap-2 px-5 py-2.5 font-extrabold uppercase tracking-widest text-[9px] rounded-xl transition-all duration-300 border ${isScanning
+              ? 'bg-[#D8BFE3] text-[#2D004D] border-[#B886D0]'
               : 'bg-[#2D004D] text-white hover:bg-[#7B3FA0] border-[#2D004D]'
-          }`}
+            }`}
           onMouseMove={handleMagneticMove}
           onMouseLeave={handleMagneticLeave}
         >
@@ -1782,22 +1768,22 @@ export default function OrdersManagement() {
       {/* --- MODAL 1: GLASSMORPHIC INVOICE DIALOG --- */}
       <AnimatePresence>
         {invoiceOrder && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 w-full h-full bg-[#2D004D]/30 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden"
             style={{ zIndex: 1000 }}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               className="bg-white rounded-3xl p-8 max-w-md w-full border border-stone-200/50 shadow-2xl relative"
             >
-              
+
               {/* Close Button */}
-              <button 
+              <button
                 onClick={() => {
                   sysSound.playTap();
                   setInvoiceOrder(null);
@@ -1814,7 +1800,7 @@ export default function OrdersManagement() {
 
               {/* Invoice Core Details */}
               <div className="flex flex-col gap-6 font-sans">
-                
+
                 <div className="flex justify-between text-xs">
                   <div className="flex flex-col">
                     <span className="text-[#7B3FA0]">INVOICE TO</span>
@@ -1833,7 +1819,7 @@ export default function OrdersManagement() {
                 {/* Table details */}
                 <div className="flex flex-col gap-3">
                   <span className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Purchased Node</span>
-                  
+
                   <div className="flex justify-between items-center bg-stone-50 p-4 rounded-2xl border border-stone-200/30">
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-[#2D004D]">{getProductName(invoiceOrder)}</span>
@@ -1848,7 +1834,7 @@ export default function OrdersManagement() {
 
                 {/* Calculation */}
                 <div className="flex flex-col gap-2.5 text-xs text-[#7B3FA0]">
-                  
+
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span className="font-bold text-[#2D004D]">₹{getOrderPrice(invoiceOrder).toFixed(2)}</span>
@@ -1875,7 +1861,7 @@ export default function OrdersManagement() {
 
                 {/* Action buttons */}
                 <div className="flex gap-3.5 mt-2">
-                  <button 
+                  <button
                     onClick={() => {
                       sysSound.playTap();
                       triggerNotification("Invoice print instruction sent");
@@ -1885,7 +1871,7 @@ export default function OrdersManagement() {
                   >
                     Print PDF
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       sysSound.playSuccess();
                       setInvoiceOrder(null);
@@ -1906,20 +1892,20 @@ export default function OrdersManagement() {
       {/* --- MODAL 2: BULK REFUND WARNING MODAL --- */}
       <AnimatePresence>
         {bulkRefundOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 w-full h-full bg-[#2D004D]/30 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden"
             style={{ zIndex: 1000 }}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               className="bg-white rounded-3xl p-8 max-w-sm w-full border border-stone-200/50 shadow-2xl relative"
             >
-              
+
               <div className="text-center flex flex-col items-center">
                 <div className="w-12 h-12 rounded-full bg-[#D8BFE3] text-[#FF8597] flex items-center justify-center mb-4">
                   <Icon name="AlertTriangle" size={20} />
@@ -1930,7 +1916,7 @@ export default function OrdersManagement() {
                 </p>
 
                 <div className="flex gap-3.5 w-full">
-                  <button 
+                  <button
                     onClick={() => {
                       sysSound.playTap();
                       setBulkRefundOpen(false);
@@ -1939,7 +1925,7 @@ export default function OrdersManagement() {
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={handleBulkRefund}
                     className="flex-1 py-3 bg-[#FF8597] hover:bg-[#ea6377] text-white rounded-2xl text-[10px] font-extrabold uppercase tracking-widest transition-colors"
                   >
