@@ -51,6 +51,59 @@ def resolve_media_url(url: str, category: str = None) -> Optional[str]:
 def resolve_products_media(products, db):
     return ProductService.resolve_products_media(products, db)
 
+
+@router.get("/media/{file_path:path}")
+def serve_product_media(file_path: str, db: Session = Depends(get_db)):
+    """
+    Public proxy endpoint to serve public product media (previews, thumbnails, videos)
+    from B2 or local storage. Prevents access to private/ folder.
+    """
+    # Prevent directory traversal or accessing private assets
+    clean_path = file_path.replace("\\", "/").strip("/")
+    if clean_path.startswith("private") or "private/" in clean_path:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access to private product assets is restricted."
+        )
+
+    # Determine active provider storage scheme
+    has_b2 = storage_service.b2_provider.is_available()
+    if has_b2:
+        storage_path = f"b2://{storage_service.b2_provider.bucket_name}/{clean_path}"
+    else:
+        storage_path = f"local://uploads/{clean_path}"
+
+    if not storage_service.exists(storage_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Media file not found."
+        )
+
+    # Determine content type based on file extension
+    import mimetypes
+    content_type, _ = mimetypes.guess_type(clean_path)
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    # Stream the file
+    try:
+        stream = storage_service.get_stream(storage_path)
+    except Exception as e:
+        print(f"[MediaProxyError] Stream error for path {storage_path}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving media file from storage."
+        )
+
+    return StreamingResponse(
+        stream,
+        media_type=content_type,
+        headers={
+            "Cache-Control": "public, max-age=86400"
+        }
+    )
+
+
 # -- Public read endpoints (no auth) ------------------------------------------
 
 @router.get("/", response_model=List[ProductResponse])
@@ -513,7 +566,26 @@ def download_product_file(
     # Increment download count on actual file download
     product.downloads = (product.downloads or 0) + 1
 
-    # Log download activity in SQLite!
+    # Record permanent ProductDownloadEvent in PostgreSQL
+    try:
+        from app.models.product_download_event import ProductDownloadEvent
+        order_id_val = owned.order_id if owned else 0
+        if not order_id_val:
+            first_item = db.query(OrderItem).filter(OrderItem.product_id == product_id).first()
+            if first_item:
+                order_id_val = first_item.order_id
+        download_event = ProductDownloadEvent(
+            user_id=user_id,
+            order_id=order_id_val or 0,
+            product_id=product_id,
+            downloaded_at=datetime.utcnow(),
+            created_at=datetime.utcnow()
+        )
+        db.add(download_event)
+    except Exception as dl_evt_err:
+        print(f"[DownloadEvent] Warning: Failed to record download event for product {product_id}: {dl_evt_err}")
+
+    # Log download activity
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
@@ -549,6 +621,150 @@ def download_product_file(
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+
+@router.get("/{product_id}/preview-stream")
+def preview_product_stream(
+    product_id: int,
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Secure online product preview proxy.
+    Verifies ownership and stream authorization but DOES NOT write a download event,
+    DOES NOT mark OrderItem as downloaded, and returns Content-Disposition: inline.
+    """
+    try:
+        user_id = verify_download_token(token, product_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        
+    from app.utils.db_sync import get_product_by_id
+    product = get_product_by_id(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
+
+    owned = db.query(OrderItem).join(Order).filter(
+        Order.user_id == user_id,
+        OrderItem.product_id == product_id,
+        Order.status == "completed"
+    ).first()
+
+    is_owner = (str(product.vendor_id) == str(user_id)) or (product.seller == user.name)
+    is_admin = (user.role == "admin")
+
+    if not owned and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to preview this product."
+        )
+
+    storage_path = product.storage_path or product.file_url
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    
+    if not storage_path or not (has_b2 or has_local):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product file is currently unavailable for preview."
+        )
+
+    import os
+    filename = f"preview-{product_id}"
+    if product.file_url:
+        filename = os.path.basename(product.file_url.split("?")[0])
+
+    content_type = product.content_type
+    if not content_type:
+        ext = os.path.splitext(filename)[1].lower()
+        if ext == ".pdf":
+            content_type = "application/pdf"
+        elif ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+            content_type = f"image/{ext.replace('.', '').replace('jpg', 'jpeg')}"
+        elif ext in (".mp4", ".webm"):
+            content_type = f"video/{ext.replace('.', '')}"
+        elif ext in (".mp3", ".wav", ".ogg"):
+            content_type = f"audio/{ext.replace('.', '')}"
+        elif ext in (".txt", ".html", ".css", ".js", ".json"):
+            content_type = "text/plain"
+        else:
+            content_type = "application/octet-stream"
+
+    try:
+        stream = storage_service.get_stream(storage_path)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[PreviewError] Stream error for path {storage_path}: {e}")
+        raise HTTPException(status_code=404, detail="Product file is currently missing or unavailable from storage.")
+
+    return StreamingResponse(
+        stream,
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f"inline; filename={filename}"
+        }
+    )
+
+
+@router.get("/{product_id}/refund-eligibility")
+def get_refund_eligibility(
+    product_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Check if current user is eligible for refund on a given product.
+    Evaluates backend PostgreSQL download events.
+    """
+    from app.models.product_download_event import ProductDownloadEvent
+    
+    owned = db.query(OrderItem).join(Order).filter(
+        Order.user_id == current_user.id,
+        OrderItem.product_id == product_id,
+        Order.status == "completed"
+    ).first()
+    
+    if not owned:
+        return {
+            "eligible": False,
+            "status": "not_purchased",
+            "reason": "Product has not been purchased by this user.",
+            "download_count": 0,
+            "first_downloaded_at": None
+        }
+
+    download_events = db.query(ProductDownloadEvent).filter(
+        ProductDownloadEvent.user_id == current_user.id,
+        ProductDownloadEvent.product_id == product_id
+    ).order_by(ProductDownloadEvent.downloaded_at.asc()).all()
+
+    download_count = len(download_events)
+    first_downloaded_at = download_events[0].downloaded_at.isoformat() if download_events else None
+
+    # Fallback to OrderItem.downloaded if download_events table is empty for legacy downloads
+    is_downloaded = download_count > 0 or owned.downloaded
+
+    if not is_downloaded:
+        return {
+            "eligible": True,
+            "status": "eligible",
+            "reason": "Product has been purchased and previewed, but never downloaded to device.",
+            "download_count": 0,
+            "first_downloaded_at": None
+        }
+    else:
+        return {
+            "eligible": False,
+            "status": "ineligible_downloaded",
+            "reason": "Product file has been downloaded to device. Refund requires admin review.",
+            "download_count": max(download_count, 1 if owned.downloaded else 0),
+            "first_downloaded_at": first_downloaded_at or (owned.order.created_at.isoformat() if owned.order else None)
+        }
 
 
 

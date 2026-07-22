@@ -34,6 +34,7 @@ const CATEGORY_ICONS = {
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
 function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleDownload = async () => {
     if (state !== 'idle') return;
@@ -165,23 +166,227 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
   const c = configs[state] || configs.idle;
 
   return (
-    <button
-      onClick={handleDownload}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: '7px',
-        padding: '9px 18px', borderRadius: '12px',
-        background: c.bg, color: c.color, border: c.border,
-        fontSize: '0.75rem', fontWeight: 700,
-        fontFamily: 'var(--font-sans)', cursor: 'pointer',
-        outline: 'none', transition: 'all 0.3s ease',
-        transform: state === 'done' ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: state === 'done' ? '0 4px 16px rgba(61,184,119,0.35)' : '0 4px 14px rgba(45,30,24,0.20)',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {c.icon}
-      {c.label}
-    </button>
+    <>
+      <button
+        onClick={() => setShowConfirmModal(true)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          padding: '9px 18px', borderRadius: '12px',
+          background: c.bg, color: c.color, border: c.border,
+          fontSize: '0.75rem', fontWeight: 700,
+          fontFamily: 'var(--font-sans)', cursor: 'pointer',
+          outline: 'none', transition: 'all 0.3s ease',
+          transform: state === 'done' ? 'scale(1.02)' : 'scale(1)',
+          boxShadow: state === 'done' ? '0 4px 16px rgba(61,184,119,0.35)' : '0 4px 14px rgba(45,30,24,0.20)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {c.icon}
+        {c.label}
+      </button>
+
+      {/* Pre-Download Confirmation Modal */}
+      {showConfirmModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#FFFDF9', borderRadius: '20px', padding: '24px 28px', maxWidth: '460px', width: '100%',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid rgba(78,59,49,0.15)',
+            animation: 'dl-fadein 0.25s ease-out'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ padding: '8px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', color: 'var(--color-espresso)' }}>
+                <Shield size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase' }}>
+                  ✦ Lumora Digital Vault
+                </span>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                  Confirm Product Download
+                </h3>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', lineHeight: 1.55, marginBottom: '20px', background: 'rgba(78,59,49,0.03)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(78,59,49,0.06)' }}>
+              You are about to download <strong>{productName}</strong> to your device.<br/><br/>
+              After the product is downloaded, the purchase may no longer qualify for a standard refund under Lumora's digital-product refund policy, except where applicable.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                style={{
+                  padding: '9px 18px', borderRadius: '10px', background: 'rgba(78,59,49,0.08)',
+                  border: 'none', color: 'var(--color-espresso)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowConfirmModal(false); handleDownload(); }}
+                style={{
+                  padding: '9px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)',
+                  border: 'none', color: '#FFFDF9', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(45,30,24,0.2)'
+                }}
+              >
+                Download Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+/* ─── PREVIEW BUTTON COMPONENT ───────────────────────────────── */
+function PreviewButton({ productId, productName }) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  const handleOpenPreview = async () => {
+    setIsPreviewOpen(true);
+    setLoading(true);
+    setErrorMsg(null);
+    setPreviewUrl(null);
+
+    const numericId = parseInt(productId, 10);
+    if (isNaN(numericId)) {
+      setErrorMsg('Invalid product ID');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await backendFetch(`/products/${numericId}/download`);
+      if (res?.download_available === false) {
+        setErrorMsg('The creator has not uploaded a previewable file for this product yet.');
+        setLoading(false);
+        return;
+      }
+
+      if (res && res.download_url) {
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
+        const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
+        const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
+        setPreviewUrl(fullUrl);
+      } else {
+        setErrorMsg('Could not resolve secure preview link');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to authorize preview session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleOpenPreview}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          padding: '8px 14px', borderRadius: '12px',
+          background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)',
+          border: '1px solid rgba(78,59,49,0.12)',
+          fontSize: '0.75rem', fontWeight: 700,
+          cursor: 'pointer', whiteSpace: 'nowrap',
+        }}
+      >
+        <BookOpen size={13} />
+        Preview
+      </button>
+
+      {isPreviewOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '24px'
+        }}>
+          <div style={{
+            background: '#FFFDF9', borderRadius: '24px', width: '90%', maxWidth: '900px', height: '82vh',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.4)',
+            animation: 'dl-fadein 0.3s ease-out'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '16px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'rgba(255,255,255,0.85)'
+            }}>
+              <div>
+                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  ✦ Lumora Web Viewer
+                </span>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                  {productName}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                style={{
+                  background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
+                  width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: 'var(--color-espresso)'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Viewer Content */}
+            <div style={{ flex: 1, position: 'relative', background: '#F8F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {loading && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-mocha)', fontSize: '0.85rem' }}>
+                  <Clock size={16} style={{ animation: 'spin 1.5s linear infinite' }} />
+                  Authorizing secure online preview stream...
+                </div>
+              )}
+
+              {errorMsg && (
+                <div style={{ padding: '32px', textAlign: 'center', color: '#DC2626', maxWidth: '400px' }}>
+                  <AlertCircle size={36} style={{ margin: '0 auto 12px' }} />
+                  <p style={{ fontWeight: 600, fontSize: '0.88rem', lineHeight: 1.5 }}>{errorMsg}</p>
+                </div>
+              )}
+
+              {previewUrl && !loading && (
+                <iframe
+                  src={previewUrl}
+                  title={`Preview ${productName}`}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '12px 24px', background: 'rgba(78,59,49,0.04)', borderTop: '1px solid rgba(78,59,49,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-mocha)'
+            }}>
+              <span>🛡️ Online preview mode — does NOT count as a device download.</span>
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -862,7 +1067,10 @@ function VaultCard({ product, isHovered, onHover }) {
               </span>
             </div>
           ) : (
-            <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <PreviewButton productId={product.id} productName={product.name} />
+              <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+            </div>
           )}
         </div>
       </div>

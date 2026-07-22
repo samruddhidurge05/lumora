@@ -243,6 +243,8 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS refund_deduction FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS approved_at      TIMESTAMP",
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS paid_at          TIMESTAMP",
+            # product_download_events table creation for PostgreSQL
+            "CREATE TABLE IF NOT EXISTS product_download_events (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), downloaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ip_address VARCHAR(64), user_agent VARCHAR(512), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
         ]
 
         
@@ -262,6 +264,7 @@ def _run_schema_migrations() -> None:
             "SELECT setval(pg_get_serial_sequence('cart_items', 'id'), COALESCE((SELECT MAX(id) FROM cart_items), 1))",
             "SELECT setval(pg_get_serial_sequence('audit_logs', 'id'), COALESCE((SELECT MAX(id) FROM audit_logs), 1))",
             "SELECT setval(pg_get_serial_sequence('product_versions', 'id'), COALESCE((SELECT MAX(id) FROM product_versions), 1))",
+            "SELECT setval(pg_get_serial_sequence('product_download_events', 'id'), COALESCE((SELECT MAX(id) FROM product_download_events), 1))",
         ]
 
         try:

@@ -464,10 +464,11 @@ class ProductService:
         if not url:
             return False
         
-        # Check scheme first
+        # Check scheme first - allow http, https, b2, gs, and relative/local paths
         low_url = url.lower()
         if not (low_url.startswith("http://") or low_url.startswith("https://") or 
-                low_url.startswith("b2://") or low_url.startswith("gs://")):
+                low_url.startswith("b2://") or low_url.startswith("gs://") or
+                low_url.startswith("/") or "/uploads/" in low_url or "media/" in low_url):
             return False
             
         # Parse query params out of path for extension check
@@ -528,52 +529,17 @@ class ProductService:
             # PRIVATE assets must NEVER be converted to public direct URLs!
             if file_path.startswith("private/"):
                 return url
-                
-            # Construct base URL without authorization token
-            base_url = f"{download_domain}/file/{bucket_name}/{file_path}"
-            
-            # Derive prefix dynamically from file path
-            prefix = "public/"
-            if "/" in file_path:
-                prefix = file_path.split("/", 1)[0] + "/"
-                
-            try:
-                pub_token = b2.get_public_download_token(prefix)
-            except Exception:
-                pub_token = None
-                
-            if pub_token:
-                # Safely parse and insert/overwrite Authorization parameter
-                try:
-                    parsed_url = urlparse(url)
-                    query_params = dict(parse_qsl(parsed_url.query))
-                    query_params["Authorization"] = pub_token
-                    
-                    # Reassemble with the new/updated query parameter
-                    new_query = urlencode(query_params)
-                    base_parsed = urlparse(base_url)
-                    reassembled = base_parsed._replace(query=new_query)
-                    return urlunparse(reassembled)
-                except Exception:
-                    # Graceful fallback
-                    return f"{base_url}?Authorization={pub_token}"
-            else:
-                return base_url
+            return f"/api/products/media/{file_path}"
                 
         # Fallback to local files resolution
         url_lower = url.lower()
         if "/uploads/" in url_lower:
+            # Route local uploads through the same media proxy for consistency
             try:
-                # Local uploads path resolution
-                # Ensure the file exists
-                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
                 path_part = url.split("/uploads/", 1)[1]
-                relative_filepath = os.path.join("uploads", path_part)
-                absolute_filepath = os.path.abspath(os.path.join(base_dir, relative_filepath))
-                if not os.path.exists(absolute_filepath):
-                    return None
+                return f"/api/products/media/{path_part}"
             except Exception:
-                pass
+                return url
                 
         return url
 

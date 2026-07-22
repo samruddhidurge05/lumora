@@ -9,13 +9,26 @@ def sync_product_to_firestore(product):
     if not firebase_connected or db is None:
         return
     try:
-        tags = product.tags if isinstance(product.tags, list) else []
-        highlights = product.highlights if isinstance(product.highlights, list) else []
+        # Resolve media urls using ProductService helper before syncing to Firestore
+        from app.services.product_service import ProductService
+        from app.db.session import SessionLocal
+        temp_db = SessionLocal()
+        try:
+            # resolve_product_media expunges the product and returns a detached copy
+            # so we don't pollute the active db session
+            resolved_product = ProductService.resolve_product_media(product, temp_db)
+        except Exception:
+            resolved_product = product
+        finally:
+            temp_db.close()
+
+        tags = resolved_product.tags if isinstance(resolved_product.tags, list) else []
+        highlights = resolved_product.highlights if isinstance(resolved_product.highlights, list) else []
         
         # Resolve thumbnail: prefer real non-Unsplash URL, fall back to image_urls[0],
         # then preview_images[0]. Never store Unsplash placeholders in Firestore.
-        image_urls_list = product.image_urls if isinstance(product.image_urls, list) else []
-        preview_images_list = product.preview_images if isinstance(product.preview_images, list) else []
+        image_urls_list = resolved_product.image_urls if isinstance(resolved_product.image_urls, list) else []
+        preview_images_list = resolved_product.preview_images if isinstance(resolved_product.preview_images, list) else []
 
         def _best_image(primary):
             if primary and "unsplash.com" not in primary:
@@ -26,71 +39,72 @@ def sync_product_to_firestore(product):
                 return preview_images_list[0]
             return None
 
-        doc_ref = db.collection("products").document(str(product.id))
+        doc_ref = db.collection("products").document(str(resolved_product.id))
         doc_ref.set({
-            "title": product.title,
-            "name": product.title,
-            "description": product.description or "",
-            "shortDesc": product.short_desc or (product.description[:150] if product.description else "Premium digital assets"),
-            "short_desc": product.short_desc or "",
-            "category": product.category or "General",
-            "price": float(product.price or 0.0),
-            "rating": float(product.rating or 5.0),
-            "reviews": int(product.reviews or 0),
-            "review_count": int(product.reviews or 0),
-            "downloads": int(product.downloads or 0),
+            "title": resolved_product.title,
+            "name": resolved_product.title,
+            "description": resolved_product.description or "",
+            "shortDesc": resolved_product.short_desc or (resolved_product.description[:150] if resolved_product.description else "Premium digital assets"),
+            "short_desc": resolved_product.short_desc or "",
+            "category": resolved_product.category or "General",
+            "price": float(resolved_product.price or 0.0),
+            "rating": float(resolved_product.rating or 5.0),
+            "reviews": int(resolved_product.reviews or 0),
+            "review_count": int(resolved_product.reviews or 0),
+            "downloads": int(resolved_product.downloads or 0),
             # -- Image URLs ------------------------------------------------------
-            "thumbnail": _best_image(product.thumbnail),
-            "preview": _best_image(product.preview),
-            "imageUrl": _best_image(product.thumbnail),   # alias used by some customer views
-            "creatorName": (product.seller or "Lumora").strip() or "Lumora",
+            "thumbnail": _best_image(resolved_product.thumbnail),
+            "preview": _best_image(resolved_product.preview),
+            "imageUrl": _best_image(resolved_product.thumbnail),   # alias used by some customer views
+            "creatorName": (resolved_product.seller or "Lumora").strip() or "Lumora",
             "creatorAvatar": (
-                product.creator_avatar
-                if getattr(product, "creator_avatar", None) and "unsplash.com" not in product.creator_avatar
+                resolved_product.creator_avatar
+                if getattr(resolved_product, "creator_avatar", None) and "unsplash.com" not in resolved_product.creator_avatar
                 else None
             ),
-            "featured": bool(product.featured),
-            "isFeatured": bool(product.featured),
-            "status": product.status or "published",
+            "featured": bool(resolved_product.featured),
+            "isFeatured": bool(resolved_product.featured),
+            "status": resolved_product.status or "published",
             "tags": tags,
             # -- Features & specs (single occurrence of each key) ----------------
             "highlights": highlights,
-            "features": product.features if isinstance(product.features, list) else [],
-            "systemRequirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
-            "system_requirements": product.system_requirements if isinstance(product.system_requirements, list) else [],
-            "whatYouGet": product.what_you_get if isinstance(product.what_you_get, list) else [],
-            "what_you_get": product.what_you_get if isinstance(product.what_you_get, list) else [],
-            "installationGuide": product.installation_guide or "",
-            "installation_guide": product.installation_guide or "",
+            "features": resolved_product.features if isinstance(resolved_product.features, list) else [],
+            "systemRequirements": resolved_product.system_requirements if isinstance(resolved_product.system_requirements, list) else [],
+            "system_requirements": resolved_product.system_requirements if isinstance(resolved_product.system_requirements, list) else [],
+            "whatYouGet": resolved_product.what_you_get if isinstance(resolved_product.what_you_get, list) else [],
+            "what_you_get": resolved_product.what_you_get if isinstance(resolved_product.what_you_get, list) else [],
+            "installationGuide": resolved_product.installation_guide or "",
+            "installation_guide": resolved_product.installation_guide or "",
             # -- Metadata --------------------------------------------------------
-            "version": product.version or "v1.0.0",
-            "fileSize": product.file_size or "48 MB",
-            "createdAt": product.created_at.isoformat() + "Z" if product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
-            "updatedAt": (product.updated_at.isoformat() + "Z" if product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
-            "vendor_id": str(product.vendor_id) if product.vendor_id else None,
-            "subcategory": product.subcategory or "",
-            "discount": float(product.discount or 0.0),
+            "version": resolved_product.version or "v1.0.0",
+            "fileSize": resolved_product.file_size or "48 MB",
+            "createdAt": resolved_product.created_at.isoformat() + "Z" if resolved_product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
+            "updatedAt": (resolved_product.updated_at.isoformat() + "Z" if resolved_product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
+            "vendor_id": str(resolved_product.vendor_id) if resolved_product.vendor_id else None,
+            "subcategory": resolved_product.subcategory or "",
+            "discount": float(resolved_product.discount or 0.0),
             # -- Gallery arrays --------------------------------------------------
             "image_urls": image_urls_list,
             "previewImages": image_urls_list if image_urls_list else preview_images_list,
             "preview_images": preview_images_list,
-            "previewVideo": product.preview_video or "",
+            "previewVideo": resolved_product.preview_video or "",
             # -- SEO -------------------------------------------------------------
-            "seoTitle": product.seo_title or "",
-            "seoDescription": product.seo_description or "",
-            "visibility": product.visibility or "public",
-            "license": product.license or "Personal Use",
+            "seoTitle": resolved_product.seo_title or "",
+            "seoDescription": resolved_product.seo_description or "",
+            "visibility": resolved_product.visibility or "public",
+            "license": resolved_product.license or "Personal Use",
             # -- Affiliate -------------------------------------------------------
-            "affiliate_enabled": bool(product.affiliate_enabled),
-            "commission_type": product.commission_type or "percentage",
-            "commission_value": float(product.commission_value or 0.0),
-            # -- Download URLs - both naming conventions for full compatibility --
-            "file_url": product.file_url or None,
-            "fileUrl": product.file_url or None,
+            "affiliate_enabled": bool(resolved_product.affiliate_enabled),
+            "commission_type": resolved_product.commission_type or "percentage",
+            "commission_value": float(resolved_product.commission_value or 0.0),
+            "pcloud_download_link": None,
+            "pcloudDownloadLink": None,
+            "file_url": resolved_product.file_url or None,
+            "fileUrl": resolved_product.file_url or None,
             # -- Integer primary key ---------------------------------------------
-            "product_id": int(product.id),
+            "product_id": int(resolved_product.id),
         }, merge=True)
-        _logger.info("[firestore-sync] Product %s synced to Firestore (status=%s)", product.id, product.status)
+        _logger.info("[firestore-sync] Product %s synced to Firestore (status=%s)", resolved_product.id, resolved_product.status)
     except Exception as e:
         _logger.error("[firestore-sync] ERROR syncing product %s to Firestore: %s", product.id, e, exc_info=True)
         # Do NOT re-raise - SQLite is the canonical source of truth.

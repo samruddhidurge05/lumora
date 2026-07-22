@@ -426,27 +426,46 @@ class RefundService:
         last_download_at = None
         
         if order:
-            is_downloaded = any(item.downloaded for item in order.items)
-            
-            from app.models.user_activity import UserActivity
-            download_logs = db.query(UserActivity).filter(
-                UserActivity.user_id == req.user_id,
-                UserActivity.activity_type == "download"
-            ).all()
-            
-            for item in order.items:
-                matching_logs = [
-                    log for log in download_logs 
-                    if f"(ID {item.product_id})" in (log.details or "") 
-                    or f"ID {item.product_id}" in (log.details or "")
-                ]
-                if matching_logs:
-                    download_count += len(matching_logs)
-                    sorted_logs = sorted(matching_logs, key=lambda x: x.created_at or datetime.min)
-                    if not first_download_at or sorted_logs[0].created_at < first_download_at:
-                        first_download_at = sorted_logs[0].created_at
-                    if not last_download_at or sorted_logs[-1].created_at > last_download_at:
-                        last_download_at = sorted_logs[-1].created_at
+            # Primary: ProductDownloadEvent records
+            try:
+                from app.models.product_download_event import ProductDownloadEvent
+                prod_ids = [item.product_id for item in order.items]
+                dl_events = db.query(ProductDownloadEvent).filter(
+                    ProductDownloadEvent.user_id == req.user_id,
+                    ProductDownloadEvent.product_id.in_(prod_ids)
+                ).order_by(ProductDownloadEvent.downloaded_at.asc()).all()
+
+                if dl_events:
+                    download_count = len(dl_events)
+                    first_download_at = dl_events[0].downloaded_at
+                    last_download_at = dl_events[-1].downloaded_at
+                    is_downloaded = True
+            except Exception as dl_err:
+                print(f"[refund-service] ProductDownloadEvent query warning: {dl_err}")
+
+            # Secondary fallback: OrderItem.downloaded & UserActivity
+            if not is_downloaded:
+                is_downloaded = any(item.downloaded for item in order.items)
+                
+                from app.models.user_activity import UserActivity
+                download_logs = db.query(UserActivity).filter(
+                    UserActivity.user_id == req.user_id,
+                    UserActivity.activity_type == "download"
+                ).all()
+                
+                for item in order.items:
+                    matching_logs = [
+                        log for log in download_logs 
+                        if f"(ID {item.product_id})" in (log.details or "") 
+                        or f"ID {item.product_id}" in (log.details or "")
+                    ]
+                    if matching_logs:
+                        download_count += len(matching_logs)
+                        sorted_logs = sorted(matching_logs, key=lambda x: x.created_at or datetime.min)
+                        if not first_download_at or sorted_logs[0].created_at < first_download_at:
+                            first_download_at = sorted_logs[0].created_at
+                        if not last_download_at or sorted_logs[-1].created_at > last_download_at:
+                            last_download_at = sorted_logs[-1].created_at
         
         if is_downloaded and not first_download_at and order:
             first_download_at = order.created_at
