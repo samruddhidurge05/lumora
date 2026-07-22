@@ -754,6 +754,7 @@ function VaultCard({ product, isHovered, onHover }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewType, setPreviewType] = useState('pdf'); // 'pdf' | 'package'
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const cardRef = useRef(null);
@@ -784,6 +785,10 @@ function VaultCard({ product, isHovered, onHover }) {
       return;
     }
 
+    // Determine if product is a PDF document or a ZIP package archive
+    const nameLower = (product.name || '').toLowerCase();
+    const isPdfName = nameLower.endsWith('.pdf') || nameLower.includes('pdf');
+
     try {
       const res = await backendFetch(`/products/${numericId}/download`);
       if (res?.download_available === false) {
@@ -792,14 +797,26 @@ function VaultCard({ product, isHovered, onHover }) {
         return;
       }
 
-      if (res && res.download_url) {
-        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
-        const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
-        const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
-        setPreviewUrl(fullUrl);
+      // If backend metadata indicates package or filename ends in zip/rar/7z
+      const dlUrl = (res?.download_url || '').toLowerCase();
+      const isZipArchive = dlUrl.includes('.zip') || dlUrl.includes('.rar') || dlUrl.includes('.7z') || nameLower.includes('zip') || nameLower.includes('pack');
+
+      if (isZipArchive && !isPdfName) {
+        // ZIP Package Archive: Use Online Package Inspection Mode without iframe ZIP stream
+        setPreviewType('package');
+        setPreviewUrl(null);
       } else {
-        setErrorMsg('Could not resolve secure preview link');
+        // PDF Document: Stream online inside document viewer iframe
+        setPreviewType('pdf');
+        if (res && res.download_url) {
+          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+          const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
+          const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
+          const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
+          setPreviewUrl(fullUrl);
+        } else {
+          setPreviewType('package');
+        }
       }
     } catch (err) {
       setErrorMsg('Failed to authorize preview session');
@@ -961,7 +978,7 @@ function VaultCard({ product, isHovered, onHover }) {
         </div>
       </div>
 
-      {/* Online PDF Viewer Modal — Rendered at Body Portal Root */}
+      {/* Online PDF / Asset Viewer Modal — Rendered at Body Portal Root */}
       {isPreviewOpen && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1022,7 +1039,7 @@ function VaultCard({ product, isHovered, onHover }) {
               {loading && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', color: '#FFFDF9', fontSize: '0.92rem' }}>
                   <Clock size={28} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
-                  <span style={{ fontWeight: 600, letterSpacing: '0.02em' }}>Loading secure online PDF viewer...</span>
+                  <span style={{ fontWeight: 600, letterSpacing: '0.02em' }}>Authorizing online asset preview...</span>
                 </div>
               )}
 
@@ -1034,7 +1051,52 @@ function VaultCard({ product, isHovered, onHover }) {
                 </div>
               )}
 
-              {previewUrl && !loading && (
+              {!loading && !errorMsg && previewType === 'package' && (
+                <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#FAF7F2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '680px', width: '100%', boxShadow: '0 20px 60px rgba(78,59,49,0.12)', border: '1px solid rgba(78,59,49,0.1)' }}>
+                    
+                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '28px' }}>
+                      <img src={product.thumbnail} alt={product.name} style={{ width: '130px', height: '130px', borderRadius: '18px', objectFit: 'cover', boxShadow: '0 10px 30px rgba(0,0,0,0.14)' }} />
+                      <div>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          📦 Package Archive (.zip)
+                        </span>
+                        <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
+                          {product.name}
+                        </h3>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
+                          Category: <strong>{product.category}</strong> • Size: <strong>{product.fileSize}</strong> • Version: <strong>{product.version}</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '28px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                        <Shield size={20} style={{ color: '#3DB877' }} />
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#276749' }}>
+                          Online Inspection Mode Verified — Refund Eligibility Intact
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#2F855A', lineHeight: 1.6, margin: 0 }}>
+                        You are inspecting <strong>{product.name}</strong> online. This is a compressed ZIP package archive containing your digital files. Viewing this online inspection dashboard preserves your standard refund eligibility. To save the file package to your computer, laptop, or phone, click the <strong>Download Product</strong> button below.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <button
+                        onClick={() => setIsPreviewOpen(false)}
+                        style={{ padding: '11px 22px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
+                      >
+                        Close Preview
+                      </button>
+                      <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {!loading && !errorMsg && previewType === 'pdf' && previewUrl && (
                 <iframe
                   src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
                   title={`PDF Web Viewer ${product.name}`}
@@ -1050,7 +1112,7 @@ function VaultCard({ product, isHovered, onHover }) {
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Shield size={16} style={{ color: '#3DB877' }} />
-                <span><strong>Online Inspection Mode:</strong> Viewing this PDF online preserves your standard refund eligibility until you download the file to your computer device.</span>
+                <span><strong>Online Inspection Mode:</strong> Viewing this product online preserves your standard refund eligibility until you download the file to your computer device.</span>
               </span>
               <button
                 onClick={() => setIsPreviewOpen(false)}

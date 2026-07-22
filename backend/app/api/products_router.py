@@ -680,24 +680,35 @@ def preview_product_stream(
 
     storage_path_lower = (storage_path or "").lower()
     file_url_lower = (product.file_url or "").lower()
+    filename_lower = filename.lower()
+
+    # Block ZIP / RAR / 7Z binary archives from preview streaming to prevent Chromium auto-download
+    is_archive = any(ext in storage_path_lower or ext in file_url_lower or filename_lower.endswith(ext) for ext in (".zip", ".rar", ".7z", ".tar", ".gz"))
+    is_pdf_doc = ".pdf" in storage_path_lower or ".pdf" in file_url_lower or filename_lower.endswith(".pdf")
+
+    if is_archive and not is_pdf_doc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Package archive (.zip) assets cannot be streamed inside an inline viewer. Use online package inspection mode."
+        )
 
     content_type = product.content_type
     if not content_type or content_type in ("application/octet-stream", "application/zip"):
-        if filename.endswith(".pdf") or storage_path_lower.endswith(".pdf") or ".pdf" in file_url_lower:
+        if is_pdf_doc:
             content_type = "application/pdf"
-        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif")):
+        elif any(filename_lower.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif")):
             ext = os.path.splitext(filename)[1].lower()
             content_type = f"image/{ext.replace('.', '').replace('jpg', 'jpeg')}"
-        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp4", ".webm")):
+        elif any(filename_lower.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp4", ".webm")):
             ext = os.path.splitext(filename)[1].lower()
             content_type = f"video/{ext.replace('.', '')}"
-        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp3", ".wav", ".ogg")):
+        elif any(filename_lower.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp3", ".wav", ".ogg")):
             ext = os.path.splitext(filename)[1].lower()
             content_type = f"audio/{ext.replace('.', '')}"
-        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".txt", ".html", ".css", ".js", ".json")):
+        elif any(filename_lower.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".txt", ".html", ".css", ".js", ".json")):
             content_type = "text/plain"
         else:
-            content_type = "application/octet-stream"
+            content_type = "application/pdf" # Default to PDF stream format for document rendering
 
     try:
         stream = storage_service.get_stream(storage_path)
