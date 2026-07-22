@@ -273,8 +273,12 @@ function mapAdminProductToApi(uiForm) {
 
     // Affiliate settings
     affiliate_enabled: Boolean(uiForm.affiliate_enabled || false),
-    commission_type:   uiForm.commission_type  || 'percentage',
+    commission_type:   uiForm.commission_mode || uiForm.commission_type || 'percentage',
+    commission_mode:   uiForm.commission_mode || uiForm.commission_type || 'percentage',
     commission_value:  Number(uiForm.commission_value) || 0.0,
+    affiliate_cookie_days: Number(uiForm.affiliate_cookie_days) || 30,
+    affiliate_visibility: uiForm.affiliate_visibility || 'public',
+    affiliate_program_status: uiForm.affiliate_program_status || 'active',
 
     // ── Features & Specs (Section 5) ──────────────────────────────────────
     // keyFeatures comes from a textarea (one per line) — filter empty lines
