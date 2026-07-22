@@ -168,6 +168,10 @@ function SPARouter() {
 function AppContent() {
   const { isAccountDisabled, isPlatformPaused, user, userRole, logout } = useAuth();
   const { navigateTo } = useApp();
+
+  // Download popup state
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
+  const [popupData, setPopupData] = useState(null);
   
   // Synchronize and persist active authentication role across navigation
   useEffect(() => {
