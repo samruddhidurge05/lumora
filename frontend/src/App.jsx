@@ -169,10 +169,17 @@ function AppContent() {
   const { isAccountDisabled, isPlatformPaused, user, userRole, logout } = useAuth();
   const { navigateTo } = useApp();
   
-  // Download popup state
-  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
-  const [popupData, setPopupData] = useState(null);
-  
+  // Synchronize and persist active authentication role across navigation
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roleParam = urlParams.get('role');
+      if (roleParam && ['customer', 'affiliate', 'vendor', 'admin'].includes(roleParam)) {
+        sessionStorage.setItem('lumora_last_auth_role', roleParam);
+      }
+    } catch (_) {}
+  }, []);
+
   // Listen for purchase completion events
   useEffect(() => {
     const handlePurchaseComplete = (event) => {

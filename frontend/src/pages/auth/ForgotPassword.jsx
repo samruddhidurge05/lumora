@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './auth.css';
 import AuthBackground from '../../components/AuthBackground';
 import { useAuth } from '../../context/AuthContext';
@@ -29,6 +30,27 @@ const itemVariants = {
 };
 
 export default function ForgotPassword() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const urlRole = searchParams.get('role');
+  const storedRole = sessionStorage.getItem('lumora_last_auth_role') || localStorage.getItem('lumora_active_role');
+
+  let refRole = null;
+  try {
+    if (typeof document !== 'undefined' && document.referrer && document.referrer.includes('role=')) {
+      const match = document.referrer.match(/role=([a-z]+)/i);
+      if (match && match[1]) refRole = match[1].toLowerCase();
+    }
+  } catch (_) {}
+
+  const validRoles = ['customer', 'affiliate', 'vendor', 'admin'];
+  const activeRole = (urlRole && validRoles.includes(urlRole))
+    ? urlRole
+    : ((refRole && validRoles.includes(refRole))
+      ? refRole
+      : ((storedRole && validRoles.includes(storedRole)) ? storedRole : 'customer'));
+
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -169,14 +191,12 @@ export default function ForgotPassword() {
                   className="btn-cta"
                   type="button"
                   onClick={() => {
-                    setLinkSent(false);
-                    setEmail('');
-                    setStatus(null);
+                    navigate(`/auth/login?role=${activeRole}`);
                   }}
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.985 }}
                 >
-                  Back to Forgot Password
+                  Return to Sign In ({activeRole.charAt(0).toUpperCase() + activeRole.slice(1)})
                 </motion.button>
               </motion.div>
             )}
@@ -184,8 +204,8 @@ export default function ForgotPassword() {
 
           <motion.div className="signup-prompt" variants={itemVariants}>
             Remember your password?{' '}
-            <a href="/auth/login?role=customer" onClick={(e) => { e.preventDefault(); window.location.href = '/auth/login?role=customer'; }}>
-              Sign in →
+            <a href={`/auth/login?role=${activeRole}`} onClick={(e) => { e.preventDefault(); navigate(`/auth/login?role=${activeRole}`); }}>
+              Sign in ({activeRole.charAt(0).toUpperCase() + activeRole.slice(1)}) →
             </a>
           </motion.div>
         </motion.div>
