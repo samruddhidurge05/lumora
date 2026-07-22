@@ -238,7 +238,7 @@
   scrollbar-color: rgba(123, 63, 160, 0.22) transparent;
 }
 
-/* --- Form & Input Controls Enhancement (Strictly Scoped under .admin-main-content) --- */
+/* --- Form & Input Controls Enhancement (Scoped to Admin Views) --- */
 .admin-main-content input[type="text"],
 .admin-main-content input[type="email"],
 .admin-main-content input[type="password"],
@@ -246,21 +246,25 @@
 .admin-main-content input[type="search"],
 .admin-main-content input[type="date"],
 .admin-main-content textarea,
-.admin-main-content .glass-input {
-  background: var(--admin-ui-select-bg, rgba(255, 255, 255, 0.72)) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1.5px solid var(--admin-ui-select-border, rgba(196, 181, 253, 0.45)) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-  border-radius: var(--admin-radius-input) !important;
+.admin-main-content .glass-input,
+.admin-page-container input[type="text"],
+.admin-page-container input[type="search"],
+.admin-page-container .glass-input {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.5) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: var(--admin-radius-input, 12px) !important;
   padding: 10px 14px !important;
   font-size: 0.82rem !important;
+  font-weight: 600 !important;
   font-family: inherit !important;
   color: #2D004D !important;
   height: 42px !important;
   box-sizing: border-box !important;
-  box-shadow: 0 2px 8px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 10px rgba(90, 30, 126, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .admin-main-content input[type="text"]:focus,
@@ -270,62 +274,72 @@
 .admin-main-content input[type="search"]:focus,
 .admin-main-content input[type="date"]:focus,
 .admin-main-content textarea:focus,
-.admin-main-content .glass-input:focus {
+.admin-main-content .glass-input:focus,
+.admin-page-container input[type="text"]:focus,
+.admin-page-container input[type="search"]:focus {
   outline: none !important;
   border-color: #7B3FA0 !important;
-  background-color: rgba(255, 255, 255, 0.98) !important;
-  box-shadow: var(--admin-ui-focus-ring, 0 0 0 3px rgba(123, 63, 160, 0.18)), 0 4px 16px rgba(90, 30, 126, 0.08) !important;
+  background-color: #ffffff !important;
+  box-shadow: var(--admin-ui-focus-ring, 0 0 0 3.5px rgba(123, 63, 160, 0.22)), 0 6px 20px rgba(90, 30, 126, 0.1) !important;
 }
 
-/* --- Native Select Dropdowns Polish (SaaS Grade) --- */
-.admin-main-content select {
+/* --- Native Select Dropdowns Polish (SaaS Grade - Ultra Visual Impact) --- */
+.admin-main-content select,
+.admin-main-content select[class],
+.admin-page-container select,
+select.glass-input {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237B3FA0' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237B3FA0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
   background-position: right 14px center !important;
   background-repeat: no-repeat !important;
   background-size: 16px 16px !important;
-  padding-right: 38px !important;
+  padding-right: 40px !important;
   padding-left: 14px !important;
-  background-color: var(--admin-ui-select-bg, rgba(255, 255, 255, 0.78)) !important;
-  backdrop-filter: blur(14px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
-  border: 1.5px solid var(--admin-ui-select-border, rgba(196, 181, 253, 0.45)) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-  border-radius: var(--admin-radius-input) !important;
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.55) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: var(--admin-radius-input, 12px) !important;
   font-size: 0.82rem !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   letter-spacing: -0.01em !important;
   color: #2D004D !important;
   height: 42px !important;
   box-sizing: border-box !important;
   cursor: pointer !important;
-  box-shadow: 0 2px 8px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 3px 12px rgba(90, 30, 126, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.admin-main-content select:hover {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(123, 63, 160, 0.5) !important;
-  box-shadow: 0 4px 16px rgba(90, 30, 126, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-  transform: translateY(-1px) !important;
+.admin-main-content select:hover,
+.admin-main-content select[class]:hover,
+.admin-page-container select:hover {
+  background-color: #ffffff !important;
+  border-color: #7B3FA0 !important;
+  box-shadow: 0 6px 20px rgba(123, 63, 160, 0.16), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  transform: translateY(-1.5px) !important;
 }
 
-.admin-main-content select:focus {
+.admin-main-content select:focus,
+.admin-main-content select[class]:focus,
+.admin-page-container select:focus {
   outline: none !important;
   border-color: #7B3FA0 !important;
   background-color: #ffffff !important;
-  box-shadow: var(--admin-ui-focus-ring, 0 0 0 3px rgba(123, 63, 160, 0.18)), 0 6px 20px rgba(90, 30, 126, 0.12) !important;
+  box-shadow: var(--admin-ui-focus-ring, 0 0 0 3.5px rgba(123, 63, 160, 0.22)), 0 8px 24px rgba(90, 30, 126, 0.14) !important;
   transform: translateY(0) !important;
 }
 
-.admin-main-content select option {
+.admin-main-content select option,
+.admin-page-container select option {
   background-color: #ffffff !important;
   color: #2D004D !important;
-  padding: 10px 14px !important;
-  font-weight: 600 !important;
-  font-size: 0.82rem !important;
+  padding: 12px 16px !important;
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
 }
 
 .admin-main-content textarea {
@@ -345,8 +359,9 @@
 
 /* --- Action Buttons Enhancement --- */
 .admin-main-content button,
-.admin-main-content .btn-premium {
-  border-radius: var(--admin-radius-button) !important;
+.admin-main-content .btn-premium,
+.admin-page-container button {
+  border-radius: var(--admin-radius-button, 12px) !important;
   font-family: inherit !important;
   font-size: 0.82rem !important;
   font-weight: 700 !important;
@@ -366,22 +381,28 @@
 }
 
 /* Primary Action Button */
-.btn-admin-primary {
+.btn-admin-primary,
+.admin-main-content .btn-admin-primary,
+.admin-page-container .btn-admin-primary {
   background: linear-gradient(135deg, #7B3FA0 0%, #5A1E7E 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(90, 30, 126, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  letter-spacing: 0.01em !important;
+  box-shadow: 0 4px 18px rgba(90, 30, 126, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  letter-spacing: 0.02em !important;
   cursor: pointer !important;
 }
-.btn-admin-primary:hover {
+.btn-admin-primary:hover,
+.admin-main-content .btn-admin-primary:hover,
+.admin-page-container .btn-admin-primary:hover {
   background: linear-gradient(135deg, #8B4FAF 0%, #6A2E8E 100%) !important;
-  box-shadow: 0 8px 24px rgba(90, 30, 126, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 28px rgba(90, 30, 126, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
   transform: translateY(-2px) !important;
 }
-.btn-admin-primary:active {
-  transform: translateY(0) scale(0.98) !important;
-  box-shadow: 0 2px 8px rgba(90, 30, 126, 0.2) !important;
+.btn-admin-primary:active,
+.admin-main-content .btn-admin-primary:active,
+.admin-page-container .btn-admin-primary:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 2px 10px rgba(90, 30, 126, 0.25) !important;
 }
 .btn-admin-primary:disabled {
   background: #E9D5FF !important;
@@ -392,24 +413,31 @@
 }
 
 /* Secondary Action Button */
-.btn-admin-secondary {
-  border: 1.5px solid rgba(196, 181, 253, 0.45) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+.btn-admin-secondary,
+.admin-main-content .btn-admin-secondary,
+.admin-page-container .btn-admin-secondary {
+  border: 1.5px solid rgba(196, 181, 253, 0.5) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
   color: #2D004D !important;
-  box-shadow: 0 2px 8px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 2px 10px rgba(90, 30, 126, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   cursor: pointer !important;
 }
-.btn-admin-secondary:hover {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(123, 63, 160, 0.45) !important;
+.btn-admin-secondary:hover,
+.admin-main-content .btn-admin-secondary:hover,
+.admin-page-container .btn-admin-secondary:hover {
+  background: #ffffff !important;
+  border-color: #7B3FA0 !important;
+  color: #2D004D !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(90, 30, 126, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 6px 22px rgba(123, 63, 160, 0.14), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
 }
-.btn-admin-secondary:active {
-  transform: translateY(0) scale(0.98) !important;
+.btn-admin-secondary:active,
+.admin-main-content .btn-admin-secondary:active,
+.admin-page-container .btn-admin-secondary:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 .btn-admin-secondary:disabled {
   opacity: 0.5 !important;
@@ -418,74 +446,87 @@
 }
 
 /* Danger Button */
-.btn-admin-danger {
+.btn-admin-danger,
+.admin-main-content .btn-admin-danger {
   background: rgba(239, 68, 68, 0.08) !important;
-  border: 1.5px solid rgba(239, 68, 68, 0.22) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.25) !important;
   color: #DC2626 !important;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.04) !important;
   cursor: pointer !important;
 }
-.btn-admin-danger:hover {
+.btn-admin-danger:hover,
+.admin-main-content .btn-admin-danger:hover {
   background: #DC2626 !important;
   border-color: transparent !important;
   color: #ffffff !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.25) !important;
 }
-.btn-admin-danger:active {
-  transform: translateY(0) scale(0.98) !important;
+.btn-admin-danger:active,
+.admin-main-content .btn-admin-danger:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 
 /* Success Button */
-.btn-admin-success {
+.btn-admin-success,
+.admin-main-content .btn-admin-success {
   background: rgba(16, 185, 129, 0.08) !important;
-  border: 1.5px solid rgba(16, 185, 129, 0.22) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
   color: #059669 !important;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.04) !important;
   cursor: pointer !important;
 }
-.btn-admin-success:hover {
+.btn-admin-success:hover,
+.admin-main-content .btn-admin-success:hover {
   background: #059669 !important;
   border-color: transparent !important;
   color: #ffffff !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25) !important;
 }
-.btn-admin-success:active {
-  transform: translateY(0) scale(0.98) !important;
+.btn-admin-success:active,
+.admin-main-content .btn-admin-success:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 
 /* Ghost Button */
-.btn-admin-ghost {
+.btn-admin-ghost,
+.admin-main-content .btn-admin-ghost {
   background: transparent !important;
   border: 1.5px solid transparent !important;
   color: #7B3FA0 !important;
   cursor: pointer !important;
 }
-.btn-admin-ghost:hover {
+.btn-admin-ghost:hover,
+.admin-main-content .btn-admin-ghost:hover {
   background: rgba(123, 63, 160, 0.08) !important;
   color: #2D004D !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-1.5px) !important;
 }
-.btn-admin-ghost:active {
-  transform: translateY(0) scale(0.98) !important;
+.btn-admin-ghost:active,
+.admin-main-content .btn-admin-ghost:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 
 /* Custom Webkit Scrollbars for Admin Controls & Dropdown Containers */
-.admin-main-content ::-webkit-scrollbar {
+.admin-main-content ::-webkit-scrollbar,
+.admin-page-container ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-.admin-main-content ::-webkit-scrollbar-track {
+.admin-main-content ::-webkit-scrollbar-track,
+.admin-page-container ::-webkit-scrollbar-track {
   background: rgba(142, 106, 168, 0.06);
   border-radius: 4px;
 }
-.admin-main-content ::-webkit-scrollbar-thumb {
-  background: rgba(123, 63, 160, 0.28);
+.admin-main-content ::-webkit-scrollbar-thumb,
+.admin-page-container ::-webkit-scrollbar-thumb {
+  background: rgba(123, 63, 160, 0.32);
   border-radius: 4px;
 }
-.admin-main-content ::-webkit-scrollbar-thumb:hover {
-  background: rgba(123, 63, 160, 0.5);
+.admin-main-content ::-webkit-scrollbar-thumb:hover,
+.admin-page-container ::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 63, 160, 0.6);
 }
 
 /* --- Spacing Scale Enforcement --- */
