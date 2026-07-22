@@ -17,6 +17,10 @@ def _is_external_url(url: Optional[str]) -> bool:
     """
     if not url:
         return False
+    # If the URL contains "/temp/", it is an internal temporary upload (B2, GCS, or Local)
+    # that needs to be moved to permanent storage.
+    if "/temp/" in url:
+        return False
     if url.startswith(("http://", "https://", "data:", "blob:", "gs://", "b2://")):
         if "/uploads/" not in url:
             return True
