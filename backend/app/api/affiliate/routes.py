@@ -115,8 +115,8 @@ def _get_affiliate_profile(user: User, db: Session) -> AffiliateProfile:
 
 def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats:
     """Compute aggregated stats from profile + commission rows."""
-    paid    = sum(c.commission_amt for c in commissions if c.status == "paid")
-    pending = sum(c.commission_amt for c in commissions if c.status == "pending")
+    paid    = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "paid" or c.status == "paid")
+    pending = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) in ("pending", "approved", "ready_for_payout") or c.status in ("pending", "approved", "ready_for_payout"))
     revenue = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
     conv    = round(
         (profile.total_sales / profile.total_clicks * 100), 2

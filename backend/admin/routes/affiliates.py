@@ -42,59 +42,106 @@ class PayoutStatusPatch(BaseModel):
 # ── Existing Endpoints (UNCHANGED) ─────────────────────────────────────────────
 
 @router.get("/")
-def list_affiliates(admin_user=Depends(require_admin_role)):
-    if not firebase_connected or fdb is None:
-        from app.db.session import SessionLocal
-        from app.models.user import User as UserModel
-        db_s = SessionLocal()
+def list_affiliates(admin_user=Depends(require_admin_role), db: Session = Depends(get_db)):
+    """List all affiliates with performance metrics, merging SQL and Firestore data."""
+    # Always query SQL AffiliateProfile records to capture real marketplace purchases & earnings
+    profiles = (
+        db.query(AffiliateProfile, User)
+        .join(User, AffiliateProfile.user_id == User.id)
+        .all()
+    )
+
+    result_map = {}
+    for aff_profile, u in profiles:
+        pending = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
+            AffiliateCommission.affiliate_id == aff_profile.id,
+            or_(
+                AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"]),
+                AffiliateCommission.status.in_(["pending", "approved", "ready_for_payout"])
+            )
+        ).scalar() or 0.0
+
+        revenue = db.query(func.sum(AffiliateCommission.sale_amount)).filter(
+            AffiliateCommission.affiliate_id == aff_profile.id
+        ).scalar() or 0.0
+
+        result_map[str(u.id)] = {
+            "uid": u.firebase_uid or str(u.id),
+            "id": aff_profile.id,
+            "name": u.name or aff_profile.display_name or "Affiliate",
+            "displayName": u.name or aff_profile.display_name or "Affiliate",
+            "email": u.email,
+            "role": "affiliate",
+            "code": aff_profile.referral_code,
+            "affiliateCode": aff_profile.referral_code,
+            "status": aff_profile.status if aff_profile.status else ("active" if aff_profile.is_active and u.is_active else "suspended"),
+            "createdAt": u.created_at.isoformat() + "Z" if u.created_at else "",
+            "joined": u.created_at.strftime("%Y-%m-%d") if u.created_at else "",
+            "clicks": aff_profile.total_clicks or 0,
+            "totalClicks": aff_profile.total_clicks or 0,
+            "sales": aff_profile.total_sales or 0,
+            "totalConversions": aff_profile.total_sales or 0,
+            "revenue": round(revenue, 2),
+            "commission": round(float(aff_profile.total_earnings or 0.0), 2),
+            "totalCommission": round(float(aff_profile.total_earnings or 0.0), 2),
+            "pending": round(float(pending), 2),
+        }
+
+    # Also query users with role='affiliate' in SQL DB who might not have an AffiliateProfile yet
+    role_users = db.query(User).filter(User.role.in_(["affiliate", "Affiliate"])).all()
+    for u in role_users:
+        if str(u.id) not in result_map:
+            result_map[str(u.id)] = {
+                "uid": u.firebase_uid or str(u.id),
+                "id": u.id,
+                "name": u.name or "Affiliate",
+                "displayName": u.name or "Affiliate",
+                "email": u.email,
+                "role": "affiliate",
+                "code": f"AFF{u.id:04d}",
+                "affiliateCode": f"AFF{u.id:04d}",
+                "status": "active" if u.is_active else "disabled",
+                "createdAt": u.created_at.isoformat() + "Z" if u.created_at else "",
+                "joined": u.created_at.strftime("%Y-%m-%d") if u.created_at else "",
+                "clicks": 0, "totalClicks": 0, "sales": 0, "totalConversions": 0,
+                "revenue": 0.0, "commission": 0.0, "totalCommission": 0.0, "pending": 0.0
+            }
+
+    # If Firestore is connected, merge any Firestore-only affiliate documents
+    if firebase_connected and fdb is not None:
         try:
-            role_affiliates = db_s.query(UserModel).filter(
-                UserModel.role.in_(["affiliate", "Affiliate"])
-            ).all()
-            profile_user_ids = {p.user_id for p in db_s.query(AffiliateProfile).all()}
-            profile_users = db_s.query(UserModel).filter(
-                UserModel.id.in_(profile_user_ids)
-            ).all() if profile_user_ids else []
-            seen = set()
-            result = []
-            for u in role_affiliates + profile_users:
-                if u.id not in seen:
-                    seen.add(u.id)
-                    aff_profile = db_s.query(AffiliateProfile).filter(
-                        AffiliateProfile.user_id == u.id
-                    ).first()
-                    result.append({
-                        "uid": str(u.id),
-                        "id": str(u.id),
-                        "displayName": u.name or "Affiliate",
-                        "email": u.email,
-                        "role": "affiliate",
-                        "status": "active" if u.is_active else "disabled",
-                        "createdAt": u.created_at.isoformat() + "Z" if u.created_at else "",
-                        "affiliateCode": aff_profile.referral_code if aff_profile else "",
-                        "totalClicks": aff_profile.total_clicks if aff_profile else 0,
-                        "totalConversions": aff_profile.total_sales if aff_profile else 0,
-                        "totalCommission": float(aff_profile.total_earnings) if aff_profile else 0.0,
-                    })
-            return result
-        finally:
-            db_s.close()
-    try:
-        users = []
-        for r_val in ("affiliate", "Affiliate"):
-            snap = fdb.collection("users").where("role", "==", r_val).stream()
-            for doc in snap:
-                data = doc.to_dict()
-                users.append({"uid": doc.id, **data})
-        seen = set()
-        unique_users = []
-        for u in users:
-            if u["uid"] not in seen:
-                seen.add(u["uid"])
-                unique_users.append(u)
-        return unique_users
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+            for r_val in ("affiliate", "Affiliate"):
+                snap = fdb.collection("users").where("role", "==", r_val).stream()
+                for doc in snap:
+                    data = doc.to_dict()
+                    uid = doc.id
+                    # Check if already present by firebase_uid or id
+                    if not any(item["uid"] == uid for item in result_map.values()):
+                        result_map[uid] = {
+                            "uid": uid,
+                            "id": uid,
+                            "name": data.get("displayName") or data.get("name") or "Affiliate",
+                            "displayName": data.get("displayName") or data.get("name") or "Affiliate",
+                            "email": data.get("email") or "",
+                            "role": "affiliate",
+                            "code": data.get("affiliateCode") or data.get("code") or "",
+                            "affiliateCode": data.get("affiliateCode") or data.get("code") or "",
+                            "status": data.get("accountStatus") or data.get("status") or "active",
+                            "createdAt": data.get("createdAt") or "",
+                            "joined": data.get("createdAt") or "",
+                            "clicks": data.get("totalClicks") or 0,
+                            "totalClicks": data.get("totalClicks") or 0,
+                            "sales": data.get("totalConversions") or 0,
+                            "totalConversions": data.get("totalConversions") or 0,
+                            "revenue": float(data.get("totalRevenue") or 0.0),
+                            "commission": float(data.get("totalCommission") or 0.0),
+                            "totalCommission": float(data.get("totalCommission") or 0.0),
+                            "pending": float(data.get("pendingCommission") or 0.0),
+                        }
+        except Exception as exc:
+            logger.error("[list_affiliates] Firestore stream failed: %s", exc)
+
+    return list(result_map.values())
 
 
 @router.put("/{uid}/status")
@@ -160,10 +207,16 @@ def get_affiliate_kpis(
 
     revenue_generated = db.query(func.sum(AffiliateCommission.sale_amount)).scalar() or 0.0
     commission_pending = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
-        AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"])
+        or_(
+            AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"]),
+            AffiliateCommission.status.in_(["pending", "approved", "ready_for_payout"])
+        )
     ).scalar() or 0.0
     commission_paid = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
-        AffiliateCommission.commission_status == "paid"
+        or_(
+            AffiliateCommission.commission_status == "paid",
+            AffiliateCommission.status == "paid"
+        )
     ).scalar() or 0.0
     avg_commission = db.query(func.avg(AffiliateCommission.commission_amt)).scalar() or 0.0
 

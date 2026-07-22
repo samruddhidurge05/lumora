@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union, List
 
 # Product Schemas
 class ProductCreate(BaseModel):

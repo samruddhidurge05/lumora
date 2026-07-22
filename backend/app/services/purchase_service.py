@@ -1,10 +1,11 @@
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.order import Order, OrderItem
 from app.models.product import Product
-from app.models.affiliate import AffiliateProfile, AffiliateCommission
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralLink
 from app.models.user import User
 from app.services.notification_service import NotificationService
 from app.services.activity_log_service import ActivityLogService
@@ -110,20 +111,35 @@ class PurchaseService:
 
                 # 6. Generate Affiliate Commissions
                 if affiliate_code and prod.affiliate_enabled:
+                    clean_code = affiliate_code.strip().upper()
+                    # 6a. First search default profile code
                     aff = db.query(AffiliateProfile).filter(
-                        AffiliateProfile.referral_code == affiliate_code,
+                        AffiliateProfile.referral_code == clean_code,
                         AffiliateProfile.is_active == True
                     ).first()
+
+                    # 6b. Fallback: search custom product referral links
+                    if not aff:
+                        ref_link = db.query(ReferralLink).filter(
+                            ReferralLink.referral_code == clean_code,
+                            ReferralLink.is_active == True
+                        ).first()
+                        if ref_link and ref_link.affiliate and ref_link.affiliate.is_active:
+                            aff = ref_link.affiliate
+
                     if aff:
                         # Verify customer is not the affiliate itself (prevent self-referral)
                         if aff.user_id != user_id:
                             # Calculate commission
-                            if prod.commission_type == "fixed":
-                                commission_amt = min(prod.commission_value or 0.0, price_paid)
+                            comm_type = prod.commission_type or "percentage"
+                            if comm_type == "fixed":
+                                comm_rate = prod.commission_value or 0.0
+                                commission_amt = min(comm_rate, price_paid)
                             else: # percentage
-                                rate = prod.commission_value if prod.commission_value is not None else (aff.commission_rate or 20.0)
-                                commission_amt = (price_paid * rate) / 100.0
+                                comm_rate = prod.commission_value if prod.commission_value is not None else (aff.commission_rate or 20.0)
+                                commission_amt = (price_paid * comm_rate) / 100.0
                             
+                            now_time = datetime.utcnow()
                             comm = AffiliateCommission(
                                 affiliate_id=aff.id,
                                 order_id=order.id,
@@ -131,20 +147,30 @@ class PurchaseService:
                                 product_name=prod.title,
                                 sale_amount=price_paid,
                                 commission_amt=commission_amt,
-                                status="approved"
+                                status="approved",
+                                commission_status="approved",
+                                commission_type=comm_type,
+                                commission_rate=comm_rate,
+                                customer_name=customer.name if customer else "Customer",
+                                customer_email=customer.email if customer else None,
+                                cookie_attr_date=now_time,
+                                last_click_at=now_time,
+                                approved_at=now_time,
                             )
                             db.add(comm)
                             
                             # Update affiliate stats
                             aff.total_earnings = (aff.total_earnings or 0.0) + commission_amt
+                            aff.pending_earnings = (aff.pending_earnings or 0.0) + commission_amt
                             aff.total_sales = (aff.total_sales or 0) + 1
+                            aff.last_active_at = now_time
 
                             # Send Affiliate Notifications
                             NotificationService.create_notification(
                                 db=db,
                                 user_id=aff.user_id,
-                                title="Commission Earned! ?",
-                                message=f"You earned a commission of ?{commission_amt * 80:.2f} (referred purchase of '{prod.title}').",
+                                title="Commission Earned! 🎉",
+                                message=f"You earned a commission of ₹{commission_amt:.2f} (referred purchase of '{prod.title}').",
                                 category="commission"
                             )
 
@@ -153,7 +179,7 @@ class PurchaseService:
                                 db=db,
                                 user_id=aff.user_id,
                                 activity_type="commission_earned",
-                                details=f"Earned ?{commission_amt * 80:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
+                                details=f"Earned ₹{commission_amt:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
                             )
 
             # 6b. Process Admin Referral Link Conversion (Isolated, Idempotent, Non-Blocking)

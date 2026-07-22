@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, ShoppingBag, DollarSign, TrendingUp, Link2, QrCode, Search,
@@ -11,6 +11,7 @@ import AdminLayout from './components/AdminLayout';
 import { AdminSelect } from './components/AdminComponents';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
+import { backendFetch } from '../../utils/api';
 
 // Mock initial data if backend API is loading or offline
 const MOCK_AFFILIATES = [
@@ -45,6 +46,29 @@ export default function AffiliateManagement() {
   ]);
 
   const [affiliates, setAffiliates] = useState(MOCK_AFFILIATES);
+
+  useEffect(() => {
+    // Load live affiliates
+    backendFetch('/admin/affiliates/')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAffiliates(data);
+        }
+      })
+      .catch(() => {});
+
+    // Load live products
+    backendFetch('/admin/products')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          const items = Array.isArray(data) ? data : (data.products || data.items || []);
+          if (items.length > 0) setProducts(items);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Statistics summaries
   const stats = useMemo(() => {

@@ -381,6 +381,27 @@ export default function AffiliateManagement() {
     finally { setKpisLoading(false); }
   }, []);
 
+  const loadAffiliates = useCallback(async () => {
+    try {
+      const r = await backendFetch('/admin/affiliates/');
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d) && d.length > 0) setAffiliates(d);
+      }
+    } catch(e) {}
+  }, []);
+
+  const loadProducts = useCallback(async () => {
+    try {
+      const r = await backendFetch('/admin/products');
+      if (r.ok) {
+        const d = await r.json();
+        const items = Array.isArray(d) ? d : (d.products || d.items || []);
+        if (items.length > 0) setProducts(items);
+      }
+    } catch(e) {}
+  }, []);
+
   const loadLedger = useCallback(async () => {
     setLedgerLoading(true);
     try {
@@ -426,12 +447,14 @@ export default function AffiliateManagement() {
 
   // Tab-driven data loading
   useEffect(() => {
-    if (activeTab === 'overview') loadKpis();
+    if (activeTab === 'overview') { loadKpis(); loadAffiliates(); loadProducts(); }
+    else if (activeTab === 'affiliates') loadAffiliates();
+    else if (activeTab === 'products') loadProducts();
     else if (activeTab === 'ledger') loadLedger();
     else if (activeTab === 'payouts') loadPayouts();
     else if (activeTab === 'performance') loadPerf();
     else if (activeTab === 'timeline') loadTimeline();
-  }, [activeTab, loadKpis, loadLedger, loadPayouts, loadPerf, loadTimeline]);
+  }, [activeTab, loadKpis, loadAffiliates, loadProducts, loadLedger, loadPayouts, loadPerf, loadTimeline]);
 
   // Re-load ledger when filters change
   useEffect(() => { if (activeTab === 'ledger') loadLedger(); }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
