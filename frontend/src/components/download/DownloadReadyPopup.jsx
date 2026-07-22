@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { CheckCircle, Download, ArrowRight, X, Clock } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { CheckCircle, ArrowRight, X, Shield, Package } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, purchasedItems = [], orderDetails = null }) {
-  const [countdown, setCountdown] = useState(3);
-  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -16,49 +14,7 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
       colors: ['#D8BFE3', '#B886D0', '#7B3FA0', '#22c55e'],
       origin: { y: 0.6 },
     });
-
-    // Auto-trigger downloads for all purchased items
-    purchasedItems.forEach((item, index) => {
-      setTimeout(() => {
-
-        if (item.download_url) {
-          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-          let finalUrl = item.download_url;
-          if (finalUrl.startsWith('/api')) {
-            finalUrl = `${BACKEND_URL}${finalUrl.replace('/api', '')}`;
-          } else if (finalUrl.startsWith('/')) {
-            finalUrl = `${BACKEND_URL}${finalUrl}`;
-          } else if (!finalUrl.startsWith('http')) {
-            finalUrl = `${BACKEND_URL}/${finalUrl}`;
-          }
-
-          const link = document.createElement('a');
-          link.href = finalUrl;
-          link.download = `${item.title || item.name || 'product'}.zip`;
-          link.target = '_blank';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      }, index * 500); // Stagger downloads by 500ms
-    });
-
-    // Countdown timer for auto-redirect
-    if (autoRedirectEnabled) {
-      const timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            onGoToDownloads();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isOpen, purchasedItems, autoRedirectEnabled, onGoToDownloads]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -69,83 +25,87 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
       left: 0,
       width: '100%',
       height: '100%',
-      background: 'rgba(0, 0, 0, 0.35)',
+      background: 'rgba(12, 10, 18, 0.65)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 10000,
-      backdropFilter: 'blur(12px)',
+      zIndex: 99999,
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
     }}>
       <div style={{
         maxWidth: '520px',
         width: '90%',
-        padding: '32px',
+        padding: '36px',
         textAlign: 'center',
         position: 'relative',
-        borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.7)',
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 24px 64px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+        borderRadius: '28px',
+        border: '1px solid rgba(220, 198, 255, 0.4)',
+        background: '#FFFDF9',
+        boxShadow: '0 30px 80px rgba(0, 0, 0, 0.25)',
+        animation: 'dl-fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
         {/* Close button */}
         <button
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '16px',
-            right: '16px',
-            background: 'rgba(0, 0, 0, 0.05)',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(78, 59, 49, 0.08)',
             border: 'none',
             borderRadius: '50%',
-            width: '32px',
-            height: '32px',
+            width: '36px',
+            height: '36px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--color-mocha)',
+            color: 'var(--color-espresso)',
             cursor: 'pointer',
           }}
         >
-          <X size={16} />
+          <X size={18} />
         </button>
 
         {/* Success icon */}
         <div style={{
-          width: '80px',
-          height: '80px',
+          width: '76px',
+          height: '76px',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg,rgba(34,197,94,0.25),rgba(34,197,94,0.10))',
-          border: '2px solid rgba(34,197,94,0.40)',
+          background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.08))',
+          border: '2px solid rgba(34,197,94,0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 24px',
+          margin: '0 auto 20px',
           color: '#16a34a',
-          boxShadow: '0 12px 40px rgba(34,197,94,0.25)',
+          boxShadow: '0 12px 32px rgba(34,197,94,0.2)',
         }}>
-          <CheckCircle size={42} />
+          <CheckCircle size={40} />
         </div>
 
         {/* Main content */}
         <div style={{ marginBottom: '24px' }}>
+          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            ✦ Lumora Payment Verified
+          </span>
           <h2 style={{
-            fontSize: '1.75rem',
-            fontWeight: 600,
+            fontSize: '1.65rem',
+            fontWeight: 700,
             color: 'var(--color-espresso)',
+            marginTop: '4px',
             marginBottom: '8px',
             lineHeight: 1.2,
           }}>
-            ✔ Payment Successful
+            Payment Successful!
           </h2>
           <p style={{
-            fontSize: '1.1rem',
+            fontSize: '0.92rem',
             color: 'var(--color-mocha)',
             marginBottom: '16px',
-            lineHeight: 1.5,
+            lineHeight: 1.55,
           }}>
-            Your purchase has been completed successfully.<br />
-            Your digital product{purchasedItems.length > 1 ? 's are' : ' is'} now available.
+            Your purchase is complete. Your digital product{purchasedItems.length > 1 ? 's have' : ' has'} been added to your <strong>Digital Vault</strong>.
           </p>
 
           {/* Order details */}
@@ -154,14 +114,14 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '8px 16px',
+              padding: '6px 16px',
               background: 'rgba(123,63,160,0.08)',
               borderRadius: '20px',
               border: '1px solid rgba(196,181,253,0.25)',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              fontSize: '0.8rem',
+              fontWeight: 700,
               color: '#7B3FA0',
-              marginBottom: '20px',
+              marginBottom: '16px',
             }}>
               Order #{orderDetails.order_id || orderDetails.id}
               {orderDetails.total_amount && (
@@ -171,23 +131,23 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
           )}
         </div>
 
-        {/* Downloaded items preview */}
+        {/* Purchased Items List */}
         {purchasedItems.length > 0 && (
           <div style={{
             textAlign: 'left',
             marginBottom: '24px',
-            maxHeight: '200px',
+            maxHeight: '220px',
             overflowY: 'auto',
           }}>
             <h4 style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
+              fontSize: '0.68rem',
+              fontWeight: 800,
               color: 'var(--color-mocha)',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: '12px',
+              letterSpacing: '0.08em',
+              marginBottom: '10px',
             }}>
-              Downloads Started ({purchasedItems.length} item{purchasedItems.length > 1 ? 's' : ''})
+              Purchased Vault Items ({purchasedItems.length} item{purchasedItems.length > 1 ? 's' : ''})
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {purchasedItems.slice(0, 3).map((item, idx) => (
@@ -195,28 +155,32 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '10px',
-                  background: 'rgba(34,197,94,0.06)',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(34,197,94,0.15)',
+                  padding: '12px 14px',
+                  background: 'rgba(61,184,119,0.06)',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(61,184,119,0.2)',
                 }}>
-                  {item.preview && (
+                  {item.preview || item.thumbnail ? (
                     <img
                       src={item.preview || item.thumbnail}
                       alt={item.title || item.name}
                       style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
                         objectFit: 'cover',
                         flexShrink: 0,
                       }}
                     />
+                  ) : (
+                    <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(78,59,49,0.08)', color: 'var(--color-espresso)' }}>
+                      <Package size={20} />
+                    </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      fontSize: '0.88rem',
+                      fontWeight: 700,
                       color: 'var(--color-espresso)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -226,17 +190,20 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
                       {item.title || item.name || 'Digital Product'}
                     </p>
                     <p style={{
-                      fontSize: '0.7rem',
+                      fontSize: '0.72rem',
                       color: '#16a34a',
-                      fontWeight: 600,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
                     }}>
-                      <Download size={10} style={{ marginRight: '4px', display: 'inline' }} />
-                      Download started
+                      <Shield size={12} style={{ color: '#16a34a' }} />
+                      Available in Vault (Preview & Download)
                     </p>
                   </div>
                   <div style={{
-                    width: '20px',
-                    height: '20px',
+                    width: '24px',
+                    height: '24px',
                     borderRadius: '50%',
                     background: 'rgba(34,197,94,0.2)',
                     display: 'flex',
@@ -244,7 +211,7 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    <CheckCircle size={12} style={{ color: '#16a34a' }} />
+                    <CheckCircle size={14} style={{ color: '#16a34a' }} />
                   </div>
                 </div>
               ))}
@@ -256,12 +223,27 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
                   fontStyle: 'italic',
                   marginTop: '4px',
                 }}>
-                  +{purchasedItems.length - 3} more item{purchasedItems.length - 3 > 1 ? 's' : ''} downloading...
+                  +{purchasedItems.length - 3} more item{purchasedItems.length - 3 > 1 ? 's' : ''} in Vault
                 </p>
               )}
             </div>
           </div>
         )}
+
+        {/* Guidance notice */}
+        <p style={{
+          fontSize: '0.78rem',
+          color: 'var(--color-mocha)',
+          lineHeight: 1.5,
+          marginBottom: '24px',
+          background: 'rgba(78,59,49,0.04)',
+          padding: '12px 16px',
+          borderRadius: '14px',
+          border: '1px solid rgba(78,59,49,0.08)',
+          textAlign: 'left'
+        }}>
+          💡 <strong>Vault Inspection:</strong> To inspect or preview your purchased items online without downloading them to your computer or phone, click <strong>Go to Downloads Vault</strong>.
+        </p>
 
         {/* Action buttons */}
         <div style={{
@@ -272,78 +254,41 @@ export default function DownloadReadyPopup({ isOpen, onClose, onGoToDownloads, p
         }}>
           <button
             onClick={onGoToDownloads}
-            className="btn-premium btn-premium-solid"
             style={{
-              padding: '14px 28px',
-              fontSize: '0.95rem',
-              borderRadius: '12px',
+              padding: '12px 24px',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #4E3B31, #2C1E18)',
+              color: '#FFFDF9',
+              border: 'none',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              boxShadow: '0 4px 16px rgba(45,30,24,0.25)'
             }}
           >
-            <Download size={16} />
-            Go to Downloads
+            Go to Downloads Vault
+            <ArrowRight size={16} />
           </button>
 
           <button
-            onClick={() => {
-              setAutoRedirectEnabled(false);
-              onClose();
-            }}
-            className="btn-premium"
+            onClick={onClose}
             style={{
-              padding: '14px 24px',
-              fontSize: '0.95rem',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
+              padding: '12px 20px',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              borderRadius: '14px',
+              background: 'rgba(78,59,49,0.08)',
+              color: 'var(--color-espresso)',
+              border: 'none',
+              cursor: 'pointer',
             }}
           >
             Continue Shopping
-            <ArrowRight size={16} />
           </button>
         </div>
-
-        {/* Auto-redirect countdown */}
-        {autoRedirectEnabled && countdown > 0 && (
-          <div style={{
-            marginTop: '20px',
-            padding: '12px',
-            background: 'rgba(123,63,160,0.08)',
-            borderRadius: '8px',
-            border: '1px solid rgba(196,181,253,0.20)',
-          }}>
-            <p style={{
-              fontSize: '0.8rem',
-              color: '#7B3FA0',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              margin: 0,
-            }}>
-              <Clock size={14} />
-              Redirecting to Downloads in {countdown} second{countdown !== 1 ? 's' : ''}
-            </p>
-            <button
-              onClick={() => setAutoRedirectEnabled(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#7B3FA0',
-                fontSize: '0.75rem',
-                textDecoration: 'underline',
-                cursor: 'pointer',
-                marginTop: '4px',
-              }}
-            >
-              Cancel auto-redirect
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
