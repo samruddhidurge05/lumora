@@ -8,8 +8,8 @@ import { backendFetch } from '../../utils/api';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
-import { collection, onSnapshot } from 'firebase/firestore';
 import { ProductQrButton } from '../../components/product/ProductQrCode';
+import { calculateCommission } from '../../utils/referralUtils';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -2591,10 +2591,119 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             </div>
           </div>
 
+          {/* Section 3: Affiliate Program */}
+          <div className="border border-[#F3EAF8] rounded-2xl p-4 bg-[#F8F3FB]/50 space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] pb-1 border-b border-[#F3EAF8] flex items-center justify-between">
+              <span>3. Affiliate Program</span>
+              {form.affiliate_enabled && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  🟢 Program Active
+                </span>
+              )}
+            </h3>
+
+            <div className="space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={form.affiliate_enabled}
+                  onChange={(e) => handleChange('affiliate_enabled', e.target.checked)}
+                  className="w-4 h-4 text-[#7B3FA0] rounded border-gray-300 focus:ring-[#7B3FA0]"
+                />
+                <span className="text-xs font-bold text-[#2D004D]">Enable Affiliate Promotion</span>
+              </label>
+
+              {form.affiliate_enabled && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Commission Type</label>
+                      <AdminSelect 
+                        value={form.commission_mode}
+                        onChange={(e) => handleChange('commission_mode', e.target.value)}
+                        options={[
+                          { value: 'percentage', label: 'Percentage (%)' },
+                          { value: 'fixed', label: 'Fixed Amount (₹)' }
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
+                        Commission Value {form.commission_mode === 'fixed' ? '(₹)' : '(%)'}
+                      </label>
+                      <input 
+                        type="number" 
+                        min="0.1"
+                        step="0.1"
+                        required={form.affiliate_enabled}
+                        value={form.commission_value}
+                        onChange={(e) => handleChange('commission_value', e.target.value)}
+                        className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Cookie Duration (Days)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        value={form.affiliate_cookie_days}
+                        onChange={(e) => handleChange('affiliate_cookie_days', e.target.value)}
+                        className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Affiliate Visibility</label>
+                      <AdminSelect 
+                        value={form.affiliate_visibility}
+                        onChange={(e) => handleChange('affiliate_visibility', e.target.value)}
+                        options={[
+                          { value: 'public', label: 'Public (All Affiliates)' },
+                          { value: 'invite_only', label: 'Invite Only' }
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Program Status</label>
+                      <AdminSelect 
+                        value={form.affiliate_program_status}
+                        onChange={(e) => handleChange('affiliate_program_status', e.target.value)}
+                        options={[
+                          { value: 'active', label: '🟢 Active' },
+                          { value: 'paused', label: '🟡 Paused' },
+                          { value: 'draft', label: '⚪ Draft' }
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Live Commission Preview */}
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#7B3FA0]/10 to-[#D8BFE3]/20 border border-[#7B3FA0]/20 flex items-center justify-between">
+                    <div>
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#7B3FA0] block">Live Commission Preview</span>
+                      <span className="text-xs font-bold text-[#2D004D]">
+                        Product Price ₹{Number(form.price || 0).toLocaleString()} &rarr; Affiliate Earns:
+                      </span>
+                    </div>
+                    <div className="text-sm font-extrabold text-[#16a34a] font-serif">
+                      ₹{calculateCommission(form.price, form.commission_mode, form.commission_value).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Section: Live Asset Upload Station */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-4 pb-1 border-b border-[#F3EAF8]">
-              3. Visual Preview Assets (Cinematic Upload Studio)
+              4. Visual Preview Assets (Cinematic Upload Studio)
             </h3>
             
             <div className="space-y-6">
