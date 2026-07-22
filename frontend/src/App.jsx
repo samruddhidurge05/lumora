@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppContextProvider, useApp } from './context/AppContext';
@@ -173,16 +173,28 @@ function AppContent() {
   const [showDownloadPopup, setShowDownloadPopup] = useState(false);
   const [popupData, setPopupData] = useState(null);
   
+  const location = useLocation();
+
   // Synchronize and persist active authentication role across navigation
   useEffect(() => {
     try {
-      const urlParams = new URLSearchParams(window.location.search);
+      const urlParams = new URLSearchParams(location.search);
       const roleParam = urlParams.get('role');
       if (roleParam && ['customer', 'affiliate', 'vendor', 'admin'].includes(roleParam)) {
         sessionStorage.setItem('lumora_last_auth_role', roleParam);
+        localStorage.setItem('lumora_active_role', roleParam);
+      } else if (location.pathname.startsWith('/affiliate')) {
+        sessionStorage.setItem('lumora_last_auth_role', 'affiliate');
+        localStorage.setItem('lumora_active_role', 'affiliate');
+      } else if (location.pathname.startsWith('/vendor')) {
+        sessionStorage.setItem('lumora_last_auth_role', 'vendor');
+        localStorage.setItem('lumora_active_role', 'vendor');
+      } else if (location.pathname.startsWith('/admin')) {
+        sessionStorage.setItem('lumora_last_auth_role', 'admin');
+        localStorage.setItem('lumora_active_role', 'admin');
       }
     } catch (_) {}
-  }, []);
+  }, [location.search, location.pathname]);
 
   // Listen for purchase completion events
   useEffect(() => {
