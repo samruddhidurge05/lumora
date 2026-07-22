@@ -480,21 +480,38 @@ def restore_products():
     )
     from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
 
-    # Seed local SQLite from products.json first if needed
-    try:
-        from scripts.seed_products import seed as seed_db_products
-        _logger.info("[startup] Auto-seeding local SQLite database from products.json...")
-        seed_db_products()
-        _logger.info("[startup] Local SQLite seeding completed successfully.")
-    except Exception as _seed_err:
-        _logger.error("[startup] Failed to auto-seed local database: %s", _seed_err)
-
     db = SessionLocal()
     try:
-        _logger.info("[startup] Syncing and restoring any missing published products from Firestore to SQLite...")
+        # ── Seed guard: only seed if the database is completely empty ──────────
+        # On Render (PostgreSQL) the database is never empty after the first deploy.
+        # Running seed on a populated database would INSERT placeholder file_urls
+        # (e.g. /products/product-{id}.zip) for any product ID that doesn't exist
+        # in PostgreSQL yet, which permanently corrupts the file reference.
+        #
+        # We deliberately count ALL statuses (published + draft + archived) so
+        # a product soft-deleted via "archive" doesn't re-trigger seeding.
+        existing_count = db.query(ProductModel).count()
+        if existing_count == 0:
+            try:
+                from scripts.seed_products import seed as seed_db_products
+                _logger.info("[startup] Empty database detected — running one-time seed from products.json...")
+                seed_db_products()
+                _logger.info("[startup] One-time seed completed.")
+            except Exception as _seed_err:
+                _logger.error("[startup] Failed to seed empty database: %s", _seed_err)
+        else:
+            _logger.info(
+                "[startup] Database has %d existing product(s) — skipping seed to protect real data.",
+                existing_count,
+            )
+
+        # ── Restore: INSERT any Firestore products completely absent from PG ───
+        # NOTE: As of 2026-07, this function is safety-hardened to NEVER overwrite
+        # existing PostgreSQL records. It only inserts products missing from PG.
+        _logger.info("[startup] Checking for products in Firestore missing from PostgreSQL...")
         restore_sqlite_products_from_firestore(db)
 
-        # -- Forward-sync: push any SQLite products missing from Firestore ----
+        # ── Forward-sync: push any PG products missing from Firestore ──────────
         # This catches products created while Firebase was temporarily offline.
         if _fs_ok and _fs_db is not None:
             try:
@@ -505,7 +522,7 @@ def restore_products():
                 missing = [p for p in all_active if str(p.id) not in existing_ids]
                 if missing:
                     _logger.info(
-                        "[startup] Found %d product(s) in SQLite not yet in Firestore - syncing now: %s",
+                        "[startup] Found %d product(s) in PostgreSQL not yet in Firestore — syncing now: %s",
                         len(missing), [p.id for p in missing],
                     )
                     for p in missing:
@@ -515,7 +532,7 @@ def restore_products():
                             _logger.error("[startup] Failed to sync product %s: %s", p.id, _sync_err)
                     _logger.info("[startup] Missing-product forward-sync complete.")
                 else:
-                    _logger.info("[startup] All SQLite products are already in Firestore. ?")
+                    _logger.info("[startup] All PostgreSQL products are already in Firestore.")
             except Exception as _fwd_err:
                 _logger.warning("[startup] Forward-sync check failed (non-fatal): %s", _fwd_err)
 
@@ -523,6 +540,7 @@ def restore_products():
         _logger.error("[startup] Error running startup products recovery: %s", e)
     finally:
         db.close()
+
 
 # -- Rate Limiting -------------------------------------------------------------
 app.state.limiter = limiter

@@ -249,9 +249,25 @@ def _refresh_pcloud_images_for_product(product_model, pcloud_share_url: str) -> 
 
 def restore_sqlite_products_from_firestore(db_session):
     """
-    Auto-sync: Pull any published Firestore products missing from SQLite into SQLite.
-    Also fixes broken localhost thumbnail URLs by refreshing them from pCloud.
-    Runs at backend startup and can be called manually.
+    Safety-hardened startup restore: Insert Firestore products that are
+    completely absent from PostgreSQL.
+
+    CRITICAL RULE (2026-07):
+    ========================
+    PostgreSQL is the SINGLE SOURCE OF TRUTH.
+    Backblaze B2 is the ONLY supported object storage.
+
+    This function NEVER overwrites existing PostgreSQL product records.
+    - storage_path, file_url, thumbnail, preview, image_urls, preview_images,
+      price, title, description — ALL are preserved from PostgreSQL.
+    - If a product already exists in PostgreSQL with any data at all,
+      it is left completely untouched.
+    - Only products with no PostgreSQL row at all are inserted (from Firestore),
+      and ONLY so that a product that was created before this Render deployment
+      doesn't disappear completely.
+
+    Do NOT revert this protection. Reverting it will cause every Render
+    restart to overwrite real B2 storage references with stale Firestore data.
     """
     if not firebase_connected or db is None:
         return
@@ -260,7 +276,6 @@ def restore_sqlite_products_from_firestore(db_session):
 
         docs = db.collection("products").where("status", "==", "published").stream()
         added = 0
-        fixed = 0
 
         for doc in docs:
             data = doc.to_dict()
@@ -270,118 +285,79 @@ def restore_sqlite_products_from_firestore(db_session):
                 continue
 
             exists = db_session.query(ProductModel).filter(ProductModel.id == prod_id).first()
-            pcloud_link = data.get("pcloud_download_link") or data.get("pcloudDownloadLink")
+
+            # ── EXISTING PRODUCT ── Never touch it. PostgreSQL owns the data. ──
+            if exists:
+                # Log at DEBUG level only so the log isn't noisy on every restart.
+                _logger.debug(
+                    "[firestore-sync] Product %s already in PostgreSQL — skipping Firestore overwrite (PG is source of truth)",
+                    prod_id,
+                )
+                continue
+
+            # ── NEW PRODUCT ── Not in PostgreSQL at all → safe to insert ───────
             thumbnail   = data.get("thumbnail") or data.get("imageUrl", "")
             is_broken_thumb = thumbnail and "localhost" in thumbnail
 
-            if not exists:
-                # New product from Firestore - import it
-                product = ProductModel(
-                    id=prod_id,
-                    title=data.get("title", data.get("name", "Product")),
-                    description=data.get("description", ""),
-                    category=data.get("category", "Productivity Tools"),
-                    price=float(data.get("price", 0.0)),
-                    rating=float(data.get("rating", 5.0)),
-                    reviews=int(data.get("reviews", 0)),
-                    downloads=int(data.get("downloads", 0)),
-                    thumbnail=None if is_broken_thumb else thumbnail,
-                    preview=None if is_broken_thumb else (data.get("preview") or thumbnail),
-                    file_url=data.get("file_url") or data.get("fileUrl"),
-                    seller=data.get("creatorName", data.get("seller", "Lumora")),
-                    vendor_id=data.get("vendor_id"),
-                    featured=bool(data.get("featured", data.get("isFeatured", False))),
-                    trending=bool(data.get("trending", False)),
-                    new_arrival=True,
-                    badge=data.get("badge"),
-                    status="published",
-                    visibility=data.get("visibility", "public"),
-                    tags=data.get("tags") or [],
-                    highlights=data.get("highlights") or [],
-                    version=data.get("version", "v1.0.0"),
-                    file_size=data.get("fileSize", "48 MB"),
-                    last_updated="Recently",
-                    license=data.get("license", "Personal Use"),
-                    affiliate_enabled=bool(data.get("affiliate_enabled", False)),
-                    commission_type=data.get("commission_type", "percentage"),
-                    commission_value=float(data.get("commission_value", 0.0)),
-                    short_desc=data.get("shortDesc") or data.get("short_desc") or "",
-                    features=data.get("features") or [],
-                    system_requirements=data.get("systemRequirements") or data.get("system_requirements") or [],
-                    what_you_get=data.get("whatYouGet") or data.get("what_you_get") or [],
-                    installation_guide=data.get("installationGuide") or data.get("installation_guide"),
-                    subcategory=data.get("subcategory"),
-                    discount=float(data.get("discount", 0.0)),
-                    preview_images=data.get("previewImages") or data.get("preview_images") or [],
-                    preview_video=data.get("previewVideo") or data.get("preview_video"),
-                    seo_title=data.get("seoTitle") or data.get("seo_title"),
-                    seo_description=data.get("seoDescription") or data.get("seo_description"),
-                    image_urls=[] if is_broken_thumb else (data.get("image_urls") or data.get("imageUrls") or []),
-                )
-                db_session.add(product)
-                db_session.flush()  # get product into session so we can update it
-
-                # Refresh pCloud images disabled
-
-                added += 1
-            else:
-                # Update existing product fields from Firestore
-                exists.title = data.get("title", data.get("name", exists.title))
-                exists.description = data.get("description", exists.description)
-                exists.category = data.get("category", exists.category)
-                exists.price = float(data.get("price", exists.price))
-                exists.rating = float(data.get("rating", exists.rating))
-                exists.reviews = int(data.get("reviews", exists.reviews))
-                exists.downloads = int(data.get("downloads", exists.downloads))
-                
-                if not is_broken_thumb:
-                    if thumbnail:
-                        exists.thumbnail = thumbnail
-                    if data.get("preview") or thumbnail:
-                        exists.preview = data.get("preview") or thumbnail
-                    if data.get("image_urls") or data.get("imageUrls"):
-                        exists.image_urls = data.get("image_urls") or data.get("imageUrls") or []
-
-                exists.file_url = data.get("file_url") or data.get("fileUrl") or exists.file_url
-                exists.seller = data.get("creatorName", data.get("seller", exists.seller))
-                exists.vendor_id = data.get("vendor_id") or exists.vendor_id
-                exists.featured = bool(data.get("featured", data.get("isFeatured", exists.featured)))
-                exists.trending = bool(data.get("trending", exists.trending))
-                exists.badge = data.get("badge", exists.badge)
-                exists.visibility = data.get("visibility", exists.visibility)
-                exists.tags = data.get("tags") or exists.tags
-                exists.highlights = data.get("highlights") or exists.highlights
-                exists.version = data.get("version", exists.version)
-                exists.file_size = data.get("fileSize", exists.file_size)
-                exists.license = data.get("license", exists.license)
-                exists.affiliate_enabled = bool(data.get("affiliate_enabled", exists.affiliate_enabled))
-                exists.commission_type = data.get("commission_type", exists.commission_type)
-                exists.commission_value = float(data.get("commission_value", exists.commission_value))
-                exists.short_desc = data.get("shortDesc") or data.get("short_desc") or exists.short_desc
-                exists.features = data.get("features") or exists.features
-                exists.system_requirements = data.get("systemRequirements") or data.get("system_requirements") or exists.system_requirements
-                exists.what_you_get = data.get("whatYouGet") or data.get("what_you_get") or exists.what_you_get
-                exists.installation_guide = data.get("installationGuide") or data.get("installation_guide") or exists.installation_guide
-                exists.subcategory = data.get("subcategory") or exists.subcategory
-                exists.discount = float(data.get("discount", exists.discount))
-                exists.preview_images = data.get("previewImages") or data.get("preview_images") or exists.preview_images
-                exists.preview_video = data.get("previewVideo") or data.get("preview_video") or exists.preview_video
-                exists.seo_title = data.get("seoTitle") or data.get("seo_title") or exists.seo_title
-                exists.seo_description = data.get("seoDescription") or data.get("seo_description") or exists.seo_description
-                
-                added += 1
+            product = ProductModel(
+                id=prod_id,
+                title=data.get("title", data.get("name", "Product")),
+                description=data.get("description", ""),
+                category=data.get("category", "Productivity Tools"),
+                price=float(data.get("price", 0.0)),
+                rating=float(data.get("rating", 5.0)),
+                reviews=int(data.get("reviews", 0)),
+                downloads=int(data.get("downloads", 0)),
+                thumbnail=None if is_broken_thumb else thumbnail,
+                preview=None if is_broken_thumb else (data.get("preview") or thumbnail),
+                file_url=data.get("file_url") or data.get("fileUrl"),
+                seller=data.get("creatorName", data.get("seller", "Lumora")),
+                vendor_id=data.get("vendor_id"),
+                featured=bool(data.get("featured", data.get("isFeatured", False))),
+                trending=bool(data.get("trending", False)),
+                new_arrival=True,
+                badge=data.get("badge"),
+                status="published",
+                visibility=data.get("visibility", "public"),
+                tags=data.get("tags") or [],
+                highlights=data.get("highlights") or [],
+                version=data.get("version", "v1.0.0"),
+                file_size=data.get("fileSize", "48 MB"),
+                last_updated="Recently",
+                license=data.get("license", "Personal Use"),
+                affiliate_enabled=bool(data.get("affiliate_enabled", False)),
+                commission_type=data.get("commission_type", "percentage"),
+                commission_value=float(data.get("commission_value", 0.0)),
+                short_desc=data.get("shortDesc") or data.get("short_desc") or "",
+                features=data.get("features") or [],
+                system_requirements=data.get("systemRequirements") or data.get("system_requirements") or [],
+                what_you_get=data.get("whatYouGet") or data.get("what_you_get") or [],
+                installation_guide=data.get("installationGuide") or data.get("installation_guide"),
+                subcategory=data.get("subcategory"),
+                discount=float(data.get("discount", 0.0)),
+                preview_images=data.get("previewImages") or data.get("preview_images") or [],
+                preview_video=data.get("previewVideo") or data.get("preview_video"),
+                seo_title=data.get("seoTitle") or data.get("seo_title"),
+                seo_description=data.get("seoDescription") or data.get("seo_description"),
+                image_urls=[] if is_broken_thumb else (data.get("image_urls") or data.get("imageUrls") or []),
+            )
+            db_session.add(product)
+            db_session.flush()
+            added += 1
+            _logger.info("[firestore-sync] Inserted missing product %s from Firestore into PostgreSQL", prod_id)
 
         db_session.commit()
         if added:
-            print(f"[firestore-sync] Auto-synced {added} products from Firestore to SQLite ({fixed} with refreshed images).")
+            _logger.info("[firestore-sync] Inserted %d missing product(s) from Firestore into PostgreSQL.", added)
         else:
-            print("[firestore-sync] SQLite is up to date with Firestore.")
+            _logger.info("[firestore-sync] PostgreSQL is up to date — no missing products found in Firestore.")
 
     except Exception as e:
         db_session.rollback()
-        print(f"[firestore-sync] Error during Firestore sync: {e}")
+        _logger.error("[firestore-sync] Error during Firestore restore: %s", e)
         import traceback
         traceback.print_exc()
+
 
 
 
