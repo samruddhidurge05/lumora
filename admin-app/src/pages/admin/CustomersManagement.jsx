@@ -14,7 +14,7 @@ import AdminLayout from './components/AdminLayout';
 import { db } from '../../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { backendFetch } from '../../utils/api';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect } from './components/AdminComponents';
 
 // ── Icon System (Inline SVG matching existing admin layout pattern) ───────────
 const Icon = ({ name, size = 16, className = '' }) => {
@@ -327,44 +327,38 @@ export default function CustomersManagement() {
           searchPlaceholder="Search name, email, or UID..."
           filters={[
             // Status Select
-            <div key="status" className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">Status:</span>
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="bg-white/70 border border-[#F3EAF8] rounded-lg px-2.5 py-1.5 text-xs text-[#2D004D] focus:outline-none focus:border-[#B886D0]"
-              >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="restricted">Restricted</option>
-                <option value="disabled">Disabled</option>
-              </select>
-            </div>,
+            <AdminSelect
+              key="status"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              options={[
+                { value: 'all', label: 'Status: All' },
+                { value: 'active', label: 'Active' },
+                { value: 'restricted', label: 'Restricted' },
+                { value: 'disabled', label: 'Disabled' }
+              ]}
+            />,
             // Date Sort Select
-            <div key="date" className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">Joined:</span>
-              <select
-                value={dateSort}
-                onChange={e => { setDateSort(e.target.value); setOrderSort('none'); }}
-                className="bg-white/70 border border-[#F3EAF8] rounded-lg px-2.5 py-1.5 text-xs text-[#2D004D] focus:outline-none focus:border-[#B886D0]"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </div>,
+            <AdminSelect
+              key="date"
+              value={dateSort}
+              onChange={e => { setDateSort(e.target.value); setOrderSort('none'); }}
+              options={[
+                { value: 'newest', label: 'Joined: Newest' },
+                { value: 'oldest', label: 'Joined: Oldest' }
+              ]}
+            />,
             // Order Sort Select
-            <div key="orders" className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">Orders:</span>
-              <select
-                value={orderSort}
-                onChange={e => { setOrderSort(e.target.value); setDateSort('none'); }}
-                className="bg-white/70 border border-[#F3EAF8] rounded-lg px-2.5 py-1.5 text-xs text-[#2D004D] focus:outline-none focus:border-[#B886D0]"
-              >
-                <option value="none">Default</option>
-                <option value="most">Most Orders</option>
-                <option value="least">Least Orders</option>
-              </select>
-            </div>
+            <AdminSelect
+              key="orders"
+              value={orderSort}
+              onChange={e => { setOrderSort(e.target.value); setDateSort('none'); }}
+              options={[
+                { value: 'none', label: 'Orders: Default' },
+                { value: 'most', label: 'Most Orders' },
+                { value: 'least', label: 'Least Orders' }
+              ]}
+            />
           ]}
         />
 

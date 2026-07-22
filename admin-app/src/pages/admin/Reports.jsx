@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer, AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
 import {
   getReportAnalytics,
@@ -537,24 +537,16 @@ export default function Reports() {
             <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto justify-end">
               
               {/* Date Filter selector */}
-              <div className="relative">
-                <select 
-                  value={dateRange}
-                  onChange={(e) => { sysSound.playTap(); setDateRange(e.target.value); }}
-                  className="appearance-none bg-white hover:bg-[#F5E9DD]/50 border border-[#F5E9DD] rounded-xl pl-9 pr-8 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] focus:outline-none cursor-pointer transition-colors"
-                >
-                  <option value="Today">Today</option>
-                  <option value="Last 7 Days">Last 7 Days</option>
-                  <option value="Last 30 Days">Last 30 Days</option>
-                  <option value="Last 90 Days">Last 90 Days</option>
-                </select>
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
-                  <Icon name="Calendar" size={12} />
-                </div>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
-                  <Icon name="ChevronDown" size={10} />
-                </div>
-              </div>
+              <AdminSelect 
+                value={dateRange}
+                onChange={(e) => { sysSound.playTap(); setDateRange(e.target.value); }}
+                options={[
+                  { value: 'Today', label: 'Today' },
+                  { value: 'Last 7 Days', label: 'Last 7 Days' },
+                  { value: 'Last 30 Days', label: 'Last 30 Days' },
+                  { value: 'Last 90 Days', label: 'Last 90 Days' }
+                ]}
+              />
 
               {/* Refresh dataset action */}
               <button 
@@ -1507,11 +1499,14 @@ export default function Reports() {
                 <div className="flex flex-col gap-3.5 w-full text-left mb-6">
                   <div>
                     <label className="text-[8px] font-black uppercase text-[#7B3FA0] block mb-1">Dispatch Interval</label>
-                    <select className="w-full bg-white border border-[#F5E9DD] rounded-xl px-3 py-2 text-[10px] font-extrabold uppercase text-[#2D004D] focus:outline-none">
-                      <option>Every Monday (Weekly summary)</option>
-                      <option>1st of Month (Monthly ledger)</option>
-                      <option>Daily telemetry dispatch</option>
-                    </select>
+                    <AdminSelect 
+                      options={[
+                        { value: 'weekly', label: 'Every Monday (Weekly summary)' },
+                        { value: 'monthly', label: '1st of Month (Monthly ledger)' },
+                        { value: 'daily', label: 'Daily telemetry dispatch' }
+                      ]}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="text-[8px] font-black uppercase text-[#7B3FA0] block mb-1">Recipient Channel</label>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AdminLayout from './components/AdminLayout';
+import { AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
 import { db } from '../../firebase';
 import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
@@ -461,7 +462,7 @@ export default function AdminUserManagement() {
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <select
+                            <AdminSelect
                               value={currentRole}
                               disabled={isOwnRow}
                               onChange={e => {
@@ -469,11 +470,8 @@ export default function AdminUserManagement() {
                                 setPendingRole(prev => ({ ...prev, [member.user_id]: newRole }));
                                 setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name });
                               }}
-                              style={{ padding: '5px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)',
-                                       fontSize: '0.72rem', background: '#fff', color: '#2D004D', cursor: isOwnRow ? 'not-allowed' : 'pointer',
-                                       opacity: isOwnRow ? 0.45 : 1 }}>
-                              {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
-                            </select>
+                              options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
+                            />
                             {!isOwnRow && (
                               <button
                                 onClick={() => setDeactivateTarget(member.user_id)}
@@ -629,12 +627,12 @@ export default function AdminUserManagement() {
               <div>
                 <label style={{ fontSize: '0.65rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase',
                                  letterSpacing: '0.06em', display: 'block', marginBottom: '6px' }}>Role</label>
-                <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px',
-                           border: '1px solid rgba(123,63,160,0.25)', fontSize: '0.85rem',
-                           boxSizing: 'border-box', background: '#fff', cursor: 'pointer' }}>
-                  {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
-                </select>
+                <AdminSelect 
+                  value={inviteRole} 
+                  onChange={e => setInviteRole(e.target.value)}
+                  options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
+                  className="w-full"
+                />
                 <p style={{ margin: '4px 0 0', fontSize: '0.68rem', color: '#8E6AA8' }}>
                   {ROLE_PERMISSIONS_DESC[inviteRole]}
                 </p>

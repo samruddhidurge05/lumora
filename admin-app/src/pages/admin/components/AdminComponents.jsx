@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, RefreshCw, AlertCircle, Inbox } from 'lucide-react';
+import React, { useState, useEffect, useRef, useId } from 'react';
+import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
@@ -315,6 +315,202 @@ export function LoadingState({ type = "table", count = 3 }) {
     <div className="w-full flex flex-col gap-4 animate-pulse">
       <div className="h-[42px] bg-[#381347]/5 rounded-xl w-1/4 mb-2" />
       <div className="h-[300px] bg-white/40 border border-white/50 rounded-3xl w-full" />
+    </div>
+  );
+}
+
+// ─── 9. ADMIN SELECT (PREMIUM GLASS POPOVER DROPDOWN) ─────────────────────
+// Custom popover dropdown panel with floating glass container, option icons, and checkmarks
+export function AdminSelect({ 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "Select...", 
+  icon: LeadIcon,
+  className = "",
+  disabled = false,
+  name = "",
+  id = "",
+  ariaLabel = "",
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  const optionRefs = useRef([]);
+  const generatedId = useId();
+  const listboxId = `admin-select-listbox-${id || generatedId}`;
+
+  // Close on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Format options if passed as raw strings, numbers or objects
+  const parsedOptions = options.map(opt => {
+    if (typeof opt === 'object' && opt !== null) {
+      return { 
+        value: opt.value, 
+        label: opt.label !== undefined ? opt.label : String(opt.value), 
+        icon: opt.icon || null,
+        disabled: Boolean(opt.disabled)
+      };
+    }
+    return { value: opt, label: String(opt), icon: null, disabled: false };
+  });
+
+  const selectedOpt = parsedOptions.find(o => String(o.value) === String(value)) || {
+    value: value !== undefined && value !== null ? value : '',
+    label: value !== undefined && value !== null && value !== '' ? String(value) : placeholder,
+    icon: null
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      const selectedIndex = parsedOptions.findIndex(o => String(o.value) === String(value));
+      setFocusedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    }
+  }, [isOpen, value]);
+
+  useEffect(() => {
+    if (isOpen && focusedIndex >= 0 && optionRefs.current[focusedIndex]) {
+      optionRefs.current[focusedIndex]?.focus();
+    }
+  }, [isOpen, focusedIndex]);
+
+  const handleSelect = (optValue) => {
+    setIsOpen(false);
+    if (buttonRef.current) buttonRef.current.focus();
+    if (onChange) {
+      // Fire synthetic event for 100% backwards compatibility with e.target.value handlers
+      const event = {
+        target: { value: optValue, name },
+        currentTarget: { value: optValue, name },
+        preventDefault: () => {},
+        stopPropagation: () => {},
+      };
+      onChange(event);
+    }
+  };
+
+  const handleKeyDownToggle = (e) => {
+    if (disabled) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  const handleKeyDownOption = (e, index) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextIndex = (index + 1) % parsedOptions.length;
+      setFocusedIndex(nextIndex);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prevIndex = (index - 1 + parsedOptions.length) % parsedOptions.length;
+      setFocusedIndex(prevIndex);
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!parsedOptions[index].disabled) {
+        handleSelect(parsedOptions[index].value);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+      if (buttonRef.current) buttonRef.current.focus();
+    } else if (e.key === "Tab") {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div ref={containerRef} className={`relative inline-block text-left min-w-[160px] ${className}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        id={id || undefined}
+        name={name || undefined}
+        disabled={disabled}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
+        aria-label={ariaLabel || placeholder || name || "Select option"}
+        onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={handleKeyDownToggle}
+        className={`w-full h-[40px] px-3.5 rounded-xl bg-white/90 backdrop-blur-xl border transition-all duration-200 flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] shadow-[0_2px_10px_rgba(90,30,126,0.06)] hover:bg-white hover:shadow-[0_4px_16px_rgba(123,63,160,0.12)] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed ${
+          isOpen
+            ? 'border-[#7B3FA0] ring-2 ring-[#7B3FA0]/25 bg-white shadow-[0_4px_20px_rgba(123,63,160,0.16)]'
+            : 'border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60'
+        }`}
+      >
+        <div className="flex items-center gap-2 truncate">
+          {LeadIcon ? (
+            <LeadIcon size={14} className="text-[#7B3FA0] flex-shrink-0" />
+          ) : selectedOpt.icon ? (
+            <selectedOpt.icon size={14} className="text-[#7B3FA0] flex-shrink-0" />
+          ) : (
+            <Grid size={14} className="text-[#7B3FA0]/70 flex-shrink-0" />
+          )}
+          <span className="truncate tracking-tight">{selectedOpt.label}</span>
+        </div>
+        <ChevronDown 
+          size={14} 
+          className={`text-[#7B3FA0] transition-transform duration-250 ease-out flex-shrink-0 ${isOpen ? 'rotate-180 text-[#5A1E7E]' : 'opacity-80'}`} 
+        />
+      </button>
+
+      {isOpen && (
+        <div 
+          id={listboxId}
+          role="listbox"
+          tabIndex={-1}
+          aria-label={ariaLabel || placeholder || name}
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[280px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_20px_50px_rgba(45,0,77,0.22)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+        >
+          {parsedOptions.map((opt, index) => {
+            const isSelected = String(opt.value) === String(value);
+            const isFocused = index === focusedIndex;
+            const OptionIcon = opt.icon;
+            return (
+              <button
+                key={`${opt.value}-${index}`}
+                ref={(el) => (optionRefs.current[index] = el)}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                disabled={opt.disabled}
+                onClick={() => !opt.disabled && handleSelect(opt.value)}
+                onKeyDown={(e) => handleKeyDownOption(e, index)}
+                className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 outline-none ${
+                  isSelected
+                    ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold shadow-xs'
+                    : isFocused
+                    ? 'bg-[#7B3FA0]/08 text-[#5A1E7E] font-bold'
+                    : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/06 hover:text-[#5A1E7E]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  {OptionIcon ? (
+                    <OptionIcon size={14} className={isSelected ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />
+                  ) : (
+                    <span className={`w-1.5 h-1.5 rounded-full transition-colors ${isSelected ? 'bg-[#7B3FA0] scale-125' : 'bg-[#D8BFE3]/60'}`} />
+                  )}
+                  <span className="truncate">{opt.label}</span>
+                </div>
+                {isSelected && <Check size={14} className="text-[#7B3FA0] flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

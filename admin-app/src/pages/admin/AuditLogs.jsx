@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { backendFetch } from '../../utils/api';
+import { AdminSelect } from './components/AdminComponents';
 
 // ─── Inline SVG icon system (matches Lumora admin design) ────────────────────
 const Icon = ({ name, size = 16, className = '' }) => {
@@ -195,25 +196,18 @@ export default function AuditLogs() {
 
             <div className="flex items-center gap-2.5 flex-wrap justify-end">
               {/* Action filter */}
-              <div className="relative">
-                <select
-                  value={actionFilter}
-                  onChange={(e) => handleActionFilterChange(e.target.value)}
-                  className="appearance-none bg-white hover:bg-[#F5E9DD]/50 border border-[#F5E9DD] rounded-xl pl-8 pr-8 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] focus:outline-none cursor-pointer transition-colors"
-                  aria-label="Filter by action"
-                >
-                  <option value="">All Actions</option>
-                  {ACTION_OPTIONS.map((a) => (
-                    <option key={a} value={a}>{a.replace(/_/g, ' ')}</option>
-                  ))}
-                </select>
-                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
-                  <Icon name="Filter" size={11} />
-                </div>
-                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
-                  <Icon name="ChevronDown" size={10} />
-                </div>
-              </div>
+              <AdminSelect
+                value={actionFilter}
+                onChange={(e) => handleActionFilterChange(e.target.value)}
+                ariaLabel="Filter by action"
+                options={[
+                  { value: '', label: 'All Actions' },
+                  ...ACTION_OPTIONS.map((a) => ({
+                    value: a,
+                    label: a.replace(/_/g, ' ')
+                  }))
+                ]}
+              />
 
               {/* Refresh */}
               <button

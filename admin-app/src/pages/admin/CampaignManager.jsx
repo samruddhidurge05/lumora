@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from './components/AdminLayout';
+import { AdminSelect } from './components/AdminComponents';
 import { 
   collection, 
   getDocs, 
@@ -411,19 +412,19 @@ export default function CampaignManager() {
               <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="v-field">
                   <label className="v-label">Select Product *</label>
-                  <select 
-                    className="v-input"
-                    value={form.productId} 
+                  <AdminSelect 
+                    value={form.productId}
                     onChange={e => setForm(f => ({ ...f, productId: e.target.value }))}
-                    required
-                  >
-                    <option value="">Select a product...</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name || p.title} (₹{p.price})
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Select a product..."
+                    options={[
+                      { value: '', label: 'Select a product...' },
+                      ...products.map(p => ({
+                        value: p.id,
+                        label: `${p.name || p.title} (₹${p.price})`
+                      }))
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="v-field">

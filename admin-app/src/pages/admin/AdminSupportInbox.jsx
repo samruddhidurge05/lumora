@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AdminLayout from './components/AdminLayout';
+import { AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
 import { MessageSquare, RefreshCw, Send, ChevronRight } from 'lucide-react';
 
@@ -116,14 +117,17 @@ export default function AdminSupportInbox() {
             </h1>
           </div>
           {/* Status filter */}
-          <select
+          <AdminSelect
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            style={{ padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(123,63,160,0.2)', background: '#fff', fontSize: '0.82rem', fontWeight: 600, color: '#2D004D', cursor: 'pointer', outline: 'none' }}
-          >
-            <option value="">All Statuses</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-          </select>
+            options={[
+              { value: '', label: 'All Statuses' },
+              ...STATUS_OPTIONS.map(s => ({
+                value: s,
+                label: s.charAt(0).toUpperCase() + s.slice(1)
+              }))
+            ]}
+          />
         </div>
 
         {/* Two-panel layout */}
@@ -186,14 +190,15 @@ export default function AdminSupportInbox() {
                   <div style={{ fontSize: '0.70rem', color: '#8B6B5B', marginTop: '2px' }}>{selectedTicket.buyer_name} · #{selectedTicket.id}</div>
                 </div>
                 {/* Status changer */}
-                <select
+                <AdminSelect
                   value={selectedTicket.status || 'open'}
                   onChange={e => handleStatusChange(e.target.value)}
                   disabled={updatingStatus}
-                  style={{ padding: '6px 12px', borderRadius: '10px', border: `1.5px solid ${statusColor(selectedTicket.status)}50`, background: `${statusColor(selectedTicket.status)}10`, color: statusColor(selectedTicket.status), fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
-                >
-                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                </select>
+                  options={STATUS_OPTIONS.map(s => ({
+                    value: s,
+                    label: s.charAt(0).toUpperCase() + s.slice(1)
+                  }))}
+                />
               </div>
 
               {/* Messages */}
