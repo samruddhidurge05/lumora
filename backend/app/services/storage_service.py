@@ -689,7 +689,14 @@ class StorageService:
         clean_ext = "".join(c for c in ext if c.isalnum() or c == '.')
         if not clean_ext or clean_ext.startswith(".."):
             clean_ext = ".bin" if not is_image else ".png"
-        unique_name = f"{uuid.uuid4()}{clean_ext}"
+        
+        # Use clean and descriptive filename instead of random UUID
+        import re
+        base_name = os.path.splitext(filename)[0]
+        clean_base = re.sub(r'[^a-zA-Z0-9_\-]', '', base_name)
+        if not clean_base:
+            clean_base = f"product-{product_id}"
+        unique_name = f"{clean_base}{clean_ext}"
         
         # Build public/private logical object structure
         if asset_type == "thumbnail":

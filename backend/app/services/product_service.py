@@ -44,6 +44,19 @@ def _extract_file_extension(source_path: Optional[str], default_ext: str = ".bin
     return clean_ext
 
 
+def _slugify(text: str) -> str:
+    """
+    Generate a clean, URL-safe slug from a product title.
+    """
+    import re
+    if not text:
+        return ""
+    text = text.lower().strip()
+    text = re.sub(r'[^a-z0-9\-]', '-', text)
+    text = re.sub(r'-+', '-', text)
+    return text.strip('-')
+
+
 class ProductService:
     @staticmethod
     def create_product(
@@ -127,6 +140,9 @@ class ProductService:
             # Move temp uploaded assets to permanent hierarchical paths:
             # vendors/{vendor_id}/products/{product_id}/...
             # External URLs (pCloud, S3, Firebase Storage, etc.) are stored as-is.
+            slug = _slugify(product.title)
+            display_name = f"{slug if slug else 'product'}-{product.id}"
+
             if temp_file_url:
                 if _is_external_url(temp_file_url):
                     # External URL - store directly; no local file movement needed
@@ -137,7 +153,7 @@ class ProductService:
                         source_path=temp_file_url,
                         vendor_id=vendor_id,
                         product_id=product.id,
-                        filename=f"product-{product.id}{file_ext}",
+                        filename=f"{display_name}{file_ext}",
                         is_image=False,
                         asset_type="file"
                     )
@@ -154,7 +170,7 @@ class ProductService:
                         source_path=temp_preview_url,
                         vendor_id=vendor_id,
                         product_id=product.id,
-                        filename="preview.png",
+                        filename=f"{display_name}-preview.png",
                         is_image=True,
                         asset_type="preview"
                     )
@@ -171,7 +187,7 @@ class ProductService:
                         source_path=temp_thumbnail_url,
                         vendor_id=vendor_id,
                         product_id=product.id,
-                        filename="thumbnail.png",
+                        filename=f"{display_name}-thumbnail.png",
                         is_image=True,
                         asset_type="thumbnail"
                     )
@@ -233,6 +249,9 @@ class ProductService:
         new_files_to_delete = []
         
         try:
+            slug = _slugify(update_data.get("title", product.title))
+            display_name = f"{slug if slug else 'product'}-{product_id}"
+
             # Handle digital file change
             if "file_url" in update_data and update_data["file_url"] != product.file_url:
                 new_file = update_data["file_url"]
@@ -249,7 +268,7 @@ class ProductService:
                             source_path=new_file,
                             vendor_id=vendor_id,
                             product_id=product_id,
-                            filename=f"product-{product_id}{file_ext}",
+                            filename=f"{display_name}{file_ext}",
                             is_image=False,
                             asset_type="file"
                         )
@@ -273,7 +292,7 @@ class ProductService:
                             source_path=new_preview,
                             vendor_id=vendor_id,
                             product_id=product_id,
-                            filename="preview.png",
+                            filename=f"{display_name}-preview.png",
                             is_image=True,
                             asset_type="preview"
                         )
@@ -296,7 +315,7 @@ class ProductService:
                             source_path=new_thumb,
                             vendor_id=vendor_id,
                             product_id=product_id,
-                            filename="thumbnail.png",
+                            filename=f"{display_name}-thumbnail.png",
                             is_image=True,
                             asset_type="thumbnail"
                         )
