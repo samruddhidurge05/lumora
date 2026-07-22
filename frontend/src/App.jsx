@@ -180,18 +180,25 @@ function AppContent() {
     try {
       const urlParams = new URLSearchParams(location.search);
       const roleParam = urlParams.get('role');
+      let targetRole = null;
+
       if (roleParam && ['customer', 'affiliate', 'vendor', 'admin'].includes(roleParam)) {
-        sessionStorage.setItem('lumora_last_auth_role', roleParam);
-        localStorage.setItem('lumora_active_role', roleParam);
+        targetRole = roleParam;
       } else if (location.pathname.startsWith('/affiliate')) {
-        sessionStorage.setItem('lumora_last_auth_role', 'affiliate');
-        localStorage.setItem('lumora_active_role', 'affiliate');
+        targetRole = 'affiliate';
       } else if (location.pathname.startsWith('/vendor')) {
-        sessionStorage.setItem('lumora_last_auth_role', 'vendor');
-        localStorage.setItem('lumora_active_role', 'vendor');
+        targetRole = 'vendor';
       } else if (location.pathname.startsWith('/admin')) {
-        sessionStorage.setItem('lumora_last_auth_role', 'admin');
-        localStorage.setItem('lumora_active_role', 'admin');
+        targetRole = 'admin';
+      }
+
+      if (targetRole) {
+        if (sessionStorage.getItem('lumora_last_auth_role') !== targetRole) {
+          sessionStorage.setItem('lumora_last_auth_role', targetRole);
+        }
+        if (localStorage.getItem('lumora_active_role') !== targetRole) {
+          localStorage.setItem('lumora_active_role', targetRole);
+        }
       }
     } catch (_) {}
   }, [location.search, location.pathname]);
