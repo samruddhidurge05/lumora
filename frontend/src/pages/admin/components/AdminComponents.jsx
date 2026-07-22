@@ -431,7 +431,7 @@ export function AdminSelect({
   };
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left min-w-[150px] ${className}`}>
+    <div ref={containerRef} className={`relative inline-block text-left min-w-[160px] ${className}`}>
       <button
         ref={buttonRef}
         type="button"
@@ -445,7 +445,11 @@ export function AdminSelect({
         aria-label={ariaLabel || placeholder || name || "Select option"}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDownToggle}
-        className="w-full h-[42px] px-3.5 rounded-xl bg-white/80 backdrop-blur-md border border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60 hover:bg-white shadow-sm flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+        className={`w-full h-[40px] px-3.5 rounded-xl bg-white/90 backdrop-blur-xl border transition-all duration-200 flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] shadow-[0_2px_10px_rgba(90,30,126,0.06)] hover:bg-white hover:shadow-[0_4px_16px_rgba(123,63,160,0.12)] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed ${
+          isOpen
+            ? 'border-[#7B3FA0] ring-2 ring-[#7B3FA0]/25 bg-white shadow-[0_4px_20px_rgba(123,63,160,0.16)]'
+            : 'border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60'
+        }`}
       >
         <div className="flex items-center gap-2 truncate">
           {LeadIcon ? (
@@ -455,11 +459,11 @@ export function AdminSelect({
           ) : (
             <Grid size={14} className="text-[#7B3FA0]/70 flex-shrink-0" />
           )}
-          <span className="truncate">{selectedOpt.label}</span>
+          <span className="truncate tracking-tight">{selectedOpt.label}</span>
         </div>
         <ChevronDown 
           size={14} 
-          className={`text-[#7B3FA0] transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`text-[#7B3FA0] transition-transform duration-250 ease-out flex-shrink-0 ${isOpen ? 'rotate-180 text-[#5A1E7E]' : 'opacity-80'}`} 
         />
       </button>
 
@@ -469,7 +473,7 @@ export function AdminSelect({
           role="listbox"
           tabIndex={-1}
           aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[300px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_16px_40px_rgba(90,30,126,0.18)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] w-full max-h-[280px] overflow-y-auto rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C4B5FD]/60 shadow-[0_20px_50px_rgba(45,0,77,0.22)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
         >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);
@@ -487,9 +491,9 @@ export function AdminSelect({
                 onKeyDown={(e) => handleKeyDownOption(e, index)}
                 className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 outline-none ${
                   isSelected
-                    ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold'
+                    ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold shadow-xs'
                     : isFocused
-                    ? 'bg-[#7B3FA0]/08 text-[#5A1E7E] font-semibold'
+                    ? 'bg-[#7B3FA0]/08 text-[#5A1E7E] font-bold'
                     : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/06 hover:text-[#5A1E7E]'
                 }`}
               >
@@ -497,7 +501,7 @@ export function AdminSelect({
                   {OptionIcon ? (
                     <OptionIcon size={14} className={isSelected ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />
                   ) : (
-                    <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-[#7B3FA0]' : 'bg-[#D8BFE3]/50'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full transition-colors ${isSelected ? 'bg-[#7B3FA0] scale-125' : 'bg-[#D8BFE3]/60'}`} />
                   )}
                   <span className="truncate">{opt.label}</span>
                 </div>
