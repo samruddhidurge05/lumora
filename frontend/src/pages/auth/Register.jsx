@@ -53,6 +53,9 @@ const itemVariants = {
 
 export default function Register() {
   const [searchParams] = useSearchParams();
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
   const role = searchParams.get('role');
   const inviteToken = searchParams.get('invite_token') || null;
   const inviteEmail = searchParams.get('email') || '';
@@ -60,6 +63,15 @@ export default function Register() {
   const validRoles = ['customer', 'affiliate', 'vendor'];
   const isAdminInvite = role === 'admin' && !!inviteToken;
 
+  // All hooks must be unconditional — declared before any early return
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState(inviteEmail); // pre-fill from invite URL
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [pwStrength, setPwStrength] = useState(0);
+
+  // Guard: redirect to default role if missing/invalid — placed AFTER all hooks
   if (!role || (!validRoles.includes(role) && !isAdminInvite)) {
     return <Navigate to="/auth/register?role=customer" replace />;
   }
@@ -72,15 +84,6 @@ export default function Register() {
         btnLabel: 'Create Account & Accept Invite',
       }
     : ROLE_META[role];
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState(inviteEmail); // pre-fill from invite URL
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [pwStrength, setPwStrength] = useState(0);
-
-  const { register } = useAuth();
-  const navigate = useNavigate();
 
   const calcStrength = (pw) => {
     let score = 0;

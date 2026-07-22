@@ -1,5 +1,5 @@
 // src/pages/auth/Login.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
@@ -56,28 +56,40 @@ const itemVariants = {
 
 export default function Login() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { login, googleSignIn, githubSignIn } = useAuth();
+
   const role = searchParams.get('role');
   const justRegistered = searchParams.get('registered') === 'true';
   const nextUrl = searchParams.get('next') || null; // invite redirect support
   const validRoles = ['customer', 'affiliate', 'vendor', 'admin'];
 
-  if (!role || !validRoles.includes(role)) {
-    return <Navigate to="/auth/login?role=customer" replace />;
-  }
-
-  const meta = ROLE_META[role];
+  // All hooks must be unconditional — declared before any early return
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [authStatus, setAuthStatus] = useState(justRegistered ? 'success' : null);
-  const [statusMessage, setStatusMessage] = useState(
-    justRegistered ? `Account created! You can now sign in as ${role}.` : ''
-  );
+  const [authStatus, setAuthStatus] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const { login, googleSignIn, githubSignIn } = useAuth();
-  const navigate = useNavigate();
+  // Restore justRegistered success banner — must be in an effect, not an initial
+  // useState value, because useState initializers only run once (on mount) and
+  // the role/justRegistered values are derived from searchParams which are stable.
+  useEffect(() => {
+    if (justRegistered && role && validRoles.includes(role)) {
+      setAuthStatus('success');
+      setStatusMessage(`Account created! You can now sign in as ${role}.`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Guard: redirect to default role if missing/invalid — placed AFTER all hooks
+  if (!role || !validRoles.includes(role)) {
+    return <Navigate to="/auth/login?role=customer" replace />;
+  }
+
+  const meta = ROLE_META[role];
 
   const mapAuthError = (code) => {
     switch (code) {
