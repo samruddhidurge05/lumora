@@ -309,78 +309,103 @@ function PreviewButton({ productId, productName }) {
       {isPreviewOpen && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '24px'
+          padding: '16px'
         }}>
           <div style={{
-            background: '#FFFDF9', borderRadius: '24px', width: '90%', maxWidth: '900px', height: '82vh',
+            background: '#FFFDF9', borderRadius: '24px', width: '95vw', maxWidth: '1200px', height: '90vh',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.4)',
+            boxShadow: '0 30px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.4)',
             animation: 'dl-fadein 0.3s ease-out'
           }}>
             {/* Header */}
             <div style={{
-              padding: '16px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
+              padding: '14px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.85)'
+              background: 'rgba(255,255,255,0.95)'
             }}>
-              <div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  ✦ Lumora Web Viewer
-                </span>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
-                  {productName}
-                </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(78,59,49,0.06)', color: 'var(--color-espresso)' }}>
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    ✦ Lumora Online PDF Viewer
+                  </span>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-espresso)', margin: 0 }}>
+                    {productName}
+                  </h3>
+                </div>
               </div>
-              <button
-                onClick={() => setIsPreviewOpen(false)}
-                style={{
-                  background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
-                  width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: 'var(--color-espresso)'
-                }}
-              >
-                <X size={18} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(61,184,119,0.2)' }}>
+                  ✓ Refund Eligibility Intact (Online View Only)
+                </span>
+                <button
+                  onClick={() => setIsPreviewOpen(false)}
+                  style={{
+                    background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
+                    width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'var(--color-espresso)'
+                  }}
+                  title="Close Viewer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
-            {/* Viewer Content */}
-            <div style={{ flex: 1, position: 'relative', background: '#F8F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* Viewer Content Container */}
+            <div style={{ flex: 1, position: 'relative', background: '#525659', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {loading && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-mocha)', fontSize: '0.85rem' }}>
-                  <Clock size={16} style={{ animation: 'spin 1.5s linear infinite' }} />
-                  Authorizing secure online preview stream...
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#FFFDF9', fontSize: '0.9rem' }}>
+                  <Clock size={24} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
+                  <span>Authorizing secure online PDF stream...</span>
                 </div>
               )}
 
               {errorMsg && (
-                <div style={{ padding: '32px', textAlign: 'center', color: '#DC2626', maxWidth: '400px' }}>
-                  <AlertCircle size={36} style={{ margin: '0 auto 12px' }} />
-                  <p style={{ fontWeight: 600, fontSize: '0.88rem', lineHeight: 1.5 }}>{errorMsg}</p>
+                <div style={{ padding: '32px', textAlign: 'center', color: '#EF4444', background: '#FFFDF9', borderRadius: '16px', maxWidth: '420px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
+                  <AlertCircle size={40} style={{ margin: '0 auto 12px', color: '#DC2626' }} />
+                  <p style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.5, color: '#1F2937' }}>{errorMsg}</p>
                 </div>
               )}
 
               {previewUrl && !loading && (
-                <iframe
-                  src={previewUrl}
-                  title={`Preview ${productName}`}
+                <object
+                  data={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  type="application/pdf"
+                  width="100%"
+                  height="100%"
                   style={{ width: '100%', height: '100%', border: 'none' }}
-                />
+                >
+                  <iframe
+                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                    title={`PDF Preview ${productName}`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                </object>
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer Bar */}
             <div style={{
-              padding: '12px 24px', background: 'rgba(78,59,49,0.04)', borderTop: '1px solid rgba(78,59,49,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-mocha)'
+              padding: '12px 24px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-mocha)'
             }}>
-              <span>🛡️ Online preview mode — does NOT count as a device download.</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Shield size={14} style={{ color: '#3DB877' }} />
+                <span>Online Web Viewer — This PDF is rendered in your browser. It has <strong>NOT</strong> been downloaded to your computer device.</span>
+              </span>
               <button
                 onClick={() => setIsPreviewOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer' }}
+                style={{
+                  padding: '6px 16px', borderRadius: '8px', background: 'var(--color-espresso)',
+                  color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem'
+                }}
               >
-                Close Preview
+                Close Viewer
               </button>
             </div>
           </div>

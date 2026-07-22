@@ -678,18 +678,23 @@ def preview_product_stream(
     if product.file_url:
         filename = os.path.basename(product.file_url.split("?")[0])
 
+    storage_path_lower = (storage_path or "").lower()
+    file_url_lower = (product.file_url or "").lower()
+
     content_type = product.content_type
-    if not content_type:
-        ext = os.path.splitext(filename)[1].lower()
-        if ext == ".pdf":
+    if not content_type or content_type in ("application/octet-stream", "application/zip"):
+        if filename.endswith(".pdf") or storage_path_lower.endswith(".pdf") or ".pdf" in file_url_lower:
             content_type = "application/pdf"
-        elif ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif")):
+            ext = os.path.splitext(filename)[1].lower()
             content_type = f"image/{ext.replace('.', '').replace('jpg', 'jpeg')}"
-        elif ext in (".mp4", ".webm"):
+        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp4", ".webm")):
+            ext = os.path.splitext(filename)[1].lower()
             content_type = f"video/{ext.replace('.', '')}"
-        elif ext in (".mp3", ".wav", ".ogg"):
+        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".mp3", ".wav", ".ogg")):
+            ext = os.path.splitext(filename)[1].lower()
             content_type = f"audio/{ext.replace('.', '')}"
-        elif ext in (".txt", ".html", ".css", ".js", ".json"):
+        elif any(filename.endswith(ext) or storage_path_lower.endswith(ext) for ext in (".txt", ".html", ".css", ".js", ".json")):
             content_type = "text/plain"
         else:
             content_type = "application/octet-stream"
