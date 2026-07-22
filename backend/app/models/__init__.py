@@ -16,7 +16,7 @@ from app.models.coupon import Coupon
 from app.models.payment import Payment
 from app.models.vendor import Vendor
 from app.models.wishlist import WishlistItem, CartItem
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, AffiliateReferral
 from app.models.withdrawal import Withdrawal
 from app.models.verification import Verification
 from app.models.admin_role import AdminRole
@@ -55,6 +55,7 @@ __all__ = [
     "AffiliatePayout",
     "ReferralLink",
     "ReferralClick",
+    "AffiliateReferral",
     "Withdrawal",
     "Verification",
     "AdminRole",

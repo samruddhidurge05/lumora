@@ -192,3 +192,33 @@ class ReferralClick(Base):
 
     referral_link = relationship("ReferralLink", back_populates="clicks")
     affiliate     = relationship("AffiliateProfile")
+
+
+class AffiliateReferral(Base):
+    """
+    Persistent referral attribution table tracking the full lifecycle:
+    CLICKED -> AUTHENTICATED -> PRODUCT_VIEWED -> ADDED_TO_CART -> PURCHASED
+    """
+    __tablename__ = "affiliate_referrals"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    affiliate_id     = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
+    referral_code    = Column(String(50), nullable=False, index=True)
+    product_id       = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    customer_id      = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    session_id       = Column(String(100), unique=True, nullable=False, index=True)
+    order_id         = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)
+    status           = Column(String(30), default="CLICKED", index=True) # CLICKED | AUTHENTICATED | PRODUCT_VIEWED | ADDED_TO_CART | PURCHASED
+    ip_address       = Column(String(45), nullable=True)
+    user_agent       = Column(Text, nullable=True)
+    clicked_at       = Column(DateTime, default=datetime.utcnow)
+    authenticated_at = Column(DateTime, nullable=True)
+    converted_at     = Column(DateTime, nullable=True)
+    created_at       = Column(DateTime, default=datetime.utcnow)
+    updated_at       = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    affiliate = relationship("AffiliateProfile")
+    product   = relationship("Product")
+    customer  = relationship("User", foreign_keys=[customer_id])
+    order     = relationship("Order", foreign_keys=[order_id])
+

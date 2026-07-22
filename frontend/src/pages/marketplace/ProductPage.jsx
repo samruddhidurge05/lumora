@@ -214,21 +214,30 @@ export default function ProductPage() {
     setReviewRating(5);
     setBackendReviews(null); // reset so new product fetches reviews fresh
 
-    // Capture affiliate referral code from URL (?ref=AFF001) and store for purchase attribution
+    // Capture affiliate referral code from URL (?ref=AFF001) and record product view state
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const hashParts = window.location.hash.split('?');
       const hashParams = hashParts.length > 1 ? new URLSearchParams(hashParts[1]) : null;
-      const ref = urlParams.get('ref') || (hashParams && hashParams.get('ref')) || '';
+      const ref = urlParams.get('ref') || (hashParams && hashParams.get('ref')) || sessionStorage.getItem('lumora_aff_ref') || '';
+      const sessId = sessionStorage.getItem('lumora_ref_session_id');
+
       if (ref) {
         sessionStorage.setItem('lumora_aff_ref', ref);
-        
+
         // Prevent duplicate API calls (e.g. from React Strict Mode or re-renders)
         const tracked = sessionStorage.getItem('lumora_aff_tracked');
         if (tracked !== ref) {
           sessionStorage.setItem('lumora_aff_tracked', ref);
           backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => {});
         }
+      }
+
+      if (sessId && product?.id) {
+        backendFetch('/affiliate/referrals/view', {
+          method: 'POST',
+          body: JSON.stringify({ session_id: sessId, product_id: parseInt(product.id, 10) })
+        }).catch(() => {});
       }
     } catch (_) {}
   }, [product?.id]);

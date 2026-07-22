@@ -57,13 +57,19 @@ export function buildAffiliateReferralLink(product, affCode) {
   }
 
   const cleanRef = (affCode || '').trim();
-  const refQuery = cleanRef ? `?ref=${encodeURIComponent(cleanRef)}` : '';
 
-  if (productId) {
-    return `${baseUrl}/#product/${productId}${refQuery}`;
+  if (cleanRef) {
+    if (productId) {
+      return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}/product/${productId}`;
+    }
+    return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}`;
   }
 
-  return `${baseUrl}/#products${refQuery}`;
+  if (productId) {
+    return `${baseUrl}/#product/${productId}`;
+  }
+
+  return `${baseUrl}/#products`;
 }
 
 export function buildAdminReferralLink(product, adminCode) {

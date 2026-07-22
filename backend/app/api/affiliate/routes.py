@@ -24,7 +24,7 @@ from app.dependencies import get_current_user_required
 from admin.validators.status_checks import verify_affiliate_active
 from app.models.user import User
 from app.models.product import Product
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, AffiliateReferral
 from app.api.affiliate.schemas import (
     AffiliateProfileResponse, AffiliateProfileUpdate,
     CommissionResponse, CommissionCreate,
@@ -34,6 +34,8 @@ from app.api.affiliate.schemas import (
     TopProductItem, MonthlyEarningsItem,
     CommissionReportItem, PayoutReportItem,
     ReferralLinkCreate, ReferralLinkResponse,
+    ReferralClickRequest, ReferralClickResponse,
+    ReferralAuthRequest, ReferralViewRequest,
 )
 
 router = APIRouter()
@@ -756,4 +758,196 @@ def track_click(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Referral code not found.",
     )
+
+
+# -- Persistent Referral Lifecycle Endpoints ------------------------------------
+
+@router.post("/referrals/click", response_model=ReferralClickResponse)
+def create_referral_click(
+    payload: ReferralClickRequest,
+    request: Request,
+    user_agent: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Validate product & referral code, create persistent AffiliateReferral record in PostgreSQL,
+    and return unique session_id for authentication & purchase attribution.
+    """
+    code_upper = payload.referral_code.strip().upper()
+    client_ip = request.client.host if request.client else None
+
+    # 1. Validate Product exists
+    product = db.query(Product).filter(Product.id == payload.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Referred product not found.")
+
+    # 2. Validate Affiliate by code (custom link or profile code)
+    affiliate_id = None
+    custom_link = db.query(ReferralLink).filter(ReferralLink.referral_code == code_upper).first()
+    if custom_link and custom_link.is_active:
+        affiliate_id = custom_link.affiliate_id
+    else:
+        profile = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == code_upper).first()
+        if profile and profile.is_active:
+            affiliate_id = profile.id
+
+    if not affiliate_id:
+        raise HTTPException(status_code=404, detail="Invalid or inactive referral code.")
+
+    # Generate server-side unique session ID
+    session_id = f"REF_SESS_{uuid.uuid4().hex}"
+
+    # Record persistent AffiliateReferral in PostgreSQL
+    referral = AffiliateReferral(
+        affiliate_id=affiliate_id,
+        referral_code=code_upper,
+        product_id=product.id,
+        session_id=session_id,
+        status="CLICKED",
+        ip_address=client_ip,
+        user_agent=user_agent,
+        clicked_at=datetime.utcnow()
+    )
+    db.add(referral)
+
+    # Increment click count on profile/link
+    if custom_link:
+        custom_link.clicks_count = (custom_link.clicks_count or 0) + 1
+    profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).first()
+    if profile:
+        profile.total_clicks = (profile.total_clicks or 0) + 1
+
+    db.commit()
+
+    return ReferralClickResponse(
+        session_id=session_id,
+        referral_code=code_upper,
+        product_id=product.id,
+        status="CLICKED",
+        is_valid=True
+    )
+
+
+@router.post("/referrals/authenticate")
+def authenticate_referral(
+    payload: ReferralAuthRequest,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Associate authenticated customer with pending referral session in PostgreSQL.
+    Updates status to AUTHENTICATED.
+    """
+    referral = None
+    if payload.session_id:
+        referral = db.query(AffiliateReferral).filter(AffiliateReferral.session_id == payload.session_id).first()
+
+    if not referral and payload.referral_code and payload.product_id:
+        referral = db.query(AffiliateReferral).filter(
+            AffiliateReferral.referral_code == payload.referral_code.strip().upper(),
+            AffiliateReferral.product_id == payload.product_id,
+            AffiliateReferral.customer_id.is_(None)
+        ).order_by(AffiliateReferral.created_at.desc()).first()
+
+    if not referral:
+        return {"status": "NO_PENDING_REFERRAL", "message": "No pending referral found to associate."}
+
+    # Associate customer and update lifecycle state
+    referral.customer_id = current_user.id
+    if referral.status in ("CLICKED", None):
+        referral.status = "AUTHENTICATED"
+    referral.authenticated_at = datetime.utcnow()
+    db.commit()
+
+    return {
+        "status": referral.status,
+        "product_id": referral.product_id,
+        "referral_code": referral.referral_code,
+        "session_id": referral.session_id,
+        "customer_id": current_user.id
+    }
+
+
+@router.post("/referrals/view")
+def record_referral_product_view(
+    payload: ReferralViewRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Update referral status to PRODUCT_VIEWED.
+    """
+    if not payload.session_id:
+        return {"status": "IGNORED"}
+
+    referral = db.query(AffiliateReferral).filter(AffiliateReferral.session_id == payload.session_id).first()
+    if referral and referral.status in ("CLICKED", "AUTHENTICATED"):
+        referral.status = "PRODUCT_VIEWED"
+        db.commit()
+        return {"status": "PRODUCT_VIEWED", "session_id": referral.session_id}
+
+    return {"status": referral.status if referral else "NOT_FOUND"}
+
+
+@router.get("/referrals/admin-analytics")
+def get_admin_referral_analytics(
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint returning comprehensive referral conversion analytics and ledger.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin authorization required.")
+
+    referrals = db.query(AffiliateReferral).order_by(AffiliateReferral.created_at.desc()).limit(200).all()
+
+    total_clicks = db.query(AffiliateReferral).count()
+    auth_visitors = db.query(AffiliateReferral).filter(AffiliateReferral.customer_id.isnot(None)).count()
+    product_views = db.query(AffiliateReferral).filter(AffiliateReferral.status.in_(["PRODUCT_VIEWED", "ADDED_TO_CART", "PURCHASED"])).count()
+    purchases = db.query(AffiliateReferral).filter(AffiliateReferral.status == "PURCHASED").count()
+
+    conversion_rate = round((purchases / total_clicks * 100), 2) if total_clicks > 0 else 0.0
+
+    total_revenue = 0.0
+    total_commission = 0.0
+    commissions = db.query(AffiliateCommission).all()
+    for c in commissions:
+        total_revenue += float(c.sale_amount or 0)
+        total_commission += float(c.commission_amt or 0)
+
+    ledger = []
+    for r in referrals:
+        aff_name = r.affiliate.display_name if r.affiliate and r.affiliate.display_name else (r.affiliate.user.name if r.affiliate and r.affiliate.user else f"Affiliate #{r.affiliate_id}")
+        cust_email = r.customer.email if r.customer else "Guest Visitor"
+        prod_name = r.product.title if r.product else f"Product #{r.product_id}"
+
+        ledger.append({
+            "id": r.id,
+            "session_id": r.session_id,
+            "referral_code": r.referral_code,
+            "affiliate_name": aff_name,
+            "product_id": r.product_id,
+            "product_title": prod_name,
+            "customer_id": r.customer_id,
+            "customer_email": cust_email,
+            "order_id": r.order_id,
+            "status": r.status,
+            "clicked_at": r.clicked_at.isoformat() if r.clicked_at else None,
+            "authenticated_at": r.authenticated_at.isoformat() if r.authenticated_at else None,
+            "converted_at": r.converted_at.isoformat() if r.converted_at else None,
+        })
+
+    return {
+        "summary": {
+            "total_clicks": total_clicks,
+            "authenticated_visitors": auth_visitors,
+            "product_views": product_views,
+            "purchases": purchases,
+            "conversion_rate": conversion_rate,
+            "total_revenue": round(total_revenue, 2),
+            "total_commission": round(total_commission, 2)
+        },
+        "referrals": ledger
+    }
+
 

@@ -213,7 +213,6 @@ class ReferralLinkCreate(BaseModel):
 
 class ReferralLinkResponse(BaseModel):
     id: int
-    affiliate_id: int
     product_id: int
     referral_code: str
     name: Optional[str] = None
@@ -224,3 +223,29 @@ class ReferralLinkResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# -- Persistent Referral Lifecycle Schemas ------------------------------------
+
+class ReferralClickRequest(BaseModel):
+    referral_code: str
+    product_id: int
+
+
+class ReferralClickResponse(BaseModel):
+    session_id: str
+    referral_code: str
+    product_id: int
+    status: str
+    is_valid: bool
+
+
+class ReferralAuthRequest(BaseModel):
+    session_id: Optional[str] = None
+    referral_code: Optional[str] = None
+    product_id: Optional[int] = None
+
+
+class ReferralViewRequest(BaseModel):
+    session_id: Optional[str] = None
+    product_id: int

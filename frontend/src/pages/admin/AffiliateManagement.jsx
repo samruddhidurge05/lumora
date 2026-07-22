@@ -156,6 +156,14 @@ export default function AffiliateManagement() {
     }));
   };
 
+  const [referralAnalytics, setReferralAnalytics] = useState(null);
+
+  useEffect(() => {
+    backendFetch('/affiliate/referrals/admin-analytics')
+      .then(res => setReferralAnalytics(res))
+      .catch(() => {});
+  }, []);
+
   return (
     <AdminLayout activePage="affiliate-management">
       <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
@@ -181,6 +189,7 @@ export default function AffiliateManagement() {
           <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'referrals', label: 'Referral Lifecycle', icon: Link2 },
               { id: 'products', label: 'Products Matrix', icon: ShoppingBag },
               { id: 'affiliates', label: 'Promoters Table', icon: Users },
               { id: 'rules', label: 'Commission Rules', icon: Sliders },
@@ -283,6 +292,82 @@ export default function AffiliateManagement() {
                   <span>Backend Query Isolation</span>
                   <Check size={16} />
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: REFERRAL LIFECYCLE ── */}
+        {activeTab === 'referrals' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider block">Total Referral Clicks</span>
+                <div className="text-xl font-bold text-[#2D004D] mt-1">{referralAnalytics?.summary?.total_clicks || 0}</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider block">Authenticated Visitors</span>
+                <div className="text-xl font-bold text-[#2D004D] mt-1">{referralAnalytics?.summary?.authenticated_visitors || 0}</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider block">Product Views</span>
+                <div className="text-xl font-bold text-[#2D004D] mt-1">{referralAnalytics?.summary?.product_views || 0}</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider block">Purchases & Conversions</span>
+                <div className="text-xl font-bold text-emerald-600 mt-1">{referralAnalytics?.summary?.purchases || 0} ({referralAnalytics?.summary?.conversion_rate || 0}%)</div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-[#F3EAF8] flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#2D004D]">Persistent Referral Attribution Ledger</h3>
+                <span className="text-xs text-[#7B3FA0] font-medium">PostgreSQL Single Source of Truth</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#2D004D]">
+                  <thead className="bg-[#F8F3FB] text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0]">
+                    <tr>
+                      <th className="p-3">Ref Code</th>
+                      <th className="p-3">Promoter</th>
+                      <th className="p-3">Product</th>
+                      <th className="p-3">Customer Email</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Order ID</th>
+                      <th className="p-3">Clicked At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3EAF8]">
+                    {(!referralAnalytics?.referrals || referralAnalytics.referrals.length === 0) ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-xs text-gray-400">
+                          No referral lifecycle events recorded yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      referralAnalytics.referrals.map((r) => (
+                        <tr key={r.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="p-3 font-mono font-bold text-[#7B3FA0]">{r.referral_code}</td>
+                          <td className="p-3 font-medium">{r.affiliate_name}</td>
+                          <td className="p-3 font-medium">{r.product_title}</td>
+                          <td className="p-3 text-gray-600">{r.customer_email}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              r.status === 'PURCHASED' ? 'bg-emerald-100 text-emerald-700' :
+                              r.status === 'AUTHENTICATED' ? 'bg-blue-100 text-blue-700' :
+                              r.status === 'PRODUCT_VIEWED' ? 'bg-purple-100 text-purple-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="p-3 font-mono text-gray-500">{r.order_id ? `#${r.order_id}` : '—'}</td>
+                          <td className="p-3 text-gray-400">{r.clicked_at ? new Date(r.clicked_at).toLocaleString() : '—'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

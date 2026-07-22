@@ -61,6 +61,7 @@ const ForgotPassword    = lazy(() => import('./pages/auth/ForgotPassword'));
 const VerifyEmail       = lazy(() => import('./pages/auth/VerifyEmail'));
 const JoinAffiliate     = lazy(() => import('./pages/marketplace/JoinAffiliate'));
 const JoinVendor        = lazy(() => import('./pages/marketplace/JoinVendor'));
+const ReferralRouteHandler = lazy(() => import('./pages/marketplace/ReferralRouteHandler'));
 
 // Partnerships
 const PartnershipHub    = lazy(() => import('./pages/partnerships/PartnershipHub'));
@@ -178,7 +179,7 @@ function AppContent() {
       const { orderDetails, purchasedItems } = event.detail;
       setPopupData({ orderDetails, purchasedItems });
       setShowDownloadPopup(true);
-      
+
       // Refresh user data after purchase
       setTimeout(() => {
         // Trigger a refresh of orders, downloads, and notifications
@@ -191,6 +192,39 @@ function AppContent() {
       window.removeEventListener('lumora_purchase_complete', handlePurchaseComplete);
     };
   }, []);
+
+  // Central post-authentication referral lifecycle processor
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const stored = localStorage.getItem('lumora_pending_referral');
+      if (!stored) return;
+
+      const pending = JSON.parse(stored);
+      if (!pending || !pending.referral_code) return;
+
+      // Prevent duplicate processing per session
+      const processedKey = `lumora_ref_processed_${user.uid}_${pending.product_id}`;
+      if (sessionStorage.getItem(processedKey)) return;
+      sessionStorage.setItem(processedKey, 'true');
+
+      import('./utils/api').then(({ backendFetch }) => {
+        backendFetch('/affiliate/referrals/authenticate', {
+          method: 'POST',
+          body: JSON.stringify({
+            session_id: pending.session_id || sessionStorage.getItem('lumora_ref_session_id'),
+            referral_code: pending.referral_code,
+            product_id: pending.product_id ? parseInt(pending.product_id, 10) : null
+          })
+        }).then(() => {
+          localStorage.removeItem('lumora_pending_referral');
+          if (pending.product_id) {
+            window.location.href = `/#product/${pending.product_id}`;
+          }
+        }).catch(() => {});
+      });
+    } catch (_) {}
+  }, [user?.uid]);
 
   const handleGoToDownloads = () => {
     setShowDownloadPopup(false);
@@ -384,6 +418,10 @@ function AppContent() {
           <Route path="/auth/register"           element={<Register />} />
           <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
           <Route path="/auth/verify-email"       element={<VerifyEmail />} />
+
+          {/* ── Referral routes ── */}
+          <Route path="/ref/:code/product/:productId" element={<ReferralRouteHandler />} />
+          <Route path="/ref/:code"                    element={<ReferralRouteHandler />} />
 
           {/* ── Partnership routes ── */}
           <Route path="/partnerships"           element={<PartnershipHub />} />

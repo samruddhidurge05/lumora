@@ -245,6 +245,8 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS paid_at          TIMESTAMP",
             # product_download_events table creation for PostgreSQL
             "CREATE TABLE IF NOT EXISTS product_download_events (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), downloaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ip_address VARCHAR(64), user_agent VARCHAR(512), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            # affiliate_referrals table creation for PostgreSQL
+            "CREATE TABLE IF NOT EXISTS affiliate_referrals (id SERIAL PRIMARY KEY, affiliate_id INTEGER NOT NULL REFERENCES affiliate_profiles(id), referral_code VARCHAR(50) NOT NULL, product_id INTEGER NOT NULL REFERENCES products(id), customer_id INTEGER REFERENCES users(id), session_id VARCHAR(100) NOT NULL UNIQUE, order_id INTEGER REFERENCES orders(id), status VARCHAR(30) NOT NULL DEFAULT 'CLICKED', ip_address VARCHAR(45), user_agent TEXT, clicked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, authenticated_at TIMESTAMP, converted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
         ]
 
         
