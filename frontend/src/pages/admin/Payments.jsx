@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, TableContainer, AdminSelect } from './components/AdminComponents';
 import {
   subscribeToPaymentsTelemetry,
   calculatePaymentOverview,
@@ -309,22 +309,16 @@ export default function Payments() {
 
                     {/* Date filter dropdown */}
                     <div className="w-full md:w-auto flex items-center gap-3 self-end md:self-auto">
-                      <span className="text-[10px] font-bold text-[#7B3FA0] tracking-wider uppercase">Timeframe:</span>
-                      <div className="relative">
-                        <select
-                          value={dateFilter}
-                          onChange={(e) => setDateFilter(e.target.value)}
-                          className="appearance-none bg-white/60 border border-stone-200 hover:border-[#D8BFE3] px-4 py-2 pr-8 rounded-xl text-xs font-bold text-[#2D004D] focus:outline-none transition-colors cursor-pointer"
-                        >
-                          <option value="today">Today</option>
-                          <option value="7days">Last 7 Days</option>
-                          <option value="30days">Last 30 Days</option>
-                          <option value="custom">Custom Range</option>
-                        </select>
-                        <div className="absolute right-3 top-2.5 pointer-events-none text-[#7B3FA0]">
-                          <ChevronDown size={10} />
-                        </div>
-                      </div>
+                      <AdminSelect
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        options={[
+                          { value: 'today', label: 'Timeframe: Today' },
+                          { value: '7days', label: 'Timeframe: Last 7 Days' },
+                          { value: '30days', label: 'Timeframe: Last 30 Days' },
+                          { value: 'custom', label: 'Timeframe: Custom Range' }
+                        ]}
+                      />
                     </div>
                   </div>
 

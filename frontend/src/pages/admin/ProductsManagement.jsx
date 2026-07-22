@@ -2529,13 +2529,12 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Category Bracket</label>
-                <select 
+                <AdminSelect 
                   value={form.category}
                   onChange={(e) => handleChange('category', e.target.value)}
-                  className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3]"
-                >
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  options={categories.map(c => ({ value: c, label: c }))}
+                  className="w-full"
+                />
               </div>
 
               <div className="sm:col-span-2">
@@ -3013,14 +3012,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Status Launch Stage</label>
-                <select 
+                <AdminSelect 
                   value={form.status}
                   onChange={(e) => handleChange('status', e.target.value)}
-                  className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none"
-                >
-                  <option value="Published">Published / Live</option>
-                  <option value="Draft">Draft Mode</option>
-                </select>
+                  options={[
+                    { value: 'Published', label: 'Published / Live' },
+                    { value: 'Draft', label: 'Draft Mode' }
+                  ]}
+                  className="w-full"
+                />
               </div>
 
               <div>
