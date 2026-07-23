@@ -414,7 +414,16 @@ export default function Dashboard() {
               color: '#fff', fontWeight: 800, fontSize: '0.8rem',
               boxShadow: '0 4px 12px rgba(90,30,126,0.30)',
             }}>L</span>
-            <span className="text-editorial" style={{ fontSize: '1.25rem', fontWeight: 500, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+            <span className="text-editorial cust-logo-text" style={{ fontSize: '1.25rem', fontWeight: 500, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+              Lumora
+            </span>
+            <span className="cust-role-badge" style={{
+              fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.07em',
+              color: '#7B3FA0', background: 'rgba(123,63,160,0.08)',
+              border: '1px solid rgba(196,148,230,0.30)',
+              padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase',
+            }}>Customer</span>
+          </button>
               Lumora
             </span>
             <span style={{
@@ -523,10 +532,11 @@ export default function Dashboard() {
           </nav>
 
           {/* Right Action Group: AI search + user info + exit */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          <div className="cust-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             {/* Cart Icon Option */}
             <button
               onClick={() => navigateTo('cart')}
+              className="cust-cart-btn"
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '6px 12px', borderRadius: '20px',
@@ -539,8 +549,8 @@ export default function Dashboard() {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.85)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.70)'; }}
             >
-              <ShoppingBag size={12} />
-              <span className="dash-cart-label">Cart ({cart?.length || 0})</span>
+              <ShoppingBag size={14} />
+              <span className="dash-cart-label cust-cart-label">Cart ({cart?.length || 0})</span>
             </button>
 
             {/* AI Search */}
@@ -564,13 +574,13 @@ export default function Dashboard() {
             </form>
 
             {/* User avatar */}
-            <div style={{
+            <div className="cust-avatar-pill" style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '4px 10px', borderRadius: '20px',
               background: 'rgba(255,255,255,0.60)',
               border: '1px solid rgba(196,148,230,0.22)',
             }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0 }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.72rem', flexShrink: 0 }}>
                 {username[0]?.toUpperCase()}
               </div>
               <span className="dash-user-name" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
@@ -579,6 +589,7 @@ export default function Dashboard() {
             {/* Exit */}
             <button
               onClick={() => navigateTo('landing')}
+              className="cust-exit-btn"
               style={{
                 display: 'flex', alignItems: 'center', gap: '4px',
                 padding: '6px 12px', borderRadius: '16px',
@@ -591,7 +602,7 @@ export default function Dashboard() {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.85)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
             >
-              <LogOut size={12} /> Exit
+              <LogOut size={14} /> <span className="cust-exit-text">Exit</span>
             </button>
 
             {/* Mobile hamburger */}
@@ -676,9 +687,47 @@ export default function Dashboard() {
         @media (max-width: 860px) {
           .cust-hamburger { display: flex !important; }
           .cust-nav-bar   { display: none !important; }
+          .dash-ai-search { display: none !important; }
+          .dash-user-name { display: none !important; }
+          .cust-cart-label { display: none !important; }
         }
         @media (max-width: 640px) {
           main { padding: 20px 16px !important; }
+          /* Header: tighten height and padding */
+          .dash-header-inner {
+            padding: 0 14px !important;
+            height: 56px !important;
+            gap: 8px !important;
+          }
+          /* Hide the CUSTOMER role badge on very small screens */
+          .cust-role-badge { display: none !important; }
+          /* Shrink logo text */
+          .cust-logo-text { font-size: 1.05rem !important; }
+          /* Right action group — icon-only, tight gap */
+          .cust-actions {
+            gap: 6px !important;
+          }
+          /* Cart button — icon only, no label */
+          .cust-cart-btn {
+            padding: 6px 8px !important;
+            border-radius: 12px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            justify-content: center !important;
+          }
+          /* User avatar pill — icon only */
+          .cust-avatar-pill {
+            padding: 4px !important;
+            border-radius: 50% !important;
+          }
+          /* Exit button — icon only */
+          .cust-exit-btn {
+            padding: 6px 8px !important;
+            border-radius: 12px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+          }
+          .cust-exit-text { display: none !important; }
         }
       `}</style>
     </div>
