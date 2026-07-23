@@ -30,12 +30,8 @@ function ProductAffiliateDrawer({ productId, onClose, onRefresh }) {
     if (!productId) return;
     setLoading(true);
     try {
-      const res = await backendFetch(`/admin/affiliates/affiliate-products/${productId}/details`);
-      if (res.ok) {
-        setData(await res.json());
-      } else {
-        setData(null);
-      }
+      const data = await backendFetch(`/admin/affiliates/affiliate-products/${productId}/details`);
+      setData(data || null);
     } catch (e) {
       setData(null);
     } finally {
@@ -58,14 +54,12 @@ function ProductAffiliateDrawer({ productId, onClose, onRefresh }) {
   const handleToggleLink = async (linkId, currentStatus) => {
     const nextStatus = currentStatus === 'active' ? 'paused' : 'active';
     try {
-      const res = await backendFetch(`/admin/referral-links/${linkId}/status`, {
+      await backendFetch(`/admin/referral-links/${linkId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: nextStatus }),
       });
-      if (res.ok) {
-        loadDetails();
-        if (onRefresh) onRefresh();
-      }
+      loadDetails();
+      if (onRefresh) onRefresh();
     } catch (e) {
       console.error('Failed to update link status:', e);
     }
@@ -74,11 +68,9 @@ function ProductAffiliateDrawer({ productId, onClose, onRefresh }) {
   const handleDeleteLink = async (linkId) => {
     if (!window.confirm('Delete this referral link?')) return;
     try {
-      const res = await backendFetch(`/admin/referral-links/${linkId}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadDetails();
-        if (onRefresh) onRefresh();
-      }
+      await backendFetch(`/admin/referral-links/${linkId}`, { method: 'DELETE' });
+      loadDetails();
+      if (onRefresh) onRefresh();
     } catch (e) {
       console.error('Failed to delete link:', e);
     }
@@ -249,13 +241,8 @@ export default function CampaignManager() {
     setLoading(true);
     try {
       const q = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
-      const res = await backendFetch(`/admin/affiliates/affiliate-products${q}`);
-      if (res.ok) {
-        const items = await res.json();
-        setAffiliateProducts(Array.isArray(items) ? items : []);
-      } else {
-        setAffiliateProducts([]);
-      }
+      const items = await backendFetch(`/admin/affiliates/affiliate-products${q}`);
+      setAffiliateProducts(Array.isArray(items) ? items : []);
     } catch (e) {
       console.error('Failed to load affiliate products:', e);
       setAffiliateProducts([]);
@@ -276,13 +263,11 @@ export default function CampaignManager() {
   // Toggle affiliate_enabled status for a product directly via backend API
   const handleToggleProductAffiliate = async (productId, currentStatus) => {
     try {
-      const res = await backendFetch(`/admin/products/${productId}`, {
-        method: 'PUT',
+      await backendFetch(`/admin/products/${productId}/affiliate`, {
+        method: 'PATCH',
         body: JSON.stringify({ affiliate_enabled: !currentStatus }),
       });
-      if (res.ok) {
-        loadAffiliateProducts();
-      }
+      loadAffiliateProducts();
     } catch (e) {
       console.error('Error toggling product affiliate status:', e);
     }
@@ -311,7 +296,7 @@ export default function CampaignManager() {
     const prodName = targetProd?.title || 'Product';
 
     try {
-      const res = await backendFetch('/admin/referral-links', {
+      await backendFetch('/admin/referral-links', {
         method: 'POST',
         body: JSON.stringify({
           productId: String(form.productId),
@@ -322,17 +307,12 @@ export default function CampaignManager() {
         }),
       });
 
-      if (res.ok) {
-        setShowForm(false);
-        setForm({ productId: '', productName: '', referralName: '', commissionPct: 20, code: '' });
-        loadAffiliateProducts();
-      } else {
-        const errData = await res.json();
-        alert(`Failed to create referral link: ${errData.detail || 'Unknown error'}`);
-      }
+      setShowForm(false);
+      setForm({ productId: '', productName: '', referralName: '', commissionPct: 20, code: '' });
+      loadAffiliateProducts();
     } catch (err) {
       console.error('Create referral link error:', err);
-      alert(`Error creating referral link: ${err.message || 'Unknown error'}`);
+      alert(`Failed to create referral link: ${err.message || 'Unknown error'}`);
     } finally {
       setCreating(false);
     }
