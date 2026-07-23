@@ -424,15 +424,6 @@ export default function Dashboard() {
               padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase',
             }}>Customer</span>
           </button>
-              Lumora
-            </span>
-            <span style={{
-              fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.07em',
-              color: '#7B3FA0', background: 'rgba(123,63,160,0.08)',
-              border: '1px solid rgba(196,148,230,0.30)',
-              padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase',
-            }}>Customer</span>
-          </button>
 
           {/* Center Navigation Bar — Single row with all customer modules */}
           <nav style={{
