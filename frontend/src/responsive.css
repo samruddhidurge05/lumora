@@ -432,16 +432,39 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
   gap: 18px;
 }
+
+/* ── Horizontal scroll carousel on mobile ── */
 @media (max-width: 640px) {
-  /* Dashboard browse grid — 2 columns, NOT carousel */
   .dash-product-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 12px !important;
+    margin-left: calc(-1 * var(--mob-pad)) !important;
+    margin-right: calc(-1 * var(--mob-pad)) !important;
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  .dash-product-grid::-webkit-scrollbar { display: none; }
+  .dash-product-grid > * {
+    flex: 0 0 72vw !important;
+    max-width: 72vw !important;
+    min-width: 0 !important;
+    scroll-snap-align: start !important;
   }
 }
 @media (max-width: 360px) {
-  .dash-product-grid { grid-template-columns: 1fr !important; }
+  .dash-product-grid > * {
+    flex: 0 0 82vw !important;
+    max-width: 82vw !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -632,18 +655,43 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
   gap: 20px;
 }
+
+/* ── Horizontal scroll carousel on mobile ── */
 @media (max-width: 640px) {
-  /* Marketplace browse grid — 2 columns, NOT carousel (134+ products need rows) */
   .product-auto-grid,
   .lumora-products-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 12px !important;
+    margin-left: calc(-1 * var(--mob-pad)) !important;
+    margin-right: calc(-1 * var(--mob-pad)) !important;
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  .product-auto-grid::-webkit-scrollbar,
+  .lumora-products-grid::-webkit-scrollbar { display: none; }
+  .product-auto-grid > *,
+  .lumora-products-grid > * {
+    flex: 0 0 72vw !important;
+    max-width: 72vw !important;
+    min-width: 0 !important;
+    scroll-snap-align: start !important;
   }
 }
 @media (max-width: 360px) {
-  .product-auto-grid,
-  .lumora-products-grid { grid-template-columns: 1fr !important; }
+  .product-auto-grid > *,
+  .lumora-products-grid > * {
+    flex: 0 0 82vw !important;
+    max-width: 82vw !important;
+  }
 }
 
 /* Product cards: smaller image on mobile — 2-col readable */
