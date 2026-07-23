@@ -191,7 +191,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       {/* ── PRODUCT GRID ──────────────────────────────────────────────── */}
       {filtered.length > 0 ? (
         <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+        <div className="aff-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
           {filtered.slice(0, showCount).map(product => {
             const rateStr = formatCommission(product);
             const earning = calcEarning(product);
