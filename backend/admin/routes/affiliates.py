@@ -304,6 +304,29 @@ def get_commissions_ledger(
     admin_user=Depends(require_admin_role)
 ):
     """Sales Ledger — all affiliate commissions with full detail, filterable."""
+    # Sanitize Query default objects
+    if not isinstance(search, str): search = None
+    if not isinstance(affiliate_id, int): affiliate_id = None
+    if not isinstance(product_id, int): product_id = None
+    if not isinstance(commission_status, str): commission_status = None
+    if not isinstance(purchase_status, str): purchase_status = None
+    if not isinstance(date_from, str): date_from = None
+    if not isinstance(date_to, str): date_to = None
+
+    # Auto-recover missing commission records for attributed orders
+    try:
+        from admin.routes.affiliates import regenerate_commission_for_order
+        attr_orders = db.query(Order).filter(
+            or_(Order.affiliate_id.isnot(None), Order.referral_code_used.isnot(None)),
+            Order.status.in_(["paid", "completed"])
+        ).all()
+        for o in attr_orders:
+            comm_exists = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == o.id).first()
+            if not comm_exists:
+                regenerate_commission_for_order(o.id, db=db, force=False)
+    except Exception as exc:
+        logger.warning("[get_commissions_ledger] Auto-recovery warning: %s", exc)
+
     q = (
         db.query(AffiliateCommission, AffiliateProfile, User)
         .join(AffiliateProfile, AffiliateCommission.affiliate_id == AffiliateProfile.id)
@@ -645,6 +668,39 @@ def get_payout_queue(
     admin_user=Depends(require_admin_role)
 ):
     """Payout queue — pending/completed payouts grouped by affiliate."""
+    if not isinstance(payout_status, str):
+        payout_status = None
+
+    # Auto-generate pending payout entries for affiliates with pending earnings/commissions
+    try:
+        affs_with_pending = db.query(AffiliateProfile).all()
+        for aff in affs_with_pending:
+            pending_sum = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
+                AffiliateCommission.affiliate_id == aff.id,
+                AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"])
+            ).scalar() or 0.0
+            
+            if pending_sum > 0:
+                existing_payout = db.query(AffiliatePayout).filter(
+                    AffiliatePayout.affiliate_id == aff.id,
+                    AffiliatePayout.status.in_(["pending", "processing"])
+                ).first()
+                if not existing_payout:
+                    new_payout = AffiliatePayout(
+                        affiliate_id=aff.id,
+                        amount=round(pending_sum, 2),
+                        method="upi",
+                        status="pending",
+                        notes="Auto-created pending payout from commissions"
+                    )
+                    db.add(new_payout)
+                    db.commit()
+                elif existing_payout.amount != round(pending_sum, 2):
+                    existing_payout.amount = round(pending_sum, 2)
+                    db.commit()
+    except Exception as exc:
+        logger.warning("[get_payout_queue] Auto-payout sync warning: %s", exc)
+
     q = (
         db.query(AffiliatePayout, AffiliateProfile, User)
         .join(AffiliateProfile, AffiliatePayout.affiliate_id == AffiliateProfile.id)
@@ -925,6 +981,9 @@ def get_affiliate_activity_timeline(
     admin_user=Depends(require_admin_role)
 ):
     """Activity timeline — all affiliate-related audit log events."""
+    if not isinstance(affiliate_action, str):
+        affiliate_action = None
+
     affiliate_actions = [
         "affiliate_enable", "affiliate_disable",
         "commission_approved", "commission_rejected", "commission_paid",
@@ -1071,6 +1130,40 @@ def get_customer_attributions(
     Customer Attribution & Lifetime Value (LTV) view.
     Answers: "Which customers converted via affiliate referrals, and what is their LTV?"
     """
+    # Sanitize Query default objects
+    if not isinstance(search, str): search = None
+    if not isinstance(affiliate_id, int): affiliate_id = None
+
+    # Auto-sync missing ReferralAttribution records from attributed orders
+    try:
+        attr_orders = db.query(Order).filter(
+            or_(Order.affiliate_id.isnot(None), Order.referral_code_used.isnot(None)),
+            Order.user_id.isnot(None),
+            Order.status.in_(["paid", "completed"])
+        ).all()
+        for o in attr_orders:
+            exists = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == o.id).first()
+            if not exists:
+                aff_id = o.affiliate_id
+                aff_code = o.referral_code_used
+                if not aff_id and aff_code:
+                    prof = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == aff_code).first()
+                    if prof: aff_id = prof.id
+
+                if aff_id:
+                    new_attr = ReferralAttribution(
+                        order_id=o.id,
+                        customer_id=o.user_id,
+                        affiliate_id=aff_id,
+                        affiliate_code=aff_code or f"AFF{aff_id:04d}",
+                        status="converted",
+                        created_at=o.created_at or datetime.utcnow()
+                    )
+                    db.add(new_attr)
+                    db.commit()
+    except Exception as exc:
+        logger.warning("[get_customer_attributions] Auto-sync warning: %s", exc)
+
     q = (
         db.query(ReferralAttribution, User, AffiliateProfile)
         .join(User, ReferralAttribution.customer_id == User.id)
