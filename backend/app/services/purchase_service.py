@@ -110,7 +110,7 @@ class PurchaseService:
                     })
 
                 # 6. Generate Affiliate Commissions
-                if affiliate_code and prod.affiliate_enabled:
+                if affiliate_code and getattr(prod, "affiliate_enabled", True) is not False:
                     clean_code = affiliate_code.strip().upper()
                     ref_link_obj = None
                     # 6a. First search default profile code

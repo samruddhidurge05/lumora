@@ -118,8 +118,9 @@ def initiate_payment(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Product with ID {item.product_id} not found."
                 )
-            if prod.status != "published":
-                print(f"DEBUG INITIATE - Product {item.product_id} is not published! Status: {prod.status}")
+            prod_status = (prod.status or "published").lower()
+            if prod_status in ("archived", "disabled", "deleted"):
+                print(f"DEBUG INITIATE - Product {item.product_id} is archived/disabled! Status: {prod.status}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Product '{prod.title}' is not available for purchase."
