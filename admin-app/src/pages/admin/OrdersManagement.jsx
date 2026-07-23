@@ -172,7 +172,6 @@ function AffiliateAttributionCard({ orderId }) {
     setLoading(true);
     setMsg(null);
     backendFetch(`/admin/affiliates/orders/${orderId}`)
-      .then(r => r.ok ? r.json() : null)
       .then(d => setTrace(d))
       .catch(() => setTrace(null))
       .finally(() => setLoading(false));
@@ -181,17 +180,12 @@ function AffiliateAttributionCard({ orderId }) {
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      const r = await backendFetch(`/admin/affiliates/orders/${orderId}/regenerate-commission?force=true`, { method: 'POST' });
-      const data = await r.json();
-      if (r.ok) {
-        setMsg({ type: 'success', text: data.message || 'Commission regenerated successfully!' });
-        const ref = await backendFetch(`/admin/affiliates/orders/${orderId}`);
-        if (ref.ok) setTrace(await ref.json());
-      } else {
-        setMsg({ type: 'error', text: data.detail || 'Failed to regenerate commission.' });
-      }
+      const data = await backendFetch(`/admin/affiliates/orders/${orderId}/regenerate-commission?force=true`, { method: 'POST' });
+      setMsg({ type: 'success', text: data?.message || 'Commission regenerated successfully!' });
+      const refData = await backendFetch(`/admin/affiliates/orders/${orderId}`);
+      if (refData) setTrace(refData);
     } catch (e) {
-      setMsg({ type: 'error', text: 'Error connecting to server.' });
+      setMsg({ type: 'error', text: e?.detail?.detail || e?.message || 'Failed to regenerate commission.' });
     } finally {
       setRegenerating(false);
     }
@@ -206,10 +200,16 @@ function AffiliateAttributionCard({ orderId }) {
 
   const attr = trace?.attribution;
   const comm = trace?.commission;
+  const hasAttribution = attr?.affiliate_id || (attr?.affiliate_code && attr.affiliate_code !== '—' && attr.affiliate_code !== 'null');
 
-  if (!trace || (!attr?.affiliate_name && !attr?.affiliate_code)) return (
+  if (!trace || (!attr?.affiliate_name || !attr?.affiliate_code) || !hasAttribution) return (
     <div className="flex flex-col gap-2">
       <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Affiliate Attribution</h4>
+      {msg && (
+        <div className={`p-2.5 rounded-xl text-[10px] font-medium ${msg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+          {msg.text}
+        </div>
+      )}
       <div className="bg-stone-50 border border-stone-200/60 p-4 rounded-2xl flex items-center justify-between text-xs text-[#7B3FA0]">
         <span className="text-[10px] font-medium text-stone-500">Direct Purchase (No Affiliate Referred)</span>
         <button onClick={handleRegenerate} disabled={regenerating} className="px-3 py-1 rounded-lg bg-[#7B3FA0]/10 hover:bg-[#7B3FA0]/20 text-[#7B3FA0] text-[10px] font-bold transition-all">

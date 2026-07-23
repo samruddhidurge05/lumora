@@ -205,6 +205,10 @@ export default function OrdersManagement() {
   // Responsive Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
+  // Affiliate attribution state for selected order
+  const [affiliateTrace, setAffiliateTrace] = useState(null);
+  const [affiliateTraceLoading, setAffiliateTraceLoading] = useState(false);
+
   // --- FIRESTORE DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     setLoading(true);
@@ -256,6 +260,16 @@ export default function OrdersManagement() {
   useEffect(() => {
     sysSound.muted = audioMuted;
   }, [audioMuted]);
+
+  // Fetch affiliate attribution whenever the selected order changes
+  useEffect(() => {
+    if (!selectedOrder?.id) { setAffiliateTrace(null); return; }
+    setAffiliateTraceLoading(true);
+    backendFetch(`/admin/affiliates/orders/${selectedOrder.id}`)
+      .then(data => setAffiliateTrace(data))
+      .catch(() => setAffiliateTrace(null))
+      .finally(() => setAffiliateTraceLoading(false));
+  }, [selectedOrder?.id]);
 
   // Toast utility
   const triggerNotification = (text, type = "success") => {
@@ -1460,6 +1474,60 @@ export default function OrdersManagement() {
                       <span className="font-black text-[#5A1E7E] text-sm">₹{(selectedOrder.vendorEarnings ?? parseFloat((getOrderPrice(selectedOrder) * 0.95).toFixed(2))).toFixed(2)}</span>
                     </div>
 
+                  </div>
+                </div>
+
+                {/* Affiliate Attribution Section */}
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Affiliate Attribution</h4>
+                  <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
+                    {affiliateTraceLoading ? (
+                      <div className="flex items-center justify-center py-2 gap-2">
+                        <svg className="animate-spin h-3.5 w-3.5 text-[#7B3FA0]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span className="text-[10px] text-[#7B3FA0] font-medium">Loading attribution...</span>
+                      </div>
+                    ) : (affiliateTrace?.attribution?.affiliate_id || (affiliateTrace?.attribution?.affiliate_code && affiliateTrace.attribution.affiliate_code !== '—' && affiliateTrace.attribution.affiliate_code !== 'null')) ? (
+                      <>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[10px] text-[#7B3FA0]">Affiliate Name</span>
+                          <span className="font-bold text-[#2D004D]">{affiliateTrace.attribution.affiliate_name || '—'}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[10px] text-[#7B3FA0]">Referral Code</span>
+                          <span className="font-mono text-[10px] font-bold text-[#2D004D] bg-white border border-stone-200/50 px-2 py-0.5 rounded shadow-sm">
+                            {affiliateTrace.attribution.affiliate_code || '—'}
+                          </span>
+                        </div>
+                        <div className="h-px bg-stone-200/50 my-1" />
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[10px] text-[#7B3FA0]">Commission Amount</span>
+                          <span className="font-bold text-[#2D004D]">
+                            {affiliateTrace.commission?.amount != null
+                              ? `₹${Number(affiliateTrace.commission.amount).toFixed(2)}`
+                              : '—'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[10px] text-[#7B3FA0]">Commission Status</span>
+                          <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                            affiliateTrace.commission?.status === 'paid'
+                              ? 'bg-[#B886D0]/30 text-[#5A1E7E] border-[#B886D0]/60'
+                              : affiliateTrace.commission?.status === 'pending'
+                              ? 'bg-[#D8BFE3]/30 text-[#7a5940] border-[#D8BFE3]/60'
+                              : 'bg-stone-100 text-stone-500 border-stone-200'
+                          }`}>
+                            {affiliateTrace.commission?.status || 'Unknown'}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2 py-1">
+                        <span className="text-[10px] text-[#8E6AA8]">Direct Purchase (No Affiliate Referred)</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
