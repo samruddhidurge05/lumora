@@ -109,7 +109,7 @@ export default function AdminSupportInbox() {
     <AdminLayout activePage="support">
       <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', itemsCenter: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span style={{ fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.08em', color: '#8B6B5B', textTransform: 'uppercase' }}>Support</span>
             <h1 style={{ fontFamily: 'var(--font-editorial, serif)', fontSize: '2rem', fontWeight: 400, color: '#2D004D', margin: 0 }}>
@@ -130,11 +130,11 @@ export default function AdminSupportInbox() {
           />
         </div>
 
-        {/* Two-panel layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '20px', flex: 1, minHeight: 0 }}>
+        {/* Two-panel layout: Master-Detail pattern on mobile (<768px) */}
+        <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-5 flex-1 min-h-0">
 
-          {/* ── Left: Ticket list ── */}
-          <div style={{ background: 'rgba(255,255,255,0.48)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {/* ── Left: Ticket list (hidden on mobile when a ticket is selected) ── */}
+          <div className={`bg-white/48 backdrop-blur-xl border border-white/40 rounded-2xl overflow-hidden flex flex-col ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(220,198,255,0.18)', fontSize: '0.74rem', fontWeight: 800, color: '#8B6B5B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Tickets {!loadingTickets && `(${tickets.length})`}
             </div>
@@ -182,12 +182,22 @@ export default function AdminSupportInbox() {
 
           {/* ── Right: Thread view ── */}
           {selectedTicket ? (
-            <div style={{ background: 'rgba(255,255,255,0.48)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {/* Thread header */}
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(220,198,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                <div>
-                  <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#2D004D' }}>{selectedTicket.title || `Ticket #${selectedTicket.id}`}</div>
-                  <div style={{ fontSize: '0.70rem', color: '#8B6B5B', marginTop: '2px' }}>{selectedTicket.buyer_name} · #{selectedTicket.id}</div>
+            <div className={`bg-white/48 backdrop-blur-xl border border-white/40 rounded-2xl flex flex-col overflow-hidden ${selectedTicket ? 'flex' : 'hidden md:flex'}`}>
+              {/* Thread header with Mobile Back Button */}
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(220,198,255,0.18)', display: 'flex', alignItems: 'center', justify: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTicket(null)}
+                    className="md:hidden p-2 rounded-xl text-[#7B3FA0] bg-[#7B3FA0]/10 hover:bg-[#7B3FA0]/20 transition-colors font-bold text-xs flex items-center gap-1"
+                    aria-label="Back to Tickets"
+                  >
+                    ← Back
+                  </button>
+                  <div>
+                    <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#2D004D' }}>{selectedTicket.title || `Ticket #${selectedTicket.id}`}</div>
+                    <div style={{ fontSize: '0.70rem', color: '#8B6B5B', marginTop: '2px' }}>{selectedTicket.buyer_name} · #{selectedTicket.id}</div>
+                  </div>
                 </div>
                 {/* Status changer */}
                 <AdminSelect
@@ -208,7 +218,7 @@ export default function AdminSupportInbox() {
                 ) : messages.map((m, i) => {
                   const isAdmin = String(m.sender_id) !== String(selectedTicket.buyer_id);
                   return (
-                    <div key={m.id || i} style={{ alignSelf: isAdmin ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                    <div key={m.id || i} style={{ alignSelf: isAdmin ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                       <div style={{ padding: '10px 14px', borderRadius: '14px', background: isAdmin ? 'linear-gradient(135deg,#7B3FA0,#5A1E7E)' : 'rgba(245,243,255,0.9)', color: isAdmin ? '#fff' : '#2D004D', fontSize: '0.83rem', lineHeight: 1.5, fontWeight: 500, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
                         {m.content}
                       </div>
@@ -240,7 +250,7 @@ export default function AdminSupportInbox() {
               </form>
             </div>
           ) : (
-            <div style={{ background: 'rgba(255,255,255,0.48)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', color: '#8B6B5B' }}>
+            <div className="hidden md:flex bg-white/48 backdrop-blur-xl border border-white/40 rounded-2xl items-center justify-center flex-col gap-3 text-[#8B6B5B] p-12">
               <MessageSquare size={40} style={{ opacity: 0.3 }} />
               <p style={{ fontSize: '0.86rem', fontWeight: 600 }}>Select a ticket to view the thread</p>
             </div>

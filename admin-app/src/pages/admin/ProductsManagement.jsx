@@ -2559,12 +2559,12 @@ function ProductFormModal({ product, onClose, onSubmit }) {
       >
         
         {/* Panel Header */}
-        <div className="px-8 py-6 border-b border-[#F3EAF8] flex items-center justify-between bg-white/45 backdrop-blur-md">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-[#F3EAF8] flex items-center justify-between bg-white/45 backdrop-blur-md">
           <div>
             <span className="text-[10px] tracking-widest uppercase font-extrabold text-[#7B3FA0] block mb-1">
               CREATOR DESIGN MATRIX
             </span>
-            <h2 className="text-xl font-serif text-[#2D004D]">
+            <h2 className="text-lg sm:text-xl font-serif text-[#2D004D]">
               {product ? `Edit Artifact: ${product.name}` : "Create Creative Product"}
             </h2>
           </div>
@@ -2577,7 +2577,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
         </div>
 
         {/* Dynamic Scrollable Form Content */}
-        <form onSubmit={handleSubmit} className="p-8 flex-1 overflow-y-auto space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-8 flex-1 overflow-y-auto space-y-4 sm:space-y-6">
           
           {/* Section: Basic Metadata */}
           <div>
@@ -3280,12 +3280,12 @@ function ProductFormModal({ product, onClose, onSubmit }) {
         </form>
 
         {/* Action Bottom Strip */}
-        <div className="px-8 py-5 border-t border-[#F3EAF8] bg-white/45 backdrop-blur-md flex items-center justify-end gap-3">
+        <div className="px-4 sm:px-8 py-3.5 sm:py-5 border-t border-[#F3EAF8] bg-white/45 backdrop-blur-md flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
           <button 
             type="button" 
             onClick={onClose}
             disabled={isSubmitting}
-            className={`px-5 py-2.5 rounded-xl border border-[#F5E9DD]/80 hover:bg-white text-xs font-bold uppercase tracking-widest text-[#7B3FA0] transition-colors ${
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#F5E9DD]/80 hover:bg-white text-xs font-bold uppercase tracking-widest text-[#7B3FA0] transition-colors ${
               isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -3295,7 +3295,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+            className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
               isSubmitting 
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] text-[#2D004D] hover:shadow-[0_4px_20px_rgba(216,191,227,0.3)]'
