@@ -746,13 +746,42 @@ export default function AffiliateManagement() {
   }, [products, affiliates]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleToggleProductAffiliate = id => setProducts(prev => prev.map(p => p.id === id ? { ...p, affiliate_enabled: !p.affiliate_enabled } : p));
+  const handleToggleProductAffiliate = async (id) => {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return;
+    const nextStatus = !prod.affiliate_enabled;
+    try {
+      const r = await backendFetch(`/admin/products/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ affiliate_enabled: nextStatus })
+      });
+      if (r.ok) loadProducts();
+    } catch(e) {
+      console.error('Failed to update product affiliate status:', e);
+    }
+  };
   const toggleSelectProduct = id => setSelectedProductIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const toggleSelectAll = () => setSelectedProductIds(selectedProductIds.length === filteredProducts.length ? [] : filteredProducts.map(p => p.id));
-  const handleApplyBulkUpdate = () => {
+  const handleApplyBulkUpdate = async () => {
     if (!selectedProductIds.length) return;
-    setProducts(prev => prev.map(p => selectedProductIds.includes(p.id) ? { ...p, affiliate_enabled: bulkEnableStatus, commission_mode: bulkCommissionMode, commission_value: Number(bulkCommissionValue) || 0 } : p));
-    setShowBulkModal(false); setSelectedProductIds([]);
+    try {
+      await Promise.all(selectedProductIds.map(id =>
+        backendFetch(`/admin/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            affiliate_enabled: bulkEnableStatus,
+            commission_mode: bulkCommissionMode,
+            commission_value: Number(bulkCommissionValue) || 0
+          })
+        })
+      ));
+      loadProducts();
+    } catch(e) {
+      console.error('Failed bulk affiliate update:', e);
+    } finally {
+      setShowBulkModal(false);
+      setSelectedProductIds([]);
+    }
   };
   const handleToggleAffiliateStatus = id => setAffiliates(prev => prev.map(a => a.id === id ? { ...a, status: a.status === 'active' ? 'suspended' : 'active' } : a));
   const handleExportCSV = () => { window.open('/api/admin/affiliates/commissions/export/csv', '_blank'); };

@@ -206,6 +206,40 @@ def patch_product_featured(
     return product
 
 
+class AffiliatePatch(BaseModel):
+    affiliate_enabled: bool
+    commission_mode: Optional[str] = "percentage"
+    commission_value: Optional[float] = 20.0
+
+
+@router.patch("/{product_id}/affiliate", response_model=ProductResponse)
+@router.put("/{product_id}/affiliate", response_model=ProductResponse)
+def patch_product_affiliate(
+    product_id: int,
+    body: AffiliatePatch,
+    db: Session = Depends(get_db),
+    admin_user = Depends(require_admin_role)
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.affiliate_enabled = body.affiliate_enabled
+    if body.commission_mode:
+        product.commission_mode = body.commission_mode
+        product.commission_type = body.commission_mode
+    if body.commission_value is not None:
+        product.commission_value = body.commission_value
+    db.commit()
+    db.refresh(product)
+    sync_product_to_firestore(product)
+    try:
+        log_admin_action(db, admin_user_id=admin_user.id, action="product_affiliate_patched", target_type="product", target_id=str(product_id))
+    except Exception:
+        pass
+    return product
+
+
+
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):
     product = db.query(Product).filter(Product.id == product_id).first()
