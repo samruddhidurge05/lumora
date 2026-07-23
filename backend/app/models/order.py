@@ -24,6 +24,8 @@ class Order(Base):
     affiliate_id       = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=True, index=True)
     referral_link_id   = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
     referral_code_used = Column(String(50), nullable=True, index=True)
+    attribution_source = Column(String(30), default="referral_link", index=True)  # referral_link | coupon_code
+    coupon_code_used   = Column(String(50), nullable=True, index=True)
 
     user  = relationship("User",      back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")

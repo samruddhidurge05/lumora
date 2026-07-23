@@ -642,10 +642,39 @@ class PaymentService:
         new_status = "REFUND_PENDING"
         repo.update_status(payment, new_status=new_status)
 
+        # Reverse any associated affiliate commissions for this order
+        if payment.order_id:
+            from app.models.affiliate import AffiliateCommission, AffiliateProfile, AffiliateReferral
+            from datetime import datetime as _dt
+            commissions = db.query(AffiliateCommission).filter(
+                AffiliateCommission.order_id == payment.order_id,
+                AffiliateCommission.commission_status != "reversed"
+            ).all()
+
+            for comm in commissions:
+                comm.commission_status = "reversed"
+                comm.status = "reversed"
+                comm.purchase_status = "refunded"
+                comm.refund_status = "full" if not amount or amount >= payment.amount else "partial"
+                comm.reversed_at = _dt.utcnow()
+
+                aff = db.query(AffiliateProfile).filter(AffiliateProfile.id == comm.affiliate_id).first()
+                if aff:
+                    aff.pending_earnings = max(0.0, (aff.pending_earnings or 0.0) - comm.commission_amt)
+                    aff.total_earnings = max(0.0, (aff.total_earnings or 0.0) - comm.commission_amt)
+                    aff.rejected_earnings = (aff.rejected_earnings or 0.0) + comm.commission_amt
+
+            referrals = db.query(AffiliateReferral).filter(
+                AffiliateReferral.order_id == payment.order_id
+            ).all()
+
+            for ref in referrals:
+                ref.status = "REFUNDED"
+
         ActivityLogService.log_user_activity(
             db=db, user_id=admin_user_id,
             activity_type="payment_refund_initiated",
-            details=f"Refund initiated for payment {payment_ref} by admin. Amount: {'full' if not amount else f'?{amount:.2f}'}.",
+            details=f"Refund initiated for payment {payment_ref} by admin. Amount: {'full' if not amount else f'₹{amount:.2f}'}.",
         )
 
         db.commit()

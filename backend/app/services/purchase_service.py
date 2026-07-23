@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from app.models.order import Order, OrderItem
 from app.models.product import Product
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralLink, ReferralAttribution
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralLink, ReferralAttribution, AffiliateReferral
 from app.models.user import User
 from app.services.notification_service import NotificationService
 from app.services.activity_log_service import ActivityLogService
@@ -110,118 +110,196 @@ class PurchaseService:
                     })
 
                 # 6. Generate Affiliate Commissions
-                if affiliate_code and getattr(prod, "affiliate_enabled", True) is not False:
-                    clean_code = affiliate_code.strip().upper()
-                    ref_link_obj = None
-                    # 6a. First search default profile code
-                    aff = db.query(AffiliateProfile).filter(
-                        AffiliateProfile.referral_code == clean_code,
-                        AffiliateProfile.is_active == True
-                    ).first()
+                if getattr(prod, "affiliate_enabled", True) is not False:
+                    target_aff_code = None
+                    attr_source = "referral_link"
+                    coupon_code_used = None
 
-                    # 6b. Fallback: search custom product referral links
-                    if not aff:
-                        ref_link_obj = db.query(ReferralLink).filter(
-                            ReferralLink.referral_code == clean_code,
-                            ReferralLink.is_active == True
+                    # Deterministic Rule: Explicit Coupon Code overrides Referral Link Attribution
+                    if promo_code:
+                        clean_promo = promo_code.strip().upper()
+                        aff_by_coupon = db.query(AffiliateProfile).filter(
+                            AffiliateProfile.referral_code == clean_promo,
+                            AffiliateProfile.is_active == True
                         ).first()
-                        if ref_link_obj and ref_link_obj.affiliate and ref_link_obj.affiliate.is_active:
-                            aff = ref_link_obj.affiliate
+                        if not aff_by_coupon:
+                            ref_link_coupon = db.query(ReferralLink).filter(
+                                ReferralLink.referral_code == clean_promo,
+                                ReferralLink.is_active == True
+                            ).first()
+                            if ref_link_coupon and ref_link_coupon.affiliate and ref_link_coupon.affiliate.is_active:
+                                aff_by_coupon = ref_link_coupon.affiliate
+                        
+                        if aff_by_coupon:
+                            target_aff_code = clean_promo
+                            attr_source = "coupon_code"
+                            coupon_code_used = clean_promo
 
-                    if aff:
-                        ref_link_id = ref_link_obj.id if ref_link_obj else None
-                        # Tag Order with referral metadata
-                        order.affiliate_id = aff.id
-                        order.referral_link_id = ref_link_id
-                        order.referral_code_used = clean_code
+                    # If no affiliate coupon code was matched, check referral link / referral code
+                    if not target_aff_code:
+                        if affiliate_code:
+                            target_aff_code = affiliate_code.strip().upper()
+                            attr_source = "referral_link"
+                        else:
+                            # Server-side fallback: check active AffiliateReferral in PostgreSQL for this customer & product
+                            pending_ref = db.query(AffiliateReferral).filter(
+                                AffiliateReferral.customer_id == user_id,
+                                AffiliateReferral.product_id == prod.id,
+                                AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
+                            ).order_by(AffiliateReferral.created_at.desc()).first()
 
-                        # Verify customer is not the affiliate itself (prevent self-referral)
-                        if aff.user_id != user_id:
-                            # Calculate commission
-                            comm_type = prod.commission_type or "percentage"
-                            if comm_type == "fixed":
-                                comm_rate = prod.commission_value if prod.commission_value else 0.0
-                                commission_amt = min(comm_rate, price_paid)
-                            else: # percentage
-                                comm_rate = prod.commission_value if prod.commission_value else (aff.commission_rate or 20.0)
-                                commission_amt = (price_paid * comm_rate) / 100.0
-                            
-                            now_time = datetime.utcnow()
-                            
-                            # 6c. Insert immutable ReferralAttribution record
-                            attribution = ReferralAttribution(
-                                order_id=order.id,
-                                customer_id=user_id,
-                                affiliate_id=aff.id,
-                                affiliate_code=clean_code,
-                                referral_link_id=ref_link_id,
-                                product_id=prod.id,
-                                status="attributed",
-                                created_at=now_time
-                            )
-                            db.add(attribution)
-                            db.flush()
+                            if not pending_ref:
+                                # Fallback without product filter for general site-wide referral
+                                pending_ref = db.query(AffiliateReferral).filter(
+                                    AffiliateReferral.customer_id == user_id,
+                                    AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
+                                ).order_by(AffiliateReferral.created_at.desc()).first()
 
-                            # 6d. Insert AffiliateCommission
-                            comm = AffiliateCommission(
-                                affiliate_id=aff.id,
-                                order_id=order.id,
-                                product_id=prod.id,
-                                product_name=prod.title,
-                                sale_amount=price_paid,
-                                commission_amt=commission_amt,
-                                status="approved",
-                                commission_status="approved",
-                                commission_type=comm_type,
-                                commission_rate=comm_rate,
-                                customer_name=customer.name if customer else "Customer",
-                                customer_email=customer.email if customer else None,
-                                cookie_attr_date=now_time,
-                                last_click_at=now_time,
-                                approved_at=now_time,
-                                referral_attribution_id=attribution.id,
-                                referral_link_id=ref_link_id
-                            )
-                            db.add(comm)
-                            
-                            # Update affiliate stats
-                            aff.total_earnings = (aff.total_earnings or 0.0) + commission_amt
-                            aff.pending_earnings = (aff.pending_earnings or 0.0) + commission_amt
-                            aff.total_sales = (aff.total_sales or 0) + 1
-                            aff.last_active_at = now_time
+                            if pending_ref:
+                                target_aff_code = pending_ref.referral_code
+                                attr_source = "referral_link"
 
-                            # Send Affiliate Notifications
-                            NotificationService.create_notification(
-                                db=db,
-                                user_id=aff.user_id,
-                                title="Commission Earned! 🎉",
-                                message=f"You earned a commission of ₹{commission_amt:.2f} (referred purchase of '{prod.title}').",
-                                category="commission"
-                            )
+                    if target_aff_code:
+                        clean_code = target_aff_code
+                        ref_link_obj = None
+                        # 6a. First search default profile code
+                        aff = db.query(AffiliateProfile).filter(
+                            AffiliateProfile.referral_code == clean_code,
+                            AffiliateProfile.is_active == True
+                        ).first()
 
-                            # Log Affiliate Activity
-                            ActivityLogService.log_user_activity(
-                                db=db,
-                                user_id=aff.user_id,
-                                activity_type="commission_earned",
-                                details=f"Earned ₹{commission_amt:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
-                            )
+                        # 6b. Fallback: search custom product referral links
+                        if not aff:
+                            ref_link_obj = db.query(ReferralLink).filter(
+                                ReferralLink.referral_code == clean_code,
+                                ReferralLink.is_active == True
+                            ).first()
+                            if ref_link_obj and ref_link_obj.affiliate and ref_link_obj.affiliate.is_active:
+                                aff = ref_link_obj.affiliate
 
-            # 6b. Process Admin Referral Link Conversion (Isolated, Idempotent, Non-Blocking)
-            if affiliate_code:
-                try:
-                    from admin_controls.referral.service import process_admin_referral
-                    # Pass 'aff' (if found above) to avoid duplicate SQL query
-                    process_admin_referral(
-                        db=db,
-                        order=order,
-                        user_id=user_id,
-                        affiliate_code=affiliate_code,
-                        affiliate_profile=locals().get('aff')
-                    )
-                except Exception as _admin_ref_exc:
-                    import logging
-                    logging.getLogger(__name__).error("[PurchaseService] Non-fatal admin referral error: %s", _admin_ref_exc)
+                        if aff:
+                            ref_link_id = ref_link_obj.id if ref_link_obj else None
+                            # Tag Order with referral metadata
+                            order.affiliate_id = aff.id
+                            order.referral_link_id = ref_link_id
+                            order.referral_code_used = clean_code
+                            order.attribution_source = attr_source
+                            order.coupon_code_used = coupon_code_used
+
+                            # Verify customer is not the affiliate itself (prevent self-referral)
+                            if aff.user_id != user_id:
+                                # Idempotency Guard: prevent duplicate commission if payment verification is retried
+                                existing_comm = db.query(AffiliateCommission).filter(
+                                    AffiliateCommission.order_id == order.id,
+                                    AffiliateCommission.product_id == prod.id
+                                ).first()
+
+                                if not existing_comm:
+                                    # Calculate commission
+                                    comm_type = prod.commission_type or "percentage"
+                                    if comm_type == "fixed":
+                                        comm_rate = prod.commission_value if prod.commission_value else 0.0
+                                        commission_amt = min(comm_rate, price_paid)
+                                    else: # percentage
+                                        comm_rate = prod.commission_value if prod.commission_value is not None else (aff.commission_rate or 20.0)
+                                        commission_amt = (price_paid * comm_rate) / 100.0
+                                    
+                                    now_time = datetime.utcnow()
+                                    
+                                    # 6c. Insert immutable ReferralAttribution record
+                                    attribution = ReferralAttribution(
+                                        order_id=order.id,
+                                        customer_id=user_id,
+                                        affiliate_id=aff.id,
+                                        affiliate_code=clean_code,
+                                        referral_link_id=ref_link_id,
+                                        product_id=prod.id,
+                                        status="attributed",
+                                        attribution_source=attr_source,
+                                        coupon_code=coupon_code_used,
+                                        created_at=now_time
+                                    )
+                                    db.add(attribution)
+                                    db.flush()
+
+                                    # 6d. Insert AffiliateCommission
+                                    comm = AffiliateCommission(
+                                        affiliate_id=aff.id,
+                                        order_id=order.id,
+                                        product_id=prod.id,
+                                        product_name=prod.title,
+                                        sale_amount=price_paid,
+                                        commission_amt=commission_amt,
+                                        status="approved",
+                                        commission_status="approved",
+                                        commission_type=comm_type,
+                                        commission_rate=comm_rate,
+                                        customer_name=customer.name if customer else "Customer",
+                                        customer_email=customer.email if customer else None,
+                                        cookie_attr_date=now_time,
+                                        last_click_at=now_time,
+                                        approved_at=now_time,
+                                        referral_attribution_id=attribution.id,
+                                        referral_link_id=ref_link_id,
+                                        attribution_source=attr_source,
+                                        coupon_code=coupon_code_used,
+                                        referral_code_used=clean_code
+                                    )
+                                    db.add(comm)
+
+                                    # 6e. Update AffiliateReferral persistent lifecycle status
+                                    pending_referral_rows = db.query(AffiliateReferral).filter(
+                                        AffiliateReferral.affiliate_id == aff.id,
+                                        AffiliateReferral.product_id == prod.id,
+                                        (AffiliateReferral.customer_id == user_id) | (AffiliateReferral.referral_code == clean_code)
+                                    ).order_by(AffiliateReferral.created_at.desc()).all()
+
+                                    for r_row in pending_referral_rows:
+                                        r_row.status = "PURCHASED"
+                                        r_row.order_id = order.id
+                                        r_row.converted_at = now_time
+                                        r_row.customer_id = user_id
+                                        r_row.attribution_source = attr_source
+                                        if coupon_code_used:
+                                            r_row.coupon_code = coupon_code_used
+
+                                    # Update affiliate stats
+                                    aff.total_earnings = (aff.total_earnings or 0.0) + commission_amt
+                                    aff.pending_earnings = (aff.pending_earnings or 0.0) + commission_amt
+                                    aff.total_sales = (aff.total_sales or 0) + 1
+                                    aff.last_active_at = now_time
+
+                                    # Send Affiliate Notifications
+                                    NotificationService.create_notification(
+                                        db=db,
+                                        user_id=aff.user_id,
+                                        title="Commission Earned! 🎉",
+                                        message=f"You earned a commission of ₹{commission_amt:.2f} (referred purchase of '{prod.title}').",
+                                        category="commission"
+                                    )
+
+                                    # Log Affiliate Activity
+                                    ActivityLogService.log_user_activity(
+                                        db=db,
+                                        user_id=aff.user_id,
+                                        activity_type="commission_earned",
+                                        details=f"Earned ₹{commission_amt:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
+                                    )
+
+                        # 6b. Process Admin Referral Link Conversion for this item (Isolated, Idempotent, Non-Blocking)
+                        if target_aff_code:
+                            try:
+                                from admin_controls.referral.service import process_admin_referral
+                                process_admin_referral(
+                                    db=db,
+                                    order=order,
+                                    user_id=user_id,
+                                    affiliate_code=target_aff_code,
+                                    affiliate_profile=aff if 'aff' in locals() else None
+                                )
+                            except Exception as _admin_ref_exc:
+                                import logging
+                                logging.getLogger(__name__).error("[PurchaseService] Non-fatal admin referral error: %s", _admin_ref_exc)
 
             # 7. Generate User notifications
 

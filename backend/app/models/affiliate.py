@@ -83,6 +83,8 @@ class ReferralAttribution(Base):
     commission_id    = Column(Integer, ForeignKey("affiliate_commissions.id", use_alter=True, name="fk_ref_attr_commission_id"), nullable=True)
     status           = Column(String(30), default="attributed", index=True) # attributed | commissioned | pending_review | recovered | flagged
     fraud_flags      = Column(JSON, nullable=True)
+    attribution_source = Column(String(30), default="referral_link", index=True)  # referral_link | coupon_code
+    coupon_code        = Column(String(50), nullable=True, index=True)
 
     # Immutable metadata fields
     device_type      = Column(String(50), nullable=True)
@@ -116,6 +118,9 @@ class AffiliateCommission(Base):
     # Phase 2 & Enterprise Attribution Fields
     referral_attribution_id = Column(Integer, ForeignKey("referral_attributions.id"), nullable=True)
     referral_link_id        = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
+    attribution_source      = Column(String(30), default="referral_link", index=True)  # referral_link | coupon_code
+    coupon_code             = Column(String(50), nullable=True, index=True)
+    referral_code_used      = Column(String(50), nullable=True, index=True)
     device_type             = Column(String(50), nullable=True)
     browser                 = Column(String(100), nullable=True)
     ip_address              = Column(String(45), nullable=True)
@@ -229,6 +234,8 @@ class AffiliateReferral(Base):
     session_id       = Column(String(100), unique=True, nullable=False, index=True)
     order_id         = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)
     status           = Column(String(30), default="CLICKED", index=True) # CLICKED | AUTHENTICATED | PRODUCT_VIEWED | ADDED_TO_CART | PURCHASED
+    attribution_source = Column(String(30), default="referral_link", index=True)  # referral_link | coupon_code
+    coupon_code        = Column(String(50), nullable=True, index=True)
     ip_address       = Column(String(45), nullable=True)
     user_agent       = Column(Text, nullable=True)
     clicked_at       = Column(DateTime, default=datetime.utcnow)

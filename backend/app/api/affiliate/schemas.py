@@ -249,3 +249,25 @@ class ReferralAuthRequest(BaseModel):
 class ReferralViewRequest(BaseModel):
     session_id: Optional[str] = None
     product_id: int
+
+
+# -- Conversions ----------------------------------------------------------------
+
+class ConversionItemResponse(BaseModel):
+    id: int
+    order_id: int
+    product_id: Optional[int] = None
+    product_name: str
+    customer_name: str
+    customer_email: Optional[str] = None
+    referral_code: str
+    attribution_source: str
+    coupon_code: Optional[str] = None
+    purchase_amount: float
+    commission_earned: float
+    commission_rate: float
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

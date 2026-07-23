@@ -36,6 +36,7 @@ from app.api.affiliate.schemas import (
     ReferralLinkCreate, ReferralLinkResponse,
     ReferralClickRequest, ReferralClickResponse,
     ReferralAuthRequest, ReferralViewRequest,
+    ConversionItemResponse,
 )
 
 router = APIRouter()
@@ -444,6 +445,58 @@ def get_commissions(
     if status:
         q = q.filter(AffiliateCommission.status == status)
     return q.order_by(AffiliateCommission.created_at.desc()).all()
+
+
+@router.get("/conversions", response_model=List[ConversionItemResponse])
+def get_conversions(
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+    _active = Depends(verify_affiliate_active)
+):
+    """
+    Return all server-backed conversion records for the authenticated affiliate.
+    Lists every distinct referred purchase with customer identity, product details,
+    order ID, referral/coupon code used, attribution source, sale amount, commission earned, and status.
+    """
+    profile = _get_affiliate_profile(current_user, db)
+    commissions = (
+        db.query(AffiliateCommission)
+        .filter(AffiliateCommission.affiliate_id == profile.id)
+        .order_by(AffiliateCommission.created_at.desc())
+        .all()
+    )
+
+    results = []
+    for c in commissions:
+        # Mask customer email for privacy compliance (e.g. j***@domain.com)
+        masked_email = None
+        if c.customer_email:
+            parts = c.customer_email.split("@")
+            if len(parts) == 2:
+                user_part = parts[0]
+                masked_user = user_part[0] + "***" if len(user_part) > 1 else "*"
+                masked_email = f"{masked_user}@{parts[1]}"
+            else:
+                masked_email = "c***@lumora.com"
+
+        results.append(ConversionItemResponse(
+            id=c.id,
+            order_id=c.order_id or 0,
+            product_id=c.product_id,
+            product_name=c.product_name or f"Product #{c.product_id}",
+            customer_name=c.customer_name or "Customer",
+            customer_email=masked_email,
+            referral_code=c.referral_code_used or profile.referral_code,
+            attribution_source=c.attribution_source or "referral_link",
+            coupon_code=c.coupon_code,
+            purchase_amount=round(c.sale_amount or 0.0, 2),
+            commission_earned=round(c.commission_amt or 0.0, 2),
+            commission_rate=c.commission_rate or 20.0,
+            status=c.commission_status or c.status or "approved",
+            created_at=c.created_at or datetime.utcnow()
+        ))
+
+    return results
 
 
 @router.post("/commissions", response_model=CommissionResponse, status_code=201)

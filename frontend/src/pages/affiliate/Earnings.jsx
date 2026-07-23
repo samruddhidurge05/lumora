@@ -72,14 +72,20 @@ export default function AffiliateEarnings({
   const activeCommissions = useMemo(() => {
     if (!parentCommissions || parentCommissions.length === 0) return [];
     return parentCommissions.map((c) => ({
-      id:         c.id,
-      date:       c.created_at,
-      product:    c.product_name || 'Referral Product',
-      saleAmount: c.sale_amount  || 0,
-      commission: c.commission_amt || 0,
-      status:     c.status || 'pending',
+      id:                 c.id,
+      date:               c.created_at,
+      orderId:            c.order_id ? `#ORD-${c.order_id}` : (c.orderId || 'N/A'),
+      customerName:       c.customer_name || c.customerName || 'Customer',
+      customerEmail:      c.customer_email || c.customerEmail || null,
+      product:            c.product_name || c.product || 'Referral Product',
+      productId:          c.product_id || c.productId || null,
+      referralCode:       c.referral_code_used || c.referral_code || c.coupon_code || profile?.referral_code || 'AFF',
+      attributionSource:  c.attribution_source || c.attributionSource || 'referral_link',
+      saleAmount:         c.sale_amount  || c.saleAmount || 0,
+      commission:         c.commission_amt || c.commission || 0,
+      status:             c.commission_status || c.status || 'pending',
     }));
-  }, [parentCommissions]);
+  }, [parentCommissions, profile]);
 
   /* ── Normalise payout records from the API ──────────────────────────────
      API shape: { id, amount, method, status, created_at }
@@ -428,8 +434,8 @@ export default function AffiliateEarnings({
 
         <div style={{ overflowX: 'auto' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '560px' }}>
-            {['Date', 'Product', 'Sale Amount', 'Commission', 'Status'].map(h => (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
+            {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
               <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
             ))}
           </div>
@@ -441,19 +447,27 @@ export default function AffiliateEarnings({
                 <div
                   key={row.id}
                   style={{
-                    display: 'grid', gridTemplateColumns: '1fr 2.5fr 1fr 1fr 1fr',
-                    gap: '12px', padding: '13px 16px',
+                    display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr',
+                    gap: '10px', padding: '13px 16px',
                     borderRadius: '10px',
                     borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
                     transition: 'background 0.2s',
                     alignItems: 'center',
-                    minWidth: '560px',
+                    minWidth: '780px',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(row.date)}</span>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7B3FA0' }}>{row.orderId}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{row.referralCode}</span>
+                    <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                      {row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'}
+                    </span>
+                  </div>
                   <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
                   <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
                   <div>
