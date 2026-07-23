@@ -37,6 +37,8 @@ def run_migration():
                 ("affiliate_id", "INTEGER"),
                 ("referral_link_id", "INTEGER"),
                 ("referral_code_used", "VARCHAR(50)"),
+                ("attribution_source", "VARCHAR(30) DEFAULT 'referral_link'"),
+                ("coupon_code_used", "VARCHAR(50)"),
             ]
             for col_name, col_type in orders_cols_to_add:
                 if not column_exists("orders", col_name):
@@ -47,9 +49,6 @@ def run_migration():
                     except Exception as e:
                         db.rollback()
                         print(f"[Migration] Column orders.{col_name} already exists or alter skipped: {e}")
-
-            # Re-inspect after orders columns
-            inspector = inspect(engine)
 
             # 2b. Add missing columns to `affiliate_profiles` table
             aff_prof_cols_to_add = [
@@ -84,13 +83,13 @@ def run_migration():
                         db.rollback()
                         print(f"[Migration] Column affiliate_profiles.{col_name} already exists or alter skipped: {e}")
 
-            # Re-inspect after profile columns
-            inspector = inspect(engine)
-
             # 3. Add attribution columns to `affiliate_commissions` table if missing
             comm_cols_to_add = [
                 ("referral_attribution_id", "INTEGER"),
                 ("referral_link_id", "INTEGER"),
+                ("attribution_source", "VARCHAR(30) DEFAULT 'referral_link'"),
+                ("coupon_code", "VARCHAR(50)"),
+                ("referral_code_used", "VARCHAR(50)"),
                 ("device_type", "VARCHAR(50)"),
                 ("browser", "VARCHAR(100)"),
                 ("ip_address", "VARCHAR(45)"),
@@ -105,6 +104,55 @@ def run_migration():
                     except Exception as e:
                         db.rollback()
                         print(f"[Migration] Column affiliate_commissions.{col_name} already exists or alter skipped: {e}")
+
+            # 3b. Add payout tracking columns to `affiliate_payouts` table if missing
+            payout_cols_to_add = [
+                ("payout_mode", "VARCHAR(20)"),
+                ("razorpay_payout_id", "VARCHAR(100)"),
+                ("razorpay_fund_account_id", "VARCHAR(100)"),
+                ("failure_reason", "TEXT"),
+                ("processed_at", "TIMESTAMP"),
+                ("completed_at", "TIMESTAMP"),
+            ]
+            for col_name, col_type in payout_cols_to_add:
+                if not column_exists("affiliate_payouts", col_name):
+                    try:
+                        print(f"[Migration] Adding column affiliate_payouts.{col_name}...")
+                        db.execute(text(f"ALTER TABLE affiliate_payouts ADD COLUMN {col_name} {col_type}"))
+                        db.commit()
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Migration] Column affiliate_payouts.{col_name} already exists or alter skipped: {e}")
+
+            # 3c. Add missing columns to `referral_attributions` table if missing
+            ref_attr_cols_to_add = [
+                ("attribution_source", "VARCHAR(30) DEFAULT 'referral_link'"),
+                ("coupon_code", "VARCHAR(50)"),
+            ]
+            for col_name, col_type in ref_attr_cols_to_add:
+                if not column_exists("referral_attributions", col_name):
+                    try:
+                        print(f"[Migration] Adding column referral_attributions.{col_name}...")
+                        db.execute(text(f"ALTER TABLE referral_attributions ADD COLUMN {col_name} {col_type}"))
+                        db.commit()
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Migration] Column referral_attributions.{col_name} already exists or alter skipped: {e}")
+
+            # 3d. Add missing columns to `affiliate_referrals` table if missing
+            aff_ref_cols_to_add = [
+                ("attribution_source", "VARCHAR(30) DEFAULT 'referral_link'"),
+                ("coupon_code", "VARCHAR(50)"),
+            ]
+            for col_name, col_type in aff_ref_cols_to_add:
+                if not column_exists("affiliate_referrals", col_name):
+                    try:
+                        print(f"[Migration] Adding column affiliate_referrals.{col_name}...")
+                        db.execute(text(f"ALTER TABLE affiliate_referrals ADD COLUMN {col_name} {col_type}"))
+                        db.commit()
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Migration] Column affiliate_referrals.{col_name} already exists or alter skipped: {e}")
 
             # 4. Non-destructive backfill for existing AffiliateCommission records
             print("[Migration] Performing idempotent backfill for existing commission records...")
