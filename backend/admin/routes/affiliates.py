@@ -1048,3 +1048,167 @@ def regenerate_commission_for_order(
         "message": f"Commission successfully regenerated for Order #{order_id}",
         "commission_id": new_comm.id if new_comm else None,
     }
+
+
+# ── Campaign Manager Real-Time Endpoints ─────────────────────────────────────
+
+@router.get("/affiliate-products")
+def get_affiliate_products(
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """
+    Returns only products where affiliate_enabled == True.
+    All data is computed dynamically from real PostgreSQL records.
+    """
+    query = db.query(Product).filter(Product.affiliate_enabled == True)
+    if search:
+        query = query.filter(or_(Product.title.ilike(f"%{search}%"), cast(Product.id, String).ilike(f"%{search}%")))
+    
+    products = query.order_by(desc(Product.id)).all()
+    items = []
+
+    for p in products:
+        # 1. Referral links created for this product
+        ref_links = db.query(ReferralLink).filter(ReferralLink.product_id == p.id).all()
+        ref_links_count = len(ref_links)
+        
+        # 2. Active promoters for this product
+        affiliate_ids = set()
+        for rl in ref_links:
+            affiliate_ids.add(rl.affiliate_id)
+        
+        comm_aff_ids = db.query(AffiliateCommission.affiliate_id).filter(AffiliateCommission.product_id == p.id).all()
+        for (aff_id,) in comm_aff_ids:
+            if aff_id:
+                affiliate_ids.add(aff_id)
+        
+        # 3. Clicks count
+        sql_link_clicks = sum(rl.clicks_count or 0 for rl in ref_links)
+        ref_link_ids = [rl.id for rl in ref_links]
+        clicks_from_table = db.query(ReferralClick).filter(ReferralClick.referral_link_id.in_(ref_link_ids)).count() if ref_link_ids else 0
+        total_clicks = max(sql_link_clicks, clicks_from_table)
+        
+        # 4. Total sales / conversions & revenue for this product
+        comms = db.query(AffiliateCommission).filter(AffiliateCommission.product_id == p.id).all()
+        total_conversions = len(comms)
+        revenue_generated = sum(c.sale_amount for c in comms if c.sale_amount)
+        total_commission_paid = sum(c.commission_amt for c in comms if c.commission_status == "paid")
+        total_commission_pending = sum(c.commission_amt for c in comms if c.commission_status in ["pending", "approved", "ready_for_payout"])
+        
+        items.append({
+            "id": p.id,
+            "product_id": p.id,
+            "title": p.title or "Untitled Product",
+            "product_name": p.title or "Untitled Product",
+            "category": p.category or "General",
+            "price": p.price or 0.0,
+            "status": p.status or "published",
+            "affiliate_enabled": True,
+            "commission_mode": p.commission_mode or "percentage",
+            "commission_value": p.commission_value if p.commission_value is not None else 20.0,
+            "commission_pct": p.commission_value if (p.commission_mode or "percentage") == "percentage" else p.commission_value,
+            "created_at": p.created_at.isoformat() + "Z" if p.created_at else None,
+            "created_date": p.created_at.strftime("%Y-%m-%d") if p.created_at else "—",
+            "referral_links_count": ref_links_count,
+            "active_affiliates": len(affiliate_ids),
+            "clicks": total_clicks,
+            "conversions": total_conversions,
+            "sales": total_conversions,
+            "revenue_generated": round(float(revenue_generated), 2),
+            "revenue": round(float(revenue_generated), 2),
+            "commission_paid": round(float(total_commission_paid), 2),
+            "commission_pending": round(float(total_commission_pending), 2),
+            "thumbnail": getattr(p, "thumbnail", None) or (getattr(p, "image_urls", None)[0] if getattr(p, "image_urls", None) else None),
+        })
+
+    return items
+
+
+@router.get("/affiliate-products/{product_id}/details")
+def get_affiliate_product_details(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """Detailed telemetry for side-drawer panel when admin clicks a product."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Referral links
+    ref_links = db.query(ReferralLink).filter(ReferralLink.product_id == product_id).all()
+    link_items = []
+    for rl in ref_links:
+        aff_user = None
+        if rl.affiliate:
+            aff_user = db.query(User).filter(User.id == rl.affiliate.user_id).first()
+        link_items.append({
+            "id": rl.id,
+            "referral_code": rl.referral_code,
+            "code": rl.referral_code,
+            "name": rl.name or f"Promo Link #{rl.id}",
+            "referral_name": rl.name or f"Promo Link #{rl.id}",
+            "clicks": rl.clicks_count or 0,
+            "status": "active" if rl.is_active else "paused",
+            "is_active": rl.is_active,
+            "created_at": rl.created_at.isoformat() + "Z" if rl.created_at else None,
+            "promoter_name": aff_user.name if aff_user else "Admin",
+        })
+
+    # Commissions & Orders
+    comms = db.query(AffiliateCommission).filter(AffiliateCommission.product_id == product_id).order_by(desc(AffiliateCommission.created_at)).all()
+    comm_items = []
+    for c in comms:
+        comm_items.append({
+            "id": c.id,
+            "order_id": c.order_id,
+            "affiliate_id": c.affiliate_id,
+            "sale_amount": c.sale_amount,
+            "commission_earned": c.commission_amt,
+            "commission_status": c.commission_status or c.status or "pending",
+            "date": c.created_at.isoformat() + "Z" if c.created_at else None,
+            "customer_name": c.customer_name or "Customer",
+        })
+
+    # Promoters
+    aff_profiles = db.query(AffiliateProfile).join(ReferralLink, ReferralLink.affiliate_id == AffiliateProfile.id).filter(ReferralLink.product_id == product_id).all()
+    promoters = []
+    for prof in set(aff_profiles):
+        u = db.query(User).filter(User.id == prof.user_id).first()
+        promoters.append({
+            "id": prof.id,
+            "name": u.name if u else prof.display_name or "Promoter",
+            "email": u.email if u else "",
+            "code": prof.referral_code,
+            "total_sales": prof.total_sales or 0,
+        })
+
+    total_clicks = sum(rl.clicks_count or 0 for rl in ref_links)
+    total_revenue = sum(c.sale_amount for c in comms)
+
+    return {
+        "product": {
+            "id": product.id,
+            "title": product.title,
+            "price": product.price,
+            "category": product.category,
+            "status": product.status,
+            "affiliate_enabled": product.affiliate_enabled,
+            "commission_mode": product.commission_mode,
+            "commission_value": product.commission_value,
+            "created_at": product.created_at.isoformat() + "Z" if product.created_at else None,
+        },
+        "analytics": {
+            "referral_links_count": len(ref_links),
+            "active_affiliates_count": len(promoters),
+            "total_clicks": total_clicks,
+            "total_conversions": len(comms),
+            "total_revenue": round(float(total_revenue), 2),
+        },
+        "referral_links": link_items,
+        "promoters": promoters,
+        "commissions": comm_items[:10],
+    }
+
