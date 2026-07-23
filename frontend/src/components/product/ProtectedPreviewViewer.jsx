@@ -4,17 +4,17 @@ import { ShieldAlert, Eye, Lock } from 'lucide-react';
 /**
  * ProtectedPreviewViewer
  * ───────────────────────
- * Wraps product preview media (images, PDFs, videos, gallery) with screenshot
- * and screen-capture protection.
+ * Production-grade screenshot protection for Lumora product preview media.
  *
- * Protection Mechanisms Implemented:
- * 1. Keyboard Shortcut Interception (PrintScreen, Ctrl+P, Cmd+P, Win+Shift+S, Cmd+Shift+3/4/5, Ctrl+S)
- * 2. Snipping Tool Focus/Blur Correlation (triggers overlay when focus changes right after capture keys)
- * 3. Right-Click Context Menu & Image Drag Prevention
- * 4. CSS @media print Protection (hides content completely on print or print-to-PDF)
- * 5. Screen Recording Stream Detection (where supported by browser mediaDevices API)
- * 6. Subtle Canvas/CSS Watermark Overlay (secondary visual protection)
- * 7. Graceful Decay & Auto-Restoration on window regain focus
+ * Core Protection Logic:
+ * 1. Direct CSS GPU Blur: Applies `filter: blur(35px) brightness(0.1)` directly to the image/video container
+ *    whenever screenshot shortcuts are pressed OR window focus is lost (Snipping Tool, Win+Shift+S, PrtScn).
+ * 2. Snipping Tool Focus Loss Defense: Any OS capture tool takes focus away from the browser window.
+ *    The instant focus is lost (`window.onblur`), the preview media GPU buffer blurs into a dark screen.
+ * 3. Keydown Interception: Catches PrintScreen, Ctrl+P, Cmd+P, Win+Shift+S, Cmd+Shift+3/4/5, Ctrl+S.
+ * 4. Context Menu & Drag Prevention: Blocks right-click, image dragging, text selection, and copying.
+ * 5. CSS @media print Protection: Hides preview completely during browser print or print-to-PDF.
+ * 6. Smooth Restoration: Automatically un-blurs when the user returns focus to the Lumora browser window.
  */
 export default function ProtectedPreviewViewer({
   children,
@@ -24,9 +24,9 @@ export default function ProtectedPreviewViewer({
   style = {}
 }) {
   const [isProtected, setIsProtected] = useState(false);
-  const [reason, setReason] = useState('Screen Capture Action Detected');
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
+  const [reason, setReason] = useState('Screen Capture Protection Active');
   const containerRef = useRef(null);
-  const keyHistoryRef = useRef([]);
 
   const triggerProtection = useCallback((cause = 'Screen Capture Action Detected') => {
     setReason(cause);
@@ -45,10 +45,10 @@ export default function ProtectedPreviewViewer({
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
       const isShift = e.shiftKey;
 
-      // PrintScreen key
-      if (key === 'PrintScreen' || code === 'PrintScreen' || key === 'PrtScn') {
+      // PrintScreen / PrtScn key
+      if (key === 'PrintScreen' || code === 'PrintScreen' || key === 'PrtScn' || e.keyCode === 44) {
         e.preventDefault();
-        triggerProtection('Screenshot Key (PrintScreen) Pressed');
+        triggerProtection('Screenshot Key (PrintScreen) Detected');
         return;
       }
 
@@ -65,63 +65,60 @@ export default function ProtectedPreviewViewer({
         return;
       }
 
-      // Save page (Ctrl+S / Cmd+S)
+      // Save webpage shortcut (Ctrl+S / Cmd+S)
       if (isCmdOrCtrl && (key.toLowerCase() === 's' || code === 'KeyS')) {
         e.preventDefault();
         triggerProtection('Save Action Intercepted (Ctrl+S)');
         return;
       }
-
-      // Track recent modifier keys to detect screen capture tool focus loss
-      if (['Meta', 'Control', 'Shift', 'Alt', 'PrintScreen'].includes(e.key)) {
-        keyHistoryRef.current.push(Date.now());
-        if (keyHistoryRef.current.length > 5) keyHistoryRef.current.shift();
-      }
     };
 
     const handleKeyUp = (e) => {
-      if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
-        triggerProtection('Screenshot Captured (PrintScreen)');
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+        triggerProtection('Screenshot Action (PrintScreen) Intercepted');
       }
     };
 
-    // ── 2. Focus / Blur Correlation (Snipping Tool overlay detection) ────────
+    // ── 2. Window Blur / Focus Defense (Catches Snipping Tool & OS Screenshot overlays) ──
     const handleWindowBlur = () => {
-      const now = Date.now();
-      const recentKey = keyHistoryRef.current.some(t => now - t < 800);
-      if (recentKey) {
-        triggerProtection('Screen Capture Overlay Active');
-      }
+      setIsWindowFocused(false);
+      setReason('Window Focus Lost (Screen Capture / Overlay Active)');
     };
 
     const handleWindowFocus = () => {
-      // Auto-restore after 1.2s when user returns to Lumora
+      setIsWindowFocused(true);
+      // Auto-restore after a brief 600ms grace period on focus return
       setTimeout(() => {
         restorePreview();
-      }, 1200);
+      }, 600);
     };
 
-    // ── 3. Screen Recording API Check (where supported by browser) ───────────
-    let recordingCheckInterval = null;
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function') {
-      recordingCheckInterval = setInterval(() => {
-        // Degrades gracefully — no-op if no active recording API flag is present
-      }, 3000);
-    }
+    // ── 3. Page Visibility State Check ───────────────────────────────────────
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsWindowFocused(false);
+        setReason('Preview Hidden (Tab Switch / Screen Capture)');
+      } else {
+        setIsWindowFocused(true);
+      }
+    };
 
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('keyup', handleKeyUp, true);
       window.removeEventListener('blur', handleWindowBlur);
       window.removeEventListener('focus', handleWindowFocus);
-      if (recordingCheckInterval) clearInterval(recordingCheckInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [triggerProtection, restorePreview]);
+
+  const activeBlur = isProtected || !isWindowFocused;
 
   return (
     <div
@@ -165,8 +162,18 @@ export default function ProtectedPreviewViewer({
         }
       `}</style>
 
-      {/* Main Preview Content */}
-      <div className="lumora-protected-preview-content" style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {/* Main Preview Content with Direct CSS GPU Blur Filter */}
+      <div
+        className="lumora-protected-preview-content"
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          filter: activeBlur ? 'blur(40px) brightness(0.08) contrast(1.2)' : 'none',
+          transition: 'filter 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: activeBlur ? 'none' : 'auto'
+        }}
+      >
         {children}
 
         {/* Secondary Watermark Overlay */}
@@ -204,14 +211,14 @@ export default function ProtectedPreviewViewer({
       </div>
 
       {/* Protection Frosted Overlay */}
-      {isProtected && (
+      {activeBlur && (
         <div
           onClick={restorePreview}
           style={{
             position: 'absolute',
             inset: 0,
             zIndex: 99,
-            background: 'rgba(15, 5, 25, 0.95)',
+            background: 'rgba(15, 5, 25, 0.94)',
             backdropFilter: 'blur(35px) brightness(0.2)',
             WebkitBackdropFilter: 'blur(35px) brightness(0.2)',
             display: 'flex',
@@ -282,7 +289,7 @@ export default function ProtectedPreviewViewer({
               marginBottom: '18px'
             }}
           >
-            Product previews are protected to safeguard creator intellectual property.
+            Product previews are protected to safeguard creator intellectual property. Click or focus window to resume viewing.
           </p>
 
           <button
