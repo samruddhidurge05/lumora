@@ -809,19 +809,17 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   /* Switch from desktop side-by-side to mobile single column */
   .product-layout {
     grid-template-columns: 1fr !important;
-    gap: 0 !important;
+    gap: 20px !important;
   }
   
-  /* Purchase panel goes BELOW content on mobile */
+  /* Mobile order: Gallery first → About/tabs second → Purchase panel last */
+  .product-layout > :first-child { order: 1; } /* Gallery + tabs */
+  .product-layout > :last-child  { order: 2; } /* Purchase panel (payment, QR) */
+
   .product-info-sticky {
     position: static !important;
-    order: -1; /* Push title/price/CTA card ABOVE the tab content on mobile */
+    order: 2;
   }
-  
-  /* On mobile: show purchase card FIRST (title+price+CTA), then gallery, then tabs */
-  /* We achieve correct order through CSS order property */
-  .product-layout > :first-child { order: 2; } /* Gallery + tabs */
-  .product-layout > :last-child  { order: 1; } /* Purchase panel */
   
   /* Purchase card spacing */
   .product-purchase-card {
@@ -874,13 +872,33 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .product-detail-inner { padding: 0 !important; }
 }
 
-/* Related products on mobile — 2 columns */
+/* Related products on mobile — horizontal scroll carousel */
 @media (max-width: 640px) {
   .product-related-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 12px !important;
+    margin-left: calc(-1 * var(--mob-pad)) !important;
+    margin-right: calc(-1 * var(--mob-pad)) !important;
+    padding-left: var(--mob-pad) !important;
+    padding-right: var(--mob-pad) !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
-  .product-related-grid .related-card-img { height: 130px !important; }
+  .product-related-grid::-webkit-scrollbar { display: none; }
+  .product-related-grid > * {
+    flex: 0 0 72vw !important;
+    max-width: 72vw !important;
+    min-width: 0 !important;
+    scroll-snap-align: start !important;
+  }
+  .product-related-grid .related-card-img { height: 160px !important; }
 }
 
 
