@@ -18,6 +18,9 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import os
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.db.session import get_db
 from app.dependencies import get_current_user_required
@@ -417,6 +420,11 @@ def get_dashboard(
         .filter(AffiliatePayout.affiliate_id == profile.id)
         .order_by(AffiliatePayout.created_at.desc())
         .all()
+    )
+
+    logger.info(
+        "[REFERRAL] Dashboard query: user_id=%s, affiliate_id=%s, commissions_found=%s, payouts_found=%s",
+        current_user.id, profile.id, len(commissions), len(payouts)
     )
 
     return DashboardSummaryResponse(
@@ -1028,6 +1036,11 @@ def create_referral_click(
 
     db.commit()
 
+    logger.info(
+        "[REFERRAL] Referral click saved: referral_code=%s, product_id=%s, affiliate_id=%s, session_id=%s",
+        code_upper, product.id, affiliate_id, session_id
+    )
+
     return ReferralClickResponse(
         session_id=session_id,
         referral_code=code_upper,
@@ -1059,6 +1072,7 @@ def authenticate_referral(
         ).order_by(AffiliateReferral.created_at.desc()).first()
 
     if not referral:
+        logger.info("[REFERRAL] Authenticate called but no pending referral found: payload=%s", payload.model_dump() if hasattr(payload, 'model_dump') else payload)
         return {"status": "NO_PENDING_REFERRAL", "message": "No pending referral found to associate."}
 
     # Associate customer and update lifecycle state
@@ -1067,6 +1081,11 @@ def authenticate_referral(
         referral.status = "AUTHENTICATED"
     referral.authenticated_at = datetime.utcnow()
     db.commit()
+
+    logger.info(
+        "[REFERRAL] User authenticated, referral linked: customer_id=%s, referral_code=%s, product_id=%s, session_id=%s",
+        current_user.id, referral.referral_code, referral.product_id, referral.session_id
+    )
 
     return {
         "status": referral.status,

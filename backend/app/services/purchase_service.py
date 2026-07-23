@@ -1,7 +1,11 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import logging
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi import HTTPException, status
+
+logger = logging.getLogger(__name__)
 
 from app.models.order import Order, OrderItem
 from app.models.product import Product
@@ -52,6 +56,8 @@ class PurchaseService:
             )
             db.add(order)
             db.flush()  # Populate order.id
+
+            logger.info("[REFERRAL] Order created: order_id=%s, customer_id=%s, total_amount=%s", order.id, user_id, total_amount)
 
             # Track vendor notifications to process later
             vendors_to_notify = []
@@ -267,7 +273,13 @@ class PurchaseService:
                                         referral_code_used=clean_code
                                     )
                                     db.add(comm)
+                                    db.flush()
                                     commission_assigned_for_order = True
+
+                                    logger.info(
+                                        "[REFERRAL] Commission created: commission_id=%s, affiliate_id=%s, order_id=%s, product_id=%s, customer_id=%s, commission_amt=%s",
+                                        comm.id, aff.id, order.id, prod.id, user_id, commission_amt
+                                    )
 
                                     # 6e. Update AffiliateReferral persistent lifecycle status
                                     pending_referral_rows = db.query(AffiliateReferral).filter(

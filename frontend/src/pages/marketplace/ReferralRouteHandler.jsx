@@ -27,6 +27,8 @@ export default function ReferralRouteHandler() {
       return;
     }
 
+    console.log('[REFERRAL] Referral URL opened:', { code: refCode, product_id: rawProdId });
+
     const processReferral = async () => {
       try {
         let sessionId = null;
@@ -61,6 +63,8 @@ export default function ReferralRouteHandler() {
         localStorage.setItem('lumora_pending_referral', JSON.stringify(referralPayload));
         sessionStorage.setItem('lumora_aff_ref', refCode);
         if (sessionId) sessionStorage.setItem('lumora_ref_session_id', sessionId);
+
+        console.log('[REFERRAL] Referral saved to localStorage/sessionStorage:', referralPayload);
 
         // 2. If user is ALREADY authenticated -> Authenticate referral session in PostgreSQL immediately
         if (user && sessionId) {
