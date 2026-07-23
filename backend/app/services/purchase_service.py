@@ -55,6 +55,7 @@ class PurchaseService:
 
             # Track vendor notifications to process later
             vendors_to_notify = []
+            commission_assigned_for_order = False
 
             # 5. Create OrderItems & permissions
             for item in items_payload:
@@ -110,10 +111,11 @@ class PurchaseService:
                     })
 
                 # 6. Generate Affiliate Commissions
-                if getattr(prod, "affiliate_enabled", True) is not False:
+                if not commission_assigned_for_order and getattr(prod, "affiliate_enabled", True) is not False:
                     target_aff_code = None
                     attr_source = "referral_link"
                     coupon_code_used = None
+                    pending_ref = None
 
                     # Deterministic Rule: Explicit Coupon Code overrides Referral Link Attribution
                     if promo_code:
@@ -135,29 +137,17 @@ class PurchaseService:
                             attr_source = "coupon_code"
                             coupon_code_used = clean_promo
 
-                    # If no affiliate coupon code was matched, check referral link / referral code
+                    # If no affiliate coupon code was matched, check PostgreSQL for AUTHENTICATED referral (ignore frontend affiliate_code)
                     if not target_aff_code:
-                        if affiliate_code:
-                            target_aff_code = affiliate_code.strip().upper()
+                        pending_ref = db.query(AffiliateReferral).filter(
+                            AffiliateReferral.customer_id == user_id,
+                            AffiliateReferral.product_id == prod.id,
+                            AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
+                        ).order_by(AffiliateReferral.updated_at.desc()).first()
+
+                        if pending_ref:
+                            target_aff_code = pending_ref.referral_code
                             attr_source = "referral_link"
-                        else:
-                            # Server-side fallback: check active AffiliateReferral in PostgreSQL for this customer & product
-                            pending_ref = db.query(AffiliateReferral).filter(
-                                AffiliateReferral.customer_id == user_id,
-                                AffiliateReferral.product_id == prod.id,
-                                AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
-                            ).order_by(AffiliateReferral.created_at.desc()).first()
-
-                            if not pending_ref:
-                                # Fallback without product filter for general site-wide referral
-                                pending_ref = db.query(AffiliateReferral).filter(
-                                    AffiliateReferral.customer_id == user_id,
-                                    AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
-                                ).order_by(AffiliateReferral.created_at.desc()).first()
-
-                            if pending_ref:
-                                target_aff_code = pending_ref.referral_code
-                                attr_source = "referral_link"
 
                     if target_aff_code:
                         clean_code = target_aff_code
@@ -246,6 +236,7 @@ class PurchaseService:
                                         referral_code_used=clean_code
                                     )
                                     db.add(comm)
+                                    commission_assigned_for_order = True
 
                                     # 6e. Update AffiliateReferral persistent lifecycle status
                                     pending_referral_rows = db.query(AffiliateReferral).filter(

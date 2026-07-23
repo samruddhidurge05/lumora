@@ -72,6 +72,7 @@ class RazorpayGateway(PaymentGateway):
         amount_inr: float,
         currency: str = "INR",
         receipt: str = "",
+        notes: Optional[dict] = None,
     ) -> GatewayOrder:
         """
         Create a Razorpay order and return the gateway_order_id.
@@ -89,12 +90,16 @@ class RazorpayGateway(PaymentGateway):
         amount_paise = int(round(amount_inr * 100))
 
         try:
-            raw_order = self._client.order.create(data={
+            data = {
                 "amount": amount_paise,
                 "currency": currency or self.currency,
                 "receipt": receipt or f"lumora_{amount_paise}",
                 "payment_capture": 1,   # Auto-capture on authorization
-            })
+            }
+            if notes:
+                data["notes"] = notes
+
+            raw_order = self._client.order.create(data=data)
             logger.info(
                 "[RazorpayGateway] Order created: order_id=%s amount_paise=%d",
                 raw_order["id"],

@@ -73,6 +73,7 @@ class PaymentGateway(ABC):
         amount_inr: float,
         currency: str,
         receipt: str,
+        notes: Optional[dict] = None,
     ) -> GatewayOrder:
         """
         Create a gateway-side order and return the gateway_order_id.
@@ -87,6 +88,7 @@ class PaymentGateway(ABC):
         amount_inr: float,
         currency: str,
         receipt: str,
+        notes: Optional[dict] = None,
     ) -> dict:
         """
         Optional: Create a UPI QR code session.

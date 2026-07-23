@@ -113,11 +113,25 @@ class PaymentService:
         gateway = get_gateway()
         receipt = f"lum_{uuid.uuid4().hex[:8]}"
 
+        notes = {}
+        if items:
+            # For debugging/tracking in Razorpay, attach the first valid referral ID
+            from app.models.affiliate import AffiliateReferral
+            pending_ref = db.query(AffiliateReferral).filter(
+                AffiliateReferral.customer_id == customer_id,
+                AffiliateReferral.product_id == items[0]["product_id"],
+                AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
+            ).order_by(AffiliateReferral.updated_at.desc()).first()
+            if pending_ref:
+                notes["affiliate_referral_id"] = str(pending_ref.id)
+                notes["referral_code"] = pending_ref.referral_code
+
         try:
             gateway_order = gateway.create_order(
                 amount_inr=amount,
                 currency=currency,
                 receipt=receipt,
+                notes=notes if notes else None,
             )
             
             # Extract UPI QR details if requested
@@ -127,6 +141,7 @@ class PaymentService:
                     amount_inr=amount,
                     currency=currency,
                     receipt=receipt,
+                    notes=notes if notes else None,
                 )
         except Exception as exc:
             logger.error("Gateway create_order failed: %s", exc)
