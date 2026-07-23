@@ -169,7 +169,7 @@ export default function ProtectedPreviewViewer({
           width: '100%',
           height: '100%',
           position: 'relative',
-          filter: activeBlur ? 'blur(40px) brightness(0.08) contrast(1.2)' : 'none',
+          filter: activeBlur ? 'blur(40px) brightness(1.15) opacity(0.12)' : 'none',
           transition: 'filter 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
           pointerEvents: activeBlur ? 'none' : 'auto'
         }}
@@ -210,7 +210,7 @@ export default function ProtectedPreviewViewer({
         )}
       </div>
 
-      {/* Protection Frosted Overlay */}
+      {/* Protection Frosted Overlay (Light Glassmorphism Theme) */}
       {activeBlur && (
         <div
           onClick={restorePreview}
@@ -218,16 +218,16 @@ export default function ProtectedPreviewViewer({
             position: 'absolute',
             inset: 0,
             zIndex: 99,
-            background: 'rgba(15, 5, 25, 0.94)',
-            backdropFilter: 'blur(35px) brightness(0.2)',
-            WebkitBackdropFilter: 'blur(35px) brightness(0.2)',
+            background: 'rgba(255, 253, 249, 0.94)',
+            backdropFilter: 'blur(35px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(35px) saturate(180%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '24px',
             textAlign: 'center',
-            color: '#fff',
+            color: '#2D004D',
             cursor: 'pointer',
             animation: 'lumoraOverlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards'
           }}
@@ -237,13 +237,13 @@ export default function ProtectedPreviewViewer({
               width: '54px',
               height: '54px',
               borderRadius: '50%',
-              background: 'rgba(123, 63, 160, 0.25)',
-              border: '1.5px solid rgba(196, 181, 253, 0.40)',
+              background: 'rgba(123, 63, 160, 0.08)',
+              border: '1.5px solid rgba(123, 63, 160, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px',
-              color: '#C084FC'
+              color: '#7B3FA0'
             }}
           >
             <ShieldAlert size={28} />
@@ -256,11 +256,12 @@ export default function ProtectedPreviewViewer({
               gap: '6px',
               fontSize: '0.68rem',
               fontWeight: 700,
-              color: '#C084FC',
+              color: '#7B3FA0',
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              background: 'rgba(196, 181, 253, 0.12)',
-              padding: '3px 10px',
+              background: 'rgba(123, 63, 160, 0.08)',
+              border: '1px solid rgba(123, 63, 160, 0.20)',
+              padding: '4px 12px',
               borderRadius: '12px',
               marginBottom: '10px'
             }}
@@ -273,7 +274,7 @@ export default function ProtectedPreviewViewer({
               fontFamily: 'var(--font-editorial, Cormorant Garamond, Georgia, serif)',
               fontSize: '1.45rem',
               fontWeight: 400,
-              color: '#FFFDF9',
+              color: '#2D004D',
               marginBottom: '8px'
             }}
           >
@@ -283,7 +284,7 @@ export default function ProtectedPreviewViewer({
           <p
             style={{
               fontSize: '0.82rem',
-              color: 'rgba(255, 255, 255, 0.72)',
+              color: 'var(--text-muted, #554D60)',
               maxWidth: '320px',
               lineHeight: 1.5,
               marginBottom: '18px'
@@ -298,15 +299,15 @@ export default function ProtectedPreviewViewer({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '8px 18px',
+              padding: '9px 20px',
               fontSize: '0.78rem',
               fontWeight: 700,
-              color: '#fff',
+              color: '#ffffff',
               background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(123, 63, 160, 0.40)'
+              boxShadow: '0 6px 18px rgba(123, 63, 160, 0.28)'
             }}
           >
             <Eye size={14} /> Resume Previewing
