@@ -70,6 +70,7 @@ const Vendor            = lazy(() => import('./pages/partnerships/Vendor'));
 
 const CustomerDashboard  = lazy(() => import('./pages/customer/Dashboard'));
 const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard'));
+const AffiliateActivation = lazy(() => import('./pages/affiliate/AffiliateActivation'));
 
 // Vendor pages
 const VendorDashboard     = lazy(() => import('./pages/vendor/Dashboard'));
@@ -472,6 +473,8 @@ function AppContent() {
           {/* ── Protected dashboard routes ── */}
           <Route path="/vendor" element={<Navigate to="/vendor/dashboard" replace />} />
           <Route path="/affiliate" element={<Navigate to="/affiliate/dashboard" replace />} />
+          {/* /affiliate/activate — open to any authenticated user; AffiliateActivation handles its own guard */}
+          <Route path="/affiliate/activate" element={<AffiliateActivation />} />
           <Route path="/affiliate/dashboard"
             element={
               <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole={['affiliate', 'vendor']}>

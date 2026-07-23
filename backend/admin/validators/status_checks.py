@@ -90,13 +90,35 @@ def verify_affiliate_active(current_user: User = Depends(get_current_user_requir
 
     # Dual-role support: vendor-role users who also have an AffiliateProfile
     # are allowed to access affiliate endpoints (they registered as both).
-    if current_user.role not in ("affiliate", "vendor"):
+    # Multi-capability support: customers who have activated affiliate access
+    # (by calling POST /affiliate/activate) have an AffiliateProfile row.
+    # We allow them through if their AffiliateProfile exists, even if their
+    # JWT still carries active_role="customer" during the transition.
+    if current_user.role not in ("affiliate", "vendor", "customer"):
         raise LumoraException(
             status_code=status.HTTP_403_FORBIDDEN,
             code="ROLE_REQUIRED",
             message="Affiliate role required."
         )
 
+    # For customers: verify they have an active AffiliateProfile (capability check)
+    if current_user.role == "customer":
+        from app.models.affiliate import AffiliateProfile as _AffProfile
+        from app.db.database import SessionLocal as _SL
+        _db = _SL()
+        try:
+            _profile = _db.query(_AffProfile).filter(
+                _AffProfile.user_id == current_user.id,
+                _AffProfile.is_active == True
+            ).first()
+        finally:
+            _db.close()
+        if not _profile:
+            raise LumoraException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                code="ROLE_REQUIRED",
+                message="Affiliate role required."
+            )
 
     # SQLite active check
     if not current_user.is_active:

@@ -3,18 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import AnimatedBackground from '../../components/AnimatedBackground';
-import { ArrowLeft, ArrowRight, DollarSign, BarChart3, Globe, Zap, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, DollarSign, BarChart3, Globe, Zap, Zap as Bolt } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Affiliate() {
   const navigate = useNavigate();
+  const { user, userRole } = useAuth();
   const [backHover, setBackHover] = useState(false);
+
+  // Derived state: what kind of user is viewing this page?
+  const isLoggedInCustomer = !!user && userRole === 'customer';
+  const isAlreadyAffiliate = !!user && (userRole === 'affiliate' || userRole === 'vendor');
 
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = 'Affiliate Program — Lumora';
   }, []);
 
-  const handleCTA = () => navigate('/auth/register?role=affiliate');
+  const handleCTA = () => {
+    if (isAlreadyAffiliate) {
+      // Already an affiliate — go straight to dashboard
+      navigate('/affiliate/dashboard');
+    } else if (isLoggedInCustomer) {
+      // Existing customer — use activation flow (no new Firebase account needed)
+      navigate('/affiliate/activate');
+    } else {
+      // Not logged in — standard registration
+      navigate('/auth/register?role=affiliate');
+    }
+  };
 
   /* ── Why Join data ── */
   const whyItems = [
@@ -143,6 +160,33 @@ export default function Affiliate() {
             }}>
               ✔ Trusted by creators worldwide
             </p>
+
+            {/* Contextual banner for logged-in customers */}
+            {isLoggedInCustomer && (
+              <div style={{
+                marginTop: '28px',
+                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                padding: '12px 20px', borderRadius: '14px',
+                background: 'rgba(123, 63, 160, 0.10)',
+                border: '1px solid rgba(123, 63, 160, 0.25)',
+                color: '#5A1E7E', fontSize: '.88rem', fontWeight: 600,
+              }}>
+                <Bolt size={16} />
+                Your customer account can activate Affiliate access instantly — no new account needed.
+              </div>
+            )}
+            {isAlreadyAffiliate && (
+              <div style={{
+                marginTop: '28px',
+                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                padding: '12px 20px', borderRadius: '14px',
+                background: 'rgba(34, 197, 94, 0.10)',
+                border: '1px solid rgba(34, 197, 94, 0.25)',
+                color: '#15803d', fontSize: '.88rem', fontWeight: 600,
+              }}>
+                ✓ You already have Affiliate access.
+              </div>
+            )}
           </div>
         </section>
 
@@ -297,8 +341,18 @@ export default function Affiliate() {
                   style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={handleCTA}
                 >
-                  Become an Affiliate <ArrowRight size={16} />
+                  {isAlreadyAffiliate
+                    ? 'Go to Affiliate Dashboard'
+                    : isLoggedInCustomer
+                      ? 'Activate Affiliate Access →'
+                      : 'Become an Affiliate'}
+                  {!isAlreadyAffiliate && !isLoggedInCustomer && <ArrowRight size={16} />}
                 </button>
+                {isLoggedInCustomer && (
+                  <p style={{ marginTop: '14px', fontSize: '.82rem', color: '#8B7A9E' }}>
+                    Uses your existing account · No new email or password required
+                  </p>
+                )}
               </div>
             </div>
           </div>

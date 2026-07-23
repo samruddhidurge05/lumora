@@ -48,6 +48,154 @@ from sqlalchemy.exc import IntegrityError
 from app.services.activity_log_service import ActivityLogService
 from app.models.notification import Notification
 
+
+# ── POST /affiliate/activate ───────────────────────────────────────────────────
+@router.post("/activate")
+def activate_affiliate(
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    """
+    Activate affiliate access for an existing authenticated user.
+
+    Multi-role design: ONE Firebase identity, ONE PostgreSQL user,
+    multiple capabilities. An existing customer can activate affiliate
+    access without creating a new account or a new Firebase identity.
+
+    - Idempotent: safe to call multiple times.
+    - Promotes user.role from "customer" → "affiliate" if needed.
+    - Creates AffiliateProfile if it doesn't already exist.
+    - Creates/updates Firestore affiliates/{uid} doc so future
+      affiliate logins (AuthContext role-check) succeed.
+    - Returns a new backend JWT with active_role="affiliate".
+
+    Customer data (orders, wishlist, downloads) is fully preserved —
+    all FKs reference users.id which never changes.
+    """
+    from app.core.security import create_access_token
+    from datetime import datetime as _dt
+
+    already_affiliate = current_user.role in ("affiliate", "vendor", "admin")
+
+    # Step 1: Promote role in SQLite if still "customer"
+    if not already_affiliate:
+        current_user.role = "affiliate"
+        db.commit()
+        db.refresh(current_user)
+
+    # Step 2: Create AffiliateProfile if it doesn't exist
+    profile = db.query(AffiliateProfile).filter(
+        AffiliateProfile.user_id == current_user.id
+    ).first()
+
+    if not profile:
+        try:
+            with db.begin_nested():
+                profile = AffiliateProfile(
+                    user_id=current_user.id,
+                    referral_code=f"AFF{current_user.id:04d}",
+                    commission_rate=20.0,
+                    total_earnings=0.0,
+                    total_clicks=0,
+                    total_sales=0,
+                    is_active=True,
+                    status="active",
+                )
+                db.add(profile)
+
+                ActivityLogService.log_user_activity(
+                    db=db,
+                    user_id=current_user.id,
+                    activity_type="affiliate_activation",
+                    details="Affiliate access activated from existing customer account.",
+                )
+
+                notification = Notification(
+                    user_id=current_user.id,
+                    title="Affiliate Access Activated",
+                    message="Welcome to the Lumora Affiliate Program! Your referral link is ready.",
+                    category="general",
+                )
+                db.add(notification)
+            db.commit()
+            db.refresh(profile)
+        except IntegrityError:
+            db.rollback()
+            profile = db.query(AffiliateProfile).filter(
+                AffiliateProfile.user_id == current_user.id
+            ).first()
+
+    # Step 3: Sync to Firestore so AuthContext role-check passes on next login
+    # AuthContext.login() checks getDoc(doc(db, 'affiliates', uid)) — if this
+    # doc exists the user can log in via the Affiliate portal in future sessions.
+    try:
+        from app.shared.firebase.connection import db as fs_db, firebase_connected
+        if firebase_connected and fs_db is not None and current_user.firebase_uid:
+            uid = current_user.firebase_uid
+            # Update users/{uid} — add "affiliate" to the roles array
+            user_ref = fs_db.collection("users").document(uid)
+            user_snap = user_ref.get()
+            if user_snap.exists:
+                existing_data = user_snap.to_dict()
+                roles = existing_data.get("roles", [existing_data.get("role", "customer")])
+                if "affiliate" not in roles:
+                    roles.append("affiliate")
+                user_ref.set({"role": "affiliate", "roles": roles, "updatedAt": _dt.utcnow().isoformat() + "Z"}, merge=True)
+            else:
+                user_ref.set({
+                    "uid": uid,
+                    "role": "affiliate",
+                    "roles": ["affiliate"],
+                    "email": current_user.email,
+                    "updatedAt": _dt.utcnow().isoformat() + "Z",
+                }, merge=True)
+
+            # Create/update affiliates/{uid} doc — required by AuthContext login role check
+            aff_ref = fs_db.collection("affiliates").document(uid)
+            aff_snap = aff_ref.get()
+            if not aff_snap.exists:
+                aff_ref.set({
+                    "userId": uid,
+                    "affiliateCode": profile.referral_code,
+                    "status": "active",
+                    "commissionRate": profile.commission_rate,
+                    "totalClicks": 0,
+                    "totalConversions": 0,
+                    "totalRevenue": 0,
+                    "totalCommission": 0,
+                    "pendingCommission": 0,
+                    "paidCommission": 0,
+                    "createdAt": _dt.utcnow().isoformat() + "Z",
+                    "fullName": current_user.name,
+                    "email": current_user.email,
+                })
+    except Exception as fs_err:
+        import logging as _log
+        _log.warning(f"[affiliate/activate] Firestore sync non-fatal: {fs_err}")
+        # Non-blocking — SQLite is the source of truth
+
+    # Step 4: Issue a new backend JWT with active_role=affiliate
+    token_data = {"sub": str(current_user.id), "active_role": "affiliate"}
+    access_token = create_access_token(token_data)
+
+    return {
+        "message": "Affiliate access activated successfully.",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "referral_code": profile.referral_code if profile else None,
+        "already_active": already_affiliate,
+        "user": {
+            "id": current_user.id,
+            "name": current_user.name,
+            "email": current_user.email,
+            "role": "affiliate",
+            "is_active": current_user.is_active,
+            "is_verified": current_user.is_verified,
+            "firebase_uid": current_user.firebase_uid,
+            "sqlite_user_id": current_user.id,
+        }
+    }
+
 def _get_affiliate_profile(user: User, db: Session) -> AffiliateProfile:
     """
     Return the AffiliateProfile for the authenticated user, creating one
