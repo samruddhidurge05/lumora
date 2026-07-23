@@ -6,7 +6,7 @@ import {
   FileText, Package, Shield, Zap, DollarSign, Trash2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { backendFetch } from '../../utils/api';
+import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 
 const COMMISSION_RATES = {
   'Website Templates': 20,
@@ -138,7 +138,7 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
     : Math.round((priceINR * parseFloat(rate)) / 100);
 
   /* ── Affiliate links built with live referral code ────────────────── */
-  const affLink   = `${SITE_URL}/#product/${product?.id}?ref=${REFERRAL_CODE}`;
+  const affLink   = buildAffiliateReferralLink(product, REFERRAL_CODE);
   const shortLink = `lumora.in/p/${product?.id}?r=${REFERRAL_CODE}`;
 
   /* ── Product-specific analytics from live commissions ─────────────── */

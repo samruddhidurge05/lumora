@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 
 /* ── Fallback mock data — shown only when backend has no records ──────────── */
 const MOCK_STATS = {
@@ -111,8 +112,7 @@ export default function AffiliateDashboardHome({
 
   /* Referral link from live stats, then profile, then fallback */
   const REFERRAL_CODE = stats?.referral_code || profile?.referral_code || 'AFF001';
-  const SITE_URL      = import.meta.env.VITE_SITE_URL || window.location.origin;
-  const REFERRAL_LINK = stats?.referral_link || `${SITE_URL}?ref=${REFERRAL_CODE}`;
+  const REFERRAL_LINK = buildAffiliateReferralLink(null, REFERRAL_CODE);
 
   /* Welcome name: Firebase displayName → profile → email prefix → generic */
   const welcomeName = useMemo(() => {

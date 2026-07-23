@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
+import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
 
@@ -49,7 +50,7 @@ export default function AffiliateProfile({
 
   /* ── Derived values from live API props ───────────────────────────── */
   const REFERRAL_CODE = stats?.referral_code || parentProfile?.referral_code || '—';
-  const REFERRAL_LINK = stats?.referral_link || (REFERRAL_CODE !== '—' ? `${SITE_URL}?ref=${REFERRAL_CODE}` : SITE_URL);
+  const REFERRAL_LINK = stats?.referral_link || (REFERRAL_CODE !== '—' ? buildAffiliateReferralLink(null, REFERRAL_CODE) : SITE_URL);
 
   const displayName   = user?.displayName || user?.email?.split('@')[0] || 'Lumora Affiliate';
   const displayEmail  = user?.email || '—';
