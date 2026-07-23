@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field("sqlite:///./test.db", env='DATABASE_URL')
     JWT_SECRET_KEY: str = Field("secret", env='JWT_SECRET_KEY')
     JWT_ALGORITHM: str = 'HS256'
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(43200, env='ACCESS_TOKEN_EXPIRE_MINUTES')  # 30 days default
     REFUND_WINDOW_DAYS: int = Field(14, env='REFUND_WINDOW_DAYS')
 
     # Firebase project - used for verifying Firebase ID tokens

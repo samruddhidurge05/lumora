@@ -30,7 +30,7 @@ const BACKEND_URL =
  */
 let activeSyncPromise = null;
 
-export const syncWithBackend = async (firebaseUser, role = 'customer') => {
+export const syncWithBackend = async (firebaseUser, role = 'customer', forceRefresh = false) => {
   if (!firebaseUser) return null;
 
   if (activeSyncPromise) {
@@ -39,8 +39,8 @@ export const syncWithBackend = async (firebaseUser, role = 'customer') => {
 
   activeSyncPromise = (async () => {
     try {
-      // Get (possibly cached) Firebase ID Token — 1-hour expiry
-      const idToken = await firebaseUser.getIdToken(false);
+      // Get Firebase ID Token — pass forceRefresh boolean
+      const idToken = await firebaseUser.getIdToken(forceRefresh);
 
       const res = await fetch(`${BACKEND_URL}/auth/firebase-sync`, {
         method: 'POST',

@@ -92,7 +92,7 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
 
     if (firebaseUser) {
       // Refresh Firebase ID token and re-sync with backend
-      const synced = await syncWithBackend(firebaseUser, activeRole);
+      const synced = await syncWithBackend(firebaseUser, activeRole, true);
 
       if (synced?.access_token) {
         // Retry the original request with the new token
