@@ -74,8 +74,7 @@ function OrderTraceModal({ orderId, onClose }) {
     if (!orderId) return;
     setLoading(true);
     backendFetch(`/admin/affiliates/orders/${orderId}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(setTrace)
+      .then(d => setTrace(d))
       .catch(() => setTrace(null))
       .finally(() => setLoading(false));
   }, [orderId]);
@@ -217,7 +216,8 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
     if (!affiliateId) return;
     setLoading(true);
     backendFetch(`/admin/affiliates/${affiliateId}/profile`)
-      .then(r => r.json()).then(setProfile).catch(() => setProfile(null))
+      .then(d => setProfile(d))
+      .catch(() => setProfile(null))
       .finally(() => setLoading(false));
   }, [affiliateId]);
 
@@ -476,11 +476,11 @@ function CommissionActionModal({ commission, onClose, onSave }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await backendFetch(`/admin/affiliates/commissions/${commission.id}/status`, {
+      await backendFetch(`/admin/affiliates/commissions/${commission.id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ commission_status: newStatus, admin_notes: notes }),
       });
-      if (res.ok) onSave(commission.id, newStatus, notes);
+      onSave(commission.id, newStatus, notes);
     } catch (e) { console.error(e); }
     finally { setSaving(false); onClose(); }
   };
@@ -593,21 +593,19 @@ export default function AffiliateManagement() {
   const loadKpis = useCallback(async () => {
     setKpisLoading(true);
     try {
-      const r = await backendFetch('/admin/affiliates/kpis');
-      if (r.ok) setKpis(await r.json());
-    } catch(e) {}
-    finally { setKpisLoading(false); }
+      const d = await backendFetch('/admin/affiliates/kpis');
+      if (d) setKpis(d);
+    } catch(e) {
+      console.error('loadKpis failed:', e);
+    } finally {
+      setKpisLoading(false);
+    }
   }, []);
 
   const loadAffiliates = useCallback(async () => {
     try {
-      const r = await backendFetch('/admin/affiliates/');
-      if (r.ok) {
-        const d = await r.json();
-        setAffiliates(Array.isArray(d) ? d : []);
-      } else {
-        setAffiliates([]);
-      }
+      const d = await backendFetch('/admin/affiliates/');
+      setAffiliates(Array.isArray(d) ? d : []);
     } catch(e) {
       setAffiliates([]);
     }
@@ -618,32 +616,22 @@ export default function AffiliateManagement() {
     try {
       const q = new URLSearchParams({ page: custAttrsPage, page_size: 50 });
       if (custAttrsSearch) q.append('search', custAttrsSearch);
-      const r = await backendFetch(`/admin/affiliates/customer-attributions?${q}`);
-      if (r.ok) {
-        const d = await r.json();
-        setCustAttrs(d.items || []);
-        setCustAttrsTotal(d.total || 0);
-      } else {
-        setCustAttrs([]);
-        setCustAttrsTotal(0);
-      }
+      const d = await backendFetch(`/admin/affiliates/customer-attributions?${q}`);
+      setCustAttrs(d?.items || []);
+      setCustAttrsTotal(d?.total || 0);
     } catch(e) {
       setCustAttrs([]);
       setCustAttrsTotal(0);
+    } finally {
+      setCustAttrsLoading(false);
     }
-    finally { setCustAttrsLoading(false); }
   }, [custAttrsPage, custAttrsSearch]);
 
   const loadProducts = useCallback(async () => {
     try {
-      const r = await backendFetch('/admin/products');
-      if (r.ok) {
-        const d = await r.json();
-        const items = Array.isArray(d) ? d : (d.products || d.items || []);
-        setProducts(items);
-      } else {
-        setProducts([]);
-      }
+      const d = await backendFetch('/admin/products');
+      const items = Array.isArray(d) ? d : (d?.products || d?.items || []);
+      setProducts(items);
     } catch(e) {
       setProducts([]);
     }
@@ -657,11 +645,15 @@ export default function AffiliateManagement() {
       if (ledgerCommStatus) params.append('commission_status', ledgerCommStatus);
       if (ledgerPurchaseStatus) params.append('purchase_status', ledgerPurchaseStatus);
       if (ledgerAffFilter) params.append('affiliate_id', ledgerAffFilter);
-      const r = await backendFetch(`/admin/affiliates/commissions?${params}`);
-      if (r.ok) { const d = await r.json(); setLedger(d.items || []); setLedgerTotal(d.total || 0); }
-      else { setLedger([]); setLedgerTotal(0); }
-    } catch(e) { setLedger([]); setLedgerTotal(0); }
-    finally { setLedgerLoading(false); }
+      const d = await backendFetch(`/admin/affiliates/commissions?${params}`);
+      setLedger(d?.items || []);
+      setLedgerTotal(d?.total || 0);
+    } catch(e) {
+      setLedger([]);
+      setLedgerTotal(0);
+    } finally {
+      setLedgerLoading(false);
+    }
   }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
 
   const loadPayouts = useCallback(async () => {
@@ -669,31 +661,43 @@ export default function AffiliateManagement() {
     try {
       const params = new URLSearchParams({ page: payoutsPage, page_size: 50 });
       if (payoutStatusFilter) params.append('payout_status', payoutStatusFilter);
-      const r = await backendFetch(`/admin/affiliates/payouts?${params}`);
-      if (r.ok) { const d = await r.json(); setPayouts(d.items || []); setPayoutsTotal(d.total || 0); }
-      else { setPayouts([]); setPayoutsTotal(0); }
-    } catch(e) { setPayouts([]); setPayoutsTotal(0); }
-    finally { setPayoutsLoading(false); }
+      const d = await backendFetch(`/admin/affiliates/payouts?${params}`);
+      setPayouts(d?.items || []);
+      setPayoutsTotal(d?.total || 0);
+    } catch(e) {
+      setPayouts([]);
+      setPayoutsTotal(0);
+    } finally {
+      setPayoutsLoading(false);
+    }
   }, [payoutsPage, payoutStatusFilter]);
 
   const loadPerf = useCallback(async () => {
     setPerfLoading(true);
     try {
-      const r = await backendFetch(`/admin/affiliates/products/performance?page=${perfPage}&page_size=50`);
-      if (r.ok) { const d = await r.json(); setPerfData(d.items || []); setPerfTotal(d.total || 0); }
-      else { setPerfData([]); setPerfTotal(0); }
-    } catch(e) { setPerfData([]); setPerfTotal(0); }
-    finally { setPerfLoading(false); }
+      const d = await backendFetch(`/admin/affiliates/products/performance?page=${perfPage}&page_size=50`);
+      setPerfData(d?.items || []);
+      setPerfTotal(d?.total || 0);
+    } catch(e) {
+      setPerfData([]);
+      setPerfTotal(0);
+    } finally {
+      setPerfLoading(false);
+    }
   }, [perfPage]);
 
   const loadTimeline = useCallback(async () => {
     setTimelineLoading(true);
     try {
-      const r = await backendFetch(`/admin/affiliates/activity?page=${timelinePage}&page_size=50`);
-      if (r.ok) { const d = await r.json(); setTimeline(d.items || []); setTimelineTotal(d.total || 0); }
-      else { setTimeline([]); setTimelineTotal(0); }
-    } catch(e) { setTimeline([]); setTimelineTotal(0); }
-    finally { setTimelineLoading(false); }
+      const d = await backendFetch(`/admin/affiliates/activity?page=${timelinePage}&page_size=50`);
+      setTimeline(d?.items || []);
+      setTimelineTotal(d?.total || 0);
+    } catch(e) {
+      setTimeline([]);
+      setTimelineTotal(0);
+    } finally {
+      setTimelineLoading(false);
+    }
   }, [timelinePage]);
 
   // Real-time auto-synchronization ticker (15s frequency with clean teardown)
@@ -769,11 +773,11 @@ export default function AffiliateManagement() {
     if (!prod) return;
     const nextStatus = !prod.affiliate_enabled;
     try {
-      const r = await backendFetch(`/admin/products/${id}`, {
+      await backendFetch(`/admin/products/${id}`, {
         method: 'PUT',
         body: JSON.stringify({ affiliate_enabled: nextStatus })
       });
-      if (r.ok) loadProducts();
+      loadProducts();
     } catch(e) {
       console.error('Failed to update product affiliate status:', e);
     }
@@ -806,7 +810,6 @@ export default function AffiliateManagement() {
   const handleCommissionSaved = (id, newStatus) => setLedger(prev => prev.map(c => c.id === id ? { ...c, commission_status: newStatus } : c));
   const handlePayoutAction = async (payoutId, newStatus) => {
     const isPayNow = newStatus === 'completed';
-    const label = isPayNow ? 'Pay Now' : 'Reject';
     const confirmed = window.confirm(
       isPayNow
         ? `Initiate payout #${payoutId}? The provider will execute the transfer.`
@@ -814,26 +817,21 @@ export default function AffiliateManagement() {
     );
     if (!confirmed) return;
     try {
-      const r = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
+      const data = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
-      if (r.ok) {
-        const data = await r.json();
-        const finalStatus = data.new_status || newStatus;
-        const modeLabel   = data.payout_mode === 'razorpay' ? 'via Razorpay X' : '(mock mode)';
-        if (finalStatus === 'processing') {
-          alert(`Payout #${payoutId} is now processing ${modeLabel}. Status will update when the webhook confirms.`);
-        } else if (finalStatus === 'completed') {
-          alert(`Payout #${payoutId} completed successfully ${modeLabel}.`);
-        }
-        loadPayouts();
-      } else {
-        const err = await r.json().catch(() => ({}));
-        alert(`Failed: ${err?.detail || 'Unknown error'}`);
+      const finalStatus = data?.new_status || newStatus;
+      const modeLabel   = data?.payout_mode === 'razorpay' ? 'via Razorpay X' : '(mock mode)';
+      if (finalStatus === 'processing') {
+        alert(`Payout #${payoutId} is now processing ${modeLabel}. Status will update when the webhook confirms.`);
+      } else if (finalStatus === 'completed') {
+        alert(`Payout #${payoutId} completed successfully ${modeLabel}.`);
       }
+      loadPayouts();
+      loadKpis();
     } catch(e) {
-      alert(`Network error: ${e.message}`);
+      alert(`Error processing payout: ${e.message || e}`);
     }
   };
 

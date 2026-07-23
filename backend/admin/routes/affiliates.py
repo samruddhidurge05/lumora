@@ -199,29 +199,53 @@ def get_affiliate_kpis(
     admin_user=Depends(require_admin_role)
 ):
     """Dashboard KPI aggregates for the Affiliate Operations Console overview."""
-    total_affiliates = db.query(AffiliateProfile).count()
+    aff_user_count = db.query(User).filter(User.role == "affiliate").count()
+    profile_count = db.query(AffiliateProfile).count()
+    total_affiliates = max(aff_user_count, profile_count)
+
     approved_affiliates = db.query(AffiliateProfile).filter(AffiliateProfile.status == "active").count()
+    if approved_affiliates == 0 and aff_user_count > 0:
+        approved_affiliates = db.query(User).filter(User.role == "affiliate", User.is_active == True).count()
+
     suspended_affiliates = db.query(AffiliateProfile).filter(AffiliateProfile.status.in_(["suspended", "disabled"])).count()
+    if suspended_affiliates == 0 and aff_user_count > 0:
+        suspended_affiliates = db.query(User).filter(User.role == "affiliate", User.is_active == False).count()
+
     enabled_products = db.query(Product).filter(Product.affiliate_enabled == True).count()
 
-    total_clicks = db.query(func.sum(AffiliateProfile.total_clicks)).scalar() or 0
+    clicks_link = db.query(func.sum(ReferralLink.clicks_count)).scalar() or 0
+    clicks_prof = db.query(func.sum(AffiliateProfile.total_clicks)).scalar() or 0
+    total_clicks = max(clicks_link, clicks_prof)
+
     unique_clicks = db.query(func.sum(AffiliateProfile.unique_clicks)).scalar() or 0
-    total_sales = db.query(func.sum(AffiliateProfile.total_sales)).scalar() or 0
+    if unique_clicks == 0 and total_clicks > 0:
+        unique_clicks = total_clicks
+
+    sales_comm = db.query(AffiliateCommission).count()
+    sales_prof = db.query(func.sum(AffiliateProfile.total_sales)).scalar() or 0
+    sales_attr = db.query(ReferralAttribution).count()
+    total_sales = max(sales_comm, sales_prof, sales_attr)
+
     conversion_rate = round((total_sales / total_clicks * 100), 2) if total_clicks > 0 else 0.0
 
-    revenue_generated = db.query(func.sum(AffiliateCommission.sale_amount)).scalar() or 0.0
+    rev_comm = db.query(func.sum(AffiliateCommission.sale_amount)).scalar() or 0.0
+    rev_order = db.query(func.sum(Order.total_amount)).filter(Order.affiliate_id.isnot(None)).scalar() or 0.0
+    revenue_generated = max(rev_comm, rev_order)
+
     commission_pending = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
         or_(
             AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"]),
             AffiliateCommission.status.in_(["pending", "approved", "ready_for_payout"])
         )
     ).scalar() or 0.0
+
     commission_paid = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
         or_(
             AffiliateCommission.commission_status == "paid",
             AffiliateCommission.status == "paid"
         )
     ).scalar() or 0.0
+
     avg_commission = db.query(func.avg(AffiliateCommission.commission_amt)).scalar() or 0.0
 
     # Top affiliate by earnings
@@ -243,7 +267,8 @@ def get_affiliate_kpis(
     top_product_name = top_prod_row[0] if top_prod_row else "—"
 
     # Average EPC (earnings per click)
-    avg_epc = round(commission_paid / total_clicks, 2) if total_clicks > 0 else 0.0
+    total_comm_earned = commission_pending + commission_paid
+    avg_epc = round((total_comm_earned / total_clicks), 2) if total_clicks > 0 else 0.0
 
     return {
         "total_affiliates": total_affiliates,
