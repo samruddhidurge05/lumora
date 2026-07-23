@@ -250,13 +250,14 @@ function AppContent() {
           localStorage.removeItem('lumora_pending_referral');
           if (pending.product_id) {
             // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
-            // window.location.href would bypass the SPA state and show the home page.
-            navigateTo('product-detail', pending.product_id);
+            // setTimeout(0) lets React finish the route transition from /auth/login before
+            // updating currentView — avoids race condition with Login's navigate() call.
+            setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
           }
         }).catch(() => {
           // Attribution failed silently — still open the product so the user isn't stuck
           if (pending.product_id) {
-            navigateTo('product-detail', pending.product_id);
+            setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
           }
         });
       });

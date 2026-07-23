@@ -1,0 +1,188 @@
+| Location | File | Line | pCloud Reference | Purpose |
+| --- | --- | --- | --- | --- |
+| app | backend/app/main.py | 183 | `"ALTER TABLE products ADD COLUMN IF NOT EXISTS pcloud_download_link VARCHAR(512)",` | pCloud download link metadata/reference field |
+| app | backend/app/api/products_router.py | 28 | `_PCLOUD_URL_CACHE = {}` | Unknown |
+| app | backend/app/api/products_router.py | 266 | `# Prefer explicitly stored pCloud/external image URLs list` | Unknown |
+| app | backend/app/api/products_router.py | 364 | `pcloud_link = product.pcloud_download_link` | pCloud download link metadata/reference field |
+| app | backend/app/api/products_router.py | 366 | `has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2` | Unknown |
+| app | backend/app/api/products_router.py | 369 | `# If the external pCloud link has expired and there is no local file on disk,` | Unknown |
+| app | backend/app/api/products_router.py | 371 | `if not has_pcloud and not has_file:` | Unknown |
+| app | backend/app/api/products_router.py | 372 | `product.storage_path = f"pcloud://uploads/products/{product_id}/product.zip"` | Unknown |
+| app | backend/app/api/products_router.py | 375 | `download_available = has_b2 or has_pcloud or has_file` | Unknown |
+| app | backend/app/api/products_router.py | 399 | `if has_pcloud:` | Unknown |
+| app | backend/app/api/products_router.py | 401 | `response_data["redirect_url"] = pcloud_link` | Customer download redirection to pCloud |
+| app | backend/app/api/products_router.py | 434 | `pcloud_link = product.pcloud_download_link` | pCloud download link metadata/reference field |
+| app | backend/app/api/products_router.py | 436 | `has_pcloud = is_pcloud_link_active(pcloud_link) and not has_b2` | Unknown |
+| app | backend/app/api/products_router.py | 439 | `if not has_pcloud and not has_file:` | Unknown |
+| app | backend/app/api/products_router.py | 442 | `download_available = has_b2 or has_pcloud or has_file` | Unknown |
+| app | backend/app/api/products_router.py | 677 | `# -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------` | Unknown |
+| app | backend/app/api/products_router.py | 678 | `pcloud_download_link=product_in.pcloud_download_link,` | pCloud download link metadata/reference field |
+| app | backend/app/models/product.py | 58 | `# -- pCloud / External URL Delivery (TEMPORARY - dev/testing only, ~2-3 weeks) --` | Unknown |
+| app | backend/app/models/product.py | 61 | `pcloud_download_link = Column(String(512), nullable=True)  # pCloud public download link` | pCloud download link metadata/reference field |
+| app | backend/app/models/product.py | 62 | `image_urls           = Column(JSON, default=list)          # pCloud / external image URL list` | Database schema column definition |
+| app | backend/app/schemas/schemas.py | 45 | `# -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------` | Unknown |
+| app | backend/app/schemas/schemas.py | 46 | `pcloud_download_link: Optional[str] = None` | pCloud download link metadata/reference field |
+| app | backend/app/schemas/schemas.py | 88 | `# -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------` | Unknown |
+| app | backend/app/schemas/schemas.py | 89 | `pcloud_download_link: Optional[str] = None` | pCloud download link metadata/reference field |
+| app | backend/app/schemas/schemas.py | 136 | `# -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -----------------` | Unknown |
+| app | backend/app/schemas/schemas.py | 137 | `pcloud_download_link: Optional[str] = None` | pCloud download link metadata/reference field |
+| app | backend/app/services/product_service.py | 15 | `AWS S3, Firebase Storage, Unsplash, pCloud, etc.) that should be stored as-is and` | Unknown |
+| app | backend/app/services/product_service.py | 79 | `# -- pCloud / External URL Delivery (temporary, ~2-3 weeks) -------------` | Unknown |
+| app | backend/app/services/product_service.py | 80 | `pcloud_download_link: Optional[str] = None,` | pCloud download link metadata/reference field |
+| app | backend/app/services/product_service.py | 113 | `pcloud_download_link=pcloud_download_link,` | pCloud download link metadata/reference field |
+| app | backend/app/services/product_service.py | 121 | `# External URLs (pCloud, S3, Firebase Storage, etc.) are stored as-is.` | Unknown |
+| app | backend/app/services/product_service.py | 233 | `# External URL (pCloud, S3, etc.) - store directly` | Unknown |
+| app | backend/app/services/product_service.py | 314 | `# -- pCloud / External URL Delivery (temporary) --` | Unknown |
+| app | backend/app/services/product_service.py | 315 | `"pcloud_download_link", "image_urls",` | pCloud download link metadata/reference field |
+| app | backend/app/utils/db_sync.py | 109 | `pcloud_download_link=data.get("pcloud_download_link") or data.get("pcloudDownloadLink"),` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 88 | `"pcloud_download_link": product.pcloud_download_link,` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 89 | `"pcloudDownloadLink": product.pcloud_download_link,` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 231 | `def _refresh_pcloud_images_for_product(product_model, pcloud_share_url: str) -> bool:` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 233 | `Fetch fresh direct p-lux pCloud image URLs from a shared folder.` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 246 | `f"https://api.pcloud.com/showpublink?code={code}",` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 257 | `f"https://api.pcloud.com/getpublinkdownload?code={code}&fileid={fid}",` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 270 | `code = _extract_code(pcloud_share_url)` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 311 | `print(f"[firestore-sync] pCloud image refresh failed: {e}")` | Firestore synchronization mapping for pCloud |
+| admin | backend/admin/firestore/admin_firestore.py | 318 | `Also fixes broken localhost thumbnail URLs by refreshing them from pCloud.` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 338 | `pcloud_link = data.get("pcloud_download_link") or data.get("pcloudDownloadLink")` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 355 | `file_url=data.get("file_url") or data.get("fileUrl") or pcloud_link,` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 384 | `pcloud_download_link=pcloud_link,` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 390 | `# Refresh pCloud images if thumbnail was broken or missing` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 391 | `if pcloud_link and (is_broken_thumb or not product.thumbnail):` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 392 | `refreshed = _refresh_pcloud_images_for_product(product, pcloud_link)` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/firestore/admin_firestore.py | 415 | `exists.file_url = data.get("file_url") or data.get("fileUrl") or pcloud_link or exists.file_url` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 441 | `exists.pcloud_download_link = pcloud_link or exists.pcloud_download_link` | pCloud download link metadata/reference field |
+| admin | backend/admin/firestore/admin_firestore.py | 443 | `if pcloud_link and (is_broken_thumb or not exists.thumbnail):` | Unknown |
+| admin | backend/admin/firestore/admin_firestore.py | 444 | `refreshed = _refresh_pcloud_images_for_product(exists, pcloud_link)` | pCloud direct image URL / folder link fetching |
+| admin | backend/admin/routes/products.py | 76 | `# so the admin card and customer marketplace always show the first pCloud image.` | Unknown |
+| admin | backend/admin/routes/products.py | 115 | `pcloud_download_link=product_in.pcloud_download_link,` | pCloud download link metadata/reference field |
+| src | frontend/src/components/ProductShowcase.jsx | 9 | `// Always show the pinned pCloud products first` | Sorting/pinning pCloud products on Home screen |
+| src | frontend/src/components/download/DownloadReadyPopup.jsx | 20 | `// Auto-trigger downloads or open pCloud links for all purchased items` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 5 | `* Extracts the first valid pCloud public share URL from a product.` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 6 | `* These are permanent links in the format: https://u.pcloud.link/publink/show?code=...` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 13 | `return candidates.find(u => u && typeof u === 'string' && u.includes('u.pcloud.link')) \|\| null;` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 17 | `* Resolve a pCloud share link to a direct download URL via the public API.` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 19 | `async function resolvePCloudLink(shareUrl) {` | Firestore synchronization mapping for pCloud |
+| src | frontend/src/components/product/ProductImage.jsx | 24 | `const showRes = await fetch(`https://api.pcloud.com/showpublink?code=${code}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 34 | `const dlRes = await fetch(`https://api.pcloud.com/getpublinkdownload?code=${code}&fileid=${img.fileid}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 39 | `const dlRes = await fetch(`https://api.pcloud.com/getpublinkdownload?code=${code}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 52 | `*  - direct pCloud CDN links (p-lux*.pcloud.com) which expire quickly` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 56 | `if (/p-lux\d*\.pcloud\.com/.test(url)) return false;` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/components/product/ProductImage.jsx | 65 | `*  2. Resolve the pCloud share link from preview_images/image_urls.` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 118 | `// Try to resolve a pCloud share link` | Unknown |
+| src | frontend/src/components/product/ProductImage.jsx | 127 | `resolvePCloudLink(shareUrl)` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 657 | `if (url.startsWith('http')) return url; // external CDN (pCloud, etc.) — pass through unchanged` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 663 | `// Priority: pCloud CDN > non-Unsplash https > image_urls array > null` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 703 | `// Resolve image: Priority: pCloud CDN / real non-Unsplash URL > image_urls[0] > preview_images[0] > null` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 803 | `// Products that must always appear first everywhere (real pCloud products)` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 896 | `// Helper: merge pCloud/image fields from a Firestore doc into a product` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 903 | `const fsPcloud = fd.pcloud_download_link \|\| fd.pcloudDownloadLink \|\| null;` | pCloud download link metadata/reference field |
+| src | frontend/src/context/AppContext.jsx | 913 | `// Always take pCloud download link from Firestore if present` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 914 | `...(fsPcloud ? { pcloud_download_link: fsPcloud, pcloudDownloadLink: fsPcloud } : {}),` | pCloud download link metadata/reference field |
+| src | frontend/src/context/AppContext.jsx | 919 | `// If the product exists in Firestore, merge its images/pcloud links on top of it.` | Unknown |
+| src | frontend/src/context/AppContext.jsx | 920 | `// This prevents Firestore documents with null image fields from blanking out valid local pCloud URLs.` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 4 | `* Extracts a public pCloud share link from the product's preview_images or image_urls.` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 6 | `function extractPCloudShareUrl(product) {` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 12 | `// Also check if preview/thumbnail itself contains u.pcloud.link` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 16 | `return urls.find(u => u && typeof u === 'string' && u.includes('u.pcloud.link')) \|\| null;` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 28 | `// (i.e. not an expired p-lux.pcloud.com link, not localhost, and not empty)` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 30 | `const isPCloudDirectUrl = directUrl && (directUrl.includes('pcloud.com') && !directUrl.includes('u.pcloud.link'));` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 33 | `if (directUrl && !isPCloudDirectUrl && !isLocalhost) {` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 40 | `const shareUrl = extractPCloudShareUrl(product);` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 42 | `// No pCloud share URL to resolve, and direct URL is expired/local -> fallback to failure/gradient` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 58 | `// Call pCloud API to get the download info` | Unknown |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 59 | `const showRes = await fetch(`https://api.pcloud.com/showpublink?code=${code}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 71 | `const dlRes = await fetch(`https://api.pcloud.com/getpublinkdownload?code=${code}&fileid=${img.fileid}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 83 | `const dlRes = await fetch(`https://api.pcloud.com/getpublinkdownload?code=${code}`);` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/hooks/useResolvedProductMedia.js | 96 | `console.warn('[pCloud Client Resolve Failed]:', err);` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 241 | `: (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 242 | `? uiForm.pcloudImageUrls[0]` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 246 | `: (uiForm.pcloudImageUrls && uiForm.pcloudImageUrls.length > 0)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 247 | `? uiForm.pcloudImageUrls[0]` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 288 | `// ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ─────────────` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 290 | `pcloud_download_link: uiForm.pcloudDownloadLink \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 291 | `image_urls:           Array.isArray(uiForm.pcloudImageUrls)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 292 | `? uiForm.pcloudImageUrls.filter(Boolean)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 296 | `preview_images:       Array.isArray(uiForm.pcloudImageUrls) && uiForm.pcloudImageUrls.length > 0` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 297 | `? uiForm.pcloudImageUrls.filter(Boolean)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 358 | `pcloud_download_link: p.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 769 | `pcloud_download_link: saved.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 770 | `pcloudDownloadLink:   saved.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 837 | `pcloud_download_link: saved.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 838 | `pcloudDownloadLink:   saved.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2144 | `// ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2145 | `pcloudDownloadLink: product?.pcloud_download_link \|\| product?.pcloudDownloadLink \|\| '',` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2146 | `pcloudImageUrls:    Array.isArray(product?.image_urls)` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2178 | `// ── pCloud Image URLs — dynamic list input ───────────────────────────────` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2179 | `const [pcloudImageInput, setPcloudImageInput] = useState('');` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2385 | `// Add backend URLs to image_urls (pcloudImageUrls) so they persist` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2386 | `handleChange('pcloudImageUrls', [` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2387 | `...form.pcloudImageUrls,` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2388 | `...uploadedUrls.filter(u => !form.pcloudImageUrls.includes(u)),` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2420 | `// Also remove from pcloudImageUrls if it's there` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 2421 | `pcloudImageUrls: prev.pcloudImageUrls.filter(u => u !== removedUrl),` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3004 | `{/* ── Section 3b: pCloud Download Link (Temporary — Dev/Testing Only) ─── */}` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3010 | `Temporary · pCloud` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3014 | `Paste a public pCloud link to the downloadable product file. This is stored in SQLite and returned securely after purchase verification. Migration-ready — only the URL needs to change when moving to R2 / S3.` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3018 | `placeholder="https://u.pcloud.link/publink/show?code=XXXXXXXX"` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3019 | `value={form.pcloudDownloadLink}` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3020 | `onChange={(e) => handleChange('pcloudDownloadLink', e.target.value)}` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3023 | `{form.pcloudDownloadLink && (` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3030 | `{/* ── Section 3c: pCloud Image Links (Temporary — Dev/Testing Only) ──── */}` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3036 | `Temporary · pCloud` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3044 | `{form.pcloudImageUrls.length > 0 && (` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3046 | `{form.pcloudImageUrls.map((url, idx) => (` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3064 | `onClick={() => handleChange('pcloudImageUrls', form.pcloudImageUrls.filter((_, i) => i !== idx))}` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3079 | `placeholder="https://u.pcloud.link/publink/show?code=… or any image URL"` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3080 | `value={pcloudImageInput}` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3081 | `onChange={(e) => setPcloudImageInput(e.target.value)}` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3085 | `const trimmed = pcloudImageInput.trim();` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3086 | `if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3087 | `handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3088 | `setPcloudImageInput('');` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3097 | `const trimmed = pcloudImageInput.trim();` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3098 | `if (trimmed && !form.pcloudImageUrls.includes(trimmed)) {` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3099 | `handleChange('pcloudImageUrls', [...form.pcloudImageUrls, trimmed]);` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3100 | `setPcloudImageInput('');` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3108 | `{form.pcloudImageUrls.length === 0 && (` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3111 | `{form.pcloudImageUrls.length > 0 && (` | Unknown |
+| src | frontend/src/pages/admin/ProductsManagement.jsx | 3112 | `<p className="text-[9px] text-[#8E6AA8] mt-2">{form.pcloudImageUrls.length} image{form.pcloudImageUrls.length > 1 ? 's' : ''} added — displayed in marketplace gallery.</p>` | Unknown |
+| src | frontend/src/pages/customer/Downloads.jsx | 35 | `function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, pcloudDownloadLink }) {` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 41 | `// ── Fast path: pCloud link → open instantly, no API round-trip ────────────` | Unknown |
+| src | frontend/src/pages/customer/Downloads.jsx | 42 | `if (pcloudDownloadLink) {` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 43 | `window.open(pcloudDownloadLink, '_blank');` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 66 | `// Handle pCloud / external redirect (temporary dev/testing implementation)` | Customer download redirection to pCloud |
+| src | frontend/src/pages/customer/Downloads.jsx | 279 | `pcloud_download_link: prod?.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 309 | `pcloud_download_link: p.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 668 | `<DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 729 | `// ── Fast path: open pCloud link instantly, no API needed ─────────────────` | Unknown |
+| src | frontend/src/pages/customer/Downloads.jsx | 730 | `const quickUrl = product.pcloud_download_link \|\| product.downloadUrl;` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/customer/Downloads.jsx | 731 | `if (quickUrl && (quickUrl.includes('pcloud') \|\| quickUrl.includes('publink'))) {` | pCloud direct image URL / folder link fetching |
+| src | frontend/src/pages/customer/Downloads.jsx | 736 | `// ── Fallback: resolve via backend for non-pCloud products ─────────────────` | Unknown |
+| src | frontend/src/pages/customer/Downloads.jsx | 901 | `<DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} pcloudDownloadLink={product.pcloud_download_link} />` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/marketplace/Downloads.jsx | 111 | `const externalLink = product.pcloud_download_link \|\| product.file_url;` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/marketplace/Downloads.jsx | 137 | `// Handle pCloud / external redirect` | Customer download redirection to pCloud |
+| src | frontend/src/pages/marketplace/Downloads.jsx | 307 | `{isDownloading ? 'Preparing…' : (p.pcloud_download_link \|\| p.file_url ? 'Open' : 'Download')}` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/marketplace/Home.jsx | 195 | `// ── Pin the real pCloud products ALWAYS first ────────────────────────────` | Sorting/pinning pCloud products on Home screen |
+| src | frontend/src/pages/marketplace/Home.jsx | 196 | `// These are the products you assigned pCloud folders to. They must always` | Sorting/pinning pCloud products on Home screen |
+| src | frontend/src/pages/marketplace/Home.jsx | 204 | `// Featured always shows the pinned pCloud products (up to first 8).` | Sorting/pinning pCloud products on Home screen |
+| src | frontend/src/pages/marketplace/ProductPage.jsx | 35 | `// Prefer explicitly stored pCloud/external image URLs (image_urls column)` | Unknown |
+| src | frontend/src/pages/marketplace/ProductPage.jsx | 36 | `const pcloudImages = Array.isArray(product.image_urls \|\| product.imageUrls)` | Unknown |
+| src | frontend/src/pages/marketplace/ProductPage.jsx | 44 | `// Build the full gallery pool — pCloud images take priority over preview/thumbnail` | Unknown |
+| src | frontend/src/pages/marketplace/ProductPage.jsx | 45 | `const allGallery = pcloudImages.length > 0 ? pcloudImages : extraImages;` | Unknown |
+| src | frontend/src/pages/marketplace/ProductPage.jsx | 179 | `pcloud_download_link: data.pcloud_download_link \|\| null` | pCloud download link metadata/reference field |
+| src | frontend/src/pages/marketplace/Products.jsx | 394 | `// Prefer explicitly stored pCloud/external image URLs (image_urls column)` | Unknown |
+| src | frontend/src/pages/marketplace/Products.jsx | 395 | `const pcloudImages = Array.isArray(product.image_urls \|\| product.imageUrls)` | Unknown |
+| src | frontend/src/pages/marketplace/Products.jsx | 399 | `if (pcloudImages.length > 0) {` | Unknown |
+| src | frontend/src/pages/marketplace/Products.jsx | 400 | `return [preview, ...pcloudImages.filter(img => img !== preview)];` | Unknown |
+| src | frontend/src/pages/marketplace/Success.jsx | 265 | `- If external (pCloud), opens in new tab.` | Unknown |
+| src | frontend/src/services/ecosystemService.js | 77 | `// Prefer pCloud download link, then file_url/fileUrl — all are set by enrichRawProducts() spread.` | Unknown |
+| src | frontend/src/services/ecosystemService.js | 81 | `const fileUrl = item.pcloud_download_link \|\| item.pcloudDownloadLink \|\|` | pCloud download link metadata/reference field |
+| src | frontend/src/services/productService.js | 110 | `pcloud_download_link: data.pcloud_download_link \|\| data.pcloudDownloadLink \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/services/productService.js | 111 | `pcloudDownloadLink: data.pcloudDownloadLink \|\| data.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/services/productService.js | 162 | `pcloud_download_link: data.pcloud_download_link \|\| data.pcloudDownloadLink \|\| null,` | pCloud download link metadata/reference field |
+| src | frontend/src/services/productService.js | 163 | `pcloudDownloadLink: data.pcloudDownloadLink \|\| data.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | admin-app/src/services/productService.js | 110 | `pcloud_download_link: data.pcloud_download_link \|\| data.pcloudDownloadLink \|\| null,` | pCloud download link metadata/reference field |
+| src | admin-app/src/services/productService.js | 111 | `pcloudDownloadLink: data.pcloudDownloadLink \|\| data.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
+| src | admin-app/src/services/productService.js | 162 | `pcloud_download_link: data.pcloud_download_link \|\| data.pcloudDownloadLink \|\| null,` | pCloud download link metadata/reference field |
+| src | admin-app/src/services/productService.js | 163 | `pcloudDownloadLink: data.pcloudDownloadLink \|\| data.pcloud_download_link \|\| null,` | pCloud download link metadata/reference field |
