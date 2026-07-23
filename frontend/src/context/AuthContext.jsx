@@ -60,6 +60,21 @@ const logAuthEvent = async (uid, email, eventType, success, failureReason = null
   }
 };
 
+/** Helper to safely clear session storage without losing referral attribution or active role */
+const clearSessionSafely = () => {
+  try {
+    const affRef = sessionStorage.getItem('lumora_aff_ref');
+    const affSession = sessionStorage.getItem('lumora_ref_session_id');
+    const lastAuthRole = sessionStorage.getItem('lumora_last_auth_role');
+    
+    sessionStorage.clear();
+    
+    if (affRef) sessionStorage.setItem('lumora_aff_ref', affRef);
+    if (affSession) sessionStorage.setItem('lumora_ref_session_id', affSession);
+    if (lastAuthRole) sessionStorage.setItem('lumora_last_auth_role', lastAuthRole);
+  } catch (_) {}
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser]       = useState(null);
   const [userRole, setUserRole] = useState(null);   // 'customer' | 'affiliate' | 'vendor'
@@ -342,7 +357,7 @@ export const AuthProvider = ({ children }) => {
         setUserRole(null);
         setIsAccountDisabled(false);
         clearBackendToken(); // clears: backend_token, backend_uid, active_role, user
-        try { sessionStorage.clear(); } catch (_) {}
+        clearSessionSafely();
       }
 
       // ── CRITICAL: setLoading(false) is ALWAYS called last ────────────────
@@ -462,7 +477,7 @@ export const AuthProvider = ({ children }) => {
     // Destroy any previous session & clear local caches before authenticating new user
     try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
-    try { sessionStorage.clear(); } catch (_) {}
+    clearSessionSafely();
     setUser(null);
     setUserRole(null);
     setIsAccountDisabled(false);
@@ -620,7 +635,7 @@ export const AuthProvider = ({ children }) => {
     clearBackendToken();
 
     // 4. Clear sessionStorage (catches any session-scoped auth state)
-    try { sessionStorage.clear(); } catch (_) {}
+    clearSessionSafely();
 
     // 5. Sign out of Firebase
     try { await signOut(auth); } catch (_) {}
@@ -637,7 +652,7 @@ export const AuthProvider = ({ children }) => {
     // Destroy any previous session & clear local caches before authenticating new user
     try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
-    try { sessionStorage.clear(); } catch (_) {}
+    clearSessionSafely();
     setUser(null);
     setUserRole(null);
     setIsAccountDisabled(false);
@@ -723,7 +738,7 @@ export const AuthProvider = ({ children }) => {
     // Destroy any previous session & clear local caches before authenticating new user
     try { if (auth.currentUser) { await signOut(auth); } } catch (_) {}
     clearBackendToken();
-    try { sessionStorage.clear(); } catch (_) {}
+    clearSessionSafely();
     setUser(null);
     setUserRole(null);
     setIsAccountDisabled(false);
