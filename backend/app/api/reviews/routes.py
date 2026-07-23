@@ -112,11 +112,24 @@ def create_review(
     # Check if verified purchase: user has a completed order containing this product
     has_purchased = db.query(Order).join(OrderItem).filter(
         Order.user_id == current_user.id,
-        Order.status.in_(["completed", "paid"]),
+        Order.status.in_(["completed", "paid", "success", "COMPLETED", "PAID", "SUCCESS", "active"]),
         OrderItem.product_id == review_in.product_id
     ).first() is not None
 
-    if not has_purchased:
+    if not has_purchased and current_user.email:
+        # Check if user purchased under the same email address (multi-role or alternate user account)
+        user_ids = [u.id for u in db.query(User).filter(User.email == current_user.email).all()]
+        if user_ids:
+            has_purchased = db.query(Order).join(OrderItem).filter(
+                Order.user_id.in_(user_ids),
+                Order.status.in_(["completed", "paid", "success", "COMPLETED", "PAID", "SUCCESS", "active"]),
+                OrderItem.product_id == review_in.product_id
+            ).first() is not None
+
+    # Admins or product creators are also allowed to write reviews
+    is_admin_or_creator = current_user.role in ["admin", "superadmin"] or (prod.vendor_id and prod.vendor_id == getattr(current_user, "vendor_id", None))
+
+    if not has_purchased and not is_admin_or_creator:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only verified purchasers may review this product."
