@@ -92,19 +92,25 @@ export default function Login() {
 
   const meta = ROLE_META[role];
 
-  const mapAuthError = (code) => {
+  const mapAuthError = (code, rawMsg = '') => {
     switch (code) {
       case 'auth/user-not-found':       return 'No account found with this email.';
       case 'auth/wrong-password':       return 'Incorrect password.';
       case 'auth/invalid-credential':   return 'Email or password is incorrect.';
       case 'auth/invalid-email':        return 'Please enter a valid email address.';
       case 'auth/too-many-requests':    return 'Too many attempts. Please try again later.';
-      case 'auth/network-request-failed': return 'Network error. Please check your connection.';
+      case 'auth/network-request-failed': return 'Network error. Please check your internet connection.';
       case 'auth/user-disabled':        return 'This account has been disabled.';
+      case 'auth/popup-closed-by-user': return 'Sign-in popup was closed before completing.';
+      case 'auth/popup-blocked':        return 'Sign-in popup was blocked by your browser. Please allow popups for this site.';
+      case 'auth/cancelled-popup-request': return 'Sign-in request was cancelled.';
+      case 'auth/unauthorized-domain': return 'This domain is not authorized for Google Sign-In in Firebase Console.';
+      case 'auth/operation-not-allowed': return 'Google Sign-In is not enabled in Firebase Console.';
+      case 'auth/account-exists-with-different-credential': return 'An account already exists with this email using a different sign-in method.';
       case 'auth/role-mismatch':
         return `This email is registered under a different account type. To use the ${role} dashboard, please register a separate ${role} account.`;
       case 'auth/account-not-found':    return 'No account found. Please register first.';
-      default:                          return 'Authentication error. Please try again.';
+      default:                          return rawMsg || 'Authentication error. Please try again.';
     }
   };
 
@@ -135,8 +141,6 @@ export default function Login() {
         if (nextUrl) {
           navigate(nextUrl, { replace: true });
         } else if (redirectUrl) {
-          // redirectUrl from ReferralRouteHandler is a path like /product/123
-          // Navigate using react-router so the SPA hash state updates correctly
           navigate(redirectUrl, { replace: true });
         } else {
           navigate(`/${role}/dashboard`);
@@ -144,7 +148,7 @@ export default function Login() {
       }
     } catch (err) {
       setAuthStatus('error');
-      setStatusMessage(mapAuthError(err.code));
+      setStatusMessage(mapAuthError(err.code, err.message));
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +168,7 @@ export default function Login() {
       }
     } catch (err) {
       setAuthStatus('error');
-      setStatusMessage(mapAuthError(err.code) || err.message);
+      setStatusMessage(mapAuthError(err.code, err.message));
     } finally {
       setIsLoading(false);
     }

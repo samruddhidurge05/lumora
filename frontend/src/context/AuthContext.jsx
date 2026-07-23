@@ -668,18 +668,27 @@ export const AuthProvider = ({ children }) => {
     const result = await signInWithPopup(auth, provider);
     const firebaseUser = result.user;
     const userRef = doc(db, 'users', firebaseUser.uid);
-    const snap = await getDoc(userRef);
+    let snap = await getDoc(userRef);
 
     if (!snap.exists()) {
-      // No Firestore account — reject immediately, sign out, do NOT create a document
-      await signOut(auth);
-      await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'google_login', false, 'Account does not exist. Please register first.');
-      const err = new Error('Account does not exist. Please register first.');
-      err.code = 'auth/account-not-found';
-      throw err;
+      // Auto-create user document on first Google sign-in
+      const newUserDoc = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || '',
+        name: firebaseUser.displayName || '',
+        role: normalizedPreRole,
+        roles: [normalizedPreRole],
+        emailVerified: true,
+        accountStatus: 'active',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(userRef, newUserDoc);
+      snap = await getDoc(userRef);
     }
 
-    const data = snap.data();
+    const data = snap.data() || {};
     const accountStatus = (data.accountStatus || data.status || 'active').toLowerCase();
     if (accountStatus === 'disabled' || accountStatus === 'suspended' || accountStatus === 'rejected') {
       await signOut(auth);
@@ -696,13 +705,12 @@ export const AuthProvider = ({ children }) => {
       updatedAt: serverTimestamp(),
     });
 
-    // Optional role validation
+    // Role handling & validation
     if (role) {
-      const data = snap.data();
-      const roles = data.roles || [data.role || 'customer'];
+      const currentRoles = data.roles || [data.role || 'customer'];
       const normalizedTarget = role === 'user' ? 'customer' : role;
       
-      let hasRole = roles.includes(normalizedTarget);
+      let hasRole = currentRoles.includes(normalizedTarget);
       if (!hasRole) {
         if (normalizedTarget === 'affiliate') {
           const affSnap = await getDoc(doc(db, 'affiliates', firebaseUser.uid));
@@ -716,15 +724,16 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
+      // If missing role but account is active, add the requested role to allow seamless multi-role access
       if (!hasRole) {
-        await signOut(auth);
-        await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'google_login', false, `Role mismatch: User does not have ${role} role`);
-        const err = new Error(`This account is not registered as a ${role}.`);
-        err.code = 'auth/role-mismatch';
-        err.role = role;
-        throw err;
+        const updatedRoles = Array.from(new Set([...currentRoles, normalizedTarget]));
+        await updateDoc(userRef, {
+          roles: updatedRoles,
+          updatedAt: serverTimestamp()
+        });
+        hasRole = true;
       }
-      
+
       localStorage.setItem('lumora_active_role', normalizedTarget);
       setUserRole(normalizedTarget);
     }
