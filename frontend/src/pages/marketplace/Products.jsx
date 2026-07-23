@@ -336,10 +336,12 @@ function ProductListRow({ product }) {
   const inCart = cart.some(item => String(item.id) === String(product.id));
   return (
     <div onClick={() => navigateTo('product-detail', product.id)}
+      className="lumora-products-list-row"
       style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(220,198,255,0.28)', borderRadius: '18px', cursor: 'pointer', transition: 'all 0.22s', boxShadow: '0 2px 12px rgba(123,63,160,0.05)' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 10px 32px rgba(123,63,160,0.12)'; e.currentTarget.style.borderColor = 'rgba(123,63,160,0.28)'; e.currentTarget.style.transform = 'translateX(3px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(123,63,160,0.05)'; e.currentTarget.style.borderColor = 'rgba(220,198,255,0.28)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
       <img src={product.preview || product.thumbnail || (Array.isArray(product.image_urls) && product.image_urls[0]) || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'} alt=""
+        className="lumora-products-list-thumb"
         style={{ width: '74px', height: '74px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(220,198,255,0.25)' }} loading="lazy"
         onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=120&q=70'; }}
       />
@@ -355,7 +357,7 @@ function ProductListRow({ product }) {
           <span style={{ fontSize: '0.68rem', color: '#B08968' }}>· by {product.seller?.name || 'Creator'}</span>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+      <div className="lumora-products-list-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2D004D' }}>{formatPrice(product.price)}</span>
         <button onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
           style={{ width: '34px', height: '34px', borderRadius: '9px', border: '1px solid rgba(220,198,255,0.30)', background: 'rgba(255,255,255,0.90)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isWished ? '#E11D48' : '#8B6B5B' }}>

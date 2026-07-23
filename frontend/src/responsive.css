@@ -328,44 +328,44 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 640px) {
-  /* ── Horizontal scroll carousel — cards side by side, swipe to browse ── */
+  /* ── Horizontal scroll carousel — 2 ROWS, swipe to browse ── */
   .home-product-grid,
   .lumora-home-products-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    /* Bleed the carousel edge-to-edge past the section's side padding */
+    gap: 10px !important;
+    max-height: 700px !important;
+    align-content: flex-start !important;
     margin-left: calc(-1 * var(--mob-pad)) !important;
     margin-right: calc(-1 * var(--mob-pad)) !important;
     padding-left: var(--mob-pad) !important;
     padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important; /* room for scrollbar on some browsers */
-    /* Hide scrollbar but keep scrollability */
+    padding-bottom: 8px !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
   }
   .home-product-grid::-webkit-scrollbar,
   .lumora-home-products-grid::-webkit-scrollbar { display: none; }
 
-  /* Each card: fixed width so two peek on screen */
+  /* Each card: 2 columns per page = products fill 2 rows then scroll */
   .home-product-grid > *,
   .lumora-home-products-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
 
   /* PCard image: compact height */
   .pcard-img {
-    height: 160px !important;
-    min-height: 160px !important;
-    max-height: 160px !important;
+    height: 130px !important;
+    min-height: 130px !important;
+    max-height: 130px !important;
   }
 
   /* Section padding reduced on mobile */
@@ -375,8 +375,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 @media (max-width: 360px) {
   .home-product-grid > *,
   .lumora-home-products-grid > * {
-    flex: 0 0 80vw !important;
-    max-width: 80vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
   }
   .pcard-img { height: 140px !important; max-height: 140px !important; }
 }
@@ -433,17 +433,20 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 18px;
 }
 
-/* ── Horizontal scroll carousel on mobile ── */
+/* ── Horizontal scroll carousel on mobile — 2 ROWS ── */
 @media (max-width: 640px) {
   .dash-product-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;              /* wrap = 2 rows */
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    /* Fixed height = 2 card rows: each card ~320px tall + gap */
+    max-height: 680px !important;
+    align-content: flex-start !important;
     margin-left: calc(-1 * var(--mob-pad)) !important;
     margin-right: calc(-1 * var(--mob-pad)) !important;
     padding-left: var(--mob-pad) !important;
@@ -454,16 +457,16 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
   .dash-product-grid::-webkit-scrollbar { display: none; }
   .dash-product-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;   /* 2 columns per page */
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
 }
 @media (max-width: 360px) {
   .dash-product-grid > * {
-    flex: 0 0 82vw !important;
-    max-width: 82vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
   }
 }
 
@@ -656,18 +659,20 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 20px;
 }
 
-/* ── Horizontal scroll carousel on mobile ── */
+/* ── Horizontal scroll carousel on mobile — 2 ROWS ── */
 @media (max-width: 640px) {
   .product-auto-grid,
   .lumora-products-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    max-height: 740px !important;
+    align-content: flex-start !important;
     margin-left: calc(-1 * var(--mob-pad)) !important;
     margin-right: calc(-1 * var(--mob-pad)) !important;
     padding-left: var(--mob-pad) !important;
@@ -680,8 +685,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .lumora-products-grid::-webkit-scrollbar { display: none; }
   .product-auto-grid > *,
   .lumora-products-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
@@ -689,8 +694,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 @media (max-width: 360px) {
   .product-auto-grid > *,
   .lumora-products-grid > * {
-    flex: 0 0 82vw !important;
-    max-width: 82vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
   }
 }
 
@@ -896,12 +901,14 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .downloads-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    max-height: 720px !important;
+    align-content: flex-start !important;
     margin-left: calc(-1 * var(--mob-pad)) !important;
     margin-right: calc(-1 * var(--mob-pad)) !important;
     padding-left: var(--mob-pad) !important;
@@ -912,14 +919,17 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
   .downloads-grid::-webkit-scrollbar { display: none; }
   .downloads-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
 }
 @media (max-width: 400px) {
-  .downloads-grid > * { flex: 0 0 80vw !important; max-width: 80vw !important; }
+  .downloads-grid > * {
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
+  }
 }
 
 @media (max-width: 640px) {
@@ -962,26 +972,31 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .purchases-card-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
     gap: 10px !important;
+    max-height: 480px !important;
+    align-content: flex-start !important;
     padding-bottom: 6px !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
   }
   .purchases-card-grid::-webkit-scrollbar { display: none; }
   .purchases-card-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
 }
 @media (max-width: 360px) {
-  .purchases-card-grid > * { flex: 0 0 80vw !important; max-width: 80vw !important; }
+  .purchases-card-grid > * {
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
+  }
 }
 
 .wishlist-grid {
@@ -993,12 +1008,14 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .wishlist-grid {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    max-height: 760px !important;
+    align-content: flex-start !important;
     margin-left: calc(-1 * var(--mob-pad)) !important;
     margin-right: calc(-1 * var(--mob-pad)) !important;
     padding-left: var(--mob-pad) !important;
@@ -1009,14 +1026,17 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
   .wishlist-grid::-webkit-scrollbar { display: none; }
   .wishlist-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
     min-width: 0 !important;
     scroll-snap-align: start !important;
   }
 }
 @media (max-width: 360px) {
-  .wishlist-grid > * { flex: 0 0 80vw !important; max-width: 80vw !important; }
+  .wishlist-grid > * {
+    flex: 0 0 calc(50% - 5px) !important;
+    max-width: calc(50% - 5px) !important;
+  }
 }
 
 /* Notifications on mobile */
@@ -1263,26 +1283,46 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
    ProductListRow has fixed-width price+buttons that overflow on small screens
 ════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  /* List view rows become card-like on narrow screens */
+  /* List rows: stack vertically — image top, info + actions below */
   .lumora-products-list-row {
     flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-    padding: 14px !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
+  /* Image: full width banner */
   .lumora-products-list-thumb {
     width: 100% !important;
-    height: 140px !important;
-    border-radius: 12px !important;
+    height: 130px !important;
+    border-radius: 0 !important;
+    border-top-left-radius: 18px !important;
+    border-top-right-radius: 18px !important;
     object-fit: cover !important;
+    flex-shrink: 0 !important;
   }
+  /* Info + actions wrapper */
+  .lumora-products-list-row > div:nth-child(2) {
+    padding: 10px 14px 4px !important;
+  }
+  /* Actions row: price + buttons full width */
   .lumora-products-list-actions {
     width: 100% !important;
+    flex-shrink: unset !important;
     display: flex !important;
-    justify-content: space-between !important;
     align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding: 8px 14px 12px !important;
+    border-top: 1px solid rgba(220,198,255,0.18) !important;
+    margin-top: 4px !important;
+  }
+  /* Make Add + Buy buttons flex-equal */
+  .lumora-products-list-actions button:not(:first-child) {
+    flex: 1 !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
 }
 
