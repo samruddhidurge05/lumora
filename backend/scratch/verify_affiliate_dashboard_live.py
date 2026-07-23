@@ -72,9 +72,11 @@ def verify_live_affiliate_dashboard():
         print(f"Activity Timeline Total: {timeline.get('total')}, Count: {len(timeline.get('items', []))}")
 
         print("\n--- POST /api/admin/affiliates/orders/{id}/regenerate-commission ---")
-        from admin.routes.affiliates import regenerate_commission_for_order
+        from admin.routes.affiliates import regenerate_commission_for_order, get_order_attribution_trace
         test_order = db.query(Order).first()
         if test_order:
+            trace_res = get_order_attribution_trace(order_id=test_order.id, db=db, admin_user=admin_mock)
+            print(f"Order #{test_order.id} Trace Result:", trace_res)
             # Clear referral_code_used to test deduction recovery
             test_order.referral_code_used = None
             db.commit()

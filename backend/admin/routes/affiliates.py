@@ -1026,113 +1026,162 @@ def get_order_attribution_trace(
     Returns Customer, Product, Code, Affiliate, ReferralLink, Commission,
     Payout status, and a detailed Event Timeline stream.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+    try:
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
 
-    customer = db.query(User).filter(User.id == order.user_id).first()
-    attribution = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == order_id).first()
-    commission = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
-    ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
+        customer = db.query(User).filter(User.id == order.user_id).first() if order.user_id else None
+        attribution = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == order_id).first()
+        commission = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
+        ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
 
-    aff_id = (
-        order.affiliate_id
-        or (attribution and attribution.affiliate_id)
-        or (commission and commission.affiliate_id)
-        or (ref and ref.affiliate_id)
-    )
+        aff_id = (
+            getattr(order, 'affiliate_id', None)
+            or (attribution and getattr(attribution, 'affiliate_id', None))
+            or (commission and getattr(commission, 'affiliate_id', None))
+            or (ref and getattr(ref, 'affiliate_id', None))
+        )
 
-    if not aff_id and order.referral_code_used:
-        prof = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == order.referral_code_used).first()
-        if prof: aff_id = prof.id
+        if not aff_id and getattr(order, 'referral_code_used', None):
+            prof = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == order.referral_code_used).first()
+            if prof: aff_id = prof.id
 
-    if not aff_id and order.user_id:
-        recent_click = db.query(ReferralClick).filter(ReferralClick.user_id == order.user_id).order_by(desc(ReferralClick.created_at)).first()
-        if recent_click and recent_click.affiliate_id:
-            aff_id = recent_click.affiliate_id
+        if not aff_id and order.user_id:
+            recent_click = db.query(ReferralClick).filter(ReferralClick.user_id == order.user_id).order_by(desc(ReferralClick.created_at)).first()
+            if recent_click and recent_click.affiliate_id:
+                aff_id = recent_click.affiliate_id
 
-    affiliate = None
-    affiliate_user = None
-    if aff_id:
-        affiliate = db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_id).first()
-        if affiliate:
-            affiliate_user = db.query(User).filter(User.id == affiliate.user_id).first()
+        affiliate = None
+        affiliate_user = None
+        if aff_id:
+            affiliate = db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_id).first()
+            if affiliate:
+                affiliate_user = db.query(User).filter(User.id == affiliate.user_id).first()
 
-    link_id = (
-        order.referral_link_id
-        or (attribution and attribution.referral_link_id)
-        or (commission and commission.referral_link_id)
-    )
-    referral_link = None
-    if link_id:
-        referral_link = db.query(ReferralLink).filter(ReferralLink.id == link_id).first()
+        link_id = (
+            getattr(order, 'referral_link_id', None)
+            or (attribution and getattr(attribution, 'referral_link_id', None))
+            or (commission and getattr(commission, 'referral_link_id', None))
+        )
+        referral_link = None
+        if link_id:
+            referral_link = db.query(ReferralLink).filter(ReferralLink.id == link_id).first()
 
-    aff_code = (
-        order.referral_code_used
-        or (attribution and attribution.affiliate_code)
-        or (commission and commission.referral_code_used)
-        or (ref and ref.referral_code)
-        or (affiliate and affiliate.referral_code)
-        or (referral_link and referral_link.referral_code)
-    )
+        aff_code = (
+            getattr(order, 'referral_code_used', None)
+            or (attribution and getattr(attribution, 'affiliate_code', None))
+            or (commission and getattr(commission, 'referral_code_used', None))
+            or (ref and getattr(ref, 'referral_code', None))
+            or (affiliate and getattr(affiliate, 'referral_code', None))
+            or (referral_link and getattr(referral_link, 'referral_code', None))
+        )
 
-    if aff_code and not order.referral_code_used:
-        order.referral_code_used = aff_code
-        if aff_id and not order.affiliate_id:
-            order.affiliate_id = aff_id
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
+        if aff_code and not getattr(order, 'referral_code_used', None):
+            order.referral_code_used = aff_code
+            if aff_id and not getattr(order, 'affiliate_id', None):
+                order.affiliate_id = aff_id
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
 
-    # Build Event Timeline Stream
-    timeline = []
-    if attribution and attribution.created_at:
-        timeline.append({"time": attribution.created_at.isoformat() + "Z", "event": "Referral Link Attributed", "status": "completed"})
-    elif ref and ref.created_at:
-        timeline.append({"time": ref.created_at.isoformat() + "Z", "event": "Referral Link Clicked", "status": "completed"})
-    if order.created_at:
-        timeline.append({"time": order.created_at.isoformat() + "Z", "event": f"Order #{order.id} Created (₹{order.total_amount:.2f})", "status": "completed"})
-    if commission:
-        if commission.created_at:
-            timeline.append({"time": commission.created_at.isoformat() + "Z", "event": f"Commission Generated (₹{commission.commission_amt:.2f})", "status": "completed"})
-        if commission.approved_at:
-            timeline.append({"time": commission.approved_at.isoformat() + "Z", "event": "Commission Approved by Admin", "status": "completed"})
-        if commission.paid_at:
-            timeline.append({"time": commission.paid_at.isoformat() + "Z", "event": "Commission Paid Out", "status": "completed"})
-        if commission.reversed_at:
-            timeline.append({"time": commission.reversed_at.isoformat() + "Z", "event": "Commission Reversed due to Refund", "status": "reversed"})
+        # Build Event Timeline Stream safely
+        timeline = []
+        if attribution and getattr(attribution, 'created_at', None):
+            timeline.append({"time": attribution.created_at.isoformat() + "Z", "event": "Referral Link Attributed", "status": "completed"})
+        elif ref and getattr(ref, 'created_at', None):
+            timeline.append({"time": ref.created_at.isoformat() + "Z", "event": "Referral Link Clicked", "status": "completed"})
+        
+        if order and getattr(order, 'created_at', None):
+            total_amt_val = getattr(order, 'total_amount', 0.0) or 0.0
+            timeline.append({"time": order.created_at.isoformat() + "Z", "event": f"Order #{order.id} Created (₹{total_amt_val:.2f})", "status": "completed"})
+        
+        if commission:
+            if getattr(commission, 'created_at', None):
+                comm_amt_val = getattr(commission, 'commission_amt', 0.0) or 0.0
+                timeline.append({"time": commission.created_at.isoformat() + "Z", "event": f"Commission Generated (₹{comm_amt_val:.2f})", "status": "completed"})
+            if getattr(commission, 'approved_at', None):
+                timeline.append({"time": commission.approved_at.isoformat() + "Z", "event": "Commission Approved by Admin", "status": "completed"})
+            if getattr(commission, 'paid_at', None):
+                timeline.append({"time": commission.paid_at.isoformat() + "Z", "event": "Commission Paid Out", "status": "completed"})
+            if getattr(commission, 'reversed_at', None):
+                timeline.append({"time": commission.reversed_at.isoformat() + "Z", "event": "Commission Reversed due to Refund", "status": "reversed"})
 
-    return {
-        "order_id": order.id,
-        "order_date": order.created_at.isoformat() + "Z" if order.created_at else None,
-        "total_amount": order.total_amount,
-        "payment_status": order.status,
-        "customer": {
-            "id": customer.id if customer else None,
-            "name": customer.name if customer else "Customer",
-            "email": (customer.email[:2] + "***@" + customer.email.split("@")[1]) if customer and customer.email and "@" in customer.email else "***",
-        },
-        "attribution": {
-            "affiliate_id": aff_id,
-            "affiliate_name": affiliate_user.name if affiliate_user else (affiliate.display_name if affiliate else ("Affiliate #" + str(aff_id) if aff_id else "—")),
-            "affiliate_code": aff_code or "—",
-            "referral_link_name": referral_link.name if referral_link else ("Referral Link #" + str(link_id) if link_id else ("Affiliate Link (" + aff_code + ")") if aff_code else "Referral Link"),
-            "device_type": (attribution.device_type if attribution else None) or (commission.device_type if commission else None) or "Desktop",
-            "browser": (attribution.browser if attribution else None) or (commission.browser if commission else None) or "Chrome",
-            "status": (attribution.status if attribution else None) or (commission.commission_status if commission else "attributed"),
-            "fraud_flags": attribution.fraud_flags if attribution else None,
-        },
-        "commission": {
-            "id": commission.id if commission else None,
-            "amount": commission.commission_amt if commission else 0.0,
-            "status": (commission.commission_status or commission.status) if commission else "none",
-            "created_at": commission.created_at.isoformat() + "Z" if commission and commission.created_at else None,
-            "approved_at": commission.approved_at.isoformat() + "Z" if commission and commission.approved_at else None,
-            "paid_at": commission.paid_at.isoformat() + "Z" if commission and commission.paid_at else None,
-        },
-        "timeline": timeline,
-    }
+        # Mask customer email safely
+        cust_email = getattr(customer, 'email', '') or ''
+        if cust_email and "@" in cust_email:
+            parts = cust_email.split("@")
+            prefix = parts[0][:2] if len(parts[0]) >= 2 else parts[0]
+            masked_email = f"{prefix}***@{parts[1]}"
+        else:
+            masked_email = "***"
+
+        aff_name = (
+            (affiliate_user and getattr(affiliate_user, 'name', None))
+            or (affiliate and getattr(affiliate, 'display_name', None))
+            or (f"Affiliate #{aff_id}" if aff_id else "—")
+        )
+
+        ref_link_name = (
+            (referral_link and getattr(referral_link, 'name', None))
+            or (f"Referral Link #{link_id}" if link_id else None)
+            or (f"Affiliate Link ({aff_code})" if aff_code else "Referral Link")
+        )
+
+        return {
+            "order_id": order.id,
+            "order_date": order.created_at.isoformat() + "Z" if getattr(order, 'created_at', None) else None,
+            "total_amount": getattr(order, 'total_amount', 0.0) or 0.0,
+            "payment_status": getattr(order, 'status', 'completed') or 'completed',
+            "customer": {
+                "id": customer.id if customer else None,
+                "name": (customer and getattr(customer, 'name', None)) or "Customer",
+                "email": masked_email,
+            },
+            "attribution": {
+                "affiliate_id": aff_id,
+                "affiliate_name": aff_name,
+                "affiliate_code": aff_code or "—",
+                "referral_link_name": ref_link_name,
+                "device_type": (attribution and getattr(attribution, 'device_type', None)) or (commission and getattr(commission, 'device_type', None)) or "Desktop",
+                "browser": (attribution and getattr(attribution, 'browser', None)) or (commission and getattr(commission, 'browser', None)) or "Chrome",
+                "status": (attribution and getattr(attribution, 'status', None)) or (commission and (getattr(commission, 'commission_status', None) or getattr(commission, 'status', None))) or "attributed",
+                "fraud_flags": getattr(attribution, 'fraud_flags', None) if attribution else None,
+            },
+            "commission": {
+                "id": commission.id if commission else None,
+                "amount": getattr(commission, 'commission_amt', 0.0) or 0.0,
+                "status": (getattr(commission, 'commission_status', None) or getattr(commission, 'status', None)) if commission else "none",
+                "created_at": commission.created_at.isoformat() + "Z" if commission and getattr(commission, 'created_at', None) else None,
+                "approved_at": commission.approved_at.isoformat() + "Z" if commission and getattr(commission, 'approved_at', None) else None,
+                "paid_at": commission.paid_at.isoformat() + "Z" if commission and getattr(commission, 'paid_at', None) else None,
+            },
+            "timeline": timeline,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("[get_order_attribution_trace] Exception for Order #%d: %s", order_id, exc, exc_info=True)
+        return {
+            "order_id": order_id,
+            "order_date": None,
+            "total_amount": 0.0,
+            "payment_status": "completed",
+            "customer": {"id": None, "name": "Customer", "email": "***"},
+            "attribution": {
+                "affiliate_id": None,
+                "affiliate_name": "—",
+                "affiliate_code": "—",
+                "referral_link_name": "Referral Link",
+                "device_type": "Desktop",
+                "browser": "Chrome",
+                "status": "none",
+                "fraud_flags": None
+            },
+            "commission": {"id": None, "amount": 0.0, "status": "none", "created_at": None, "approved_at": None, "paid_at": None},
+            "timeline": []
+        }
 
 
 @router.get("/customer-attributions")
