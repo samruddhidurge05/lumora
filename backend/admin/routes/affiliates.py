@@ -1,6 +1,7 @@
 import logging
 import csv
 import io
+import os
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -18,6 +19,8 @@ from app.models.affiliate import AffiliateProfile, AffiliateCommission, Affiliat
 from app.models.product import Product
 from app.models.order import Order
 from app.services.audit_log_service import log_admin_action
+from app.payments.payout.factory import get_payout_provider
+from app.payments.payout.completion_handler import complete_payout
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -35,7 +38,8 @@ class CommissionStatusPatch(BaseModel):
 
 
 class PayoutStatusPatch(BaseModel):
-    status: str  # pending|completed|rejected
+    # "completed" triggers real payment via provider; "rejected" skips provider
+    status: str  # completed | rejected
     notes: Optional[str] = None
 
 
@@ -662,35 +666,168 @@ def patch_payout_status(
     db: Session = Depends(get_db),
     admin_user=Depends(require_admin_role)
 ):
-    """Mark a payout as completed or rejected."""
+    """
+    Admin payout action endpoint.
+
+    completed — triggers the payout provider (mock or Razorpay).
+                Wallet updates happen inside complete_payout() atomically.
+    rejected  — marks as rejected without calling any provider.
+                No wallet update occurs.
+
+    This endpoint NEVER directly updates AffiliateProfile balances.
+    Balance updates are exclusively owned by complete_payout().
+    """
     payout = db.query(AffiliatePayout).filter(AffiliatePayout.id == payout_id).first()
     if not payout:
         raise HTTPException(status_code=404, detail="Payout not found")
 
-    valid = {"pending", "completed", "rejected"}
-    if payload.status not in valid:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid}")
+    # Guard: only act on pending payouts
+    if payout.status not in ("pending", "processing"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Payout #{payout_id} is in status '{payout.status}' and cannot be modified. "
+                f"Only 'pending' or 'processing' payouts can be actioned."
+            ),
+        )
 
-    payout.status = payload.status
-    if payload.notes:
-        payout.notes = payload.notes
-    payout.updated_at = datetime.utcnow()
+    valid_actions = {"completed", "rejected"}
+    if payload.status not in valid_actions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid action. Must be one of: {valid_actions}"
+        )
 
-    if payload.status == "completed":
-        profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == payout.affiliate_id).first()
-        if profile:
-            profile.paid_earnings = (profile.paid_earnings or 0.0) + payout.amount
-            profile.pending_earnings = max(0.0, (profile.pending_earnings or 0.0) - payout.amount)
+    payout_mode = os.getenv("AFFILIATE_PAYOUT_MODE", "mock").lower()
 
-    audit = AuditLog(
-        admin_user_id=admin_user.id,
-        action=f"payout_{payload.status}",
-        target_type="affiliate_payout",
-        target_id=str(payout_id),
-    )
-    db.add(audit)
+    # ── REJECT path: no provider call ─────────────────────────────────────────
+    if payload.status == "rejected":
+        payout.status     = "rejected"
+        payout.notes      = payload.notes or payout.notes
+        payout.updated_at = datetime.utcnow()
+        payout.payout_mode = payout_mode
+
+        audit = AuditLog(
+            admin_user_id = admin_user.id,
+            action        = "payout_rejected",
+            target_type   = "affiliate_payout",
+            target_id     = str(payout_id),
+            metadata_json = f'{{"amount": {payout.amount}, "affiliate_id": {payout.affiliate_id}, "notes": "{payload.notes or ""}", "admin_id": {admin_user.id}}}',
+        )
+        db.add(audit)
+        db.commit()
+        logger.info(
+            "[patch_payout_status] Payout #%d rejected by admin #%d",
+            payout_id, admin_user.id
+        )
+        return {"success": True, "payout_id": payout_id, "new_status": "rejected"}
+
+    # ── COMPLETE path: call payout provider ───────────────────────────────────
+    # Fetch affiliate profile for payment details
+    profile = db.query(AffiliateProfile).filter(
+        AffiliateProfile.id == payout.affiliate_id
+    ).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Affiliate profile not found")
+
+    affiliate_user = db.query(User).filter(User.id == profile.user_id).first()
+    affiliate_name = affiliate_user.name if affiliate_user else f"Affiliate #{profile.id}"
+
+    # Mark as processing BEFORE calling provider (prevents duplicate dispatch)
+    payout.status       = "processing"
+    payout.payout_mode  = payout_mode
+    payout.processed_at = datetime.utcnow()
+    payout.notes        = payload.notes or payout.notes
+    payout.updated_at   = datetime.utcnow()
     db.commit()
-    return {"success": True, "payout_id": payout_id, "new_status": payload.status}
+
+    logger.info(
+        "[patch_payout_status] Admin #%d initiating payout #%d via %s "
+        "(amount=%.2f affiliate_id=%d)",
+        admin_user.id, payout_id, payout_mode, payout.amount, profile.id,
+    )
+
+    # Call provider
+    try:
+        provider = get_payout_provider()
+        result = provider.initiate_payout(
+            payout_db_id    = payout.id,
+            affiliate_id    = profile.id,
+            amount_inr      = payout.amount,
+            method          = payout.method or "upi",
+            upi_id          = payout.upi_id or profile.upi_id,
+            bank_account    = payout.bank_account or profile.account_number,
+            ifsc_code       = profile.ifsc_code,
+            bank_name       = profile.bank_name,
+            affiliate_name  = affiliate_name,
+            reference_note  = f"Lumora Affiliate Payout #{payout.id}",
+        )
+    except Exception as exc:
+        # Provider raised an unexpected exception — fail the payout cleanly
+        logger.error(
+            "[patch_payout_status] Provider raised exception for payout #%d: %s",
+            payout_id, exc,
+        )
+        result_status = "failed"
+        result = None
+
+        # Persist failure immediately
+        payout.status         = "failed"
+        payout.failure_reason = str(exc)
+        payout.updated_at     = datetime.utcnow()
+        db.commit()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Payout provider error: {exc}",
+        ) from exc
+
+    if not result.success:
+        # Provider returned failure result (not exception)
+        payout.status         = "failed"
+        payout.failure_reason = result.failure_reason or "Provider declined"
+        payout.updated_at     = datetime.utcnow()
+        db.commit()
+        raise HTTPException(
+            status_code=502,
+            detail=f"Payout provider declined the request: {result.failure_reason}",
+        )
+
+    # Persist provider reference (before completion handler)
+    payout.razorpay_payout_id       = result.provider_ref
+    payout.razorpay_fund_account_id = result.fund_account_id
+    db.commit()
+
+    # ── Completion handler (shared with webhook) ───────────────────────────────
+    # Mock returns status="completed" synchronously.
+    # Razorpay returns status="processing" — webhook will call complete_payout().
+    if result.status == "completed":
+        complete_payout(
+            db             = db,
+            payout_id      = payout.id,
+            new_status     = "completed",
+            provider_ref   = result.provider_ref,
+            fund_account_id= result.fund_account_id,
+            admin_user_id  = admin_user.id,
+            source         = payout_mode,
+        )
+        final_status = "completed"
+    else:
+        # Razorpay mode: webhook will complete it
+        final_status = "processing"
+
+    logger.info(
+        "[patch_payout_status] Payout #%d → %s (provider_ref=%s mode=%s)",
+        payout_id, final_status, result.provider_ref, payout_mode,
+    )
+
+    return {
+        "success": True,
+        "payout_id": payout_id,
+        "new_status": final_status,
+        "provider_ref": result.provider_ref,
+        "payout_mode": payout_mode,
+    }
 
 
 @router.get("/products/performance")

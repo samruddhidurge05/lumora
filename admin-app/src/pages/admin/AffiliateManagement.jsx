@@ -38,6 +38,24 @@ const COMM_STATUS = {
   archived:         { label: 'Archived',          bg: 'bg-gray-50',    text: 'text-gray-500',   border: 'border-gray-200' },
 };
 
+// Payout-specific status config (separate from commission statuses)
+const PAYOUT_STATUS = {
+  pending:    { label: 'Pending',    bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200' },
+  processing: { label: 'Processing', bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200' },
+  completed:  { label: 'Completed',  bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  failed:     { label: 'Failed',     bg: 'bg-rose-50',    text: 'text-rose-700',    border: 'border-rose-200' },
+  rejected:   { label: 'Rejected',   bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200' },
+};
+
+function PayoutStatusBadge({ status }) {
+  const cfg = PAYOUT_STATUS[status] || PAYOUT_STATUS['pending'];
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-bold border ${cfg.bg} ${cfg.text} ${cfg.border} text-[9px]`}>
+      {cfg.label}
+    </span>
+  );
+}
+
 function StatusBadge({ status, size = 'sm' }) {
   const cfg = COMM_STATUS[status] || COMM_STATUS['pending'];
   return (
@@ -787,10 +805,36 @@ export default function AffiliateManagement() {
   const handleExportCSV = () => { window.open('/api/admin/affiliates/commissions/export/csv', '_blank'); };
   const handleCommissionSaved = (id, newStatus) => setLedger(prev => prev.map(c => c.id === id ? { ...c, commission_status: newStatus } : c));
   const handlePayoutAction = async (payoutId, newStatus) => {
+    const isPayNow = newStatus === 'completed';
+    const label = isPayNow ? 'Pay Now' : 'Reject';
+    const confirmed = window.confirm(
+      isPayNow
+        ? `Initiate payout #${payoutId}? The provider will execute the transfer.`
+        : `Reject payout request #${payoutId}? This cannot be undone.`
+    );
+    if (!confirmed) return;
     try {
-      const r = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
-      if (r.ok) loadPayouts();
-    } catch(e) {}
+      const r = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const finalStatus = data.new_status || newStatus;
+        const modeLabel   = data.payout_mode === 'razorpay' ? 'via Razorpay X' : '(mock mode)';
+        if (finalStatus === 'processing') {
+          alert(`Payout #${payoutId} is now processing ${modeLabel}. Status will update when the webhook confirms.`);
+        } else if (finalStatus === 'completed') {
+          alert(`Payout #${payoutId} completed successfully ${modeLabel}.`);
+        }
+        loadPayouts();
+      } else {
+        const err = await r.json().catch(() => ({}));
+        alert(`Failed: ${err?.detail || 'Unknown error'}`);
+      }
+    } catch(e) {
+      alert(`Network error: ${e.message}`);
+    }
   };
 
   const handleExportCustAttrsCSV = () => {
@@ -1091,18 +1135,30 @@ export default function AffiliateManagement() {
         {activeTab === 'payouts' && (
           <div className="space-y-6">
             <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
-              <AdminSelect value={payoutStatusFilter} onChange={e => { setPayoutStatusFilter(e.target.value); setPayoutsPage(1); }} className="w-40" options={[{value:'',label:'All Payouts'},{value:'pending',label:'Pending'},{value:'completed',label:'Completed'},{value:'rejected',label:'Rejected'}]} />
+              <AdminSelect value={payoutStatusFilter} onChange={e => { setPayoutStatusFilter(e.target.value); setPayoutsPage(1); }} className="w-44" options={[
+                {value:'',label:'All Payouts'},
+                {value:'pending',label:'Pending'},
+                {value:'processing',label:'Processing'},
+                {value:'completed',label:'Completed'},
+                {value:'failed',label:'Failed'},
+                {value:'rejected',label:'Rejected'},
+              ]} />
               <span className="text-xs text-[#7B3FA0] font-bold ml-auto">{fmtN(payoutsTotal)} payout requests</span>
             </div>
             <div className="space-y-4">
-              <DataTable loading={payoutsLoading} empty={!payoutsLoading && payouts.length === 0}>
+                <DataTable loading={payoutsLoading} empty={!payoutsLoading && payouts.length === 0}>
                 {payouts.map(p => (
                   <div key={p.id} className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm p-5 flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-bold text-[#2D004D] text-sm">{p.affiliate_name}</h3>
                         <span className="font-mono text-[10px] font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-lg">{p.affiliate_code}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${p.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : p.status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>{p.status}</span>
+                        <PayoutStatusBadge status={p.status} />
+                        {p.payout_mode && (
+                          <span className="text-[9px] font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                            {p.payout_mode === 'razorpay' ? '⚡ Razorpay X' : '🔧 Mock'}
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-4 text-xs text-[#7B3FA0]">
                         <span>Method: <strong className="text-[#2D004D]">{(p.method || 'UPI').toUpperCase()}</strong></span>
@@ -1110,16 +1166,28 @@ export default function AffiliateManagement() {
                         {p.bank_name && <span>Bank: <strong className="text-[#2D004D]">{p.bank_name}</strong></span>}
                         <span>Balance: <strong className="text-[#7B3FA0]">{fmt(p.pending_balance)}</strong></span>
                         <span>Requested: <strong className="text-[#2D004D]">{fmtDate(p.created_at)}</strong></span>
+                        {p.razorpay_payout_id && (
+                          <span className="font-mono text-[9px] text-gray-400">Ref: {p.razorpay_payout_id}</span>
+                        )}
                       </div>
+                      {p.failure_reason && (
+                        <p className="text-[10px] text-rose-600 font-medium">⚠ {p.failure_reason}</p>
+                      )}
                       {p.notes && <p className="text-[10px] text-[#7B3FA0] italic">Note: {p.notes}</p>}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <p className="text-xl font-serif font-bold text-[#2D004D]">{fmt(p.amount)}</p>
                       {p.status === 'pending' && (
                         <div className="flex gap-2">
-                          <button onClick={() => handlePayoutAction(p.id, 'completed')} className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-all"><Check size={12} className="inline mr-1" />Mark Paid</button>
+                          <button onClick={() => handlePayoutAction(p.id, 'completed')} className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-all"><Check size={12} className="inline mr-1" />Pay Now</button>
                           <button onClick={() => handlePayoutAction(p.id, 'rejected')} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold hover:bg-rose-100 transition-all"><X size={12} className="inline mr-1" />Reject</button>
                         </div>
+                      )}
+                      {p.status === 'processing' && (
+                        <span className="text-[10px] text-blue-600 font-medium animate-pulse">⏳ Awaiting webhook…</span>
+                      )}
+                      {p.status === 'failed' && (
+                        <button onClick={() => handlePayoutAction(p.id, 'completed')} className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold hover:bg-amber-100 transition-all"><RefreshCw size={12} className="inline mr-1" />Retry</button>
                       )}
                     </div>
                   </div>

@@ -144,17 +144,37 @@ class AffiliateCommission(Base):
 
 
 class AffiliatePayout(Base):
-    """A withdrawal/payout request from an affiliate."""
+    """
+    A withdrawal/payout request from an affiliate.
+
+    Status machine:
+        pending → processing → completed
+                             ↘ failed
+        pending → rejected   (admin rejected without attempting payment)
+    """
     __tablename__ = "affiliate_payouts"
 
     id              = Column(Integer, primary_key=True, index=True)
     affiliate_id    = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
     amount          = Column(Float, nullable=False)
-    method          = Column(String(30), default="upi")   # upi | bank
+    method          = Column(String(30), default="upi")    # upi | bank
     upi_id          = Column(String(100), nullable=True)
     bank_account    = Column(String(50), nullable=True)
-    status          = Column(String(20), default="pending")  # pending | completed | rejected
+
+    # Status: pending | processing | completed | failed | rejected
+    status          = Column(String(20), default="pending", index=True)
     notes           = Column(Text, nullable=True)
+
+    # ── Payout Provider Tracking (production columns — all nullable) ──────────
+    # Populated when admin triggers payment; persisted before provider call
+    # to prevent duplicate dispatch on retry.
+    payout_mode              = Column(String(20), nullable=True)   # "mock" | "razorpay"
+    razorpay_payout_id       = Column(String(100), nullable=True, index=True)  # provider ref
+    razorpay_fund_account_id = Column(String(100), nullable=True)  # Razorpay fund account
+    failure_reason           = Column(Text, nullable=True)         # populated on failure
+    processed_at             = Column(DateTime, nullable=True)     # when provider was called
+    completed_at             = Column(DateTime, nullable=True)     # when confirmed complete
+
     created_at      = Column(DateTime, default=datetime.utcnow)
     updated_at      = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

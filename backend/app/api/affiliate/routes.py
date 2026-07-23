@@ -530,12 +530,20 @@ def request_payout(
             ),
         )
 
-    # ? Check available approved balance
+    # ✓ Check available approved balance
+    # IMPORTANT: Check commission_status first (canonical field).
+    # Fallback to legacy 'status' field for backward compatibility.
+    # Admin approval sets commission_status="approved" via PATCH /admin/affiliates/commissions/{id}/status
+    from sqlalchemy import or_ as _or
     approved_commissions = db.query(AffiliateCommission).filter(
         AffiliateCommission.affiliate_id == profile.id,
-        AffiliateCommission.status == "approved",
+        _or(
+            AffiliateCommission.commission_status == "approved",
+            AffiliateCommission.status == "approved",
+        ),
     ).all()
     available = sum(c.commission_amt for c in approved_commissions)
+
 
     if data.amount > available:
         raise HTTPException(
