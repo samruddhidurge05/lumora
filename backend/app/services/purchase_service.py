@@ -225,10 +225,10 @@ class PurchaseService:
                                     # Calculate commission
                                     comm_type = prod.commission_type or "percentage"
                                     if comm_type == "fixed":
-                                        comm_rate = prod.commission_value if prod.commission_value else 0.0
+                                        comm_rate = prod.commission_value if (prod.commission_value and prod.commission_value > 0) else 0.0
                                         commission_amt = min(comm_rate, price_paid)
                                     else: # percentage
-                                        comm_rate = prod.commission_value if prod.commission_value is not None else (aff.commission_rate or 20.0)
+                                        comm_rate = prod.commission_value if (prod.commission_value and prod.commission_value > 0) else (aff.commission_rate or 20.0)
                                         commission_amt = (price_paid * comm_rate) / 100.0
                                     
                                     now_time = datetime.utcnow()

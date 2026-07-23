@@ -370,6 +370,20 @@ def _run_schema_migrations() -> None:
                 # affiliate_profiles — Phase 2 earnings breakdown
                 aff_prof_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(affiliate_profiles)"))}
                 aff_prof_additions = [
+                    ("display_name",         "VARCHAR(150)"),
+                    ("short_bio",            "TEXT"),
+                    ("country",              "VARCHAR(100)"),
+                    ("youtube",              "VARCHAR(255)"),
+                    ("instagram",            "VARCHAR(255)"),
+                    ("linkedin",             "VARCHAR(255)"),
+                    ("preferred_categories", "JSON"),
+                    ("promotion_methods",    "JSON"),
+                    ("primary_audience",     "VARCHAR(100)"),
+                    ("audience_size",        "VARCHAR(50)"),
+                    ("preferred_language",   "VARCHAR(50)"),
+                    ("preferred_currency",   "VARCHAR(10)"),
+                    ("timezone",             "VARCHAR(50)"),
+                    ("email_notifications",  "BOOLEAN DEFAULT 1"),
                     ("pending_earnings",   "FLOAT DEFAULT 0.0"),
                     ("paid_earnings",      "FLOAT DEFAULT 0.0"),
                     ("rejected_earnings",  "FLOAT DEFAULT 0.0"),
