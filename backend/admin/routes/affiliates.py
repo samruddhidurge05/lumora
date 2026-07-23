@@ -1048,9 +1048,9 @@ def get_order_attribution_trace(
             if prof: aff_id = prof.id
 
         if not aff_id and order.user_id:
-            recent_click = db.query(ReferralClick).filter(ReferralClick.user_id == order.user_id).order_by(desc(ReferralClick.created_at)).first()
-            if recent_click and recent_click.affiliate_id:
-                aff_id = recent_click.affiliate_id
+            recent_ref = db.query(AffiliateReferral).filter(AffiliateReferral.customer_id == order.user_id).order_by(desc(AffiliateReferral.created_at)).first()
+            if recent_ref and recent_ref.affiliate_id:
+                aff_id = recent_ref.affiliate_id
 
         affiliate = None
         affiliate_user = None
@@ -1395,11 +1395,11 @@ def regenerate_commission_for_order(
                 code = aff_prof.referral_code
 
     if not code and order.user_id:
-        recent_click = db.query(ReferralClick).filter(
-            ReferralClick.user_id == order.user_id
-        ).order_by(desc(ReferralClick.created_at)).first()
-        if recent_click and recent_click.affiliate_id:
-            aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == recent_click.affiliate_id).first()
+        recent_ref = db.query(AffiliateReferral).filter(
+            AffiliateReferral.customer_id == order.user_id
+        ).order_by(desc(AffiliateReferral.created_at)).first()
+        if recent_ref and recent_ref.affiliate_id:
+            aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == recent_ref.affiliate_id).first()
             if aff_prof:
                 code = aff_prof.referral_code
 
