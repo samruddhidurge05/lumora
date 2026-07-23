@@ -117,7 +117,7 @@ class PurchaseService:
                     coupon_code_used = None
                     pending_ref = None
 
-                    # Deterministic Rule: Explicit Coupon Code overrides Referral Link Attribution
+                    # Tier 1: Explicit Coupon Code overrides Referral Link Attribution
                     if promo_code:
                         clean_promo = promo_code.strip().upper()
                         aff_by_coupon = db.query(AffiliateProfile).filter(
@@ -137,7 +137,7 @@ class PurchaseService:
                             attr_source = "coupon_code"
                             coupon_code_used = clean_promo
 
-                    # If no affiliate coupon code was matched, check PostgreSQL for AUTHENTICATED referral (ignore frontend affiliate_code)
+                    # Tier 2: Check PostgreSQL AffiliateReferral by (customer_id, product_id)
                     if not target_aff_code:
                         pending_ref = db.query(AffiliateReferral).filter(
                             AffiliateReferral.customer_id == user_id,
@@ -147,6 +147,37 @@ class PurchaseService:
 
                         if pending_ref:
                             target_aff_code = pending_ref.referral_code
+                            attr_source = "referral_link"
+
+                    # Tier 3: Check PostgreSQL AffiliateReferral by (customer_id) — any recent referral for this buyer
+                    if not target_aff_code:
+                        pending_ref = db.query(AffiliateReferral).filter(
+                            AffiliateReferral.customer_id == user_id,
+                            AffiliateReferral.status.in_(["CLICKED", "AUTHENTICATED", "PRODUCT_VIEWED", "ADDED_TO_CART"])
+                        ).order_by(AffiliateReferral.updated_at.desc()).first()
+
+                        if pending_ref:
+                            target_aff_code = pending_ref.referral_code
+                            attr_source = "referral_link"
+
+                    # Tier 4: Fallback to affiliate_code passed from checkout/payment payload
+                    if not target_aff_code and affiliate_code:
+                        clean_passed = affiliate_code.strip().upper()
+                        # Verify passed code matches an active affiliate profile or referral link
+                        check_aff = db.query(AffiliateProfile).filter(
+                            AffiliateProfile.referral_code == clean_passed,
+                            AffiliateProfile.is_active == True
+                        ).first()
+                        if not check_aff:
+                            check_link = db.query(ReferralLink).filter(
+                                ReferralLink.referral_code == clean_passed,
+                                ReferralLink.is_active == True
+                            ).first()
+                            if check_link and check_link.affiliate and check_link.affiliate.is_active:
+                                check_aff = check_link.affiliate
+
+                        if check_aff:
+                            target_aff_code = clean_passed
                             attr_source = "referral_link"
 
                     if target_aff_code:

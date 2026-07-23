@@ -211,6 +211,13 @@ function AppContent() {
       setPopupData({ orderDetails, purchasedItems });
       setShowDownloadPopup(true);
 
+      // Clean up pending referral state after purchase completion
+      try {
+        localStorage.removeItem('lumora_pending_referral');
+        sessionStorage.removeItem('lumora_aff_ref');
+        sessionStorage.removeItem('lumora_ref_session_id');
+      } catch (_) {}
+
       // Refresh user data after purchase
       setTimeout(() => {
         // Trigger a refresh of orders, downloads, and notifications
@@ -234,8 +241,16 @@ function AppContent() {
       const pending = JSON.parse(stored);
       if (!pending || !pending.referral_code) return;
 
-      // Prevent duplicate processing per session
-      const processedKey = `lumora_ref_processed_${user.uid}_${pending.product_id}`;
+      // Ensure active referral code is synced to sessionStorage
+      if (pending.referral_code) {
+        sessionStorage.setItem('lumora_aff_ref', pending.referral_code);
+      }
+      if (pending.session_id) {
+        sessionStorage.setItem('lumora_ref_session_id', pending.session_id);
+      }
+
+      // Prevent duplicate authentication calls per session
+      const processedKey = `lumora_ref_processed_${user.uid}_${pending.product_id || 'general'}`;
       if (sessionStorage.getItem(processedKey)) return;
       sessionStorage.setItem(processedKey, 'true');
 
@@ -248,11 +263,9 @@ function AppContent() {
             product_id: pending.product_id ? parseInt(pending.product_id, 10) : null
           })
         }).then(() => {
-          localStorage.removeItem('lumora_pending_referral');
+          // Do NOT remove localStorage here — preserve pending referral until purchase completion
           if (pending.product_id) {
             // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
-            // setTimeout(0) lets React finish the route transition from /auth/login before
-            // updating currentView — avoids race condition with Login's navigate() call.
             setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
           }
         }).catch(() => {

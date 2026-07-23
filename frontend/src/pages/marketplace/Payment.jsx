@@ -38,6 +38,20 @@ export default function Payment() {
   });
 
   const checkoutItems = buyNowProduct ? [buyNowProduct] : cart;
+
+  const getAffiliateCode = () => {
+    let code = sessionStorage.getItem('lumora_aff_ref');
+    if (!code) {
+      try {
+        const stored = localStorage.getItem('lumora_pending_referral');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          code = parsed?.referral_code || null;
+        }
+      } catch (_) {}
+    }
+    return code || null;
+  };
   const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
   
   // Calculations
@@ -235,7 +249,7 @@ export default function Payment() {
           payment_method: 'upi_qr',
           idempotency_key: freshIdempotencyKey,
           promo_code: appliedPromo?.code || null,
-          affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+          affiliate_code: getAffiliateCode(),
           discount_amount: parseFloat(discount.toFixed(2)),
           tax_amount: parseFloat((platformFee + gst).toFixed(2)),
         }),
@@ -289,7 +303,7 @@ export default function Payment() {
       payment_method: paymentMethod,
       idempotency_key: freshIdempotencyKey,
       promo_code:     appliedPromo?.code || null,
-      affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+      affiliate_code: getAffiliateCode(),
       discount_amount: parseFloat(discount.toFixed(2)),
       tax_amount: parseFloat((platformFee + gst).toFixed(2)),
     };
@@ -380,7 +394,7 @@ export default function Payment() {
       payment_method: 'test_bypass',
       idempotency_key: freshIdempotencyKey,
       promo_code:     appliedPromo?.code || null,
-      affiliate_code: sessionStorage.getItem('lumora_aff_ref') || null,
+      affiliate_code: getAffiliateCode(),
       discount_amount: parseFloat(discount.toFixed(2)),
       tax_amount: parseFloat((platformFee + gst).toFixed(2)),
     };
