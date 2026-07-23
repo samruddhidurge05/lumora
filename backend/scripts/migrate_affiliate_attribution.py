@@ -23,12 +23,11 @@ def run_migration():
         Base.metadata.create_all(bind=engine)
 
         with SessionLocal() as db:
-            inspector = inspect(engine)
-
             # Helper for checking column existence
             def column_exists(table_name, col_name):
                 try:
-                    cols = [c["name"] for c in inspector.get_columns(table_name)]
+                    insp = inspect(db.get_bind())
+                    cols = [c["name"] for c in insp.get_columns(table_name)]
                     return col_name in cols
                 except Exception:
                     return False

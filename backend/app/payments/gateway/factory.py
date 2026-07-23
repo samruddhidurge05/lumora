@@ -31,6 +31,10 @@ def get_gateway() -> PaymentGateway:
     gateway_name = os.getenv("PAYMENT_GATEWAY", "").strip().lower()
 
     # Explicit env var takes priority
+    if gateway_name == "mock":
+        from app.payments.gateway.mock_gateway import MockGateway
+        return MockGateway()
+
     if gateway_name == "razorpay":
         from app.payments.gateway.razorpay_gateway import RazorpayGateway
         return RazorpayGateway()
