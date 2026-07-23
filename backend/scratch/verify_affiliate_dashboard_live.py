@@ -71,6 +71,16 @@ def verify_live_affiliate_dashboard():
         timeline = get_affiliate_activity_timeline(page=1, page_size=50, db=db, admin_user=admin_mock)
         print(f"Activity Timeline Total: {timeline.get('total')}, Count: {len(timeline.get('items', []))}")
 
+        print("\n--- POST /api/admin/affiliates/orders/{id}/regenerate-commission ---")
+        from admin.routes.affiliates import regenerate_commission_for_order
+        test_order = db.query(Order).first()
+        if test_order:
+            # Clear referral_code_used to test deduction recovery
+            test_order.referral_code_used = None
+            db.commit()
+            regen_res = regenerate_commission_for_order(order_id=test_order.id, force=True, db=db, admin_user=admin_mock)
+            print("Regenerate Result:", regen_res)
+
     finally:
         db.close()
 
