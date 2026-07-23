@@ -14,7 +14,7 @@ from app.shared.firebase.connection import db as fdb, firebase_connected
 from app.db.session import get_db
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, ReferralAttribution
 from app.models.product import Product
 from app.models.order import Order
 from app.services.audit_log_service import log_admin_action
@@ -325,9 +325,11 @@ def get_commissions_ledger(
             "id": comm.id,
             "order_id": comm.order_id,
             "order_date": comm.created_at.isoformat() + "Z" if comm.created_at else None,
+            "date": comm.created_at.isoformat() + "Z" if comm.created_at else None,
             "product_id": comm.product_id,
             "product_name": comm.product_name or "—",
             "product_price": comm.sale_amount,
+            "sale_amount": comm.sale_amount,
             "customer_name": comm.customer_name or "Customer",
             "customer_email_masked": masked_email,
             "affiliate_name": user.name or "Affiliate",
@@ -904,7 +906,7 @@ def get_customer_attributions(
         aff_user = db.query(User).filter(User.id == profile.user_id).first()
         
         # Calculate Customer Lifetime Value (LTV) for this customer under this affiliate
-        cust_orders = db.query(Order).filter(Order.user_id == customer.id, Order.status == "paid").all()
+        cust_orders = db.query(Order).filter(Order.user_id == customer.id, Order.status.in_(["paid", "completed"])).all()
         ltv = sum(o.total_amount for o in cust_orders)
         order_count = len(cust_orders)
         

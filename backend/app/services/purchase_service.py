@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from app.models.order import Order, OrderItem
 from app.models.product import Product
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralLink
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, ReferralLink, ReferralAttribution
 from app.models.user import User
 from app.services.notification_service import NotificationService
 from app.services.activity_log_service import ActivityLogService
@@ -112,6 +112,7 @@ class PurchaseService:
                 # 6. Generate Affiliate Commissions
                 if affiliate_code and prod.affiliate_enabled:
                     clean_code = affiliate_code.strip().upper()
+                    ref_link_obj = None
                     # 6a. First search default profile code
                     aff = db.query(AffiliateProfile).filter(
                         AffiliateProfile.referral_code == clean_code,
@@ -120,14 +121,20 @@ class PurchaseService:
 
                     # 6b. Fallback: search custom product referral links
                     if not aff:
-                        ref_link = db.query(ReferralLink).filter(
+                        ref_link_obj = db.query(ReferralLink).filter(
                             ReferralLink.referral_code == clean_code,
                             ReferralLink.is_active == True
                         ).first()
-                        if ref_link and ref_link.affiliate and ref_link.affiliate.is_active:
-                            aff = ref_link.affiliate
+                        if ref_link_obj and ref_link_obj.affiliate and ref_link_obj.affiliate.is_active:
+                            aff = ref_link_obj.affiliate
 
                     if aff:
+                        ref_link_id = ref_link_obj.id if ref_link_obj else None
+                        # Tag Order with referral metadata
+                        order.affiliate_id = aff.id
+                        order.referral_link_id = ref_link_id
+                        order.referral_code_used = clean_code
+
                         # Verify customer is not the affiliate itself (prevent self-referral)
                         if aff.user_id != user_id:
                             # Calculate commission
@@ -140,6 +147,22 @@ class PurchaseService:
                                 commission_amt = (price_paid * comm_rate) / 100.0
                             
                             now_time = datetime.utcnow()
+                            
+                            # 6c. Insert immutable ReferralAttribution record
+                            attribution = ReferralAttribution(
+                                order_id=order.id,
+                                customer_id=user_id,
+                                affiliate_id=aff.id,
+                                affiliate_code=clean_code,
+                                referral_link_id=ref_link_id,
+                                product_id=prod.id,
+                                status="attributed",
+                                created_at=now_time
+                            )
+                            db.add(attribution)
+                            db.flush()
+
+                            # 6d. Insert AffiliateCommission
                             comm = AffiliateCommission(
                                 affiliate_id=aff.id,
                                 order_id=order.id,
@@ -156,6 +179,8 @@ class PurchaseService:
                                 cookie_attr_date=now_time,
                                 last_click_at=now_time,
                                 approved_at=now_time,
+                                referral_attribution_id=attribution.id,
+                                referral_link_id=ref_link_id
                             )
                             db.add(comm)
                             

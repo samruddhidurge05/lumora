@@ -52,6 +52,42 @@ def run_migration():
             # Re-inspect after orders columns
             inspector = inspect(engine)
 
+            # 2b. Add missing columns to `affiliate_profiles` table
+            aff_prof_cols_to_add = [
+                ("display_name", "VARCHAR(150)"),
+                ("short_bio", "TEXT"),
+                ("country", "VARCHAR(100)"),
+                ("youtube", "VARCHAR(255)"),
+                ("instagram", "VARCHAR(255)"),
+                ("linkedin", "VARCHAR(255)"),
+                ("preferred_categories", "JSON"),
+                ("promotion_methods", "JSON"),
+                ("primary_audience", "VARCHAR(100)"),
+                ("audience_size", "VARCHAR(50)"),
+                ("preferred_language", "VARCHAR(50)"),
+                ("preferred_currency", "VARCHAR(10)"),
+                ("timezone", "VARCHAR(50)"),
+                ("email_notifications", "BOOLEAN DEFAULT 1"),
+                ("pending_earnings", "FLOAT DEFAULT 0.0"),
+                ("paid_earnings", "FLOAT DEFAULT 0.0"),
+                ("rejected_earnings", "FLOAT DEFAULT 0.0"),
+                ("unique_clicks", "INTEGER DEFAULT 0"),
+                ("avg_order_value", "FLOAT DEFAULT 0.0"),
+                ("last_active_at", "DATETIME"),
+            ]
+            for col_name, col_type in aff_prof_cols_to_add:
+                if not column_exists("affiliate_profiles", col_name):
+                    try:
+                        print(f"[Migration] Adding column affiliate_profiles.{col_name}...")
+                        db.execute(text(f"ALTER TABLE affiliate_profiles ADD COLUMN {col_name} {col_type}"))
+                        db.commit()
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Migration] Column affiliate_profiles.{col_name} already exists or alter skipped: {e}")
+
+            # Re-inspect after profile columns
+            inspector = inspect(engine)
+
             # 3. Add attribution columns to `affiliate_commissions` table if missing
             comm_cols_to_add = [
                 ("referral_attribution_id", "INTEGER"),

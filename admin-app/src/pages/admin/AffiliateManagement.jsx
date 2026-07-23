@@ -47,20 +47,99 @@ function StatusBadge({ status, size = 'sm' }) {
   );
 }
 
-// Mock data fallback for when backend is offline / empty
-const MOCK_AFFILIATES = [
-  { id: 1, name: 'Apex Media Studio', email: 'affiliate@apexmedia.com', code: 'AFF-0001', status: 'active', clicks: 1240, sales: 88, revenue: 142000, commission: 28400, pending: 4200, joined: '2026-01-15' },
-  { id: 2, name: 'Digital Craft Reviews', email: 'contact@digitalcraft.io', code: 'AFF-0002', status: 'active', clicks: 890, sales: 45, revenue: 89000, commission: 17800, pending: 1200, joined: '2026-02-01' },
-  { id: 3, name: 'UI/UX Hub India', email: 'partner@uiuxhub.in', code: 'AFF-0003', status: 'active', clicks: 2150, sales: 162, revenue: 295000, commission: 59000, pending: 8500, joined: '2025-11-20' },
-  { id: 4, name: 'Creative Stack Labs', email: 'promo@creativestack.com', code: 'AFF-0004', status: 'suspended', clicks: 310, sales: 8, revenue: 12000, commission: 2400, pending: 0, joined: '2026-03-10' },
-];
+// ── Order Attribution Trace Modal ───────────────────────────────────────────────
+function OrderTraceModal({ orderId, onClose }) {
+  const [trace, setTrace] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const MOCK_PRODUCTS = [
-  { id: 1, title: 'Lumora Pro UI Kit', category: 'Graphics & UI', price: 999, status: 'published', affiliate_enabled: true, commission_mode: 'percentage', commission_value: 20, affiliate_cookie_days: 30, clicks: 420, sales: 34 },
-  { id: 2, title: 'Atmospheric Shaders V2', category: '3D & Shaders', price: 1499, status: 'published', affiliate_enabled: true, commission_mode: 'percentage', commission_value: 25, affiliate_cookie_days: 30, clicks: 680, sales: 52 },
-  { id: 3, title: 'Neumorphic Dashboard', category: 'Web Templates', price: 2499, status: 'published', affiliate_enabled: false, commission_mode: 'percentage', commission_value: 15, affiliate_cookie_days: 30, clicks: 0, sales: 0 },
-  { id: 4, title: 'Cyberpunk Asset Pack', category: 'Game Assets', price: 799, status: 'published', affiliate_enabled: true, commission_mode: 'fixed', commission_value: 200, affiliate_cookie_days: 30, clicks: 150, sales: 12 },
-];
+  useEffect(() => {
+    if (!orderId) return;
+    setLoading(true);
+    backendFetch(`/admin/affiliates/orders/${orderId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(setTrace)
+      .catch(() => setTrace(null))
+      .finally(() => setLoading(false));
+  }, [orderId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-3">
+          <div>
+            <h3 className="text-base font-bold text-[#2D004D]">Attribution Trace — Order #{orderId}</h3>
+            <p className="text-xs text-[#7B3FA0]">End-to-end attribution lifecycle & fraud checks</p>
+          </div>
+          <button onClick={onClose} className="text-[#7B3FA0] hover:text-[#2D004D] p-1"><X size={18} /></button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-[#7B3FA0]">
+            <RefreshCw size={20} className="animate-spin mr-2" /><span className="text-sm font-medium font-mono">Loading trace data…</span>
+          </div>
+        ) : !trace ? (
+          <div className="py-12 text-center text-[#7B3FA0] text-xs">Trace details not found for Order #{orderId}.</div>
+        ) : (
+          <div className="space-y-5 text-xs text-[#2D004D]">
+            {/* Order & Payment Summary */}
+            <div className="grid grid-cols-3 gap-3 bg-[#F8F3FB] p-3.5 rounded-xl border border-[#F3EAF8]">
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Order Total</span>
+                <span className="text-sm font-bold text-[#2D004D]">{fmt(trace.total_amount)}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Payment Status</span>
+                <span className="font-bold text-emerald-600 uppercase text-xs">{trace.payment_status}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Order Date</span>
+                <span className="text-xs font-semibold">{fmtDateTime(trace.order_date)}</span>
+              </div>
+            </div>
+
+            {/* Customer & Affiliate Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-1.5">
+                <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Customer Details</h4>
+                <p className="font-bold text-[#2D004D]">{trace.customer?.name || 'Customer'}</p>
+                <p className="text-[10px] text-[#7B3FA0] font-mono">{trace.customer?.email}</p>
+              </div>
+              <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-1.5">
+                <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Affiliate Attribution</h4>
+                <p className="font-bold text-[#2D004D]">{trace.attribution?.affiliate_name || '—'}</p>
+                <p className="text-[10px] font-mono text-[#7B3FA0]">Code: {trace.attribution?.affiliate_code} · {trace.attribution?.device_type} ({trace.attribution?.browser})</p>
+              </div>
+            </div>
+
+            {/* Commission Details */}
+            <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-2">
+              <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Commission Ledger</h4>
+              <div className="flex justify-between items-center">
+                <span>Earned Commission: <strong className="text-emerald-600 font-bold">{fmt(trace.commission?.amount)}</strong></span>
+                <StatusBadge status={trace.commission?.status} size="xs" />
+              </div>
+            </div>
+
+            {/* Event Timeline Stream */}
+            <div className="space-y-2">
+              <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Event Timeline Stream</h4>
+              <div className="border-l-2 border-[#7B3FA0]/30 pl-3 space-y-3">
+                {trace.timeline?.map((ev, i) => (
+                  <div key={i} className="relative pl-3">
+                    <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#7B3FA0]" />
+                    <p className="font-bold text-[#2D004D]">{ev.event}</p>
+                    <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDateTime(ev.time)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
 
 // ── Small reusable KPI card ───────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
@@ -436,7 +515,7 @@ export default function AffiliateManagement() {
   const [kpisLoading, setKpisLoading] = useState(true);
 
   // ── Products Matrix state ────────────────────────────────────────────────
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modeFilter, setModeFilter] = useState('all');
@@ -448,7 +527,7 @@ export default function AffiliateManagement() {
   const [qrModalProduct, setQrModalProduct] = useState(null);
 
   // ── Promoters Table state ────────────────────────────────────────────────
-  const [affiliates, setAffiliates] = useState(MOCK_AFFILIATES);
+  const [affiliates, setAffiliates] = useState([]);
   const [affSearch, setAffSearch] = useState('');
   const [affStatusFilter, setAffStatusFilter] = useState('all');
   const [profilePanelId, setProfilePanelId] = useState(null);
@@ -507,9 +586,13 @@ export default function AffiliateManagement() {
       const r = await backendFetch('/admin/affiliates/');
       if (r.ok) {
         const d = await r.json();
-        if (Array.isArray(d) && d.length > 0) setAffiliates(d);
+        setAffiliates(Array.isArray(d) ? d : []);
+      } else {
+        setAffiliates([]);
       }
-    } catch(e) {}
+    } catch(e) {
+      setAffiliates([]);
+    }
   }, []);
 
   const loadCustAttrs = useCallback(async () => {
@@ -522,8 +605,14 @@ export default function AffiliateManagement() {
         const d = await r.json();
         setCustAttrs(d.items || []);
         setCustAttrsTotal(d.total || 0);
+      } else {
+        setCustAttrs([]);
+        setCustAttrsTotal(0);
       }
-    } catch(e) {}
+    } catch(e) {
+      setCustAttrs([]);
+      setCustAttrsTotal(0);
+    }
     finally { setCustAttrsLoading(false); }
   }, [custAttrsPage, custAttrsSearch]);
 
@@ -533,9 +622,13 @@ export default function AffiliateManagement() {
       if (r.ok) {
         const d = await r.json();
         const items = Array.isArray(d) ? d : (d.products || d.items || []);
-        if (items.length > 0) setProducts(items);
+        setProducts(items);
+      } else {
+        setProducts([]);
       }
-    } catch(e) {}
+    } catch(e) {
+      setProducts([]);
+    }
   }, []);
 
   const loadLedger = useCallback(async () => {
@@ -548,7 +641,8 @@ export default function AffiliateManagement() {
       if (ledgerAffFilter) params.append('affiliate_id', ledgerAffFilter);
       const r = await backendFetch(`/admin/affiliates/commissions?${params}`);
       if (r.ok) { const d = await r.json(); setLedger(d.items || []); setLedgerTotal(d.total || 0); }
-    } catch(e) {}
+      else { setLedger([]); setLedgerTotal(0); }
+    } catch(e) { setLedger([]); setLedgerTotal(0); }
     finally { setLedgerLoading(false); }
   }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
 
@@ -559,7 +653,8 @@ export default function AffiliateManagement() {
       if (payoutStatusFilter) params.append('payout_status', payoutStatusFilter);
       const r = await backendFetch(`/admin/affiliates/payouts?${params}`);
       if (r.ok) { const d = await r.json(); setPayouts(d.items || []); setPayoutsTotal(d.total || 0); }
-    } catch(e) {}
+      else { setPayouts([]); setPayoutsTotal(0); }
+    } catch(e) { setPayouts([]); setPayoutsTotal(0); }
     finally { setPayoutsLoading(false); }
   }, [payoutsPage, payoutStatusFilter]);
 
@@ -568,7 +663,8 @@ export default function AffiliateManagement() {
     try {
       const r = await backendFetch(`/admin/affiliates/products/performance?page=${perfPage}&page_size=50`);
       if (r.ok) { const d = await r.json(); setPerfData(d.items || []); setPerfTotal(d.total || 0); }
-    } catch(e) {}
+      else { setPerfData([]); setPerfTotal(0); }
+    } catch(e) { setPerfData([]); setPerfTotal(0); }
     finally { setPerfLoading(false); }
   }, [perfPage]);
 
@@ -577,7 +673,8 @@ export default function AffiliateManagement() {
     try {
       const r = await backendFetch(`/admin/affiliates/activity?page=${timelinePage}&page_size=50`);
       if (r.ok) { const d = await r.json(); setTimeline(d.items || []); setTimelineTotal(d.total || 0); }
-    } catch(e) {}
+      else { setTimeline([]); setTimelineTotal(0); }
+    } catch(e) { setTimeline([]); setTimelineTotal(0); }
     finally { setTimelineLoading(false); }
   }, [timelinePage]);
 
@@ -627,15 +724,25 @@ export default function AffiliateManagement() {
     return matchSearch && matchStatus;
   }), [affiliates, affSearch, affStatusFilter]);
 
-  const mockStats = useMemo(() => {
-    const activeAffs = affiliates.filter(a => a.status === 'active');
-    const enabledProds = products.filter(p => p.affiliate_enabled);
-    const totalRev = affiliates.reduce((a, x) => a + x.revenue, 0);
-    const totalComm = affiliates.reduce((a, x) => a + x.commission, 0);
-    const pendingComm = affiliates.reduce((a, x) => a + x.pending, 0);
-    const totalClicks = affiliates.reduce((a, x) => a + x.clicks, 0);
-    const totalSales = affiliates.reduce((a, x) => a + x.sales, 0);
-    return { enabledProductsCount: enabledProds.length, totalProductsCount: products.length, activeAffiliatesCount: activeAffs.length, totalRevenue: totalRev, totalCommission: totalComm, pendingCommission: pendingComm, totalClicks, totalSales, ctr: totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : '0.0' };
+  const liveStats = useMemo(() => {
+    const activeAffs = (affiliates || []).filter(a => a.status === 'active');
+    const enabledProds = (products || []).filter(p => p.affiliate_enabled);
+    const totalRev = (affiliates || []).reduce((a, x) => a + Number(x.revenue || 0), 0);
+    const totalComm = (affiliates || []).reduce((a, x) => a + Number(x.commission || 0), 0);
+    const pendingComm = (affiliates || []).reduce((a, x) => a + Number(x.pending || 0), 0);
+    const totalClicks = (affiliates || []).reduce((a, x) => a + Number(x.clicks || 0), 0);
+    const totalSales = (affiliates || []).reduce((a, x) => a + Number(x.sales || 0), 0);
+    return {
+      enabledProductsCount: enabledProds.length,
+      totalProductsCount: (products || []).length,
+      activeAffiliatesCount: activeAffs.length,
+      totalRevenue: totalRev,
+      totalCommission: totalComm,
+      pendingCommission: pendingComm,
+      totalClicks,
+      totalSales,
+      ctr: totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : '0.0'
+    };
   }, [products, affiliates]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -723,15 +830,15 @@ export default function AffiliateManagement() {
               <>
                 {/* 10-card KPI grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  <KpiCard label="Total Affiliates"     value={fmtN(kpis?.total_affiliates   ?? mockStats.activeAffiliatesCount)} icon={Users} />
-                  <KpiCard label="Approved"             value={fmtN(kpis?.approved_affiliates ?? mockStats.activeAffiliatesCount)} sub="Active promoters" icon={UserCheck} />
+                  <KpiCard label="Total Affiliates"     value={fmtN(kpis?.total_affiliates   ?? liveStats.activeAffiliatesCount)} icon={Users} />
+                  <KpiCard label="Approved"             value={fmtN(kpis?.approved_affiliates ?? liveStats.activeAffiliatesCount)} sub="Active promoters" icon={UserCheck} />
                   <KpiCard label="Suspended"            value={fmtN(kpis?.suspended_affiliates ?? 0)} sub="Disabled accounts" icon={Ban} />
-                  <KpiCard label="Affiliate Products"   value={fmtN(kpis?.enabled_products ?? mockStats.enabledProductsCount)} sub={`of ${mockStats.totalProductsCount} total`} icon={ShoppingBag} />
-                  <KpiCard label="Total Clicks"         value={fmtN(kpis?.total_clicks ?? mockStats.totalClicks)} sub={`${fmtN(kpis?.unique_clicks ?? 0)} unique`} icon={ArrowUpRight} />
-                  <KpiCard label="Conversions"          value={fmtN(kpis?.total_conversions ?? mockStats.totalSales)} sub={`${kpis?.conversion_rate ?? mockStats.ctr}% rate`} icon={Target} accent />
-                  <KpiCard label="Revenue Generated"    value={fmt(kpis?.revenue_generated ?? mockStats.totalRevenue)} sub="Total affiliate-driven" icon={TrendingUp} />
-                  <KpiCard label="Commission Pending"   value={fmt(kpis?.commission_pending ?? mockStats.pendingCommission)} sub="Awaiting approval/payout" icon={Clock} />
-                  <KpiCard label="Commission Paid"      value={fmt(kpis?.commission_paid ?? mockStats.totalCommission)} sub={`Avg: ${fmt(kpis?.avg_commission ?? 0)}`} icon={DollarSign} />
+                  <KpiCard label="Affiliate Products"   value={fmtN(kpis?.enabled_products ?? liveStats.enabledProductsCount)} sub={`of ${liveStats.totalProductsCount} total`} icon={ShoppingBag} />
+                  <KpiCard label="Total Clicks"         value={fmtN(kpis?.total_clicks ?? liveStats.totalClicks)} sub={`${fmtN(kpis?.unique_clicks ?? 0)} unique`} icon={ArrowUpRight} />
+                  <KpiCard label="Conversions"          value={fmtN(kpis?.total_conversions ?? liveStats.totalSales)} sub={`${kpis?.conversion_rate ?? liveStats.ctr}% rate`} icon={Target} accent />
+                  <KpiCard label="Revenue Generated"    value={fmt(kpis?.revenue_generated ?? liveStats.totalRevenue)} sub="Total affiliate-driven" icon={TrendingUp} />
+                  <KpiCard label="Commission Pending"   value={fmt(kpis?.commission_pending ?? liveStats.pendingCommission)} sub="Awaiting approval/payout" icon={Clock} />
+                  <KpiCard label="Commission Paid"      value={fmt(kpis?.commission_paid ?? liveStats.totalCommission)} sub={`Avg: ${fmt(kpis?.avg_commission ?? 0)}`} icon={DollarSign} />
                   <KpiCard label="Avg EPC"              value={`₹${kpis?.avg_epc ?? '0'}`} sub="Earnings per click" icon={Zap} />
                 </div>
 
@@ -741,9 +848,9 @@ export default function AffiliateManagement() {
                     <h3 className="text-sm font-bold uppercase tracking-wider text-[#2D004D] mb-4">Ecosystem Conversion Funnel</h3>
                     <div className="grid grid-cols-3 gap-4">
                       {[
-                        { label: 'Total Clicks',    value: fmtN(kpis?.total_clicks ?? mockStats.totalClicks) },
-                        { label: 'Conversions',     value: fmtN(kpis?.total_conversions ?? mockStats.totalSales) },
-                        { label: 'Conversion Rate', value: `${kpis?.conversion_rate ?? mockStats.ctr}%`, green: true },
+                        { label: 'Total Clicks',    value: fmtN(kpis?.total_clicks ?? liveStats.totalClicks) },
+                        { label: 'Conversions',     value: fmtN(kpis?.total_conversions ?? liveStats.totalSales) },
+                        { label: 'Conversion Rate', value: `${kpis?.conversion_rate ?? liveStats.ctr}%`, green: true },
                       ].map(({ label, value, green }) => (
                         <div key={label} className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] text-center">
                           <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block mb-1">{label}</span>
