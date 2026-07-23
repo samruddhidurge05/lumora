@@ -665,6 +665,44 @@ const PrivacyPolicy = ({ role }) => {
           opacity: 0.8;
         }
 
+        /* ── MOBILE RESPONSIVE ── */
+        @media (max-width: 640px) {
+          .pp-checkbox-row {
+            gap: 0.9rem;
+            padding: 1.1rem 1.1rem;
+            border-radius: 14px;
+          }
+
+          .pp-checkbox-stack {
+            gap: 1rem;
+            margin-bottom: 2rem;
+          }
+
+          .pp-custom-checkbox {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border-radius: 7px;
+          }
+
+          .pp-checkbox-label strong {
+            font-size: 0.88rem;
+            line-height: 1.3;
+          }
+
+          .pp-checkbox-label span {
+            font-size: 0.78rem;
+            line-height: 1.5;
+          }
+
+          .pp-submit-btn {
+            font-size: 0.88rem;
+            padding: 0.9rem 1.5rem;
+            border-radius: 12px;
+            gap: 0.5rem;
+          }
+        }
+
         /* SUCCESS STATE STYLES */
         .pp-success-overlay {
           display: flex;
