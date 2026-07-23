@@ -62,17 +62,7 @@ export default function ReferralRouteHandler() {
         sessionStorage.setItem('lumora_aff_ref', refCode);
         if (sessionId) sessionStorage.setItem('lumora_ref_session_id', sessionId);
 
-        // 2. Check Customer Authentication State
-        if (!user) {
-          // Unauthenticated customer -> Route to Login page with redirect query param
-          setStatusMsg('Redirecting to secure login...');
-          // Use hash-based SPA URL so the product loads correctly after login
-          const targetRedirect = validProdId ? `/#product/${validProdId}` : '/#products';
-          navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}&ref=${encodeURIComponent(refCode)}`, { replace: true });
-          return;
-        }
-
-        // 3. Authenticated customer -> Authenticate referral session in PostgreSQL
+        // 2. If user is ALREADY authenticated -> Authenticate referral session in PostgreSQL immediately
         if (user && sessionId) {
           try {
             await backendFetch('/affiliate/referrals/authenticate', {
@@ -88,7 +78,7 @@ export default function ReferralRouteHandler() {
           }
         }
 
-        // 4. Open the EXACT referred product page
+        // 3. Open the EXACT referred product page directly (for both authenticated & unauthenticated visitors)
         if (validProdId) {
           if (typeof openProductModal === 'function') {
             openProductModal(validProdId);

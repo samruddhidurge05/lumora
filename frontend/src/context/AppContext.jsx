@@ -1383,7 +1383,11 @@ export function AppContextProvider({ children }) {
   const addToCart = (product) => {
     if (!user) {
       alert("Please sign in or create an account to purchase products or add items to your cart.");
-      navigate('/auth/login?role=customer');
+      const prodId = product?.id || activeProductId;
+      const targetRedirect = prodId ? `/#product/${prodId}` : '/#products';
+      const refCode = sessionStorage.getItem('lumora_aff_ref') || '';
+      const refParam = refCode ? `&ref=${encodeURIComponent(refCode)}` : '';
+      navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}${refParam}`);
       return;
     }
     setCart((prev) => {
@@ -1417,7 +1421,11 @@ export function AppContextProvider({ children }) {
     }
     if (!user) {
       alert("Please sign in or create an account to purchase products.");
-      navigate('/auth/login?role=customer');
+      const prodId = product?.id || activeProductId;
+      const targetRedirect = prodId ? `/#product/${prodId}` : '/#products';
+      const refCode = sessionStorage.getItem('lumora_aff_ref') || '';
+      const refParam = refCode ? `&ref=${encodeURIComponent(refCode)}` : '';
+      navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}${refParam}`);
       return;
     }
     setBuyNowProduct(product);

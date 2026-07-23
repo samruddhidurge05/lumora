@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingBag, Zap, Download, Shield, Heart, MessageSquare, Package, ChevronLeft, ChevronRight, Check, BadgeCheck, Flag } from 'lucide-react';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
@@ -74,6 +74,7 @@ function getGallery(product) {
 export default function ProductPage() {
   const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview, cart } = useApp();
   const { user, userRole } = useAuth();
+  const navigate = useNavigate();
   
   const [fetchedProduct, setFetchedProduct] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -104,9 +105,25 @@ export default function ProductPage() {
   const [showAckModal, setShowAckModal]             = useState(false);
   const [showConfirmDialog, setShowConfirmDialog]   = useState(false);
 
+  const handleSignInToPurchase = () => {
+    const targetProdId = product?.id || activeProductId;
+    const targetRedirect = targetProdId ? `/#product/${targetProdId}` : '/#products';
+    const refCode = sessionStorage.getItem('lumora_aff_ref') || '';
+    const refParam = refCode ? `&ref=${encodeURIComponent(refCode)}` : '';
+    navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}${refParam}`);
+  };
+
+  const handleRegisterToPurchase = () => {
+    const targetProdId = product?.id || activeProductId;
+    const targetRedirect = targetProdId ? `/#product/${targetProdId}` : '/#products';
+    const refCode = sessionStorage.getItem('lumora_aff_ref') || '';
+    const refParam = refCode ? `&ref=${encodeURIComponent(refCode)}` : '';
+    navigate(`/auth/register?role=customer&redirect=${encodeURIComponent(targetRedirect)}${refParam}`);
+  };
+
   const handleBuyNowClick = (prod) => {
     if (!user) {
-      navigateTo('login-selection');
+      handleSignInToPurchase();
       return;
     }
     setShowAckModal(true);
@@ -999,7 +1016,16 @@ export default function ProductPage() {
               ) : (
                 /* Not logged in — show sign-in prompt instead of purchase buttons */
                 <div style={{ marginBottom: '12px' }}>
-                  <button onClick={() => navigateTo('login-selection')} className="btn-premium btn-premium-solid buy-now-glow"
+                  {sessionStorage.getItem('lumora_aff_ref') && (
+                    <div style={{
+                      marginBottom: '12px', padding: '10px 14px', borderRadius: '12px',
+                      background: 'rgba(123, 63, 160, 0.08)', border: '1px solid rgba(123, 63, 160, 0.22)',
+                      display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: '#5A1E7E', fontWeight: 600
+                    }}>
+                      <span>🎁 Shared via Affiliate Referral link ({sessionStorage.getItem('lumora_aff_ref')})</span>
+                    </div>
+                  )}
+                  <button onClick={handleSignInToPurchase} className="btn-premium btn-premium-solid buy-now-glow"
                     style={{ width: '100%', justifyContent: 'center', padding: '15px', fontSize: '0.92rem', borderRadius: '14px', marginBottom: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Zap size={16} /> Sign In to Purchase
                   </button>
@@ -1007,7 +1033,7 @@ export default function ProductPage() {
                     <p style={{ fontSize: '0.78rem', color: '#7B3FA0', fontWeight: 500, lineHeight: 1.5 }}>
                       Create a free account or sign in to purchase and access this product instantly.
                     </p>
-                    <button onClick={() => navigateTo('register-selection')}
+                    <button onClick={handleRegisterToPurchase}
                       style={{ marginTop: '10px', fontSize: '0.76rem', fontWeight: 700, color: '#5A1E7E', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-sans)' }}>
                       New here? Create account →
                     </button>
