@@ -1197,42 +1197,78 @@ def get_affiliate_products(
 ):
     """
     Returns only products where affiliate_enabled == True.
-    All data is computed dynamically from real PostgreSQL records.
+    All data is computed dynamically from real PostgreSQL records using bulk grouped queries (O(1) lookups).
     """
     query = db.query(Product).filter(Product.affiliate_enabled == True)
     if search:
         query = query.filter(or_(Product.title.ilike(f"%{search}%"), cast(Product.id, String).ilike(f"%{search}%")))
     
     products = query.order_by(desc(Product.id)).all()
-    items = []
+    if not products:
+        return []
 
+    product_ids = [p.id for p in products]
+
+    # 1. Bulk query ReferralLinks for these products
+    # Map: product_id -> { "count": int, "clicks": int, "affiliate_ids": set(), "link_ids": list() }
+    ref_links = db.query(ReferralLink).filter(ReferralLink.product_id.in_(product_ids)).all()
+    link_map = {pid: {"count": 0, "clicks": 0, "affiliate_ids": set(), "link_ids": []} for pid in product_ids}
+    
+    for rl in ref_links:
+        link_map[rl.product_id]["count"] += 1
+        link_map[rl.product_id]["clicks"] += (rl.clicks_count or 0)
+        if rl.affiliate_id:
+            link_map[rl.product_id]["affiliate_ids"].add(rl.affiliate_id)
+        link_map[rl.product_id]["link_ids"].append(rl.id)
+
+    # 2. Bulk query ReferralClicks for all the link_ids we just found
+    all_link_ids = []
+    for m in link_map.values():
+        all_link_ids.extend(m["link_ids"])
+    
+    click_counts_by_link = {}
+    if all_link_ids:
+        # Group by referral_link_id
+        click_rows = (
+            db.query(ReferralClick.referral_link_id, func.count(ReferralClick.id))
+            .filter(ReferralClick.referral_link_id.in_(all_link_ids))
+            .group_by(ReferralClick.referral_link_id)
+            .all()
+        )
+        for link_id, cnt in click_rows:
+            click_counts_by_link[link_id] = cnt
+
+    # Accumulate clicks_from_table per product
+    for pid, m in link_map.items():
+        clicks_from_table = sum(click_counts_by_link.get(lid, 0) for lid in m["link_ids"])
+        m["total_clicks"] = max(m["clicks"], clicks_from_table)
+
+    # 3. Bulk query AffiliateCommissions for these products
+    # Map: product_id -> { "conversions": int, "revenue": float, "paid": float, "pending": float, "affiliate_ids": set() }
+    commissions = db.query(AffiliateCommission).filter(AffiliateCommission.product_id.in_(product_ids)).all()
+    comm_map = {pid: {"conversions": 0, "revenue": 0.0, "paid": 0.0, "pending": 0.0, "affiliate_ids": set()} for pid in product_ids}
+
+    for c in commissions:
+        comm_map[c.product_id]["conversions"] += 1
+        if c.affiliate_id:
+            comm_map[c.product_id]["affiliate_ids"].add(c.affiliate_id)
+        
+        if c.sale_amount:
+            comm_map[c.product_id]["revenue"] += c.sale_amount
+        if c.commission_amt:
+            status = c.commission_status or c.status
+            if status == "paid":
+                comm_map[c.product_id]["paid"] += c.commission_amt
+            elif status in ("pending", "approved", "ready_for_payout"):
+                comm_map[c.product_id]["pending"] += c.commission_amt
+
+    items = []
     for p in products:
-        # 1. Referral links created for this product
-        ref_links = db.query(ReferralLink).filter(ReferralLink.product_id == p.id).all()
-        ref_links_count = len(ref_links)
+        l_data = link_map[p.id]
+        c_data = comm_map[p.id]
         
-        # 2. Active promoters for this product
-        affiliate_ids = set()
-        for rl in ref_links:
-            affiliate_ids.add(rl.affiliate_id)
-        
-        comm_aff_ids = db.query(AffiliateCommission.affiliate_id).filter(AffiliateCommission.product_id == p.id).all()
-        for (aff_id,) in comm_aff_ids:
-            if aff_id:
-                affiliate_ids.add(aff_id)
-        
-        # 3. Clicks count
-        sql_link_clicks = sum(rl.clicks_count or 0 for rl in ref_links)
-        ref_link_ids = [rl.id for rl in ref_links]
-        clicks_from_table = db.query(ReferralClick).filter(ReferralClick.referral_link_id.in_(ref_link_ids)).count() if ref_link_ids else 0
-        total_clicks = max(sql_link_clicks, clicks_from_table)
-        
-        # 4. Total sales / conversions & revenue for this product
-        comms = db.query(AffiliateCommission).filter(AffiliateCommission.product_id == p.id).all()
-        total_conversions = len(comms)
-        revenue_generated = sum(c.sale_amount for c in comms if c.sale_amount)
-        total_commission_paid = sum(c.commission_amt for c in comms if c.commission_status == "paid")
-        total_commission_pending = sum(c.commission_amt for c in comms if c.commission_status in ["pending", "approved", "ready_for_payout"])
+        # Merge active promoters from links and commissions
+        active_affiliates = len(l_data["affiliate_ids"].union(c_data["affiliate_ids"]))
         
         items.append({
             "id": p.id,
@@ -1248,15 +1284,15 @@ def get_affiliate_products(
             "commission_pct": p.commission_value if (p.commission_mode or "percentage") == "percentage" else p.commission_value,
             "created_at": p.created_at.isoformat() + "Z" if p.created_at else None,
             "created_date": p.created_at.strftime("%Y-%m-%d") if p.created_at else "—",
-            "referral_links_count": ref_links_count,
-            "active_affiliates": len(affiliate_ids),
-            "clicks": total_clicks,
-            "conversions": total_conversions,
-            "sales": total_conversions,
-            "revenue_generated": round(float(revenue_generated), 2),
-            "revenue": round(float(revenue_generated), 2),
-            "commission_paid": round(float(total_commission_paid), 2),
-            "commission_pending": round(float(total_commission_pending), 2),
+            "referral_links_count": l_data["count"],
+            "active_affiliates": active_affiliates,
+            "clicks": l_data["total_clicks"],
+            "conversions": c_data["conversions"],
+            "sales": c_data["conversions"],
+            "revenue_generated": round(float(c_data["revenue"]), 2),
+            "revenue": round(float(c_data["revenue"]), 2),
+            "commission_paid": round(float(c_data["paid"]), 2),
+            "commission_pending": round(float(c_data["pending"]), 2),
             "thumbnail": getattr(p, "thumbnail", None) or (getattr(p, "image_urls", None)[0] if getattr(p, "image_urls", None) else None),
         })
 
