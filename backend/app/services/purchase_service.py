@@ -328,29 +328,40 @@ class PurchaseService:
                 category="download"
             )
 
-            # Vendor Notifications
+            # Vendor Notifications (Best-Effort)
             for v_info in vendors_to_notify:
-                NotificationService.create_vendor_sale_notification(
-                    db=db,
-                    vendor_firebase_uid=v_info["vendor_id"],
-                    buyer_name=customer.name,
-                    product_name=v_info["product_name"],
-                    amount=v_info["amount"],
-                    order_id=f"ORD-{order.id}"
-                )
+                try:
+                    NotificationService.create_vendor_sale_notification(
+                        db=db,
+                        vendor_firebase_uid=v_info["vendor_id"],
+                        buyer_name=customer.name if customer and customer.name else (customer.email if customer and customer.email else "Customer"),
+                        product_name=v_info["product_name"],
+                        amount=v_info["amount"],
+                        order_id=f"ORD-{order.id}"
+                    )
+                except Exception as _v_notif_exc:
+                    import logging
+                    logging.getLogger(__name__).warning("[PurchaseService] Non-fatal vendor notification error: %s", _v_notif_exc)
 
             # 8. Create Activity Logs
-            ActivityLogService.log_user_activity(
-                db=db,
-                user_id=user_id,
-                activity_type="purchase",
-                details=f"Completed purchase for order ORD-{order.id} containing {len(items_payload)} items."
-            )
+            try:
+                ActivityLogService.log_user_activity(
+                    db=db,
+                    user_id=user_id,
+                    activity_type="purchase",
+                    details=f"Completed purchase for order ORD-{order.id} containing {len(items_payload)} items."
+                )
+            except Exception as _act_exc:
+                pass
 
             db.flush() # Ensure all IDs populated
 
-            # 9. Sync to Firestore (Read-Only Mirror)
-            sync_order_to_firestore(order)
+            # 9. Sync to Firestore (Read-Only Mirror - Best Effort)
+            try:
+                sync_order_to_firestore(order)
+            except Exception as _fs_exc:
+                import logging
+                logging.getLogger(__name__).warning("[PurchaseService] Non-fatal Firestore order sync error: %s", _fs_exc)
 
             return order
 
