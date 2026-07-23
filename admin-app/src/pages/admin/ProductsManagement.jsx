@@ -360,6 +360,14 @@ export default function App() {
               whatYouGet:           Array.isArray(p.what_you_get)        ? p.what_you_get        : [],
               systemRequirements:   Array.isArray(p.system_requirements) ? p.system_requirements : [],
               installation_guide:   p.installation_guide || '',
+              // ── Affiliate Program fields — must be preserved so Edit form reflects DB state ──
+              affiliate_enabled:        Boolean(p.affiliate_enabled),
+              commission_mode:          p.commission_mode  || p.commission_type || 'percentage',
+              commission_type:          p.commission_type  || p.commission_mode || 'percentage',
+              commission_value:         p.commission_value != null ? Number(p.commission_value) : 0,
+              affiliate_cookie_days:    p.affiliate_cookie_days    ?? 30,
+              affiliate_visibility:     p.affiliate_visibility     || 'public',
+              affiliate_program_status: p.affiliate_program_status || 'active',
             }));
             setProducts(uiItems);
           }
@@ -785,6 +793,14 @@ export default function App() {
         subcategory:        saved.subcategory || '',
         discount:           saved.discount    || 0,
         visibility:         saved.visibility  || 'public',
+        // ── Affiliate Program fields — carry from API response so edit form reflects DB state ──
+        affiliate_enabled:        Boolean(saved.affiliate_enabled),
+        commission_mode:          saved.commission_mode  || saved.commission_type || 'percentage',
+        commission_type:          saved.commission_type  || saved.commission_mode || 'percentage',
+        commission_value:         saved.commission_value != null ? Number(saved.commission_value) : 0,
+        affiliate_cookie_days:    saved.affiliate_cookie_days    ?? 30,
+        affiliate_visibility:     saved.affiliate_visibility     || 'public',
+        affiliate_program_status: saved.affiliate_program_status || 'active',
       };
 
       setProducts([uiProduct, ...products]);
@@ -851,6 +867,14 @@ export default function App() {
           subcategory:        saved.subcategory || '',
           discount:           saved.discount    || 0,
           visibility:         saved.visibility  || 'public',
+          // ── Affiliate Program fields — carry from API response so edit form reflects updated DB state ──
+          affiliate_enabled:        Boolean(saved.affiliate_enabled),
+          commission_mode:          saved.commission_mode  || saved.commission_type || 'percentage',
+          commission_type:          saved.commission_type  || saved.commission_mode || 'percentage',
+          commission_value:         saved.commission_value != null ? Number(saved.commission_value) : 0,
+          affiliate_cookie_days:    saved.affiliate_cookie_days    ?? 30,
+          affiliate_visibility:     saved.affiliate_visibility     || 'public',
+          affiliate_program_status: saved.affiliate_program_status || 'active',
         };
         setProducts(products.map(p => p.id === targetId ? mapped : p));
       }
@@ -2691,7 +2715,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                       </label>
                       <input 
                         type="number" 
-                        min="0.1"
+                        min="0"
                         step="0.1"
                         required={form.affiliate_enabled}
                         value={form.commission_value}
