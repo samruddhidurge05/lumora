@@ -73,47 +73,47 @@
 - [x] 3. In `frontend/src/pages/customer/Dashboard.jsx`: add "My Reports" sub-section inside Support tab — calls `GET /api/reports/me`, shows title/category/status badge/resolution_note/date
 - [ ] 4. Run `python -c "from app.main import app; print('OK')"` — must PASS
 - [ ] 5. Run `npm run build` — must PASS
-- [~] 6. Verify customer can see submitted report status and resolution note after admin resolves
+- [ ] 6. Verify customer can see submitted report status and resolution note after admin resolves
 
 ---
 
 ### MILESTONE M4-M6 — Admin Notifications
 
-- [~] 1. Create `backend/app/admin_api/notifications/__init__.py`
-- [~] 2. Create `backend/app/admin_api/notifications/routes.py` with `GET /counts` — returns `{ support_tickets, reports, pending_orders, total }` with 30-second server-side cache, requires admin JWT
-- [~] 3. Register notifications router in `backend/app/main.py` at prefix `/api/admin/notifications`
+- [ ] 1. Create `backend/app/admin_api/notifications/__init__.py`
+- [ ] 2. Create `backend/app/admin_api/notifications/routes.py` with `GET /counts` — returns `{ support_tickets, reports, pending_orders, total }` with 30-second server-side cache, requires admin JWT
+- [ ] 3. Register notifications router in `backend/app/main.py` at prefix `/api/admin/notifications`
 - [ ] 4. Run `python -c "from app.main import app; print('OK')"` — must PASS
-- [~] 5. In `frontend/src/pages/admin/components/AdminSidebar.jsx`: add 60-second polling of `/api/admin/notifications/counts`, show badge on "Support Inbox" when `support_tickets > 0`, badge on "Reports" when `reports > 0`, total badge in sidebar header
-- [~] 6. Run `npm run build` — must PASS
-- [~] 7. Verify badge appears in sidebar after submitting a support ticket as customer
+- [ ] 5. In `frontend/src/pages/admin/components/AdminSidebar.jsx`: add 60-second polling of `/api/admin/notifications/counts`, show badge on "Support Inbox" when `support_tickets > 0`, badge on "Reports" when `reports > 0`, total badge in sidebar header
+- [ ] 6. Run `npm run build` — must PASS
+- [ ] 7. Verify badge appears in sidebar after submitting a support ticket as customer
 
 ---
 
 ### MILESTONE M4-M7 — Vendor Product Approval
 
-- [~] 1. In `backend/app/api/products_router.py` `POST /api/products/`: set initial status to `'pending_review'` when creator role is vendor, `'published'` when creator is admin
-- [~] 2. Create `backend/app/admin_api/products/__init__.py`
-- [~] 3. Create `backend/app/admin_api/products/routes.py` with: `GET /pending` (paginated list of pending_review products), `POST /{product_id}/approve` (publish + audit log), `POST /{product_id}/reject` (reject + reason + audit log)
-- [~] 4. Register admin products router in `backend/app/main.py`
-- [~] 5. Run `python -c "from app.main import app; print('OK')"` — must PASS
-- [~] 6. In `frontend/src/pages/admin/ProductsManagement.jsx`: add "Pending Review" filter tab, show Approve/Reject action buttons on pending products, rejection modal with reason input
-- [~] 7. Run `npm run build` — must PASS
-- [~] 8. Verify: vendor creates product → status is `pending_review` → not visible on marketplace → admin approves → appears on marketplace
+- [ ] 1. In `backend/app/api/products_router.py` `POST /api/products/`: set initial status to `'pending_review'` when creator role is vendor, `'published'` when creator is admin
+- [ ] 2. Create `backend/app/admin_api/products/__init__.py`
+- [ ] 3. Create `backend/app/admin_api/products/routes.py` with: `GET /pending` (paginated list of pending_review products), `POST /{product_id}/approve` (publish + audit log), `POST /{product_id}/reject` (reject + reason + audit log)
+- [ ] 4. Register admin products router in `backend/app/main.py`
+- [ ] 5. Run `python -c "from app.main import app; print('OK')"` — must PASS
+- [ ] 6. In `frontend/src/pages/admin/ProductsManagement.jsx`: add "Pending Review" filter tab, show Approve/Reject action buttons on pending products, rejection modal with reason input
+- [ ] 7. Run `npm run build` — must PASS
+- [ ] 8. Verify: vendor creates product → status is `pending_review` → not visible on marketplace → admin approves → appears on marketplace
 
 ---
 
 ### MILESTONE M4-M8 — Admin User Management
 
-- [~] 1. Create `backend/app/models/admin_role.py` — SQLAlchemy model for `admin_roles` table with columns: id, user_id (FK), role_level, permissions (JSON text), invited_by (FK nullable), is_active, activated_at, deactivated_at, created_at, updated_at
-- [~] 2. Create `backend/app/models/admin_invitation.py` — SQLAlchemy model for `admin_invitations` table with columns: id, email, role_level, invite_token (unique), invited_by (FK), expires_at, accepted_at, created_at
-- [~] 3. Create `backend/app/core/permissions.py` — `ROLE_PERMISSIONS` dict for roles (super_admin, admin, moderator, support, finance, marketing, analyst) + `require_permission(permission)` FastAPI dependency factory
-- [~] 4. Create `backend/app/admin_api/admin_users/__init__.py`
-- [~] 5. Create `backend/app/admin_api/admin_users/routes.py` with full CRUD: `GET /team`, `POST /team/invite`, `POST /team/{user_id}/activate`, `POST /team/{user_id}/deactivate`, `PUT /team/{user_id}/role`, `GET /team/invitations`, `DELETE /team/invitations/{id}` — all protected by `require_permission("write:admin_team")`
-- [~] 6. Register admin_users router in `backend/app/main.py`, ensure `Base.metadata.create_all()` creates new tables
-- [~] 7. Run `python -c "from app.main import app; print('OK')"` — must PASS (tables auto-created)
-- [~] 8. Create `frontend/src/pages/admin/AdminUserManagement.jsx` — team table, invite modal, pending invitations section, deactivate/role-change actions
-- [~] 9. Create `frontend/src/pages/admin/AcceptInvite.jsx` — reads `?token=` from URL, verifies token, shows confirmation and register/login CTA
-- [~] 10. In `frontend/src/pages/admin/components/AdminSidebar.jsx`: add "Team Management" nav item under Settings group
-- [~] 11. In `frontend/src/App.jsx`: add lazy imports and routes for `/admin/team` (requiredRole="admin") and `/admin/accept-invite` (public)
-- [~] 12. Run `npm run build` — must PASS
-- [~] 13. Verify: existing admin login works, super_admin can invite team member, invited admin can accept and activate, deactivation blocks access
+- [ ] 1. Create `backend/app/models/admin_role.py` — SQLAlchemy model for `admin_roles` table with columns: id, user_id (FK), role_level, permissions (JSON text), invited_by (FK nullable), is_active, activated_at, deactivated_at, created_at, updated_at
+- [ ] 2. Create `backend/app/models/admin_invitation.py` — SQLAlchemy model for `admin_invitations` table with columns: id, email, role_level, invite_token (unique), invited_by (FK), expires_at, accepted_at, created_at
+- [ ] 3. Create `backend/app/core/permissions.py` — `ROLE_PERMISSIONS` dict for roles (super_admin, admin, moderator, support, finance, marketing, analyst) + `require_permission(permission)` FastAPI dependency factory
+- [ ] 4. Create `backend/app/admin_api/admin_users/__init__.py`
+- [ ] 5. Create `backend/app/admin_api/admin_users/routes.py` with full CRUD: `GET /team`, `POST /team/invite`, `POST /team/{user_id}/activate`, `POST /team/{user_id}/deactivate`, `PUT /team/{user_id}/role`, `GET /team/invitations`, `DELETE /team/invitations/{id}` — all protected by `require_permission("write:admin_team")`
+- [ ] 6. Register admin_users router in `backend/app/main.py`, ensure `Base.metadata.create_all()` creates new tables
+- [ ] 7. Run `python -c "from app.main import app; print('OK')"` — must PASS (tables auto-created)
+- [ ] 8. Create `frontend/src/pages/admin/AdminUserManagement.jsx` — team table, invite modal, pending invitations section, deactivate/role-change actions
+- [ ] 9. Create `frontend/src/pages/admin/AcceptInvite.jsx` — reads `?token=` from URL, verifies token, shows confirmation and register/login CTA
+- [ ] 10. In `frontend/src/pages/admin/components/AdminSidebar.jsx`: add "Team Management" nav item under Settings group
+- [ ] 11. In `frontend/src/App.jsx`: add lazy imports and routes for `/admin/team` (requiredRole="admin") and `/admin/accept-invite` (public)
+- [ ] 12. Run `npm run build` — must PASS
+- [ ] 13. Verify: existing admin login works, super_admin can invite team member, invited admin can accept and activate, deactivation blocks access

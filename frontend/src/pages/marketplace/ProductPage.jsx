@@ -1148,7 +1148,7 @@ export default function ProductPage() {
           </div>
 
           {/* Cards grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+          <div className="product-related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
             {relatedProducts.map(rel => {
               const relGallery = getGallery(rel);
               const relWished = wishlist.some(w => w.id === rel.id);

@@ -15,7 +15,7 @@ from app.shared.firebase.connection import db as fdb, firebase_connected
 from app.db.session import get_db
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, ReferralAttribution
+from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, ReferralAttribution, AffiliateReferral
 from app.models.product import Product
 from app.models.order import Order
 from app.services.audit_log_service import log_admin_action
@@ -199,29 +199,53 @@ def get_affiliate_kpis(
     admin_user=Depends(require_admin_role)
 ):
     """Dashboard KPI aggregates for the Affiliate Operations Console overview."""
-    total_affiliates = db.query(AffiliateProfile).count()
+    aff_user_count = db.query(User).filter(User.role == "affiliate").count()
+    profile_count = db.query(AffiliateProfile).count()
+    total_affiliates = max(aff_user_count, profile_count)
+
     approved_affiliates = db.query(AffiliateProfile).filter(AffiliateProfile.status == "active").count()
+    if approved_affiliates == 0 and aff_user_count > 0:
+        approved_affiliates = db.query(User).filter(User.role == "affiliate", User.is_active == True).count()
+
     suspended_affiliates = db.query(AffiliateProfile).filter(AffiliateProfile.status.in_(["suspended", "disabled"])).count()
+    if suspended_affiliates == 0 and aff_user_count > 0:
+        suspended_affiliates = db.query(User).filter(User.role == "affiliate", User.is_active == False).count()
+
     enabled_products = db.query(Product).filter(Product.affiliate_enabled == True).count()
 
-    total_clicks = db.query(func.sum(AffiliateProfile.total_clicks)).scalar() or 0
+    clicks_link = db.query(func.sum(ReferralLink.clicks_count)).scalar() or 0
+    clicks_prof = db.query(func.sum(AffiliateProfile.total_clicks)).scalar() or 0
+    total_clicks = max(clicks_link, clicks_prof)
+
     unique_clicks = db.query(func.sum(AffiliateProfile.unique_clicks)).scalar() or 0
-    total_sales = db.query(func.sum(AffiliateProfile.total_sales)).scalar() or 0
+    if unique_clicks == 0 and total_clicks > 0:
+        unique_clicks = total_clicks
+
+    sales_comm = db.query(AffiliateCommission).count()
+    sales_prof = db.query(func.sum(AffiliateProfile.total_sales)).scalar() or 0
+    sales_attr = db.query(ReferralAttribution).count()
+    total_sales = max(sales_comm, sales_prof, sales_attr)
+
     conversion_rate = round((total_sales / total_clicks * 100), 2) if total_clicks > 0 else 0.0
 
-    revenue_generated = db.query(func.sum(AffiliateCommission.sale_amount)).scalar() or 0.0
+    rev_comm = db.query(func.sum(AffiliateCommission.sale_amount)).scalar() or 0.0
+    rev_order = db.query(func.sum(Order.total_amount)).filter(Order.affiliate_id.isnot(None)).scalar() or 0.0
+    revenue_generated = max(rev_comm, rev_order)
+
     commission_pending = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
         or_(
             AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"]),
             AffiliateCommission.status.in_(["pending", "approved", "ready_for_payout"])
         )
     ).scalar() or 0.0
+
     commission_paid = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
         or_(
             AffiliateCommission.commission_status == "paid",
             AffiliateCommission.status == "paid"
         )
     ).scalar() or 0.0
+
     avg_commission = db.query(func.avg(AffiliateCommission.commission_amt)).scalar() or 0.0
 
     # Top affiliate by earnings
@@ -243,7 +267,8 @@ def get_affiliate_kpis(
     top_product_name = top_prod_row[0] if top_prod_row else "—"
 
     # Average EPC (earnings per click)
-    avg_epc = round(commission_paid / total_clicks, 2) if total_clicks > 0 else 0.0
+    total_comm_earned = commission_pending + commission_paid
+    avg_epc = round((total_comm_earned / total_clicks), 2) if total_clicks > 0 else 0.0
 
     return {
         "total_affiliates": total_affiliates,
@@ -949,24 +974,46 @@ def get_order_attribution_trace(
     customer = db.query(User).filter(User.id == order.user_id).first()
     attribution = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == order_id).first()
     commission = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
-    
+    ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
+
+    aff_id = (
+        order.affiliate_id
+        or (attribution and attribution.affiliate_id)
+        or (commission and commission.affiliate_id)
+        or (ref and ref.affiliate_id)
+    )
+
     affiliate = None
     affiliate_user = None
-    if order.affiliate_id or (attribution and attribution.affiliate_id):
-        aff_id = order.affiliate_id or attribution.affiliate_id
+    if aff_id:
         affiliate = db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_id).first()
         if affiliate:
             affiliate_user = db.query(User).filter(User.id == affiliate.user_id).first()
 
+    link_id = (
+        order.referral_link_id
+        or (attribution and attribution.referral_link_id)
+        or (commission and commission.referral_link_id)
+    )
     referral_link = None
-    if order.referral_link_id or (attribution and attribution.referral_link_id):
-        link_id = order.referral_link_id or attribution.referral_link_id
+    if link_id:
         referral_link = db.query(ReferralLink).filter(ReferralLink.id == link_id).first()
+
+    aff_code = (
+        order.referral_code_used
+        or (attribution and attribution.affiliate_code)
+        or (commission and commission.referral_code_used)
+        or (ref and ref.referral_code)
+        or (affiliate and affiliate.referral_code)
+        or (referral_link and referral_link.referral_code)
+    )
 
     # Build Event Timeline Stream
     timeline = []
     if attribution and attribution.created_at:
         timeline.append({"time": attribution.created_at.isoformat() + "Z", "event": "Referral Link Attributed", "status": "completed"})
+    elif ref and ref.created_at:
+        timeline.append({"time": ref.created_at.isoformat() + "Z", "event": "Referral Link Clicked", "status": "completed"})
     if order.created_at:
         timeline.append({"time": order.created_at.isoformat() + "Z", "event": f"Order #{order.id} Created (₹{order.total_amount:.2f})", "status": "completed"})
     if commission:
@@ -990,19 +1037,19 @@ def get_order_attribution_trace(
             "email": (customer.email[:2] + "***@" + customer.email.split("@")[1]) if customer and customer.email and "@" in customer.email else "***",
         },
         "attribution": {
-            "affiliate_id": affiliate.id if affiliate else None,
-            "affiliate_name": affiliate_user.name if affiliate_user else (affiliate.display_name if affiliate else "—"),
-            "affiliate_code": order.referral_code_used or (affiliate.referral_code if affiliate else "—"),
-            "referral_link_name": referral_link.name if referral_link else "Default Referral Code",
-            "device_type": attribution.device_type if attribution else "Desktop",
-            "browser": attribution.browser if attribution else "Chrome",
-            "status": attribution.status if attribution else "attributed",
+            "affiliate_id": aff_id,
+            "affiliate_name": affiliate_user.name if affiliate_user else (affiliate.display_name if affiliate else ("Affiliate #" + str(aff_id) if aff_id else "—")),
+            "affiliate_code": aff_code or "—",
+            "referral_link_name": referral_link.name if referral_link else ("Referral Link #" + str(link_id) if link_id else ("Affiliate Link (" + aff_code + ")") if aff_code else "Referral Link"),
+            "device_type": (attribution.device_type if attribution else None) or (commission.device_type if commission else None) or "Desktop",
+            "browser": (attribution.browser if attribution else None) or (commission.browser if commission else None) or "Chrome",
+            "status": (attribution.status if attribution else None) or (commission.commission_status if commission else "attributed"),
             "fraud_flags": attribution.fraud_flags if attribution else None,
         },
         "commission": {
             "id": commission.id if commission else None,
             "amount": commission.commission_amt if commission else 0.0,
-            "status": commission.commission_status or commission.status if commission else "none",
+            "status": (commission.commission_status or commission.status) if commission else "none",
             "created_at": commission.created_at.isoformat() + "Z" if commission and commission.created_at else None,
             "approved_at": commission.approved_at.isoformat() + "Z" if commission and commission.approved_at else None,
             "paid_at": commission.paid_at.isoformat() + "Z" if commission and commission.paid_at else None,

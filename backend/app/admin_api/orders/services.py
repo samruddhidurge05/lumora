@@ -44,7 +44,10 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
                 "status": o.status or "completed",
                 "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
                 "paymentMethod": o.payment_method or "upi",
-                "createdAt": o.created_at.isoformat() + "Z" if o.created_at else ""
+                "createdAt": o.created_at.isoformat() + "Z" if o.created_at else "",
+                "affiliateId": str(o.affiliate_id) if o.affiliate_id else None,
+                "referralCodeUsed": o.referral_code_used or None,
+                "referralLinkId": str(o.referral_link_id) if o.referral_link_id else None,
             })
         return {"total": total, "page": page, "page_size": page_size, "items": result}
     finally:

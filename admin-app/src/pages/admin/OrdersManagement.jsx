@@ -200,7 +200,7 @@ function AffiliateAttributionCard({ orderId }) {
 
   const attr = trace?.attribution;
   const comm = trace?.commission;
-  const hasAttribution = attr?.affiliate_id || (attr?.affiliate_code && attr.affiliate_code !== '—' && attr.affiliate_code !== 'null');
+  const hasAttribution = attr?.affiliate_id || (attr?.affiliate_code && attr.affiliate_code !== '—' && attr.affiliate_code !== 'null') || (comm?.id && comm?.id !== null);
 
   if (!trace || (!attr?.affiliate_name || !attr?.affiliate_code) || !hasAttribution) return (
     <div className="flex flex-col gap-2">

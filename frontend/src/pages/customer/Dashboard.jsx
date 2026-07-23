@@ -400,6 +400,7 @@ export default function Dashboard() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0 24px', height: '64px', gap: '16px',
+            maxWidth: '1440px', margin: '0 auto', width: '100%',
           }}
         >
           {/* Brand Logo */}
@@ -425,10 +426,13 @@ export default function Dashboard() {
             }}>Customer</span>
           </button>
 
-          {/* Center Navigation Bar — Single row with all customer modules */}
+          {/* Center Navigation Bar — Structured glass pill container */}
           <nav style={{
             display: 'flex', alignItems: 'center', gap: '4px',
             flex: 1, justifyContent: 'center', position: 'relative', overflow: 'visible',
+            background: 'rgba(123,63,160,0.03)',
+            border: '1px solid rgba(196,148,230,0.20)',
+            borderRadius: '24px', padding: '4px 8px', margin: '0 12px',
           }} className="cust-nav-bar">
             {PRIMARY_NAV.map(item => {
               const isActive = dashboardTab === item.name;
@@ -438,45 +442,47 @@ export default function Dashboard() {
                   onClick={() => handleNavClick(item.name)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '7px 14px', borderRadius: '8px',
+                    padding: '6px 14px', borderRadius: '18px',
                     border: 'none', outline: 'none', cursor: 'pointer',
                     fontFamily: 'var(--font-sans)',
                     fontSize: '0.80rem', fontWeight: isActive ? 700 : 600,
-                    background: isActive ? 'rgba(123,63,160,0.12)' : 'transparent',
-                    color: isActive ? '#7B3FA0' : '#4A3B5A',
-                    transition: 'all 0.2s',
+                    background: isActive ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'transparent',
+                    color: isActive ? '#FFFFFF' : '#4A3B5A',
+                    boxShadow: isActive ? '0 4px 12px rgba(123,63,160,0.22)' : 'none',
+                    transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
                     whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = '#7B3FA0'; e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; } }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = '#7B3FA0'; e.currentTarget.style.background = 'rgba(123,63,160,0.08)'; } }}
                   onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color = '#4A3B5A'; e.currentTarget.style.background = 'transparent'; } }}
                 >
-                  <span style={{ color: isActive ? '#7B3FA0' : '#6B5A7A' }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#FFFFFF' : '#6B5A7A' }}>{item.icon}</span>
                   {item.label}
                   {item.badge && unreadCount > 0 && (
-                    <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: '10px', background: '#7B3FA0', color: '#fff', fontWeight: 800, lineHeight: 1.4 }}>{unreadCount}</span>
+                    <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: '10px', background: isActive ? '#FFFFFF' : '#7B3FA0', color: isActive ? '#7B3FA0' : '#FFFFFF', fontWeight: 800, lineHeight: 1.4 }}>{unreadCount}</span>
                   )}
                 </button>
               );
             })}
 
             {/* More dropdown */}
-            <div ref={moreRef} style={{ position: 'relative', marginLeft: '4px', display: 'flex', alignItems: 'center' }}>
+            <div ref={moreRef} style={{ position: 'relative', marginLeft: '2px', display: 'flex', alignItems: 'center' }}>
               <button
                 onClick={() => setMoreOpen(o => !o)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
-                  padding: '7px 14px', borderRadius: '8px',
+                  padding: '6px 14px', borderRadius: '18px',
                   border: 'none', outline: 'none', cursor: 'pointer',
                   fontFamily: 'var(--font-sans)',
                   fontSize: '0.80rem', fontWeight: isMoreActive ? 700 : 600,
-                  background: isMoreActive ? 'rgba(123,63,160,0.12)' : 'rgba(123,63,160,0.06)',
-                  color: isMoreActive ? '#7B3FA0' : '#4A3B5A',
-                  transition: 'all 0.2s',
+                  background: isMoreActive ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'transparent',
+                  color: isMoreActive ? '#FFFFFF' : '#4A3B5A',
+                  boxShadow: isMoreActive ? '0 4px 12px rgba(123,63,160,0.22)' : 'none',
+                  transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
                 }}
-                onMouseEnter={e => { if (!isMoreActive) { e.currentTarget.style.color = '#7B3FA0'; e.currentTarget.style.background = 'rgba(123,63,160,0.10)'; } }}
-                onMouseLeave={e => { if (!isMoreActive) { e.currentTarget.style.color = '#4A3B5A'; e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; } }}
+                onMouseEnter={e => { if (!isMoreActive) { e.currentTarget.style.color = '#7B3FA0'; e.currentTarget.style.background = 'rgba(123,63,160,0.08)'; } }}
+                onMouseLeave={e => { if (!isMoreActive) { e.currentTarget.style.color = '#4A3B5A'; e.currentTarget.style.background = 'transparent'; } }}
               >
-                More Options <ChevronDown size={12} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                More Options <ChevronDown size={12} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: isMoreActive ? '#FFFFFF' : 'inherit' }} />
               </button>
 
               {moreOpen && (

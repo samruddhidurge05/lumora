@@ -15,11 +15,12 @@ from sqlalchemy.orm import sessionmaker
 from app.models.user import Base, User
 from app.db.session import get_db
 from app.core.security import create_access_token, get_password_hash
+from sqlalchemy import create_engine, StaticPool
 
 # -- In-memory SQLite test database --------------------------------------------
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_upload_auth.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -41,7 +42,7 @@ def setup_test_db():
         admin = User(
             name="Test Admin",
             email="admin@upload-test.com",
-            password_hash="firebase_managed",
+            password_hash=get_password_hash("adminpassword"),
             role="admin",
             is_active=True,
             is_verified=True,
@@ -66,7 +67,7 @@ def setup_test_db():
 
 
 @pytest.fixture
-def client():
+def client(setup_test_db):
     """TestClient with DB override + firebase disabled + storage service mocked."""
     fake_storage_result = {
         "url": "https://cdn.example.com/file.zip",
@@ -76,13 +77,14 @@ def client():
     mock_storage = MagicMock()
     mock_storage.upload.return_value = fake_storage_result
 
+    from app.main import app
+    from app.db.session import get_db
+    app.dependency_overrides[get_db] = override_get_db
     with patch("app.shared.firebase.connection.firebase_connected", False), \
-         patch("app.services.storage_service.storage_service", mock_storage):
-        from app.main import app
-        app.dependency_overrides[get_db] = override_get_db
-        with TestClient(app) as c:
-            yield c
-        app.dependency_overrides.clear()
+         patch("app.services.storage_service.storage_service", mock_storage), \
+         TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
 
 
 def _token_for_role(role: str) -> str:
