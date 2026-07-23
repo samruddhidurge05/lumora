@@ -16,6 +16,7 @@ import RefundPolicyCard from '../../components/policy/RefundPolicyCard';
 import RefundPolicyModal from '../../components/policy/RefundPolicyModal';
 import RefundAcknowledgementModal from '../../components/policy/RefundAcknowledgementModal';
 import PurchaseConfirmationDialog from '../../components/policy/PurchaseConfirmationDialog';
+import ProtectedPreviewViewer from '../../components/product/ProtectedPreviewViewer';
 
 
 // Same gallery images as Products page
@@ -492,29 +493,31 @@ export default function ProductPage() {
           <div>
             {/* Main Image */}
             <div style={{ borderRadius: '24px', overflow: 'hidden', marginBottom: '12px', position: 'relative', background: 'rgba(255, 255, 255, 0.48)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid rgba(255, 255, 255, 0.45)', boxShadow: '0 8px 40px rgba(123, 63, 160, 0.08)' }}>
-              <AnimatePresence mode="wait">
-                {videoUrl && activeImg === gallery.length ? (
-                  <video
-                    key="video"
-                    src={videoUrl}
-                    controls
-                    className="product-gallery-img lumora-product-gallery-img"
-                    style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
-                  />
-                ) : (
-                  <motion.img
-                    key={activeImg}
-                    src={gallery[activeImg]}
-                    alt={`${product.title} preview ${activeImg + 1}`}
-                    initial={{ opacity: 0, scale: 1.03 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.97 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="product-gallery-img lumora-product-gallery-img"
-                    style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
-                  />
-                )}
-              </AnimatePresence>
+              <ProtectedPreviewViewer productTitle={product?.title || 'Product Preview'}>
+                <AnimatePresence mode="wait">
+                  {videoUrl && activeImg === gallery.length ? (
+                    <video
+                      key="video"
+                      src={videoUrl}
+                      controls
+                      className="product-gallery-img lumora-product-gallery-img"
+                      style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <motion.img
+                      key={activeImg}
+                      src={gallery[activeImg]}
+                      alt={`${product.title} preview ${activeImg + 1}`}
+                      initial={{ opacity: 0, scale: 1.03 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="product-gallery-img lumora-product-gallery-img"
+                      style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
+                    />
+                  )}
+                </AnimatePresence>
+              </ProtectedPreviewViewer>
               {/* Arrows */}
               {(() => {
                 const totalSlides = videoUrl ? gallery.length + 1 : gallery.length;

@@ -73,7 +73,20 @@ export default function ProductImage({ product, isHovered = false, style, classN
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: 'rgba(240, 235, 245, 0.4)' }}>
+    <div
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background: 'rgba(240, 235, 245, 0.4)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitUserDrag: 'none'
+      }}
+    >
       <img
         src={displaySrc}
         alt={product?.title || ''}
