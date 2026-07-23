@@ -414,8 +414,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  justify-content: flex-start !important;
-  flex-wrap: nowrap !important;
+  justify-content: center;
+  flex-wrap: nowrap;
 }
 .cust-nav-bar::-webkit-scrollbar { display: none; }
 
