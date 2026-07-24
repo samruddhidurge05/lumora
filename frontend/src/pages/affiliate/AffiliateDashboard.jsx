@@ -516,7 +516,7 @@ function AffiliateDashboardInner() {
             box-sizing: border-box !important;
           }
           .aff-main-area main {
-            padding: 16px 14px 40px !important;
+            padding: 16px 12px 40px !important;
             max-width: 100vw !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -524,6 +524,52 @@ function AffiliateDashboardInner() {
           }
           .aff-hamburger {
             display: flex !important;
+          }
+          .aff-stat-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            width: 100% !important;
+          }
+          .aff-commission-strip {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            padding: 14px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .aff-commission-strip > div:last-child {
+            grid-column: 1 / -1 !important;
+            text-align: left !important;
+            margin-left: 0 !important;
+            border-top: 1px solid rgba(45,0,96,0.06) !important;
+            padding-top: 8px !important;
+          }
+          .aff-earnings-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+            width: 100% !important;
+          }
+          .aff-earnings-header > div:last-child {
+            width: 100% !important;
+          }
+          .aff-earnings-header > div:last-child > button:last-child {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .aff-main-area .premium-flat-card {
+            padding: 16px 14px !important;
+            box-sizing: border-box !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+          }
+          .aff-table-wrap {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>
