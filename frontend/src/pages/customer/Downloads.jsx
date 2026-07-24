@@ -307,10 +307,12 @@ export default function CustomerDownloads() {
     const updated = Array.from(new Set([...deletedIds, ...selectedIds]));
     saveDeletedIds(updated);
     setSelectedIds([]);
+    window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
   };
 
   const handleRestoreDeleted = () => {
     saveDeletedIds([]);
+    window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
   };
 
   const fetchBackendDownloads = async () => {

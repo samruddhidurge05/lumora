@@ -144,7 +144,7 @@ export default function Dashboard() {
     borderGlow, setBorderGlow,
     notifications, navigateTo,
     formatPrice, addToCart, buyNow, toggleWishlist, wishlist,
-    products, cart,
+    products, cart, ownedProducts,
   } = useApp();
 
   const [globalSearch, setGlobalSearch] = useState('');
@@ -227,10 +227,17 @@ export default function Dashboard() {
         setNotifsSummary(fetchedNotifs);
         setActivities(fetchedActivities);
 
-        let totalProductsOwned = 0;
-        let totalDownloads = 0;
-        
-        // Calculate stats from backend orders (SQLite source of truth, removing duplicates)
+        // Read deleted downloads set from localStorage
+        let deletedSet = new Set();
+        try {
+          const savedDeleted = localStorage.getItem('lumora_deleted_downloads');
+          if (savedDeleted) {
+            const arr = JSON.parse(savedDeleted);
+            if (Array.isArray(arr)) deletedSet = new Set(arr.map(String));
+          }
+        } catch (e) {}
+
+        // Calculate stats from backend orders + local ownedProducts, removing duplicates and deleted items
         const ownedProductIds = new Set();
         fetchedOrders.forEach(order => {
           if (order.items && (order.status === 'completed' || order.status === 'paid')) {
@@ -241,14 +248,13 @@ export default function Dashboard() {
             });
           }
         });
-        totalProductsOwned = ownedProductIds.size;
+        (ownedProducts || []).forEach(id => ownedProductIds.add(String(id)));
 
-        // Count unique products in downloads (matching unique products owned)
-        totalDownloads = totalProductsOwned;
+        const activeOwnedIds = Array.from(ownedProductIds).filter(id => !deletedSet.has(String(id)));
 
         setStats({
-          productsOwned: totalProductsOwned,
-          downloadsCount: totalDownloads,
+          productsOwned: activeOwnedIds.length,
+          downloadsCount: activeOwnedIds.length,
           wishlistCount: fetchedWishlist.length,
           ordersCount: fetchedOrders.length,
         });
