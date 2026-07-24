@@ -503,17 +503,24 @@ function AffiliateDashboardInner() {
           }
           .aff-main-area {
             margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+          }
+          .aff-main-area header {
+            padding: 12px 14px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .aff-main-area main {
+            padding: 16px 14px 40px !important;
+            max-width: 100vw !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
           }
           .aff-hamburger {
             display: flex !important;
-          }
-        }
-        @media (max-width: 640px) {
-          .aff-main-area main {
-            padding: 24px 20px !important;
-          }
-          .aff-main-area header {
-            padding: 14px 20px !important;
           }
         }
       `}</style>
