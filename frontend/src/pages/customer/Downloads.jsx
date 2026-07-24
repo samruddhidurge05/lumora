@@ -6,7 +6,8 @@ import {
   Sparkles, Star, Clock, HardDrive, Tag, Shield,
   Zap, CheckCircle, ArrowUpRight, ChevronRight,
   Package, Layers, Cpu, FileCode, BookOpen,
-  Palette, Music, Video, RotateCcw, Bell, X, AlertCircle
+  Palette, Music, Video, RotateCcw, Bell, X, AlertCircle,
+  Trash2, CheckSquare, Square
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -265,6 +266,53 @@ export default function CustomerDownloads() {
   const [error, setError] = useState(null);
   const [backendOwnedProducts, setBackendOwnedProducts] = useState([]);
 
+  // ── Multi-select & Delete State ──────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deletedIds, setDeletedIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lumora_deleted_downloads');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const saveDeletedIds = (newList) => {
+    setDeletedIds(newList);
+    try {
+      localStorage.setItem('lumora_deleted_downloads', JSON.stringify(newList));
+    } catch (e) {
+      console.warn('Failed to save deleted downloads:', e);
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (visibleItems) => {
+    const visibleIds = visibleItems.map(p => String(p.id));
+    const allSelected = visibleIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    const updated = Array.from(new Set([...deletedIds, ...selectedIds]));
+    saveDeletedIds(updated);
+    setSelectedIds([]);
+  };
+
+  const handleRestoreDeleted = () => {
+    saveDeletedIds([]);
+  };
+
   const fetchBackendDownloads = async () => {
     try {
       setLoading(true);
@@ -359,7 +407,7 @@ export default function CustomerDownloads() {
     if (!allProductsMap.has(String(r.id))) allProductsMap.set(String(r.id), r);
   });
 
-  const allProducts = Array.from(allProductsMap.values());
+  const allProducts = Array.from(allProductsMap.values()).filter(p => !deletedIds.includes(String(p.id)));
 
   // Dynamic filter tabs: base tabs + unique categories from real library
   const uniqueCategories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
@@ -568,19 +616,90 @@ export default function CustomerDownloads() {
           SECTION 3: VAULT PRODUCTS GRID
           ═══════════════════════════════════════════════════════════ */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <span className="caption-premium" style={{ fontSize: '0.65rem', color: 'var(--color-mocha)' }}>Owned Assets</span>
             <h2 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, marginTop: 2, color: 'var(--color-espresso)' }}>
               {activeFilter === 'all' ? 'Complete Library' : dynamicFilterTabs.find(t => t.id === activeFilter)?.label}
             </h2>
           </div>
-          <span style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', fontWeight: 700 }}>
-            {filtered.length} {filtered.length === 1 ? 'asset' : 'assets'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {filtered.length > 0 && (
+              <button
+                onClick={() => handleSelectAll(filtered)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 14px', borderRadius: '10px',
+                  border: '1px solid rgba(196,148,230,0.35)',
+                  background: 'rgba(255,255,255,0.75)',
+                  color: 'var(--color-espresso)', fontSize: '0.75rem', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)', backdropFilter: 'blur(10px)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {filtered.every(p => selectedIds.includes(String(p.id))) ? <CheckSquare size={14} color="#7B3FA0" /> : <Square size={14} />}
+                {filtered.every(p => selectedIds.includes(String(p.id))) ? 'Deselect All' : 'Select All'}
+              </button>
+            )}
+
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 16px', borderRadius: '10px',
+                  border: 'none', background: 'linear-gradient(135deg, #e11d48, #be123c)',
+                  color: '#ffffff', fontSize: '0.75rem', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  boxShadow: '0 4px 14px rgba(225,29,72,0.3)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Trash2 size={14} />
+                Delete Selected ({selectedIds.length})
+              </button>
+            )}
+
+            {deletedIds.length > 0 && selectedIds.length === 0 && (
+              <button
+                onClick={handleRestoreDeleted}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 14px', borderRadius: '10px',
+                  border: '1px solid rgba(123,63,160,0.3)',
+                  background: 'rgba(123,63,160,0.06)',
+                  color: '#7B3FA0', fontSize: '0.75rem', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                }}
+              >
+                <RotateCcw size={13} />
+                Restore Removed ({deletedIds.length})
+              </button>
+            )}
+
+            <span style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', fontWeight: 700 }}>
+              {filtered.length} {filtered.length === 1 ? 'asset' : 'assets'}
+            </span>
+          </div>
         </div>
 
-        {!loading && allProducts.length === 0 ? (
+        {!loading && allProducts.length === 0 && deletedIds.length > 0 ? (
+          <div style={{
+            padding: '70px 40px', textAlign: 'center', borderRadius: 20,
+            background: 'rgba(255,255,255,0.55)', border: '1px dashed rgba(78,59,49,0.12)',
+            backdropFilter: 'blur(16px)',
+          }}>
+            <Trash2 size={48} style={{ color: 'rgba(225,29,72,0.3)', margin: '0 auto 16px', display: 'block' }} />
+            <h3 style={{ color: 'var(--color-espresso)', fontWeight: 700, fontSize: '1.1rem', marginBottom: '8px' }}>All download products deleted</h3>
+            <p style={{ color: 'var(--color-mocha)', fontSize: '0.82rem', maxWidth: '360px', margin: '0 auto 20px', lineHeight: 1.5 }}>You have removed your download products from this view. You can restore them anytime.</p>
+            <button
+              onClick={handleRestoreDeleted}
+              style={{ padding: '10px 24px', borderRadius: 12, background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#FFFDF9', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+            >
+              <RotateCcw size={14} /> Restore All Download Products
+            </button>
+          </div>
+        ) : !loading && allProducts.length === 0 ? (
           /* Empty vault — user has no purchases */
           <div style={{
             padding: '70px 40px', textAlign: 'center', borderRadius: 20,
@@ -617,6 +736,8 @@ export default function CustomerDownloads() {
                   product={product}
                   isHovered={hoveredCard === product.id}
                   onHover={setHoveredCard}
+                  isSelected={selectedIds.includes(String(product.id))}
+                  onToggleSelect={() => handleToggleSelect(String(product.id))}
                 />
               </div>
             ))}
@@ -750,7 +871,7 @@ export default function CustomerDownloads() {
 }
 
 /* ─── VAULT PRODUCT CARD ─────────────────────────────────────── */
-function VaultCard({ product, isHovered, onHover }) {
+function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -834,8 +955,10 @@ function VaultCard({ product, isHovered, onHover }) {
         onMouseLeave={handleMouseLeave}
         style={{
           borderRadius: 20, overflow: 'hidden',
-          background: 'rgba(255,255,255,0.72)',
-          border: isHovered ? '1px solid rgba(255,255,255,0.95)' : '1px solid rgba(255,255,255,0.75)',
+          background: isSelected ? 'rgba(243, 232, 255, 0.85)' : 'rgba(255,255,255,0.72)',
+          border: isSelected
+            ? '2px solid #7B3FA0'
+            : isHovered ? '1px solid rgba(255,255,255,0.95)' : '1px solid rgba(255,255,255,0.75)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           boxShadow: isHovered
             ? `0 24px 60px rgba(78,59,49,0.12), 0 0 0 1px rgba(255,255,255,0.6), 0 8px 20px ${product.accentColor}18`
@@ -847,8 +970,31 @@ function VaultCard({ product, isHovered, onHover }) {
             ? 'box-shadow 0.3s ease, border-color 0.3s ease'
             : 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
           willChange: 'transform',
+          position: 'relative',
         }}
       >
+        {/* Selection Checkbox Overlay */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onToggleSelect) onToggleSelect();
+          }}
+          style={{
+            position: 'absolute', top: 12, left: 12, zIndex: 15,
+            width: '28px', height: '28px', borderRadius: '8px',
+            background: isSelected ? '#7B3FA0' : 'rgba(255,255,255,0.92)',
+            border: isSelected ? 'none' : '1.5px solid rgba(123,63,160,0.35)',
+            color: isSelected ? '#ffffff' : '#7B3FA0',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease',
+          }}
+          title={isSelected ? 'Deselect item' : 'Select item to delete'}
+        >
+          {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+        </button>
+
         {/* Thumbnail */}
         <div 
           onClick={handleOpenPreview}
@@ -866,7 +1012,7 @@ function VaultCard({ product, isHovered, onHover }) {
 
           {/* Category badge */}
           <span style={{
-            position: 'absolute', top: 12, left: 12,
+            position: 'absolute', top: 12, left: 48,
             fontSize: '0.6rem', fontWeight: 800, padding: '4px 10px',
             borderRadius: 20, background: 'rgba(255,255,255,0.92)',
             color: 'var(--color-espresso)', backdropFilter: 'blur(8px)',
