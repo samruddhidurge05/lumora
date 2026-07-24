@@ -878,6 +878,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewType, setPreviewType] = useState('pdf'); // 'pdf' | 'package'
+  const [viewerMode, setViewerMode] = useState('visual'); // 'visual' | 'stream'
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const cardRef = useRef(null);
@@ -900,6 +901,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
     setLoading(true);
     setErrorMsg(null);
     setPreviewUrl(null);
+    setViewerMode('visual');
 
     const numericId = parseInt(product.id, 10);
     if (isNaN(numericId)) {
@@ -1167,6 +1169,34 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {previewUrl && (
+                  <div style={{ display: 'flex', background: 'rgba(78,59,49,0.08)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                    <button
+                      onClick={() => setViewerMode('visual')}
+                      style={{
+                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                        background: viewerMode === 'visual' ? '#FFFDF9' : 'transparent',
+                        color: viewerMode === 'visual' ? '#5A1E7E' : 'var(--color-mocha)',
+                        fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer',
+                        boxShadow: viewerMode === 'visual' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                      }}
+                    >
+                      🖼️ Visual View
+                    </button>
+                    <button
+                      onClick={() => setViewerMode('stream')}
+                      style={{
+                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                        background: viewerMode === 'stream' ? '#FFFDF9' : 'transparent',
+                        color: viewerMode === 'stream' ? '#5A1E7E' : 'var(--color-mocha)',
+                        fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer',
+                        boxShadow: viewerMode === 'stream' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                      }}
+                    >
+                      📄 Document Stream
+                    </button>
+                  </div>
+                )}
                 <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
                 <button
                   onClick={() => setIsPreviewOpen(false)}
@@ -1183,7 +1213,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
             </div>
 
             {/* Viewer Body Content */}
-            <div style={{ flex: 1, position: 'relative', background: '#323639', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <div style={{ flex: 1, position: 'relative', background: viewerMode === 'visual' ? '#1A1823' : '#323639', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {loading && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', color: '#FFFDF9', fontSize: '0.92rem' }}>
                   <Clock size={28} style={{ animation: 'spin 1.5s linear infinite', color: '#DCC6FF' }} />
@@ -1199,26 +1229,58 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                 </div>
               )}
 
-              {!loading && !errorMsg && previewType === 'package' && (
-                <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#FAF7F2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '680px', width: '100%', boxShadow: '0 20px 60px rgba(78,59,49,0.12)', border: '1px solid rgba(78,59,49,0.1)' }}>
+              {!loading && !errorMsg && (viewerMode === 'visual' || previewType === 'package' || !previewUrl) && (
+                <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#181524', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '820px', width: '100%', boxShadow: '0 25px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(196,181,253,0.3)' }}>
                     
-                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '28px' }}>
-                      <img src={product.thumbnail} alt={product.name} style={{ width: '130px', height: '130px', borderRadius: '18px', objectFit: 'cover', boxShadow: '0 10px 30px rgba(0,0,0,0.14)' }} />
-                      <div>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          📦 Package Archive (.zip)
-                        </span>
-                        <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
-                          {product.name}
-                        </h3>
-                        <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
-                          Category: <strong>{product.category}</strong> • Size: <strong>{product.fileSize}</strong> • Version: <strong>{product.version}</strong>
-                        </p>
+                    {/* Visual Document Showcase Canvas */}
+                    <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                      <div style={{
+                        position: 'relative', display: 'inline-block', borderRadius: '18px', overflow: 'hidden',
+                        boxShadow: '0 20px 50px rgba(45,30,24,0.3)', border: '1px solid rgba(78,59,49,0.12)',
+                        background: '#FAF7F2', padding: '12px'
+                      }}>
+                        <img
+                          src={product.thumbnail || product.preview}
+                          alt={product.name}
+                          style={{ maxHeight: '340px', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
+                        />
+                        <div style={{
+                          position: 'absolute', bottom: '20px', right: '20px',
+                          background: 'rgba(12,10,18,0.85)', backdropFilter: 'blur(10px)',
+                          color: '#FFFDF9', fontSize: '0.7rem', fontWeight: 800,
+                          padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.05em'
+                        }}>
+                          ✦ Online Inspection View
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '28px' }}>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '260px' }}>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          {product.category || 'Digital Asset'} • {product.version || 'v1.0.0'}
+                        </span>
+                        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
+                          {product.name}
+                        </h3>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
+                          Size: <strong>{product.fileSize || 'Available'}</strong> • Updated: <strong>{product.lastUpdated || 'Recently'}</strong>
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {product.compatibility && product.compatibility.map(tag => (
+                          <span key={tag} style={{
+                            fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px',
+                            borderRadius: '8px', background: 'rgba(123,63,160,0.08)',
+                            color: '#5A1E7E', border: '1px solid rgba(123,63,160,0.18)'
+                          }}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                         <Shield size={20} style={{ color: '#3DB877' }} />
                         <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#276749' }}>
@@ -1226,7 +1288,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                         </span>
                       </div>
                       <p style={{ fontSize: '0.8rem', color: '#2F855A', lineHeight: 1.6, margin: 0 }}>
-                        You are inspecting <strong>{product.name}</strong> online. This is a compressed ZIP package archive containing your digital files. Viewing this online inspection dashboard preserves your standard refund eligibility. To save the file package to your computer, laptop, or phone, click the <strong>Download Product</strong> button below.
+                        You are inspecting <strong>{product.name}</strong> online. Inspecting this document or asset online preserves your standard refund eligibility. To save the complete file package to your device, click the <strong>Download Product</strong> button.
                       </p>
                     </div>
 
@@ -1244,7 +1306,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                 </div>
               )}
 
-              {!loading && !errorMsg && previewType === 'pdf' && previewUrl && (
+              {!loading && !errorMsg && viewerMode === 'stream' && previewUrl && (
                 <iframe
                   src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
                   title={`PDF Web Viewer ${product.name}`}

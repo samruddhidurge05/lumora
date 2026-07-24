@@ -722,7 +722,9 @@ def preview_product_stream(
         stream,
         media_type=content_type,
         headers={
-            "Content-Disposition": f"inline; filename={filename}"
+            "Content-Disposition": f"inline; filename={filename}",
+            "X-Frame-Options": "ALLOWALL",
+            "Content-Security-Policy": "frame-ancestors 'self' https://*.vercel.app https://lumora-lemon-seven.vercel.app http://localhost:* http://127.0.0.1:*;",
         }
     )
 

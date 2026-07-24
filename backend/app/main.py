@@ -742,12 +742,19 @@ async def add_security_headers(request: Request, call_next):
             },
         )
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+    # Allow iframe framing for preview-stream and online inspection endpoints across Lumora Vercel deployments & localhost
+    path = request.url.path.lower()
+    if "preview" in path or "stream" in path or "download" in path:
+        response.headers.pop("X-Frame-Options", None)
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://*.vercel.app https://lumora-lemon-seven.vercel.app http://localhost:* http://127.0.0.1:*;"
+    else:
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'self' https://*.vercel.app https://lumora-lemon-seven.vercel.app http://localhost:*;"
     return response
 
 
