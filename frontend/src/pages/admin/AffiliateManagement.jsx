@@ -1060,8 +1060,7 @@ export default function AffiliateManagement() {
               <div className="p-3 border-t border-[#F3EAF8] text-[10px] text-[#7B3FA0]">Click a row to view full affiliate profile →</div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════════
             TAB 4: SALES LEDGER (NEW)
