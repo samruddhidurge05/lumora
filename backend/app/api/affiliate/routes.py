@@ -881,9 +881,11 @@ def track_click(
             
             # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
             # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
-            aff_profile = db.query(AffiliateProfile).filter(
+            is_postgres = "postgres" in db.get_bind().dialect.name
+            profile_query = db.query(AffiliateProfile).filter(
                 AffiliateProfile.id == custom_link.affiliate_id
-            ).with_for_update().first()
+            )
+            aff_profile = profile_query.with_for_update().first() if is_postgres else profile_query.first()
             if aff_profile:
                 aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
                 if not aff_user or not aff_user.is_active:
@@ -930,9 +932,11 @@ def track_click(
 
     # 2. Check if it's a default affiliate profile referral code
     # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
-    profile = db.query(AffiliateProfile).filter(
+    is_postgres = "postgres" in db.get_bind().dialect.name
+    profile_query = db.query(AffiliateProfile).filter(
         AffiliateProfile.referral_code == code_upper
-    ).with_for_update().first()
+    )
+    profile = profile_query.with_for_update().first() if is_postgres else profile_query.first()
 
     if profile and profile.is_active:
 
@@ -1045,7 +1049,9 @@ def create_referral_click(
 
     # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
     # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
-    locked_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).with_for_update().first()
+    is_postgres = "postgres" in db.get_bind().dialect.name
+    profile_query = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id)
+    locked_profile = profile_query.with_for_update().first() if is_postgres else profile_query.first()
 
 
 

@@ -129,7 +129,7 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
   const customCommVal = product?.commission_value;
   const rate = isFixed
     ? `₹${Math.round(customCommVal || 0)}`
-    : `${customCommVal !== undefined ? customCommVal : (profile?.commission_rate ?? COMMISSION_RATES[product?.category] ?? 15)}%`;
+    : `${customCommVal != null ? customCommVal : (profile?.commission_rate ?? COMMISSION_RATES[product?.category] ?? 15)}%`;
 
   /* ── Price + earning per sale ─────────────────────────────────────── */
   const priceINR  = Math.round(product?.price || 0);

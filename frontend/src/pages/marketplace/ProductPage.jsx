@@ -21,15 +21,15 @@ import ProtectedPreviewViewer from '../../components/product/ProtectedPreviewVie
 
 // Same gallery images as Products page
 const CAT_GALLERY = {
-  'UI Kits':              ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=85','https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=800&q=85','https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&q=85','https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=85'],
-  'Mobile App Designs':   ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=85','https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=800&q=85','https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=85','https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=85'],
-  'React Templates':      ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=85','https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=800&q=85','https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&q=85','https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=85'],
-  'Website Templates':    ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=85','https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=85','https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=800&q=85','https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=85'],
-  'Design Assets':        ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85','https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&q=85','https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=85','https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800&q=85'],
-  'E-books':              ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=85','https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=85','https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=800&q=85','https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=85'],
-  'Notion Templates':     ['https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&q=85','https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=85','https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=800&q=85','https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=85'],
-  'Social Media Kits':    ['https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=85','https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=85','https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=800&q=85','https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=85'],
-  'AI Tools':             ['https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=85','https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=85','https://images.unsplash.com/photo-1676277791608-ac54525aa94d?w=800&q=85','https://images.unsplash.com/photo-1695654395926-68cefd20b6cc?w=800&q=85'],
+  'UI Kits': ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=85', 'https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=800&q=85', 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&q=85', 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=85'],
+  'Mobile App Designs': ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=85', 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=800&q=85', 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=85', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=85'],
+  'React Templates': ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=85', 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=800&q=85', 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&q=85', 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=85'],
+  'Website Templates': ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=85', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=85', 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=800&q=85', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=85'],
+  'Design Assets': ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85', 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&q=85', 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=85', 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800&q=85'],
+  'E-books': ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=85', 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=85', 'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=800&q=85', 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=85'],
+  'Notion Templates': ['https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&q=85', 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=85', 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=800&q=85', 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=85'],
+  'Social Media Kits': ['https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=85', 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=85', 'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=800&q=85', 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=85'],
+  'AI Tools': ['https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=85', 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=85', 'https://images.unsplash.com/photo-1676277791608-ac54525aa94d?w=800&q=85', 'https://images.unsplash.com/photo-1695654395926-68cefd20b6cc?w=800&q=85'],
 };
 
 function getGallery(product) {
@@ -76,7 +76,7 @@ export default function ProductPage() {
   const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview, cart } = useApp();
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
-  
+
   const [fetchedProduct, setFetchedProduct] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState(false);
@@ -94,17 +94,17 @@ export default function ProductPage() {
   const [backendReviews, setBackendReviews] = useState(null); // null = not yet fetched
 
   // ── Report modal state (fully isolated from purchase/cart flow) ──────────
-  const [reportModalOpen, setReportModalOpen]       = useState(false);
-  const [reportCategory, setReportCategory]         = useState('');
-  const [reportDescription, setReportDescription]   = useState('');
-  const [reportSubmitting, setReportSubmitting]      = useState(false);
-  const [reportSubmitted, setReportSubmitted]        = useState(false);
-  const [reportError, setReportError]               = useState('');
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportCategory, setReportCategory] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [reportError, setReportError] = useState('');
 
   // ── Customer Refund Policy Acknowledgement State ──────────────────────────
-  const [showPolicyModal, setShowPolicyModal]       = useState(false);
-  const [showAckModal, setShowAckModal]             = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog]   = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [showAckModal, setShowAckModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleSignInToPurchase = () => {
     const targetProdId = product?.id || activeProductId;
@@ -222,7 +222,7 @@ export default function ProductPage() {
           document.head.appendChild(metaDesc);
         }
         metaDesc.setAttribute('content', product.seoDescription || product.seo_description || product.description || '');
-      } catch (_) {}
+      } catch (_) { }
     }
     if (product && user) trackProductViewing(user.uid, product);
     else if (product) trackProductViewing(null, product);
@@ -248,7 +248,7 @@ export default function ProductPage() {
         const tracked = sessionStorage.getItem('lumora_aff_tracked');
         if (tracked !== ref && !sessId) {
           sessionStorage.setItem('lumora_aff_tracked', ref);
-          backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => {});
+          backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => { });
         }
       }
 
@@ -256,9 +256,9 @@ export default function ProductPage() {
         backendFetch('/affiliate/referrals/view', {
           method: 'POST',
           body: JSON.stringify({ session_id: sessId, product_id: parseInt(product.id, 10) })
-        }).catch(() => {});
+        }).catch(() => { });
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [product?.id]);
 
   // Load reviews from backend whenever the product changes
@@ -303,7 +303,7 @@ export default function ProductPage() {
   const videoUrl = product.previewVideo || product.preview_video;
   const isWishlisted = wishlist.some(w => w.id === product.id);
   const isOwned = ownedProducts.some(id => String(id) === String(product.id));
-  const inCart  = cart.some(item => String(item.id) === String(product.id));
+  const inCart = cart.some(item => String(item.id) === String(product.id));
 
   // Features list parsing:
   // For backend products (numeric IDs), never show hardcoded defaults.
@@ -339,12 +339,12 @@ export default function ProductPage() {
     try {
       // Resolve buyer_id (integer from backend UID)
       const buyerId = parseInt(localStorage.getItem('lumora_backend_uid'), 10) || 1;
-      
+
       // Resolve seller_id (integer from product.vendor_id)
       let sellerId = parseInt(product.vendor_id, 10);
       if (isNaN(sellerId)) {
         // Fallback to admin user 1 (Platform Admin) if product vendor is not a valid integer ID
-        sellerId = 1; 
+        sellerId = 1;
       }
 
       // Try creating conversation on backend first
@@ -554,7 +554,7 @@ export default function ProductPage() {
               {gallery.map((img, i) => (
                 <button key={i} onClick={() => setActiveImg(i)}
                   style={{ flex: 1, height: '68px', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${i === activeImg ? '#7B3FA0' : 'rgba(220,198,255,0.30)'}`, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', boxShadow: i === activeImg ? '0 4px 16px rgba(123,63,160,0.18)' : 'none' }}>
-                  <img src={img} alt={`thumb ${i+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: i === activeImg ? 'none' : 'brightness(0.85)', transition: 'filter 0.2s' }} />
+                  <img src={img} alt={`thumb ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: i === activeImg ? 'none' : 'brightness(0.85)', transition: 'filter 0.2s' }} />
                 </button>
               ))}
               {videoUrl && (
@@ -582,7 +582,7 @@ export default function ProductPage() {
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '14px' }}>About this product</h2>
                   <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: '#6B4F7A', fontWeight: 400, marginBottom: '24px' }}>{product.description}</p>
-                  
+
                   {/* Installation Guide */}
                   {(product.installationGuide || product.installation_guide) && (
                     <div style={{ marginBottom: '24px', padding: '18px', borderRadius: '16px', background: 'rgba(123, 63, 160, 0.04)', border: '1px solid rgba(220,198,255,0.22)' }}>
@@ -734,7 +734,7 @@ export default function ProductPage() {
                         {/* Star rating picker */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
                           <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#8B6B5B', marginRight: '4px' }}>Your rating:</span>
-                          {[1,2,3,4,5].map(star => (
+                          {[1, 2, 3, 4, 5].map(star => (
                             <button
                               key={star}
                               type="button"
@@ -762,7 +762,7 @@ export default function ProductPage() {
                           onChange={e => setReviewComment(e.target.value)}
                           placeholder={
                             !user ? 'Please sign in to leave a review'
-                            : 'Share your experience with this product...'
+                              : 'Share your experience with this product...'
                           }
                           disabled={!user}
                           maxLength={600}
@@ -940,28 +940,28 @@ export default function ProductPage() {
                     <Check size={16} style={{ color: '#16a34a' }} />
                     <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#15803d' }}>You own this product</span>
                   </div>
-                  <button 
+                  <button
                     onClick={async () => {
                       const numericId = parseInt(product.id, 10);
                       if (isNaN(numericId)) return;
-                      
+
                       try {
                         const res = await backendFetch(`/products/${numericId}/download`);
                         if (res?.download_available === false) {
                           alert("The creator has not yet uploaded the downloadable asset.");
                           return;
                         }
-                        
+
                         let activeUrl = res?.download_url || `/downloads/product-${product.id}.zip`;
                         if (res?.type === 'external' && res?.redirect_url) {
                           window.open(res.redirect_url, '_blank');
                           return;
                         }
-                        
+
                         const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
                         const fileCheckUrl = activeUrl.startsWith('/api') ? activeUrl.replace('/api', '') : activeUrl;
                         const token = localStorage.getItem('lumora_backend_token');
-                        
+
                         const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
                           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                         });
@@ -976,7 +976,7 @@ export default function ProductPage() {
                             }
                           }
                         }
-                        
+
                         window.open(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, '_blank');
                       } catch (err) {
                         console.warn('[ProductPage] Failed to resolve download:', err);
@@ -984,15 +984,15 @@ export default function ProductPage() {
                       }
                     }}
                     className="btn-premium btn-premium-solid"
-                    style={{ 
-                      width: '100%', 
-                      justifyContent: 'center', 
-                      padding: '12px', 
-                      fontSize: '0.88rem', 
-                      borderRadius: '12px', 
-                      cursor: 'pointer', 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      padding: '12px',
+                      fontSize: '0.88rem',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '8px',
                       background: 'linear-gradient(135deg,#16a34a,#15803d)',
                       boxShadow: '0 4px 12px rgba(22,163,74,0.3)',
@@ -1307,11 +1307,11 @@ function RelatedCard({ product, thumb, isWished, formatPrice, onView, onCart, on
 // Fully isolated component — its open/close state is managed in ProductPage
 // and has no connection to the purchase, cart, or checkout flows.
 const REPORT_CATEGORIES = [
-  { value: 'spam',         label: 'Spam' },
-  { value: 'inappropriate',label: 'Inappropriate Content' },
-  { value: 'counterfeit',  label: 'Counterfeit / IP Violation' },
-  { value: 'misleading',   label: 'Misleading Description' },
-  { value: 'other',        label: 'Other' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'inappropriate', label: 'Inappropriate Content' },
+  { value: 'counterfeit', label: 'Counterfeit / IP Violation' },
+  { value: 'misleading', label: 'Misleading Description' },
+  { value: 'other', label: 'Other' },
 ];
 
 function ReportModal({

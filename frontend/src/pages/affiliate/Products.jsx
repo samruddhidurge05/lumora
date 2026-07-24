@@ -93,7 +93,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     if (product.commission_type === 'fixed') {
       return `₹${Math.round(product.commission_value || 0)}`;
     }
-    return `${product.commission_value !== undefined ? product.commission_value : (COMMISSION_RATES[product.category] || 15)}%`;
+    return `${product.commission_value != null ? product.commission_value : (COMMISSION_RATES[product.category] || 15)}%`;
   };
 
   const calcEarning = (product) => {
@@ -101,7 +101,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       return Math.round(product.commission_value || 0);
     }
     const priceINR = Math.round(product.price);
-    const rateVal = product.commission_value !== undefined ? product.commission_value : (COMMISSION_RATES[product.category] || 15);
+    const rateVal = product.commission_value != null ? product.commission_value : (COMMISSION_RATES[product.category] || 15);
     return Math.round((priceINR * rateVal) / 100);
   };
 
