@@ -330,7 +330,7 @@ export default function AffiliateDashboardHome({
       }} />
 
       {/* ── HERO BANNER ──────────────────────────────────────────────────────── */}
-      <div className="glass-card" style={{
+      <div className="glass-card aff-hero-banner" style={{
         padding: '40px 44px',
         background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -338,7 +338,7 @@ export default function AffiliateDashboardHome({
       }}>
         <div style={{ position: 'absolute', top: '-60px', right: '80px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,181,253,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div style={{ position: 'relative', zIndex: 2 }}>
+        <div className="aff-hero-content" style={{ position: 'relative', zIndex: 2 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>✦ Affiliate Program</span>
           <h1 className="text-editorial" style={{ fontSize: '2.6rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
             Welcome back, {welcomeName}.
@@ -374,7 +374,7 @@ export default function AffiliateDashboardHome({
         </div>
 
         {/* Quick copy widget */}
-        <div style={{
+        <div className="aff-hero-widget" style={{
           background: 'rgba(255,255,255,0.80)', backdropFilter: 'blur(20px)',
           border: '1px solid rgba(196,181,253,0.35)', borderRadius: '16px',
           padding: '20px 24px', minWidth: '280px',
@@ -467,7 +467,7 @@ export default function AffiliateDashboardHome({
       </div>
 
       {/* ── COMMISSION SUMMARY STRIP ─────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{
+      <div className="premium-flat-card aff-commission-strip" style={{
         padding: '18px 24px', display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))',
         gap: '16px', position: 'relative', zIndex: 1,

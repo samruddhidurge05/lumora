@@ -1083,28 +1083,51 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 /* ── Hero banner: stack on mobile ── */
 @media (max-width: 640px) {
-  /* Hero glass-card inside affiliate dashboard home */
-  .aff-page-wrap > .glass-card:first-child {
-    padding: 24px 20px !important;
+  /* Hero banner — named class applied in Dashboard.jsx */
+  .aff-hero-banner {
+    padding: 22px 18px !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 20px !important;
+    align-items: stretch !important;
+    gap: 18px !important;
   }
-  /* Referral link widget: full width */
-  .aff-page-wrap > .glass-card:first-child > div:last-child {
+  /* Hero content area — no max-width clamp on mobile */
+  .aff-hero-content {
+    min-width: 0 !important;
+  }
+  /* Hero title */
+  .aff-hero-content h1 {
+    font-size: clamp(1.6rem, 6.5vw, 2.2rem) !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+  /* Hero subtitle text */
+  .aff-hero-content p {
+    max-width: 100% !important;
+    font-size: 0.82rem !important;
+  }
+  /* Hero CTA buttons row: wrap on narrow screens */
+  .aff-hero-content > div:last-child {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .aff-hero-content > div:last-child > button {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+  /* Referral widget: full width, no minWidth */
+  .aff-hero-widget {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
+    padding: 16px !important;
   }
-  /* Hero title */
-  .aff-page-wrap > .glass-card:first-child h1 {
-    font-size: clamp(1.8rem, 7vw, 2.6rem) !important;
-  }
-  /* Hero CTA buttons: wrap */
-  .aff-page-wrap > .glass-card:first-child div[style*="gap: '10px'"],
-  .aff-page-wrap > .glass-card:first-child div[style*="marginTop: '20px'"] {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+  /* Referral link text inside widget — break long URLs */
+  .aff-hero-widget > div:nth-child(2) {
+    font-size: 0.72rem !important;
+    word-break: break-all !important;
+    white-space: normal !important;
   }
 }
 
@@ -1123,7 +1146,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     padding: 12px 16px !important;
   }
   .aff-main-area header h1 {
-    font-size: 1.35rem !important;
+    font-size: 1.2rem !important;
   }
   /* Cart button label — hide text, show icon only */
   .aff-main-area header button span:not([class]) {
@@ -1134,7 +1157,62 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 /* ── Main content: compact padding ── */
 @media (max-width: 640px) {
   .aff-main-area main {
-    padding: 20px 14px 40px !important;
+    padding: 16px 12px 40px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* Prevent any affiliate page content from overflowing the viewport */
+@media (max-width: 640px) {
+  .aff-page-wrap,
+  .aff-page-wrap > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* ── Commission summary strip (on Overview dashboard) — grid on mobile ── */
+@media (max-width: 640px) {
+  .aff-commission-grid-mobile {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+}
+
+/* ── Commission summary strip (named class) — 2x2 grid on mobile ── */
+@media (max-width: 640px) {
+  .aff-commission-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  /* "Commission Summary" label: full row */
+  .aff-commission-strip > div:first-child {
+    grid-column: 1 / -1 !important;
+    margin-bottom: -4px !important;
+  }
+}
+
+/* ── Stat cards: compact padding + font on mobile ── */
+@media (max-width: 480px) {
+  .aff-stat-grid > .premium-flat-card {
+    padding: 14px 14px !important;
+  }
+  .aff-stat-grid > .premium-flat-card > div > div:nth-child(2) {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* ── Overflow guard: prevent any child from escaping the main area ── */
+@media (max-width: 900px) {
+  .aff-main-area {
+    overflow-x: hidden !important;
+  }
+  .aff-main-area main {
+    max-width: 100vw !important;
   }
 }
 

@@ -381,7 +381,7 @@ function AffiliateDashboardInner() {
         </header>
 
         {/* Page content */}
-        <main style={{ padding: '36px 40px', maxWidth: '1200px' }}>
+        <main style={{ padding: '36px 40px', maxWidth: '1200px', overflowX: 'hidden' }}>
           {isSuspended ? (
             <div style={{
               background: 'rgba(255, 255, 255, 0.45)',
