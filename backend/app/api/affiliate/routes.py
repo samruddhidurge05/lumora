@@ -863,12 +863,12 @@ def track_click(
     Increment click counter when a visitor lands via a referral link.
     Tracks both default affiliate codes and custom referral link codes.
     No auth required - called client-side when ?ref=CODE is detected.
-    Includes 24-hour IP deduplication.
+    Includes 10-second IP deduplication.
     """
     code_upper = referral_code.upper()
     client_ip = request.client.host if request.client else None
     now = datetime.utcnow()
-    cutoff = now - timedelta(hours=24)
+    cutoff = now - timedelta(seconds=10)
 
     # 1. Check if it's a custom referral link code
     custom_link = db.query(ReferralLink).filter(
@@ -1056,7 +1056,7 @@ def create_referral_click(
 
 
     # Database deduplication
-    time_threshold = datetime.utcnow() - timedelta(minutes=15)
+    time_threshold = datetime.utcnow() - timedelta(seconds=10)
     
     query = db.query(AffiliateReferral).filter(
         AffiliateReferral.referral_code == code_upper,
