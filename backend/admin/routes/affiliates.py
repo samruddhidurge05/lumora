@@ -1017,7 +1017,7 @@ def get_affiliate_activity_timeline(
 
 @router.get("/orders/{order_id}")
 def get_order_attribution_trace(
-    order_id: int,
+    order_id: str,
     db: Session = Depends(get_db),
     admin_user=Depends(require_admin_role)
 ):
@@ -1027,14 +1027,28 @@ def get_order_attribution_trace(
     Payout status, and a detailed Event Timeline stream.
     """
     try:
-        order = db.query(Order).filter(Order.id == order_id).first()
+        clean_id_str = str(order_id).replace("ORD-", "").replace("ord-", "").strip()
+        if not clean_id_str.isdigit():
+            return {
+                "order_id": order_id,
+                "order_date": None,
+                "total_amount": 0.0,
+                "payment_status": "completed",
+                "customer": {"id": None, "name": "Customer", "email": "***"},
+                "attribution": {"affiliate_id": None, "affiliate_name": None, "affiliate_code": None, "referral_link_name": None, "device_type": "Desktop", "browser": "Chrome", "status": "none"},
+                "commission": {"id": None, "amount": 0.0, "status": "none"},
+                "timeline": []
+            }
+        numeric_order_id = int(clean_id_str)
+
+        order = db.query(Order).filter(Order.id == numeric_order_id).first()
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
 
         customer = db.query(User).filter(User.id == order.user_id).first() if order.user_id else None
-        attribution = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == order_id).first()
-        commission = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
-        ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
+        attribution = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == numeric_order_id).first()
+        commission = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == numeric_order_id).first()
+        ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == numeric_order_id).first()
 
         aff_id = (
             getattr(order, 'affiliate_id', None)
@@ -1353,7 +1367,7 @@ def get_funnel_analytics(
 
 @router.post("/orders/{order_id}/regenerate-commission")
 def regenerate_commission_for_order(
-    order_id: int,
+    order_id: str,
     force: bool = Query(False, description="Force regeneration even if commission exists"),
     referral_code: Optional[str] = Query(None, description="Optional referral code to manually assign/recover"),
     db: Session = Depends(get_db),
@@ -1363,18 +1377,35 @@ def regenerate_commission_for_order(
     Commission Recovery Endpoint.
     If an order has an affiliate code attached but missing commission,
     allows admin to safely regenerate commission.
-    Returns HTTP 409 Conflict if commission already exists unless force=True.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+    clean_id_str = str(order_id).replace("ORD-", "").replace("ord-", "").strip()
+    if not clean_id_str.isdigit():
+        return {
+            "success": False,
+            "linked": False,
+            "message": f"Invalid order ID format '{order_id}'.",
+            "order_id": order_id
+        }
+    numeric_order_id = int(clean_id_str)
 
-    existing_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
+    order = db.query(Order).filter(Order.id == numeric_order_id).first()
+    if not order:
+        return {
+            "success": False,
+            "linked": False,
+            "message": f"Order #{order_id} not found.",
+            "order_id": order_id
+        }
+
+    existing_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == numeric_order_id).first()
     if existing_comm and not force:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Commission #{existing_comm.id} already exists for Order #{order_id}. Pass force=true to override."
-        )
+        return {
+            "success": False,
+            "linked": True,
+            "message": f"Commission #{existing_comm.id} already exists for Order #{order_id}. Pass force=true to override.",
+            "order_id": order_id,
+            "commission_id": existing_comm.id
+        }
 
     # Multi-source deduction for referral code
     code = referral_code.strip().upper() if referral_code and referral_code.strip() else None
@@ -1388,12 +1419,12 @@ def regenerate_commission_for_order(
             code = aff_prof.referral_code
 
     if not code:
-        ref_attr = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == order_id).first()
+        ref_attr = db.query(ReferralAttribution).filter(ReferralAttribution.order_id == numeric_order_id).first()
         if ref_attr:
             code = ref_attr.affiliate_code
 
     if not code:
-        aff_ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
+        aff_ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == numeric_order_id).first()
         if aff_ref:
             code = aff_ref.referral_code or (
                 db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_ref.affiliate_id).first().referral_code
@@ -1469,7 +1500,7 @@ def regenerate_commission_for_order(
     from app.api.orders.routes import _create_affiliate_commissions
     _create_affiliate_commissions(db, order, clean_code, order.user_id)
 
-    new_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
+    new_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == numeric_order_id).first()
     if new_comm:
         admin_id_val = admin_user.id if admin_user else 1
         new_comm.admin_notes = f"Regenerated by Admin #{admin_id_val} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
