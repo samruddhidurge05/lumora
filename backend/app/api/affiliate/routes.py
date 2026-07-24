@@ -99,9 +99,24 @@ def activate_affiliate(
     if not profile:
         try:
             with db.begin_nested():
+                # Check Firestore first — if an affiliates/{uid} doc exists,
+                # use its affiliateCode to keep the dashboard consistent.
+                # Fall back to auto-generating AFF{id:04d} only if Firestore has nothing.
+                firestore_code = None
+                try:
+                    from app.shared.firebase.connection import db as fs_db, firebase_connected
+                    if firebase_connected and fs_db is not None and current_user.firebase_uid:
+                        aff_snap = fs_db.collection("affiliates").document(current_user.firebase_uid).get()
+                        if aff_snap.exists:
+                            aff_data = aff_snap.to_dict()
+                            firestore_code = aff_data.get("affiliateCode") or aff_data.get("referralCode")
+                except Exception:
+                    pass  # Non-blocking — fall through to auto-generate
+
+                referral_code = firestore_code or f"AFF{current_user.id:04d}"
                 profile = AffiliateProfile(
                     user_id=current_user.id,
-                    referral_code=f"AFF{current_user.id:04d}",
+                    referral_code=referral_code,
                     commission_rate=20.0,
                     total_earnings=0.0,
                     total_clicks=0,
