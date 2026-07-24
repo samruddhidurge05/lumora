@@ -885,10 +885,11 @@ def track_click(
                 return ClickTrackResponse(tracked=True, referral_code=code_upper)
             _click_cache[cache_key] = now_ts
             
-            # Verify affiliate is active
+            # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
+            # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
             aff_profile = db.query(AffiliateProfile).filter(
                 AffiliateProfile.id == custom_link.affiliate_id
-            ).first()
+            ).with_for_update().first()
             if aff_profile:
                 aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
                 if not aff_user or not aff_user.is_active:
@@ -934,9 +935,10 @@ def track_click(
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
     # 2. Check if it's a default affiliate profile referral code
+    # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
     profile = db.query(AffiliateProfile).filter(
         AffiliateProfile.referral_code == code_upper
-    ).first()
+    ).with_for_update().first()
 
     if profile and profile.is_active:
         # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
@@ -1053,6 +1055,10 @@ def create_referral_click(
     if not affiliate_id:
         raise HTTPException(status_code=404, detail="Invalid or inactive referral code.")
 
+    # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
+    # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
+    locked_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).with_for_update().first()
+
     # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
     now_ts = time.time()
     cache_key = f"create_{code_upper}_{product.id}_{client_ip}_{user_agent}"
@@ -1111,10 +1117,13 @@ def create_referral_click(
 
     # Increment click count on profile/link
     if custom_link:
-        custom_link.clicks_count = (custom_link.clicks_count or 0) + 1
-    profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).first()
-    if profile:
-        profile.total_clicks = (profile.total_clicks or 0) + 1
+        # Also lock the custom link if applicable
+        locked_link = db.query(ReferralLink).filter(ReferralLink.id == custom_link.id).with_for_update().first()
+        if locked_link:
+            locked_link.clicks_count = (locked_link.clicks_count or 0) + 1
+            
+    if locked_profile:
+        locked_profile.total_clicks = (locked_profile.total_clicks or 0) + 1
 
     db.commit()
 
