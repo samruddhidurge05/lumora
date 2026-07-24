@@ -681,9 +681,9 @@ export default function AffiliateDashboardHome({
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>No referrals recorded yet</span>
           </div>
         ) : (
-          <>
+          <div className="aff-table-wrap" style={{ minWidth: 0 }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '16px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '16px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px', minWidth: '540px' }}>
               {['Product', 'Sale Amount', 'Commission', 'Status', 'Date'].map(h => (
                 <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
               ))}
@@ -693,7 +693,7 @@ export default function AffiliateDashboardHome({
                 key={comm.id || idx}
                 style={{
                   display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
-                  gap: '16px', padding: '12px', borderRadius: '10px',
+                  gap: '16px', padding: '12px', borderRadius: '10px', minWidth: '540px',
                   border: '1px solid transparent', transition: 'all 0.25s', alignItems: 'center',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.03)'; e.currentTarget.style.borderColor = 'rgba(196,181,253,0.20)'; }}
@@ -717,7 +717,7 @@ export default function AffiliateDashboardHome({
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{relativeTime(comm.created_at || comm.date)}</span>
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
 
@@ -727,7 +727,7 @@ export default function AffiliateDashboardHome({
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Analytics</span>
           <h3 className="text-editorial" style={{ fontSize: '1.3rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Referral Performance</h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: '16px' }} className="aff-referral-perf-grid">
           {[
             { label: 'Referral Code',   value: REFERRAL_CODE,                                  icon: <Link2 size={13} />,           color: '#7B3FA0' },
             { label: 'Total Clicks',    value: (activeStats.referralClicks || 0).toLocaleString(), icon: <MousePointerClick size={13} />, color: '#4338CA' },
@@ -736,7 +736,7 @@ export default function AffiliateDashboardHome({
             { label: 'Avg Commission',  value: activeStats.totalSales > 0 ? formatINR(activeStats.totalEarnings / activeStats.totalSales) : '—', icon: <DollarSign size={13} />, color: '#7B3FA0' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '9px', background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)', color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '30px', height: '30px', borderRadius: '99px', background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)', color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {item.icon}
               </div>
               <div>
@@ -749,7 +749,7 @@ export default function AffiliateDashboardHome({
       </div>
 
       {/* ── QUICK ACTIONS ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '16px', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '16px', position: 'relative', zIndex: 1 }} className="aff-quick-actions">
         {[
           { label: 'Browse Products',  sub: 'Generate referral links',    icon: <Link2 size={18} />,      action: () => navigateTo('affiliate-products') },
           { label: 'View Earnings & Payouts', sub: 'Track commissions and payouts', icon: <BarChart2 size={18} />,  action: () => navigateTo('affiliate-earnings') },
