@@ -5,12 +5,16 @@ import shutil
 import hashlib
 import urllib.parse
 import requests
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Generator, Dict, Any, Tuple, Optional
 from fastapi import HTTPException, status
 from app.core.config import settings
+
+_logger = logging.getLogger(__name__)
+logger = _logger
 
 # Load .env file automatically if present
 try:
