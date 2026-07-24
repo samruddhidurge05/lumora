@@ -701,12 +701,14 @@ def get_payout_queue(
 
     # Auto-generate pending payout entries for affiliates with pending earnings/commissions
     try:
+        from app.utils.money_utils import quantize_money
         affs_with_pending = db.query(AffiliateProfile).all()
         for aff in affs_with_pending:
-            pending_sum = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
+            raw_pending = db.query(func.sum(AffiliateCommission.commission_amt)).filter(
                 AffiliateCommission.affiliate_id == aff.id,
                 AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout"])
             ).scalar() or 0.0
+            pending_sum = quantize_money(raw_pending)
             
             if pending_sum > 0:
                 existing_payout = db.query(AffiliatePayout).filter(
@@ -716,15 +718,15 @@ def get_payout_queue(
                 if not existing_payout:
                     new_payout = AffiliatePayout(
                         affiliate_id=aff.id,
-                        amount=round(pending_sum, 2),
+                        amount=pending_sum,
                         method="upi",
                         status="pending",
                         notes="Auto-created pending payout from commissions"
                     )
                     db.add(new_payout)
                     db.commit()
-                elif existing_payout.amount != round(pending_sum, 2):
-                    existing_payout.amount = round(pending_sum, 2)
+                elif existing_payout.amount != pending_sum:
+                    existing_payout.amount = pending_sum
                     db.commit()
     except Exception as exc:
         logger.warning("[get_payout_queue] Auto-payout sync warning: %s", exc)

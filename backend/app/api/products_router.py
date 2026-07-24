@@ -126,7 +126,7 @@ def read_products(
         query = query.filter(Product.affiliate_enabled == True)
     if category and category != "All":
         query = query.filter(Product.category == category)
-    query = query.order_by(Product.id.desc())
+    query = query.order_by(Product.created_at.desc(), Product.id.desc())
     results = query.offset(skip).limit(limit).all()
     return resolve_products_media(results, db)
 
@@ -146,7 +146,7 @@ def search_products(
     query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
         Product.status == "published",
         or_(User.id == None, User.is_active == True)
-    ).order_by(Product.id.desc())
+    ).order_by(Product.created_at.desc(), Product.id.desc())
     if q:
         like_q = f"%{q.lower()}%"
         query = query.filter(

@@ -19,8 +19,12 @@ from datetime import datetime, timedelta
 import os
 import uuid
 import logging
+import time
 
 logger = logging.getLogger(__name__)
+
+# In-memory cache for fast deduplication (prevents concurrent race conditions)
+_click_cache = {}
 
 from app.db.session import get_db
 from app.dependencies import get_current_user_required
@@ -873,25 +877,48 @@ def track_click(
 
     if custom_link:
         if custom_link.is_active:
-            # Verify affiliate is active
+            # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
+            now_ts = time.time()
+            cache_key = f"track_{code_upper}_{client_ip}_{user_agent}"
+            if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
+                logger.info("[REFERRAL] Fast-deduplicated concurrent profile track-click for code %s", code_upper)
+                return ClickTrackResponse(tracked=True, referral_code=code_upper)
+            _click_cache[cache_key] = now_ts
+            
+            # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
+            # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
             aff_profile = db.query(AffiliateProfile).filter(
                 AffiliateProfile.id == custom_link.affiliate_id
-            ).first()
+            ).with_for_update().first()
             if aff_profile:
                 aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
                 if not aff_user or not aff_user.is_active:
                     raise HTTPException(status_code=403, detail="Affiliate account is suspended")
 
                 # Deduplication Check
+                time_threshold = cutoff
+                query_legacy = db.query(ReferralClick).filter(
+                    ReferralClick.affiliate_id == custom_link.affiliate_id,
+                    ReferralClick.referral_link_id == custom_link.id,
+                    ReferralClick.clicked_at >= time_threshold
+                )
+                query_ent = db.query(AffiliateReferral).filter(
+                    AffiliateReferral.referral_code == code_upper,
+                    AffiliateReferral.clicked_at >= time_threshold
+                )
+                
                 if client_ip:
-                    recent_click = db.query(ReferralClick).filter(
-                        ReferralClick.affiliate_id == custom_link.affiliate_id,
-                        ReferralClick.referral_link_id == custom_link.id,
-                        ReferralClick.ip_address == client_ip,
-                        ReferralClick.clicked_at >= cutoff
-                    ).first()
-                    if recent_click:
-                        return ClickTrackResponse(tracked=True, referral_code=code_upper)
+                    query_legacy = query_legacy.filter(ReferralClick.ip_address == client_ip)
+                    query_ent = query_ent.filter(AffiliateReferral.ip_address == client_ip)
+                elif user_agent:
+                    query_legacy = query_legacy.filter(ReferralClick.user_agent == user_agent)
+                    query_ent = query_ent.filter(AffiliateReferral.user_agent == user_agent)
+                    
+                recent_click = query_legacy.first()
+                recent_ent_click = query_ent.first()
+                
+                if recent_click or recent_ent_click:
+                    return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
                 custom_link.clicks_count += 1
                 aff_profile.total_clicks += 1
@@ -908,26 +935,49 @@ def track_click(
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
     # 2. Check if it's a default affiliate profile referral code
+    # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
     profile = db.query(AffiliateProfile).filter(
         AffiliateProfile.referral_code == code_upper
-    ).first()
+    ).with_for_update().first()
 
-    if profile:
+    if profile and profile.is_active:
+        # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
+        now_ts = time.time()
+        cache_key = f"track_{code_upper}_{client_ip}_{user_agent}"
+        if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
+            logger.info("[REFERRAL] Fast-deduplicated concurrent profile track-click for code %s", code_upper)
+            return ClickTrackResponse(tracked=True, referral_code=code_upper)
+        _click_cache[cache_key] = now_ts
+        
         # Verify affiliate is active
         aff_user = db.query(User).filter(User.id == profile.user_id).first()
         if not aff_user or not aff_user.is_active:
             raise HTTPException(status_code=403, detail="Affiliate account is suspended")
 
         # Deduplication Check
+        time_threshold = cutoff
+        query_legacy = db.query(ReferralClick).filter(
+            ReferralClick.affiliate_id == profile.id,
+            ReferralClick.referral_link_id == None,
+            ReferralClick.clicked_at >= time_threshold
+        )
+        query_ent = db.query(AffiliateReferral).filter(
+            AffiliateReferral.referral_code == code_upper,
+            AffiliateReferral.clicked_at >= time_threshold
+        )
+        
         if client_ip:
-            recent_click = db.query(ReferralClick).filter(
-                ReferralClick.affiliate_id == profile.id,
-                ReferralClick.referral_link_id == None,
-                ReferralClick.ip_address == client_ip,
-                ReferralClick.clicked_at >= cutoff
-            ).first()
-            if recent_click:
-                return ClickTrackResponse(tracked=True, referral_code=code_upper)
+            query_legacy = query_legacy.filter(ReferralClick.ip_address == client_ip)
+            query_ent = query_ent.filter(AffiliateReferral.ip_address == client_ip)
+        elif user_agent:
+            query_legacy = query_legacy.filter(ReferralClick.user_agent == user_agent)
+            query_ent = query_ent.filter(AffiliateReferral.user_agent == user_agent)
+            
+        recent_click = query_legacy.first()
+        recent_ent_click = query_ent.first()
+        
+        if recent_click or recent_ent_click:
+            return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
         profile.total_clicks += 1
 
@@ -943,12 +993,6 @@ def track_click(
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
     # 3. Fallback: Check Firestore adminReferralLinks
-    if not firebase_connected or fdb is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Referral service temporarily unavailable."
-        )
-
     try:
         from admin_controls.referral.service import AdminReferralService
         campaign = AdminReferralService.find_campaign(code_upper)
@@ -958,7 +1002,7 @@ def track_click(
                 return ClickTrackResponse(tracked=True, referral_code=code_upper)
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
+                    status_code=http_status.HTTP_403_FORBIDDEN,
                     detail="Referral link is inactive."
                 )
     except HTTPException:
@@ -966,13 +1010,13 @@ def track_click(
     except Exception as exc:
         logger.error("[track_click] AdminReferralService fallback failed for code=%s: %s", code_upper, exc)
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Referral service temporarily unavailable."
         )
 
     # 4. Code not found anywhere
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
+        status_code=http_status.HTTP_404_NOT_FOUND,
         detail="Referral code not found.",
     )
 
@@ -1011,6 +1055,50 @@ def create_referral_click(
     if not affiliate_id:
         raise HTTPException(status_code=404, detail="Invalid or inactive referral code.")
 
+    # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
+    # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
+    locked_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).with_for_update().first()
+
+    # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
+    now_ts = time.time()
+    cache_key = f"create_{code_upper}_{product.id}_{client_ip}_{user_agent}"
+    if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
+        logger.info("[REFERRAL] Fast-deduplicated concurrent click for code %s", code_upper)
+        return ReferralClickResponse(
+            session_id=f"REF_SESS_{uuid.uuid4().hex}", # Return dummy ID to prevent frontend errors
+            referral_code=code_upper,
+            product_id=product.id,
+            status="CLICKED",
+            is_valid=True
+        )
+    _click_cache[cache_key] = now_ts
+
+    # Database deduplication
+    time_threshold = datetime.utcnow() - timedelta(minutes=15)
+    
+    query = db.query(AffiliateReferral).filter(
+        AffiliateReferral.referral_code == code_upper,
+        AffiliateReferral.product_id == product.id,
+        AffiliateReferral.clicked_at >= time_threshold
+    )
+    
+    if client_ip:
+        query = query.filter(AffiliateReferral.ip_address == client_ip)
+    elif user_agent:
+        query = query.filter(AffiliateReferral.user_agent == user_agent)
+        
+    recent_click = query.first()
+
+    if recent_click:
+        logger.info("[REFERRAL] Deduplicated click for code %s", code_upper)
+        return ReferralClickResponse(
+            session_id=recent_click.session_id,
+            referral_code=code_upper,
+            product_id=product.id,
+            status=recent_click.status or "CLICKED",
+            is_valid=True
+        )
+
     # Generate server-side unique session ID
     session_id = f"REF_SESS_{uuid.uuid4().hex}"
 
@@ -1029,10 +1117,13 @@ def create_referral_click(
 
     # Increment click count on profile/link
     if custom_link:
-        custom_link.clicks_count = (custom_link.clicks_count or 0) + 1
-    profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).first()
-    if profile:
-        profile.total_clicks = (profile.total_clicks or 0) + 1
+        # Also lock the custom link if applicable
+        locked_link = db.query(ReferralLink).filter(ReferralLink.id == custom_link.id).with_for_update().first()
+        if locked_link:
+            locked_link.clicks_count = (locked_link.clicks_count or 0) + 1
+            
+    if locked_profile:
+        locked_profile.total_clicks = (locked_profile.total_clicks or 0) + 1
 
     db.commit()
 

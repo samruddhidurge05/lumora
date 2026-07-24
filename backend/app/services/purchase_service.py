@@ -65,8 +65,9 @@ class PurchaseService:
 
             # 5. Create OrderItems & permissions
             for item in items_payload:
+                from app.utils.money_utils import quantize_money
                 prod_id = item["product_id"]
-                price_paid = item["price_paid"]
+                price_paid = quantize_money(item["price_paid"])
                 
                 from app.utils.db_sync import get_product_by_id
                 prod = get_product_by_id(db, prod_id)
@@ -222,14 +223,14 @@ class PurchaseService:
                                 ).first()
 
                                 if not existing_comm:
-                                    # Calculate commission
+                                    # Calculate commission with 2-decimal money quantization
                                     comm_type = prod.commission_type or "percentage"
                                     if comm_type == "fixed":
-                                        comm_rate = prod.commission_value if (prod.commission_value and prod.commission_value > 0) else 0.0
-                                        commission_amt = min(comm_rate, price_paid)
+                                        comm_rate = float(prod.commission_value) if (prod.commission_value and prod.commission_value > 0) else 0.0
+                                        commission_amt = quantize_money(min(comm_rate, price_paid))
                                     else: # percentage
-                                        comm_rate = prod.commission_value if (prod.commission_value and prod.commission_value > 0) else (aff.commission_rate or 20.0)
-                                        commission_amt = (price_paid * comm_rate) / 100.0
+                                        comm_rate = float(prod.commission_value) if (prod.commission_value and prod.commission_value > 0) else float(aff.commission_rate or 20.0)
+                                        commission_amt = quantize_money((price_paid * comm_rate) / 100.0)
                                     
                                     now_time = datetime.utcnow()
                                     
@@ -263,17 +264,17 @@ class PurchaseService:
                                         commission_rate=comm_rate,
                                         customer_name=customer.name if customer else "Customer",
                                         customer_email=customer.email if customer else None,
-                                        cookie_attr_date=now_time,
-                                        last_click_at=now_time,
-                                        approved_at=now_time,
                                         referral_attribution_id=attribution.id,
                                         referral_link_id=ref_link_id,
                                         attribution_source=attr_source,
                                         coupon_code=coupon_code_used,
-                                        referral_code_used=clean_code
+                                        referral_code_used=clean_code,
+                                        created_at=now_time
                                     )
                                     db.add(comm)
                                     db.flush()
+
+                                    attribution.commission_id = comm.id
                                     commission_assigned_for_order = True
 
                                     logger.info(
@@ -281,14 +282,19 @@ class PurchaseService:
                                         comm.id, aff.id, order.id, prod.id, user_id, commission_amt
                                     )
 
-                                    # 6e. Update AffiliateReferral persistent lifecycle status
-                                    pending_referral_rows = db.query(AffiliateReferral).filter(
+                                    # 6e. Sync with legacy AffiliateReferral if present
+                                    if pending_ref:
+                                        pending_ref.status = "PURCHASED"
+                                        pending_ref.order_id = order.id
+                                        pending_ref.converted_at = now_time
+
+                                    # Also update matching AffiliateReferral by (customer_id, product_id)
+                                    r_rows = db.query(AffiliateReferral).filter(
                                         AffiliateReferral.affiliate_id == aff.id,
                                         AffiliateReferral.product_id == prod.id,
-                                        (AffiliateReferral.customer_id == user_id) | (AffiliateReferral.referral_code == clean_code)
-                                    ).order_by(AffiliateReferral.created_at.desc()).all()
-
-                                    for r_row in pending_referral_rows:
+                                        AffiliateReferral.customer_id == user_id
+                                    ).all()
+                                    for r_row in r_rows:
                                         r_row.status = "PURCHASED"
                                         r_row.order_id = order.id
                                         r_row.converted_at = now_time
@@ -297,9 +303,9 @@ class PurchaseService:
                                         if coupon_code_used:
                                             r_row.coupon_code = coupon_code_used
 
-                                    # Update affiliate stats
-                                    aff.total_earnings = (aff.total_earnings or 0.0) + commission_amt
-                                    aff.pending_earnings = (aff.pending_earnings or 0.0) + commission_amt
+                                    # Update affiliate stats with quantized money accumulation
+                                    aff.total_earnings = quantize_money((aff.total_earnings or 0.0) + commission_amt)
+                                    aff.pending_earnings = quantize_money((aff.pending_earnings or 0.0) + commission_amt)
                                     aff.total_sales = (aff.total_sales or 0) + 1
                                     aff.last_active_at = now_time
 
