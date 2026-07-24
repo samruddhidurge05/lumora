@@ -5,6 +5,7 @@ import shutil
 import hashlib
 import urllib.parse
 import requests
+from datetime import datetime, timezone
 from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Generator, Dict, Any, Tuple, Optional
@@ -361,18 +362,20 @@ class B2StorageProvider(BaseStorageProvider):
         
         upload_url_endpoint = f"{self.api_url}/b2api/v2/b2_get_upload_url"
         self.cache.total_b2_requests += 1
+        headers = {"Authorization": self.auth_token} if self.auth_token else {}
         res = requests.post(
             upload_url_endpoint,
-            headers={"Authorization": self.auth_token},
+            headers=headers,
             json={"bucketId": self.bucket_id},
             timeout=10
         )
         if res.status_code != 200:
             self._authorize()
             self.cache.total_b2_requests += 1
+            retry_headers = {"Authorization": self.auth_token} if self.auth_token else {}
             res = requests.post(
                 upload_url_endpoint,
-                headers={"Authorization": self.auth_token},
+                headers=retry_headers,
                 json={"bucketId": self.bucket_id},
                 timeout=10
             )
@@ -388,7 +391,7 @@ class B2StorageProvider(BaseStorageProvider):
         upload_auth_token = upload_data["authorizationToken"]
 
         file_sha1 = hashlib.sha1(file_bytes).hexdigest()
-        encoded_file_name = urllib.parse.quote(b2_file_path)
+        encoded_file_name = urllib.parse.quote(b2_file_path, safe='/')
 
         self.cache.total_b2_requests += 1
         upload_res = requests.post(
@@ -431,7 +434,7 @@ class B2StorageProvider(BaseStorageProvider):
     def move_file(self, source_path: str, target_path: str) -> str:
         self._ensure_auth()
         download_domain = self.download_url or "https://f005.backblazeb2.com"
-        dest_clean = target_path.replace(f"b2://{self.bucket_name}/", "")
+        dest_clean = self._clean_b2_key(target_path)
         if not self.is_available():
             if _is_test_environment():
                 return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
@@ -440,7 +443,7 @@ class B2StorageProvider(BaseStorageProvider):
                 detail=f"Backblaze B2 is unavailable ({self.b2_status}). Permanent file move aborted."
             )
 
-        src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
+        src_clean = self._clean_b2_key(source_path)
         file_id = self._get_file_id_by_name(src_clean)
         if not file_id:
             if self.exists(target_path):
@@ -453,9 +456,10 @@ class B2StorageProvider(BaseStorageProvider):
 
         copy_endpoint = f"{self.api_url}/b2api/v2/b2_copy_file"
         self.cache.total_b2_requests += 1
+        headers = {"Authorization": self.auth_token} if self.auth_token else {}
         copy_res = requests.post(
             copy_endpoint,
-            headers={"Authorization": self.auth_token},
+            headers=headers,
             json={
                 "sourceFileId": file_id,
                 "fileName": dest_clean,
@@ -465,9 +469,10 @@ class B2StorageProvider(BaseStorageProvider):
         if copy_res.status_code == 401:
             self._authorize()
             self.cache.total_b2_requests += 1
+            retry_headers = {"Authorization": self.auth_token} if self.auth_token else {}
             copy_res = requests.post(
                 copy_endpoint,
-                headers={"Authorization": self.auth_token},
+                headers=retry_headers,
                 json={
                     "sourceFileId": file_id,
                     "fileName": dest_clean,
@@ -491,9 +496,10 @@ class B2StorageProvider(BaseStorageProvider):
             return ""
         endpoint = f"{self.api_url}/b2api/v2/b2_list_file_names"
         self.cache.total_b2_requests += 1
+        headers = {"Authorization": self.auth_token} if self.auth_token else {}
         res = requests.post(
             endpoint,
-            headers={"Authorization": self.auth_token},
+            headers=headers,
             json={
                 "bucketId": self.bucket_id,
                 "startFileName": file_name,
@@ -504,9 +510,10 @@ class B2StorageProvider(BaseStorageProvider):
         if res.status_code == 401:
             self._authorize()
             self.cache.total_b2_requests += 1
+            retry_headers = {"Authorization": self.auth_token} if self.auth_token else {}
             res = requests.post(
                 endpoint,
-                headers={"Authorization": self.auth_token},
+                headers=retry_headers,
                 json={
                     "bucketId": self.bucket_id,
                     "startFileName": file_name,
@@ -528,18 +535,20 @@ class B2StorageProvider(BaseStorageProvider):
             return False
         endpoint = f"{self.api_url}/b2api/v2/b2_delete_file_version"
         self.cache.total_b2_requests += 1
+        headers = {"Authorization": self.auth_token} if self.auth_token else {}
         res = requests.post(
             endpoint,
-            headers={"Authorization": self.auth_token},
+            headers=headers,
             json={"fileId": file_id, "fileName": file_name},
             timeout=10
         )
         if res.status_code == 401:
             self._authorize()
             self.cache.total_b2_requests += 1
+            retry_headers = {"Authorization": self.auth_token} if self.auth_token else {}
             res = requests.post(
                 endpoint,
-                headers={"Authorization": self.auth_token},
+                headers=retry_headers,
                 json={"fileId": file_id, "fileName": file_name},
                 timeout=10
             )
@@ -553,28 +562,88 @@ class B2StorageProvider(BaseStorageProvider):
     def delete_file(self, storage_path: str) -> bool:
         if not storage_path:
             return False
-        clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
+        clean_name = self._clean_b2_key(storage_path)
         file_id = self._get_file_id_by_name(clean_name)
         if file_id:
             return self.delete_file_id(file_id, clean_name)
         return False
 
+    def _clean_b2_key(self, storage_path: str) -> str:
+        if not storage_path:
+            return ""
+        clean = storage_path.strip().split("?")[0].split("#")[0]
+        prefix = f"b2://{self.bucket_name}/"
+        if clean.startswith(prefix):
+            clean = clean[len(prefix):]
+        elif "backblazeb2.com/file/" in clean:
+            parts = clean.split("backblazeb2.com/file/")[1].split("/")
+            clean = "/".join(parts[1:]) if len(parts) > 1 else parts[0]
+        elif self.download_url and f"{self.download_url}/file/" in clean:
+            parts = clean.split(f"{self.download_url}/file/")[1].split("/")
+            clean = "/".join(parts[1:]) if len(parts) > 1 else parts[0]
+        elif clean.startswith("b2://"):
+            parts = clean.split("/", 3)
+            clean = parts[3] if len(parts) >= 4 else clean
+        return clean.lstrip("/")
+
     def get_file_stream(self, storage_path: str) -> Generator[bytes, None, None]:
         self._ensure_auth()
-        clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
+        if not self.download_url or not self.auth_token:
+            if self.b2_status == "TRANSACTION_CAP_EXCEEDED":
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Product file is temporarily unavailable from storage (Backblaze B2 transaction cap exceeded). Please try again later."
+                )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Storage service is currently unavailable. Please try again later."
+            )
+
+        clean_name = self._clean_b2_key(storage_path)
         file_url = f"{self.download_url}/file/{self.bucket_name}/{clean_name}"
         self.cache.total_b2_requests += 1
-        res = requests.get(file_url, headers={"Authorization": self.auth_token}, stream=True, timeout=30)
-        if res.status_code == 401:
-            self._authorize()
-            self.cache.total_b2_requests += 1
+
+        try:
             res = requests.get(file_url, headers={"Authorization": self.auth_token}, stream=True, timeout=30)
-        if res.status_code != 200:
+            if res.status_code == 401:
+                self._authorize()
+                self.cache.total_b2_requests += 1
+                if self.download_url and self.auth_token:
+                    file_url = f"{self.download_url}/file/{self.bucket_name}/{clean_name}"
+                    res = requests.get(file_url, headers={"Authorization": self.auth_token}, stream=True, timeout=30)
+
+            if res.status_code == 403 and "transaction_cap_exceeded" in res.text.lower():
+                self.b2_status = "TRANSACTION_CAP_EXCEEDED"
+                self.cache.failed_b2_calls += 1
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Product file is temporarily unavailable from storage (Backblaze B2 transaction cap exceeded). Please try again later."
+                )
+            elif res.status_code != 200:
+                self.cache.failed_b2_calls += 1
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Product file was not found in Backblaze B2 storage."
+                )
+        except HTTPException:
+            raise
+        except requests.exceptions.RequestException as req_err:
             self.cache.failed_b2_calls += 1
-            raise HTTPException(status_code=404, detail="File not found in Backblaze B2 storage")
-        for chunk in res.iter_content(chunk_size=8192):
-            if chunk:
-                yield chunk
+            print(f"[B2StorageStream] Connection error fetching '{clean_name}': {req_err}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Product file is temporarily unavailable due to a storage connection issue. Please try again later."
+            )
+
+        def _stream_generator():
+            try:
+                for chunk in res.iter_content(chunk_size=8192):
+                    if chunk:
+                        yield chunk
+            except Exception as stream_err:
+                print(f"[B2StorageStream] Stream iteration interrupted for '{clean_name}': {stream_err}")
+
+        return _stream_generator()
 
     def exists(self, storage_path: str) -> bool:
         if not storage_path:
@@ -588,16 +657,18 @@ class B2StorageProvider(BaseStorageProvider):
         if not self.is_available():
             return False
 
-        clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
+        clean_name = self._clean_b2_key(storage_path)
         file_url = f"{self.download_url}/file/{self.bucket_name}/{clean_name}"
         
         self.cache.total_b2_requests += 1
         try:
-            res = requests.head(file_url, headers={"Authorization": self.auth_token}, timeout=5)
+            headers = {"Authorization": self.auth_token} if self.auth_token else {}
+            res = requests.head(file_url, headers=headers, timeout=5)
             if res.status_code == 401:
                 self._authorize()
                 self.cache.total_b2_requests += 1
-                res = requests.head(file_url, headers={"Authorization": self.auth_token}, timeout=5)
+                retry_headers = {"Authorization": self.auth_token} if self.auth_token else {}
+                res = requests.head(file_url, headers=retry_headers, timeout=5)
                 
             exists_val = (res.status_code == 200)
             size_val = int(res.headers.get("Content-Length", 0)) if exists_val else 0
@@ -612,17 +683,20 @@ class B2StorageProvider(BaseStorageProvider):
 
     def verify_object_integrity(self, storage_path: str) -> bool:
         """Physical verification: checks that storage object exists and size > 0."""
-        if not storage_path or not storage_path.startswith(f"b2://{self.bucket_name}/"):
+        if not storage_path:
             return False
         if not self.exists(storage_path):
             return False
         cached = self.cache.get(storage_path)
         if cached and cached.get("size", 0) > 0:
             return True
-        clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
+        clean_name = self._clean_b2_key(storage_path)
+        if not self.download_url:
+            return False
         file_url = f"{self.download_url}/file/{self.bucket_name}/{clean_name}"
         try:
-            res = requests.head(file_url, headers={"Authorization": self.auth_token}, timeout=5)
+            headers = {"Authorization": self.auth_token} if self.auth_token else {}
+            res = requests.head(file_url, headers=headers, timeout=5)
             if res.status_code == 200:
                 sz = int(res.headers.get("Content-Length", 0))
                 self.cache.set(storage_path, {"exists": True, "size": sz})
@@ -650,21 +724,19 @@ class StorageService:
         self.firebase_provider = FirebaseStorageProvider(bucket_name)
         
         pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
+        self.provider: BaseStorageProvider
         if _is_test_environment() and not os.getenv("FORCE_B2_TESTS"):
             self.provider = self.local_provider
             print("[StorageService] Active Provider: Local Disk (Test Environment)")
-        elif pref == "b2" and self.b2_provider.is_available():
-            self.provider = self.b2_provider
-            print(f"[StorageService] Active Provider: Backblaze B2 Storage (Status: {self.b2_provider.b2_status})")
         elif pref == "firebase" and self.firebase_provider.is_available():
             self.provider = self.firebase_provider
             print("[StorageService] Active Provider: Firebase Storage")
-        elif self.b2_provider.is_available():
-            self.provider = self.b2_provider
-            print(f"[StorageService] Active Provider: Backblaze B2 Storage (Default, Status: {self.b2_provider.b2_status})")
-        else:
+        elif pref == "local":
             self.provider = self.local_provider
-            print(f"[StorageService] Active Provider: Local Disk Storage (Fallback, B2 Status: {self.b2_provider.b2_status})")
+            print("[StorageService] Active Provider: Local Disk Storage (Explicit Local Config)")
+        else:
+            self.provider = self.b2_provider
+            print(f"[StorageService] Active Provider: Backblaze B2 Storage (Status: {self.b2_provider.b2_status})")
 
     def validate_file(self, file_bytes: bytes, filename: str, is_image: bool = False) -> str:
         if file_bytes is None or len(file_bytes) == 0:
@@ -867,24 +939,30 @@ class StorageService:
             from app.models.storage_metadata import StorageMetadata
             db = SessionLocal()
             try:
+                now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+                safe_size = int(size_bytes or 0)
+                safe_version = int(version or 1)
+                
                 meta = db.query(StorageMetadata).filter(StorageMetadata.storage_path == storage_path).first()
-                if not meta:
+                if meta is None:
                     meta = StorageMetadata(
                         storage_path=storage_path,
-                        size_bytes=size_bytes,
+                        size_bytes=safe_size,
                         checksum_sha256=checksum_sha256,
                         provider="b2" if storage_path.startswith("b2://") else "local",
                         verification_status="verified",
-                        version=version
+                        verified_at=now_utc,
+                        version=safe_version
                     )
                     db.add(meta)
                 else:
-                    meta.size_bytes = size_bytes
+                    assert meta is not None
+                    meta.size_bytes = safe_size
                     if checksum_sha256:
                         meta.checksum_sha256 = checksum_sha256
                     meta.verification_status = "verified"
-                    meta.verified_at = datetime.utcnow()
-                    meta.version = version
+                    meta.verified_at = now_utc
+                    meta.version = safe_version
                 db.commit()
             except Exception as db_err:
                 db.rollback()
@@ -999,7 +1077,7 @@ class StorageService:
             try:
                 return self.b2_provider.get_file_stream(resolved_path)
             except HTTPException as exc:
-                clean_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+                clean_path = self.b2_provider._clean_b2_key(resolved_path)
                 local_path = f"local://uploads/{clean_path}"
                 if self.local_provider.exists(local_path):
                     import logging
@@ -1035,7 +1113,7 @@ class StorageService:
             except Exception:
                 pass
             # Controlled read check fallback for legacy local disk assets
-            clean_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+            clean_path = self.b2_provider._clean_b2_key(resolved_path)
             return self.local_provider.exists(f"local://uploads/{clean_path}")
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.exists(resolved_path)

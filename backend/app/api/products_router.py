@@ -601,11 +601,14 @@ def download_product_file(
     
     try:
         stream = storage_service.get_stream(storage_path)
-    except HTTPException:
-        raise
+    except HTTPException as http_exc:
+        import logging
+        logging.getLogger(__name__).warning("[DownloadStreamNotice] HTTP %s for product %s (user %s, path '%s'): %s", http_exc.status_code, product_id, user_id, storage_path, http_exc.detail)
+        raise http_exc
     except Exception as e:
-        print(f"[DownloadError] Stream error for path {storage_path}: {e}")
-        raise HTTPException(status_code=404, detail="Product file is currently missing or unavailable from storage.")
+        import logging
+        logging.getLogger(__name__).error("[DownloadError] Failed to stream product %s for user %s (path '%s'): %s", product_id, user_id, storage_path, e, exc_info=True)
+        raise HTTPException(status_code=503, detail="Product file is temporarily unavailable from storage. Please try again later.")
 
     return StreamingResponse(
         stream,
