@@ -585,9 +585,19 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 # No raw Python tracebacks, SQLAlchemy errors, or Firebase errors are exposed.
 # ?????????????????????????????????????????????????????????????????????????????
 
+def _make_json_response(request: Request, status_code: int, content: dict) -> JSONResponse:
+    res = JSONResponse(status_code=status_code, content=content)
+    origin = request.headers.get("origin")
+    if origin:
+        res.headers["Access-Control-Allow-Origin"] = origin
+        res.headers["Access-Control-Allow-Credentials"] = "true"
+    return res
+
+
 @app.exception_handler(LumoraException)
 async def lumora_exception_handler(request: Request, exc: LumoraException) -> JSONResponse:
-    return JSONResponse(
+    return _make_json_response(
+        request,
         status_code=exc.status_code,
         content={
             "success": False,
@@ -608,7 +618,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         loc = " -> ".join(str(loc) for loc in error.get("loc", []) if loc != "body")
         field_errors.append(f"{loc}: {error.get('msg', 'Invalid value')}" if loc else error.get("msg", "Validation error"))
 
-    return JSONResponse(
+    return _make_json_response(
+        request,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "success": False,
@@ -626,7 +637,8 @@ async def database_exception_handler(request: Request, exc: SQLAlchemyError) -> 
     """Catch any unhandled SQLAlchemy database error and hide internals from the client."""
     _logger.error("[db_error] Unhandled database error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
     from app.core.config import settings
-    return JSONResponse(
+    return _make_json_response(
+        request,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,
@@ -648,8 +660,8 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     """
     from fastapi import HTTPException as _HTTPEx
     if isinstance(exc, _HTTPEx):
-        # Let FastAPI's own HTTPException handler deal with these
-        return JSONResponse(
+        return _make_json_response(
+            request,
             status_code=exc.status_code,
             content={
                 "success": False,
@@ -666,7 +678,8 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         request.method, request.url.path, type(exc).__name__, exc,
         exc_info=True,
     )
-    return JSONResponse(
+    return _make_json_response(
+        request,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,
@@ -688,7 +701,8 @@ async def response_validation_exception_handler(request: Request, exc: ResponseV
         "[response_validation_error] Response schema mismatch on %s %s: %s",
         request.method, request.url.path, exc, exc_info=True
     )
-    return JSONResponse(
+    return _make_json_response(
+        request,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,

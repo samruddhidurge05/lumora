@@ -19,7 +19,7 @@ from app.middleware.rate_limit import limiter
 router = APIRouter()
 
 @router.post("/")
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def upload_product_file(
     request: Request,
     file: UploadFile = File(...),
@@ -60,7 +60,7 @@ async def upload_product_file(
 
 
 @router.post("/image")
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def upload_product_image(
     request: Request,
     file: UploadFile = File(...),

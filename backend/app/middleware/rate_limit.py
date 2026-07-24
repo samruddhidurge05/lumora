@@ -8,7 +8,12 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    return JSONResponse(
+    origin = request.headers.get("origin")
+    res = JSONResponse(
         status_code=429,
-        content={"detail": "Rate limit exceeded"},
+        content={"detail": "Rate limit exceeded. Please wait a moment before trying again."},
     )
+    if origin:
+        res.headers["Access-Control-Allow-Origin"] = origin
+        res.headers["Access-Control-Allow-Credentials"] = "true"
+    return res
