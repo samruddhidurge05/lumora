@@ -988,6 +988,45 @@ export function AppContextProvider({ children }) {
   // Shared category filter state
   const [activeCategory, setActiveCategory] = useState('All');
 
+  // ── Global referral code capture ──────────────────────────────────────────
+  // Reads ?ref=CODE from ANY URL on first mount and persists it so it survives
+  // navigation to login, register, checkout, and payment pages.
+  // This handles the common share pattern: https://lumora.in?ref=AFF0005
+  // which the /ref/:code route does NOT handle (different URL format).
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode && refCode.trim()) {
+        const code = refCode.trim().toUpperCase();
+        // Only write if not already set — don't overwrite a more specific session
+        if (!sessionStorage.getItem('lumora_aff_ref')) {
+          sessionStorage.setItem('lumora_aff_ref', code);
+        }
+        if (!localStorage.getItem('lumora_aff_ref')) {
+          localStorage.setItem('lumora_aff_ref', code);
+        }
+        // Also write to lumora_pending_referral if not already set
+        if (!localStorage.getItem('lumora_pending_referral')) {
+          const hashParams = window.location.hash.includes('?')
+            ? new URLSearchParams(window.location.hash.split('?')[1])
+            : null;
+          const productIdRaw = urlParams.get('product_id') || urlParams.get('p')
+            || (hashParams && hashParams.get('product_id'))
+            || null;
+          const productId = productIdRaw ? parseInt(productIdRaw, 10) : null;
+          localStorage.setItem('lumora_pending_referral', JSON.stringify({
+            referral_code: code,
+            product_id: isNaN(productId) ? null : productId,
+            session_id: null,
+            timestamp: Date.now(),
+          }));
+        }
+        console.log('[AppContext] Referral code captured from URL:', code);
+      }
+    } catch (_) {}
+  }, []);
+
   // Navigation & Route states
   const [currentView, setCurrentView] = useState(() => {
     const path = window.location.pathname;

@@ -132,6 +132,26 @@ export default function Login() {
     setAuthStatus(null);
     try {
       await login(normalizedEmail, password, rememberMe, role);
+      
+      // Extract ?ref= from redirectUrl if present and persist it before navigation.
+      // redirectUrl format: "/#product/120?ref=AFF0005" → we want to extract "AFF0005"
+      if (redirectUrl && redirectUrl.includes('ref=')) {
+        try {
+          // Handle hash-based URLs: /#product/120?ref=CODE
+          const hashIndex = redirectUrl.indexOf('#');
+          const fragment = hashIndex !== -1 ? redirectUrl.substring(hashIndex + 1) : redirectUrl;
+          const [, queryPart] = fragment.split('?');
+          if (queryPart) {
+            const params = new URLSearchParams(queryPart);
+            const refCode = params.get('ref');
+            if (refCode) {
+              sessionStorage.setItem('lumora_aff_ref', refCode.toUpperCase());
+              localStorage.setItem('lumora_aff_ref', refCode.toUpperCase());
+            }
+          }
+        } catch (_) {}
+      }
+
       if (auth.currentUser && !auth.currentUser.emailVerified) {
         const nextParam = nextUrl ? `&next=${encodeURIComponent(nextUrl)}` : '';
         const redirectParam = redirectUrl ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';

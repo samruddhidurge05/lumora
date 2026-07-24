@@ -294,7 +294,13 @@ class PurchaseService:
                                         AffiliateReferral.product_id == prod.id,
                                         AffiliateReferral.customer_id == user_id
                                     ).all()
-                                    for r_row in r_rows:
+                                    # Also catch the no-product-id referral rows created by track-click
+                                    r_rows_null = db.query(AffiliateReferral).filter(
+                                        AffiliateReferral.affiliate_id == aff.id,
+                                        AffiliateReferral.product_id.is_(None),
+                                        AffiliateReferral.customer_id == user_id
+                                    ).all()
+                                    for r_row in (r_rows + r_rows_null):
                                         r_row.status = "PURCHASED"
                                         r_row.order_id = order.id
                                         r_row.converted_at = now_time
@@ -325,6 +331,14 @@ class PurchaseService:
                                         activity_type="commission_earned",
                                         details=f"Earned ₹{commission_amt:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
                                     )
+
+                            else:
+                                logger.warning(
+                                    "[REFERRAL] Self-referral blocked: affiliate_id=%s (user_id=%s) tried to earn commission "
+                                    "from their own purchase (buyer user_id=%s). Order ORD-%s. "
+                                    "Use a DIFFERENT customer account to test affiliate commissions.",
+                                    aff.id, aff.user_id, user_id, order.id
+                                )
 
                         # 6b. Process Admin Referral Link Conversion for this item (Isolated, Idempotent, Non-Blocking)
                         if target_aff_code:
