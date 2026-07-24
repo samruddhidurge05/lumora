@@ -941,17 +941,15 @@ function DashboardHome({
         // array if no category/search filter is active) are the most recent.
         // We use the full products list here (not filtered) so recently added
         // products always appear regardless of the user's current category filter.
-        const { products: allProducts } = { products: filtered.concat([]) };
-
-        // Sort by real creation timestamp, fall back to numeric ID for mock products
-        const recentlyAdded = [...filtered]
+        const recentlyAdded = [...products]
           .filter(p => p.status === 'published' || !p.status)
           .sort((a, b) => {
             const tsA = a.createdAt || a.created_at;
             const tsB = b.createdAt || b.created_at;
-            const ta = tsA ? new Date(tsA).getTime() : (Number(a.id) || 0);
-            const tb = tsB ? new Date(tsB).getTime() : (Number(b.id) || 0);
-            return tb - ta;
+            const ta = tsA ? new Date(tsA).getTime() : 0;
+            const tb = tsB ? new Date(tsB).getTime() : 0;
+            if (ta !== tb) return tb - ta;
+            return (Number(b.id) || 0) - (Number(a.id) || 0);
           })
           .slice(0, 6);
 
