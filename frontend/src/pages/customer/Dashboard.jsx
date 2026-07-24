@@ -347,6 +347,7 @@ export default function Dashboard() {
             username={username}
             navigateTo={navigateTo}
             filtered={filtered}
+            products={products}
             showCount={showCount}
             setShowCount={setShowCount}
             searchQuery={searchQuery}
@@ -734,7 +735,7 @@ export default function Dashboard() {
 
 /* ─── Dashboard Home tab ─────────────────────────────────────────── */
 function DashboardHome({
-  username, navigateTo, filtered, showCount, setShowCount,
+  username, navigateTo, filtered, products, showCount, setShowCount,
   searchQuery, setSearchQuery,
   selectedCategory, setSelectedCategory, allCategories,
   addToCart, buyNow, toggleWishlist, wishlist, formatPrice,
