@@ -1220,14 +1220,7 @@ export default function OrdersManagement() {
                                           sysSound.playTap();
                                           setSelectedOrderId(o.id);
                                         }}
-                                        <div className="flex flex-col">
-                                          <span className="text-xs font-bold text-[#2D004D]">{o.customerName}</span>
-                                          <span className="text-[10px] text-[#7B3FA0] leading-none mt-0.5">{o.customerEmail}</span>
-                                        </div>
-                                      </div>
-                                    </td>
-
-                                    {/* Price */}
+                                      >
                                     <td className="py-4 px-4 text-right">
                                       <div className="flex flex-col">
                                         <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
