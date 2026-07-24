@@ -229,7 +229,7 @@ class AffiliateReferral(Base):
     id               = Column(Integer, primary_key=True, index=True)
     affiliate_id     = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=False, index=True)
     referral_code    = Column(String(50), nullable=False, index=True)
-    product_id       = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    product_id       = Column(Integer, ForeignKey("products.id"), nullable=True, index=True)
     customer_id      = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     session_id       = Column(String(100), unique=True, nullable=False, index=True)
     order_id         = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)

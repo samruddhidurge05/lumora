@@ -591,13 +591,37 @@ async def razorpay_webhook(
                     payment.payment_ref,
                 )
                 try:
+                    # Rebuild items from the stored snapshot on the payment record.
+                    # items_json is written at initiate time so the order can be
+                    # fulfilled even when the browser closes before /confirm is called.
+                    import json as _wh_json
+                    _wh_items: list = []
+                    if payment.items_json:
+                        try:
+                            _wh_items = _wh_json.loads(payment.items_json)
+                        except Exception as _parse_err:
+                            logger.error(
+                                "[webhook/razorpay] Failed to parse items_json for payment %s: %s",
+                                payment.payment_ref, _parse_err,
+                            )
+
+                    if not _wh_items:
+                        logger.error(
+                            "[webhook/razorpay] payment %s has no items_json — cannot fulfil order via webhook. "
+                            "Customer must use /confirm from the browser.",
+                            payment.payment_ref,
+                        )
+                        # Do not proceed — an empty order would be wrong.
+                        # Razorpay will retry; if the issue persists investigate items_json storage.
+                        raise ValueError(f"items_json missing or empty for payment {payment.payment_ref}")
+
                     payment_service.confirm_payment(
                         db=db,
                         payment_ref=payment.payment_ref,
                         customer_id=payment.customer_id,
                         gateway_payment_id=event.gateway_payment_id or "",
                         gateway_signature="",  # Already verified via webhook sig
-                        items_payload=[],
+                        items_payload=_wh_items,
                         payment_method=payment.payment_method or "razorpay",
                         skip_signature_verify=True,  # Webhook already authenticated
                     )

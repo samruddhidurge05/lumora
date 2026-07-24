@@ -928,7 +928,13 @@ def track_click(
                 )
                 db.add(click)
                 db.commit()
-        return ClickTrackResponse(tracked=True, referral_code=code_upper)
+                return ClickTrackResponse(tracked=True, referral_code=code_upper)
+            # aff_profile not found — fall through to 404 at end
+        else:
+            raise HTTPException(
+                status_code=http_status.HTTP_403_FORBIDDEN,
+                detail="Referral link is inactive.",
+            )
 
     # 2. Check if it's a default affiliate profile referral code
     # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
@@ -981,7 +987,27 @@ def track_click(
             clicked_at=now
         )
         db.add(click)
+
+        # Also create an AffiliateReferral row (product_id=None) so purchase_service
+        # Tier 3 can find this referral by customer_id after login/authenticate.
+        session_id = f"REF_SESS_{uuid.uuid4().hex}"
+        referral_row = AffiliateReferral(
+            affiliate_id=profile.id,
+            referral_code=code_upper,
+            product_id=None,    # No product in URL — Tier 3 matches by customer_id only
+            session_id=session_id,
+            status="CLICKED",
+            ip_address=client_ip,
+            user_agent=user_agent,
+            clicked_at=now,
+        )
+        db.add(referral_row)
+
         db.commit()
+        logger.info(
+            "[track_click] Click + AffiliateReferral saved: code=%s, affiliate_id=%s, session_id=%s",
+            code_upper, profile.id, session_id,
+        )
         return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
     # 3. Fallback: Check Firestore adminReferralLinks
@@ -1141,6 +1167,14 @@ def authenticate_referral(
         referral = db.query(AffiliateReferral).filter(
             AffiliateReferral.referral_code == payload.referral_code.strip().upper(),
             AffiliateReferral.product_id == payload.product_id,
+            AffiliateReferral.customer_id.is_(None)
+        ).order_by(AffiliateReferral.created_at.desc()).first()
+
+    # Extra fallback: handle rows created by track-click (no product_id in the URL)
+    if not referral and payload.referral_code:
+        referral = db.query(AffiliateReferral).filter(
+            AffiliateReferral.referral_code == payload.referral_code.strip().upper(),
+            AffiliateReferral.product_id.is_(None),
             AffiliateReferral.customer_id.is_(None)
         ).order_by(AffiliateReferral.created_at.desc()).first()
 
