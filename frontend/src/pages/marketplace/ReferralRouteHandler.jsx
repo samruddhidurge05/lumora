@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
@@ -14,9 +14,12 @@ export default function ReferralRouteHandler() {
 
   const [statusMsg, setStatusMsg] = useState('Verifying affiliate referral link...');
   const [errorMsg, setErrorMsg] = useState(null);
+  const processedRef = useRef(false);
 
   useEffect(() => {
     if (authLoading) return;
+    if (processedRef.current) return;
+    processedRef.current = true;
 
     const refCode = code || searchParams.get('ref') || '';
     const rawProdId = paramProductId || searchParams.get('product_id') || searchParams.get('p') || '';

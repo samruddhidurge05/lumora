@@ -244,8 +244,9 @@ export default function ProductPage() {
         sessionStorage.setItem('lumora_aff_ref', ref);
 
         // Prevent duplicate API calls (e.g. from React Strict Mode or re-renders)
+        // Also skip if we already have an Enterprise session_id (which means it was already tracked by ReferralRouteHandler)
         const tracked = sessionStorage.getItem('lumora_aff_tracked');
-        if (tracked !== ref) {
+        if (tracked !== ref && !sessId) {
           sessionStorage.setItem('lumora_aff_tracked', ref);
           backendFetch(`/affiliate/track-click/${ref}`, { method: 'POST' }).catch(() => {});
         }
