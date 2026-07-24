@@ -18,10 +18,17 @@ Routes:
   GET    /team/audit-log                     Team-scoped audit log (Req 6)
   GET    /me                                 Authenticated admin profile + permissions (Req 4)
 """
+import sys
+import os
 import uuid
 import threading
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Any, cast
+
+# Ensure backend root directory is in sys.path for IDE and runtime resolution
+_backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from pydantic import BaseModel
@@ -66,13 +73,15 @@ class ChangeRoleRequest(BaseModel):
 # -- Helpers --------------------------------------------------------------------
 
 def _is_super_admin(user: User, db: Session) -> bool:
-    """Returns True if user is legacy admin or has super_admin role record."""
-    if user.role == "admin":
-        return True
+    """Returns True if user has an active super_admin role record (or is a legacy admin without an AdminRole record)."""
+    if not user:
+        return False
     role = db.query(AdminRole).filter(
-        AdminRole.user_id == user.id, AdminRole.is_active == True
+        AdminRole.user_id == user.id, AdminRole.is_active.is_(True)
     ).first()
-    return role is not None and role.role_level == "super_admin"
+    if role:
+        return bool(role.role_level == "super_admin")
+    return bool(getattr(user, "role", None) == "admin")
 
 
 def _require_super_admin(user: User, db: Session):
@@ -147,9 +156,9 @@ def get_admin_me(
 ):
     """Return the authenticated admin's profile and resolved permissions."""
     role_record = db.query(AdminRole).filter(
-        AdminRole.user_id == admin_user.id, AdminRole.is_active == True
+        AdminRole.user_id == admin_user.id, AdminRole.is_active.is_(True)
     ).first()
-    role_level = role_record.role_level if role_record else "admin"
+    role_level = str(role_record.role_level) if role_record else "admin"
     permissions = ROLE_PERMISSIONS.get(role_level, [])
     return {
         "user_id":    admin_user.id,
@@ -168,23 +177,16 @@ def list_team_members(
     admin_user: User = Depends(require_admin_role),
 ):
     """List all active admin team members sorted by last_login_at descending."""
-    import os
-    from app.db.database import engine as _engine
-    db_file_path = str(_engine.url).replace("sqlite:///", "")
-    print(f"[FORENSIC-TEAM] engine.url: {_engine.url}")
-    if os.path.exists(db_file_path):
-        print(f"[FORENSIC-TEAM] DB file exists at: {os.path.abspath(db_file_path)}")
-        print(f"[FORENSIC-TEAM] DB file size: {os.path.getsize(db_file_path)} bytes")
-    else:
-        print(f"[FORENSIC-TEAM] DB file NOT found at: {os.path.abspath(db_file_path)}")
-
-    roles = db.query(AdminRole).filter(AdminRole.is_active == True).all()
-    print(f"[FORENSIC-TEAM] db.query(AdminRole) returned {len(roles)} active roles")
+    roles = db.query(AdminRole).filter(AdminRole.is_active.is_(True)).all()
+    admin_users = db.query(User).filter(User.role == "admin").all()
 
     result = []
+    seen_user_ids = set()
+
     for r in roles:
         user = db.query(User).filter(User.id == r.user_id).first()
         if user:
+            seen_user_ids.add(user.id)
             result.append({
                 "id":           r.id,
                 "user_id":      user.id,
@@ -193,14 +195,28 @@ def list_team_members(
                 "avatar_url":   user.avatar_url,
                 "role_level":   r.role_level,
                 "is_active":    r.is_active,
-                "activated_at": r.activated_at.isoformat() if r.activated_at else None,
-                "created_at":   r.created_at.isoformat() if r.created_at else None,
-                # Req 9 - last login timestamp
+                "activated_at": cast(datetime, r.activated_at).isoformat() if r.activated_at is not None else None,
+                "created_at":   cast(datetime, r.created_at).isoformat() if r.created_at is not None else None,
                 "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
             })
-    # Sort: last_login_at desc, nulls last
+
+    for user in admin_users:
+        if user.id not in seen_user_ids:
+            seen_user_ids.add(user.id)
+            result.append({
+                "id":           user.id,
+                "user_id":      user.id,
+                "name":         user.name,
+                "email":        user.email,
+                "avatar_url":   user.avatar_url,
+                "role_level":   "super_admin",
+                "is_active":    True,
+                "activated_at": cast(datetime, user.created_at).isoformat() if user.created_at is not None else None,
+                "created_at":   cast(datetime, user.created_at).isoformat() if user.created_at is not None else None,
+                "last_login_at": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
+            })
+
     result.sort(key=lambda m: m["last_login_at"] or "", reverse=True)
-    print(f"[FORENSIC-TEAM] list_team_members returning {len(result)} items")
     return result
 
 
@@ -218,35 +234,71 @@ def invite_admin(
     if body.role_level not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"Invalid role_level. Must be one of: {VALID_ROLES}")
 
-    token      = str(uuid.uuid4()).replace("-", "")
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
+    clean_email = body.email.strip().lower()
+
+    # Check if target email is already an active admin team member
+    existing_user = db.query(User).filter(User.email.ilike(clean_email)).first()
+    if existing_user:
+        active_role = db.query(AdminRole).filter(
+            AdminRole.user_id == existing_user.id,
+            AdminRole.is_active.is_(True)
+        ).first()
+        if active_role:
+            raise HTTPException(
+                status_code=400,
+                detail=f"User {clean_email} is already an active admin team member."
+            )
+
+    now = datetime.now(timezone.utc)
+    token = str(uuid.uuid4()).replace("-", "")
+    expires_at = now + timedelta(hours=48)
     accept_url = f"{settings.ADMIN_FRONTEND_URL}/admin/accept-invite?token={token}"
 
-    invitation = AdminInvitation(
-        email=body.email,
-        role_level=body.role_level,
-        invite_token=token,
-        invited_by=admin_user.id,
-        expires_at=expires_at,
-        invited_name=body.invited_name,
-        message=body.message,
-    )
-    db.add(invitation)
+    # Check for existing unaccepted, unrevoked, unexpired invitation to renew
+    existing_inv = db.query(AdminInvitation).filter(
+        AdminInvitation.email.ilike(clean_email),
+        AdminInvitation.accepted_at.is_(None),
+        AdminInvitation.revoked_at.is_(None),
+        AdminInvitation.expires_at > now
+    ).first()
+
+    if existing_inv:
+        existing_inv.invite_token = cast(Any, token)
+        existing_inv.expires_at = cast(Any, expires_at)
+        existing_inv.role_level = cast(Any, body.role_level)
+        existing_inv.invited_by = cast(Any, admin_user.id)
+        if body.invited_name:
+            existing_inv.invited_name = cast(Any, body.invited_name)
+        if body.message:
+            existing_inv.message = cast(Any, body.message)
+        invitation = existing_inv
+    else:
+        invitation = AdminInvitation(
+            email=clean_email,
+            role_level=body.role_level,
+            invite_token=token,
+            invited_by=admin_user.id,
+            expires_at=expires_at,
+            invited_name=body.invited_name,
+            message=body.message,
+        )
+        db.add(invitation)
+
     db.commit()
     db.refresh(invitation)
 
     try:
         log_admin_action(
-            db=db, admin_user_id=admin_user.id, action="admin_invited",
+            db=db, admin_user_id=cast(Any, admin_user.id), action="admin_invited",
             target_type="invitation", target_id=str(invitation.id),
-            metadata={"email": body.email, "role_level": body.role_level},
+            metadata={"email": clean_email, "role_level": body.role_level},
         )
     except Exception:
         pass
 
     # Req 1 - send email in background thread (non-blocking)
     _send_email_async(
-        to_email=body.email,
+        to_email=clean_email,
         invited_name=body.invited_name,
         role_level=body.role_level,
         accept_url=accept_url,
@@ -296,8 +348,8 @@ def resend_invitation(
         )
 
     # Regenerate token + expiry
-    invitation.invite_token = str(uuid.uuid4()).replace("-", "")
-    invitation.expires_at   = now + timedelta(hours=48)
+    invitation.invite_token = cast(Any, str(uuid.uuid4()).replace("-", ""))
+    invitation.expires_at   = cast(Any, now + timedelta(hours=48))
     db.commit()
     db.refresh(invitation)
 
@@ -305,7 +357,7 @@ def resend_invitation(
 
     try:
         log_admin_action(
-            db=db, admin_user_id=admin_user.id, action="admin_invitation_resent",
+            db=db, admin_user_id=cast(Any, admin_user.id), action="admin_invitation_resent",
             target_type="invitation", target_id=str(invitation.id),
             metadata={"email": invitation.email, "new_expires_at": invitation.expires_at.isoformat()},
         )
@@ -346,7 +398,7 @@ def activate_admin(
     now = datetime.now(timezone.utc)
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
-        AdminInvitation.accepted_at == None,
+        AdminInvitation.accepted_at.is_(None),
     ).first()
 
     if not invitation:
@@ -354,7 +406,7 @@ def activate_admin(
     if getattr(invitation, "revoked_at", None):
         raise HTTPException(status_code=400, detail="This invitation has been revoked.")
 
-    exp = invitation.expires_at
+    exp = cast(Any, invitation.expires_at)
     if exp.tzinfo is None:
         exp = exp.replace(tzinfo=timezone.utc)
     if exp < now:
@@ -366,17 +418,17 @@ def activate_admin(
 
     existing_role = db.query(AdminRole).filter(AdminRole.user_id == user_id).first()
     if existing_role:
-        existing_role.role_level   = invitation.role_level
-        existing_role.is_active    = True
-        existing_role.activated_at = now
-        existing_role.deactivated_at = None
+        existing_role.role_level   = cast(Any, invitation.role_level)
+        existing_role.is_active    = cast(Any, True)
+        existing_role.activated_at = cast(Any, now)
+        existing_role.deactivated_at = cast(Any, None)
     else:
         db.add(AdminRole(user_id=user_id, role_level=invitation.role_level,
                          invited_by=invitation.invited_by, is_active=True, activated_at=now))
 
-    user.role = "admin"
+    user.role = cast(Any, "admin")
     db.add(user)
-    invitation.accepted_at = now
+    invitation.accepted_at = cast(Any, now)
     db.commit()
 
     try:
@@ -407,7 +459,7 @@ def accept_invite(
 
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
-        AdminInvitation.accepted_at == None,
+        AdminInvitation.accepted_at.is_(None),
     ).first()
 
     if not invitation:
@@ -416,7 +468,7 @@ def accept_invite(
     if getattr(invitation, "revoked_at", None):
         raise HTTPException(status_code=400, detail="This invitation has been revoked.")
 
-    exp = invitation.expires_at
+    exp = cast(Any, invitation.expires_at)
     if exp.tzinfo is None:
         exp = exp.replace(tzinfo=timezone.utc)
     if exp < now:
@@ -433,22 +485,22 @@ def accept_invite(
 
     existing_role = db.query(AdminRole).filter(AdminRole.user_id == current_user.id).first()
     if existing_role:
-        existing_role.role_level     = invitation.role_level
-        existing_role.is_active      = True
-        existing_role.activated_at   = now
-        existing_role.deactivated_at = None
+        existing_role.role_level     = cast(Any, invitation.role_level)
+        existing_role.is_active      = cast(Any, True)
+        existing_role.activated_at   = cast(Any, now)
+        existing_role.deactivated_at = cast(Any, None)
     else:
         db.add(AdminRole(user_id=current_user.id, role_level=invitation.role_level,
                          invited_by=invitation.invited_by, is_active=True, activated_at=now))
 
-    current_user.role = "admin"
+    current_user.role = cast(Any, "admin")
     db.add(current_user)
-    invitation.accepted_at = now
+    invitation.accepted_at = cast(Any, now)
     db.commit()
 
     try:
         log_admin_action(
-            db=db, admin_user_id=current_user.id, action="admin_invite_accepted",
+            db=db, admin_user_id=cast(int, current_user.id), action="admin_invite_accepted",
             target_type="invitation", target_id=str(invitation.id),
             metadata={"role_level": invitation.role_level, "email": current_user.email},
         )
@@ -490,16 +542,27 @@ def deactivate_admin(
     if user_id == admin_user.id:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself.")
 
-    role = db.query(AdminRole).filter(AdminRole.user_id == user_id, AdminRole.is_active == True).first()
+    role = db.query(AdminRole).filter(AdminRole.user_id == user_id, AdminRole.is_active.is_(True)).first()
     if not role:
         raise HTTPException(status_code=404, detail="Active admin role not found for this user.")
 
-    role.is_active       = False
-    role.deactivated_at  = datetime.now(timezone.utc)
+    if cast(Any, role.role_level) == "super_admin":
+        active_super_admins = db.query(AdminRole).filter(
+            AdminRole.role_level == "super_admin",
+            AdminRole.is_active.is_(True)
+        ).count()
+        if active_super_admins <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot deactivate the last active super_admin in the system."
+            )
+
+    role.is_active       = cast(Any, False)
+    role.deactivated_at  = cast(Any, datetime.now(timezone.utc))
     db.commit()
 
     try:
-        log_admin_action(db=db, admin_user_id=admin_user.id, action="admin_deactivated",
+        log_admin_action(db=db, admin_user_id=cast(int, admin_user.id), action="admin_deactivated",
                          target_type="user", target_id=str(user_id))
     except Exception:
         pass
@@ -530,16 +593,27 @@ def change_admin_role(
     if body.role_level not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"Invalid role_level. Must be one of: {VALID_ROLES}")
 
-    role = db.query(AdminRole).filter(AdminRole.user_id == user_id, AdminRole.is_active == True).first()
+    role = db.query(AdminRole).filter(AdminRole.user_id == user_id, AdminRole.is_active.is_(True)).first()
     if not role:
         raise HTTPException(status_code=404, detail="Active admin role not found for this user.")
 
+    if cast(Any, role.role_level) == "super_admin" and body.role_level != "super_admin":
+        active_super_admins = db.query(AdminRole).filter(
+            AdminRole.role_level == "super_admin",
+            AdminRole.is_active.is_(True)
+        ).count()
+        if active_super_admins <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot demote yourself or the last active super_admin."
+            )
+
     old_role       = role.role_level
-    role.role_level = body.role_level
+    role.role_level = cast(Any, body.role_level)
     db.commit()
 
     try:
-        log_admin_action(db=db, admin_user_id=admin_user.id, action="admin_role_changed",
+        log_admin_action(db=db, admin_user_id=cast(int, admin_user.id), action="admin_role_changed",
                          target_type="user", target_id=str(user_id),
                          metadata={"old_role": old_role, "new_role": body.role_level})
     except Exception:
@@ -566,16 +640,6 @@ def list_invitations(
     admin_user: User = Depends(require_admin_role),
 ):
     """List invitations - includes revoked status. (Req 3)"""
-    import os
-    from app.db.database import engine as _engine
-    db_file_path = str(_engine.url).replace("sqlite:///", "")
-    print(f"[FORENSIC-INV] engine.url: {_engine.url}")
-    if os.path.exists(db_file_path):
-        print(f"[FORENSIC-INV] DB file exists at: {os.path.abspath(db_file_path)}")
-        print(f"[FORENSIC-INV] DB file size: {os.path.getsize(db_file_path)} bytes")
-    else:
-        print(f"[FORENSIC-INV] DB file NOT found at: {os.path.abspath(db_file_path)}")
-
     now = datetime.now(timezone.utc)
 
     if include_history:
@@ -583,13 +647,11 @@ def list_invitations(
                        .order_by(AdminInvitation.created_at.desc()).limit(200).all())
     else:
         invitations = (db.query(AdminInvitation)
-                       .filter(AdminInvitation.accepted_at == None,
+                       .filter(AdminInvitation.accepted_at.is_(None),
                                AdminInvitation.expires_at > now)
                        .order_by(AdminInvitation.created_at.desc()).all())
 
-    print(f"[FORENSIC-INV] db.query(AdminInvitation) returned {len(invitations)} records (include_history={include_history})")
     res = [_invitation_payload(inv, now) for inv in invitations]
-    print(f"[FORENSIC-INV] returning {len(res)} items")
     return res
 
 
@@ -607,14 +669,14 @@ def cancel_invitation(
     invitation = db.query(AdminInvitation).filter(AdminInvitation.id == invitation_id).first()
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found.")
-    if invitation.accepted_at:
+    if cast(Any, invitation.accepted_at):
         raise HTTPException(status_code=400, detail="Cannot revoke an already accepted invitation.")
 
-    invitation.revoked_at = datetime.now(timezone.utc)
+    invitation.revoked_at = cast(Any, datetime.now(timezone.utc))
     db.commit()
 
     try:
-        log_admin_action(db=db, admin_user_id=admin_user.id, action="admin_invitation_revoked",
+        log_admin_action(db=db, admin_user_id=cast(int, admin_user.id), action="admin_invitation_revoked",
                          target_type="invitation", target_id=str(invitation.id),
                          metadata={"email": invitation.email})
     except Exception:
@@ -640,7 +702,7 @@ def verify_invitation(
     now = datetime.now(timezone.utc)
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
-        AdminInvitation.accepted_at == None,
+        AdminInvitation.accepted_at.is_(None),
         AdminInvitation.expires_at > now,
     ).first()
 
@@ -655,7 +717,7 @@ def verify_invitation(
         "email":         invitation.email,
         "invited_name":  getattr(invitation, "invited_name", None),
         "role_level":    invitation.role_level,
-        "expires_at":    invitation.expires_at.isoformat(),
+        "expires_at":    cast(datetime, invitation.expires_at).isoformat(),
     }
 
 
@@ -678,7 +740,7 @@ def get_team_audit_log(
 
     items = []
     for row in rows:
-        actor = db.query(User).filter(User.id == row.admin_user_id).first() if row.admin_user_id else None
+        actor = db.query(User).filter(User.id == row.admin_user_id).first() if row.admin_user_id is not None else None
         items.append({
             "id":             row.id,
             "action":         row.action,
@@ -689,7 +751,7 @@ def get_team_audit_log(
             "target_id":      row.target_id,
             "metadata":       row.metadata_json,
             "ip_address":     row.ip_address,
-            "created_at":     row.created_at.isoformat() if row.created_at else None,
+            "created_at":     cast(datetime, row.created_at).isoformat() if row.created_at is not None else None,
         })
 
     return {"items": items, "total": total, "limit": limit, "offset": offset}

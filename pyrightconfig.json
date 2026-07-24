@@ -1,6 +1,6 @@
 {
   "venvPath": "backend",
-  "venv": "env",
+  "venv": ".venv",
   "executionEnvironments": [
     {
       "root": "backend"

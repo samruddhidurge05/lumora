@@ -219,6 +219,8 @@ export default function AdminUserManagement() {
   const [loading, setLoading]         = useState(true);
   const [toast, setToast]             = useState(null);
   const [liveStatus, setLiveStatus]   = useState('live'); // live | paused
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter]   = useState('ALL');
   const pollRef = useRef(null);
 
   // ── Invite modal state
@@ -368,6 +370,20 @@ export default function AdminUserManagement() {
     (b.last_login_at || '') > (a.last_login_at || '') ? 1 : -1
   );
 
+  const filteredTeam = sortedTeam.filter(m => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchSearch = !q || (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q);
+    const matchRole   = roleFilter === 'ALL' || m.role_level === roleFilter;
+    return matchSearch && matchRole;
+  });
+
+  const filteredInvitations = invitations.filter(inv => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchSearch = !q || (inv.email || '').toLowerCase().includes(q) || (inv.invited_name || '').toLowerCase().includes(q);
+    const matchRole   = roleFilter === 'ALL' || inv.role_level === roleFilter;
+    return matchSearch && matchRole;
+  });
+
   return (
     <AdminLayout activePage="team">
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
@@ -402,18 +418,50 @@ export default function AdminUserManagement() {
           </div>
         </section>
 
+        {/* Search & Filter Bar */}
+        <section className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="w-full md:w-80">
+            <input
+              type="text"
+              placeholder="Search members by name or email..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '9px 14px', borderRadius: '10px',
+                       border: '1px solid rgba(196,148,230,0.3)', background: 'rgba(255,255,255,0.7)',
+                       fontSize: '0.8rem', color: '#2D004D', outline: 'none' }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7B3FA0', textTransform: 'uppercase', marginRight: '4px' }}>Filter Role:</span>
+            {['ALL', ...ROLES].map(r => (
+              <button
+                key={r}
+                onClick={() => setRoleFilter(r)}
+                style={{ padding: '4px 10px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700,
+                         border: roleFilter === r ? '1px solid #7B3FA0' : '1px solid rgba(196,148,230,0.25)',
+                         background: roleFilter === r ? 'rgba(123,63,160,0.15)' : 'transparent',
+                         color: roleFilter === r ? '#5A1E7E' : '#7B3FA0', cursor: 'pointer' }}>
+                {r.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Active team table */}
         <section className="glass-surface rounded-3xl border border-white/50 shadow-sm overflow-hidden mb-8">
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(196,148,230,0.15)' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(196,148,230,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 700, color: '#2D004D' }}>
               Active Team Members
             </h2>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#7B3FA0' }}>
+              Showing {filteredTeam.length} of {team.length}
+            </span>
           </div>
           {loading ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#7B3FA0', fontSize: '0.85rem' }}>Loading…</div>
-          ) : sortedTeam.length === 0 ? (
+          ) : filteredTeam.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#7B3FA0', opacity: 0.6, fontSize: '0.85rem' }}>
-              No team members found.
+              No active team members match the search/filter query.
             </div>
           ) : (
           <>
@@ -428,7 +476,7 @@ export default function AdminUserManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedTeam.map((member) => {
+                  {filteredTeam.map((member) => {
                     const isOwnRow = member.user_id === ownUserId;
                     const currentRole = pendingRole[member.user_id] ?? member.role_level;
                     return (
@@ -461,7 +509,7 @@ export default function AdminUserManagement() {
 
             {/* Mobile Card Stack (< 768px) */}
             <div className="block md:hidden space-y-3 p-3">
-              {sortedTeam.map((member) => {
+              {filteredTeam.map((member) => {
                 const isOwnRow = member.user_id === ownUserId;
                 const currentRole = pendingRole[member.user_id] ?? member.role_level;
                 return (
