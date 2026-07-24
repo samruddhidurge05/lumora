@@ -763,8 +763,18 @@ function enrichRawProducts(raw) {
       installationGuide:  p.installationGuide  || p.installation_guide || '',
       version: p.version || 'v1.0.0',
       fileSize: p.fileSize || p.file_size || '48 MB',
-      // Normalize creation timestamp to camelCase for consistent sorting
-      createdAt: p.createdAt || p.created_at || null,
+      // Normalize creation timestamp to camelCase for consistent sorting.
+      // Legacy catalog items (IDs 1-100) get fixed historical dates in June 2026 so newly
+      // created/uploaded products (IDs > 100 with July 2026+ timestamps) always rank first.
+      createdAt: (() => {
+        const rawTs = p.createdAt || p.created_at;
+        const numId = parseInt(p.id, 10);
+        if (!isNaN(numId) && numId <= 100) {
+          const baseMs = new Date('2026-06-01T00:00:00Z').getTime();
+          return new Date(baseMs + numId * 3600 * 1000).toISOString();
+        }
+        return rawTs || null;
+      })(),
       lastUpdated: p.lastUpdated || p.last_updated || (p.createdAt || p.created_at ? new Date(p.createdAt || p.created_at).toLocaleDateString() : 'Recently'),
       reviews: isBackend ? (p.reviews || 0) : (p.reviews || Math.floor((p.downloads || 100) * 0.08)),
       downloads: p.downloads || 0,
