@@ -191,11 +191,16 @@ function AffiliateAttributionCard({ orderId }) {
         url += `&referral_code=${encodeURIComponent(overrideCode.trim().toUpperCase())}`;
       }
       const data = await backendFetch(url, { method: 'POST' });
-      setMsg({ type: 'success', text: data?.message || 'Commission regenerated successfully!' });
-      setShowInput(false);
-      setManualCode('');
-      const refData = await backendFetch(`/admin/affiliates/orders/${cleanId}`);
-      if (refData) setTrace(refData);
+      if (data?.success === false) {
+        setMsg({ type: 'error', text: data?.message || 'No referral link found. Enter a referral code below to link manually.' });
+        setShowInput(true);
+      } else {
+        setMsg({ type: 'success', text: data?.message || 'Commission regenerated successfully!' });
+        setShowInput(false);
+        setManualCode('');
+        const refData = await backendFetch(`/admin/affiliates/orders/${cleanId}`);
+        if (refData) setTrace(refData);
+      }
     } catch (e) {
       setMsg({ type: 'error', text: e?.detail?.detail || e?.detail || e?.message || 'Failed to regenerate commission.' });
     } finally {
