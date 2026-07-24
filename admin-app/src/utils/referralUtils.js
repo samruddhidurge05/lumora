@@ -44,7 +44,7 @@ export function getCustomerBaseUrl() {
     return origin.replace(/\/+$/, '');
   }
 
-  return 'https://lumora.vercel.app';
+  return 'https://lumora-lemon-seven.vercel.app';
 }
 
 export function buildAffiliateReferralLink(product, affCode) {
