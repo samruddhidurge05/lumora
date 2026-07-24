@@ -893,7 +893,11 @@ class StorageService:
 
     def upload(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
         self.validate_file(file_bytes, filename, is_image)
-        res = self.provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
+        try:
+            res = self.provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
+        except Exception as err:
+            _logger.warning("[StorageService] Active provider upload failed (%s). Falling back to local disk storage.", err)
+            res = self.local_provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
         res["hash"] = self.compute_sha256(file_bytes)
         res["content_type"] = content_type
         return res
