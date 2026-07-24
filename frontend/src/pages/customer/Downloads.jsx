@@ -59,12 +59,12 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     let activeUrl = downloadUrl;
     const numericId = parseInt(productId, 10);
 
-    // Fetch a fresh tokenized download URL from backend
+    // Step 1: Fetch a fresh tokenized download URL from backend
     if (!isNaN(numericId)) {
       try {
         const res = await backendFetch(`/products/${numericId}/download`);
 
-        // ── Download Pending: backend signals asset not yet uploaded ──────────
+        // Backend says asset not yet uploaded
         if (res?.download_available === false) {
           setState('pending');
           return;
@@ -74,53 +74,34 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
           activeUrl = res.download_url;
         }
       } catch (err) {
-        console.warn('[DownloadButton] Failed to fetch fresh download token, falling back to cached URL:', err.message);
+        console.warn('[DownloadButton] Failed to fetch fresh download token, using cached URL:', err.message);
       }
     }
     
-    // Connect to backend download URL if provided
+    // Step 2: Trigger native browser file download via hidden <a> tag
+    // The token is already embedded in the URL query string — no Bearer header needed
     if (activeUrl) {
       try {
-        const token = localStorage.getItem('lumora_backend_token');
-        const targetUrl = resolveFullUrl(activeUrl);
-        const fileResp = await fetch(targetUrl, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-
-        if (!fileResp.ok) {
-          throw new Error(`HTTP error! status: ${fileResp.status}`);
-        }
-
-        const contentType = fileResp.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const fileRespJson = await fileResp.json();
-          if (fileRespJson?.type === 'pending') {
-            setState('pending');
-            return;
-          }
-        } else {
-          // It's a binary stream! Download via blob
-          const blob = await fileResp.blob();
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          const cleanName = (productName || 'digital-asset').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          link.setAttribute('download', `${cleanName}.zip`);
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          window.URL.revokeObjectURL(blobUrl);
-          setTimeout(() => setState('done'), 1800);
-          setTimeout(() => setState('idle'), 4500);
-          return;
-        }
+        const fullUrl = resolveFullUrl(activeUrl);
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        const cleanName = (productName || 'digital-asset').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        link.setAttribute('download', cleanName);
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => setState('done'), 1500);
+        setTimeout(() => setState('idle'), 4000);
+        return;
       } catch (e) {
-        console.warn('Download link trigger error:', e);
+        console.warn('[DownloadButton] Direct link download failed:', e);
       }
     }
 
-    setTimeout(() => setState('done'), 1800);
-    setTimeout(() => setState('idle'), 4500);
+    // Fallback: mark as done anyway
+    setTimeout(() => setState('done'), 1500);
+    setTimeout(() => setState('idle'), 4000);
   };
 
   // ── Pending state: show professional message, not an error ───────────────
