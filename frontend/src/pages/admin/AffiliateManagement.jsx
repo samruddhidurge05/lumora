@@ -1025,7 +1025,11 @@ export default function AffiliateManagement() {
               </div>
               <AdminSelect value={affStatusFilter} onChange={e => setAffStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'active',label:'Active'},{value:'suspended',label:'Suspended'}]} className="w-36" />
             </div>
-                <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
+
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#2D004D]">
+                  <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
                   <tr>
                     <th className="p-4">Promoter / Email</th><th className="p-4">Code</th><th className="p-4">Status</th>
                     <th className="p-4">Clicks</th><th className="p-4">Sales</th><th className="p-4">Commission</th>
@@ -1052,6 +1056,7 @@ export default function AffiliateManagement() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <div className="p-3 border-t border-[#F3EAF8] text-[10px] text-[#7B3FA0]">Click a row to view full affiliate profile →</div>
             </div>
           </div>
