@@ -339,7 +339,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── MONTHLY CHART ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '28px' }}>
+      <div className="premium-flat-card aff-chart-card" style={{ padding: '28px' }}>
         <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Trends</span>
@@ -400,7 +400,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION TABLE ─────────────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '28px', overflow: 'hidden' }}>
+      <div className="premium-flat-card aff-table-card" style={{ padding: '28px', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Commission Log</span>
@@ -496,7 +496,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── RECENT PAYOUTS ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '28px' }}>
+      <div className="premium-flat-card aff-payout-card" style={{ padding: '28px' }}>
         <div style={{ marginBottom: '20px' }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
           <h3 className="text-editorial" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Payout Requests</h3>

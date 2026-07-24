@@ -1059,7 +1059,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 .aff-page-wrap { padding: 0; box-sizing: border-box; width: 100%; max-width: 100%; }
 @media (max-width: 1024px) { .aff-page-wrap { padding: 0 !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; } }
 
-/* ── Stat grid: 4-col on desktop → 1-col on mobile/tablet (<=1024px) ── */
+/* ── Stat grid: 4-col on desktop → 2x2 grid on mobile/tablet (<=1024px) ── */
 .aff-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1069,21 +1069,46 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 @media (max-width: 1024px) { 
   .aff-stat-grid { 
-    grid-template-columns: 1fr !important; 
-    gap: 12px !important; 
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 8px !important; 
     width: 100% !important;
     box-sizing: border-box !important;
   } 
   .aff-stat-grid > .premium-flat-card {
-    padding: 16px 18px !important;
+    padding: 12px 10px !important;
     box-sizing: border-box !important;
     width: 100% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .aff-stat-grid > .premium-flat-card > div:first-child {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+  .aff-stat-grid > .premium-flat-card span {
+    font-size: 0.58rem !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
   }
   .aff-stat-grid > .premium-flat-card > div > div:nth-child(2) {
-    font-size: 1.4rem !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    margin-top: 2px !important;
+    line-height: 1.1 !important;
     word-break: break-all !important;
+  }
+  .aff-stat-grid > .premium-flat-card > div:last-child {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+    margin-left: 4px !important;
   }
 }
 

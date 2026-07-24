@@ -516,7 +516,7 @@ function AffiliateDashboardInner() {
             box-sizing: border-box !important;
           }
           .aff-main-area main {
-            padding: 16px 12px 40px !important;
+            padding: 14px 10px 40px !important;
             max-width: 100vw !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -525,18 +525,66 @@ function AffiliateDashboardInner() {
           .aff-hamburger {
             display: flex !important;
           }
+
+          /* Step 2: First 4 Stat Boxes — 2x2 Grid for every mobile screen */
           .aff-stat-grid {
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
             width: 100% !important;
+            box-sizing: border-box !important;
           }
+          .aff-stat-grid > .premium-flat-card {
+            padding: 12px 10px !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+          }
+          .aff-stat-grid > .premium-flat-card > div:first-child {
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+          .aff-stat-grid > .premium-flat-card span {
+            font-size: 0.58rem !important;
+            letter-spacing: 0.02em !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: block !important;
+          }
+          .aff-stat-grid > .premium-flat-card > div > div:nth-child(2) {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            margin-top: 2px !important;
+            line-height: 1.1 !important;
+            word-break: break-all !important;
+          }
+          .aff-stat-grid > .premium-flat-card > div:last-child {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            flex-shrink: 0 !important;
+            margin-left: 4px !important;
+          }
+
+          /* Step 3: Commission Rate Box */
           .aff-commission-strip {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-            padding: 14px !important;
+            gap: 10px !important;
+            padding: 14px 12px !important;
             width: 100% !important;
             box-sizing: border-box !important;
+          }
+          .aff-commission-strip > div {
+            min-width: 0 !important;
+          }
+          .aff-commission-strip > div:nth-child(2) {
+            display: none !important;
           }
           .aff-commission-strip > div:last-child {
             grid-column: 1 / -1 !important;
@@ -545,10 +593,12 @@ function AffiliateDashboardInner() {
             border-top: 1px solid rgba(45,0,96,0.06) !important;
             padding-top: 8px !important;
           }
+
+          /* Earnings Header CTA button row */
           .aff-earnings-header {
             flex-direction: column !important;
             align-items: flex-start !important;
-            gap: 12px !important;
+            gap: 10px !important;
             width: 100% !important;
           }
           .aff-earnings-header > div:last-child {
@@ -558,12 +608,19 @@ function AffiliateDashboardInner() {
             width: 100% !important;
             justify-content: center !important;
           }
+
+          /* Step 4: Other 3 Boxes */
+          .aff-chart-card,
+          .aff-table-card,
+          .aff-payout-card,
           .aff-main-area .premium-flat-card {
-            padding: 16px 14px !important;
+            padding: 14px 12px !important;
             box-sizing: border-box !important;
+            width: 100% !important;
             max-width: 100% !important;
             min-width: 0 !important;
           }
+
           .aff-table-wrap {
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
