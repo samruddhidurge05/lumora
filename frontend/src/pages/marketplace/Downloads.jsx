@@ -153,6 +153,18 @@ export default function Downloads() {
     return orderItem?.download_url || null;
   };
 
+function resolveFullUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  const baseUrl = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+  const cleanPath = url.startsWith('/api') ? url : (url.startsWith('/') ? `/api${url}` : `/api/${url}`);
+  const baseNoApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
+  return `${baseNoApi}${cleanPath}`;
+}
+
   const [downloadToast, setDownloadToast] = useState(null); // { id, msg, ok }
 
   const handleDownload = async (product) => {
@@ -161,7 +173,7 @@ export default function Downloads() {
     setDownloadingId(product.id);
     setDownloadToast(null);
     try {
-      await new Promise(r => setTimeout(r, 400)); // brief preparing delay for internal files
+      await new Promise(r => setTimeout(r, 300));
       
       let activeUrl = directUrl;
       if (!activeUrl) {
@@ -176,41 +188,7 @@ export default function Downloads() {
           }
 
           if (resp?.download_url) {
-            // Internal token-based URL — call the download-file endpoint
-            const fileCheckUrl = resp.download_url.replace('/api', '');
-            const token = localStorage.getItem('lumora_backend_token');
-            const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-            const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
-              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-
-            if (!fileResp.ok) {
-              throw new Error(`HTTP error! status: ${fileResp.status}`);
-            }
-
-            const contentType = fileResp.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-              const fileRespJson = await fileResp.json();
-              if (fileRespJson?.type === 'pending') {
-                setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
-                return;
-              }
-            } else {
-              // Stream/binary file download
-              const blob = await fileResp.blob();
-              const blobUrl = window.URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = blobUrl;
-              link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              window.URL.revokeObjectURL(blobUrl);
-
-              setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
-              window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
-              return;
-            }
+            activeUrl = resp.download_url;
           } else {
             setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
             return;
@@ -219,20 +197,18 @@ export default function Downloads() {
       }
 
       if (activeUrl) {
+        const fullUrl = resolveFullUrl(activeUrl);
         const link = document.createElement('a');
-        link.href = activeUrl;
-        link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
+        link.href = fullUrl;
+        const cleanName = ((product.title || product.name || 'digital-asset')).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        link.setAttribute('download', cleanName);
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        link.remove();
+        document.body.removeChild(link);
 
         setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
         window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
-      } else {
-        setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
-      }
-    } catch (err) {
-      const msg = err?.message?.includes('403') || err?.message?.includes('401')
         ? 'Access denied. Please verify your purchase is complete.'
         : 'Download unavailable. Try refreshing or contact support.';
       setDownloadToast({ id: product.id, msg, ok: false });
