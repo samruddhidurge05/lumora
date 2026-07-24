@@ -34,7 +34,7 @@ def get_payout_provider() -> PayoutProvider:
     This function is called once per request inside the admin payout route.
     It is intentionally cheap — no heavy initialisation on cold start.
     """
-    mode = os.getenv("AFFILIATE_PAYOUT_MODE", "mock").strip().lower()
+    mode = os.getenv("AFFILIATE_PAYOUT_PROVIDER", os.getenv("AFFILIATE_PAYOUT_MODE", "mock")).strip().lower()
 
     if mode == "razorpay":
         from app.payments.payout.razorpay_provider import RazorpayPayoutProvider
@@ -43,5 +43,5 @@ def get_payout_provider() -> PayoutProvider:
 
     # Default: mock (development / staging)
     from app.payments.payout.mock_provider import MockPayoutProvider
-    logger.info("[PayoutFactory] Using MockPayoutProvider (AFFILIATE_PAYOUT_MODE=%s)", mode)
+    logger.info("[PayoutFactory] Using MockPayoutProvider (provider=%s)", mode)
     return MockPayoutProvider()

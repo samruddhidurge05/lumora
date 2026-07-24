@@ -56,6 +56,7 @@ def complete_payout(
     failure_reason: Optional[str] = None,
     admin_user_id: Optional[int] = None,   # None when called from webhook
     source: str = "webhook",               # "webhook" | "mock" | "admin_manual"
+    forensic_meta: Optional[dict] = None,
 ) -> bool:
     """
     Atomically complete or fail a payout.
@@ -95,7 +96,7 @@ def complete_payout(
         # ── Idempotency guard ────────────────────────────────────────────────
         if payout.status in _TERMINAL_STATES:
             logger.warning(
-                "[complete_payout] Payout #%d already in terminal state '%s' — "
+                "[complete_payout] Payout #%d already in terminal state '%s' - "
                 "ignoring duplicate call (source=%s)",
                 payout_id, payout.status, source,
             )
@@ -158,6 +159,8 @@ def complete_payout(
         }
         if failure_reason:
             metadata["failure_reason"] = failure_reason
+        if forensic_meta and isinstance(forensic_meta, dict):
+            metadata["forensic_details"] = forensic_meta
 
         audit = AuditLog(
             admin_user_id = admin_user_id,
@@ -172,7 +175,7 @@ def complete_payout(
         db.commit()
 
         logger.info(
-            "[complete_payout] SUCCESS — payout #%d → %s (source=%s amount=%.2f)",
+            "[complete_payout] SUCCESS - payout #%d -> %s (source=%s amount=%.2f)",
             payout_id, new_status, source, payout.amount,
         )
         return True

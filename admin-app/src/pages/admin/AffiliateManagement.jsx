@@ -14,6 +14,7 @@ import { AdminSelect } from './components/AdminComponents';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
 import { backendFetch } from '../../utils/api';
+import AffiliatePayoutModal from '../../components/AffiliatePayoutModal';
 
 // ── Color palette tokens ──────────────────────────────────────────────────────
 const P  = '#7B3FA0';
@@ -562,12 +563,21 @@ export default function AffiliateManagement() {
   const [commActionModal, setCommActionModal] = useState(null);
   const PAGE_SIZE = 50;
 
-  // ── Payout Queue state ───────────────────────────────────────────────────
+  // ── Payout Queue & System Config state ──────────────────────────────────
   const [payouts, setPayouts] = useState([]);
   const [payoutsLoading, setPayoutsLoading] = useState(false);
   const [payoutsTotal, setPayoutsTotal] = useState(0);
   const [payoutsPage, setPayoutsPage] = useState(1);
   const [payoutStatusFilter, setPayoutStatusFilter] = useState('pending');
+  const [systemConfig, setSystemConfig] = useState(null);
+  const [selectedPayoutForModal, setSelectedPayoutForModal] = useState(null);
+  const [payoutModalLoading, setPayoutModalLoading] = useState(false);
+
+  useEffect(() => {
+    backendFetch('/admin/system/config')
+      .then(cfg => setSystemConfig(cfg))
+      .catch(() => setSystemConfig({ payout_mode: 'mock', payout_provider: 'mock' }));
+  }, []);
 
   // ── Product Performance state ────────────────────────────────────────────
   const [perfData, setPerfData] = useState([]);
@@ -809,29 +819,53 @@ export default function AffiliateManagement() {
   const handleExportCSV = () => { window.open('/api/admin/affiliates/commissions/export/csv', '_blank'); };
   const handleCommissionSaved = (id, newStatus) => setLedger(prev => prev.map(c => c.id === id ? { ...c, commission_status: newStatus } : c));
   const handlePayoutAction = async (payoutId, newStatus) => {
-    const isPayNow = newStatus === 'completed';
-    const confirmed = window.confirm(
-      isPayNow
-        ? `Initiate payout #${payoutId}? The provider will execute the transfer.`
-        : `Reject payout request #${payoutId}? This cannot be undone.`
-    );
+    if (newStatus === 'completed') {
+      const p = payouts.find(item => item.id === payoutId);
+      if (p) {
+        setSelectedPayoutForModal(p);
+        return;
+      }
+    }
+
+    // Rejection Flow
+    const confirmed = window.confirm(`Reject payout request #${payoutId}? This action cannot be undone.`);
     if (!confirmed) return;
     try {
-      const data = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
+      await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: 'rejected' }),
       });
-      const finalStatus = data?.new_status || newStatus;
-      const modeLabel   = data?.payout_mode === 'razorpay' ? 'via Razorpay X' : '(mock mode)';
-      if (finalStatus === 'processing') {
-        alert(`Payout #${payoutId} is now processing ${modeLabel}. Status will update when the webhook confirms.`);
-      } else if (finalStatus === 'completed') {
-        alert(`Payout #${payoutId} completed successfully ${modeLabel}.`);
-      }
       loadPayouts();
       loadKpis();
     } catch(e) {
-      alert(`Error processing payout: ${e.message || e}`);
+      alert(`Error rejecting payout: ${e.message || e}`);
+    }
+  };
+
+  const handleModalInitiateTransfer = async (payoutId, developerMockOverride = false) => {
+    setPayoutModalLoading(true);
+    try {
+      const data = await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: 'completed',
+          developer_mock_override: developerMockOverride
+        }),
+      });
+      const finalStatus = data?.new_status || 'completed';
+      const modeLabel = data?.payout_mode === 'razorpay' ? 'via Razorpay X' : '(mock mode)';
+      if (finalStatus === 'processing') {
+        alert(`Payout #${payoutId} initiated ${modeLabel}. Status will update automatically when Razorpay webhook confirms processing.`);
+      } else if (finalStatus === 'completed') {
+        alert(`Payout #${payoutId} completed successfully ${modeLabel}. Wallet paid earnings updated.`);
+      }
+      loadPayouts();
+      loadKpis();
+      setSelectedPayoutForModal(null);
+    } catch(e) {
+      alert(`Error initiating payout transfer: ${e.message || e}`);
+    } finally {
+      setPayoutModalLoading(false);
     }
   };
 
@@ -1521,6 +1555,17 @@ export default function AffiliateManagement() {
 
         {/* ── Affiliate Profile Slide-over ── */}
         {profilePanelId && <AffiliateProfilePanel affiliateId={profilePanelId} onClose={() => setProfilePanelId(null)} />}
+
+        {/* ── Enterprise Stripe-Style Payout Modal ── */}
+        {selectedPayoutForModal && (
+          <AffiliatePayoutModal
+            payout={selectedPayoutForModal}
+            systemConfig={systemConfig}
+            onClose={() => setSelectedPayoutForModal(null)}
+            onConfirm={handleModalInitiateTransfer}
+            loading={payoutModalLoading}
+          />
+        )}
 
       </div>
     </AdminLayout>

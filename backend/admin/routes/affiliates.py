@@ -271,6 +271,29 @@ def get_affiliate_kpis(
     total_comm_earned = commission_pending + commission_paid
     avg_epc = round((total_comm_earned / total_clicks), 2) if total_clicks > 0 else 0.0
 
+    # ── Payout Financial Expense Metrics ──────────────────────────────────────
+    now = datetime.utcnow()
+    start_of_today = datetime(now.year, now.month, now.day)
+    start_of_month = datetime(now.year, now.month, 1)
+
+    pending_affiliate_liability = db.query(func.sum(AffiliatePayout.amount)).filter(
+        AffiliatePayout.status.in_(["pending", "requested", "under_review", "approved", "processing"])
+    ).scalar() or 0.0
+
+    todays_affiliate_payout = db.query(func.sum(AffiliatePayout.amount)).filter(
+        AffiliatePayout.status == "completed",
+        AffiliatePayout.completed_at >= start_of_today
+    ).scalar() or 0.0
+
+    monthly_affiliate_payout = db.query(func.sum(AffiliatePayout.amount)).filter(
+        AffiliatePayout.status == "completed",
+        AffiliatePayout.completed_at >= start_of_month
+    ).scalar() or 0.0
+
+    lifetime_affiliate_expense = db.query(func.sum(AffiliatePayout.amount)).filter(
+        AffiliatePayout.status == "completed"
+    ).scalar() or 0.0
+
     return {
         "total_affiliates": total_affiliates,
         "approved_affiliates": approved_affiliates,
@@ -287,6 +310,10 @@ def get_affiliate_kpis(
         "avg_epc": avg_epc,
         "top_affiliate": top_affiliate_name,
         "top_product": top_product_name,
+        "pending_affiliate_liability": round(pending_affiliate_liability, 2),
+        "todays_affiliate_payout": round(todays_affiliate_payout, 2),
+        "monthly_affiliate_payout": round(monthly_affiliate_payout, 2),
+        "lifetime_affiliate_expense": round(lifetime_affiliate_expense, 2),
     }
 
 

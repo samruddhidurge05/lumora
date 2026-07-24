@@ -28,3 +28,15 @@ router.include_router(affiliates_router, prefix="/affiliates", tags=["Affiliates
 router.include_router(settings_router, prefix="/settings", tags=["Settings"])
 router.include_router(products_router, prefix="/products", tags=["Products"])
 router.include_router(admin_refunds_router, prefix="/refunds", tags=["Refund Requests"])
+
+
+@router.get("/system/config", tags=["System Config"])
+def get_system_config():
+    import os
+    provider = os.getenv("AFFILIATE_PAYOUT_PROVIDER", os.getenv("AFFILIATE_PAYOUT_MODE", "mock")).strip().lower()
+    return {
+        "payout_provider": provider,
+        "payout_mode": provider,
+        "currency": os.getenv("PAYMENT_CURRENCY", "INR")
+    }
+
