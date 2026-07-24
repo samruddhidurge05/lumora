@@ -496,7 +496,7 @@ function AffiliateDashboardInner() {
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
           .aff-sidebar {
             transform: translateX(-100%);
             z-index: 100 !important;

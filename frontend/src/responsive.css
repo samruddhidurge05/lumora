@@ -1057,9 +1057,9 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 /* ── Base page wrap: zero outer padding to avoid double margin with main ── */
 .aff-page-wrap { padding: 0; box-sizing: border-box; width: 100%; max-width: 100%; }
-@media (max-width: 900px) { .aff-page-wrap { padding: 0 !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; } }
+@media (max-width: 1024px) { .aff-page-wrap { padding: 0 !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; } }
 
-/* ── Stat grid: 4-col on desktop → 1-col on mobile/tablet (<=900px) ── */
+/* ── Stat grid: 4-col on desktop → 1-col on mobile/tablet (<=1024px) ── */
 .aff-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1067,8 +1067,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   width: 100%;
   box-sizing: border-box;
 }
-@media (max-width: 1024px) { .aff-stat-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 900px)  { 
+@media (max-width: 1024px) { 
   .aff-stat-grid { 
     grid-template-columns: 1fr !important; 
     gap: 12px !important; 
@@ -1090,7 +1089,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 /* ── Two-col panels: stack on tablet/mobile ── */
 .aff-two-col { display: grid; }
-@media (max-width: 900px) { .aff-two-col { grid-template-columns: 1fr !important; } }
+@media (max-width: 1024px) { .aff-two-col { grid-template-columns: 1fr !important; } }
 
 /* ── Tables: horizontal scroll ── */
 .aff-table-wrap {
@@ -1102,8 +1101,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 .aff-table-wrap table { min-width: 520px; }
 
-/* ── Topbar & Main Container: compact on mobile/tablet (<=900px) ── */
-@media (max-width: 900px) {
+/* ── Topbar & Main Container: compact on mobile/tablet (<=1024px) ── */
+@media (max-width: 1024px) {
   .aff-sidebar {
     transform: translateX(-100%);
     z-index: 100 !important;
@@ -1140,7 +1139,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* Prevent any affiliate page content from overflowing the viewport */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-page-wrap,
   .aff-page-wrap > *,
   .aff-main-area main > div {
@@ -1151,7 +1150,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Hero banner: stack on mobile/tablet ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-hero-banner {
     padding: 20px 16px !important;
     flex-direction: column !important;
@@ -1199,8 +1198,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
 }
 
-/* ── Commission summary strip (named class) — 2x2 grid on mobile/tablet (<=900px) ── */
-@media (max-width: 900px) {
+/* ── Commission summary strip (named class) — 2x2 grid on mobile/tablet (<=1024px) ── */
+@media (max-width: 1024px) {
   .aff-commission-strip {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1222,7 +1221,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Stat cards: compact padding + font on mobile ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-stat-grid > .premium-flat-card {
     padding: 16px 18px !important;
     box-sizing: border-box !important;
@@ -1242,7 +1241,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Overflow guard: prevent any child from escaping the main area ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-main-area {
     overflow-x: hidden !important;
     width: 100% !important;
@@ -1255,7 +1254,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Status strip: horizontal scroll ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-status-strip {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
@@ -1277,7 +1276,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Affiliate Products grid → horizontal scroll carousel ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-products-grid {
     display: flex !important;
     flex-direction: row !important;
@@ -1305,7 +1304,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Earnings page: commission breakdown strip wrap ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   /* Commission strip: wrap items */
   .aff-commission-strip {
     flex-wrap: wrap !important;
@@ -1337,7 +1336,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 /* ── Profile page: status strip scroll ── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .aff-profile-strip {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
