@@ -2213,15 +2213,16 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     thumbnail: product?.thumbnail || null,
     galleryInput: product?.gallery?.join(', ') || '',
     videoUrl: product?.videoUrl || '',
-    zipName: product?.zipName || '',
+    zipName: product?.zipName || product?.fileName || (product?.file_url ? product.file_url.split('/').pop() : ''),
     seoTitle: product?.seoTitle || '',
     seoKeywords: product?.seoKeywords || '',
     slug: product?.slug || '',
     // ── Storage delivery fields ───────────────────────────────────────────────
-    storagePath:  product?.storagePath  || null,   // Firebase Storage path
-    downloadUrl:  product?.downloadUrl  || null,   // permanent HTTPS URL
-    fileSize:     product?.fileSize     || null,   // bytes
-    fileName:     product?.fileName     || null,   // original filename
+    storagePath:  product?.storagePath  || product?.file_url || null,
+    downloadUrl:  product?.downloadUrl  || product?.file_url || null,
+    fileSize:     product?.fileSize     || product?.file_size || null,
+    fileName:     product?.fileName     || product?.zipName || (product?.file_url ? product.file_url.split('/').pop() : null),
+    file_url:     product?.file_url     || product?.downloadUrl || null,
 
     image_urls:    Array.isArray(product?.image_urls)
       ? product.image_urls

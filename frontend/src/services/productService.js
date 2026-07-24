@@ -112,6 +112,13 @@ export const mapDocToProduct = (docSnap) => {
       subcategory: data.subcategory || '',
       discount: data.discount || 0,
       visibility: data.visibility || 'public',
+      file_url: data.file_url || data.downloadUrl || data.pcloud_download_link || null,
+      downloadUrl: data.file_url || data.downloadUrl || data.pcloud_download_link || null,
+      file_size: data.file_size || data.fileSize || null,
+      fileSize: data.file_size || data.fileSize || null,
+      zipName: data.zipName || data.fileName || (data.file_url ? data.file_url.split('/').pop() : ''),
+      fileName: data.fileName || data.zipName || (data.file_url ? data.file_url.split('/').pop() : null),
+      storagePath: data.storagePath || data.storage_path || data.file_url || null,
     };
   }
 
@@ -162,6 +169,13 @@ export const mapDocToProduct = (docSnap) => {
     subcategory: data.subcategory || '',
     discount: data.discount || 0,
     visibility: data.visibility || 'public',
+    file_url: data.file_url || data.downloadUrl || data.pcloud_download_link || null,
+    downloadUrl: data.file_url || data.downloadUrl || data.pcloud_download_link || null,
+    file_size: data.file_size || data.fileSize || null,
+    fileSize: data.file_size || data.fileSize || null,
+    zipName: data.zipName || data.fileName || (data.file_url ? data.file_url.split('/').pop() : ''),
+    fileName: data.fileName || data.zipName || (data.file_url ? data.file_url.split('/').pop() : null),
+    storagePath: data.storagePath || data.storage_path || data.file_url || null,
   };
 };
 
