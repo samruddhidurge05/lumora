@@ -653,15 +653,18 @@ class StorageService:
         if _is_test_environment() and not os.getenv("FORCE_B2_TESTS"):
             self.provider = self.local_provider
             print("[StorageService] Active Provider: Local Disk (Test Environment)")
-        elif pref == "b2":
+        elif pref == "b2" and self.b2_provider.is_available():
             self.provider = self.b2_provider
             print(f"[StorageService] Active Provider: Backblaze B2 Storage (Status: {self.b2_provider.b2_status})")
         elif pref == "firebase" and self.firebase_provider.is_available():
             self.provider = self.firebase_provider
             print("[StorageService] Active Provider: Firebase Storage")
-        else:
+        elif self.b2_provider.is_available():
             self.provider = self.b2_provider
             print(f"[StorageService] Active Provider: Backblaze B2 Storage (Default, Status: {self.b2_provider.b2_status})")
+        else:
+            self.provider = self.local_provider
+            print(f"[StorageService] Active Provider: Local Disk Storage (Fallback, B2 Status: {self.b2_provider.b2_status})")
 
     def validate_file(self, file_bytes: bytes, filename: str, is_image: bool = False) -> str:
         if file_bytes is None or len(file_bytes) == 0:

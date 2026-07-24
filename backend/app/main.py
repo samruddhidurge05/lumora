@@ -723,9 +723,10 @@ async def fix_duplicate_api_prefix(request: Request, call_next):
         )
 
 
-# -- Security Headers ----------------------------------------------------------
+# -- Security Headers & CORS Fallback -------------------------------------------
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+    origin = request.headers.get("origin")
     try:
         response = await call_next(request)
     except Exception as exc:
@@ -741,6 +742,10 @@ async def add_security_headers(request: Request, call_next):
                 },
             },
         )
+    if origin and "Access-Control-Allow-Origin" not in response.headers:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
