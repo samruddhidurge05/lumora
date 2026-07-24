@@ -95,8 +95,9 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
         if not is_published or not is_affiliate_enabled:
             continue
 
-        sale_amount = float(item.price_paid or 0)
-        total_sale_amount += sale_amount
+        from app.utils.money_utils import quantize_money
+        sale_amount = quantize_money(item.price_paid or 0)
+        total_sale_amount = quantize_money(total_sale_amount + sale_amount)
 
         # Custom vs Default commission calculation
         comm_value = getattr(product, "commission_value", None)
@@ -104,11 +105,11 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
 
         if comm_value is not None and float(comm_value) > 0:
             if comm_mode == "fixed":
-                commission_amt = float(comm_value)
+                commission_amt = quantize_money(comm_value)
             else:
-                commission_amt = round(sale_amount * float(comm_value) / 100.0, 2)
+                commission_amt = quantize_money(sale_amount * float(comm_value) / 100.0)
         else:
-            commission_amt = round(sale_amount * float(profile.commission_rate or 20.0) / 100.0, 2)
+            commission_amt = quantize_money(sale_amount * float(profile.commission_rate or 20.0) / 100.0)
 
         commission_amt = max(0.0, commission_amt)
 
