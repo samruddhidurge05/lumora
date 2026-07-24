@@ -171,7 +171,7 @@ function AffiliateAttributionCard({ orderId }) {
 
   useEffect(() => {
     if (!orderId) return;
-    const cleanId = String(orderId).replace('ORD-', '');
+    const cleanId = String(orderId).replace(/[^0-9]/g, '');
     setLoading(true);
     setMsg(null);
     backendFetch(`/admin/affiliates/orders/${cleanId}`)
@@ -182,7 +182,7 @@ function AffiliateAttributionCard({ orderId }) {
 
   const handleRegenerate = async (overrideCode = null) => {
     if (!orderId) return;
-    const cleanId = String(orderId).replace('ORD-', '');
+    const cleanId = String(orderId).replace(/[^0-9]/g, '');
     setRegenerating(true);
     setMsg(null);
     try {
@@ -217,7 +217,11 @@ function AffiliateAttributionCard({ orderId }) {
 
   const attr = trace?.attribution;
   const comm = trace?.commission;
-  const hasAttribution = attr?.affiliate_id || (attr?.affiliate_code && attr.affiliate_code !== '—' && attr.affiliate_code !== 'null') || (comm?.id && comm?.id !== null);
+  const hasAttribution = Boolean(
+    attr?.affiliate_id || 
+    (attr?.affiliate_code && attr.affiliate_code !== '—' && attr.affiliate_code !== 'null') || 
+    (comm?.id && comm?.id !== null)
+  );
 
   if (!trace || (!attr?.affiliate_name || !attr?.affiliate_code) || !hasAttribution) return (
     <div className="flex flex-col gap-2">

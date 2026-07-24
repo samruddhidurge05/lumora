@@ -1027,8 +1027,8 @@ def get_order_attribution_trace(
     Payout status, and a detailed Event Timeline stream.
     """
     try:
-        clean_id_str = str(order_id).replace("ORD-", "").replace("ord-", "").strip()
-        if not clean_id_str.isdigit():
+        clean_id_str = re.sub(r'[^\d]', '', str(order_id))
+        if not clean_id_str:
             return {
                 "order_id": order_id,
                 "order_date": None,
@@ -1378,8 +1378,8 @@ def regenerate_commission_for_order(
     If an order has an affiliate code attached but missing commission,
     allows admin to safely regenerate commission.
     """
-    clean_id_str = str(order_id).replace("ORD-", "").replace("ord-", "").strip()
-    if not clean_id_str.isdigit():
+    clean_id_str = re.sub(r'[^\d]', '', str(order_id))
+    if not clean_id_str:
         return {
             "success": False,
             "linked": False,
