@@ -800,6 +800,11 @@ function dedupeById(arr) {
   });
 }
 
+// Helper: sort pinned products to front (disabled)
+function pinnedFirst(arr) {
+  return arr;
+}
+
 // Helper: sort products by created_at / createdAt timestamp descending (newest first)
 function sortByCreationDateDesc(list) {
   return [...list].sort((a, b) => {
