@@ -8,6 +8,7 @@ import { backendFetch } from '../../utils/api';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { ProductQrButton } from '../../components/product/ProductQrCode';
 import { calculateCommission } from '../../utils/referralUtils';
 
