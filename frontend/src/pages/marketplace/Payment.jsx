@@ -40,10 +40,10 @@ export default function Payment() {
   const checkoutItems = buyNowProduct ? [buyNowProduct] : cart;
 
   const getAffiliateCode = () => {
-    let code = sessionStorage.getItem('lumora_aff_ref');
+    let code = sessionStorage.getItem('lumora_aff_ref') || localStorage.getItem('lumora_aff_ref');
     if (!code) {
       try {
-        const stored = localStorage.getItem('lumora_pending_referral');
+        const stored = localStorage.getItem('lumora_pending_referral') || sessionStorage.getItem('lumora_pending_referral');
         if (stored) {
           const parsed = JSON.parse(stored);
           code = parsed?.referral_code || null;

@@ -61,6 +61,7 @@ export default function ReferralRouteHandler() {
           timestamp: Date.now()
         };
         localStorage.setItem('lumora_pending_referral', JSON.stringify(referralPayload));
+        localStorage.setItem('lumora_aff_ref', refCode);
         sessionStorage.setItem('lumora_aff_ref', refCode);
         if (sessionId) sessionStorage.setItem('lumora_ref_session_id', sessionId);
 

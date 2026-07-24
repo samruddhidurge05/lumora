@@ -172,14 +172,14 @@ class PurchaseService:
                         # Verify passed code matches an active affiliate profile or referral link
                         check_aff = db.query(AffiliateProfile).filter(
                             AffiliateProfile.referral_code == clean_passed,
-                            AffiliateProfile.is_active == True
+                            (AffiliateProfile.is_active == True) | (AffiliateProfile.status.in_(["active", "approved"]))
                         ).first()
                         if not check_aff:
                             check_link = db.query(ReferralLink).filter(
                                 ReferralLink.referral_code == clean_passed,
                                 ReferralLink.is_active == True
                             ).first()
-                            if check_link and check_link.affiliate and check_link.affiliate.is_active:
+                            if check_link and check_link.affiliate:
                                 check_aff = check_link.affiliate
 
                         if check_aff:
@@ -192,7 +192,7 @@ class PurchaseService:
                         # 6a. First search default profile code
                         aff = db.query(AffiliateProfile).filter(
                             AffiliateProfile.referral_code == clean_code,
-                            AffiliateProfile.is_active == True
+                            (AffiliateProfile.is_active == True) | (AffiliateProfile.status.in_(["active", "approved"]))
                         ).first()
 
                         # 6b. Fallback: search custom product referral links
@@ -201,7 +201,7 @@ class PurchaseService:
                                 ReferralLink.referral_code == clean_code,
                                 ReferralLink.is_active == True
                             ).first()
-                            if ref_link_obj and ref_link_obj.affiliate and ref_link_obj.affiliate.is_active:
+                            if ref_link_obj and ref_link_obj.affiliate:
                                 aff = ref_link_obj.affiliate
 
                         if aff:

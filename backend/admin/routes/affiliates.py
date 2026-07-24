@@ -1355,6 +1355,7 @@ def get_funnel_analytics(
 def regenerate_commission_for_order(
     order_id: int,
     force: bool = Query(False, description="Force regeneration even if commission exists"),
+    referral_code: Optional[str] = Query(None, description="Optional referral code to manually assign/recover"),
     db: Session = Depends(get_db),
     admin_user=Depends(require_admin_role)
 ):
@@ -1376,7 +1377,11 @@ def regenerate_commission_for_order(
         )
 
     # Multi-source deduction for referral code
-    code = order.referral_code_used
+    code = referral_code.strip().upper() if referral_code and referral_code.strip() else None
+
+    if not code:
+        code = order.referral_code_used
+
     if not code and order.affiliate_id:
         aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == order.affiliate_id).first()
         if aff_prof:
@@ -1389,34 +1394,61 @@ def regenerate_commission_for_order(
 
     if not code:
         aff_ref = db.query(AffiliateReferral).filter(AffiliateReferral.order_id == order_id).first()
-        if aff_ref and aff_ref.affiliate_id:
-            aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_ref.affiliate_id).first()
-            if aff_prof:
-                code = aff_prof.referral_code
+        if aff_ref:
+            code = aff_ref.referral_code or (
+                db.query(AffiliateProfile).filter(AffiliateProfile.id == aff_ref.affiliate_id).first().referral_code
+                if aff_ref.affiliate_id else None
+            )
 
     if not code and order.user_id:
         recent_ref = db.query(AffiliateReferral).filter(
             AffiliateReferral.customer_id == order.user_id
         ).order_by(desc(AffiliateReferral.created_at)).first()
-        if recent_ref and recent_ref.affiliate_id:
-            aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == recent_ref.affiliate_id).first()
-            if aff_prof:
-                code = aff_prof.referral_code
+        if recent_ref:
+            code = recent_ref.referral_code
+            if not code and recent_ref.affiliate_id:
+                aff_prof = db.query(AffiliateProfile).filter(AffiliateProfile.id == recent_ref.affiliate_id).first()
+                if aff_prof:
+                    code = aff_prof.referral_code
+
+    if not code and order.items:
+        prod_ids = [it.product_id for it in order.items if it.product_id]
+        if prod_ids:
+            prod_ref = db.query(AffiliateReferral).filter(
+                AffiliateReferral.product_id.in_(prod_ids)
+            ).order_by(desc(AffiliateReferral.created_at)).first()
+            if prod_ref:
+                code = prod_ref.referral_code
 
     if not code:
         raise HTTPException(status_code=400, detail="Order does not contain or link to a referral code.")
 
-    # Update order with deduced referral code if missing
-    if not order.referral_code_used:
-        order.referral_code_used = code
-        db.commit()
+    # Validate code against AffiliateProfile or ReferralLink
+    clean_code = code.strip().upper()
+    aff_profile = db.query(AffiliateProfile).filter(AffiliateProfile.referral_code == clean_code).first()
+    if not aff_profile:
+        ref_link = db.query(ReferralLink).filter(ReferralLink.referral_code == clean_code).first()
+        if ref_link and ref_link.affiliate:
+            aff_profile = ref_link.affiliate
+
+    # Update order with deduced referral code and affiliate_id
+    order.referral_code_used = clean_code
+    if aff_profile:
+        order.affiliate_id = aff_profile.id
+    db.commit()
 
     if existing_comm and force:
         db.delete(existing_comm)
         db.commit()
 
     from app.api.orders.routes import _create_affiliate_commissions
-    _create_affiliate_commissions(db, order, code, order.user_id)
+    _create_affiliate_commissions(db, order, clean_code, order.user_id)
+
+    return {
+        "message": f"Commission regenerated for Order #{order_id} using referral code '{clean_code}'.",
+        "order_id": order_id,
+        "referral_code": clean_code
+    }
 
     new_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == order_id).first()
     if new_comm:

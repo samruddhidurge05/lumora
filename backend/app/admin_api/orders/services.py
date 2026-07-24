@@ -89,7 +89,10 @@ def get_order_by_id(order_id: str):
                 "status": order.status or "completed",
                 "paymentStatus": "Paid" if (order.status or "").lower() == "completed" else "Pending",
                 "paymentMethod": order.payment_method or "upi",
-                "createdAt": order.created_at.isoformat() + "Z" if order.created_at else ""
+                "createdAt": order.created_at.isoformat() + "Z" if order.created_at else "",
+                "affiliateId": str(order.affiliate_id) if order.affiliate_id else None,
+                "referralCodeUsed": order.referral_code_used or None,
+                "referralLinkId": str(order.referral_link_id) if order.referral_link_id else None,
             }
         finally:
             db_s.close()
