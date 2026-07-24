@@ -57,10 +57,12 @@ export default function Downloads() {
     const updated = Array.from(new Set([...deletedIds, ...selectedIds]));
     saveDeletedIds(updated);
     setSelectedIds([]);
+    window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
   };
 
   const handleRestoreDeleted = () => {
     saveDeletedIds([]);
+    window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
   };
 
   // Build owned list: merge backend order items + locally tracked ownedProducts

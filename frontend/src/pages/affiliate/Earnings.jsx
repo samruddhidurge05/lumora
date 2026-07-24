@@ -238,10 +238,10 @@ export default function AffiliateEarnings({
      MAIN RENDER
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
+    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="aff-earnings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Financial Overview</span>
           <h2 className="text-editorial" style={{ fontSize: '2.2rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Earnings &amp; Payouts</h2>
@@ -268,7 +268,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── STAT CARDS ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: '20px' }}>
+      <div className="aff-stat-grid" style={{ position: 'relative', zIndex: 1 }}>
         {[
           {
             label: 'Total Earnings',
@@ -313,7 +313,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+      <div className="premium-flat-card aff-commission-strip" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
         <div>
           <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Commission Rate</span>
           <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#7B3FA0', marginTop: '2px' }}>{commissionRate}%</div>
@@ -432,7 +432,7 @@ export default function AffiliateEarnings({
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="aff-table-wrap" style={{ minWidth: 0 }}>
           {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
             {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
@@ -511,9 +511,9 @@ export default function AffiliateEarnings({
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <div className="aff-table-wrap" style={{ minWidth: 0 }}>
             {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
               {['Date', 'Amount', 'Method', 'Status'].map(h => (
                 <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
               ))}
@@ -526,7 +526,7 @@ export default function AffiliateEarnings({
                   style={{
                     display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
                     gap: '12px', padding: '13px 16px',
-                    borderRadius: '10px',
+                    borderRadius: '10px', minWidth: '480px',
                     borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
                     transition: 'background 0.2s',
                     alignItems: 'center',
