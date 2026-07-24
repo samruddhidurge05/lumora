@@ -1055,9 +1055,9 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
    Desktop (>900px) untouched.
 ════════════════════════════════════════════════════════════════════ */
 
-/* ── Base page padding ── */
-.aff-page-wrap { padding: 32px; box-sizing: border-box; width: 100%; }
-@media (max-width: 900px) { .aff-page-wrap { padding: 14px 14px 40px !important; box-sizing: border-box !important; } }
+/* ── Base page wrap: zero outer padding to avoid double margin with main ── */
+.aff-page-wrap { padding: 0; box-sizing: border-box; width: 100%; max-width: 100%; }
+@media (max-width: 900px) { .aff-page-wrap { padding: 0 !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; } }
 
 /* ── Stat grid: 4-col on desktop → 1-col on mobile/tablet (<=900px) ── */
 .aff-stat-grid {

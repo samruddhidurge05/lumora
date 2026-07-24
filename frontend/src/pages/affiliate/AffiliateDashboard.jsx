@@ -289,7 +289,7 @@ function AffiliateDashboardInner() {
       )}
 
       {/* ── MAIN CONTENT AREA ─────────────────────────────────────────── */}
-      <div style={{ flex: 1, marginLeft: '240px', minHeight: '100vh', position: 'relative', zIndex: 10 }} className="aff-main-area">
+      <div style={{ flex: 1, marginLeft: '240px', minHeight: '100vh', position: 'relative', zIndex: 10, minWidth: 0, maxWidth: '100vw', overflowX: 'hidden' }} className="aff-main-area">
 
         {/* Top bar */}
         <header style={{
@@ -304,17 +304,20 @@ function AffiliateDashboardInner() {
           alignItems: 'center',
           justifyContent: 'space-between',
           transition: 'all 0.3s',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}>
           {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="aff-hamburger"
-            style={{ display: 'none', background: 'none', border: 'none', outline: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }}
+            style={{ display: 'none', background: 'none', border: 'none', outline: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0, flexShrink: 0 }}
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
             {activeTab !== 'dashboard' && (
               <button
                 onClick={() => setActiveTab('dashboard')}
@@ -332,16 +335,16 @@ function AffiliateDashboardInner() {
                 <ArrowLeft size={18} />
               </button>
             )}
-            <div>
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Affiliate Dashboard</span>
-              <h1 className="text-editorial" style={{ fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.1, marginTop: '1px' }}>
+            <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Affiliate Dashboard</span>
+              <h1 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.1, marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {isSuspended ? "Account Suspended" : PAGE_TITLES[activeTab]}
               </h1>
             </div>
           </div>
 
           {/* Right: breadcrumb + quick actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             {/* Affiliate Cart Button */}
             <button
               onClick={() => setIsAffCartOpen(true)}
@@ -381,7 +384,7 @@ function AffiliateDashboardInner() {
         </header>
 
         {/* Page content */}
-        <main style={{ padding: '36px 40px', maxWidth: '1200px', overflowX: 'hidden' }}>
+        <main style={{ padding: '36px 40px', maxWidth: '1200px', width: '100%', boxSizing: 'border-box', overflowX: 'hidden', minWidth: 0 }}>
           {isSuspended ? (
             <div style={{
               background: 'rgba(255, 255, 255, 0.45)',
