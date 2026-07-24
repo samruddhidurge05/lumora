@@ -503,6 +503,13 @@ def restore_products():
     )
     from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
 
+    # Quick Fast Storage Probe
+    try:
+        from app.services.storage_service import storage_service
+        _logger.info("[startup] Fast Storage Health Probe: Backblaze B2 Status = %s (Available: %s)", storage_service.b2_provider.b2_status, storage_service.b2_provider.is_available())
+    except Exception as st_err:
+        _logger.warning("[startup] Storage health probe notice: %s", st_err)
+
     db = SessionLocal()
     try:
         # ── Seed guard: only seed if the database is completely empty ──────────

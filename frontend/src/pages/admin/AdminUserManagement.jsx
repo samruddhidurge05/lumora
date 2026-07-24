@@ -416,13 +416,14 @@ export default function AdminUserManagement() {
               No team members found.
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+          <>
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
                     {['Name', 'Email', 'Role', 'Joined', 'Last Login', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.65rem',
-                                           fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -434,10 +435,7 @@ export default function AdminUserManagement() {
                       <tr key={member.user_id || member.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.1)' }}>
                         <td style={{ padding: '14px 20px', fontSize: '0.85rem', fontWeight: 700, color: '#2D004D' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%',
-                                          background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
                               {(member.name || 'A')[0].toUpperCase()}
                             </div>
                             {member.name}
@@ -446,33 +444,12 @@ export default function AdminUserManagement() {
                         </td>
                         <td style={{ padding: '14px 20px', fontSize: '0.78rem', color: '#7B3FA0' }}>{member.email}</td>
                         <td style={{ padding: '14px 20px' }}>{roleBadge(member.role_level)}</td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                          {member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                          {formatRelativeTime(member.last_login_at)}
-                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>{member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}</td>
+                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>{formatRelativeTime(member.last_login_at)}</td>
                         <td style={{ padding: '14px 20px' }}>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <AdminSelect
-                              value={currentRole}
-                              disabled={isOwnRow}
-                              onChange={e => {
-                                const newRole = e.target.value;
-                                setPendingRole(prev => ({ ...prev, [member.user_id]: newRole }));
-                                setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name });
-                              }}
-                              options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
-                            />
-                            {!isOwnRow && (
-                              <button
-                                onClick={() => setDeactivateTarget(member.user_id)}
-                                style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
-                                         background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem',
-                                         fontWeight: 700, cursor: 'pointer' }}>
-                                Deactivate
-                              </button>
-                            )}
+                            <AdminSelect value={currentRole} disabled={isOwnRow} onChange={e => { const newRole = e.target.value; setPendingRole(prev => ({ ...prev, [member.user_id]: newRole })); setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name }); }} options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))} />
+                            {!isOwnRow && (<button onClick={() => setDeactivateTarget(member.user_id)} style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>Deactivate</button>)}
                           </div>
                         </td>
                       </tr>
@@ -481,6 +458,39 @@ export default function AdminUserManagement() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card Stack (< 768px) */}
+            <div className="block md:hidden space-y-3 p-3">
+              {sortedTeam.map((member) => {
+                const isOwnRow = member.user_id === ownUserId;
+                const currentRole = pendingRole[member.user_id] ?? member.role_level;
+                return (
+                  <div key={member.user_id || member.id} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
+                          {(member.name || 'A')[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#2D004D] leading-tight flex items-center gap-1.5">{member.name}{isOwnRow && <span style={{ fontSize: '0.55rem', color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '1px 5px', borderRadius: '4px' }}>You</span>}</p>
+                          <p className="text-[10px] text-[#7B3FA0] leading-tight truncate max-w-[180px]">{member.email}</p>
+                        </div>
+                      </div>
+                      {roleBadge(member.role_level)}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px] text-[#7B3FA0] pt-1 border-t border-stone-100">
+                      <div><span className="font-bold uppercase text-[9px] tracking-wider">Joined:</span> {member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}</div>
+                      <div><span className="font-bold uppercase text-[9px] tracking-wider">Last login:</span> {formatRelativeTime(member.last_login_at)}</div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <AdminSelect value={currentRole} disabled={isOwnRow} onChange={e => { const newRole = e.target.value; setPendingRole(prev => ({ ...prev, [member.user_id]: newRole })); setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name }); }} options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))} />
+                      {!isOwnRow && (<button onClick={() => setDeactivateTarget(member.user_id)} style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>Deactivate</button>)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
           )}
         </section>
 
@@ -498,70 +508,33 @@ export default function AdminUserManagement() {
               No invitations sent yet.
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+          <>
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
                     {['Email', 'Role', 'Status', 'Sent', 'Expires / Accepted', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '0.62rem',
-                                           fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
-                                           color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {invitations.map(inv => (
-                    <tr key={inv.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.08)',
-                                              opacity: inv.status === 'expired' || inv.status === 'revoked' ? 0.65 : 1 }}>
+                    <tr key={inv.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.08)', opacity: inv.status === 'expired' || inv.status === 'revoked' ? 0.65 : 1 }}>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2D004D' }}>{inv.email}</div>
-                        {inv.invited_name && (
-                          <div style={{ fontSize: '0.68rem', color: '#8E6AA8', marginTop: '2px' }}>{inv.invited_name}</div>
-                        )}
+                        {inv.invited_name && (<div style={{ fontSize: '0.68rem', color: '#8E6AA8', marginTop: '2px' }}>{inv.invited_name}</div>)}
                       </td>
                       <td style={{ padding: '12px 16px' }}>{roleBadge(inv.role_level)}</td>
                       <td style={{ padding: '12px 16px' }}>{statusBadge(inv.status)}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                        {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                        {inv.status === 'accepted' && inv.accepted_at
-                          ? new Date(inv.accepted_at).toLocaleDateString()
-                          : inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}
-                      </td>
+                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>{inv.status === 'accepted' && inv.accepted_at ? new Date(inv.accepted_at).toLocaleDateString() : inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}</td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                          {/* Copy Link — pending only (Req 11) */}
-                          {inv.status === 'pending' && inv.invite_token && (
-                            <button
-                              onClick={() => handleCopyLink(inv.invite_token)}
-                              title="Copy invitation link"
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)',
-                                       background: 'rgba(123,63,160,0.06)', color: '#5A1E7E',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              📋 Copy
-                            </button>
-                          )}
-                          {/* Resend — pending or expired (Req 2) */}
-                          {(inv.status === 'pending' || inv.status === 'expired') && (
-                            <button
-                              onClick={() => handleResend(inv.id, inv.email)}
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)',
-                                       background: 'rgba(59,130,246,0.06)', color: '#1D4ED8',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              ↩ Resend
-                            </button>
-                          )}
-                          {/* Revoke — pending only (Req 3) */}
-                          {inv.status === 'pending' && (
-                            <button
-                              onClick={() => handleRevoke(inv.id)}
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
-                                       background: 'rgba(220,38,38,0.06)', color: '#DC2626',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              ✕ Revoke
-                            </button>
-                          )}
+                          {inv.status === 'pending' && inv.invite_token && (<button onClick={() => handleCopyLink(inv.invite_token)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)', background: 'rgba(123,63,160,0.06)', color: '#5A1E7E', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>📋 Copy</button>)}
+                          {(inv.status === 'pending' || inv.status === 'expired') && (<button onClick={() => handleResend(inv.id, inv.email)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)', background: 'rgba(59,130,246,0.06)', color: '#1D4ED8', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>↩ Resend</button>)}
+                          {inv.status === 'pending' && (<button onClick={() => handleRevoke(inv.id)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>✕ Revoke</button>)}
                         </div>
                       </td>
                     </tr>
@@ -569,6 +542,28 @@ export default function AdminUserManagement() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card Stack (< 768px) */}
+            <div className="block md:hidden space-y-3 p-3">
+              {invitations.map(inv => (
+                <div key={inv.id} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2" style={{ opacity: inv.status === 'expired' || inv.status === 'revoked' ? 0.65 : 1 }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-[#2D004D] leading-tight">{inv.email}</p>
+                      {inv.invited_name && <p className="text-[10px] text-[#8E6AA8]">{inv.invited_name}</p>}
+                    </div>
+                    {statusBadge(inv.status)}
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 border-t border-stone-100">{roleBadge(inv.role_level)}<span className="text-[10px] text-[#8E6AA8]">Sent: {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</span></div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {inv.status === 'pending' && inv.invite_token && (<button onClick={() => handleCopyLink(inv.invite_token)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)', background: 'rgba(123,63,160,0.06)', color: '#5A1E7E', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>📋 Copy</button>)}
+                    {(inv.status === 'pending' || inv.status === 'expired') && (<button onClick={() => handleResend(inv.id, inv.email)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)', background: 'rgba(59,130,246,0.06)', color: '#1D4ED8', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>↩ Resend</button>)}
+                    {inv.status === 'pending' && (<button onClick={() => handleRevoke(inv.id)} style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>✕ Revoke</button>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
           )}
         </section>
 

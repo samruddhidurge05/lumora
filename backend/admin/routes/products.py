@@ -253,10 +253,39 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
         product.preview_path
     ]
 
-    # -- Delete from Firestore BEFORE removing the SQLite row ------------------
-    # This ensures no orphan Firestore documents are left when the product has
-    # cross-collection references. delete_product_from_firestore always deletes
-    # and logs reference warnings - it never blocks the admin delete.
+    # -- Clean up child dependencies to prevent IntegrityError on delete ---------
+    try:
+        from app.models.order import OrderItem
+        from app.models.affiliate import ReferralLink, AffiliateCommission, ReferralAttribution, AffiliateReferral
+        from app.models.review import Review
+        from app.models.price_alert import PriceAlert
+        from app.models.recently_viewed import RecentlyViewed
+
+        # 1. Clean up OrderItems
+        db.query(OrderItem).filter(OrderItem.product_id == product_id).delete(synchronize_session=False)
+
+        # 2. Delete associated ReferralLinks for this product
+        db.query(ReferralLink).filter(ReferralLink.product_id == product_id).delete(synchronize_session=False)
+
+        # 3. Clean up AffiliateCommissions
+        db.query(AffiliateCommission).filter(AffiliateCommission.product_id == product_id).delete(synchronize_session=False)
+
+        # 4. Clean up ReferralAttributions
+        db.query(ReferralAttribution).filter(ReferralAttribution.product_id == product_id).delete(synchronize_session=False)
+
+        # 5. Clean up AffiliateReferrals
+        db.query(AffiliateReferral).filter(AffiliateReferral.product_id == product_id).delete(synchronize_session=False)
+
+        # 6. Clean up Reviews, PriceAlerts, RecentlyViewed
+        db.query(Review).filter(Review.product_id == product_id).delete(synchronize_session=False)
+        db.query(PriceAlert).filter(PriceAlert.product_id == product_id).delete(synchronize_session=False)
+        db.query(RecentlyViewed).filter(RecentlyViewed.product_id == product_id).delete(synchronize_session=False)
+
+        db.flush()
+    except Exception as cleanup_err:
+        logger.warning("[product-delete] Warning cleaning child references for product %s: %s", product_id, cleanup_err)
+
+    # -- Delete from Firestore BEFORE removing the database row ------------------
     result = delete_product_from_firestore(product_id)
     if not result.get("deleted") and result.get("reason") != "firestore_unavailable":
         logger.warning(

@@ -397,108 +397,102 @@ export default function CustomersManagement() {
             </div>
           )}
 
-          {/* Table Data */}
+          {/* Table Data — dual render: desktop table + mobile card stack */}
           {!isPageLoading && !error && filteredCustomers.length > 0 && (
-            <div className="overflow-x-auto">
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
-                    {['Customer', 'Email', 'UID', 'Joined', 'Orders', 'Spent', 'Status', 'Actions'].map(h => (
-                      <th key={h} style={{
-                        padding: '12px 20px',
-                        textAlign: 'left',
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        letterSpacing: '1px',
-                        textTransform: 'uppercase',
-                        color: '#7B3FA0',
-                        whiteSpace: 'nowrap'
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedCustomers.map((customer, idx) => (
-                    <tr
-                      key={customer.uid}
-                      onClick={() => setSelectedCustomer(customer)}
-                      style={{
-                        borderBottom: idx < pagedCustomers.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
-                        background: 'transparent',
-                        transition: 'background 0.2s',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      {/* Customer Name / Avatar */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #D8BFE3, #B886D0)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0
-                          }}>
-                            {customer.name[0].toUpperCase()}
-                          </div>
-                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>
-                            {customer.name}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Email */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: '12px', color: '#7B3FA0' }}>{customer.email}</span>
-                      </td>
-
-                      {/* UID */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#8E6AA8' }}>{customer.uid}</span>
-                      </td>
-
-                      {/* Joined Date */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: '12px', color: '#7B3FA0' }}>
-                          {formatJoinedDate(customer.joinedDate)}
-                        </span>
-                      </td>
-
-                      {/* Orders Count */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
-                          {customer.totalOrders}
-                        </span>
-                      </td>
-
-                      {/* Spent */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>
-                          ₹{customer.totalSpent.toLocaleString()}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <StatusBadge status={customer.status || 'active'} />
-                      </td>
-
-                      {/* Actions */}
-                      <td style={{ padding: '14px 20px' }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#7B3FA0]/30 bg-[#7B3FA0]/5 text-[#7B3FA0] text-[10px] font-bold uppercase tracking-wider hover:bg-[#7B3FA0]/10 transition"
-                        >
-                          <Icon name="Eye" size={11} />
-                          Details
-                        </button>
-                      </td>
+            <>
+              {/* ── Desktop Table View (≥ 768px) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
+                      {['Customer', 'Email', 'UID', 'Joined', 'Orders', 'Spent', 'Status', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '9px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {pagedCustomers.map((customer, idx) => (
+                      <tr
+                        key={customer.uid}
+                        onClick={() => setSelectedCustomer(customer)}
+                        style={{ borderBottom: idx < pagedCustomers.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none', background: 'transparent', transition: 'background 0.2s', cursor: 'pointer' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <td style={{ padding: '14px 20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #D8BFE3, #B886D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                              {customer.name[0].toUpperCase()}
+                            </div>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>{customer.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0' }}>{customer.email}</span></td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#8E6AA8' }}>{customer.uid}</span></td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0' }}>{formatJoinedDate(customer.joinedDate)}</span></td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>{customer.totalOrders}</span></td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>₹{customer.totalSpent.toLocaleString()}</span></td>
+                        <td style={{ padding: '14px 20px' }}><StatusBadge status={customer.status || 'active'} /></td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#7B3FA0]/30 bg-[#7B3FA0]/5 text-[#7B3FA0] text-[10px] font-bold uppercase tracking-wider hover:bg-[#7B3FA0]/10 transition"
+                          >
+                            <Icon name="Eye" size={11} />
+                            Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Mobile Card Stack (< 768px) ── */}
+              <div className="block md:hidden space-y-3 p-3">
+                {pagedCustomers.map(customer => (
+                  <div
+                    key={customer.uid}
+                    onClick={() => setSelectedCustomer(customer)}
+                    className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5 cursor-pointer active:scale-[0.99] transition-transform"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #D8BFE3, #B886D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                          {customer.name[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#2D004D] leading-tight">{customer.name}</p>
+                          <p className="text-[10px] text-[#7B3FA0] leading-tight truncate max-w-[180px]">{customer.email}</p>
+                        </div>
+                      </div>
+                      <StatusBadge status={customer.status || 'active'} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-stone-100">
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Orders</p>
+                        <p className="text-xs font-bold text-[#2D004D]">{customer.totalOrders}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Spent</p>
+                        <p className="text-xs font-bold text-[#9B2C5E]">₹{customer.totalSpent.toLocaleString()}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Joined</p>
+                        <p className="text-xs font-bold text-[#2D004D]">{formatJoinedDate(customer.joinedDate)}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-[#7B3FA0]/30 bg-[#7B3FA0]/5 text-[#7B3FA0] text-[10px] font-bold uppercase tracking-wider"
+                    >
+                      <Icon name="Eye" size={11} />
+                      View Details
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TableContainer>
 

@@ -5,14 +5,14 @@ import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid, Filter
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="px-3 py-1 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[9px] font-bold tracking-widest uppercase">
+        <div className="flex items-center gap-3 mb-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
             MARKETPLACE ADMINISTRATION
           </span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-2">
+        <h1 className="text-xl sm:text-2xl md:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5">
           {title}
         </h1>
         {subtitle && (
@@ -22,7 +22,7 @@ export function PageHeader({ title, subtitle, actions }) {
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-3 flex-wrap md:flex-nowrap flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap flex-shrink-0">
           {actions}
         </div>
       )}
@@ -39,7 +39,7 @@ export function StatsGrid({ children, columns = 4 }) {
       : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
       
   return (
-    <div className={`${gridColsClass} gap-6 mb-8`}>
+    <div className={`${gridColsClass} gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8`}>
       {children}
     </div>
   );
@@ -50,7 +50,7 @@ export function StatsGrid({ children, columns = 4 }) {
 export function DashboardCard({ title, value, icon: IconComponent, trend, trendLabel, onClick, chart, isLoading }) {
   const cardContent = (
     <>
-      <div className="flex items-center justify-between mb-3 text-[#7B3FA0]">
+      <div className="flex items-center justify-between mb-2 text-[#7B3FA0]">
         <span className="text-[8px] font-extrabold tracking-widest uppercase">{title}</span>
         {IconComponent && typeof IconComponent === 'function' ? (
           <IconComponent size={14} className="text-[#7B3FA0]" />
@@ -59,15 +59,15 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
         )}
       </div>
       
-      <h3 className="text-2xl font-serif font-black text-[#2D004D] mb-1.5 transition-colors group-hover:text-[#5A1E7E]">
+      <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-[#2D004D] mb-1 transition-colors group-hover:text-[#5A1E7E]">
         {isLoading ? (
-          <div className="h-8 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
+          <div className="h-7 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
         ) : (
           value
         )}
       </h3>
       
-      <div className="flex items-center justify-between mt-2 min-h-[20px]">
+      <div className="flex items-center justify-between mt-1.5 min-h-[18px]">
         {isLoading ? (
           <div className="h-3 bg-[#381347]/5 animate-pulse rounded-md w-1/2" />
         ) : (
@@ -84,7 +84,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
       </div>
       
       {chart && (
-        <div className="h-8 w-full mt-3 overflow-visible">
+        <div className="h-8 w-full mt-2 overflow-visible">
           {isLoading ? (
             <div className="h-full bg-[#381347]/5 animate-pulse rounded-md w-full" />
           ) : (
@@ -95,14 +95,14 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     </>
   );
 
-  const baseClass = "glass-surface rounded-3xl p-5 border border-white/50 hover:border-white/90 hover:-translate-y-1 transition-all duration-500 shadow-sm relative overflow-hidden group";
+  const baseClass = "glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-white/50 hover:border-white/90 hover:-translate-y-1 transition-all duration-500 shadow-sm relative overflow-hidden group h-auto";
   
   if (onClick) {
     return (
       <button 
         type="button" 
         onClick={onClick} 
-        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30`}
+        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 min-h-[44px]`}
       >
         {cardContent}
       </button>
@@ -120,15 +120,15 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
 // Custom container element matching design details
 export function GlassCard({ children, className = '', title, subtitle, headerActions }) {
   return (
-    <div className={`glass-surface rounded-3xl p-6 border border-white/50 shadow-sm relative overflow-hidden ${className}`}>
+    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/50 shadow-sm relative overflow-hidden h-auto ${className}`}>
       {(title || subtitle || headerActions) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-200/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-stone-200/50">
           <div>
-            {subtitle && <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{subtitle}</h4>}
-            {title && <h2 className="text-lg font-serif font-black text-[#2D004D] mt-0.5">{title}</h2>}
+            {subtitle && <h4 className="text-[8px] sm:text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{subtitle}</h4>}
+            {title && <h2 className="text-base sm:text-lg font-serif font-black text-[#2D004D] mt-0.5">{title}</h2>}
           </div>
           {headerActions && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {headerActions}
             </div>
           )}

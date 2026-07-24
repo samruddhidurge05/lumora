@@ -9,7 +9,7 @@ import useAuth from '../../../hooks/useAuth';
 import { backendFetch } from '../../../utils/api';
 import { useAdminContext } from '../../../context/AdminContext';
 
-export default function AdminSidebar({ activePage }) {
+export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, logout } = useAuth();
@@ -108,14 +108,18 @@ export default function AdminSidebar({ activePage }) {
 
   return (
     <aside
-      className={`admin-sidebar glass-surface ${isCollapsed ? 'collapsed' : ''}`}
-      role="navigation" aria-label="Admin Navigation" aria-expanded={!isCollapsed}
+      className={`admin-sidebar glass-surface ${isCollapsed && !isMobileDrawer ? 'collapsed' : ''}`}
+      role="navigation" aria-label="Admin Navigation" aria-expanded={!isCollapsed || isMobileDrawer}
       style={{
-        width: '260px', borderRadius: '24px', padding: '24px 16px',
+        width: isMobileDrawer ? '100%' : (isCollapsed ? '76px' : '260px'),
+        borderRadius: isMobileDrawer ? '16px' : '24px',
+        padding: '24px 16px',
         display: 'flex', flexDirection: 'column', gap: '20px',
         border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(20px)',
         boxShadow: '0 8px 32px rgba(90,30,126,0.04)',
-        height: 'calc(100vh - 48px)', position: 'sticky', top: '24px',
+        height: isMobileDrawer ? 'auto' : 'calc(100vh - 48px)',
+        position: isMobileDrawer ? 'relative' : 'sticky',
+        top: isMobileDrawer ? '0' : '24px',
         flexShrink: 0, boxSizing: 'border-box',
       }}
     >

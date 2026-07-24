@@ -335,12 +335,12 @@ export default function Dashboard() {
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
 
         {/* --- LAYER 1: HERO INTELLIGENCE HEADER --- */}
-        <section className="mb-10">
+        <section className="mb-6 md:mb-8">
           <PageHeader
             title={`${headerStats.greeting}, Admin`}
             subtitle={`${headerStats.marketStatus}. ${isLoading ? 'Loading live data...' : `Last updated: ${dashData?._meta?.fetchedAt ? new Date(dashData._meta.fetchedAt).toLocaleTimeString() : 'just now'}`}`}
             actions={
-              <div className="flex items-center gap-6 pt-2 md:pt-0">
+              <div className="flex items-center gap-4 sm:gap-6 pt-2 md:pt-0">
                 <div className="flex flex-col text-right">
                   <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Pulse Health</span>
                   <span className="text-xs font-bold text-[#B886D0] bg-[#B886D0]/10 px-2 py-0.5 rounded mt-1 border border-[#B886D0]/20">{healthStatus || (isLoading ? '...' : 'Healthy')}</span>
@@ -355,6 +355,34 @@ export default function Dashboard() {
               </div>
             }
           />
+
+          {/* Quick Actions 2-Column Grid on Mobile / 4-Column on Desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4">
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/products'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Package" size={14} /> Add Product
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/orders'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Activity" size={14} /> View Orders
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/team'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Users" size={14} /> Team
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/support'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Globe" size={14} /> Support
+            </button>
+          </div>
         </section>
 
         {/* --- LAYER 2: CORE METRICS GRID --- */}
@@ -621,7 +649,8 @@ export default function Dashboard() {
           
           {/* A. Product Performance Matrix (60%) */}
           <GlassCard title="Product Performance Matrix" subtitle="Asset Telemetry" className="lg:col-span-6">
-            <div className="overflow-x-auto w-full">
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto w-full">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-stone-200/40 pb-2">
@@ -667,6 +696,37 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Stacked Card View (< 768px) */}
+            <div className="block md:hidden space-y-3">
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-3 bg-white/70 rounded-2xl border border-stone-200/40 animate-pulse space-y-2">
+                    <div className="h-4 bg-[#381347]/15 rounded w-3/4" />
+                    <div className="h-3 bg-[#381347]/10 rounded w-1/2" />
+                  </div>
+                ))
+              ) : ecosystemProducts.length === 0 ? (
+                <div className="py-6 text-center text-xs text-[#7B3FA0]">No published products with orders yet.</div>
+              ) : ecosystemProducts.map((p) => (
+                <div key={p.id} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs font-bold text-[#2D004D] line-clamp-1">{p.name}</span>
+                    <span className="text-xs font-black text-[#2D004D]">{currencySymbol}{formatValue(p.revenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-[#7B3FA0] pt-1 border-t border-stone-100">
+                    <span>Orders: <strong className="text-[#2D004D]">{p.orders}</strong></span>
+                    <span>Conv: <strong className="text-[#2D004D]">{p.conversion}%</strong></span>
+                    <div className="flex items-center gap-1">
+                      <span>Eng: <strong className="text-[#2D004D]">{p.engagement}%</strong></span>
+                      <span className={`w-2 h-2 rounded-full ${
+                        p.status === 'growth' ? 'bg-[#B886D0]' : 'bg-[#D8BFE3]'
+                      }`} />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </GlassCard>
 
@@ -727,12 +787,12 @@ export default function Dashboard() {
         </section>
 
         {/* --- LAYER 5: LIVE EVENTS & LEADERS & RISK --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
           
           {/* 5. Live Activity Stream (Event Log) - 4 cols */}
-          <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[360px] overflow-hidden flex flex-col justify-between">
+          <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-auto lg:h-[360px] min-h-[280px] overflow-hidden flex flex-col justify-between">
             {/* Vertical scrolling event containers */}
-            <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin">
+            <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin max-h-[300px]">
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-white/80 border border-[#F3EAF8] rounded-2xl animate-pulse">
@@ -788,7 +848,7 @@ export default function Dashboard() {
           </GlassCard>
 
           {/* 6. Creator Economy Panel (Leaderboard) - 4 cols */}
-          <GlassCard title="Creator Leaderboard" subtitle="Marketplace Leaders" className="lg:col-span-4 h-[360px] flex flex-col justify-between">
+          <GlassCard title="Creator Leaderboard" subtitle="Marketplace Leaders" className="lg:col-span-4 h-auto lg:h-[360px] min-h-[280px] flex flex-col justify-between">
             <div className="flex flex-col gap-3.5 flex-1 justify-center my-1">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -837,14 +897,18 @@ export default function Dashboard() {
           <GlassCard 
             title="Risk & Fraud Audit" 
             subtitle="SECURITY LEDGER" 
-            className="lg:col-span-4 h-[360px] flex flex-col justify-between relative overflow-hidden"
+            className="lg:col-span-4 h-auto lg:h-[360px] min-h-[280px] flex flex-col justify-between relative overflow-hidden"
             headerActions={
               <button 
                 onClick={handleTriggerSecurityScan}
                 disabled={isScanning}
-                className="p-1.5 bg-white border border-stone-200/50 rounded-lg hover:bg-stone-100 text-[#7B3FA0] hover:text-[#2D004D] transition-colors"
+                className="p-1.5 bg-white border border-stone-200/50 rounded-lg hover:bg-stone-100 text-[#7B3FA0] hover:text-[#2D004D] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                 title="Trigger Audit Scan"
               >
+                <Icon name="RefreshCw" size={12} className={isScanning ? 'animate-spin' : ''} />
+              </button>
+            }
+          >
                 <Icon name="RefreshCw" size={12} className={isScanning ? 'animate-spin' : ''} />
               </button>
             }

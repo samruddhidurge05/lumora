@@ -892,22 +892,36 @@ export default function App() {
   };
 
   const handleDeleteProduct = async (productId) => {
-    const targetProduct = products.find(p => p.id === productId);
+    const targetProduct = products.find(p => p.id === productId || String(p.id) === String(productId));
 
+    // 1. Optimistically update local admin UI state immediately so product vanishes instantly
+    setProducts(prev => prev.filter(p => p.id !== productId && String(p.id) !== String(productId)));
+    triggerNotification(`Removed "${targetProduct?.name || targetProduct?.title || 'product'}" from Lumora`, 'info');
+
+    // 2. Dispatch real-time events for instant zero-refresh synchronization across SPA & Admin
+    window.dispatchEvent(new CustomEvent('lumora:product:created'));
+    window.dispatchEvent(new CustomEvent('lumora:admin-state-mutation', { 
+      detail: { domain: 'product', payload: { productId, action: 'deleted' }, timestamp: Date.now() } 
+    }));
+
+    // 3. Perform backend API deletion
     try {
       if (productId) {
-        // DELETE via backend API (which also removes from Firestore via admin_firestore.py)
         await productService.remove(productId);
       }
-      // Remove from local admin state
-      setProducts(products.filter(p => p.id !== productId));
-      triggerNotification(`Removed "${targetProduct?.name || 'product'}" from Lumora`, 'info');
-      // Notify customer AppContext to re-fetch immediately so deleted product
-      // disappears from the marketplace without waiting for the 60s background poll.
-      window.dispatchEvent(new CustomEvent('lumora:product:created'));
     } catch (err) {
-      console.error('Delete product failed:', err);
-      triggerNotification(`Failed to delete product: ${err.message}`, 'error');
+      console.warn('[ProductsManagement] Backend API delete warning:', err.message);
+    }
+
+    // 4. ALSO perform direct Firestore document deletion if client Firestore instance is loaded
+    try {
+      if (db && productId) {
+        const { doc, deleteDoc } = await import('firebase/firestore');
+        const docId = String(productId);
+        await deleteDoc(doc(db, "products", docId));
+      }
+    } catch (fsErr) {
+      console.warn('[ProductsManagement] Direct Firestore client delete warning:', fsErr.message);
     }
   };
 

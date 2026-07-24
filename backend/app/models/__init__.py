@@ -24,12 +24,14 @@ from app.models.admin_invitation import AdminInvitation
 from app.models.refund_request import RefundRequest
 from app.models.report import SQLReport
 from app.models.product_download_event import ProductDownloadEvent
+from app.models.storage_metadata import StorageMetadata
 
 __all__ = [
     "Base",
     "SQLReport",
     "RefundRequest",
     "ProductDownloadEvent",
+    "StorageMetadata",
     "User",
     "AuditLog",
     "PlatformSetting",

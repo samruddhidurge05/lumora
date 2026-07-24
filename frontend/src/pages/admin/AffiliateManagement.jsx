@@ -943,42 +943,77 @@ export default function AffiliateManagement() {
                 </button>
               )}
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#2D004D]">
-                <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                  <tr>
-                    <th className="p-4 w-10"><button onClick={toggleSelectAll}>{selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0 ? <CheckSquare size={16} className="text-[#7B3FA0]" /> : <Square size={16} className="text-[#7B3FA0]/40" />}</button></th>
-                    <th className="p-4">Product</th><th className="p-4">Price</th><th className="p-4">Affiliate</th>
-                    <th className="p-4">Commission</th><th className="p-4">Est. Earnings</th><th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EAF8]">
-                  {filteredProducts.map(prod => {
-                    const isSelected = selectedProductIds.includes(prod.id);
-                    const est = calculateCommission(prod.price, prod.commission_mode, prod.commission_value);
-                    return (
-                      <tr key={prod.id} className={`hover:bg-[#F8F3FB]/50 transition-colors ${isSelected ? 'bg-[#F8F3FB]' : ''}`}>
-                        <td className="p-4"><button onClick={() => toggleSelectProduct(prod.id)}>{isSelected ? <CheckSquare size={16} className="text-[#7B3FA0]" /> : <Square size={16} className="text-[#7B3FA0]/40" />}</button></td>
-                        <td className="p-4 font-bold">{prod.title}<span className="block text-[10px] text-[#7B3FA0] font-normal">{prod.category}</span></td>
-                        <td className="p-4 font-semibold">₹{prod.price}</td>
-                        <td className="p-4">{prod.affiliate_enabled ? <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 Enabled</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">⚪ Disabled</span>}</td>
-                        <td className="p-4 font-medium">{prod.affiliate_enabled ? (prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`) : <span className="text-gray-400">—</span>}</td>
-                        <td className="p-4 font-bold text-emerald-600">{prod.affiliate_enabled ? `₹${est.toFixed(2)}` : '—'}</td>
-                        <td className="p-4 text-right space-x-2">
-                          <button onClick={() => handleToggleProductAffiliate(prod.id)} className="px-3 py-1.5 rounded-lg border border-[#F3EAF8] hover:bg-white text-[11px] font-bold text-[#7B3FA0] transition-all">{prod.affiliate_enabled ? 'Disable' : 'Enable'}</button>
-                          <button onClick={() => setQrModalProduct(prod)} className="p-1.5 rounded-lg border border-[#F3EAF8] hover:bg-white text-[#7B3FA0]" title="QR Code"><QrCode size={14} /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* Products Table — dual-render */}
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+              {/* Desktop Table View (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#2D004D]">
+                  <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
+                    <tr>
+                      <th className="p-4 w-10"><button onClick={toggleSelectAll}>{selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0 ? <CheckSquare size={16} className="text-[#7B3FA0]" /> : <Square size={16} className="text-[#7B3FA0]/40" />}</button></th>
+                      <th className="p-4">Product</th><th className="p-4">Price</th><th className="p-4">Affiliate</th>
+                      <th className="p-4">Commission</th><th className="p-4">Est. Earnings</th><th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3EAF8]">
+                    {filteredProducts.map(prod => {
+                      const isSelected = selectedProductIds.includes(prod.id);
+                      const est = calculateCommission(prod.price, prod.commission_mode, prod.commission_value);
+                      return (
+                        <tr key={prod.id} className={`hover:bg-[#F8F3FB]/50 transition-colors ${isSelected ? 'bg-[#F8F3FB]' : ''}`}>
+                          <td className="p-4"><button onClick={() => toggleSelectProduct(prod.id)}>{isSelected ? <CheckSquare size={16} className="text-[#7B3FA0]" /> : <Square size={16} className="text-[#7B3FA0]/40" />}</button></td>
+                          <td className="p-4 font-bold">{prod.title}<span className="block text-[10px] text-[#7B3FA0] font-normal">{prod.category}</span></td>
+                          <td className="p-4 font-semibold">₹{prod.price}</td>
+                          <td className="p-4">{prod.affiliate_enabled ? <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 Enabled</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">⚪ Disabled</span>}</td>
+                          <td className="p-4 font-medium">{prod.affiliate_enabled ? (prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`) : <span className="text-gray-400">—</span>}</td>
+                          <td className="p-4 font-bold text-emerald-600">{prod.affiliate_enabled ? `₹${est.toFixed(2)}` : '—'}</td>
+                          <td className="p-4 text-right space-x-2">
+                            <button onClick={() => handleToggleProductAffiliate(prod.id)} className="px-3 py-1.5 rounded-lg border border-[#F3EAF8] hover:bg-white text-[11px] font-bold text-[#7B3FA0] transition-all">{prod.affiliate_enabled ? 'Disable' : 'Enable'}</button>
+                            <button onClick={() => setQrModalProduct(prod)} className="p-1.5 rounded-lg border border-[#F3EAF8] hover:bg-white text-[#7B3FA0]" title="QR Code"><QrCode size={14} /></button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View (< 768px) */}
+              <div className="block md:hidden space-y-3 p-3 bg-stone-50/50">
+                {filteredProducts.map(prod => {
+                  const isSelected = selectedProductIds.includes(prod.id);
+                  const est = calculateCommission(prod.price, prod.commission_mode, prod.commission_value);
+                  return (
+                    <div key={prod.id} className={`p-3.5 bg-white rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5 transition-all ${isSelected ? 'ring-2 ring-[#7B3FA0]' : ''}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => toggleSelectProduct(prod.id)}>{isSelected ? <CheckSquare size={16} className="text-[#7B3FA0]" /> : <Square size={16} className="text-[#7B3FA0]/40" />}</button>
+                          <div>
+                            <p className="text-xs font-bold text-[#2D004D] leading-tight">{prod.title}</p>
+                            <p className="text-[10px] text-[#7B3FA0] leading-tight mt-0.5">{prod.category}</p>
+                          </div>
+                        </div>
+                        {prod.affiliate_enabled ? <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Enabled</span> : <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-gray-100 text-gray-500">Disabled</span>}
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-stone-100 text-center">
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Price</p><p className="text-xs font-semibold text-[#2D004D]">₹{prod.price}</p></div>
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Commission</p><p className="text-xs font-medium text-[#2D004D]">{prod.affiliate_enabled ? (prod.commission_mode === 'fixed' ? `₹${prod.commission_value}` : `${prod.commission_value}%`) : '—'}</p></div>
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Est. Earn</p><p className="text-xs font-bold text-emerald-600">{prod.affiliate_enabled ? `₹${est.toFixed(0)}` : '—'}</p></div>
+                      </div>
+                      <div className="flex gap-2 pt-1 border-t border-stone-50">
+                        <button onClick={() => handleToggleProductAffiliate(prod.id)} className="flex-1 py-1.5 rounded-xl border border-stone-200 text-[10px] font-bold text-[#7B3FA0]">{prod.affiliate_enabled ? 'Disable' : 'Enable'}</button>
+                        <button onClick={() => setQrModalProduct(prod)} className="px-3 py-1.5 rounded-xl border border-stone-200 text-[#7B3FA0] flex items-center justify-center"><QrCode size={13} /></button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
-            TAB 3: PROMOTERS TABLE (existing + clickable profile slide-over)
+            TAB 3: PROMOTERS TABLE
         ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'affiliates' && (
           <div className="space-y-6">
@@ -990,8 +1025,6 @@ export default function AffiliateManagement() {
               </div>
               <AdminSelect value={affStatusFilter} onChange={e => setAffStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'active',label:'Active'},{value:'suspended',label:'Suspended'}]} className="w-36" />
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#2D004D]">
                 <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
                   <tr>
                     <th className="p-4">Promoter / Email</th><th className="p-4">Code</th><th className="p-4">Status</th>
@@ -1048,43 +1081,73 @@ export default function AffiliateManagement() {
             </div>
 
             {/* Ledger Table */}
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
+            {/* Sales Ledger Table — dual-render */}
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
               <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
-                <table className="w-full text-left text-xs text-[#2D004D] min-w-[1100px]">
-                  <thead className="bg-[#F8F3FB] text-[9px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                    <tr>
-                      <th className="p-3">Order</th><th className="p-3">Date</th><th className="p-3">Product</th>
-                      <th className="p-3">Customer</th><th className="p-3">Affiliate</th><th className="p-3">Code</th>
-                      <th className="p-3">Price</th><th className="p-3">Rate</th><th className="p-3">Commission</th>
-                      <th className="p-3">Platform Rev.</th><th className="p-3">Comm. Status</th>
-                      <th className="p-3">Purchase</th><th className="p-3">Refund</th><th className="p-3">TX ID</th>
-                      <th className="p-3 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F3EAF8]">
-                    {ledger.map(row => (
-                      <tr key={row.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
-                        <td className="p-3 font-mono font-bold text-[#7B3FA0]">#{row.order_id || row.id}</td>
-                        <td className="p-3 whitespace-nowrap">{fmtDate(row.order_date)}</td>
-                        <td className="p-3 font-medium max-w-[140px]"><span className="truncate block">{row.product_name}</span><span className="text-[9px] text-[#7B3FA0]">ID: {row.product_id}</span></td>
-                        <td className="p-3">{row.customer_name}<span className="block text-[9px] text-[#7B3FA0]">{row.customer_email_masked}</span></td>
-                        <td className="p-3 font-medium">{row.affiliate_name}</td>
-                        <td className="p-3 font-mono text-[#7B3FA0] text-[10px]">{row.affiliate_code}</td>
-                        <td className="p-3 font-semibold">{fmt(row.product_price)}</td>
-                        <td className="p-3">{row.commission_type === 'fixed' ? `₹${row.commission_rate}` : `${row.commission_rate}%`}</td>
-                        <td className="p-3 font-bold text-emerald-600">{fmt(row.commission_earned)}</td>
-                        <td className="p-3 font-medium text-[#7B3FA0]">{fmt(row.platform_revenue)}</td>
-                        <td className="p-3"><StatusBadge status={row.commission_status} /></td>
-                        <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${row.purchase_status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{row.purchase_status}</span></td>
-                        <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${row.refund_status === 'none' ? 'bg-gray-50 text-gray-500 border-gray-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{row.refund_status}</span></td>
-                        <td className="p-3 font-mono text-[9px] text-[#7B3FA0] max-w-[100px]"><span className="truncate block" title={row.gateway_tx_id}>{row.gateway_tx_id || '—'}</span></td>
-                        <td className="p-3 text-center">
-                          <button onClick={() => setCommActionModal(row)} className="p-1.5 rounded-lg border border-[#F3EAF8] hover:bg-[#F8F3FB] text-[#7B3FA0]" title="Update Status"><MoreVertical size={14} /></button>
-                        </td>
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs text-[#2D004D]">
+                    <thead className="bg-[#F8F3FB] text-[9px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
+                      <tr>
+                        <th className="p-3">Order</th><th className="p-3">Date</th><th className="p-3">Product</th>
+                        <th className="p-3">Customer</th><th className="p-3">Affiliate</th><th className="p-3">Code</th>
+                        <th className="p-3">Price</th><th className="p-3">Rate</th><th className="p-3">Commission</th>
+                        <th className="p-3">Platform Rev.</th><th className="p-3">Comm. Status</th>
+                        <th className="p-3">Purchase</th><th className="p-3">Refund</th><th className="p-3">TX ID</th>
+                        <th className="p-3 text-center">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3EAF8]">
+                      {ledger.map(row => (
+                        <tr key={row.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="p-3 font-mono font-bold text-[#7B3FA0]">#{row.order_id || row.id}</td>
+                          <td className="p-3 whitespace-nowrap">{fmtDate(row.order_date)}</td>
+                          <td className="p-3 font-medium max-w-[140px]"><span className="truncate block">{row.product_name}</span><span className="text-[9px] text-[#7B3FA0]">ID: {row.product_id}</span></td>
+                          <td className="p-3">{row.customer_name}<span className="block text-[9px] text-[#7B3FA0]">{row.customer_email_masked}</span></td>
+                          <td className="p-3 font-medium">{row.affiliate_name}</td>
+                          <td className="p-3 font-mono text-[#7B3FA0] text-[10px]">{row.affiliate_code}</td>
+                          <td className="p-3 font-semibold">{fmt(row.product_price)}</td>
+                          <td className="p-3">{row.commission_type === 'fixed' ? `₹${row.commission_rate}` : `${row.commission_rate}%`}</td>
+                          <td className="p-3 font-bold text-emerald-600">{fmt(row.commission_earned)}</td>
+                          <td className="p-3 font-medium text-[#7B3FA0]">{fmt(row.platform_revenue)}</td>
+                          <td className="p-3"><StatusBadge status={row.commission_status} /></td>
+                          <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${row.purchase_status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{row.purchase_status}</span></td>
+                          <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${row.refund_status === 'none' ? 'bg-gray-50 text-gray-500 border-gray-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{row.refund_status}</span></td>
+                          <td className="p-3 font-mono text-[9px] text-[#7B3FA0] max-w-[100px]"><span className="truncate block" title={row.gateway_tx_id}>{row.gateway_tx_id || '—'}</span></td>
+                          <td className="p-3 text-center">
+                            <button onClick={() => setCommActionModal(row)} className="p-1.5 rounded-lg border border-[#F3EAF8] hover:bg-[#F8F3FB] text-[#7B3FA0]" title="Update Status"><MoreVertical size={14} /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View (< 768px) */}
+                <div className="block md:hidden space-y-3 p-3 bg-stone-50/50">
+                  {ledger.map(row => (
+                    <div key={row.id} className="p-3.5 bg-white rounded-2xl border border-stone-200/50 shadow-sm space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-[#7B3FA0]">Order #{row.order_id || row.id}</span>
+                        <StatusBadge status={row.commission_status} />
+                      </div>
+                      <div className="text-xs text-[#2D004D]">
+                        <p className="font-bold truncate max-w-[200px]">{row.product_name}</p>
+                        <p className="text-[10px] text-[#7B3FA0] mt-0.5">Buyer: {row.customer_name} ({row.customer_email_masked})</p>
+                        <p className="text-[10px] text-[#7B3FA0]">Affiliate: {row.affiliate_name} (<span className="font-mono">{row.affiliate_code}</span>)</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-stone-100 text-center text-[10px]">
+                        <div><p className="text-[#7B3FA0] font-bold uppercase text-[9px]">Sale</p><p className="font-bold text-[#2D004D]">{fmt(row.product_price)}</p></div>
+                        <div><p className="text-[#7B3FA0] font-bold uppercase text-[9px]">Comm.</p><p className="font-bold text-emerald-600">{fmt(row.commission_earned)}</p></div>
+                        <div><p className="text-[#7B3FA0] font-bold uppercase text-[9px]">Platform</p><p className="font-semibold text-[#2D004D]">{fmt(row.platform_revenue)}</p></div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-stone-50">
+                        <span className="text-[9px] text-[#7B3FA0]">{fmtDate(row.order_date)}</span>
+                        <button onClick={() => setCommActionModal(row)} className="px-3 py-1 rounded-xl border border-stone-200 text-[#7B3FA0] text-[10px] font-bold flex items-center gap-1"><MoreVertical size={11} />Update</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </DataTable>
               <div className="p-4 border-t border-[#F3EAF8]">
                 <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / PAGE_SIZE)} onChange={setLedgerPage} />
@@ -1302,7 +1365,8 @@ export default function AffiliateManagement() {
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
               <DataTable loading={custAttrsLoading} empty={custAttrs.length === 0}>
-                <div className="overflow-x-auto">
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">
@@ -1347,6 +1411,33 @@ export default function AffiliateManagement() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Card View (< 768px) */}
+                <div className="block md:hidden space-y-3 p-3 bg-stone-50/50">
+                  {custAttrs.map(item => (
+                    <div key={item.attribution_id} className="p-3.5 bg-white rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-[#2D004D] leading-tight">{item.customer_name}</p>
+                          <p className="text-[10px] text-[#7B3FA0] font-mono leading-tight mt-0.5">{item.customer_email}</p>
+                        </div>
+                        <StatusBadge status={item.status === 'attributed' ? 'approved' : item.status} size="xs" />
+                      </div>
+                      <div className="text-[10px] text-[#7B3FA0] space-y-1 py-1 border-y border-stone-100">
+                        <p>Affiliate: <span className="font-bold text-[#2D004D]">{item.affiliate_name}</span> (<span className="font-mono">{item.affiliate_code}</span>)</p>
+                        <p>Platform: <span className="font-mono text-[9px]">{item.device} • {item.browser}</span></p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 text-center">
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Orders</p><p className="text-xs font-bold text-[#2D004D]">{item.order_count}</p></div>
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">LTV</p><p className="text-xs font-bold text-emerald-600">₹{item.customer_ltv?.toFixed(0)}</p></div>
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Date</p><p className="text-xs font-medium text-[#2D004D]">{fmtDate(item.first_purchase_date)}</p></div>
+                      </div>
+                      <button onClick={() => setSelectedTraceOrderId(item.order_id)} className="w-full py-1.5 rounded-xl bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] font-bold text-[10px]">
+                        View Trace Details
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </DataTable>
             </div>
             <Pagination page={custAttrsPage} totalPages={Math.ceil(custAttrsTotal / 50)} onChange={setCustAttrsPage} />
@@ -1360,7 +1451,8 @@ export default function AffiliateManagement() {
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
               <DataTable loading={ledgerLoading} empty={ledger.length === 0}>
-                <div className="overflow-x-auto">
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">
@@ -1399,6 +1491,33 @@ export default function AffiliateManagement() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Card View (< 768px) */}
+                <div className="block md:hidden space-y-3 p-3 bg-stone-50/50">
+                  {ledger.map(row => (
+                    <div key={row.id} className="p-3.5 bg-white rounded-2xl border border-stone-200/50 shadow-sm space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-[#7B3FA0]">Order #{row.order_id || row.id}</span>
+                        <StatusBadge status={row.commission_status || row.status} size="xs" />
+                      </div>
+                      <div className="text-xs text-[#2D004D] space-y-0.5">
+                        <p className="font-bold truncate max-w-[220px]">{row.product_name || 'Product'}</p>
+                        <p className="text-[10px] text-[#7B3FA0]">Customer: {row.customer_name || 'Customer'}</p>
+                        <p className="text-[10px] text-[#7B3FA0]">Affiliate: {row.affiliate_name}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-stone-100 text-center">
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Order Value</p><p className="text-xs font-bold text-[#2D004D]">₹{row.sale_amount?.toFixed(0)}</p></div>
+                        <div><p className="text-[9px] text-[#7B3FA0] font-bold uppercase">Commission</p><p className="text-xs font-bold text-emerald-600">₹{row.commission_earned?.toFixed(0)}</p></div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-stone-50">
+                        <span className="text-[9px] text-[#7B3FA0]">{fmtDate(row.date)}</span>
+                        <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-3 py-1 rounded-xl bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-[10px] font-bold">
+                          Trace Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </DataTable>
             </div>

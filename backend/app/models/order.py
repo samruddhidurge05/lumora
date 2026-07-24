@@ -36,7 +36,7 @@ class OrderItem(Base):
 
     id          = Column(Integer, primary_key=True, index=True)
     order_id    = Column(Integer, ForeignKey("orders.id"),    nullable=False)
-    product_id  = Column(Integer, ForeignKey("products.id"),  nullable=False)
+    product_id  = Column(Integer, ForeignKey("products.id"),  nullable=True)
     price_paid  = Column(Float,  nullable=False)
     download_url= Column(String(512), nullable=True)
     downloaded  = Column(Boolean, default=False)

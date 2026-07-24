@@ -272,41 +272,69 @@ export default function AuditLogs() {
               </div>
             </div>
           ) : !error ? (
-            /* Table */
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#F5E9DD]/80 bg-[#FAF5FF]/40">
-                    {['ID', 'Timestamp', 'Action', 'Target Type', 'Target ID', 'Admin ID', 'IP Address'].map((col) => (
-                      <th key={col} className="px-5 py-3.5 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence>
-                    {logs.map((log, idx) => (
-                      <motion.tr
-                        key={log.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.02 }}
-                        className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors"
-                      >
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.id}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#2D004D] whitespace-nowrap">{formatTimestamp(log.created_at)}</td>
-                        <td className="px-5 py-3">{actionBadge(log.action)}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.target_type || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0] max-w-[120px] truncate" title={log.target_id}>{log.target_id || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.admin_user_id || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.ip_address || '—'}</td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
+            /* Dual-render: Desktop Table + Mobile Card Stack */
+            <>
+              {/* Desktop Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#F5E9DD]/80 bg-[#FAF5FF]/40">
+                      {['ID', 'Timestamp', 'Action', 'Target Type', 'Target ID', 'Admin ID', 'IP Address'].map((col) => (
+                        <th key={col} className="px-5 py-3.5 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0] whitespace-nowrap">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {logs.map((log, idx) => (
+                        <motion.tr
+                          key={log.id}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.02 }}
+                          className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors"
+                        >
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.id}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#2D004D] whitespace-nowrap">{formatTimestamp(log.created_at)}</td>
+                          <td className="px-5 py-3">{actionBadge(log.action)}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.target_type || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0] max-w-[120px] truncate" title={log.target_id}>{log.target_id || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.admin_user_id || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.ip_address || '—'}</td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card Stack (< 768px) */}
+              <div className="block md:hidden space-y-2.5 p-3">
+                <AnimatePresence>
+                  {logs.map((log, idx) => (
+                    <motion.div
+                      key={log.id}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className="p-3 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        {actionBadge(log.action)}
+                        <span className="text-[9px] text-[#7B3FA0] whitespace-nowrap">{formatTimestamp(log.created_at)}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[9px] text-[#7B3FA0]">
+                        <div><span className="font-bold uppercase tracking-wider">Target:</span> {log.target_type || '—'}</div>
+                        <div><span className="font-bold uppercase tracking-wider">IP:</span> <span className="font-mono">{log.ip_address || '—'}</span></div>
+                        <div className="col-span-2 truncate"><span className="font-bold uppercase tracking-wider">ID:</span> <span className="font-mono">{log.target_id || '—'}</span></div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </>
           ) : null}
 
           {/* ── Pagination ── */}

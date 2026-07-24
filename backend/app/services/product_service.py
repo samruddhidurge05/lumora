@@ -193,8 +193,39 @@ class ProductService:
                         product.thumbnail = perm_thumbnail
                         moved_files.append(thumbnail_path)
 
+            # Strict Physical Verification of Permanent Storage Objects before PostgreSQL Commit
+            pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
+            if pref == "b2" and not _is_test_environment():
+                # Verify digital file if present
+                if temp_file_url and not _is_external_url(temp_file_url):
+                    if not product.storage_path or not product.storage_path.startswith("b2://") or "/temp/" in product.storage_path:
+                        raise HTTPException(
+                            status_code=500,
+                            detail="Transactional failure: Storage path is missing or non-permanent B2 reference."
+                        )
+                    if not storage_service.b2_provider.verify_object_integrity(product.storage_path):
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"Physical object verification failed for digital file '{product.storage_path}'."
+                        )
+
+                # Verify preview if present
+                if temp_preview_url and not _is_external_url(temp_preview_url):
+                    if getattr(product, "preview_path", None) and "/temp/" in product.preview_path:
+                        raise HTTPException(
+                            status_code=500,
+                            detail="Transactional failure: Preview path is non-permanent B2 reference."
+                        )
+
+                # Verify thumbnail if present
+                if temp_thumbnail_url and not _is_external_url(temp_thumbnail_url):
+                    if getattr(product, "thumbnail_path", None) and "/temp/" in product.thumbnail_path:
+                        raise HTTPException(
+                            status_code=500,
+                            detail="Transactional failure: Thumbnail path is non-permanent B2 reference."
+                        )
+
             # Log activity
-            # Try to get user_id from vendor_id string if possible (uid is user.firebase_uid)
             from app.models.user import User
             user = db.query(User).filter(User.firebase_uid == vendor_id).first()
             if user:
@@ -205,11 +236,15 @@ class ProductService:
                     details=f"Uploaded product '{title}' (ID {product.id})."
                 )
 
-            # Commit to SQLite (Single Source of Truth)
+            # Commit to SQLite/PostgreSQL (Single Source of Truth)
             db.commit()
             
-            # Sync product details to Firestore for real-time customer catalogs
-            sync_product_to_firestore(product)
+            # Sync product details to Firestore for real-time customer catalogs (best-effort)
+            try:
+                sync_product_to_firestore(product)
+            except Exception as fs_err:
+                import logging
+                logging.getLogger(__name__).warning("[product-service] Firestore sync failed non-fatally: %s", fs_err)
             
             return product
 
@@ -218,7 +253,7 @@ class ProductService:
             logger = logging.getLogger(__name__)
             logger.error("[product-service] Product creation database/storage transaction failed: %s", e, exc_info=True)
             db.rollback()
-            # Rollback: Clean up any moved permanent files in GCS/disk
+            # Rollback: Clean up any moved permanent files in B2/disk
             for path in moved_files:
                 try:
                     storage_service.delete(path)

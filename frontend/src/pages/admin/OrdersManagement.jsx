@@ -1019,85 +1019,150 @@ export default function OrdersManagement() {
                 ) : (
                 /* ── ORDERS TABLE ── */
                 processedOrders.length > 0 ? (
+                  <>
+                    {/* Desktop Table View (>= 768px) */}
+                    <div className="hidden md:block overflow-x-auto w-full">
+                      <table className="w-full border-collapse text-left">
+                        <thead>
+                          <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                            <th className="py-4 px-5 w-10">
+                              <input 
+                                type="checkbox"
+                                checked={selectedRowIds.length === processedOrders.length}
+                                onChange={(e) => {
+                                  sysSound.playTap();
+                                  if (e.target.checked) {
+                                    setSelectedRowIds(processedOrders.map(o => o.id));
+                                  } else {
+                                    setSelectedRowIds([]);
+                                  }
+                                }}
+                                className="rounded border-stone-300 accent-[#D8BFE3]"
+                              />
+                            </th>
+                            <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
+                            <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                            <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
+                            <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                            <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
+                            <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <AnimatePresence initial={false}>
+                            {processedOrders.map((o) => {
+                              const isFocused = selectedOrder?.id === o.id;
+                              const isChecked = selectedRowIds.includes(o.id);
+                              
+                              const statusStyles = {
+                                Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                Refunded: "bg-stone-100 text-stone-500 border-stone-200",
+                                Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
+                              };
 
-                  <table className="w-full border-collapse text-left">
-                    <thead>
-                      <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                        <th className="py-4 px-5 w-10">
-                          <input 
-                            type="checkbox"
-                            checked={selectedRowIds.length === processedOrders.length}
-                            onChange={(e) => {
-                              sysSound.playTap();
-                              if (e.target.checked) {
-                                setSelectedRowIds(processedOrders.map(o => o.id));
-                              } else {
-                                setSelectedRowIds([]);
-                              }
-                            }}
-                            className="rounded border-stone-300 accent-[#D8BFE3]"
-                          />
-                        </th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
-                        <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
-                        <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence initial={false}>
-                        {processedOrders.map((o) => {
-                          const isFocused = selectedOrder?.id === o.id;
-                          const isChecked = selectedRowIds.includes(o.id);
-                          
-                          // Custom status colors
-                          const statusStyles = {
-                            Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                            Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                            Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                            Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                            Refunded: "bg-stone-100 text-stone-500 border-stone-200",
-                            Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
-                          };
-
-                          return (
-                            <motion.tr
-                              key={o.id}
-                              layoutId={`row-${o.id}`}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
-                                isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
-                              }`}
-                              onClick={() => {
-                                sysSound.playTap();
-                                setSelectedOrderId(o.id);
-                              }}
-                            >
-                              {/* Checkbox select */}
-                              <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
-                                <input 
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
+                              return (
+                                <motion.tr
+                                  key={o.id}
+                                  layoutId={`row-${o.id}`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
+                                    isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
+                                  }`}
+                                  onClick={() => {
                                     sysSound.playTap();
-                                    handleToggleRowSelection(o.id);
+                                    setSelectedOrderId(o.id);
                                   }}
-                                  className="rounded border-stone-300 accent-[#D8BFE3]"
-                                />
-                              </td>
+                                >
+                                  <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
+                                    <input 
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        sysSound.playTap();
+                                        handleToggleRowSelection(o.id);
+                                      }}
+                                      className="rounded border-stone-300 accent-[#D8BFE3]"
+                                    />
+                                  </td>
+                                  <td className="py-4 px-4 font-mono text-[11px] font-bold text-[#2D004D]">{o.id}</td>
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-7 h-7 rounded-xl bg-stone-100 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0]">
+                                        {(o.customerName || 'U').slice(0, 2)}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-[#2D004D]">{o.customerName || 'Customer'}</span>
+                                        <span className="text-[9px] text-[#7B3FA0]">{o.customerEmail}</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4 text-right text-xs font-black text-[#2D004D]">₹{getOrderPrice(o).toLocaleString()}</td>
+                                  <td className="py-4 px-4 text-center">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-extrabold uppercase tracking-widest ${statusStyles[o.status] || "bg-stone-100"}`}>
+                                      {o.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-4 px-4 text-center">
+                                    <span className="text-xs font-bold text-[#7B3FA0]">{getRiskScore(o)}%</span>
+                                  </td>
+                                  <td className="py-4 px-5 text-center">
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); sysSound.playTap(); setSelectedOrderId(o.id); }}
+                                      className="p-1.5 rounded-lg hover:bg-stone-100 text-[#7B3FA0] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                    >
+                                      <Icon name="Eye" size={14} />
+                                    </button>
+                                  </td>
+                                </motion.tr>
+                              );
+                            })}
+                          </AnimatePresence>
+                        </tbody>
+                      </table>
+                    </div>
 
-                              {/* Order ID */}
-                              <td className="py-4 px-4 font-mono text-[11px] font-bold text-[#2D004D]">
-                                {o.id}
-                              </td>
-
-                              {/* Customer name / email summary */}
-                              <td className="py-4 px-4">
-                                <div className="flex items-center gap-3">
+                    {/* Mobile Stacked Card View (< 768px) */}
+                    <div className="block md:hidden space-y-3 p-2">
+                      {processedOrders.map((o) => {
+                        const isFocused = selectedOrder?.id === o.id;
+                        return (
+                          <div
+                            key={o.id}
+                            onClick={() => { sysSound.playTap(); setSelectedOrderId(o.id); }}
+                            className={`p-3.5 bg-white/80 rounded-2xl border transition-all shadow-sm space-y-2 cursor-pointer ${
+                              isFocused ? 'border-[#7B3FA0] ring-1 ring-[#7B3FA0]/30' : 'border-stone-200/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-xs font-bold text-[#2D004D]">{o.id}</span>
+                              <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-[#2D004D]">
+                              <span className="font-bold truncate max-w-[180px]">{o.customerName || o.customerEmail || 'Customer'}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
+                                o.status === 'Completed' ? 'bg-[#B886D0]/30 text-[#5A1E7E]' : 'bg-[#D8BFE3]/40 text-[#7a5940]'
+                              }`}>
+                                {o.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[#7B3FA0] pt-1.5 border-t border-stone-100">
+                              <span>{o.timestamp ? new Date(o.timestamp).toLocaleDateString() : 'Recent'}</span>
+                              <div className="flex items-center gap-2">
+                                <span>Risk: {getRiskScore(o)}%</span>
+                                <button className="px-2 py-1 bg-[#2D004D] text-white rounded-lg text-[9px] font-bold">Details</button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) :
                                   <div className="w-7 h-7 rounded-full bg-white border border-stone-200/50 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner">
                                     {o.customerName.slice(0, 2)}
                                   </div>

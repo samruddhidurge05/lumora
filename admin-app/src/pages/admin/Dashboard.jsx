@@ -335,12 +335,12 @@ export default function Dashboard() {
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
 
         {/* --- LAYER 1: HERO INTELLIGENCE HEADER --- */}
-        <section className="mb-10">
+        <section className="mb-6 md:mb-8">
           <PageHeader
             title={`${headerStats.greeting}, Admin`}
             subtitle={`${headerStats.marketStatus}. ${isLoading ? 'Loading live data...' : `Last updated: ${dashData?._meta?.fetchedAt ? new Date(dashData._meta.fetchedAt).toLocaleTimeString() : 'just now'}`}`}
             actions={
-              <div className="flex items-center gap-6 pt-2 md:pt-0">
+              <div className="flex items-center gap-4 sm:gap-6 pt-2 md:pt-0">
                 <div className="flex flex-col text-right">
                   <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Pulse Health</span>
                   <span className="text-xs font-bold text-[#B886D0] bg-[#B886D0]/10 px-2 py-0.5 rounded mt-1 border border-[#B886D0]/20">{healthStatus || (isLoading ? '...' : 'Healthy')}</span>
@@ -355,6 +355,34 @@ export default function Dashboard() {
               </div>
             }
           />
+
+          {/* Quick Actions 2-Column Grid on Mobile / 4-Column on Desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4">
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/products'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Package" size={14} /> Add Product
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/orders'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Activity" size={14} /> View Orders
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/team'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Users" size={14} /> Team
+            </button>
+            <button
+              onClick={() => { sysSound.playTap(); navigate('/admin/support'); }}
+              className="w-full min-h-[44px] py-2.5 px-3 bg-white/80 hover:bg-[#7B3FA0] hover:text-white text-[#2D004D] border border-white/60 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Icon name="Globe" size={14} /> Support
+            </button>
+          </div>
         </section>
 
         {/* --- LAYER 2: CORE METRICS GRID --- */}

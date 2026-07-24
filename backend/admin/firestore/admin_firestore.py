@@ -126,20 +126,23 @@ def delete_product_from_firestore(product_id: int) -> dict:
         pid = str(product_id)
         references = []
 
-        # Check orders collection (items array contains productId)
-        for doc in db.collection("orders").stream():
-            data = doc.to_dict() or {}
-            items = data.get("items", [])
-            if any(str(item.get("productId", "")) == pid for item in items):
-                references.append({"collection": "orders", "doc_id": doc.id})
+        try:
+            # Check orders collection (items array contains productId)
+            for doc_snap in db.collection("orders").stream():
+                data = doc_snap.to_dict() or {}
+                items = data.get("items", [])
+                if any(str(item.get("productId", "")) == pid for item in items):
+                    references.append({"collection": "orders", "doc_id": doc_snap.id})
 
-        # Check reviews
-        for doc in db.collection("reviews").where("productId", "==", pid).stream():
-            references.append({"collection": "reviews", "doc_id": doc.id})
+            # Check reviews
+            for doc_snap in db.collection("reviews").where("productId", "==", pid).stream():
+                references.append({"collection": "reviews", "doc_id": doc_snap.id})
 
-        # Check downloads
-        for doc in db.collection("downloads").where("productId", "==", pid).stream():
-            references.append({"collection": "downloads", "doc_id": doc.id})
+            # Check downloads
+            for doc_snap in db.collection("downloads").where("productId", "==", pid).stream():
+                references.append({"collection": "downloads", "doc_id": doc_snap.id})
+        except Exception as ref_err:
+            _logger.warning("[firestore-sync] Non-fatal reference check warning for product %s: %s", product_id, ref_err)
 
         if references:
             _logger.warning(

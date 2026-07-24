@@ -394,83 +394,68 @@ export default function Payments() {
                     </div>
                   )}
 
-                  <div className="overflow-x-auto w-full">
+                  {/* ── Desktop Table View (≥ 768px) ── */}
+                  <div className="hidden md:block overflow-x-auto w-full">
                     {!telemetry.loading && !error && pagedOrders.length > 0 ? (
                       <table className="w-full border-collapse text-left">
                         <thead>
                           <tr className="bg-stone-100/40 border-b border-stone-200/50">
                             {['Transaction ID', 'Order ID', 'Customer', 'Amount', 'Method', 'Payment', 'Order Status', 'Date'].map(h => (
-                              <th key={h} className="py-4 px-4 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase white-nowrap">
-                                {h}
-                              </th>
+                              <th key={h} className="py-4 px-4 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {pagedOrders.map((o) => {
-                            const paymentStyles = {
-                              Paid: 'bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]',
-                              Unpaid: 'bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80',
-                              Failed: 'bg-red-500/10 text-red-700 border-red-200',
-                              Refunded: 'bg-stone-100 text-stone-500 border-stone-200'
-                            };
-
-                            const orderStyles = {
-                              Completed: 'bg-[#B886D0]/40 text-[#5A1E7E]',
-                              Processing: 'bg-[#D8BFE3]/40 text-[#47607a]',
-                              Pending: 'bg-[#D8BFE3]/40 text-[#7a5940]',
-                              Failed: 'bg-red-500/10 text-red-700',
-                              Refunded: 'bg-stone-100 text-stone-500'
-                            };
-
+                            const paymentStyles = { Paid: 'bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80', Unpaid: 'bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80', Failed: 'bg-red-500/10 text-red-700 border-red-200', Refunded: 'bg-stone-100 text-stone-500 border-stone-200' };
+                            const orderStyles = { Completed: 'bg-[#B886D0]/40 text-[#5A1E7E]', Processing: 'bg-[#D8BFE3]/40 text-[#47607a]', Pending: 'bg-[#D8BFE3]/40 text-[#7a5940]', Failed: 'bg-red-500/10 text-red-700', Refunded: 'bg-stone-100 text-stone-500' };
                             return (
-                              <tr 
-                                key={o.id}
-                                className="border-b border-stone-200/40 hover:bg-white/65 transition-colors"
-                              >
-                                <td className="py-4 px-4 font-mono text-[10px] text-[#2D004D] font-bold">
-                                  {o.id.slice(0, 10)}...
-                                </td>
-                                <td className="py-4 px-4 font-mono text-[10px] text-[#2D004D]">
-                                  {o.orderId || '—'}
-                                </td>
-                                <td className="py-4 px-4">
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-[#2D004D]">{o.customerName || 'Customer'}</span>
-                                    <span className="text-[9px] text-[#7B3FA0] mt-0.5">{o.customerEmail}</span>
-                                  </div>
-                                </td>
-                                <td className="py-4 px-4 font-black text-xs text-[#2D004D]">
-                                  ₹{(o.total ?? o.price ?? 0).toLocaleString()}
-                                </td>
-                                <td className="py-4 px-4 text-xs font-bold text-[#7B3FA0] uppercase">
-                                  {o.paymentMethod || 'card'}
-                                </td>
-                                <td className="py-4 px-4">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-extrabold uppercase tracking-widest ${paymentStyles[o.paymentStatus] || 'bg-stone-100'}`}>
-                                    {o.paymentStatus || 'Unpaid'}
-                                  </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest ${orderStyles[o.status] || 'bg-stone-100'}`}>
-                                    {o.status || 'Pending'}
-                                  </span>
-                                </td>
-                                <td className="py-4 px-4 text-[10px] text-[#7B3FA0]">
-                                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}
-                                </td>
+                              <tr key={o.id} className="border-b border-stone-200/40 hover:bg-white/65 transition-colors">
+                                <td className="py-4 px-4 font-mono text-[10px] text-[#2D004D] font-bold">{o.id.slice(0, 10)}...</td>
+                                <td className="py-4 px-4 font-mono text-[10px] text-[#2D004D]">{o.orderId || '—'}</td>
+                                <td className="py-4 px-4"><div className="flex flex-col"><span className="text-xs font-bold text-[#2D004D]">{o.customerName || 'Customer'}</span><span className="text-[9px] text-[#7B3FA0] mt-0.5">{o.customerEmail}</span></div></td>
+                                <td className="py-4 px-4 font-black text-xs text-[#2D004D]">₹{(o.total ?? o.price ?? 0).toLocaleString()}</td>
+                                <td className="py-4 px-4 text-xs font-bold text-[#7B3FA0] uppercase">{o.paymentMethod || 'card'}</td>
+                                <td className="py-4 px-4"><span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-extrabold uppercase tracking-widest ${paymentStyles[o.paymentStatus] || 'bg-stone-100'}`}>{o.paymentStatus || 'Unpaid'}</span></td>
+                                <td className="py-4 px-4"><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest ${orderStyles[o.status] || 'bg-stone-100'}`}>{o.status || 'Pending'}</span></td>
+                                <td className="py-4 px-4 text-[10px] text-[#7B3FA0]">{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}</td>
                               </tr>
                             );
                           })}
                         </tbody>
                       </table>
                     ) : !telemetry.loading && !error ? (
-                      <div className="py-12 text-center text-[#7B3FA0]">
-                        <p className="text-2xl mb-2">💸</p>
-                        <p className="text-xs font-bold uppercase tracking-widest">No transactions found</p>
-                      </div>
+                      <div className="py-12 text-center text-[#7B3FA0]"><p className="text-2xl mb-2">💸</p><p className="text-xs font-bold uppercase tracking-widest">No transactions found</p></div>
                     ) : null}
                   </div>
+
+                  {/* ── Mobile Card Stack (< 768px) ── */}
+                  {!telemetry.loading && !error && pagedOrders.length > 0 && (
+                    <div className="block md:hidden space-y-3 p-3">
+                      {pagedOrders.map(o => {
+                        const ps = o.paymentStatus || 'Unpaid';
+                        return (
+                          <div key={o.id} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-[10px] font-bold text-[#2D004D]">{o.id.slice(0, 12)}…</span>
+                              <span className="text-xs font-black text-[#2D004D]">₹{(o.total ?? o.price ?? 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-[#2D004D]">
+                              <span className="font-bold truncate max-w-[160px]">{o.customerName || o.customerEmail || 'Customer'}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase ${ps === 'Paid' ? 'bg-[#B886D0]/30 text-[#5A1E7E]' : 'bg-[#D8BFE3]/40 text-[#7a5940]'}`}>{ps}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase ${o.status === 'Completed' ? 'bg-[#B886D0]/30 text-[#5A1E7E]' : 'bg-stone-100 text-stone-500'}`}>{o.status || 'Pending'}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[#7B3FA0] pt-1 border-t border-stone-100">
+                              <span>{o.paymentMethod || 'card'}</span>
+                              <span>{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Pagination controls */}
                   {!telemetry.loading && !error && txnTotalPages > 1 && (
@@ -512,46 +497,50 @@ export default function Payments() {
                     </h2>
                   </div>
 
-                  <div className="overflow-x-auto w-full">
+                  {/* ── Desktop Table (≥ 768px) ── */}
+                  <div className="hidden md:block overflow-x-auto w-full">
                     {vendorPayouts.length > 0 ? (
                       <table className="w-full border-collapse text-left">
                         <thead>
                           <tr className="bg-stone-100/40 border-b border-stone-200/50">
                             {['Vendor', 'Sales', 'Comm. (5%)', 'Paid', 'Pending'].map(h => (
-                              <th key={h} className="py-3.5 px-4 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">
-                                {h}
-                              </th>
+                              <th key={h} className="py-3.5 px-4 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {vendorPayouts.map((v) => (
                             <tr key={v.vendorId} className="border-b border-stone-200/40 hover:bg-white/50 transition-colors">
-                              <td className="py-3 px-4 font-bold text-xs text-[#2D004D]">
-                                {v.vendorName}
-                              </td>
-                              <td className="py-3 px-4 font-black text-xs text-[#2D004D]">
-                                ₹{v.totalSales.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-xs text-[#7B3FA0]">
-                                ₹{v.commission.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-xs text-[#5A1E7E] font-medium">
-                                ₹{v.paidPayout.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-xs font-bold text-[#9B2C5E]">
-                                ₹{v.pendingPayout.toLocaleString()}
-                              </td>
+                              <td className="py-3 px-4 font-bold text-xs text-[#2D004D]">{v.vendorName}</td>
+                              <td className="py-3 px-4 font-black text-xs text-[#2D004D]">₹{v.totalSales.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-xs text-[#7B3FA0]">₹{v.commission.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-xs text-[#5A1E7E] font-medium">₹{v.paidPayout.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-xs font-bold text-[#9B2C5E]">₹{v.pendingPayout.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     ) : (
-                      <div className="py-8 text-center text-[#7B3FA0]">
-                        <p className="text-xs font-bold uppercase tracking-widest">No vendor accounts verified</p>
-                      </div>
+                      <div className="py-8 text-center text-[#7B3FA0]"><p className="text-xs font-bold uppercase tracking-widest">No vendor accounts verified</p></div>
                     )}
                   </div>
+
+                  {/* ── Mobile Cards (< 768px) ── */}
+                  {vendorPayouts.length > 0 && (
+                    <div className="block md:hidden space-y-2.5 p-3">
+                      {vendorPayouts.map(v => (
+                        <div key={v.vendorId} className="p-3 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2">
+                          <p className="text-xs font-bold text-[#2D004D]">{v.vendorName}</p>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <div><p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Sales</p><p className="text-xs font-black text-[#2D004D]">₹{v.totalSales.toLocaleString()}</p></div>
+                            <div><p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Commission</p><p className="text-xs text-[#7B3FA0]">₹{v.commission.toLocaleString()}</p></div>
+                            <div><p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Paid</p><p className="text-xs text-[#5A1E7E] font-medium">₹{v.paidPayout.toLocaleString()}</p></div>
+                            <div><p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Pending</p><p className="text-xs font-bold text-[#9B2C5E]">₹{v.pendingPayout.toLocaleString()}</p></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </TableContainer>
 
                 {/* Refund Monitoring */}

@@ -1162,87 +1162,64 @@ export default function OrdersManagement() {
                     ) : (
                       /* ── ORDERS TABLE ── */
                       processedOrders.length > 0 ? (
+                        <>
+                          {/* Desktop Table View (>= 768px) */}
+                          <div className="hidden md:block overflow-x-auto w-full">
+                            <table className="w-full border-collapse text-left">
+                              <thead>
+                                <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                                  <th className="py-4 px-5 w-10">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedRowIds.length === processedOrders.length}
+                                      onChange={(e) => {
+                                        sysSound.playTap();
+                                        if (e.target.checked) {
+                                          setSelectedRowIds(processedOrders.map(o => o.id));
+                                        } else {
+                                          setSelectedRowIds([]);
+                                        }
+                                      }}
+                                      className="rounded border-stone-300 accent-[#D8BFE3]"
+                                    />
+                                  </th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
+                                  <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <AnimatePresence initial={false}>
+                                  {processedOrders.map((o) => {
+                                    const isFocused = selectedOrder?.id === o.id;
+                                    const isChecked = selectedRowIds.includes(o.id);
 
-                        <table className="w-full border-collapse text-left">
-                          <thead>
-                            <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                              <th className="py-4 px-5 w-10">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedRowIds.length === processedOrders.length}
-                                  onChange={(e) => {
-                                    sysSound.playTap();
-                                    if (e.target.checked) {
-                                      setSelectedRowIds(processedOrders.map(o => o.id));
-                                    } else {
-                                      setSelectedRowIds([]);
-                                    }
-                                  }}
-                                  className="rounded border-stone-300 accent-[#D8BFE3]"
-                                />
-                              </th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Order ID</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Value</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-24">Risk</th>
-                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center w-12">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <AnimatePresence initial={false}>
-                              {processedOrders.map((o) => {
-                                const isFocused = selectedOrder?.id === o.id;
-                                const isChecked = selectedRowIds.includes(o.id);
+                                    const statusStyles = {
+                                      Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                      Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                      Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
+                                      Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
+                                      Refunded: "bg-stone-100 text-stone-500 border-stone-200",
+                                      Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
+                                    };
 
-                                // Custom status colors
-                                const statusStyles = {
-                                  Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                                  Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                                  Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(216,191,227,0.3)]",
-                                  Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80 shadow-[0_0_8px_rgba(184,134,208,0.3)]",
-                                  Refunded: "bg-stone-100 text-stone-500 border-stone-200",
-                                  Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 shadow-[0_0_8px_rgba(255,133,151,0.2)] animate-pulse"
-                                };
-
-                                return (
-                                  <motion.tr
-                                    key={o.id}
-                                    layoutId={`row-${o.id}`}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
-                                      }`}
-                                    onClick={() => {
-                                      sysSound.playTap();
-                                      setSelectedOrderId(o.id);
-                                    }}
-                                  >
-                                    {/* Checkbox select */}
-                                    <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={() => {
+                                    return (
+                                      <motion.tr
+                                        key={o.id}
+                                        layoutId={`row-${o.id}`}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${
+                                          isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
+                                        }`}
+                                        onClick={() => {
                                           sysSound.playTap();
-                                          handleToggleRowSelection(o.id);
+                                          setSelectedOrderId(o.id);
                                         }}
-                                        className="rounded border-stone-300 accent-[#D8BFE3]"
-                                      />
-                                    </td>
-
-                                    {/* Order ID */}
-                                    <td className="py-4 px-4 font-mono text-[11px] font-bold text-[#2D004D]">
-                                      {o.id}
-                                    </td>
-
-                                    {/* Customer name / email summary */}
-                                    <td className="py-4 px-4">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-7 h-7 rounded-full bg-white border border-stone-200/50 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner">
-                                          {o.customerName.slice(0, 2)}
-                                        </div>
                                         <div className="flex flex-col">
                                           <span className="text-xs font-bold text-[#2D004D]">{o.customerName}</span>
                                           <span className="text-[10px] text-[#7B3FA0] leading-none mt-0.5">{o.customerEmail}</span>
