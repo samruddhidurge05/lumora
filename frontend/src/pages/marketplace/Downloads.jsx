@@ -209,12 +209,16 @@ function resolveFullUrl(url) {
 
         setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
         window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+        return;
+      }
+    } catch (err) {
+      console.warn('Download error:', err);
+      const msg = err?.message?.includes('403') || err?.message?.includes('401')
         ? 'Access denied. Please verify your purchase is complete.'
         : 'Download unavailable. Try refreshing or contact support.';
       setDownloadToast({ id: product.id, msg, ok: false });
     } finally {
       setDownloadingId(null);
-      // Auto-clear toast after 6s (longer for pending messages)
       setTimeout(() => setDownloadToast(null), 6000);
     }
   };
