@@ -10,23 +10,74 @@ import CartDrawer from './components/cart/CartDrawer';
 
 import DownloadReadyPopup from './components/download/DownloadReadyPopup';
 
+// Helper for lazy loading with automatic retry & reload on deployment chunk updates
+function safeLazy(importFn) {
+  return lazy(() =>
+    importFn().catch((error) => {
+      const msg = error?.message || '';
+      const isChunkError =
+        error.name === 'ChunkLoadError' ||
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('Importing a module script failed') ||
+        msg.includes('Loading chunk');
+
+      if (isChunkError) {
+        const hasRetried = sessionStorage.getItem('lumora_chunk_retry');
+        if (!hasRetried) {
+          sessionStorage.setItem('lumora_chunk_retry', 'true');
+          window.location.reload();
+          return new Promise(() => {});
+        }
+      }
+      throw error;
+    })
+  );
+}
+
 /* ── Error boundary ── */
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error, info) { console.error('[Lumora] Render error:', error, info); }
+  componentDidCatch(error, info) {
+    console.error('[Lumora] Render error:', error, info);
+    const msg = error?.message || '';
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Loading chunk')
+    ) {
+      if (!sessionStorage.getItem('lumora_chunk_reload')) {
+        sessionStorage.setItem('lumora_chunk_reload', 'true');
+        window.location.reload();
+      }
+    }
+  }
   render() {
     if (this.state.error) {
+      const msg = this.state.error?.message || '';
+      const isChunkError =
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('Importing a module script failed') ||
+        msg.includes('Loading chunk');
+
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: '#FAF5FF', padding: '40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
-          <h2 style={{ color: '#2D004D', marginBottom: '8px', fontWeight: 700 }}>Something went wrong</h2>
+          <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>{isChunkError ? '🔄' : '⚠️'}</div>
+          <h2 style={{ color: '#2D004D', marginBottom: '8px', fontWeight: 700 }}>
+            {isChunkError ? 'New Version Deployed' : 'Something went wrong'}
+          </h2>
           <p style={{ color: '#7B5FA0', marginBottom: '24px', maxWidth: '500px' }}>
-            {this.state.error?.message || 'An unexpected error occurred.'}
+            {isChunkError
+              ? 'A new version of Lumora is live. Reloading will fetch the latest assets.'
+              : msg || 'An unexpected error occurred.'}
           </p>
-          <button onClick={() => window.location.reload()}
+          <button onClick={() => {
+            sessionStorage.removeItem('lumora_chunk_retry');
+            sessionStorage.removeItem('lumora_chunk_reload');
+            window.location.reload();
+          }}
             style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
-            Reload App
+            {isChunkError ? 'Reload Latest Version' : 'Reload App'}
           </button>
         </div>
       );
@@ -36,73 +87,73 @@ class ErrorBoundary extends React.Component {
 }
 
 // ── Lazy page imports ─────────────────────────────────────────────
-const Home           = lazy(() => import('./pages/marketplace/Home'));
-const Products       = lazy(() => import('./pages/marketplace/Products'));
-const ProductPage    = lazy(() => import('./pages/marketplace/ProductPage'));
-const CreatorProfile = lazy(() => import('./pages/marketplace/CreatorProfile'));
-const Cart           = lazy(() => import('./pages/marketplace/Cart'));
-const Checkout       = lazy(() => import('./pages/marketplace/Checkout'));
-const Payment        = lazy(() => import('./pages/marketplace/Payment'));
-const Success        = lazy(() => import('./pages/marketplace/Success'));
-const Wishlist       = lazy(() => import('./pages/marketplace/Wishlist'));
-const Search         = lazy(() => import('./pages/marketplace/Search'));
-const Categories     = lazy(() => import('./pages/marketplace/Categories'));
-const About          = lazy(() => import('./pages/marketplace/About'));
-const Contact        = lazy(() => import('./pages/marketplace/Contact'));
-const Downloads      = lazy(() => import('./pages/marketplace/Downloads'));
-const RefundPolicy   = lazy(() => import('./pages/support/RefundPolicy'));
+const Home           = safeLazy(() => import('./pages/marketplace/Home'));
+const Products       = safeLazy(() => import('./pages/marketplace/Products'));
+const ProductPage    = safeLazy(() => import('./pages/marketplace/ProductPage'));
+const CreatorProfile = safeLazy(() => import('./pages/marketplace/CreatorProfile'));
+const Cart           = safeLazy(() => import('./pages/marketplace/Cart'));
+const Checkout       = safeLazy(() => import('./pages/marketplace/Checkout'));
+const Payment        = safeLazy(() => import('./pages/marketplace/Payment'));
+const Success        = safeLazy(() => import('./pages/marketplace/Success'));
+const Wishlist       = safeLazy(() => import('./pages/marketplace/Wishlist'));
+const Search         = safeLazy(() => import('./pages/marketplace/Search'));
+const Categories     = safeLazy(() => import('./pages/marketplace/Categories'));
+const About          = safeLazy(() => import('./pages/marketplace/About'));
+const Contact        = safeLazy(() => import('./pages/marketplace/Contact'));
+const Downloads      = safeLazy(() => import('./pages/marketplace/Downloads'));
+const RefundPolicy   = safeLazy(() => import('./pages/support/RefundPolicy'));
 
 
-const LoginSelection    = lazy(() => import('./pages/auth/LoginSelection'));
-const RegisterSelection = lazy(() => import('./pages/auth/RegisterSelection'));
-const Login             = lazy(() => import('./pages/auth/Login'));
-const Register          = lazy(() => import('./pages/auth/Register'));
-const ForgotPassword    = lazy(() => import('./pages/auth/ForgotPassword'));
-const VerifyEmail       = lazy(() => import('./pages/auth/VerifyEmail'));
-const JoinAffiliate     = lazy(() => import('./pages/marketplace/JoinAffiliate'));
-const JoinVendor        = lazy(() => import('./pages/marketplace/JoinVendor'));
-const ReferralRouteHandler = lazy(() => import('./pages/marketplace/ReferralRouteHandler'));
+const LoginSelection    = safeLazy(() => import('./pages/auth/LoginSelection'));
+const RegisterSelection = safeLazy(() => import('./pages/auth/RegisterSelection'));
+const Login             = safeLazy(() => import('./pages/auth/Login'));
+const Register          = safeLazy(() => import('./pages/auth/Register'));
+const ForgotPassword    = safeLazy(() => import('./pages/auth/ForgotPassword'));
+const VerifyEmail       = safeLazy(() => import('./pages/auth/VerifyEmail'));
+const JoinAffiliate     = safeLazy(() => import('./pages/marketplace/JoinAffiliate'));
+const JoinVendor        = safeLazy(() => import('./pages/marketplace/JoinVendor'));
+const ReferralRouteHandler = safeLazy(() => import('./pages/marketplace/ReferralRouteHandler'));
 
 // Partnerships
-const PartnershipHub    = lazy(() => import('./pages/partnerships/PartnershipHub'));
-const Affiliate         = lazy(() => import('./pages/partnerships/Affiliate'));
-const Vendor            = lazy(() => import('./pages/partnerships/Vendor'));
+const PartnershipHub    = safeLazy(() => import('./pages/partnerships/PartnershipHub'));
+const Affiliate         = safeLazy(() => import('./pages/partnerships/Affiliate'));
+const Vendor            = safeLazy(() => import('./pages/partnerships/Vendor'));
 
-const CustomerDashboard  = lazy(() => import('./pages/customer/Dashboard'));
-const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard'));
-const AffiliateActivation = lazy(() => import('./pages/affiliate/AffiliateActivation'));
+const CustomerDashboard  = safeLazy(() => import('./pages/customer/Dashboard'));
+const AffiliateDashboard = safeLazy(() => import('./pages/affiliate/AffiliateDashboard'));
+const AffiliateActivation = safeLazy(() => import('./pages/affiliate/AffiliateActivation'));
 
 // Vendor pages
-const VendorDashboard     = lazy(() => import('./pages/vendor/Dashboard'));
-const VendorOrders        = lazy(() => import('./pages/vendor/Orders'));
-const VendorProducts      = lazy(() => import('./pages/vendor/ManageProducts'));
-const VendorAddProduct    = lazy(() => import('./pages/vendor/AddProduct'));
-const VendorEditProduct   = lazy(() => import('./pages/vendor/EditProduct'));
-const VendorAnalytics     = lazy(() => import('./pages/vendor/Analytics'));
-const VendorEarnings      = lazy(() => import('./pages/vendor/Earnings'));
-const VendorWithdrawals   = lazy(() => import('./pages/vendor/Withdrawals'));
-const VendorReviews       = lazy(() => import('./pages/vendor/Reviews'));
-const VendorAffiliate     = lazy(() => import('./pages/vendor/Affiliate'));
-const VendorVerification  = lazy(() => import('./pages/vendor/Verification'));
-const VendorStoreSettings = lazy(() => import('./pages/vendor/StoreSettings'));
-const VendorProfile       = lazy(() => import('./pages/vendor/Profile'));
+const VendorDashboard     = safeLazy(() => import('./pages/vendor/Dashboard'));
+const VendorOrders        = safeLazy(() => import('./pages/vendor/Orders'));
+const VendorProducts      = safeLazy(() => import('./pages/vendor/ManageProducts'));
+const VendorAddProduct    = safeLazy(() => import('./pages/vendor/AddProduct'));
+const VendorEditProduct   = safeLazy(() => import('./pages/vendor/EditProduct'));
+const VendorAnalytics     = safeLazy(() => import('./pages/vendor/Analytics'));
+const VendorEarnings      = safeLazy(() => import('./pages/vendor/Earnings'));
+const VendorWithdrawals   = safeLazy(() => import('./pages/vendor/Withdrawals'));
+const VendorReviews       = safeLazy(() => import('./pages/vendor/Reviews'));
+const VendorAffiliate     = safeLazy(() => import('./pages/vendor/Affiliate'));
+const VendorVerification  = safeLazy(() => import('./pages/vendor/Verification'));
+const VendorStoreSettings = safeLazy(() => import('./pages/vendor/StoreSettings'));
+const VendorProfile       = safeLazy(() => import('./pages/vendor/Profile'));
 
-const NotFound = lazy(() => import('./pages/error/NotFound'));
+const NotFound = safeLazy(() => import('./pages/error/NotFound'));
 
 // Admin pages
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
-const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
-const AdminProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
-const AdminOrdersManagement = lazy(() => import('./pages/admin/OrdersManagement'));
-const AdminPayments = lazy(() => import('./pages/admin/Payments'));
-const AdminVendors = lazy(() => import('./pages/admin/Vendors'));
-const AdminCustomersManagement = lazy(() => import('./pages/admin/CustomersManagement'));
-const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
-const AdminReports = lazy(() => import('./pages/admin/Reports'));
-const AdminCampaignManager = lazy(() => import('./pages/admin/CampaignManager'));
-const AdminAffiliateManagement = lazy(() => import('./pages/admin/AffiliateManagement'));
-const PlatformSettings = lazy(() => import('./pages/admin/platform/PlatformSettings'));
+const AdminLogin = safeLazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = safeLazy(() => import('./pages/admin/Dashboard'));
+const AdminAnalytics = safeLazy(() => import('./pages/admin/Analytics'));
+const AdminProductsManagement = safeLazy(() => import('./pages/admin/ProductsManagement'));
+const AdminOrdersManagement = safeLazy(() => import('./pages/admin/OrdersManagement'));
+const AdminPayments = safeLazy(() => import('./pages/admin/Payments'));
+const AdminVendors = safeLazy(() => import('./pages/admin/Vendors'));
+const AdminCustomersManagement = safeLazy(() => import('./pages/admin/CustomersManagement'));
+const AdminReviews = safeLazy(() => import('./pages/admin/Reviews'));
+const AdminReports = safeLazy(() => import('./pages/admin/Reports'));
+const AdminCampaignManager = safeLazy(() => import('./pages/admin/CampaignManager'));
+const AdminAffiliateManagement = safeLazy(() => import('./pages/admin/AffiliateManagement'));
+const PlatformSettings = safeLazy(() => import('./pages/admin/platform/PlatformSettings'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminAuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
 const AdminSupportInbox = lazy(() => import('./pages/admin/AdminSupportInbox'));
