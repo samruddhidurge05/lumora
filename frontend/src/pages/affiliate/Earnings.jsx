@@ -238,7 +238,7 @@ export default function AffiliateEarnings({
      MAIN RENDER
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
+    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="aff-earnings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>

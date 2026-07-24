@@ -410,7 +410,7 @@ export default function AffiliateProfile({
      MAIN RENDER
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
       {/* ── SUCCESS TOAST ────────────────────────────────────────────────── */}
       {saved && (

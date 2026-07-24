@@ -106,7 +106,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
+    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
 
       {/* ── TOAST ─────────────────────────────────────────────────────── */}
       {toast && (
