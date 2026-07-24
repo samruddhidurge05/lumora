@@ -877,13 +877,7 @@ def track_click(
 
     if custom_link:
         if custom_link.is_active:
-            # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
-            now_ts = time.time()
-            cache_key = f"track_{code_upper}_{client_ip}_{user_agent}"
-            if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
-                logger.info("[REFERRAL] Fast-deduplicated concurrent profile track-click for code %s", code_upper)
-                return ClickTrackResponse(tracked=True, referral_code=code_upper)
-            _click_cache[cache_key] = now_ts
+
             
             # LOCK THE PROFILE ROW to serialize concurrent requests from React Strict Mode double-fetches
             # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
@@ -941,13 +935,7 @@ def track_click(
     ).with_for_update().first()
 
     if profile and profile.is_active:
-        # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
-        now_ts = time.time()
-        cache_key = f"track_{code_upper}_{client_ip}_{user_agent}"
-        if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
-            logger.info("[REFERRAL] Fast-deduplicated concurrent profile track-click for code %s", code_upper)
-            return ClickTrackResponse(tracked=True, referral_code=code_upper)
-        _click_cache[cache_key] = now_ts
+
         
         # Verify affiliate is active
         aff_user = db.query(User).filter(User.id == profile.user_id).first()
@@ -1059,19 +1047,7 @@ def create_referral_click(
     # This prevents the Read-Modify-Write race condition when multiple workers process requests simultaneously
     locked_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).with_for_update().first()
 
-    # Fast in-memory deduplication (prevents concurrent race conditions from React Strict Mode double-fetches)
-    now_ts = time.time()
-    cache_key = f"create_{code_upper}_{product.id}_{client_ip}_{user_agent}"
-    if cache_key in _click_cache and (now_ts - _click_cache[cache_key]) < 10:
-        logger.info("[REFERRAL] Fast-deduplicated concurrent click for code %s", code_upper)
-        return ReferralClickResponse(
-            session_id=f"REF_SESS_{uuid.uuid4().hex}", # Return dummy ID to prevent frontend errors
-            referral_code=code_upper,
-            product_id=product.id,
-            status="CLICKED",
-            is_valid=True
-        )
-    _click_cache[cache_key] = now_ts
+
 
     # Database deduplication
     time_threshold = datetime.utcnow() - timedelta(minutes=15)

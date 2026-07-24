@@ -4,7 +4,7 @@ import Footer from '../../components/common/Footer';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
-import { Download, Lock, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
+import { Download, Lock, RefreshCw, ExternalLink, CheckCircle, Trash2, CheckSquare, Square, RotateCcw } from 'lucide-react';
 import PolicyBanner from '../../components/policy/PolicyBanner';
 
 
@@ -15,6 +15,53 @@ export default function Downloads() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+
+  // ── Multi-select & Delete State ──────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deletedIds, setDeletedIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lumora_deleted_downloads');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const saveDeletedIds = (newList) => {
+    setDeletedIds(newList);
+    try {
+      localStorage.setItem('lumora_deleted_downloads', JSON.stringify(newList));
+    } catch (e) {
+      console.warn('Failed to save deleted downloads:', e);
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (items) => {
+    const visibleIds = items.map(p => String(p.id));
+    const allSelected = visibleIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !visibleIds.includes(id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    const updated = Array.from(new Set([...deletedIds, ...selectedIds]));
+    saveDeletedIds(updated);
+    setSelectedIds([]);
+  };
+
+  const handleRestoreDeleted = () => {
+    saveDeletedIds([]);
+  };
 
   // Build owned list: merge backend order items + locally tracked ownedProducts
   const loadBackendDownloads = useCallback(async () => {
@@ -76,7 +123,7 @@ export default function Downloads() {
   const allOwnedIds = new Set([...backendOwnedIds, ...localOwnedIds]);
 
   const uniqueOwnedIds = Array.from(allOwnedIds);
-  const owned = uniqueOwnedIds.map(id => {
+  const owned = uniqueOwnedIds.filter(id => !deletedIds.includes(String(id))).map(id => {
     const prod = products.find(p => String(p.id) === String(id));
     const orderItem = (backendOrders || []).find(i => i.product_id === String(id));
     return {
@@ -231,7 +278,18 @@ export default function Downloads() {
           </div>
         )}
 
-        {!loading && owned.length === 0 ? (
+        {!loading && owned.length === 0 && deletedIds.length > 0 ? (
+          <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center', border: '1px dashed rgba(123,63,160,0.30)' }}>
+            <Trash2 size={48} style={{ color: 'rgba(225,29,72,0.3)', margin: '0 auto 16px' }} />
+            <h2 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, color: 'var(--color-espresso)' }}>All download products deleted</h2>
+            <p style={{ color: 'var(--color-mocha)', marginTop: '8px' }}>
+              You have removed your download products from this view. You can restore them anytime.
+            </p>
+            <button onClick={handleRestoreDeleted} className="btn-premium btn-premium-solid" style={{ marginTop: '24px', padding: '12px 28px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <RotateCcw size={15} /> Restore All Download Products
+            </button>
+          </div>
+        ) : !loading && owned.length === 0 ? (
           <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center', border: '1px dashed rgba(123,63,160,0.30)' }}>
             <Lock size={48} style={{ color: 'rgba(123,63,160,0.2)', margin: '0 auto 16px' }} />
             <h2 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, color: 'var(--color-espresso)' }}>No downloads yet</h2>
@@ -242,24 +300,93 @@ export default function Downloads() {
           </div>
         ) : (
           <>
-            {/* Summary strip */}
-            <div style={{ marginBottom: '24px', padding: '14px 20px', background: 'rgba(123,63,160,0.05)', borderRadius: '12px', border: '1px solid rgba(196,181,253,0.25)', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.82rem', color: '#7B3FA0', fontWeight: 700 }}>
+            {/* Summary strip with Selection & Delete Controls */}
+            <div style={{ marginBottom: '24px', padding: '14px 20px', background: 'rgba(123,63,160,0.05)', borderRadius: '12px', border: '1px solid rgba(196,181,253,0.25)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', fontSize: '0.82rem', color: '#7B3FA0', fontWeight: 700 }}>
               <CheckCircle size={16} />
               {owned.length} product{owned.length !== 1 ? 's' : ''} in your vault
-              {backendOrders !== null && backendOrders.length > 0 && (
-                <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: '#8B6B5B', fontWeight: 500 }}>
-                  from {new Set((backendOrders || []).map(i => i.order_id)).size} order{new Set((backendOrders || []).map(i => i.order_id)).size !== 1 ? 's' : ''}
-                </span>
-              )}
+
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {owned.length > 0 && (
+                  <button
+                    onClick={() => handleSelectAll(owned)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '6px 12px', borderRadius: '8px',
+                      border: '1px solid rgba(196,181,253,0.4)',
+                      background: 'rgba(255,255,255,0.8)',
+                      color: 'var(--color-espresso)', fontSize: '0.74rem', fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                    }}
+                  >
+                    {owned.every(p => selectedIds.includes(String(p.id))) ? <CheckSquare size={14} color="#7B3FA0" /> : <Square size={14} />}
+                    {owned.every(p => selectedIds.includes(String(p.id))) ? 'Deselect All' : 'Select All'}
+                  </button>
+                )}
+
+                {selectedIds.length > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '6px 14px', borderRadius: '8px',
+                      border: 'none', background: 'linear-gradient(135deg, #e11d48, #be123c)',
+                      color: '#ffffff', fontSize: '0.74rem', fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                      boxShadow: '0 3px 10px rgba(225,29,72,0.3)',
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    Delete Selected ({selectedIds.length})
+                  </button>
+                )}
+
+                {deletedIds.length > 0 && selectedIds.length === 0 && (
+                  <button
+                    onClick={handleRestoreDeleted}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '6px 12px', borderRadius: '8px',
+                      border: '1px solid rgba(123,63,160,0.3)',
+                      background: 'rgba(123,63,160,0.06)',
+                      color: '#7B3FA0', fontSize: '0.74rem', fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                    }}
+                  >
+                    <RotateCcw size={12} />
+                    Restore Removed ({deletedIds.length})
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {owned.map(p => {
                 const orderItem = (backendOrders || []).find(i => i.product_id === String(p.id));
                 const isDownloading = downloadingId === p.id;
+                const isSelected = selectedIds.includes(String(p.id));
                 return (
                   <div key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div className="glass-card" style={{ padding: '20px 24px', display: 'flex', gap: '16px', alignItems: 'center', border: '1px solid rgba(196,181,253,0.22)' }}>
+                    <div className="glass-card" style={{
+                      padding: '20px 24px', display: 'flex', gap: '16px', alignItems: 'center',
+                      border: isSelected ? '2px solid #7B3FA0' : '1px solid rgba(196,181,253,0.22)',
+                      background: isSelected ? 'rgba(243, 232, 255, 0.65)' : undefined,
+                      transition: 'all 0.2s ease',
+                    }}>
+                    <button
+                      onClick={() => handleToggleSelect(String(p.id))}
+                      style={{
+                        width: '28px', height: '28px', borderRadius: '8px',
+                        background: isSelected ? '#7B3FA0' : 'rgba(255,255,255,0.92)',
+                        border: isSelected ? 'none' : '1.5px solid rgba(123,63,160,0.35)',
+                        color: isSelected ? '#ffffff' : '#7B3FA0',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', flexShrink: 0,
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={isSelected ? 'Deselect item' : 'Select item to delete'}
+                    >
+                      {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                    </button>
                     <img src={p.preview} alt={p.title} style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>{p.category}</p>
