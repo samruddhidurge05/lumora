@@ -2,6 +2,7 @@ import logging
 import csv
 import io
 import os
+import re
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
