@@ -322,6 +322,10 @@ def get_email_provider(provider_name: Optional[str] = None) -> BaseEmailProvider
     p_name = (provider_name or getattr(settings, "EMAIL_PROVIDER", os.getenv("EMAIL_PROVIDER", "failover"))).lower()
 
     if p_name in ("failover", "chain"):
+        # In live SMTP mode, failover chain MUST NOT fall back to MockProvider,
+        # ensuring SMTP errors are properly reported and logged rather than swallowed.
+        if smtp_enabled:
+            return FailoverEmailProvider([GmailProvider()])
         return FailoverEmailProvider([GmailProvider(), MockProvider()])
     elif p_name in ("gmail", "gmail_smtp", "smtp"):
         return GmailProvider()
@@ -335,4 +339,6 @@ def get_email_provider(provider_name: Optional[str] = None) -> BaseEmailProvider
         return SESProvider()
     else:
         logger.warning("Unknown EMAIL_PROVIDER '%s', defaulting to FailoverEmailProvider", p_name)
+        if smtp_enabled:
+            return FailoverEmailProvider([GmailProvider()])
         return FailoverEmailProvider([GmailProvider(), MockProvider()])
