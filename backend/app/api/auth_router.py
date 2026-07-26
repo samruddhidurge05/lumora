@@ -362,8 +362,28 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
             db.commit()
             db.refresh(user)
 
-    # Enforce email verification (exclude admins or special cases if any? No, admin doesn't use firebase-sync)
-    if not email_verified:
+    # Enforce email verification for standard customer/vendor accounts.
+    # Exclude admins and pending admin invitees per AGENTS.md rules:
+    # "Admin authentication flows must remain separate and must not be forced through email verification checks."
+    is_admin_or_invited = False
+    if user and user.role == "admin":
+        is_admin_or_invited = True
+    elif normalized_email:
+        from app.models.admin_invitation import AdminInvitation
+        from datetime import datetime, timezone
+        now_utc = datetime.now(timezone.utc)
+        pending_inv = db.query(AdminInvitation).filter(
+            AdminInvitation.email == normalized_email,
+            AdminInvitation.accepted_at == None,
+        ).first()
+        if pending_inv and not getattr(pending_inv, "revoked_at", None):
+            exp = pending_inv.expires_at
+            if exp and exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            if exp and exp > now_utc:
+                is_admin_or_invited = True
+
+    if not email_verified and not is_admin_or_invited:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Please verify your email before continuing.",
