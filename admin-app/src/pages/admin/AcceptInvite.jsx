@@ -109,14 +109,19 @@ export default function AcceptInvite() {
   const activateViaRegularJwt = async () => {
     setStatus('activating');
     try {
-      await backendFetch('/admin/team/accept-invite', {
+      const res = await backendFetch('/admin/team/accept-invite', {
         method: 'POST',
         body: JSON.stringify({ token }),
       });
       // Clean up sessionStorage
       sessionStorage.removeItem('lumora_pending_invite_token');
       sessionStorage.removeItem('lumora_pending_invite_email');
-      setStatus('activated');
+
+      if (res?.already_admin) {
+        setStatus('already_admin');
+      } else {
+        setStatus('activated');
+      }
     } catch (err) {
       // Email mismatch: backend returns 403
       if (err.status === 403) {
@@ -296,18 +301,22 @@ export default function AcceptInvite() {
         )}
 
         {/* ── Activation Success ── */}
-        {status === 'activated' && (
+        {(status === 'activated' || status === 'already_admin') && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>✓</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>Role Activated!</h2>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>
+              {status === 'already_admin' ? 'Administrator Access Confirmed' : 'Role Activated!'}
+            </h2>
             <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 28px' }}>
-              Your admin role has been successfully activated. Click below to sign in to the Admin Portal.
+              {status === 'already_admin'
+                ? 'You already have active administrator access to Lumora. Click below to open your Admin Portal.'
+                : 'Your admin role has been successfully activated. Click below to sign in to the Admin Portal.'}
             </p>
             <button
               onClick={handleGoToAdminLogin}
               style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
             >
-              Sign In to Admin Portal
+              Enter Admin Portal
             </button>
           </div>
         )}

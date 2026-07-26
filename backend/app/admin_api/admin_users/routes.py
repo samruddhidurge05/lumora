@@ -457,13 +457,32 @@ def accept_invite(
     """
     now = datetime.now(timezone.utc)
 
+    # Enterprise Check: If user is ALREADY an active admin, handle cleanly
+    existing_role = db.query(AdminRole).filter(AdminRole.user_id == current_user.id).first()
+    if current_user.role == "admin" and existing_role and existing_role.is_active:
+        return {
+            "message": "You already have administrator access.",
+            "role_level": existing_role.role_level,
+            "already_admin": True,
+        }
+
+    # Enterprise Row-Lock: Atomic lock to prevent concurrent multi-tab or duplicate acceptances
     invitation = db.query(AdminInvitation).filter(
         AdminInvitation.invite_token == token,
-        AdminInvitation.accepted_at.is_(None),
-    ).first()
+    ).with_for_update().first()
 
     if not invitation:
-        raise HTTPException(status_code=400, detail="Invalid or already used invitation token.")
+        raise HTTPException(status_code=400, detail="Invalid invitation token.")
+
+    # Enterprise Idempotency: If token was already accepted by the matching user, return 200 OK for seamless network retries
+    if invitation.accepted_at is not None:
+        if current_user.email.lower() == invitation.email.lower():
+            return {
+                "message": "Invitation already accepted.",
+                "role_level": invitation.role_level,
+                "already_accepted": True,
+            }
+        raise HTTPException(status_code=400, detail="This invitation has already been accepted by another user.")
 
     if getattr(invitation, "revoked_at", None):
         raise HTTPException(status_code=400, detail="This invitation has been revoked.")

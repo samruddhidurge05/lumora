@@ -79,37 +79,59 @@ export default function AdminRegister() {
       const firebaseUser = cred.user;
       await updateProfile(firebaseUser, { displayName: name });
 
-      // 2. Create Firestore users/{uid} document with base 'customer' role
-      const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+      // 2. Non-destructive Firestore users/{uid} document creation
+      const { doc, getDoc, setDoc, serverTimestamp } = await import('firebase/firestore');
       const userRef = doc(db, 'users', firebaseUser.uid);
-      await setDoc(userRef, {
-        uid: firebaseUser.uid,
-        fullName: name,
-        email: firebaseUser.email,
-        photoURL: null,
-        provider: 'password',
-        emailVerified: firebaseUser.emailVerified,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-        accountStatus: 'active',
-        role: 'customer',
-        roles: ['customer'],
-        loginCount: 1,
-        phoneNumber: null,
-        country: null,
-        timezone: null,
-      });
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: firebaseUser.uid,
+          fullName: name,
+          email: firebaseUser.email,
+          photoURL: null,
+          provider: 'password',
+          emailVerified: firebaseUser.emailVerified,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+          accountStatus: 'active',
+          role: 'customer',
+          roles: ['customer'],
+          loginCount: 1,
+          phoneNumber: null,
+          country: null,
+          timezone: null,
+        });
+      } else {
+        // Enterprise Schema Self-Healing: Validate full schema & repair missing fields non-destructively
+        const userData = userSnap.data() || {};
+        const repairs = {};
+        if (!userData.role) repairs.role = 'customer';
+        if (!userData.roles) repairs.roles = ['customer'];
+        if (!userData.email) repairs.email = firebaseUser.email;
+        if (!userData.fullName && name) repairs.fullName = name;
+        if (userData.emailVerified === undefined) repairs.emailVerified = firebaseUser.emailVerified;
+        if (!userData.accountStatus) repairs.accountStatus = 'active';
+        if (!userData.provider) repairs.provider = 'password';
+        if (!userData.updatedAt) repairs.updatedAt = serverTimestamp();
+        if (Object.keys(repairs).length > 0) {
+          await setDoc(userRef, repairs, { merge: true });
+        }
+      }
 
-      // 3. Create customer profile doc
-      await setDoc(doc(db, 'customers', firebaseUser.uid), {
-        uid: firebaseUser.uid,
-        fullName: name,
-        email: firebaseUser.email,
-        role: 'customer',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      // 3. Non-destructive customer profile doc creation
+      const custRef = doc(db, 'customers', firebaseUser.uid);
+      const custSnap = await getDoc(custRef);
+      if (!custSnap.exists()) {
+        await setDoc(custRef, {
+          uid: firebaseUser.uid,
+          fullName: name,
+          email: firebaseUser.email,
+          role: 'customer',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
 
       // 4. Sync with backend (exchanges Firebase ID token for customer JWT)
       await syncWithBackend(firebaseUser, 'customer');
@@ -118,7 +140,32 @@ export default function AdminRegister() {
       const redirectTarget = searchParams.get('redirect') || `/admin/accept-invite?token=${encodeURIComponent(token)}`;
       navigate(redirectTarget, { replace: true });
     } catch (err) {
-      setFormError(err.message || 'Registration failed. Please try again.');
+      if (err.code === 'auth/email-already-in-use') {
+        const redirectTarget = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+        setFormError(
+          <>
+            This email already has a Lumora account. Sign in using your existing credentials to accept this administrator invitation. No new account will be created.{' '}
+            <button
+              type="button"
+              onClick={() => navigate(redirectTarget)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#c084fc',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: 700,
+                padding: 0,
+                marginLeft: '4px',
+              }}
+            >
+              Click here to Log In & Accept Invitation
+            </button>
+          </>
+        );
+      } else {
+        setFormError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setRegistering(false);
     }
