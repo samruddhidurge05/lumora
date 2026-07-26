@@ -1021,27 +1021,31 @@ export default function AffiliateManagement() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
-            TAB 2: PRODUCTS MATRIX (existing, preserved)
+            TAB 2: PRODUCTS MATRIX
         ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'products' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
-              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                <div className="relative flex-1 w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7B3FA0]" />
                   <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search product…"
                     className="w-full pl-9 pr-4 py-2 bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-xs focus:outline-none text-[#2D004D]" />
                 </div>
-                <AdminSelect value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'enabled',label:'🟢 Enabled'},{value:'disabled',label:'⚪ Disabled'}]} className="w-36" />
-                <AdminSelect value={modeFilter} onChange={e => setModeFilter(e.target.value)} options={[{value:'all',label:'All Modes'},{value:'percentage',label:'Percentage (%)'},{value:'fixed',label:'Fixed (₹)'}]} className="w-36" />
+                <div className="flex items-center gap-2">
+                  <AdminSelect value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'enabled',label:'🟢 Enabled'},{value:'disabled',label:'⚪ Disabled'}]} className="flex-1 sm:w-36" />
+                  <AdminSelect value={modeFilter} onChange={e => setModeFilter(e.target.value)} options={[{value:'all',label:'All Modes'},{value:'percentage',label:'Percentage (%)'},{value:'fixed',label:'Fixed (₹)'}]} className="flex-1 sm:w-36" />
+                </div>
               </div>
               {selectedProductIds.length > 0 && (
-                <button onClick={() => setShowBulkModal(true)} className="px-4 py-2 rounded-xl bg-[#7B3FA0] text-white text-xs font-bold flex items-center gap-2 shadow-md hover:bg-[#5C2B7C] transition-all">
+                <button onClick={() => setShowBulkModal(true)} className="px-4 py-2 rounded-xl bg-[#7B3FA0] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:bg-[#5C2B7C] transition-all">
                   <Sliders size={14} /><span>Bulk Edit ({selectedProductIds.length})</span>
                 </button>
               )}
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
+
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
               <table className="w-full text-left text-xs text-[#2D004D]">
                 <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
                   <tr>
@@ -1072,6 +1076,60 @@ export default function AffiliateManagement() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Stacked Card View (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              {filteredProducts.map(prod => {
+                const isSelected = selectedProductIds.includes(prod.id);
+                const est = calculateCommission(prod.price, prod.commission_mode, prod.commission_value);
+                return (
+                  <div key={`m-prod-${prod.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <button onClick={() => toggleSelectProduct(prod.id)} className="shrink-0">
+                          {isSelected ? <CheckSquare size={18} className="text-[#7B3FA0]" /> : <Square size={18} className="text-[#7B3FA0]/40" />}
+                        </button>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-[#2D004D] truncate">{prod.title}</span>
+                          <span className="text-[10px] text-[#7B3FA0]">{prod.category}</span>
+                        </div>
+                      </div>
+                      {prod.affiliate_enabled ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">🟢 Enabled</span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 shrink-0">⚪ Disabled</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#7B3FA0]">Price: <strong className="text-[#2D004D]">₹{prod.price}</strong></span>
+                      <span className="text-[#7B3FA0]">Commission: <strong className="text-[#2D004D]">{prod.affiliate_enabled ? (prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`) : '—'}</strong></span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] pt-1">
+                      <span className="text-[#7B3FA0]">Est. Earnings/sale:</span>
+                      <span className="font-bold text-emerald-600 text-xs">{prod.affiliate_enabled ? `₹${est.toFixed(2)}` : '—'}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                      <button
+                        onClick={() => handleToggleProductAffiliate(prod.id)}
+                        className="flex-1 py-2.5 rounded-xl border border-[#F3EAF8] bg-[#F8F3FB] text-xs font-bold text-[#7B3FA0] min-h-[44px] flex items-center justify-center gap-1.5"
+                      >
+                        {prod.affiliate_enabled ? 'Disable Affiliate' : 'Enable Affiliate'}
+                      </button>
+                      <button
+                        onClick={() => setQrModalProduct(prod)}
+                        className="p-2.5 rounded-xl border border-[#F3EAF8] bg-[#F8F3FB] text-[#7B3FA0] min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                        title="QR Code"
+                      >
+                        <QrCode size={18} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -1088,7 +1146,8 @@ export default function AffiliateManagement() {
               </div>
               <AdminSelect value={affStatusFilter} onChange={e => setAffStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'active',label:'Active'},{value:'suspended',label:'Suspended'}]} className="w-36" />
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
               <table className="w-full text-left text-xs text-[#2D004D]">
                 <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
                   <tr>
@@ -1119,6 +1178,44 @@ export default function AffiliateManagement() {
               </table>
               <div className="p-3 border-t border-[#F3EAF8] text-[10px] text-[#7B3FA0]">Click a row to view full affiliate profile →</div>
             </div>
+
+            {/* Mobile Stacked Cards (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              {filteredAffiliates.map(aff => (
+                <div key={`m-aff-${aff.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3 cursor-pointer" onClick={() => setProfilePanelId(aff.id)}>
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-[#2D004D] truncate">{aff.name}</span>
+                      <span className="text-[10px] text-[#7B3FA0] truncate">{aff.email}</span>
+                    </div>
+                    {aff.status === 'active' ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">Active</span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">Suspended</span>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-[#7B3FA0]">Code: <strong className="font-mono text-[#7B3FA0]">{aff.code || aff.affiliateCode}</strong></span>
+                    <span className="text-[#7B3FA0]">Clicks: <strong className="text-[#2D004D]">{fmtN(aff.clicks || aff.totalClicks)}</strong></span>
+                    <span className="text-[#7B3FA0]">Sales: <strong className="text-[#2D004D]">{fmtN(aff.sales || aff.totalConversions)}</strong></span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[11px] pt-1">
+                    <span className="text-[#7B3FA0]">Commission: <strong className="text-emerald-600">{fmt(aff.commission || aff.totalCommission)}</strong></span>
+                    <span className="text-[#7B3FA0]">Pending: <strong className="text-[#7B3FA0]">{fmt(aff.pending || 0)}</strong></span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-stone-100" onClick={e => e.stopPropagation()}>
+                    <span className="text-[10px] text-[#7B3FA0]">Tap card to view profile</span>
+                    <button onClick={() => handleToggleAffiliateStatus(aff.id)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] ${aff.status === 'active' ? 'border border-rose-200 bg-rose-50 text-rose-700' : 'border border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                      {aff.status === 'active' ? 'Suspend Affiliate' : 'Activate Affiliate'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1145,8 +1242,8 @@ export default function AffiliateManagement() {
               <span className="text-xs text-[#7B3FA0] font-bold ml-auto">{fmtN(ledgerTotal)} records</span>
             </div>
 
-            {/* Ledger Table */}
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
+            {/* Ledger Desktop Table (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
               <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
                 <table className="w-full text-left text-xs text-[#2D004D] min-w-[1100px]">
                   <thead className="bg-[#F8F3FB] text-[9px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
@@ -1185,6 +1282,45 @@ export default function AffiliateManagement() {
                 </table>
               </DataTable>
               <div className="p-4 border-t border-[#F3EAF8]">
+                <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / PAGE_SIZE)} onChange={setLedgerPage} />
+              </div>
+            </div>
+
+            {/* Ledger Mobile Stacked Cards (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
+                {ledger.map(row => (
+                  <div key={`m-ledger-${row.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-xs font-bold text-[#7B3FA0]">Order #{row.order_id || row.id}</span>
+                        <span className="text-[10px] text-[#8E6AA8]">{fmtDate(row.order_date)}</span>
+                      </div>
+                      <StatusBadge status={row.commission_status} />
+                    </div>
+
+                    <div className="flex justify-between items-start text-[11px] gap-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-[#2D004D] truncate">{row.product_name}</span>
+                        <span className="text-[10px] text-[#7B3FA0]">Customer: {row.customer_name}</span>
+                        <span className="text-[10px] text-[#7B3FA0]">Affiliate: {row.affiliate_name} ({row.affiliate_code})</span>
+                      </div>
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="font-bold text-emerald-600 text-xs">{fmt(row.commission_earned)}</span>
+                        <span className="text-[9px] text-[#7B3FA0]">Price: {fmt(row.product_price)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                      <span className="text-[10px] text-[#8E6AA8]">Rate: {row.commission_type === 'fixed' ? `₹${row.commission_rate}` : `${row.commission_rate}%`}</span>
+                      <button onClick={() => setCommActionModal(row)} className="px-3 py-1.5 rounded-xl border border-[#F3EAF8] bg-[#F8F3FB] text-xs font-bold text-[#7B3FA0] min-h-[38px]">
+                        Manage Status
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </DataTable>
+              <div className="p-4 bg-white rounded-2xl border border-[#F3EAF8]">
                 <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / PAGE_SIZE)} onChange={setLedgerPage} />
               </div>
             </div>
@@ -1269,7 +1405,8 @@ export default function AffiliateManagement() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Affiliate-Enabled Products — Performance</h3>
               <span className="text-xs text-[#7B3FA0] font-bold">{fmtN(perfTotal)} products</span>
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
+            {/* Performance Desktop Table (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
               <DataTable loading={perfLoading} empty={!perfLoading && perfData.length === 0}>
                 <table className="w-full text-left text-xs text-[#2D004D] min-w-[900px]">
                   <thead className="bg-[#F8F3FB] text-[9px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
@@ -1306,6 +1443,40 @@ export default function AffiliateManagement() {
                 </table>
               </DataTable>
               <div className="p-4 border-t border-[#F3EAF8]">
+                <Pagination page={perfPage} totalPages={Math.ceil(perfTotal / 50)} onChange={setPerfPage} />
+              </div>
+            </div>
+
+            {/* Performance Mobile Stacked Cards (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              <DataTable loading={perfLoading} empty={!perfLoading && perfData.length === 0}>
+                {perfData.map(p => (
+                  <div key={`m-perf-${p.product_id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {p.thumbnail && <img src={getMediaUrl(p.thumbnail)} alt="" className="w-8 h-8 rounded-lg object-cover border border-[#F3EAF8] shrink-0" onError={e => e.target.style.display='none'} />}
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-[#2D004D] text-xs truncate">{p.product_name}</span>
+                          <span className="text-[10px] text-[#7B3FA0]">Creator: {p.creator}</span>
+                        </div>
+                      </div>
+                      <span className="font-bold text-[#2D004D] text-xs shrink-0">{fmt(p.price)}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-[#7B3FA0]">Affiliates: <strong className="text-[#2D004D]">{fmtN(p.affiliate_count)}</strong></span>
+                      <span className="text-[#7B3FA0]">Clicks: <strong className="text-[#2D004D]">{fmtN(p.clicks)}</strong></span>
+                      <span className="text-[#7B3FA0]">Conv: <strong className="text-[#2D004D]">{fmtN(p.conversions)} ({p.conversion_rate}%)</strong></span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[11px] pt-1 border-t border-stone-100">
+                      <span className="text-[#7B3FA0]">Revenue: <strong className="text-[#2D004D]">{fmt(p.revenue_generated)}</strong></span>
+                      <span className="text-[#7B3FA0]">Comm Paid: <strong className="text-emerald-600">{fmt(p.commission_paid)}</strong></span>
+                    </div>
+                  </div>
+                ))}
+              </DataTable>
+              <div className="p-4 bg-white rounded-2xl border border-[#F3EAF8]">
                 <Pagination page={perfPage} totalPages={Math.ceil(perfTotal / 50)} onChange={setPerfPage} />
               </div>
             </div>
