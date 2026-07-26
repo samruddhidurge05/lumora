@@ -920,14 +920,53 @@ def list_invitations(
     """List invitations - includes revoked status. (Req 3)"""
     now = datetime.now(timezone.utc)
 
-    if include_history:
-        invitations = (db.query(AdminInvitation)
-                       .order_by(AdminInvitation.created_at.desc()).limit(200).all())
-    else:
-        invitations = (db.query(AdminInvitation)
-                       .filter(AdminInvitation.accepted_at.is_(None),
-                               AdminInvitation.expires_at > now)
-                       .order_by(AdminInvitation.created_at.desc()).all())
+    try:
+        if include_history:
+            invitations = (db.query(AdminInvitation)
+                           .order_by(AdminInvitation.created_at.desc()).limit(200).all())
+        else:
+            invitations = (db.query(AdminInvitation)
+                           .filter(AdminInvitation.accepted_at.is_(None),
+                                   AdminInvitation.expires_at > now)
+                           .order_by(AdminInvitation.created_at.desc()).all())
+    except Exception as query_err:
+        # Schema auto-healing guard: if PostgreSQL database is missing columns on production,
+        # run auto-migration DDL and retry the query cleanly
+        import logging
+        logging.getLogger(__name__).warning("[team] Database query error in list_invitations: %s. Attempting schema self-healing.", query_err)
+        try:
+            from app.db.database import engine
+            from sqlalchemy import text as _text
+            with engine.connect() as conn:
+                conn.execute(_text("COMMIT"))
+                ddls = [
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'email_queued'",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_email_sent_at TIMESTAMP",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_error_log TEXT",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS resend_count INTEGER DEFAULT 0",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS first_sent_at TIMESTAMP",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS next_retry_at TIMESTAMP",
+                    "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'gmail_smtp'",
+                ]
+                for ddl in ddls:
+                    try:
+                        conn.execute(_text(ddl))
+                        conn.execute(_text("COMMIT"))
+                    except Exception:
+                        pass
+            db.rollback()
+            if include_history:
+                invitations = (db.query(AdminInvitation)
+                               .order_by(AdminInvitation.created_at.desc()).limit(200).all())
+            else:
+                invitations = (db.query(AdminInvitation)
+                               .filter(AdminInvitation.accepted_at.is_(None),
+                                       AdminInvitation.expires_at > now)
+                               .order_by(AdminInvitation.created_at.desc()).all())
+        except Exception as retry_err:
+            logging.getLogger(__name__).error("[team] Schema self-healing retry failed: %s", retry_err)
+            return []
 
     res = [_invitation_payload(inv, now) for inv in invitations]
     return res

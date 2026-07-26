@@ -225,10 +225,20 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS version              VARCHAR(20) DEFAULT 'v1.0.0'",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS file_size            VARCHAR(30)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS last_updated         VARCHAR(50)",
-            # admin_invitations
+            # admin_invitations — Phase B & B.5 email persistence & resend metadata columns
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS revoked_at   TIMESTAMP",
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS invited_name VARCHAR(150)",
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS message      TEXT",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'email_queued'",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_email_sent_at TIMESTAMP",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_error_log TEXT",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS resend_count INTEGER DEFAULT 0",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS first_sent_at TIMESTAMP",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS next_retry_at TIMESTAMP",
+            "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'gmail_smtp'",
+            # admin_email_logs — Phase B append-only immutable audit trail table
+            "CREATE TABLE IF NOT EXISTS admin_email_logs (id SERIAL PRIMARY KEY, invitation_id INTEGER NOT NULL REFERENCES admin_invitations(id) ON DELETE CASCADE, event VARCHAR(50) NOT NULL, job_id VARCHAR(36), correlation_id VARCHAR(36), recipient VARCHAR(255) NOT NULL, provider VARCHAR(50) NOT NULL DEFAULT 'gmail_smtp', attempt INTEGER NOT NULL DEFAULT 1, latency_ms INTEGER NOT NULL DEFAULT 0, status_code INTEGER, error_message TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
             # affiliate_profiles — Phase 2 earnings breakdown
@@ -321,11 +331,19 @@ def _run_schema_migrations() -> None:
     if dialect == "sqlite":
         try:
             with engine.connect() as conn:
-                # admin_invitations - add revoked_at, invited_name, message
+                # admin_invitations - add revoked_at, invited_name, message, and Phase B/B.5 persistence fields
                 inv_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(admin_invitations)"))}
-                if "revoked_at"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
-                if "invited_name" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
-                if "message"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
+                if "revoked_at"         not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN revoked_at DATETIME"))
+                if "invited_name"       not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN invited_name VARCHAR(150)"))
+                if "message"            not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN message TEXT"))
+                if "email_status"       not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN email_status VARCHAR(50) DEFAULT 'email_queued'"))
+                if "last_email_sent_at" not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN last_email_sent_at DATETIME"))
+                if "email_error_log"   not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN email_error_log TEXT"))
+                if "resend_count"       not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN resend_count INTEGER DEFAULT 0"))
+                if "first_sent_at"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN first_sent_at DATETIME"))
+                if "last_attempt_at"    not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN last_attempt_at DATETIME"))
+                if "next_retry_at"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN next_retry_at DATETIME"))
+                if "provider"           not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN provider VARCHAR(50) DEFAULT 'gmail_smtp'"))
 
                 # users - add last_login_at
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}

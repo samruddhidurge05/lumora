@@ -29,6 +29,9 @@ CREATE INDEX IF NOT EXISTS ix_admin_email_logs_correlation_id ON admin_email_log
 CREATE INDEX IF NOT EXISTS ix_admin_email_logs_created_at ON admin_email_logs(created_at);
 
 -- 2. Add Phase B metadata tracking columns to admin_invitations
+ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'email_queued';
+ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_email_sent_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS email_error_log TEXT;
 ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS resend_count INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS first_sent_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP WITH TIME ZONE;
