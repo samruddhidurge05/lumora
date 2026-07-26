@@ -870,15 +870,16 @@ export default function Reviews() {
                             exit={{ opacity: 0, scale: 0.98 }}
                             transition={{ duration: 0.3, delay: idx * 0.03 }}
                             onClick={() => { sysSound.playTap(); setSelectedReview(rev); }}
-                            className={`p-5 rounded-2xl bg-white/40 hover:bg-white/80 border transition-all duration-300 cursor-pointer hover:shadow-[0_8px_20px_rgba(90,30,126,0.02)] flex flex-col gap-3 relative overflow-hidden ${
-                              rev.flagged ? 'border-amber-200/50 hover:border-amber-300' : 'border-[#F3EAF8] hover:border-[#D8BFE3]/30'
+                            className={`p-4 sm:p-5 rounded-2xl bg-white/60 hover:bg-white/80 border transition-all duration-300 cursor-pointer hover:shadow-sm flex flex-col gap-3 relative overflow-hidden ${
+                              rev.flagged ? 'border-amber-200/60 hover:border-amber-300' : 'border-[#F3EAF8] hover:border-[#D8BFE3]/40'
                             }`}
                           >
                             {rev.flagged && (
                               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-red-400" />
                             )}
 
-                            <div className="flex justify-between items-start gap-4">
+                            {/* Desktop Header Layout */}
+                            <div className="hidden sm:flex justify-between items-start gap-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD]/60 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner shrink-0">
                                   {rev.customer.slice(0, 2)}
@@ -902,11 +903,38 @@ export default function Reviews() {
                               </div>
                             </div>
 
-                            <p className="text-[11px] text-[#7B3FA0] leading-relaxed line-clamp-2">
+                            {/* Mobile Header Layout (< 640px) */}
+                            <div className="sm:hidden flex flex-col gap-2 border-b border-stone-100 pb-2.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD] flex items-center justify-center text-xs font-bold text-[#7B3FA0] shrink-0">
+                                    {rev.customer.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-[#2D004D]">{rev.customer}</span>
+                                    <span className="text-[10px] text-[#7B3FA0] truncate max-w-[180px]">{rev.product}</span>
+                                  </div>
+                                </div>
+                                <StarRating rating={rev.rating} size={12} />
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] text-[#8E6AA8] pt-1">
+                                <span>{rev.date}</span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                                  rev.sentiment === 'positive'
+                                    ? 'bg-[#B886D0]/30 text-emerald-700'
+                                    : (rev.sentiment === 'neutral' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600')
+                                }`}>
+                                  {rev.sentiment}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="text-[11px] sm:text-[11px] text-[#7B3FA0] leading-relaxed line-clamp-3">
                               {rev.comment}
                             </p>
 
-                            <div className="flex items-center justify-between border-t border-[#F5E9DD]/30 pt-3">
+                            {/* Desktop Footer Actions */}
+                            <div className="hidden sm:flex items-center justify-between border-t border-[#F5E9DD]/30 pt-3">
                               <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
                                 rev.sentiment === 'positive'
                                   ? 'bg-[#B886D0]/30 text-emerald-600'
@@ -915,27 +943,45 @@ export default function Reviews() {
                                 {rev.sentiment}
                               </span>
 
-                              {/* Moderation action buttons */}
                               <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                                 <button
                                   disabled={moderating}
                                   onClick={() => handleModerateReview(rev.id, rev.flagged ? "unflag" : "flag")}
-                                  className="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-colors border"
+                                  className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors border min-h-[36px]"
                                   style={{ background: rev.flagged ? 'rgba(245,158,11,0.08)' : 'rgba(90,30,126,0.04)', borderColor: rev.flagged ? 'rgba(245,158,11,0.3)' : 'rgba(142,106,168,0.2)', color: rev.flagged ? '#b45309' : '#7B3FA0', cursor: moderating ? 'not-allowed' : 'pointer' }}
-                                  title={rev.flagged ? "Unflag" : "Flag"}
                                 >
                                   {rev.flagged ? "Unflag" : "Flag"}
                                 </button>
                                 <button
                                   disabled={moderating}
                                   onClick={() => { if (window.confirm("Delete this review permanently?")) handleModerateReview(rev.id, "delete"); }}
-                                  className="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-colors border"
+                                  className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors border min-h-[36px]"
                                   style={{ background: 'rgba(220,38,38,0.05)', borderColor: 'rgba(220,38,38,0.2)', color: '#dc2626', cursor: moderating ? 'not-allowed' : 'pointer' }}
-                                  title="Delete"
                                 >
                                   Delete
                                 </button>
                               </div>
+                            </div>
+
+                            {/* Mobile Footer Actions (< 640px) */}
+                            <div className="sm:hidden flex gap-2 pt-2 border-t border-stone-100" onClick={e => e.stopPropagation()}>
+                              <button
+                                disabled={moderating}
+                                onClick={() => handleModerateReview(rev.id, rev.flagged ? "unflag" : "flag")}
+                                className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors border min-h-[44px] flex items-center justify-center gap-1.5"
+                                style={{ background: rev.flagged ? 'rgba(245,158,11,0.1)' : 'rgba(90,30,126,0.06)', borderColor: rev.flagged ? 'rgba(245,158,11,0.3)' : 'rgba(142,106,168,0.3)', color: rev.flagged ? '#b45309' : '#7B3FA0' }}
+                              >
+                                <Icon name="AlertTriangle" size={13} />
+                                {rev.flagged ? "Unflag Review" : "Flag Review"}
+                              </button>
+                              <button
+                                disabled={moderating}
+                                onClick={() => { if (window.confirm("Delete this review permanently?")) handleModerateReview(rev.id, "delete"); }}
+                                className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors border min-h-[44px] flex items-center justify-center gap-1.5 bg-red-50/80 border-red-200 text-red-600"
+                              >
+                                <Icon name="X" size={13} />
+                                Delete
+                              </button>
                             </div>
                           </motion.div>
                         ))

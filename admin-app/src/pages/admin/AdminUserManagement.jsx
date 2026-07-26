@@ -483,71 +483,127 @@ export default function AdminUserManagement() {
               No active team members match the search/filter query.
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
-                    {['Name', 'Email', 'Role', 'Joined', 'Last Login', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.65rem',
-                                           fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTeam.map((member) => {
-                    const isOwnRow = member.user_id === ownUserId;
-                    const currentRole = pendingRole[member.user_id] ?? member.role_level;
-                    return (
-                      <tr key={member.user_id || member.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.1)' }}>
-                        <td style={{ padding: '14px 20px', fontSize: '0.85rem', fontWeight: 700, color: '#2D004D' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%',
-                                          background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
-                              {(member.name || 'A')[0].toUpperCase()}
+            <>
+              {/* Active Team Members Desktop Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
+                      {['Name', 'Email', 'Role', 'Joined', 'Last Login', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.65rem',
+                                             fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FA0' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTeam.map((member) => {
+                      const isOwnRow = member.user_id === ownUserId;
+                      const currentRole = pendingRole[member.user_id] ?? member.role_level;
+                      return (
+                        <tr key={member.user_id || member.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.1)' }}>
+                          <td style={{ padding: '14px 20px', fontSize: '0.85rem', fontWeight: 700, color: '#2D004D' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%',
+                                            background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: '#fff', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
+                                {(member.name || 'A')[0].toUpperCase()}
+                              </div>
+                              {member.name}
+                              {isOwnRow && <span style={{ fontSize: '0.6rem', color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '1px 6px', borderRadius: '4px' }}>You</span>}
                             </div>
-                            {member.name}
-                            {isOwnRow && <span style={{ fontSize: '0.6rem', color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '1px 6px', borderRadius: '4px' }}>You</span>}
+                          </td>
+                          <td style={{ padding: '14px 20px', fontSize: '0.78rem', color: '#7B3FA0' }}>{member.email}</td>
+                          <td style={{ padding: '14px 20px' }}>{roleBadge(currentRole)}</td>
+                          <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                            {member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}
+                          </td>
+                          <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                            {formatRelativeTime(member.last_login_at)}
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                              <AdminSelect
+                                value={currentRole}
+                                disabled={isOwnRow}
+                                onChange={e => {
+                                  const newRole = e.target.value;
+                                  setPendingRole(prev => ({ ...prev, [member.user_id]: newRole }));
+                                  setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name });
+                                }}
+                                options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
+                              />
+                              {!isOwnRow && (
+                                <button
+                                  onClick={() => setDeactivateTarget(member.user_id)}
+                                  style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
+                                           background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem',
+                                           fontWeight: 700, cursor: 'pointer' }}>
+                                  Deactivate
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Active Team Members Mobile Cards (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3">
+                {filteredTeam.map((member) => {
+                  const isOwnRow = member.user_id === ownUserId;
+                  const currentRole = pendingRole[member.user_id] ?? member.role_level;
+                  return (
+                    <div key={`m-team-${member.user_id || member.id}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                      <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7B3FA0] to-[#5A1E7E] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {(member.name || 'A')[0].toUpperCase()}
                           </div>
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.78rem', color: '#7B3FA0' }}>{member.email}</td>
-                        <td style={{ padding: '14px 20px' }}>{roleBadge(member.role_level)}</td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                          {member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}
-                        </td>
-                        <td style={{ padding: '14px 20px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                          {formatRelativeTime(member.last_login_at)}
-                        </td>
-                        <td style={{ padding: '14px 20px' }}>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <AdminSelect
-                              value={currentRole}
-                              disabled={isOwnRow}
-                              onChange={e => {
-                                const newRole = e.target.value;
-                                setPendingRole(prev => ({ ...prev, [member.user_id]: newRole }));
-                                setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name });
-                              }}
-                              options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
-                            />
-                            {!isOwnRow && (
-                              <button
-                                onClick={() => setDeactivateTarget(member.user_id)}
-                                style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
-                                         background: 'rgba(220,38,38,0.06)', color: '#DC2626', fontSize: '0.72rem',
-                                         fontWeight: 700, cursor: 'pointer' }}>
-                                Deactivate
-                              </button>
-                            )}
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-[#2D004D]">{member.name}</span>
+                            <span className="text-[10px] text-[#7B3FA0]">{member.email}</span>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        {roleBadge(currentRole)}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-[#8E6AA8]">
+                        <span>Joined: {member.activated_at ? new Date(member.activated_at).toLocaleDateString() : '—'}</span>
+                        <span>Last: {formatRelativeTime(member.last_login_at)}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                        <div className="flex-1">
+                          <AdminSelect
+                            value={currentRole}
+                            disabled={isOwnRow}
+                            onChange={e => {
+                              const newRole = e.target.value;
+                              setPendingRole(prev => ({ ...prev, [member.user_id]: newRole }));
+                              setRoleChangeTarget({ userId: member.user_id, currentRole: member.role_level, newRole, memberName: member.name });
+                            }}
+                            options={ROLES.map(r => ({ value: r, label: r.replace(/_/g, ' ') }))}
+                            className="w-full"
+                          />
+                        </div>
+                        {!isOwnRow && (
+                          <button
+                            onClick={() => setDeactivateTarget(member.user_id)}
+                            className="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 text-xs font-bold min-h-[40px]"
+                          >
+                            Deactivate
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </section>
 
@@ -569,79 +625,127 @@ export default function AdminUserManagement() {
               No invitations sent yet.
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
-                    {['Email', 'Role', 'Status', 'Sent', 'Expires / Accepted', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '0.62rem',
-                                           fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
-                                           color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {invitations.map(inv => (
-                    <tr key={inv.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.08)',
-                                              opacity: inv.status === 'expired' || inv.status === 'revoked' ? 0.65 : 1 }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2D004D' }}>{inv.email}</div>
-                        {inv.invited_name && (
-                          <div style={{ fontSize: '0.68rem', color: '#8E6AA8', marginTop: '2px' }}>{inv.invited_name}</div>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>{roleBadge(inv.role_level)}</td>
-                      <td style={{ padding: '12px 16px' }}>{statusBadge(inv.status)}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                        {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
-                        {inv.status === 'accepted' && inv.accepted_at
-                          ? new Date(inv.accepted_at).toLocaleDateString()
-                          : inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                          {/* Copy Link — pending only (Req 11) */}
-                          {inv.status === 'pending' && inv.invite_token && (
-                            <button
-                              onClick={() => handleCopyLink(inv.invite_token)}
-                              title="Copy invitation link"
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)',
-                                       background: 'rgba(123,63,160,0.06)', color: '#5A1E7E',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              📋 Copy
-                            </button>
-                          )}
-                          {/* Resend — pending or expired (Req 2) */}
-                          {(inv.status === 'pending' || inv.status === 'expired') && (
-                            <button
-                              onClick={() => handleResend(inv.id, inv.email)}
-                              disabled={resendingId === inv.id}
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)',
-                                       background: resendingId === inv.id ? 'rgba(156,163,175,0.1)' : 'rgba(59,130,246,0.06)',
-                                       color: resendingId === inv.id ? '#9CA3AF' : '#1D4ED8',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: resendingId === inv.id ? 'not-allowed' : 'pointer' }}>
-                              {resendingId === inv.id ? '⏳ Sending...' : '↩ Resend'}
-                            </button>
-                          )}
-                          {/* Revoke — pending only (Req 3) */}
-                          {inv.status === 'pending' && (
-                            <button
-                              onClick={() => handleRevoke(inv.id)}
-                              style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
-                                       background: 'rgba(220,38,38,0.06)', color: '#DC2626',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              ✕ Revoke
-                            </button>
-                          )}
-                        </div>
-                      </td>
+            <>
+              {/* Desktop Invitations Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(196,148,230,0.15)', background: 'rgba(245,233,221,0.3)' }}>
+                      {['Email', 'Role', 'Status', 'Sent', 'Expires / Accepted', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '0.62rem',
+                                             fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
+                                             color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {invitations.map(inv => (
+                      <tr key={inv.id} style={{ borderBottom: '1px solid rgba(196,148,230,0.08)',
+                                                opacity: inv.status === 'expired' || inv.status === 'revoked' ? 0.65 : 1 }}>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2D004D' }}>{inv.email}</div>
+                          {inv.invited_name && (
+                            <div style={{ fontSize: '0.68rem', color: '#8E6AA8', marginTop: '2px' }}>{inv.invited_name}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>{roleBadge(inv.role_level)}</td>
+                        <td style={{ padding: '12px 16px' }}>{statusBadge(inv.status)}</td>
+                        <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                          {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: '0.72rem', color: '#8E6AA8' }}>
+                          {inv.status === 'accepted' && inv.accepted_at
+                            ? new Date(inv.accepted_at).toLocaleDateString()
+                            : inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—'}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {inv.status === 'pending' && inv.invite_token && (
+                              <button
+                                onClick={() => handleCopyLink(inv.invite_token)}
+                                title="Copy invitation link"
+                                style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(123,63,160,0.25)',
+                                         background: 'rgba(123,63,160,0.06)', color: '#5A1E7E',
+                                         fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
+                                📋 Copy
+                              </button>
+                            )}
+                            {(inv.status === 'pending' || inv.status === 'expired') && (
+                              <button
+                                onClick={() => handleResend(inv.id, inv.email)}
+                                disabled={resendingId === inv.id}
+                                style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)',
+                                         background: resendingId === inv.id ? 'rgba(156,163,175,0.1)' : 'rgba(59,130,246,0.06)',
+                                         color: resendingId === inv.id ? '#9CA3AF' : '#1D4ED8',
+                                         fontSize: '0.68rem', fontWeight: 700, cursor: resendingId === inv.id ? 'not-allowed' : 'pointer' }}>
+                                {resendingId === inv.id ? '⏳ Sending...' : '↩ Resend'}
+                              </button>
+                            )}
+                            {inv.status === 'pending' && (
+                              <button
+                                onClick={() => handleRevoke(inv.id)}
+                                style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(220,38,38,0.25)',
+                                         background: 'rgba(220,38,38,0.06)', color: '#DC2626',
+                                         fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
+                                ✕ Revoke
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Invitations Cards (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3">
+                {invitations.map(inv => (
+                  <div key={`m-inv-${inv.id}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-[#2D004D] truncate">{inv.email}</span>
+                        {inv.invited_name && <span className="text-[10px] text-[#8E6AA8] truncate">{inv.invited_name}</span>}
+                      </div>
+                      {statusBadge(inv.status)}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-[#8E6AA8]">
+                      <span>Role: {roleBadge(inv.role_level)}</span>
+                      <span>Sent: {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-stone-100 flex-wrap">
+                      {inv.status === 'pending' && inv.invite_token && (
+                        <button
+                          onClick={() => handleCopyLink(inv.invite_token)}
+                          className="px-3 py-2 rounded-xl bg-[#7B3FA0]/10 text-[#5A1E7E] text-xs font-bold min-h-[40px] flex items-center gap-1"
+                        >
+                          📋 Copy Link
+                        </button>
+                      )}
+                      {(inv.status === 'pending' || inv.status === 'expired') && (
+                        <button
+                          onClick={() => handleResend(inv.id, inv.email)}
+                          disabled={resendingId === inv.id}
+                          className="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold min-h-[40px] flex items-center gap-1"
+                        >
+                          {resendingId === inv.id ? '⏳ Sending...' : '↩ Resend'}
+                        </button>
+                      )}
+                      {inv.status === 'pending' && (
+                        <button
+                          onClick={() => handleRevoke(inv.id)}
+                          className="px-3 py-2 rounded-xl bg-red-50 text-red-600 text-xs font-bold min-h-[40px] flex items-center gap-1"
+                        >
+                          ✕ Revoke
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 

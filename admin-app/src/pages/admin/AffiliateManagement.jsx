@@ -923,15 +923,31 @@ export default function AffiliateManagement() {
             </button>
           </div>
 
-          {/* Tab bar */}
-          <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto">
+          {/* Mobile Tab Dropdown Selector (< 640px) */}
+          <div className="sm:hidden w-full relative z-30">
+            <label className="text-[10px] font-extrabold uppercase tracking-widest text-[#7B3FA0] mb-1.5 block">
+              Console Section:
+            </label>
+            <div className="w-full">
+              <AdminSelect
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                options={TABS.map(t => ({ value: t.id, label: t.label, icon: t.icon }))}
+                className="w-full"
+                ariaLabel="Select Affiliate Section"
+              />
+            </div>
+          </div>
+
+          {/* Desktop & Tablet Segmented Tab Bar (>= 640px) */}
+          <div className="hidden sm:flex items-center gap-1 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto no-scrollbar snap-x">
             {TABS.map(tab => {
               const IconComp = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap ${isActive ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5C2B7C] text-white shadow-md' : 'text-[#7B3FA0] hover:bg-white/60'}`}>
-                  <IconComp size={13} /><span>{tab.label}</span>
+                  className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap snap-start min-h-[44px] ${isActive ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5C2B7C] text-white shadow-md' : 'text-[#7B3FA0] hover:bg-white/60'}`}>
+                  <IconComp size={14} /><span>{tab.label}</span>
                 </button>
               );
             })}

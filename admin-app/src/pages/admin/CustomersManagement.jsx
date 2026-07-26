@@ -407,9 +407,9 @@ export default function CustomersManagement() {
             </div>
           )}
 
-          {/* Table Data */}
+          {/* Desktop Table View (>= 768px) */}
           {!isPageLoading && !error && filteredCustomers.length > 0 && (
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
@@ -441,7 +441,6 @@ export default function CustomersManagement() {
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      {/* Customer Name / Avatar */}
                       <td style={{ padding: '14px 20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{
@@ -457,44 +456,30 @@ export default function CustomersManagement() {
                           </span>
                         </div>
                       </td>
-
-                      {/* Email */}
                       <td style={{ padding: '14px 20px' }}>
                         <span style={{ fontSize: '12px', color: '#7B3FA0' }}>{customer.email}</span>
                       </td>
-
-                      {/* UID */}
                       <td style={{ padding: '14px 20px' }}>
                         <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#8E6AA8' }}>{customer.uid}</span>
                       </td>
-
-                      {/* Joined Date */}
                       <td style={{ padding: '14px 20px' }}>
                         <span style={{ fontSize: '12px', color: '#7B3FA0' }}>
                           {formatJoinedDate(customer.joinedDate)}
                         </span>
                       </td>
-
-                      {/* Orders Count */}
                       <td style={{ padding: '14px 20px' }}>
                         <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
                           {customer.totalOrders}
                         </span>
                       </td>
-
-                      {/* Spent */}
                       <td style={{ padding: '14px 20px' }}>
                         <span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>
                           ₹{customer.totalSpent.toLocaleString()}
                         </span>
                       </td>
-
-                      {/* Status */}
                       <td style={{ padding: '14px 20px' }}>
                         <StatusBadge status={customer.status || 'active'} />
                       </td>
-
-                      {/* Actions */}
                       <td style={{ padding: '14px 20px' }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
@@ -508,6 +493,53 @@ export default function CustomersManagement() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Mobile Card View (< 768px) */}
+          {!isPageLoading && !error && filteredCustomers.length > 0 && (
+            <div className="md:hidden flex flex-col gap-3 p-3">
+              {pagedCustomers.map((customer) => (
+                <div
+                  key={`m-cust-${customer.uid}`}
+                  onClick={() => setSelectedCustomer(customer)}
+                  className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5 cursor-pointer hover:bg-white transition-all"
+                >
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#D8BFE3] to-[#B886D0] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        {customer.name[0].toUpperCase()}
+                      </div>
+                      <span className="text-xs font-bold text-[#2D004D]">{customer.name}</span>
+                    </div>
+                    <StatusBadge status={customer.status || 'active'} />
+                  </div>
+
+                  <div className="flex justify-between items-start text-[11px] gap-2">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[#7B3FA0] truncate">{customer.email}</span>
+                      <span className="font-mono text-[9px] text-[#8E6AA8] truncate">UID: {customer.uid.slice(0, 14)}...</span>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="font-black text-[#2D004D]">₹{customer.totalSpent.toLocaleString()}</span>
+                      <span className="text-[9px] text-[#7B3FA0] font-bold">{customer.totalOrders} orders</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                    <span className="text-[10px] text-[#7B3FA0]">
+                      Joined: {formatJoinedDate(customer.joinedDate)}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
+                      className="px-3 py-1.5 rounded-lg border border-[#7B3FA0]/30 bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                    >
+                      <Icon name="Eye" size={12} />
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </TableContainer>

@@ -277,41 +277,85 @@ export default function AuditLogs() {
               </div>
             </div>
           ) : !error ? (
-            /* Table */
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#F5E9DD]/80 bg-[#FAF5FF]/40">
-                    {['ID', 'Timestamp', 'Action', 'Target Type', 'Target ID', 'Admin ID', 'IP Address'].map((col) => (
-                      <th key={col} className="px-5 py-3.5 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence>
-                    {logs.map((log, idx) => (
-                      <motion.tr
-                        key={log.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.02 }}
-                        className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors"
-                      >
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.id}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#2D004D] whitespace-nowrap">{formatTimestamp(log.created_at)}</td>
-                        <td className="px-5 py-3">{actionBadge(log.action)}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.target_type || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0] max-w-[120px] truncate" title={log.target_id}>{log.target_id || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.admin_user_id || '—'}</td>
-                        <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.ip_address || '—'}</td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Desktop Table View (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#F5E9DD]/80 bg-[#FAF5FF]/40">
+                      {['ID', 'Timestamp', 'Action', 'Target Type', 'Target ID', 'Admin ID', 'IP Address'].map((col) => (
+                        <th key={col} className="px-5 py-3.5 text-[8px] font-black uppercase tracking-widest text-[#7B3FA0] whitespace-nowrap">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {logs.map((log, idx) => (
+                        <motion.tr
+                          key={log.id}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.02 }}
+                          className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors"
+                        >
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.id}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#2D004D] whitespace-nowrap">{formatTimestamp(log.created_at)}</td>
+                          <td className="px-5 py-3">{actionBadge(log.action)}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.target_type || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0] max-w-[120px] truncate" title={log.target_id}>{log.target_id || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] text-[#7B3FA0]">{log.admin_user_id || '—'}</td>
+                          <td className="px-5 py-3 text-[9px] font-mono text-[#7B3FA0]">{log.ip_address || '—'}</td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Card View (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3">
+                <AnimatePresence>
+                  {logs.map((log, idx) => (
+                    <motion.div
+                      key={`mobile-log-${log.id}`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5"
+                    >
+                      <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                        <span className="font-mono text-xs font-bold text-[#2D004D]">
+                          ID #{log.id}
+                        </span>
+                        {actionBadge(log.action)}
+                      </div>
+
+                      <div className="flex flex-col gap-1 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-[#7B3FA0]">Target:</span>
+                          <span className="font-bold text-[#2D004D]">{log.target_type || '—'} ({log.target_id || '—'})</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#7B3FA0]">Admin ID:</span>
+                          <span className="font-mono text-[#7B3FA0]">{log.admin_user_id || '—'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#7B3FA0]">IP Address:</span>
+                          <span className="font-mono text-[#7B3FA0]">{log.ip_address || '—'}</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-stone-100 flex justify-between items-center text-[10px] text-[#8E6AA8]">
+                        <span>Timestamp:</span>
+                        <span className="font-bold text-[#2D004D]">{formatTimestamp(log.created_at)}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </>
           ) : null}
 
           {/* ── Pagination ── */}
