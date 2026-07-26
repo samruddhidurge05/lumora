@@ -220,18 +220,92 @@ class SendGridProvider(BaseEmailProvider):
 
 
 class ResendProvider(BaseEmailProvider):
-    """Stub adapter for Resend REST API."""
+    """
+    Production HTTP Email Provider via Resend REST API.
+    Uses HTTPS port 443 — not subject to Render's SMTP port 587 block.
+    Requires RESEND_API_KEY environment variable.
+    Free tier: 3,000 emails/month, 100/day.
+    """
 
     @property
     def name(self) -> str:
-        return "resend"
+        return "resend_api"
 
-    def send(self, to_email: str, subject: str, text_body: str, html_body: str, job_id: str, correlation_id: str, invitation_id: Optional[int] = None) -> Tuple[bool, Optional[str], int]:
-        logger.info("[ResendProvider] Sending via Resend API to %s", to_email)
-        return True, None, 10
+    def send(
+        self,
+        to_email: str,
+        subject: str,
+        text_body: str,
+        html_body: str,
+        job_id: str,
+        correlation_id: str,
+        invitation_id: Optional[int] = None,
+    ) -> Tuple[bool, Optional[str], int]:
+        import urllib.request
+        import urllib.error
+        import json
+
+        api_key = os.getenv("RESEND_API_KEY", "")
+        from_address = os.getenv("RESEND_FROM", os.getenv("SMTP_FROM", "onboarding@resend.dev"))
+
+        if not api_key:
+            logger.error("[ResendProvider] RESEND_API_KEY is not set. Cannot send email to %s.", to_email)
+            return False, "ResendProvider: RESEND_API_KEY environment variable is not configured.", 0
+
+        payload = json.dumps({
+            "from": f"Lumora Admin <{from_address}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body,
+            "text": text_body,
+            "headers": {
+                "X-Lumora-Job-ID": job_id,
+                "X-Lumora-Correlation-ID": correlation_id,
+            },
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        start_time = time.time()
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                latency_ms = int((time.time() - start_time) * 1000)
+                resp_body = json.loads(resp.read().decode("utf-8"))
+                resend_id = resp_body.get("id", "unknown")
+                logger.info(
+                    "[ResendProvider] SENT via Resend API: invitation_id=%s, TO=%s, resend_id=%s, job_id=%s, latency_ms=%dms",
+                    invitation_id, to_email, resend_id, job_id, latency_ms
+                )
+                return True, None, latency_ms
+        except urllib.error.HTTPError as exc:
+            latency_ms = int((time.time() - start_time) * 1000)
+            err_body = exc.read().decode("utf-8", errors="ignore")
+            logger.error(
+                "[ResendProvider] HTTP Error for %s (job_id=%s): status=%d, body=%s",
+                to_email, job_id, exc.code, err_body
+            )
+            return False, f"ResendProvider HTTPError {exc.code}: {err_body}", latency_ms
+        except Exception as exc:
+            latency_ms = int((time.time() - start_time) * 1000)
+            logger.error("[ResendProvider] Error for %s (job_id=%s): %s", to_email, job_id, exc)
+            return False, f"ResendProvider Error ({type(exc).__name__}): {exc}", latency_ms
 
     def check_health(self) -> Dict[str, Any]:
-        return {"status": "healthy", "provider": self.name, "latency_ms": 5, "error": None}
+        api_key = os.getenv("RESEND_API_KEY", "")
+        return {
+            "status": "healthy" if api_key else "misconfigured",
+            "provider": self.name,
+            "latency_ms": 0,
+            "error": None if api_key else "RESEND_API_KEY not set",
+        }
 
 
 class SESProvider(BaseEmailProvider):
@@ -330,10 +404,16 @@ def get_email_provider(provider_name: Optional[str] = None) -> BaseEmailProvider
     p_name = (provider_name or getattr(settings, "EMAIL_PROVIDER", os.getenv("EMAIL_PROVIDER", "failover"))).lower()
 
     if p_name in ("failover", "chain"):
-        # In live SMTP mode, failover chain MUST NOT fall back to MockProvider,
-        # ensuring SMTP errors are properly reported and logged rather than swallowed.
+        # Build production failover chain.
+        # Priority: ResendProvider (HTTPS port 443, works on Render) > GmailProvider (SMTP port 587, blocked on Render free tier).
+        # ResendProvider is only added if RESEND_API_KEY is present in environment.
+        resend_key = os.getenv("RESEND_API_KEY", "")
         if smtp_enabled:
-            return FailoverEmailProvider([GmailProvider()])
+            providers = []
+            if resend_key:
+                providers.append(ResendProvider())
+            providers.append(GmailProvider())  # Fallback — works if Render network allows port 587
+            return FailoverEmailProvider(providers)
         return FailoverEmailProvider([GmailProvider(), MockProvider()])
     elif p_name in ("gmail", "gmail_smtp", "smtp"):
         return GmailProvider()

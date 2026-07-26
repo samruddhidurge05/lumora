@@ -239,6 +239,8 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'gmail_smtp'",
             # admin_email_logs — Phase B append-only immutable audit trail table
             "CREATE TABLE IF NOT EXISTS admin_email_logs (id SERIAL PRIMARY KEY, invitation_id INTEGER NOT NULL REFERENCES admin_invitations(id) ON DELETE CASCADE, event VARCHAR(50) NOT NULL, job_id VARCHAR(36), correlation_id VARCHAR(36), recipient VARCHAR(255) NOT NULL, provider VARCHAR(50) NOT NULL DEFAULT 'gmail_smtp', attempt INTEGER NOT NULL DEFAULT 1, latency_ms INTEGER NOT NULL DEFAULT 0, status_code INTEGER, error_message TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            # admin_email_logs — Phase B.6 Message-ID traceability column
+            "ALTER TABLE admin_email_logs ADD COLUMN IF NOT EXISTS message_id VARCHAR(255)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
             # affiliate_profiles — Phase 2 earnings breakdown
