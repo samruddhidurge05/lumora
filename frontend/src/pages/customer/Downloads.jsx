@@ -34,18 +34,6 @@ const CATEGORY_ICONS = {
   'Productivity': <BookOpen size={12} />,
 };
 
-function resolveFullUrl(url) {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  const baseUrl = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
-  const cleanPath = url.startsWith('/api') ? url : (url.startsWith('/') ? `/api${url}` : `/api/${url}`);
-  const baseNoApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
-  return `${baseNoApi}${cleanPath}`;
-}
-
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
 function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
@@ -81,9 +69,15 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     // Connect to backend download URL if provided
     if (activeUrl) {
       try {
+        // ── Check if the actual file response is pending ─────────────────────
+        // The download-file endpoint returns JSON {type:"pending"} when no file
+        // is uploaded — intercept before triggering a browser download attempt.
+        const fileCheckUrl = activeUrl.startsWith('/api')
+          ? activeUrl.replace('/api', '')
+          : activeUrl;
         const token = localStorage.getItem('lumora_backend_token');
-        const targetUrl = resolveFullUrl(activeUrl);
-        const fileResp = await fetch(targetUrl, {
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
 
@@ -104,8 +98,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
           const blobUrl = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = blobUrl;
-          const cleanName = (productName || 'digital-asset').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          link.setAttribute('download', `${cleanName}.zip`);
+          link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
           document.body.appendChild(link);
           link.click();
           link.remove();
@@ -115,7 +108,7 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
           return;
         }
       } catch (e) {
-        console.warn('Download link trigger error:', e);
+        console.warn('Download link trigger:', e);
       }
     }
 
@@ -941,8 +934,11 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
         // PDF Document: Stream online inside document viewer iframe
         setPreviewType('pdf');
         if (res && res.download_url) {
+          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
           const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
-          setPreviewUrl(resolveFullUrl(streamUrl));
+          const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
+          const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
+          setPreviewUrl(fullUrl);
         } else {
           setPreviewType('package');
         }
