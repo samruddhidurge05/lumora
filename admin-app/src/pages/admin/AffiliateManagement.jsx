@@ -1578,22 +1578,23 @@ export default function AffiliateManagement() {
           </div>
         )}
         {/* ═══════════════════════════════════════════════════════════════════
-            TAB 10: CUSTOMER ATTRIBUTION (LTV) (NEW)
+            TAB 10: CUSTOMER ATTRIBUTION (LTV)
         ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'customer-attribution' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm">
               <div className="relative w-full sm:w-80">
                 <Search size={15} className="absolute left-3 top-2.5 text-[#7B3FA0]/60" />
                 <input type="text" value={custAttrsSearch} onChange={e => setCustAttrsSearch(e.target.value)} placeholder="Search customer, email, code..."
                   className="w-full pl-9 pr-4 py-2 text-xs bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-[#2D004D] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30" />
               </div>
-              <button onClick={handleExportCustAttrsCSV} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all">
+              <button onClick={handleExportCustAttrsCSV} className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all min-h-[44px]">
                 <ArrowDownToLine size={13} /> Export LTV CSV
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
               <DataTable loading={custAttrsLoading} empty={custAttrs.length === 0}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
@@ -1642,16 +1643,54 @@ export default function AffiliateManagement() {
                 </div>
               </DataTable>
             </div>
+
+            {/* Mobile Stacked Cards (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              <DataTable loading={custAttrsLoading} empty={custAttrs.length === 0}>
+                {custAttrs.map(item => (
+                  <div key={`m-custattr-${item.attribution_id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-[#2D004D] text-xs truncate">{item.customer_name}</span>
+                        <span className="text-[10px] text-[#7B3FA0] font-mono truncate">{item.customer_email}</span>
+                      </div>
+                      <StatusBadge status={item.status === 'attributed' ? 'approved' : item.status} size="xs" />
+                    </div>
+
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-[#7B3FA0]">Affiliate: <strong className="text-[#2D004D]">{item.affiliate_name}</strong></span>
+                      <span className="font-mono text-[10px] font-bold bg-[#F8F3FB] text-[#7B3FA0] px-2 py-0.5 rounded border border-[#F3EAF8]">
+                        {item.affiliate_code}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[11px] pt-1">
+                      <span className="text-[#7B3FA0]">Orders: <strong className="text-[#2D004D]">{item.order_count}</strong></span>
+                      <span className="text-[#7B3FA0]">Customer LTV: <strong className="text-emerald-600 text-xs">₹{item.customer_ltv?.toFixed(2)}</strong></span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                      <span className="text-[9px] text-[#8E6AA8]">{item.device || 'Desktop'} • {fmtDate(item.first_purchase_date)}</span>
+                      <button onClick={() => setSelectedTraceOrderId(item.order_id)} className="px-3 py-1.5 rounded-xl bg-[#F8F3FB] text-[#7B3FA0] text-xs font-bold border border-[#F3EAF8] min-h-[38px]">
+                        View Trace
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </DataTable>
+            </div>
+
             <Pagination page={custAttrsPage} totalPages={Math.ceil(custAttrsTotal / 50)} onChange={setCustAttrsPage} />
           </div>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
-            TAB 11: ORDERS ATTRIBUTION (NEW)
+            TAB 11: ORDERS ATTRIBUTION
         ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'orders-attribution' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-hidden">
               <DataTable loading={ledgerLoading} empty={ledger.length === 0}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
@@ -1695,6 +1734,42 @@ export default function AffiliateManagement() {
                 </div>
               </DataTable>
             </div>
+
+            {/* Mobile Stacked Cards (< 768px) */}
+            <div className="md:hidden flex flex-col gap-3">
+              <DataTable loading={ledgerLoading} empty={ledger.length === 0}>
+                {ledger.map(row => (
+                  <div key={`m-[#7B3FA0]-order-${row.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-xs font-bold text-[#7B3FA0]">Order #{row.order_id || row.id}</span>
+                        <span className="text-[10px] text-[#8E6AA8]">{fmtDate(row.date)}</span>
+                      </div>
+                      <StatusBadge status={row.commission_status || row.status} size="xs" />
+                    </div>
+
+                    <div className="flex justify-between items-start text-[11px] gap-2">
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-[#2D004D] truncate">{row.product_name || 'Product'}</span>
+                        <span className="text-[10px] text-[#7B3FA0]">Customer: {row.customer_name || 'Customer'}</span>
+                        <span className="text-[10px] text-[#7B3FA0]">Affiliate: {row.affiliate_name}</span>
+                      </div>
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="font-bold text-[#2D004D] text-xs">₹{row.sale_amount?.toFixed(2)}</span>
+                        <span className="text-[10px] font-bold text-emerald-600">Comm: ₹{row.commission_earned?.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end pt-2 border-t border-stone-100">
+                      <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-3 py-1.5 rounded-xl bg-[#F8F3FB] text-[#7B3FA0] text-xs font-bold border border-[#F3EAF8] min-h-[38px]">
+                        Trace Order
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </DataTable>
+            </div>
+
             <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / 50)} onChange={setLedgerPage} />
           </div>
         )}
