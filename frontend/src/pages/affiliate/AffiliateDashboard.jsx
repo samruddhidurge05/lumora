@@ -289,7 +289,7 @@ function AffiliateDashboardInner() {
       )}
 
       {/* ── MAIN CONTENT AREA ─────────────────────────────────────────── */}
-      <div style={{ flex: 1, marginLeft: '240px', minHeight: '100vh', position: 'relative', zIndex: 10, minWidth: 0, maxWidth: '100vw', overflowX: 'hidden' }} className="aff-main-area">
+      <div style={{ flex: 1, minHeight: '100vh', position: 'relative', zIndex: 10, minWidth: 0, boxSizing: 'border-box' }} className="aff-main-area">
 
         {/* Top bar */}
         <header style={{
@@ -299,12 +299,11 @@ function AffiliateDashboardInner() {
           WebkitBackdropFilter: 'blur(28px) saturate(200%)',
           borderBottom: '1px solid rgba(196,181,253,0.16)',
           boxShadow: scrolled ? '0 2px 16px rgba(45,0,96,0.06)' : 'none',
-          padding: '16px 40px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           transition: 'all 0.3s',
-          maxWidth: '100vw',
+          width: '100%',
           boxSizing: 'border-box',
           overflow: 'hidden',
         }}>
@@ -384,7 +383,7 @@ function AffiliateDashboardInner() {
         </header>
 
         {/* Page content */}
-        <main style={{ padding: '36px 40px', maxWidth: '1200px', width: '100%', boxSizing: 'border-box', overflowX: 'hidden', minWidth: 0 }}>
+        <main style={{ maxWidth: '1200px', width: '100%', boxSizing: 'border-box', overflowX: 'hidden', minWidth: 0 }}>
           {isSuspended ? (
             <div style={{
               background: 'rgba(255, 255, 255, 0.45)',
