@@ -1162,55 +1162,57 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
 
       {/* Online PDF / Asset Viewer Modal — Rendered at Body Portal Root */}
       {isPreviewOpen && createPortal(
-        <div style={{
+        <div className="doc-modal-backdrop" style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           zIndex: 999999,
           background: 'rgba(12, 10, 18, 0.88)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '16px'
+          padding: 'clamp(8px, 2vw, 16px)', boxSizing: 'border-box'
         }}>
-          <div style={{
+          <div className="doc-modal-box" style={{
             background: '#FFFDF9', borderRadius: '24px', width: '92vw', maxWidth: '1200px', height: '88vh',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            boxShadow: '0 30px 90px rgba(0,0,0,0.6)', border: '1px solid rgba(220,198,255,0.3)',
-            animation: 'dl-fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            boxShadow: '0 30px 90px rgba(0,0,0,0.6)', border: '1px solid rgba(220,198,253,0.3)',
+            animation: 'dl-fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1)', boxSizing: 'border-box'
           }}>
             {/* Header */}
-            <div style={{
+            <div className="doc-modal-header" style={{
               padding: '16px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'linear-gradient(135deg, rgba(250,247,242,0.98), rgba(255,255,255,0.95))'
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
+              background: 'linear-gradient(135deg, rgba(250,247,242,0.98), rgba(255,255,255,0.95))',
+              boxSizing: 'border-box'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)', color: '#FFFDF9', boxShadow: '0 4px 12px rgba(45,30,24,0.2)' }}>
-                  <BookOpen size={20} />
+              <div className="doc-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                <div className="doc-modal-icon" style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)', color: '#FFFDF9', boxShadow: '0 4px 12px rgba(45,30,24,0.2)', flexShrink: 0 }}>
+                  <BookOpen size={18} />
                 </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="doc-modal-badges" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
                       ✦ Lumora Web Document Viewer
                     </span>
-                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.12)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(61,184,119,0.25)' }}>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.12)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(61,184,119,0.25)', whiteSpace: 'nowrap' }}>
                       Online View Only
                     </span>
                   </div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-espresso)', margin: '2px 0 0' }}>
+                  <h3 style={{ fontSize: 'clamp(0.95rem, 3vw, 1.15rem)', fontWeight: 700, color: 'var(--color-espresso)', margin: '2px 0 0', lineHeight: 1.25, wordBreak: 'break-word' }}>
                     {product.name}
                   </h3>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="doc-modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 {previewUrl && (
                   <div style={{ display: 'flex', background: 'rgba(78,59,49,0.08)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                     <button
                       onClick={() => setViewerMode('visual')}
                       style={{
-                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                        padding: '6px 12px', borderRadius: '8px', border: 'none',
                         background: viewerMode === 'visual' ? '#FFFDF9' : 'transparent',
                         color: viewerMode === 'visual' ? '#5A1E7E' : 'var(--color-mocha)',
-                        fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer',
+                        fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
                         boxShadow: viewerMode === 'visual' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       🖼️ Visual View
@@ -1218,11 +1220,12 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                     <button
                       onClick={() => setViewerMode('stream')}
                       style={{
-                        padding: '6px 14px', borderRadius: '8px', border: 'none',
+                        padding: '6px 12px', borderRadius: '8px', border: 'none',
                         background: viewerMode === 'stream' ? '#FFFDF9' : 'transparent',
                         color: viewerMode === 'stream' ? '#5A1E7E' : 'var(--color-mocha)',
-                        fontWeight: 700, fontSize: '0.74rem', cursor: 'pointer',
+                        fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
                         boxShadow: viewerMode === 'stream' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       📄 Document Stream
@@ -1234,8 +1237,8 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                   onClick={() => setIsPreviewOpen(false)}
                   style={{
                     background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
-                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', color: 'var(--color-espresso)', transition: 'all 0.2s ease'
+                    width: '36px', height: '36px', minWidth: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'var(--color-espresso)', transition: 'all 0.2s ease', flexShrink: 0
                   }}
                   title="Close Viewer"
                 >
@@ -1254,24 +1257,24 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
               )}
 
               {errorMsg && (
-                <div style={{ padding: '36px 40px', textAlign: 'center', color: '#DC2626', background: '#FFFDF9', borderRadius: '20px', maxWidth: '440px', boxShadow: '0 15px 40px rgba(0,0,0,0.2)' }}>
-                  <AlertCircle size={44} style={{ margin: '0 auto 14px', color: '#DC2626' }} />
+                <div style={{ padding: '24px 20px', textAlign: 'center', color: '#DC2626', background: '#FFFDF9', borderRadius: '20px', maxWidth: '440px', boxShadow: '0 15px 40px rgba(0,0,0,0.2)', margin: '16px', boxSizing: 'border-box' }}>
+                  <AlertCircle size={36} style={{ margin: '0 auto 12px', color: '#DC2626' }} />
                   <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-espresso)', marginBottom: '8px' }}>Preview Notice</h4>
-                  <p style={{ fontWeight: 600, fontSize: '0.86rem', lineHeight: 1.5, color: 'var(--color-mocha)', margin: 0 }}>{errorMsg}</p>
+                  <p style={{ fontWeight: 600, fontSize: '0.84rem', lineHeight: 1.5, color: 'var(--color-mocha)', margin: 0 }}>{errorMsg}</p>
                 </div>
               )}
 
               {!loading && !errorMsg && (viewerMode === 'visual' || previewType === 'package' || !previewUrl) && (
                 <ProtectedPreviewViewer productTitle={product.name} style={{ width: '100%', height: '100%' }}>
-                  <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#181524', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '820px', width: '100%', boxShadow: '0 25px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(196,181,253,0.3)' }}>
+                  <div style={{ padding: 'clamp(16px, 3vw, 32px)', width: '100%', height: '100%', overflowY: 'auto', background: '#181524', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+                    <div className="doc-modal-inner-card" style={{ background: '#FFFFFF', borderRadius: '24px', padding: 'clamp(16px, 4vw, 36px)', maxWidth: '820px', width: '100%', boxShadow: '0 25px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(196,181,253,0.3)', boxSizing: 'border-box' }}>
                       
                       {/* Visual Document Showcase Canvas */}
-                      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                         <div style={{
                           position: 'relative', display: 'inline-block', borderRadius: '18px', overflow: 'hidden',
                           boxShadow: '0 20px 50px rgba(45,30,24,0.3)', border: '1px solid rgba(78,59,49,0.12)',
-                          background: '#FAF7F2', padding: '12px'
+                          background: '#FAF7F2', padding: '8px', maxWidth: '100%'
                         }}>
                           <img
                             src={product.thumbnail || product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
@@ -1280,36 +1283,36 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                               e.target.onerror = null;
                               e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
                             }}
-                            style={{ maxHeight: '340px', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
+                            style={{ maxHeight: '300px', maxWidth: '100%', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
                           />
                           <div style={{
-                            position: 'absolute', bottom: '20px', right: '20px',
+                            position: 'absolute', bottom: '12px', right: '12px',
                             background: 'rgba(12,10,18,0.85)', backdropFilter: 'blur(10px)',
-                            color: '#FFFDF9', fontSize: '0.7rem', fontWeight: 800,
-                            padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.05em'
+                            color: '#FFFDF9', fontSize: '0.65rem', fontWeight: 800,
+                            padding: '5px 12px', borderRadius: '20px', letterSpacing: '0.05em'
                           }}>
                             ✦ Online Inspection View
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '260px' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 10px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                             {product.category || 'Digital Asset'} • {product.version || 'v1.0.0'}
                           </span>
-                          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-espresso)', margin: '8px 0 4px', lineHeight: 1.25, wordBreak: 'break-word' }}>
                             {product.name}
                           </h3>
-                          <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
                             Size: <strong>{product.fileSize || 'Available'}</strong> • Updated: <strong>{product.lastUpdated || 'Recently'}</strong>
                           </p>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                           {product.compatibility && product.compatibility.map(tag => (
                             <span key={tag} style={{
-                              fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px',
+                              fontSize: '0.62rem', fontWeight: 700, padding: '4px 10px',
                               borderRadius: '8px', background: 'rgba(123,63,160,0.08)',
                               color: '#5A1E7E', border: '1px solid rgba(123,63,160,0.18)'
                             }}>{tag}</span>
@@ -1317,22 +1320,22 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                         </div>
                       </div>
 
-                      <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                          <Shield size={20} style={{ color: '#3DB877' }} />
-                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#276749' }}>
+                      <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <Shield size={18} style={{ color: '#3DB877', flexShrink: 0 }} />
+                          <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#276749' }}>
                             Online Inspection Mode Verified — Refund Eligibility Intact
                           </span>
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#2F855A', lineHeight: 1.6, margin: 0 }}>
+                        <p style={{ fontSize: '0.78rem', color: '#2F855A', lineHeight: 1.5, margin: 0 }}>
                           You are inspecting <strong>{product.name}</strong> online. Inspecting this document or asset online preserves your standard refund eligibility. To save the complete file package to your device, click the <strong>Download Product</strong> button.
                         </p>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => setIsPreviewOpen(false)}
-                          style={{ padding: '11px 22px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
+                          style={{ padding: '10px 18px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
                         >
                           Close Preview
                         </button>
@@ -1356,20 +1359,21 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
             </div>
 
             {/* Footer Status Bar */}
-            <div style={{
-              padding: '12px 24px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--color-mocha)'
+            <div className="doc-modal-footer" style={{
+              padding: '12px 20px', background: '#FFFDF9', borderTop: '1px solid rgba(78,59,49,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--color-mocha)',
+              flexWrap: 'wrap', gap: '10px', boxSizing: 'border-box'
             }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={16} style={{ color: '#3DB877' }} />
-                <span><strong>Online Inspection Mode:</strong> Viewing this product online preserves your standard refund eligibility until you download the file to your computer device.</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '220px' }}>
+                <Shield size={15} style={{ color: '#3DB877', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.72rem', lineHeight: 1.4 }}><strong>Online Inspection Mode:</strong> Viewing this product online preserves your standard refund eligibility until downloaded to your computer device.</span>
               </span>
               <button
                 onClick={() => setIsPreviewOpen(false)}
                 style={{
-                  padding: '7px 18px', borderRadius: '10px', background: 'var(--color-espresso)',
+                  padding: '8px 20px', borderRadius: '10px', background: 'var(--color-espresso)',
                   color: '#FFFDF9', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.76rem',
-                  boxShadow: '0 2px 8px rgba(45,30,24,0.15)'
+                  boxShadow: '0 2px 8px rgba(45,30,24,0.15)', whiteSpace: 'nowrap', minHeight: '36px'
                 }}
               >
                 Close Viewer
