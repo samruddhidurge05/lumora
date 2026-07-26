@@ -43,7 +43,9 @@ class Settings(BaseSettings):
 
     # Transactional Email / Gmail SMTP Configuration
     EMAIL_PROVIDER: str = Field("failover", env="EMAIL_PROVIDER")
-    SMTP_ENABLED: bool = Field(False, env="SMTP_ENABLED")
+    SMTP_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("SMTP_ENABLED", "").lower() in ("true", "1") or bool(os.getenv("SMTP_USER") and os.getenv("SMTP_PASSWORD"))
+    )
     SMTP_HOST: str = Field("smtp.gmail.com", env="SMTP_HOST")
     SMTP_PORT: int = Field(587, env="SMTP_PORT")
     SMTP_USER: Optional[str] = Field(None, env="SMTP_USER")

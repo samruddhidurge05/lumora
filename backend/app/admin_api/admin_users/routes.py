@@ -147,8 +147,12 @@ def _send_email_async(to_email, invited_name, role_level, accept_url, expires_at
                         now_utc = datetime.now(timezone.utc)
                         inv.last_email_sent_at = cast(Any, now_utc)
                         if ok:
-                            inv.email_status = cast(Any, "email_sent")
-                            inv.email_error_log = cast(Any, None)
+                            if err_msg and "[MOCK_MODE]" in str(err_msg):
+                                inv.email_status = cast(Any, "email_mocked")
+                                inv.email_error_log = cast(Any, err_msg)
+                            else:
+                                inv.email_status = cast(Any, "email_sent")
+                                inv.email_error_log = cast(Any, None)
                         else:
                             inv.email_status = cast(Any, "email_failed")
                             inv.email_error_log = cast(Any, err_msg or "SMTP delivery failed after max retries")

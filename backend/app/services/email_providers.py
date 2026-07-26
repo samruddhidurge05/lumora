@@ -66,8 +66,12 @@ class MockProvider(BaseEmailProvider):
         correlation_id: str,
         invitation_id: Optional[int] = None,
     ) -> Tuple[bool, Optional[str], int]:
-        logger.info("[MockProvider] Skipped delivery to %s (job_id=%s)", to_email, job_id)
-        return True, None, 0
+        logger.warning(
+            "[MockProvider] MOCK MODE ACTIVE: Skipped live email delivery to %s (job_id=%s). "
+            "To enable real inbox delivery, set SMTP_ENABLED=true, SMTP_USER, and SMTP_PASSWORD on hosting server.",
+            to_email, job_id
+        )
+        return True, "[MOCK_MODE] Real email delivery skipped (SMTP credentials missing on server)", 0
 
     def check_health(self) -> Dict[str, Any]:
         return {
