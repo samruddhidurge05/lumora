@@ -313,7 +313,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
-      <div className="premium-flat-card aff-commission-strip" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+      <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
         <div>
           <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Commission Rate</span>
           <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#7B3FA0', marginTop: '2px' }}>{commissionRate}%</div>
@@ -408,7 +408,7 @@ export default function AffiliateEarnings({
           </div>
 
           {/* Filter tabs */}
-          <div style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)' }}>
+          <div className="aff-filter-tabs" style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)' }}>
             {['all','pending','approved','paid'].map(s => (
               <button
                 key={s}
@@ -648,6 +648,119 @@ export default function AffiliateEarnings({
           </div>
         </div>
       )}
+
+      {/* ─── Mobile responsive overrides ─── */}
+      <style>{`
+        @keyframes skeletonPulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+        @media (max-width: 640px) {
+
+          /* ── Header: stack title above button ── */
+          .aff-earnings-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+          }
+          .aff-earnings-header > div:last-child {
+            width: 100% !important;
+          }
+          .aff-earnings-header > div:last-child > button:last-child {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+
+          /* ── Stat cards: 2 col, compact padding ── */
+          .aff-stat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          .aff-stat-grid > .premium-flat-card {
+            padding: 14px 12px !important;
+          }
+          .aff-stat-grid > .premium-flat-card > div > div[style] {
+            font-size: 1.3rem !important;
+          }
+
+          /* ── Commission breakdown strip: 2-col grid ── */
+          .aff-earnings-breakdown {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 14px !important;
+            padding: 16px !important;
+          }
+          /* Hide the vertical divider on mobile */
+          .aff-earnings-breakdown > div[style*="width: '1px'"] {
+            display: none !important;
+          }
+          /* Available to withdraw: full row */
+          .aff-earnings-breakdown > div[style*="marginLeft: 'auto'"] {
+            grid-column: 1 / -1 !important;
+            text-align: left !important;
+            margin-left: 0 !important;
+            border-top: 1px solid rgba(45,0,96,0.06) !important;
+            padding-top: 10px !important;
+          }
+
+          /* ── Chart card: reduce height ── */
+          .aff-chart-card {
+            padding: 20px 16px !important;
+          }
+
+          /* ── Commission table card: ensure outer clips ── */
+          .aff-table-card {
+            padding: 20px 16px !important;
+            overflow: hidden !important;
+          }
+          .aff-table-card .aff-table-wrap {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            width: 100% !important;
+          }
+
+          /* ── Filter tabs: scroll horizontally ── */
+          .aff-filter-tabs {
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            padding-bottom: 2px !important;
+          }
+          .aff-filter-tabs::-webkit-scrollbar { display: none; }
+          .aff-filter-tabs > button {
+            padding: 6px 10px !important;
+            font-size: 0.68rem !important;
+            flex-shrink: 0 !important;
+          }
+
+          /* ── Payout card ── */
+          .aff-payout-card {
+            padding: 20px 16px !important;
+          }
+
+          /* ── Empty state text alignment ── */
+          .aff-table-card > div:last-child > div[style*="textAlign: 'center'"],
+          .aff-payout-card > div[style*="textAlign: 'center'"] {
+            padding: 32px 16px !important;
+          }
+
+          /* ── Page title size ── */
+          .aff-earnings-header h2 {
+            font-size: 1.8rem !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .aff-stat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .aff-stat-grid > .premium-flat-card {
+            padding: 12px 10px !important;
+          }
+          .aff-stat-grid > .premium-flat-card > div > div[style] {
+            font-size: 1.1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
