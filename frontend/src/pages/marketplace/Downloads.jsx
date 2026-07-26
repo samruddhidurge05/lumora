@@ -176,11 +176,27 @@ export default function Downloads() {
           }
 
           if (resp?.download_url) {
+            let dlUrl = resp.download_url;
+            if (dlUrl.startsWith('http://') || dlUrl.startsWith('https://')) {
+              const link = document.createElement('a');
+              link.href = dlUrl;
+              link.target = '_blank';
+              link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+              window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+              return;
+            }
+
             // Internal token-based URL — call the download-file endpoint
-            const fileCheckUrl = resp.download_url.replace('/api', '');
+            const fileCheckUrl = dlUrl.startsWith('/api') ? dlUrl.replace('/api', '') : dlUrl;
             const token = localStorage.getItem('lumora_backend_token');
             const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-            const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
+            const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+            
+            const fileResp = await fetch(fullUrl, {
               headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
 
@@ -195,22 +211,32 @@ export default function Downloads() {
                 setDownloadToast({ id: product.id, msg: 'Download Pending — asset not yet uploaded by creator.', ok: false, pending: true });
                 return;
               }
-            } else {
-              // Stream/binary file download
-              const blob = await fileResp.blob();
-              const blobUrl = window.URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = blobUrl;
-              link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              window.URL.revokeObjectURL(blobUrl);
-
-              setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
-              window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
-              return;
             }
+
+            // Stream/binary file download
+            const blob = await fileResp.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+
+            let filename = `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`;
+            const disposition = fileResp.headers.get('content-disposition');
+            if (disposition && disposition.includes('filename=')) {
+              const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+              if (match && match[1]) {
+                filename = match[1];
+              }
+            }
+
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(blobUrl);
+
+            setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
+            window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+            return;
           } else {
             setDownloadToast({ id: product.id, msg: 'Download link will be available after order processing.', ok: false });
             return;
@@ -219,12 +245,25 @@ export default function Downloads() {
       }
 
       if (activeUrl) {
-        const link = document.createElement('a');
-        link.href = activeUrl;
-        link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        if (activeUrl.startsWith('http://') || activeUrl.startsWith('https://')) {
+          const link = document.createElement('a');
+          link.href = activeUrl;
+          link.target = '_blank';
+          link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        } else {
+          const fileCheckUrl = activeUrl.startsWith('/api') ? activeUrl.replace('/api', '') : activeUrl;
+          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+          const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+          const link = document.createElement('a');
+          link.href = fullUrl;
+          link.setAttribute('download', `${(product.title || product.name || 'product').toLowerCase().replace(/\s+/g, '-')}.zip`);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
 
         setDownloadToast({ id: product.id, msg: '✓ Download started!', ok: true });
         window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));

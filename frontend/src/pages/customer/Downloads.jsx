@@ -69,15 +69,29 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
     // Connect to backend download URL if provided
     if (activeUrl) {
       try {
-        // ── Check if the actual file response is pending ─────────────────────
-        // The download-file endpoint returns JSON {type:"pending"} when no file
-        // is uploaded — intercept before triggering a browser download attempt.
+        // Direct external storage links (Backblaze, S3, Cloudflare, pCloud, etc.)
+        if (activeUrl.startsWith('http://') || activeUrl.startsWith('https://')) {
+          const link = document.createElement('a');
+          link.href = activeUrl;
+          link.target = '_blank';
+          link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => setState('done'), 1800);
+          setTimeout(() => setState('idle'), 4500);
+          return;
+        }
+
+        // Relative API endpoint download link
         const fileCheckUrl = activeUrl.startsWith('/api')
           ? activeUrl.replace('/api', '')
           : activeUrl;
         const token = localStorage.getItem('lumora_backend_token');
         const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        const fileResp = await fetch(`${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`, {
+        const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+
+        const fileResp = await fetch(fullUrl, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
 
@@ -92,23 +106,50 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
             setState('pending');
             return;
           }
-        } else {
-          // It's a binary stream! Download via blob
-          const blob = await fileResp.blob();
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          window.URL.revokeObjectURL(blobUrl);
-          setTimeout(() => setState('done'), 1800);
-          setTimeout(() => setState('idle'), 4500);
-          return;
         }
+
+        // Binary file stream — trigger device download via blob URL
+        const blob = await fileResp.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+
+        let filename = `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`;
+        const disposition = fileResp.headers.get('content-disposition');
+        if (disposition && disposition.includes('filename=')) {
+          const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+          if (match && match[1]) {
+            filename = match[1];
+          }
+        }
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(blobUrl);
+
+        window.dispatchEvent(new CustomEvent('lumora_refresh_user_data'));
+        setTimeout(() => setState('done'), 1800);
+        setTimeout(() => setState('idle'), 4500);
+        return;
       } catch (e) {
-        console.warn('Download link trigger:', e);
+        console.warn('Download fetch failed, falling back to direct token link trigger:', e);
+        const fileCheckUrl = activeUrl.startsWith('/api')
+          ? activeUrl.replace('/api', '')
+          : activeUrl;
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.setAttribute('download', `${productName.toLowerCase().replace(/\s+/g, '-')}.zip`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => setState('done'), 1800);
+        setTimeout(() => setState('idle'), 4500);
+        return;
       }
     }
 

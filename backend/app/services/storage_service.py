@@ -1027,17 +1027,35 @@ class StorageService:
             return self.local_provider.delete_file(resolved_path)
 
     def get_stream(self, storage_path: str) -> Generator[bytes, None, None]:
-        resolved_path = self.resolve_storage_path_from_url(storage_path)
+        if not storage_path:
+            raise HTTPException(status_code=404, detail="Empty storage path provided")
+            
+        clean_path = str(storage_path).strip()
+        resolved_path = self.resolve_storage_path_from_url(clean_path)
+
+        if resolved_path.startswith("http://") or resolved_path.startswith("https://"):
+            try:
+                resp = requests.get(resolved_path, stream=True, timeout=30)
+                if not resp.ok:
+                    raise HTTPException(status_code=404, detail=f"Remote HTTP storage returned status {resp.status_code}")
+                def http_stream():
+                    for chunk in resp.iter_content(chunk_size=8192):
+                        if chunk:
+                            yield chunk
+                return http_stream()
+            except Exception as req_err:
+                logger.error("[storage-service] Remote HTTP stream failed for '%s': %s", resolved_path, req_err)
+                raise HTTPException(status_code=404, detail="Could not connect to remote storage URL")
+
         if resolved_path.startswith("b2://"):
             try:
                 return self.b2_provider.get_file_stream(resolved_path)
             except HTTPException as exc:
-                clean_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
-                local_path = f"local://uploads/{clean_path}"
+                clean_b2_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+                local_path = f"local://uploads/{clean_b2_path}"
                 if self.local_provider.exists(local_path):
                     import logging
-                    logger = logging.getLogger(__name__)
-                    logger.warning("[storage-service] Controlled read fallback: B2 object missing for '%s', streaming from legacy local disk.", resolved_path)
+                    logging.getLogger(__name__).warning("[storage-service] Controlled read fallback: B2 object missing for '%s', streaming from legacy local disk.", resolved_path)
                     return self.local_provider.get_file_stream(local_path)
                 raise exc
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
