@@ -308,6 +308,96 @@ class ResendProvider(BaseEmailProvider):
         }
 
 
+class BrevoProvider(BaseEmailProvider):
+    """
+    Production HTTP Email Provider via Brevo (formerly Sendinblue) v3 REST API.
+    Uses HTTPS port 443 — bypasses Render's SMTP port 587 block.
+    Free tier: 300 emails/day to ANY recipient email address without domain verification.
+    Requires BREVO_API_KEY environment variable.
+    """
+
+    @property
+    def name(self) -> str:
+        return "brevo_api"
+
+    def send(
+        self,
+        to_email: str,
+        subject: str,
+        text_body: str,
+        html_body: str,
+        job_id: str,
+        correlation_id: str,
+        invitation_id: Optional[int] = None,
+    ) -> Tuple[bool, Optional[str], int]:
+        import urllib.request
+        import urllib.error
+        import json
+
+        api_key = os.getenv("BREVO_API_KEY", "")
+        from_email = os.getenv("BREVO_FROM", os.getenv("SMTP_FROM", "durgesamruddhi@gmail.com"))
+
+        if not api_key:
+            logger.error("[BrevoProvider] BREVO_API_KEY is not set. Cannot send email to %s.", to_email)
+            return False, "BrevoProvider: BREVO_API_KEY environment variable is not configured.", 0
+
+        payload = json.dumps({
+            "sender": {"name": "Lumora Admin", "email": from_email},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_body,
+            "textContent": text_body,
+            "headers": {
+                "X-Lumora-Job-ID": job_id,
+                "X-Lumora-Correlation-ID": correlation_id,
+            },
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=payload,
+            headers={
+                "api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+
+        start_time = time.time()
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                latency_ms = int((time.time() - start_time) * 1000)
+                resp_body = json.loads(resp.read().decode("utf-8"))
+                msg_id = resp_body.get("messageId", "unknown")
+                logger.info(
+                    "[BrevoProvider] SENT via Brevo API: invitation_id=%s, TO=%s, messageId=%s, job_id=%s, latency_ms=%dms",
+                    invitation_id, to_email, msg_id, job_id, latency_ms
+                )
+                return True, None, latency_ms
+        except urllib.error.HTTPError as exc:
+            latency_ms = int((time.time() - start_time) * 1000)
+            err_body = exc.read().decode("utf-8", errors="ignore")
+            logger.error(
+                "[BrevoProvider] HTTP Error for %s (job_id=%s): status=%d, body=%s",
+                to_email, job_id, exc.code, err_body
+            )
+            return False, f"BrevoProvider HTTPError {exc.code}: {err_body}", latency_ms
+        except Exception as exc:
+            latency_ms = int((time.time() - start_time) * 1000)
+            logger.error("[BrevoProvider] Error for %s (job_id=%s): %s", to_email, job_id, exc)
+            return False, f"BrevoProvider Error ({type(exc).__name__}): {exc}", latency_ms
+
+    def check_health(self) -> Dict[str, Any]:
+        api_key = os.getenv("BREVO_API_KEY", "")
+        return {
+            "status": "healthy" if api_key else "misconfigured",
+            "provider": self.name,
+            "latency_ms": 0,
+            "error": None if api_key else "BREVO_API_KEY not set",
+        }
+
+
 class SESProvider(BaseEmailProvider):
     """Stub adapter for AWS SES v2 API."""
 
@@ -321,6 +411,7 @@ class SESProvider(BaseEmailProvider):
 
     def check_health(self) -> Dict[str, Any]:
         return {"status": "healthy", "provider": self.name, "latency_ms": 5, "error": None}
+
 
 
 class FailoverEmailProvider(BaseEmailProvider):
@@ -405,11 +496,13 @@ def get_email_provider(provider_name: Optional[str] = None) -> BaseEmailProvider
 
     if p_name in ("failover", "chain"):
         # Build production failover chain.
-        # Priority: ResendProvider (HTTPS port 443, works on Render) > GmailProvider (SMTP port 587, blocked on Render free tier).
-        # ResendProvider is only added if RESEND_API_KEY is present in environment.
+        # Priority: BrevoProvider (HTTPS 443, 300/day to ANY email, no domain required) > ResendProvider > GmailProvider
+        brevo_key = os.getenv("BREVO_API_KEY", "")
         resend_key = os.getenv("RESEND_API_KEY", "")
         if smtp_enabled:
             providers = []
+            if brevo_key:
+                providers.append(BrevoProvider())
             if resend_key:
                 providers.append(ResendProvider())
             providers.append(GmailProvider())  # Fallback — works if Render network allows port 587
@@ -419,10 +512,12 @@ def get_email_provider(provider_name: Optional[str] = None) -> BaseEmailProvider
         return GmailProvider()
     elif p_name == "mock":
         return MockProvider()
+    elif p_name in ("brevo", "brevo_api"):
+        return BrevoProvider()
+    elif p_name in ("resend", "resend_api"):
+        return ResendProvider()
     elif p_name == "sendgrid":
         return SendGridProvider()
-    elif p_name == "resend":
-        return ResendProvider()
     elif p_name in ("ses", "aws_ses"):
         return SESProvider()
     else:
