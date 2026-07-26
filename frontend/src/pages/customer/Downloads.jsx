@@ -1177,73 +1177,77 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
           }}>
             {/* Header */}
             <div className="doc-modal-header" style={{
-              padding: '16px 24px', borderBottom: '1px solid rgba(78,59,49,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
+              padding: '14px 20px', borderBottom: '1px solid rgba(78,59,49,0.1)',
               background: 'linear-gradient(135deg, rgba(250,247,242,0.98), rgba(255,255,255,0.95))',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '10px'
             }}>
-              <div className="doc-modal-header-main" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                <div className="doc-modal-icon" style={{ padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)', color: '#FFFDF9', boxShadow: '0 4px 12px rgba(45,30,24,0.2)', flexShrink: 0 }}>
-                  <BookOpen size={18} />
+              {/* Top Row: Badges + Close Button */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', minWidth: 0 }}>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+                    ✦ Lumora Web Document Viewer
+                  </span>
+                  <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.12)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(61,184,119,0.25)', whiteSpace: 'nowrap' }}>
+                    Online View Only
+                  </span>
                 </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="doc-modal-badges" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-                      ✦ Lumora Web Document Viewer
-                    </span>
-                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#3DB877', background: 'rgba(61,184,119,0.12)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(61,184,119,0.25)', whiteSpace: 'nowrap' }}>
-                      Online View Only
-                    </span>
-                  </div>
-                  <h3 style={{ fontSize: 'clamp(0.95rem, 3vw, 1.15rem)', fontWeight: 700, color: 'var(--color-espresso)', margin: '2px 0 0', lineHeight: 1.25, wordBreak: 'break-word' }}>
-                    {product.name}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="doc-modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                {previewUrl && (
-                  <div style={{ display: 'flex', background: 'rgba(78,59,49,0.08)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
-                    <button
-                      onClick={() => setViewerMode('visual')}
-                      style={{
-                        padding: '6px 12px', borderRadius: '8px', border: 'none',
-                        background: viewerMode === 'visual' ? '#FFFDF9' : 'transparent',
-                        color: viewerMode === 'visual' ? '#5A1E7E' : 'var(--color-mocha)',
-                        fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
-                        boxShadow: viewerMode === 'visual' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      🖼️ Visual View
-                    </button>
-                    <button
-                      onClick={() => setViewerMode('stream')}
-                      style={{
-                        padding: '6px 12px', borderRadius: '8px', border: 'none',
-                        background: viewerMode === 'stream' ? '#FFFDF9' : 'transparent',
-                        color: viewerMode === 'stream' ? '#5A1E7E' : 'var(--color-mocha)',
-                        fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
-                        boxShadow: viewerMode === 'stream' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      📄 Document Stream
-                    </button>
-                  </div>
-                )}
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
                 <button
                   onClick={() => setIsPreviewOpen(false)}
                   style={{
                     background: 'rgba(78,59,49,0.08)', border: 'none', borderRadius: '50%',
-                    width: '36px', height: '36px', minWidth: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '34px', height: '34px', minWidth: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', color: 'var(--color-espresso)', transition: 'all 0.2s ease', flexShrink: 0
                   }}
                   title="Close Viewer"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
+              </div>
+
+              {/* Title & Actions Row */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                  <div className="doc-modal-icon" style={{ padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #4E3B31, #2C1E18)', color: '#FFFDF9', boxShadow: '0 4px 12px rgba(45,30,24,0.15)', flexShrink: 0 }}>
+                    <BookOpen size={16} />
+                  </div>
+                  <h3 style={{ fontSize: 'clamp(1rem, 3.5vw, 1.25rem)', fontWeight: 800, color: 'var(--color-espresso)', margin: 0, lineHeight: 1.2, wordBreak: 'break-word' }}>
+                    {product.name}
+                  </h3>
+                </div>
+
+                <div className="doc-modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {previewUrl && (
+                    <div style={{ display: 'flex', background: 'rgba(78,59,49,0.08)', padding: '3px', borderRadius: '10px', gap: '3px' }}>
+                      <button
+                        onClick={() => setViewerMode('visual')}
+                        style={{
+                          padding: '6px 12px', borderRadius: '8px', border: 'none',
+                          background: viewerMode === 'visual' ? '#FFFDF9' : 'transparent',
+                          color: viewerMode === 'visual' ? '#5A1E7E' : 'var(--color-mocha)',
+                          fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
+                          boxShadow: viewerMode === 'visual' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        🖼️ Visual View
+                      </button>
+                      <button
+                        onClick={() => setViewerMode('stream')}
+                        style={{
+                          padding: '6px 12px', borderRadius: '8px', border: 'none',
+                          background: viewerMode === 'stream' ? '#FFFDF9' : 'transparent',
+                          color: viewerMode === 'stream' ? '#5A1E7E' : 'var(--color-mocha)',
+                          fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
+                          boxShadow: viewerMode === 'stream' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        📄 Document Stream
+                      </button>
+                    </div>
+                  )}
+                  <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                </div>
               </div>
             </div>
 

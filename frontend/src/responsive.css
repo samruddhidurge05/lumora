@@ -2254,31 +2254,28 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 /* ── 27. DOCUMENT VIEWER MODAL MOBILE RESPONSIVENESS ─────────────── */
 @media (max-width: 768px) {
   .doc-modal-backdrop {
-    padding: 8px !important;
+    padding: 6px !important;
   }
   .doc-modal-box {
-    width: calc(100vw - 16px) !important;
-    height: calc(100vh - 20px) !important;
+    width: calc(100vw - 12px) !important;
+    height: calc(100vh - 16px) !important;
     border-radius: 18px !important;
     max-height: 100vh !important;
   }
   .doc-modal-header {
     padding: 12px 14px !important;
-    gap: 10px !important;
-  }
-  .doc-modal-header-main {
-    width: 100% !important;
-  }
-  .doc-modal-badges {
-    flex-wrap: wrap !important;
-    gap: 4px !important;
+    gap: 8px !important;
   }
   .doc-modal-header-actions {
     width: 100% !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     border-top: 1px solid rgba(78,59,49,0.08) !important;
     padding-top: 8px !important;
-    gap: 8px !important;
+    gap: 6px !important;
+  }
+  .doc-modal-header-actions > button,
+  .doc-modal-header-actions > div {
+    flex: 1 !important;
   }
   .doc-modal-icon {
     display: none !important;
