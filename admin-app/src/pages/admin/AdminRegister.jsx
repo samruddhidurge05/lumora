@@ -143,25 +143,32 @@ export default function AdminRegister() {
       if (err.code === 'auth/email-already-in-use') {
         const redirectTarget = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
         setFormError(
-          <>
-            This email already has a Lumora account. Sign in using your existing credentials to accept this administrator invitation. No new account will be created.{' '}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#e9d5ff' }}>
+              Great! An existing Lumora account was found.
+            </div>
+            <div style={{ fontSize: '0.80rem', color: '#c084fc', lineHeight: 1.5 }}>
+              Simply sign in with your existing account credentials to accept your administrator invitation. No additional account setup is required.
+            </div>
             <button
               type="button"
               onClick={() => navigate(redirectTarget)}
               style={{
-                background: 'none',
+                marginTop: '4px',
+                padding: '10px 16px',
+                borderRadius: '10px',
                 border: 'none',
-                color: '#c084fc',
-                textDecoration: 'underline',
-                cursor: 'pointer',
+                background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                color: '#ffffff',
                 fontWeight: 700,
-                padding: 0,
-                marginLeft: '4px',
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
               }}
             >
-              Click here to Log In & Accept Invitation
+              Sign In & Accept Invitation →
             </button>
-          </>
+          </div>
         );
       } else {
         setFormError(err.message || 'Registration failed. Please try again.');
@@ -247,9 +254,11 @@ export default function AdminRegister() {
         )}
 
         {formError && (
-          <div style={styles.errorAlert} role="alert">
-            <span style={{ fontWeight: 800 }}>⚠️</span>
-            <span style={{ fontSize: '0.8rem' }}>{formError}</span>
+          <div style={typeof formError === 'object' ? styles.infoAlert : styles.errorAlert} role="alert">
+            <span style={{ fontSize: '1rem', flexShrink: 0 }}>
+              {typeof formError === 'object' ? '🔑' : '⚠️'}
+            </span>
+            <div style={{ fontSize: '0.8rem', width: '100%' }}>{formError}</div>
           </div>
         )}
 
@@ -425,6 +434,19 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
+    textAlign: 'left',
+    marginBottom: '20px',
+    boxSizing: 'border-box',
+  },
+  infoAlert: {
+    background: 'rgba(124,58,237,0.12)',
+    border: '1px solid rgba(139,92,246,0.30)',
+    borderRadius: '14px',
+    padding: '16px',
+    color: '#e9d5ff',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
     textAlign: 'left',
     marginBottom: '20px',
     boxSizing: 'border-box',

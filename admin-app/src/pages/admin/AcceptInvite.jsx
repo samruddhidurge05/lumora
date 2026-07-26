@@ -207,54 +207,75 @@ export default function AcceptInvite() {
 
         {/* ── Loading / Activating ── */}
         {(status === 'loading' || status === 'activating') && (
-          <div style={{ textAlign: 'center', color: '#7B3FA0', fontSize: '0.9rem', padding: '20px 0' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid rgba(123,63,160,0.2)', borderTop: '3px solid #7B3FA0', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-            {status === 'activating' ? 'Activating your admin role…' : 'Verifying invitation…'}
+          <div style={{ textAlign: 'center', color: '#7B3FA0', fontSize: '0.9rem', padding: '24px 0' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(123,63,160,0.2)', borderTop: '3px solid #7B3FA0', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+            <h3 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 6px', fontSize: '1.05rem' }}>
+              {status === 'activating' ? 'Activating Admin Access…' : 'Validating Invitation…'}
+            </h3>
+            <p style={{ color: '#7B3FA0', fontSize: '0.84rem', margin: 0 }}>
+              {status === 'activating' ? 'Setting up your team workspace permissions…' : 'Checking security token credentials…'}
+            </p>
           </div>
         )}
 
-        {/* ── Invalid / Expired ── */}
+        {/* ── Invalid / Expired / Session Required State (Screen 1 Redesign) ── */}
         {status === 'invalid' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>✕</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>Invalid Invitation</h2>
-            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 28px' }}>{errorMsg}</p>
-            <button
-              onClick={() => navigate('/admin/login')}
-              style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
-            >
-              Go to Admin Login
-            </button>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(123,63,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7B3FA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, fontSize: '1.3rem', margin: '0 0 10px' }}>Sign In to Continue</h2>
+            <p style={{ color: '#66507A', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 24px' }}>
+              For security reasons, you need to sign in to your Lumora account before accepting your administrator invitation.
+              <br /><br />
+              Your invitation is secure and will activate automatically once authenticated.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => navigate(`/admin/login?redirect=${encodeURIComponent(`/admin/accept-invite?token=${encodeURIComponent(token || '')}`)}`)}
+                style={{ padding: '14px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
+              >
+                Sign In to Accept Invite
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                style={{ padding: '12px 28px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.25)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+              >
+                Return to Marketplace
+              </button>
+            </div>
           </div>
         )}
 
         {/* ── Valid — not yet authenticated ── */}
         {status === 'valid' && invitation && !user && (
           <div>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem', textAlign: 'center' }}>✉️</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>You've been invited!</h2>
-            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-              You have been invited to join Lumora Admin as:
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(123,63,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7B3FA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, fontSize: '1.3rem', margin: '0 0 8px', textAlign: 'center' }}>Team Invitation</h2>
+            <p style={{ color: '#66507A', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 12px', textAlign: 'center' }}>
+              You've been invited to join the Lumora Admin Team as:
             </p>
-            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-              <span style={{ padding: '4px 16px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+              <span style={{ padding: '6px 18px', borderRadius: '999px', background: 'rgba(123,63,160,0.12)', color: '#5A1E7E', fontWeight: 800, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 {invitation.role_level?.replace(/_/g, ' ')}
               </span>
             </div>
-            <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.6, margin: '0 0 8px', textAlign: 'center' }}>
-              Invited email: <strong>{invitation.email}</strong>
+            <p style={{ color: '#8E6AA8', fontSize: '0.82rem', lineHeight: 1.6, margin: '0 0 16px', textAlign: 'center' }}>
+              Invited address: <strong style={{ color: '#2D004D' }}>{invitation.email}</strong>
             </p>
-            {invitation.expires_at && (
-              <p style={{ color: '#8E6AA8', fontSize: '0.72rem', textAlign: 'center', margin: '0 0 24px' }}>
-                Expires: {new Date(invitation.expires_at).toLocaleString()}
-              </p>
-            )}
 
             {/* ── Provider-aware action buttons ──────────────────────────── */}
-            {/* signInMethods === null means provider check is still loading  */}
             {signInMethods === null ? (
-              <div style={{ textAlign: 'center', color: '#7B3FA0', fontSize: '0.85rem', padding: '8px 0' }}>
-                Checking account…
+              <div style={{ textAlign: 'center', color: '#7B3FA0', fontSize: '0.85rem', padding: '12px 0' }}>
+                Verifying account options…
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -262,17 +283,17 @@ export default function AcceptInvite() {
                 {signInMethods.length === 0 && (
                   <button
                     onClick={handleRegisterRedirect}
-                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
                   >
-                    Create a new account
+                    Create Account & Join Team
                   </button>
                 )}
 
-                {/* Google-only account → show Google button, NOT password form */}
+                {/* Google-only account → show Google button */}
                 {signInMethods.includes('google.com') && (
                   <button
                     onClick={handleGoogleRedirect}
-                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
                       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -290,11 +311,11 @@ export default function AcceptInvite() {
                     onClick={handleLoginRedirect}
                     style={{ width: '100%', padding: '14px', borderRadius: '12px', border: signInMethods.includes('google.com') ? '1px solid rgba(123,63,160,0.3)' : 'none', background: signInMethods.includes('google.com') ? 'transparent' : 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: signInMethods.includes('google.com') ? '#5A1E7E' : '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
                   >
-                    Log in with email & password
+                    Sign In to Accept Invite
                   </button>
                 )}
 
-                {/* No account + offer alternate registration */}
+                {/* No account + offer alternate sign in */}
                 {signInMethods.length === 0 && (
                   <button
                     onClick={handleLoginRedirect}
@@ -305,55 +326,61 @@ export default function AcceptInvite() {
                 )}
               </div>
             )}
-
-            <p style={{ color: '#8E6AA8', fontSize: '0.70rem', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
-              You must sign in with the email address the invitation was sent to.
-            </p>
           </div>
         )}
 
         {/* ── Activation Success ── */}
         {(status === 'activated' || status === 'already_admin') && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(5,150,105,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>✓</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>
-              {status === 'already_admin' ? 'Administrator Access Confirmed' : 'Role Activated!'}
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(5,150,105,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, fontSize: '1.3rem', margin: '0 0 10px' }}>
+              {status === 'already_admin' ? 'Administrator Access Confirmed' : 'Welcome to the Team!'}
             </h2>
-            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 28px' }}>
+            <p style={{ color: '#66507A', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 24px' }}>
               {status === 'already_admin'
-                ? 'You already have active administrator access to Lumora. Click below to open your Admin Portal.'
-                : 'Your admin role has been successfully activated. Click below to sign in to the Admin Portal.'}
+                ? 'Your administrator privileges are active and confirmed.'
+                : 'Your administrator permissions have been successfully activated.'}
             </p>
             <button
               onClick={handleGoToAdminLogin}
-              style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
             >
-              Enter Admin Portal
+              Open Admin Dashboard
             </button>
           </div>
         )}
 
-        {/* ── Email Mismatch Error ── */}
+        {/* ── Email Mismatch State (Screen 3 Redesign) ── */}
         {status === 'email_mismatch' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>✉️</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>Email Address Mismatch</h2>
-            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 12px' }}>
-              You are currently signed in as <strong>{user?.email}</strong>, but this invitation was sent to <strong>{invitation?.email}</strong>.
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(123,63,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7B3FA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <polyline points="17 11 19 13 23 9"></polyline>
+              </svg>
+            </div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, fontSize: '1.3rem', margin: '0 0 10px' }}>Switch Account to Accept</h2>
+            <p style={{ color: '#66507A', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 12px' }}>
+              You are currently signed in as <strong style={{ color: '#2D004D' }}>{user?.email}</strong>, but this invitation was sent to <strong style={{ color: '#2D004D' }}>{invitation?.email}</strong>.
             </p>
-            <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.5, margin: '0 0 24px' }}>
-              Please sign in with <strong>{invitation?.email}</strong> to accept this administrator invitation.
+            <p style={{ color: '#8E6AA8', fontSize: '0.80rem', lineHeight: 1.5, margin: '0 0 24px' }}>
+              Please sign in with <strong>{invitation?.email}</strong> to accept your administrator invitation.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
                 onClick={handleGoToAdminLoginOnError}
-                style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
               >
                 Sign In as {invitation?.email || 'Invited Email'}
               </button>
               <button
                 onClick={() => navigate('/')}
-                style={{ padding: '12px 28px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.25)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
               >
                 Return to Marketplace
               </button>
@@ -361,22 +388,28 @@ export default function AcceptInvite() {
           </div>
         )}
 
-        {/* ── Error ── */}
+        {/* ── Generic Error ── */}
         {status === 'error' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(220,38,38,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>⚠️</div>
-            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>Activation Failed</h2>
-            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 28px' }}>{errorMsg}</p>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(123,63,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7B3FA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, fontSize: '1.3rem', margin: '0 0 10px' }}>Invitation Assistance Needed</h2>
+            <p style={{ color: '#66507A', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 24px' }}>{errorMsg}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
                 onClick={handleGoToAdminLoginOnError}
-                style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 14px rgba(90,30,126,0.25)' }}
               >
-                Go to Admin Login
+                Sign In to Admin Portal
               </button>
               <button
                 onClick={() => navigate('/')}
-                style={{ padding: '12px 28px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.25)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
               >
                 Return to Marketplace
               </button>
