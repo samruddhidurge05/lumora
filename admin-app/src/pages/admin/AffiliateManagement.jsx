@@ -13,7 +13,7 @@ import AdminLayout from './components/AdminLayout';
 import { AdminSelect } from './components/AdminComponents';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
-import { backendFetch } from '../../utils/api';
+import { backendFetch, getMediaUrl } from '../../utils/api';
 import AffiliatePayoutModal from '../../components/AffiliatePayoutModal';
 
 // ── Color palette tokens ──────────────────────────────────────────────────────
@@ -1255,7 +1255,7 @@ export default function AffiliateManagement() {
                       <tr key={p.product_id} className="hover:bg-[#F8F3FB]/50 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            {p.thumbnail && <img src={p.thumbnail} alt="" className="w-8 h-8 rounded-lg object-cover border border-[#F3EAF8]" onError={e => e.target.style.display='none'} />}
+                            {p.thumbnail && <img src={getMediaUrl(p.thumbnail)} alt="" className="w-8 h-8 rounded-lg object-cover border border-[#F3EAF8]" onError={e => e.target.style.display='none'} />}
                             <div><p className="font-bold text-[#2D004D] max-w-[140px] truncate">{p.product_name}</p><p className="text-[9px] text-[#7B3FA0]">ID: {p.product_id}</p></div>
                           </div>
                         </td>

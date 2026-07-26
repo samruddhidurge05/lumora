@@ -138,3 +138,20 @@ export const checkBackendOnline = async () => {
     return false;
   }
 };
+
+/**
+ * Resolves a backend media/thumbnail relative path to a full backend URL.
+ *
+ * @param {string} path  e.g. '/api/products/media/xyz.png'
+ * @returns {string}      e.g. 'https://lumora-backend-lmfa.onrender.com/api/products/media/xyz.png'
+ */
+export const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const origin = BACKEND_URL.replace(/\/api\/?$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${origin}${cleanPath}`;
+};
+
