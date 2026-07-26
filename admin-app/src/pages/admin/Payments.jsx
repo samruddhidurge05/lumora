@@ -380,7 +380,22 @@ export default function Payments() {
 
                   {/* Loading skeleton */}
                   {telemetry.loading && (
-                    <div className="p-4 flex flex-col ga                  {/* Desktop Table View (>= 768px) */}
+                    <div className="p-4 flex flex-col gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-12 rounded-xl bg-[#F5E9DD]/40 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Error state */}
+                  {!telemetry.loading && error && (
+                    <div className="py-12 flex flex-col items-center gap-3 text-center">
+                      <p className="text-sm font-bold text-red-400">{error}</p>
+                      <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#2D004D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors">Retry</button>
+                    </div>
+                  )}
+
+                  {/* Desktop Table View (>= 768px) */}
                   <div className="hidden md:block overflow-x-auto w-full">
                     {!telemetry.loading && !error && pagedOrders.length > 0 ? (
                       <table className="w-full border-collapse text-left">
@@ -518,23 +533,7 @@ export default function Payments() {
                       <p className="text-2xl mb-2">💸</p>
                       <p className="text-xs font-bold uppercase tracking-widest">No transactions found</p>
                     </div>
-                  )}   </span>
-                                </td>
-                                <td className="py-4 px-4 text-[10px] text-[#7B3FA0]">
-                                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    ) : !telemetry.loading && !error ? (
-                      <div className="py-12 text-center text-[#7B3FA0]">
-                        <p className="text-2xl mb-2">💸</p>
-                        <p className="text-xs font-bold uppercase tracking-widest">No transactions found</p>
-                      </div>
-                    ) : null}
-                  </div>
+                  )}
 
                   {/* Pagination controls */}
                   {!telemetry.loading && !error && txnTotalPages > 1 && (
