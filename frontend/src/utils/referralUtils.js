@@ -41,6 +41,11 @@ export function getCustomerBaseUrl() {
       return origin.replace('-admin-nine', '').replace('-admin', '');
     }
 
+    // Force the production URL when viewing from a Vercel preview deployment
+    if (origin.includes('.vercel.app') && !origin.includes('lumora-lemon-seven')) {
+      return 'https://lumora-lemon-seven.vercel.app';
+    }
+
     return origin.replace(/\/+$/, '');
   }
 
