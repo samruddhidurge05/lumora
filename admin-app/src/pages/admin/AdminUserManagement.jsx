@@ -325,12 +325,23 @@ export default function AdminUserManagement() {
     } finally { setInviting(false); }
   };
 
+  const [resendingId, setResendingId] = useState(null);
+
   const handleResend = async (invId, email) => {
+    setResendingId(invId);
     try {
       await backendFetch(`/admin/team/invitations/${invId}/resend`, { method: 'POST' });
       showToast(`Invitation resent to ${email}`);
       fetchData();
-    } catch (err) { showToast(`Resend failed: ${err.message}`); }
+    } catch (err) {
+      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('wait'))) {
+        showToast(`⏱️ ${err.message || 'Please wait a minute before requesting another email resend.'}`);
+      } else {
+        showToast(`Resend failed: ${err.message}`);
+      }
+    } finally {
+      setResendingId(null);
+    }
   };
 
   const handleRevoke = async (invId) => {
@@ -606,10 +617,12 @@ export default function AdminUserManagement() {
                           {(inv.status === 'pending' || inv.status === 'expired') && (
                             <button
                               onClick={() => handleResend(inv.id, inv.email)}
+                              disabled={resendingId === inv.id}
                               style={{ padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.25)',
-                                       background: 'rgba(59,130,246,0.06)', color: '#1D4ED8',
-                                       fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
-                              ↩ Resend
+                                       background: resendingId === inv.id ? 'rgba(156,163,175,0.1)' : 'rgba(59,130,246,0.06)',
+                                       color: resendingId === inv.id ? '#9CA3AF' : '#1D4ED8',
+                                       fontSize: '0.68rem', fontWeight: 700, cursor: resendingId === inv.id ? 'not-allowed' : 'pointer' }}>
+                              {resendingId === inv.id ? '⏳ Sending...' : '↩ Resend'}
                             </button>
                           )}
                           {/* Revoke — pending only (Req 3) */}

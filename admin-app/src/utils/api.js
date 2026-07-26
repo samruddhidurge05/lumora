@@ -99,14 +99,19 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     } catch (_) {
       // Not JSON or empty
     }
-    
+
     const code = detail?.code || null;
     if (globalErrorListener && (code === 'ACCOUNT_DISABLED' || code === 'PLATFORM_PAUSED')) {
       globalErrorListener({ status: res.status, code, message: detail?.message || detail?.detail });
     }
 
+    // Extract human readable detail string from FastAPI error response
+    const extractedMessage = typeof detail?.detail === 'string'
+      ? detail.detail
+      : (detail?.message || (typeof detail === 'string' ? detail : null));
+
     const error = new Error(
-      detail?.message || `API error: ${res.status} ${errorText || res.statusText}`
+      extractedMessage || `API error: ${res.status} ${errorText || res.statusText}`
     );
     error.status = res.status;
     error.code = code;
