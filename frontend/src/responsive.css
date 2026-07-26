@@ -1192,16 +1192,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
 }
 
-/* ── Stat cards: compact padding + font on mobile ── */
 @media (max-width: 1024px) {
-  .aff-stat-grid > .premium-flat-card {
-    padding: 16px 18px !important;
-    box-sizing: border-box !important;
-    width: 100% !important;
-  }
-  .aff-stat-grid > .premium-flat-card > div > div:nth-child(2) {
-    font-size: 1.4rem !important;
-  }
   .aff-referral-perf-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
@@ -1348,8 +1339,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 /* Stat Grid Breakpoints:
    - Desktop (1200px+): 4 columns
-   - Tablet (600px - 1199px): 2 columns
-   - Mobile (< 600px): 1 column (minmax(0, 1fr))
+   - Tablet & Mobile (<= 1024px): 2x2 Grid (repeat(2, 1fr))
 */
 .aff-stat-grid {
   display: grid !important;
@@ -1359,23 +1349,16 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   box-sizing: border-box !important;
 }
 
-@media (max-width: 1199px) and (min-width: 600px) {
+@media (max-width: 1024px) {
   .aff-stat-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-  }
-}
-
-@media (max-width: 599px) {
-  .aff-stat-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
     gap: 10px !important;
     width: 100% !important;
+    box-sizing: border-box !important;
   }
   .aff-earnings-stat-card,
   .aff-stat-grid > .premium-flat-card {
-    padding: 16px 18px !important;
+    padding: 14px 12px !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -1384,9 +1367,50 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     align-items: center !important;
     justify-content: space-between !important;
   }
+  .aff-stat-grid > .premium-flat-card > div:first-child {
+    min-width: 0 !important;
+    flex: 1 !important;
+    padding-right: 4px !important;
+  }
+  .aff-stat-grid > .premium-flat-card span {
+    font-size: clamp(0.55rem, 2.2vw, 0.62rem) !important;
+    letter-spacing: 0.03em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+  }
   .aff-stat-value {
-    font-size: 1.45rem !important;
-    line-height: 1.1 !important;
+    font-size: clamp(1.1rem, 4vw, 1.35rem) !important;
+    font-weight: 700 !important;
+    margin-top: 2px !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .aff-stat-grid > .premium-flat-card > div:last-child {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .aff-stat-grid {
+    gap: 8px !important;
+  }
+  .aff-earnings-stat-card,
+  .aff-stat-grid > .premium-flat-card {
+    padding: 12px 10px !important;
+  }
+  .aff-stat-value {
+    font-size: clamp(1.02rem, 4vw, 1.18rem) !important;
+  }
+  .aff-stat-grid > .premium-flat-card > div:last-child {
+    width: 28px !important;
+    height: 28px !important;
   }
 }
 
