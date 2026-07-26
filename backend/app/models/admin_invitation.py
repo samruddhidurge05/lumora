@@ -17,6 +17,14 @@ class AdminInvitation(Base):
     revoked_at   = Column(DateTime, nullable=True)   # soft-revoke (Req 3)
     invited_name = Column(String(150), nullable=True) # optional display name (Req 8)
     message      = Column(Text, nullable=True)        # optional personal message (Req 8)
+    email_status = Column(String(50), nullable=False, default="created") # 'created'|'email_queued'|'email_sent'|'email_failed'
+    last_email_sent_at = Column(DateTime, nullable=True)
+    email_error_log    = Column(Text, nullable=True)
+    resend_count       = Column(Integer, nullable=False, default=0)
+    first_sent_at      = Column(DateTime, nullable=True)
+    last_attempt_at    = Column(DateTime, nullable=True)
+    next_retry_at      = Column(DateTime, nullable=True)
+    provider           = Column(String(50), nullable=False, default="gmail_smtp")
     created_at   = Column(DateTime, default=datetime.utcnow)
 
     inviter = relationship("User", foreign_keys=[invited_by])

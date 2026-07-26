@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     # Admin Frontend URL - used to generate invitation links
     ADMIN_FRONTEND_URL: str = Field("http://localhost:5174", env="ADMIN_FRONTEND_URL")
 
+    # Transactional Email / Gmail SMTP Configuration
+    EMAIL_PROVIDER: str = Field("failover", env="EMAIL_PROVIDER")
+    SMTP_ENABLED: bool = Field(False, env="SMTP_ENABLED")
+    SMTP_HOST: str = Field("smtp.gmail.com", env="SMTP_HOST")
+    SMTP_PORT: int = Field(587, env="SMTP_PORT")
+    SMTP_USER: Optional[str] = Field(None, env="SMTP_USER")
+    SMTP_PASSWORD: Optional[str] = Field(None, env="SMTP_PASSWORD")
+    SMTP_FROM: str = Field("noreply@lumora.design", env="SMTP_FROM")
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'

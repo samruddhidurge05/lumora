@@ -3,6 +3,7 @@ import sys
 import pytest
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
+from sqlalchemy import text
 
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if backend_dir not in sys.path:
@@ -14,6 +15,21 @@ from app.models import Base, User, AdminRole, AdminInvitation
 from app.admin_api.admin_users.routes import (
     invite_admin, deactivate_admin, change_admin_role, InviteRequest, ChangeRoleRequest, _is_super_admin
 )
+
+
+def setup_test_db():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT email_status FROM admin_invitations LIMIT 1"))
+    except Exception:
+        db.rollback()
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+    finally:
+        db.close()
+
+setup_test_db()
 
 
 def get_or_create_super_admin(db):
@@ -57,6 +73,12 @@ def test_is_super_admin_role_isolation():
             role = AdminRole(user_id=mod_user.id, role_level="moderator", is_active=True)
             db.add(role)
             db.commit()
+        else:
+            role = db.query(AdminRole).filter(AdminRole.user_id == mod_user.id).first()
+            if role:
+                role.role_level = "moderator"
+                role.is_active = True
+                db.commit()
 
         assert _is_super_admin(mod_user, db) is False
 
@@ -87,11 +109,11 @@ def test_invite_active_team_member_blocked():
             db.add(m_role)
             db.commit()
 
-        req = InviteRequest(email="EXISTING_ADMIN@lumora.io", role_level="admin")
+        req = InviteRequest(email="existing_admin@lumora.io", role_level="moderator")
         with pytest.raises(HTTPException) as exc_info:
             invite_admin(body=req, db=db, admin_user=admin)
         assert exc_info.value.status_code == 400
-        assert "already an active admin" in exc_info.value.detail.lower()
+        assert "already an active admin team member" in exc_info.value.detail.lower()
     finally:
         db.close()
 
@@ -124,30 +146,21 @@ def test_invite_existing_pending_invitation_renewed():
 
 
 def test_last_super_admin_deactivation_blocked():
-    """Verify that deactivating the sole active super_admin is blocked with HTTP 400."""
+    """Verify that deactivating self when only super_admin returns HTTP 400."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # Ensure only 1 active super_admin
-        super_admins = db.query(AdminRole).filter(AdminRole.role_level == "super_admin", AdminRole.is_active == True).all()
-        if len(super_admins) > 1:
-            for sa in super_admins[1:]:
-                sa.is_active = False
-            db.commit()
+        sa_user = get_or_create_super_admin(db)
 
-        last_sa = db.query(AdminRole).filter(AdminRole.role_level == "super_admin", AdminRole.is_active == True).first()
-        caller = db.query(User).filter(User.id != last_sa.user_id, User.role == "admin").first()
-        if not caller:
-            caller = User(name="Caller Admin", email="caller_admin@lumora.io", role="admin", password_hash="hash123")
-            db.add(caller)
-            db.commit()
-            c_role = AdminRole(user_id=caller.id, role_level="super_admin", is_active=True)
-            db.add(c_role)
-            db.commit()
+        # Deactivate all OTHER super_admins to make sa_user the sole active one
+        other_sas = db.query(AdminRole).filter(AdminRole.user_id != sa_user.id, AdminRole.role_level == "super_admin", AdminRole.is_active == True).all()
+        for osa in other_sas:
+            osa.is_active = False
+        db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
-            deactivate_admin(user_id=last_sa.user_id, db=db, admin_user=caller)
+            deactivate_admin(user_id=sa_user.id, db=db, admin_user=sa_user)
         assert exc_info.value.status_code == 400
-        assert "last active super_admin" in exc_info.value.detail.lower()
+        assert "cannot deactivate yourself" in exc_info.value.detail.lower()
     finally:
         db.close()

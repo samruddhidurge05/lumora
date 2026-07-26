@@ -106,28 +106,69 @@ def _invitation_status(inv, now: datetime) -> str:
     return "pending"
 
 
-def _send_email_async(to_email, invited_name, role_level, accept_url, expires_at, message=None):
+_email_metrics: Dict[str, Any] = {
+    "total_dispatched": 0,
+    "total_successful": 0,
+    "total_failed": 0,
+    "total_latency_ms": 0,
+}
+
+
+def _send_email_async(to_email, invited_name, role_level, accept_url, expires_at, message=None, invitation_id=None, job_id=None, correlation_id=None):
     """Fire email delivery in a background thread so it never blocks the response."""
     def _do():
         try:
             from app.services.email_service import send_invitation_email
-            ok = send_invitation_email(
+            _email_metrics["total_dispatched"] += 1
+            ok, err_msg, latency_ms = send_invitation_email(
                 to_email=to_email,
                 invited_name=invited_name,
                 role_level=role_level,
                 accept_url=accept_url,
                 expires_at=expires_at,
                 message=message,
+                job_id=job_id,
+                correlation_id=correlation_id,
+                invitation_id=invitation_id,
             )
+            _email_metrics["total_latency_ms"] += latency_ms
+            if ok:
+                _email_metrics["total_successful"] += 1
+            else:
+                _email_metrics["total_failed"] += 1
+
+            if invitation_id:
+                try:
+                    from app.db.session import SessionLocal
+                    from app.models.admin_invitation import AdminInvitation
+                    db = SessionLocal()
+                    inv = db.query(AdminInvitation).filter(AdminInvitation.id == invitation_id).first()
+                    if inv:
+                        now_utc = datetime.now(timezone.utc)
+                        inv.last_email_sent_at = cast(Any, now_utc)
+                        if ok:
+                            inv.email_status = cast(Any, "email_sent")
+                            inv.email_error_log = cast(Any, None)
+                        else:
+                            inv.email_status = cast(Any, "email_failed")
+                            inv.email_error_log = cast(Any, err_msg or "SMTP delivery failed after max retries")
+                        db.commit()
+                    db.close()
+                except Exception as db_err:
+                    import logging
+                    logging.getLogger(__name__).warning("[team] Failed to update email_status for inv %s: %s", invitation_id, db_err)
+
             if not ok:
                 import logging
                 logging.getLogger(__name__).warning(
-                    "[team] Email delivery failed for %s - invitation still valid", to_email
+                    "[team] Email delivery failed for %s - invitation still valid. Error: %s", to_email, err_msg
                 )
         except Exception as exc:
             import logging
             logging.getLogger(__name__).error("[team] Email thread error: %s", exc)
-    threading.Thread(target=_do, daemon=True).start()
+
+    from app.services.email_service import EmailDispatcher
+    EmailDispatcher.dispatch(_do)
 
 
 def _invitation_payload(inv, now: datetime) -> dict:
@@ -139,6 +180,8 @@ def _invitation_payload(inv, now: datetime) -> dict:
         "role_level":   inv.role_level,
         "invite_token": inv.invite_token,
         "status":       _invitation_status(inv, now),
+        "email_status": getattr(inv, "email_status", "created"),
+        "last_email_sent_at": inv.last_email_sent_at.isoformat() if getattr(inv, "last_email_sent_at", None) else None,
         "accepted_at":  inv.accepted_at.isoformat() if inv.accepted_at else None,
         "revoked_at":   inv.revoked_at.isoformat() if getattr(inv, "revoked_at", None) else None,
         "expires_at":   inv.expires_at.isoformat() if inv.expires_at else None,
@@ -267,6 +310,11 @@ def invite_admin(
         existing_inv.expires_at = cast(Any, expires_at)
         existing_inv.role_level = cast(Any, body.role_level)
         existing_inv.invited_by = cast(Any, admin_user.id)
+        existing_inv.email_status = cast(Any, "email_queued")
+        existing_inv.resend_count = cast(Any, (getattr(existing_inv, "resend_count", 0) or 0) + 1)
+        existing_inv.last_attempt_at = cast(Any, now)
+        if not getattr(existing_inv, "first_sent_at", None):
+            existing_inv.first_sent_at = cast(Any, now)
         if body.invited_name:
             existing_inv.invited_name = cast(Any, body.invited_name)
         if body.message:
@@ -281,11 +329,23 @@ def invite_admin(
             expires_at=expires_at,
             invited_name=body.invited_name,
             message=body.message,
+            email_status="email_queued",
+            resend_count=0,
+            first_sent_at=now,
+            last_attempt_at=now,
+            provider="gmail_smtp",
         )
         db.add(invitation)
 
     db.commit()
     db.refresh(invitation)
+
+    try:
+        from app.services.email_service import record_email_event
+        record_email_event(invitation.id, "CREATED", clean_email)
+        record_email_event(invitation.id, "QUEUED", clean_email)
+    except Exception:
+        pass
 
     try:
         log_admin_action(
@@ -304,6 +364,7 @@ def invite_admin(
         accept_url=accept_url,
         expires_at=expires_at,
         message=body.message,
+        invitation_id=invitation.id,
     )
 
     # Req 5 - sync to Firestore
@@ -321,6 +382,7 @@ def invite_admin(
         "invite_token":  token,
         "expires_at":    expires_at.isoformat(),
         "accept_url":    accept_url,
+        "email_status":  invitation.email_status,
     }
 
 
@@ -335,11 +397,14 @@ def resend_invitation(
     """Renew an expired or pending invitation with a fresh token. (Req 2)"""
     _require_super_admin(admin_user, db)
 
-    invitation = db.query(AdminInvitation).filter(AdminInvitation.id == invitation_id).first()
+    # Multi-instance atomic row lock ensures distributed idempotency across multiple backend worker instances
+    invitation = db.query(AdminInvitation).filter(
+        AdminInvitation.id == invitation_id
+    ).with_for_update().first()
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found.")
 
-    now    = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
     status_ = _invitation_status(invitation, now)
     if status_ in ("accepted", "revoked"):
         raise HTTPException(
@@ -347,11 +412,36 @@ def resend_invitation(
             detail="Cannot resend an accepted or revoked invitation.",
         )
 
+    # Enforce 60-second resend cooldown lock (idempotency guard)
+    if invitation.last_email_sent_at:
+        last_sent = invitation.last_email_sent_at
+        if last_sent.tzinfo is None:
+            last_sent = last_sent.replace(tzinfo=timezone.utc)
+        elapsed_sec = (now - last_sent).total_seconds()
+        if elapsed_sec < 60:
+            retry_after = int(60 - elapsed_sec)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Please wait {retry_after} seconds before requesting another email resend.",
+            )
+
     # Regenerate token + expiry
     invitation.invite_token = cast(Any, str(uuid.uuid4()).replace("-", ""))
     invitation.expires_at   = cast(Any, now + timedelta(hours=48))
+    invitation.email_status = cast(Any, "email_queued")
+    invitation.last_email_sent_at = cast(Any, now)
+    invitation.last_attempt_at    = cast(Any, now)
+    invitation.resend_count       = cast(Any, (getattr(invitation, "resend_count", 0) or 0) + 1)
+    if not getattr(invitation, "first_sent_at", None):
+        invitation.first_sent_at  = cast(Any, now)
     db.commit()
     db.refresh(invitation)
+
+    try:
+        from app.services.email_service import record_email_event
+        record_email_event(invitation.id, "QUEUED", invitation.email)
+    except Exception:
+        pass
 
     accept_url = f"{settings.ADMIN_FRONTEND_URL}/admin/accept-invite?token={invitation.invite_token}"
 
@@ -371,6 +461,7 @@ def resend_invitation(
         accept_url=accept_url,
         expires_at=invitation.expires_at,
         message=getattr(invitation, "message", None),
+        invitation_id=invitation.id,
     )
 
     try:
@@ -383,6 +474,168 @@ def resend_invitation(
         "message":    f"Invitation resent to {invitation.email}",
         "accept_url": accept_url,
         "expires_at": invitation.expires_at.isoformat(),
+        "resend_count": invitation.resend_count,
+    }
+
+
+# -- GET /team/invitations/{invitation_id}/history ----------------------------
+
+@router.get("/team/invitations/{invitation_id}/history")
+def get_invitation_history(
+    invitation_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Return the complete append-only audit trail from AdminEmailLog for an invitation."""
+    invitation = db.query(AdminInvitation).filter(AdminInvitation.id == invitation_id).first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found.")
+
+    from app.models.admin_email_log import AdminEmailLog
+    logs = db.query(AdminEmailLog).filter(
+        AdminEmailLog.invitation_id == invitation_id
+    ).order_by(AdminEmailLog.created_at.asc()).all()
+
+    return {
+        "invitation_id": invitation.id,
+        "email": invitation.email,
+        "resend_count": getattr(invitation, "resend_count", 0),
+        "first_sent_at": invitation.first_sent_at.isoformat() if getattr(invitation, "first_sent_at", None) else None,
+        "last_attempt_at": invitation.last_attempt_at.isoformat() if getattr(invitation, "last_attempt_at", None) else None,
+        "history": [l.to_dict() for l in logs],
+    }
+
+
+# -- GET /team/email-logs ------------------------------------------------------
+
+@router.get("/team/email-logs")
+def get_email_logs(
+    limit: int = 50,
+    offset: int = 0,
+    event: Optional[str] = None,
+    recipient: Optional[str] = None,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Return paginated system-wide email audit logs for monitoring."""
+    from app.models.admin_email_log import AdminEmailLog
+    query = db.query(AdminEmailLog)
+
+    if event:
+        query = query.filter(AdminEmailLog.event == event.upper())
+    if recipient:
+        query = query.filter(AdminEmailLog.recipient.ilike(f"%{recipient}%"))
+
+    total = query.count()
+    logs = query.order_by(AdminEmailLog.created_at.desc()).offset(offset).limit(limit).all()
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "logs": [l.to_dict() for l in logs],
+    }
+
+
+# -- GET /team/email-dlq & POST /team/email-dlq/{log_id}/retry -----------------
+
+@router.get("/team/email-dlq")
+def get_email_dead_letter_queue(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Return dead-lettered email jobs requiring admin investigation or retry."""
+    from app.models.admin_email_log import AdminEmailLog
+    query = db.query(AdminEmailLog).filter(AdminEmailLog.event == "DEAD_LETTER_QUEUE")
+    total = query.count()
+    logs = query.order_by(AdminEmailLog.created_at.desc()).offset(offset).limit(limit).all()
+
+    return {
+        "total_dead_lettered": total,
+        "limit": limit,
+        "offset": offset,
+        "dlq_jobs": [l.to_dict() for l in logs],
+    }
+
+
+@router.post("/team/email-dlq/{log_id}/retry")
+def retry_dead_letter_email(
+    log_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Manually re-queue a dead-lettered email job."""
+    _require_super_admin(admin_user, db)
+    from app.models.admin_email_log import AdminEmailLog
+    dlq_log = db.query(AdminEmailLog).filter(
+        AdminEmailLog.id == log_id,
+        AdminEmailLog.event == "DEAD_LETTER_QUEUE",
+    ).first()
+
+    if not dlq_log:
+        raise HTTPException(status_code=404, detail="Dead Letter Queue log record not found.")
+
+    invitation = db.query(AdminInvitation).filter(AdminInvitation.id == dlq_log.invitation_id).first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Associated invitation no longer exists.")
+
+    now = datetime.now(timezone.utc)
+    accept_url = f"{settings.ADMIN_FRONTEND_URL}/admin/accept-invite?token={invitation.invite_token}"
+
+    _send_email_async(
+        to_email=invitation.email,
+        invited_name=getattr(invitation, "invited_name", None),
+        role_level=invitation.role_level,
+        accept_url=accept_url,
+        expires_at=invitation.expires_at,
+        message=getattr(invitation, "message", None),
+        invitation_id=invitation.id,
+    )
+
+    return {
+        "message": f"DLQ Email job #{log_id} re-queued successfully for {invitation.email}.",
+        "invitation_id": invitation.id,
+        "recipient": invitation.email,
+    }
+
+
+# -- GET /team/email-health ---------------------------------------------------
+
+@router.get("/team/email-health")
+def get_email_health(
+    admin_user: User = Depends(require_admin_role),
+):
+    """Synthetic health check testing real-time SMTP connection & TLS handshake."""
+    from app.services.email_service import check_smtp_health
+    return check_smtp_health()
+
+
+# -- GET /team/email-metrics --------------------------------------------------
+
+@router.get("/team/email-metrics")
+def get_email_metrics(
+    admin_user: User = Depends(require_admin_role),
+):
+    """Return aggregated email delivery metrics and current SMTP health."""
+    from app.services.email_service import check_smtp_health
+    dispatched = _email_metrics["total_dispatched"]
+    successful = _email_metrics["total_successful"]
+    failed = _email_metrics["total_failed"]
+    total_lat = _email_metrics["total_latency_ms"]
+    success_rate = (successful / dispatched * 100) if dispatched > 0 else 100.0
+    avg_latency = (total_lat / dispatched) if dispatched > 0 else 0
+
+    return {
+        "metrics": {
+            "total_dispatched": dispatched,
+            "total_successful": successful,
+            "total_failed": failed,
+            "success_rate_percent": round(success_rate, 2),
+            "average_latency_ms": round(avg_latency, 2),
+        },
+        "health": check_smtp_health(),
     }
 
 
@@ -516,6 +769,12 @@ def accept_invite(
     db.add(current_user)
     invitation.accepted_at = cast(Any, now)
     db.commit()
+
+    try:
+        from app.services.email_service import record_email_event
+        record_email_event(invitation.id, "ACCEPTED", current_user.email)
+    except Exception:
+        pass
 
     try:
         log_admin_action(

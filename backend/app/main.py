@@ -143,11 +143,21 @@ def _validate_startup_config() -> None:
     _logger.info("[startup] Storage provider: %s", storage_provider)
     if storage_provider == "firebase":
         from app.services.storage_service import storage_service
+        health = storage_service.check_health()
+        _logger.info("[startup] Firebase Storage health: %s", health)
         if not storage_service.firebase_provider.is_available():
             errors.append(
                 "STORAGE_PROVIDER is set to 'firebase' but Firebase Storage could not "
                 "be initialized. Check your credentials and FIREBASE_PROJECT_ID."
             )
+
+    # 7. SMTP Email Readiness Validation
+    try:
+        from app.services.email_service import validate_smtp_on_startup
+        val_res = validate_smtp_on_startup()
+        _logger.info("[startup] SMTP Email Readiness: %s", val_res.get("status", "UNKNOWN"))
+    except Exception as email_val_err:
+        _logger.warning("[startup] SMTP readiness validation error: %s", email_val_err)
 
     # Fail fast if any critical errors found
     if errors:

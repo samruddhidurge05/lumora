@@ -21,6 +21,7 @@ from app.models.withdrawal import Withdrawal
 from app.models.verification import Verification
 from app.models.admin_role import AdminRole
 from app.models.admin_invitation import AdminInvitation
+from app.models.admin_email_log import AdminEmailLog
 from app.models.refund_request import RefundRequest
 from app.models.report import SQLReport
 from app.models.product_download_event import ProductDownloadEvent
