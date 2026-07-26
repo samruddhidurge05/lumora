@@ -299,14 +299,16 @@ export default function AffiliateEarnings({
             sub: 'Awaiting approval',
           },
         ].map((s, i) => (
-          <div key={i} className="premium-flat-card aff-earnings-stat-card" style={{ padding: 'clamp(14px, 2.5vw, 22px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0, boxSizing: 'border-box' }}>
-            <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
-              <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
-              <div className="aff-stat-value" style={{ fontSize: 'clamp(1.15rem, 3.5vw, 1.7rem)', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.value}</div>
-              <span style={{ fontSize: '0.65rem', color: 'var(--text-light)', display: 'block', marginTop: '4px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sub}</span>
+          <div key={i} className="premium-flat-card aff-earnings-stat-card" style={{ padding: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, boxSizing: 'border-box', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '6px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{s.label}</span>
+              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)', color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {s.icon}
+              </div>
             </div>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)', color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {s.icon}
+            <div>
+              <div className="aff-stat-value" style={{ fontSize: 'clamp(1.15rem, 3.8vw, 1.6rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.value}</div>
+              <span className="aff-stat-sub" style={{ fontSize: '0.62rem', color: 'var(--text-light)', display: 'block', marginTop: '3px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sub}</span>
             </div>
           </div>
         ))}
