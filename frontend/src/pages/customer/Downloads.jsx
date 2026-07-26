@@ -942,7 +942,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
     setLoading(true);
     setErrorMsg(null);
     setPreviewUrl(null);
-    setViewerMode('visual');
+    setViewerMode('stream');
 
     const numericId = parseInt(product.id, 10);
     if (isNaN(numericId)) {
@@ -951,7 +951,6 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
       return;
     }
 
-    // Determine if product is a PDF document or a ZIP package archive
     const nameLower = (product.name || '').toLowerCase();
     const isPdfName = nameLower.endsWith('.pdf') || nameLower.includes('pdf');
 
@@ -963,26 +962,17 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
         return;
       }
 
-      // If backend metadata indicates package or filename ends in zip/rar/7z
-      const dlUrl = (res?.download_url || '').toLowerCase();
-      const isZipArchive = dlUrl.includes('.zip') || dlUrl.includes('.rar') || dlUrl.includes('.7z') || nameLower.includes('zip') || nameLower.includes('pack');
-
-      if (isZipArchive && !isPdfName) {
-        // ZIP Package Archive: Use Online Package Inspection Mode without iframe ZIP stream
-        setPreviewType('package');
-        setPreviewUrl(null);
-      } else {
-        // PDF Document: Stream online inside document viewer iframe
+      if (res && res.download_url) {
+        const BACKEND_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '');
+        const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
+        const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
+        const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
+        setPreviewUrl(fullUrl);
         setPreviewType('pdf');
-        if (res && res.download_url) {
-          const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-          const streamUrl = res.download_url.replace('/download-file', '/preview-stream');
-          const cleanUrl = streamUrl.startsWith('/api') ? streamUrl.replace('/api', '') : streamUrl;
-          const fullUrl = `${BACKEND_URL}${cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl}`;
-          setPreviewUrl(fullUrl);
-        } else {
-          setPreviewType('package');
-        }
+        setViewerMode('stream');
+      } else {
+        setPreviewType('package');
+        setViewerMode('visual');
       }
     } catch (err) {
       setErrorMsg('Failed to authorize preview session');
@@ -1282,8 +1272,12 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                         background: '#FAF7F2', padding: '12px'
                       }}>
                         <img
-                          src={product.thumbnail || product.preview}
+                          src={product.thumbnail || product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
                           alt={product.name}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
+                          }}
                           style={{ maxHeight: '340px', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
                         />
                         <div style={{
