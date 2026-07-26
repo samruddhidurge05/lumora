@@ -1294,7 +1294,9 @@ export default function OrdersManagement() {
                             </AnimatePresence>
                           </tbody>
                         </table>
-                      ) : (
+                      </div>
+                    </>
+                  ) : (
 
                         // Empty state visual system
                         <div className="py-20 flex flex-col items-center justify-center text-center px-6">
