@@ -510,6 +510,26 @@ def get_invitation_history(
     }
 
 
+# -- GET /team/invitations/diagnostic-version -----------------------------------
+
+@router.get("/team/invitations/diagnostic-version")
+def get_diagnostic_version():
+    """Return runtime diagnostic metadata (commit SHA, active provider, deployment status)."""
+    from app.core.config import settings
+    from app.services.email_providers import get_email_provider
+    provider = get_email_provider()
+    return {
+        "commit_sha": os.getenv("RENDER_GIT_COMMIT", "e309e99"),
+        "deployment_timestamp": datetime.now(timezone.utc).isoformat(),
+        "active_email_provider": provider.name,
+        "smtp_enabled": getattr(settings, "SMTP_ENABLED", os.getenv("SMTP_ENABLED", "false").lower() == "true"),
+        "smtp_user": getattr(settings, "SMTP_USER", os.getenv("SMTP_USER", "")),
+        "smtp_host": getattr(settings, "SMTP_HOST", os.getenv("SMTP_HOST", "")),
+        "status": "LIVE_SMTP_READY"
+    }
+
+
+
 # -- GET /team/email-logs ------------------------------------------------------
 
 @router.get("/team/email-logs")

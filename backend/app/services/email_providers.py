@@ -131,12 +131,17 @@ class GmailProvider(BaseEmailProvider):
                 server.starttls()
                 if smtp_user and smtp_password:
                     server.login(smtp_user, smtp_password)
+
+                logger.info(
+                    "[GmailProvider-Sendmail-Trigger] BEFORE_SENDMAIL: invitation_id=%s, TO=%s, Subject='%s', provider=%s, job_id=%s",
+                    invitation_id, to_email, subject, self.name, job_id
+                )
                 send_response = server.sendmail(smtp_from, [to_email], msg.as_string())
 
             latency_ms = int((time.time() - start_time) * 1000)
             logger.info(
-                "[GmailProvider] SMTP sendmail completed successfully to %s via %s:%s (job_id=%s, latency=%dms, response=%s)",
-                to_email, smtp_host, smtp_port, job_id, latency_ms, send_response
+                "[GmailProvider-Sendmail-Trigger] AFTER_SENDMAIL: invitation_id=%s, TO=%s, response=%s, latency_ms=%dms",
+                invitation_id, to_email, send_response, latency_ms
             )
             return True, None, latency_ms
         except Exception as exc:
