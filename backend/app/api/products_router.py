@@ -26,6 +26,39 @@ router = APIRouter()
 
 import urllib.parse as urlparse
 import requests
+import re
+import mimetypes
+
+def generate_fallback_pdf(title: str, product_id: int) -> bytes:
+    clean_title = str(title).encode("latin-1", "replace").decode("latin-1")
+    pdf_content = (
+        "%PDF-1.4\n"
+        "1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj\n"
+        "2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj\n"
+        "3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources <</Font <</F1 5 0 R>>>>>> endobj\n"
+        "4 0 obj <</Length 250>> stream\n"
+        "BT /F1 24 Tf 50 700 Td (Lumora Digital Product) Tj ET\n"
+        f"BT /F1 16 Tf 50 650 Td (Product ID: {product_id}) Tj ET\n"
+        f"BT /F1 14 Tf 50 620 Td (Title: {clean_title}) Tj ET\n"
+        "BT /F1 12 Tf 50 580 Td (Thank you for your purchase on Lumora Marketplace.) Tj ET\n"
+        "BT /F1 10 Tf 50 540 Td (License: Personal and Commercial License Granted.) Tj ET\n"
+        "endstream\n"
+        "endobj\n"
+        "5 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica>> endobj\n"
+        "xref\n"
+        "0 6\n"
+        "0000000000 65535 f \n"
+        "0000000009 00000 n \n"
+        "0000000058 00000 n \n"
+        "0000000115 00000 n \n"
+        "0000000244 00000 n \n"
+        "0000000495 00000 n \n"
+        "trailer <</Size 6 /Root 1 0 R>>\n"
+        "startxref\n"
+        "568\n"
+        "%%EOF\n"
+    )
+    return pdf_content.encode("latin-1")
 
 _LAST_FIRESTORE_SYNC_TIME = 0.0
 
@@ -604,30 +637,62 @@ def download_product_file(
     )
     db.commit()
 
-    # Stream the file bytes or generate clean fallback asset package
-    filename = f"product-{product_id}.zip"
-    file_url_val = str(getattr(product, "file_url", "") or "")
-    if bool(file_url_val):
-        import os
-        filename = os.path.basename(file_url_val.split("?")[0])
-        if not filename or not os.path.splitext(filename)[1]:
-            filename = f"product-{product_id}.zip"
-            
-    content_type = str(getattr(product, "content_type", None) or "application/octet-stream")
-    
+    # 1. Determine accurate filename and extension
+    clean_title = getattr(product, "title", f"Product-{product_id}") or f"Product-{product_id}"
+    safe_title_base = re.sub(r'[^\w\s-]', '', str(clean_title)).strip().replace(' ', '_') or f"product-{product_id}"
+
+    source_path_ref = str(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", "") or "")
+    source_basename = os.path.basename(source_path_ref.split("?")[0]) if source_path_ref else ""
+    _, raw_ext = os.path.splitext(source_basename)
+    raw_ext = raw_ext.lower().strip()
+
+    if not raw_ext:
+        _, title_ext = os.path.splitext(clean_title)
+        if title_ext.lower() in [".pdf", ".zip", ".docx", ".epub", ".png", ".jpg", ".jpeg"]:
+            raw_ext = title_ext.lower()
+
+    if not raw_ext:
+        raw_ext = ".zip"
+
+    filename = f"{safe_title_base}{raw_ext}"
+    guessed_type, _ = mimetypes.guess_type(filename)
+    content_type = getattr(product, "content_type", None)
+    if not content_type or content_type in ["application/octet-stream", "binary/octet-stream"]:
+        content_type = guessed_type or "application/octet-stream"
+
     stream = None
+    first_chunk = None
+
     if bool(storage_path):
         try:
-            stream = storage_service.get_stream(str(storage_path))
+            raw_stream = storage_service.get_stream(str(storage_path))
+            if raw_stream:
+                # Eagerly fetch the first chunk to ensure stream connection exists and prevent uncaught generator errors
+                first_chunk = next(raw_stream, None)
+                if first_chunk is not None:
+                    initial_chunk: bytes = first_chunk
+                    def safe_iter():
+                        yield initial_chunk
+                        try:
+                            for chunk in raw_stream:
+                                if chunk:
+                                    yield chunk
+                        except Exception as chunk_err:
+                            print(f"[DownloadStream] Warning during chunk iteration for product {product_id}: {chunk_err}")
+                    stream = safe_iter()
         except Exception as e:
-            print(f"[DownloadStream] Notice: Physical file stream unavailable for path {storage_path}: {e}")
+            print(f"[DownloadStream] Physical file stream unavailable for path '{storage_path}': {e}")
             stream = None
+            first_chunk = None
 
     if stream is None:
-        # Generate valid digital product zip package for device download
-        zip_buf = io.BytesIO()
-        clean_title = getattr(product, "title", f"Digital Asset #{product_id}")
-        readme_text = f"""===================================================================
+        if raw_ext == ".pdf":
+            fallback_bytes = generate_fallback_pdf(clean_title, product_id)
+            content_type = "application/pdf"
+            filename = f"{safe_title_base}.pdf"
+        else:
+            zip_buf = io.BytesIO()
+            readme_text = f"""===================================================================
 {str(clean_title).upper()}
 Lumora Digital Marketplace Asset Package
 ===================================================================
@@ -639,23 +704,25 @@ License: Personal & Commercial Digital License
 
 Thank you for your purchase on Lumora!
 """
-        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("README_LICENSE.txt", readme_text)
-            zf.writestr(f"{str(clean_title).replace(' ', '_')}_Guide.txt", f"Digital Asset Package for {clean_title}.\nVersion: 1.0.0\n")
-        
-        fallback_bytes = zip_buf.getvalue()
-        def iter_bytes():
-            yield fallback_bytes
+            with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr("README_LICENSE.txt", readme_text)
+                zf.writestr(f"{safe_title_base}_Guide.txt", f"Digital Asset Package for {clean_title}.\nVersion: 1.0.0\n")
             
-        stream = iter_bytes()
-        filename = f"product-{product_id}.zip"
-        content_type = "application/zip"
+            fallback_bytes = zip_buf.getvalue()
+            content_type = "application/zip"
+            filename = f"{safe_title_base}.zip"
+
+        def iter_fallback_bytes():
+            yield fallback_bytes
+
+        stream = iter_fallback_bytes()
 
     return StreamingResponse(
         stream,
         media_type=content_type,
         headers={
-            "Content-Disposition": f"attachment; filename={filename}"
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
 

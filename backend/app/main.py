@@ -797,7 +797,8 @@ async def add_security_headers(request: Request, call_next):
     # Allow iframe framing for preview-stream and online inspection endpoints across Lumora Vercel deployments & localhost
     path = request.url.path.lower()
     if "preview" in path or "stream" in path or "download" in path:
-        response.headers.pop("X-Frame-Options", None)
+        if "X-Frame-Options" in response.headers:
+            del response.headers["X-Frame-Options"]
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://*.vercel.app https://lumora-lemon-seven.vercel.app http://localhost:* http://127.0.0.1:*;"
     else:
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
