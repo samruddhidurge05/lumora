@@ -279,6 +279,8 @@ def restore_sqlite_products_from_firestore(db_session):
 
         for doc in docs:
             data = doc.to_dict()
+            if not data:
+                continue
             try:
                 prod_id = int(doc.id)
             except ValueError:

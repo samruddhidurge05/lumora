@@ -909,10 +909,6 @@ export default function Dashboard() {
               </button>
             }
           >
-                <Icon name="RefreshCw" size={12} className={isScanning ? 'animate-spin' : ''} />
-              </button>
-            }
-          >
             {/* Scanning line sweep visual overlay */}
             {isScanning && (
               <motion.div 

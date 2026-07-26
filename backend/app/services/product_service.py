@@ -1,10 +1,10 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from app.models.product import Product
-from app.services.storage_service import storage_service
+from app.services.storage_service import storage_service, _is_test_environment
 from app.services.activity_log_service import ActivityLogService
 from admin.firestore.admin_firestore import sync_product_to_firestore, delete_product_from_firestore
 
@@ -44,7 +44,7 @@ def _extract_file_extension(source_path: Optional[str], default_ext: str = ".bin
     return clean_ext
 
 
-def _slugify(text: str) -> str:
+def _slugify(text: Optional[str]) -> str:
     """
     Generate a clean, URL-safe slug from a product title.
     """
@@ -137,60 +137,60 @@ class ProductService:
             # Move temp uploaded assets to permanent hierarchical paths:
             # vendors/{vendor_id}/products/{product_id}/...
             # External URLs (pCloud, S3, Firebase Storage, etc.) are stored as-is.
-            slug = _slugify(product.title)
+            slug = _slugify(getattr(product, "title"))
             display_name = f"{slug if slug else 'product'}-{product.id}"
 
             if temp_file_url:
                 if _is_external_url(temp_file_url):
                     # External URL - store directly; no local file movement needed
-                    product.file_url = temp_file_url
+                    setattr(product, "file_url", temp_file_url)
                 else:
                     file_ext = _extract_file_extension(temp_file_url, default_ext=".bin")
                     storage_path, perm_url = storage_service.move_to_permanent(
                         source_path=temp_file_url,
                         vendor_id=vendor_id,
-                        product_id=product.id,
+                        product_id=getattr(product, "id"),
                         filename=f"{display_name}{file_ext}",
                         is_image=False,
                         asset_type="file"
                     )
                     if storage_path:
-                        product.storage_path = storage_path
-                        product.file_url = perm_url
+                        setattr(product, "storage_path", storage_path)
+                        setattr(product, "file_url", perm_url)
                         moved_files.append(storage_path)
 
             if temp_preview_url:
                 if _is_external_url(temp_preview_url):
-                    product.preview = temp_preview_url
+                    setattr(product, "preview", temp_preview_url)
                 else:
                     preview_path, perm_preview = storage_service.move_to_permanent(
                         source_path=temp_preview_url,
                         vendor_id=vendor_id,
-                        product_id=product.id,
+                        product_id=getattr(product, "id"),
                         filename=f"{display_name}-preview.png",
                         is_image=True,
                         asset_type="preview"
                     )
                     if preview_path:
-                        product.preview_path = preview_path
-                        product.preview = perm_preview
+                        setattr(product, "preview_path", preview_path)
+                        setattr(product, "preview", perm_preview)
                         moved_files.append(preview_path)
 
             if temp_thumbnail_url:
                 if _is_external_url(temp_thumbnail_url):
-                    product.thumbnail = temp_thumbnail_url
+                    setattr(product, "thumbnail", temp_thumbnail_url)
                 else:
                     thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
                         source_path=temp_thumbnail_url,
                         vendor_id=vendor_id,
-                        product_id=product.id,
+                        product_id=getattr(product, "id"),
                         filename=f"{display_name}-thumbnail.png",
                         is_image=True,
                         asset_type="thumbnail"
                     )
                     if thumbnail_path:
-                        product.thumbnail_path = thumbnail_path
-                        product.thumbnail = perm_thumbnail
+                        setattr(product, "thumbnail_path", thumbnail_path)
+                        setattr(product, "thumbnail", perm_thumbnail)
                         moved_files.append(thumbnail_path)
 
             # Strict Physical Verification of Permanent Storage Objects before PostgreSQL Commit
@@ -203,7 +203,7 @@ class ProductService:
                             status_code=500,
                             detail="Transactional failure: Storage path is missing or non-permanent B2 reference."
                         )
-                    if not storage_service.b2_provider.verify_object_integrity(product.storage_path):
+                    if not storage_service.b2_provider.verify_object_integrity(cast(str, product.storage_path)):
                         raise HTTPException(
                             status_code=500,
                             detail=f"Physical object verification failed for digital file '{product.storage_path}'."
@@ -231,7 +231,7 @@ class ProductService:
             if user:
                 ActivityLogService.log_user_activity(
                     db=db,
-                    user_id=user.id,
+                    user_id=cast(int, user.id),
                     activity_type="upload_product",
                     details=f"Uploaded product '{title}' (ID {product.id})."
                 )
@@ -281,7 +281,7 @@ class ProductService:
         new_files_to_delete = []
         
         try:
-            slug = _slugify(update_data.get("title", product.title))
+            slug = _slugify(update_data.get("title", getattr(product, "title")))
             display_name = f"{slug if slug else 'product'}-{product_id}"
 
             # Handle digital file change
@@ -290,7 +290,7 @@ class ProductService:
                 if new_file:
                     if _is_external_url(new_file):
                         # External URL (pCloud, S3, etc.) - store directly
-                        product.file_url = new_file
+                        setattr(product, "file_url", new_file)
                     elif "/products/" not in new_file:
                         # New temporary local upload - move to permanent storage
                         if product.storage_path:
@@ -304,19 +304,19 @@ class ProductService:
                             is_image=False,
                             asset_type="file"
                         )
-                        product.storage_path = new_storage_path
-                        product.file_url = perm_url
+                        setattr(product, "storage_path", new_storage_path)
+                        setattr(product, "file_url", perm_url)
                         new_files_to_delete.append(new_storage_path)
                     else:
                         # Already-permanent local path
-                        product.file_url = new_file
+                        setattr(product, "file_url", new_file)
 
             # Handle preview image change
             if "preview" in update_data and update_data["preview"] != product.preview:
                 new_preview = update_data["preview"]
                 if new_preview:
                     if _is_external_url(new_preview):
-                        product.preview = new_preview
+                        setattr(product, "preview", new_preview)
                     elif "/products/" not in new_preview:
                         if product.preview_path:
                             old_files_to_delete.append(product.preview_path)
@@ -328,18 +328,18 @@ class ProductService:
                             is_image=True,
                             asset_type="preview"
                         )
-                        product.preview_path = new_preview_path
-                        product.preview = perm_preview
+                        setattr(product, "preview_path", new_preview_path)
+                        setattr(product, "preview", perm_preview)
                         new_files_to_delete.append(new_preview_path)
                     else:
-                        product.preview = new_preview
+                        setattr(product, "preview", new_preview)
 
             # Handle thumbnail image change
             if "thumbnail" in update_data and update_data["thumbnail"] != product.thumbnail:
                 new_thumb = update_data["thumbnail"]
                 if new_thumb:
                     if _is_external_url(new_thumb):
-                        product.thumbnail = new_thumb
+                        setattr(product, "thumbnail", new_thumb)
                     elif "/products/" not in new_thumb:
                         if product.thumbnail_path:
                             old_files_to_delete.append(product.thumbnail_path)
@@ -351,16 +351,17 @@ class ProductService:
                             is_image=True,
                             asset_type="thumbnail"
                         )
-                        product.thumbnail_path = new_thumbnail_path
-                        product.thumbnail = perm_thumbnail
+                        setattr(product, "thumbnail_path", new_thumbnail_path)
+                        setattr(product, "thumbnail", perm_thumbnail)
                         new_files_to_delete.append(new_thumbnail_path)
                     else:
-                        product.thumbnail = new_thumb
+                        setattr(product, "thumbnail", new_thumb)
 
             # Price drop check
             price_dropped = False
-            old_price = product.price
-            new_price = update_data.get("price")
+            old_price = float(getattr(product, "price"))
+            raw_new_price = update_data.get("price")
+            new_price = float(raw_new_price) if raw_new_price is not None else None
             if new_price is not None and new_price < old_price:
                 price_dropped = True
 
@@ -375,7 +376,7 @@ class ProductService:
                 if field in update_data:
                     setattr(product, field, update_data[field])
 
-            if price_dropped:
+            if price_dropped and new_price is not None and old_price is not None:
                 # Trigger price alerts
                 discount_percent = int(((old_price - new_price) / old_price) * 100)
                 from app.models.price_alert import PriceAlert
@@ -390,13 +391,13 @@ class ProductService:
                     msg = f"'{product.title}' has dropped from ?{int(old_price * 80)} to ?{int(new_price * 80)} ({discount_percent}% OFF)."
                     NotificationService.create_notification(
                         db=db,
-                        user_id=alert.user_id,
+                        user_id=int(getattr(alert, "user_id")),
                         title="Price Drop Alert! ?",
                         message=msg,
                         category="price_drop"
                     )
-                    alert.original_price = new_price
-                    alert.target_price = new_price * 0.9
+                    setattr(alert, "original_price", new_price)
+                    setattr(alert, "target_price", new_price * 0.9)
                     db.add(alert)
 
             from app.models.user import User
@@ -404,7 +405,7 @@ class ProductService:
             if user:
                 ActivityLogService.log_user_activity(
                     db=db,
-                    user_id=user.id,
+                    user_id=int(getattr(user, "id")),
                     activity_type="edit_product",
                     details=f"Edited product '{product.title}' (ID {product.id})."
                 )
@@ -425,7 +426,7 @@ class ProductService:
             # Structured log
             from app.utils.logger import log_structured_event
             log_structured_event(
-                user_id=user.id if user else None,
+                user_id=int(getattr(user, "id")) if user else None,
                 role="vendor",
                 action="product_updated",
                 module="products",
@@ -460,14 +461,14 @@ class ProductService:
 
         try:
             # Soft Delete / Archive product
-            product.status = "archived"
+            setattr(product, "status", "archived")
             
             from app.models.user import User
             user = db.query(User).filter(User.firebase_uid == vendor_id).first()
             if user:
                 ActivityLogService.log_user_activity(
                     db=db,
-                    user_id=user.id,
+                    user_id=int(getattr(user, "id")),
                     activity_type="archive_product",
                     details=f"Archived/deleted product '{product.title}' (ID {product.id})."
                 )
@@ -477,7 +478,7 @@ class ProductService:
             # Structured log
             from app.utils.logger import log_structured_event
             log_structured_event(
-                user_id=user.id if user else None,
+                user_id=int(getattr(user, "id")) if user else None,
                 role="vendor",
                 action="product_archived",
                 module="products",
@@ -526,7 +527,7 @@ class ProductService:
         return True
 
     @staticmethod
-    def _resolve_media_url(url: Optional[str], category: str = None) -> Optional[str]:
+    def _resolve_media_url(url: Optional[str], category: Optional[str] = None) -> Optional[str]:
         if not url:
             return None
             

@@ -64,7 +64,7 @@ class NotificationService:
         if vendor_user:
             NotificationService.create_notification(
                 db=db,
-                user_id=vendor_user.id,
+                user_id=int(vendor_user.id),
                 title="Product Sold ?",
                 message=msg,
                 category="purchase"
@@ -79,7 +79,7 @@ class NotificationService:
                     "orderId": order_id,
                     "buyerName": buyer_name,
                     "productName": product_name,
-                    "amount": float(amount),
+                    "amount": amount,
                     "type": "sale",
                     "read": False,
                     "createdAt": datetime.now(timezone.utc).isoformat() + "Z"

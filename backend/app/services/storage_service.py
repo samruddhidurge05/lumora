@@ -160,6 +160,8 @@ class FirebaseStorageProvider(BaseStorageProvider):
         return self.client is not None and self.bucket is not None
 
     def upload_file(self, file_bytes: bytes, filename: str, content_type: str, vendor_id: str, is_image: bool = False) -> Dict[str, Any]:
+        if self.bucket is None:
+            raise HTTPException(status_code=503, detail="GCS Storage is unavailable")
         ext = os.path.splitext(filename.lower())[1]
         unique_name = f"{uuid.uuid4()}{ext}"
         blob_path = f"vendors/{vendor_id}/temp/{unique_name}"
@@ -174,6 +176,8 @@ class FirebaseStorageProvider(BaseStorageProvider):
         }
 
     def move_file(self, source_path: str, target_path: str) -> str:
+        if self.bucket is None:
+            return ""
         # gs://bucket_name/blob_path
         src_blob_path = source_path.replace(f"gs://{self.bucket_name}/", "")
         dest_blob_path = target_path.replace(f"gs://{self.bucket_name}/", "")
@@ -186,7 +190,7 @@ class FirebaseStorageProvider(BaseStorageProvider):
         return ""
 
     def delete_file(self, storage_path: str) -> bool:
-        if not storage_path:
+        if not storage_path or self.bucket is None:
             return False
         blob_path = storage_path.replace(f"gs://{self.bucket_name}/", "")
         blob = self.bucket.blob(blob_path)
@@ -199,6 +203,8 @@ class FirebaseStorageProvider(BaseStorageProvider):
         return False
 
     def get_file_stream(self, storage_path: str) -> Generator[bytes, None, None]:
+        if self.bucket is None:
+            raise HTTPException(status_code=503, detail="GCS Storage is unavailable")
         blob_path = storage_path.replace(f"gs://{self.bucket_name}/", "")
         blob = self.bucket.blob(blob_path)
         if not blob.exists():
@@ -206,11 +212,15 @@ class FirebaseStorageProvider(BaseStorageProvider):
         
         # Download bytes in chunks
         with blob.open("rb") as f:
-            while chunk := f.read(8192):
-                yield chunk
+            while True:
+                chunk = f.read(8192)
+                if not chunk:
+                    break
+                if isinstance(chunk, bytes):
+                    yield chunk
 
     def exists(self, storage_path: str) -> bool:
-        if not storage_path:
+        if not storage_path or self.bucket is None:
             return False
         blob_path = storage_path.replace(f"gs://{self.bucket_name}/", "")
         blob = self.bucket.blob(blob_path)
@@ -267,7 +277,7 @@ class B2StorageProvider(BaseStorageProvider):
         self.api_url = None
         self.download_url = None
         self.b2_status = "UNAUTHORIZED"
-        self.auth_token_expires_at = 0
+        self.auth_token_expires_at: float = 0.0
         self.cache = B2MetadataCache(default_ttl=300)
         
         if self.key_id and self.app_key:
@@ -277,7 +287,7 @@ class B2StorageProvider(BaseStorageProvider):
         url = "https://api.backblazeb2.com/b2api/v2/b2_authorize_account"
         self.cache.total_b2_requests += 1
         try:
-            resp = requests.get(url, auth=(self.key_id, self.app_key), timeout=10)
+            resp = requests.get(url, auth=(self.key_id or "", self.app_key or ""), timeout=10)
             if resp.status_code == 200:
                 data = resp.json()
                 self.auth_token = data.get("authorizationToken")
@@ -310,6 +320,8 @@ class B2StorageProvider(BaseStorageProvider):
         return bool(self.auth_token and self.api_url and self.bucket_id and self.b2_status == "AUTHORIZED")
 
     def _ensure_auth(self):
+        if self.b2_status == "TRANSACTION_CAP_EXCEEDED":
+            return
         if not self.is_available() or time.time() >= self.auth_token_expires_at:
             self._authorize()
 
@@ -645,6 +657,8 @@ def _is_test_environment() -> bool:
 
 
 class StorageService:
+    provider: BaseStorageProvider
+
     def __init__(self):
         backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.local_provider = LocalStorageProvider(os.path.join(backend_dir, "uploads"))
@@ -654,6 +668,7 @@ class StorageService:
         bucket_name = os.getenv("R2_BUCKET_NAME") or os.getenv("FIREBASE_STORAGE_BUCKET") or "lumora-e6ddc.appspot.com"
         self.firebase_provider = FirebaseStorageProvider(bucket_name)
         
+        self.provider: BaseStorageProvider
         pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
         if _is_test_environment() and not os.getenv("FORCE_B2_TESTS"):
             self.provider = self.local_provider
@@ -829,8 +844,17 @@ class StorageService:
         try:
             res = self.provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
         except Exception as err:
-            _logger.warning("[StorageService] Active provider upload failed (%s). Falling back to local disk storage.", err)
-            res = self.local_provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
+            if isinstance(self.provider, LocalStorageProvider):
+                _logger.warning("[StorageService] Local provider upload failed (%s). Retrying local storage.", err)
+                res = self.local_provider.upload_file(file_bytes, filename, content_type, vendor_id, is_image)
+            else:
+                _logger.error("[StorageService] Active provider upload failed cleanly (%s). Ephemeral local fallback disabled for production/non-local providers.", err)
+                if isinstance(err, HTTPException):
+                    raise err
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"Active storage provider ({self.provider.__class__.__name__}) is unavailable: {err}"
+                )
         res["hash"] = self.compute_sha256(file_bytes)
         res["content_type"] = content_type
         return res
@@ -888,12 +912,12 @@ class StorageService:
                     )
                     db.add(meta)
                 else:
-                    meta.size_bytes = size_bytes
+                    meta.size_bytes = size_bytes  # type: ignore
                     if checksum_sha256:
-                        meta.checksum_sha256 = checksum_sha256
-                    meta.verification_status = "verified"
-                    meta.verified_at = datetime.utcnow()
-                    meta.version = version
+                        meta.checksum_sha256 = checksum_sha256  # type: ignore
+                    meta.verification_status = "verified"  # type: ignore
+                    meta.verified_at = datetime.utcnow()  # type: ignore
+                    meta.version = version  # type: ignore
                 db.commit()
             except Exception as db_err:
                 db.rollback()
