@@ -1221,12 +1221,47 @@ export default function OrdersManagement() {
                                           setSelectedOrderId(o.id);
                                         }}
                                       >
-                                    <td className="py-4 px-4 text-right">
-                                      <div className="flex flex-col">
-                                        <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
-                                        <span className="text-[8px] text-[#8E6AA8] uppercase font-bold tracking-widest">{getProductType(o)}</span>
-                                      </div>
-                                    </td>
+                                        {/* Checkbox */}
+                                        <td className="py-4 px-5 w-10" onClick={(e) => e.stopPropagation()}>
+                                          <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => handleToggleRowSelection(o.id)}
+                                            className="rounded border-stone-300 accent-[#D8BFE3]"
+                                          />
+                                        </td>
+
+                                        {/* Order ID & Product Snapshot */}
+                                        <td className="py-4 px-4">
+                                          <div className="flex flex-col">
+                                            <span className="font-mono text-[11px] font-bold text-[#2D004D]">
+                                              {o.orderId || o.id?.slice(0, 8)}
+                                            </span>
+                                            <span className="text-[9px] text-[#8E6AA8] truncate max-w-[140px]">
+                                              {getProductName(o)}
+                                            </span>
+                                          </div>
+                                        </td>
+
+                                        {/* Customer */}
+                                        <td className="py-4 px-4">
+                                          <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-[#2D004D]">
+                                              {o.customerName || 'Customer'}
+                                            </span>
+                                            <span className="text-[9px] text-[#8E6AA8] truncate max-w-[140px]">
+                                              {o.customerEmail || '—'}
+                                            </span>
+                                          </div>
+                                        </td>
+
+                                        {/* Value */}
+                                        <td className="py-4 px-4 text-right">
+                                          <div className="flex flex-col">
+                                            <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
+                                            <span className="text-[8px] text-[#8E6AA8] uppercase font-bold tracking-widest">{getProductType(o)}</span>
+                                          </div>
+                                        </td>
 
                                     {/* Status pill with animated glow sweep */}
                                     <td className="py-4 px-4 text-center">
