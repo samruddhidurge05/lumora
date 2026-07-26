@@ -138,6 +138,7 @@ def record_email_event(
     latency_ms: int = 0,
     status_code: Optional[int] = None,
     error_message: Optional[str] = None,
+    message_id: Optional[str] = None,
 ) -> None:
     """Record an append-only entry in the AdminEmailLog audit table."""
     if not invitation_id:
@@ -157,6 +158,7 @@ def record_email_event(
             latency_ms=latency_ms,
             status_code=status_code,
             error_message=error_message,
+            message_id=message_id,
         )
         db.add(log_entry)
         db.commit()
@@ -188,6 +190,10 @@ def _send_raw_with_retry(
     c_id = correlation_id or generate_correlation_id()
     provider = get_email_provider()
 
+    # Generate RFC 5322–compatible Message-ID tied to this job for full traceability
+    from datetime import datetime as _dt
+    _msg_id = f"<{_dt.utcnow().strftime('%Y%m%d%H%M%S')}.{j_id}@lumora.design>"
+
     record_email_event(
         invitation_id=invitation_id,
         event="SENDING",
@@ -196,6 +202,7 @@ def _send_raw_with_retry(
         job_id=j_id,
         correlation_id=c_id,
         attempt=1,
+        message_id=_msg_id,
     )
 
     start_time = time.time()
@@ -218,6 +225,7 @@ def _send_raw_with_retry(
             _log_structured_event("email_dispatch_success", {
                 "job_id": j_id,
                 "correlation_id": c_id,
+                "message_id": _msg_id,
                 "invitation_id": invitation_id,
                 "recipient": to_email,
                 "provider": provider.name,
@@ -234,6 +242,7 @@ def _send_raw_with_retry(
                 attempt=attempt,
                 latency_ms=total_lat,
                 status_code=200,
+                message_id=_msg_id,
             )
             return True, None, total_lat
         else:

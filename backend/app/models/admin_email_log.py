@@ -34,6 +34,7 @@ class AdminEmailLog(Base):
     latency_ms = Column(Integer, nullable=False, default=0)
     status_code = Column(Integer, nullable=True)
     error_message = Column(Text, nullable=True)
+    message_id = Column(String(255), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_utc_now, index=True)
 
     # Relationship back to invitation
@@ -46,6 +47,7 @@ class AdminEmailLog(Base):
             "event": self.event,
             "job_id": self.job_id,
             "correlation_id": self.correlation_id,
+            "message_id": self.message_id,
             "recipient": self.recipient,
             "provider": self.provider,
             "attempt": self.attempt,

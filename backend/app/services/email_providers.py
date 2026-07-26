@@ -6,6 +6,7 @@ Allows swapping transport adapters (Gmail SMTP, SendGrid, Resend, AWS SES, Mock)
 via configuration without changing application business logic.
 """
 from abc import ABC, abstractmethod
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
@@ -114,11 +115,13 @@ class GmailProvider(BaseEmailProvider):
 
         sender_header = f"Lumora Admin <{smtp_from}>" if "<" not in smtp_from else smtp_from
 
+        message_id = f"<{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{job_id}@lumora.design>"
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = sender_header
         msg["To"] = to_email
         msg["Reply-To"] = reply_to
+        msg["Message-ID"] = message_id
         msg["X-Lumora-Job-ID"] = job_id
         msg["X-Lumora-Correlation-ID"] = correlation_id
         msg.attach(MIMEText(text_body, "plain"))
@@ -133,15 +136,15 @@ class GmailProvider(BaseEmailProvider):
                     server.login(smtp_user, smtp_password)
 
                 logger.info(
-                    "[GmailProvider-Sendmail-Trigger] BEFORE_SENDMAIL: invitation_id=%s, TO=%s, Subject='%s', provider=%s, job_id=%s",
-                    invitation_id, to_email, subject, self.name, job_id
+                    "[GmailProvider-Sendmail-Trigger] BEFORE_SENDMAIL: invitation_id=%s, TO=%s, Message-ID=%s, Subject='%s', provider=%s, job_id=%s",
+                    invitation_id, to_email, message_id, subject, self.name, job_id
                 )
                 send_response = server.sendmail(smtp_from, [to_email], msg.as_string())
 
             latency_ms = int((time.time() - start_time) * 1000)
             logger.info(
-                "[GmailProvider-Sendmail-Trigger] AFTER_SENDMAIL: invitation_id=%s, TO=%s, response=%s, latency_ms=%dms",
-                invitation_id, to_email, send_response, latency_ms
+                "[GmailProvider-Sendmail-Trigger] AFTER_SENDMAIL: invitation_id=%s, TO=%s, Message-ID=%s, response=%s, latency_ms=%dms",
+                invitation_id, to_email, message_id, send_response, latency_ms
             )
             return True, None, latency_ms
         except Exception as exc:
