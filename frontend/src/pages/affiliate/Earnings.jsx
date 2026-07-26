@@ -315,11 +315,7 @@ export default function AffiliateEarnings({
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
       <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
-        <div className="aff-breakdown-rate">
-          <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Commission Rate</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#7B3FA0', marginTop: '2px' }}>{commissionRate}%</div>
-        </div>
-        <div className="aff-breakdown-divider" style={{ width: '1px', height: '36px', background: 'rgba(45,0,96,0.07)' }} />
+
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
           { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },

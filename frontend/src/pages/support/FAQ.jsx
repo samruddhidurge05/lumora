@@ -8,7 +8,7 @@ const FAQS = [
   { q: 'What is your refund policy?', a: 'We offer refunds on verified broken file downloads only. Due to the digital nature of products, we cannot accept refunds for change of mind.' },
   { q: 'How do I download my purchases?', a: 'Go to Dashboard → Downloads. All your purchased products will appear there with download buttons.' },
   { q: 'Can I become a creator/seller?', a: 'Absolutely! Register as a Vendor/Creator account and you can upload and sell your digital products on Lumora.' },
-  { q: 'How do affiliate commissions work?', a: 'Affiliates earn 15–30% commission per sale through their referral links. Commissions are approved after order completion and paid out on request.' },
+  { q: 'How do affiliate commissions work?', a: 'Affiliates earn a commission per sale through their referral links. Commissions are approved after order completion and paid out on request.' },
   { q: 'Is my payment information secure?', a: 'Yes. All transactions are processed through PCI-DSS compliant gateways. We never store your card details.' },
 ];
 

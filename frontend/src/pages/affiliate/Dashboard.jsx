@@ -344,7 +344,7 @@ export default function AffiliateDashboardHome({
             Welcome back, {welcomeName}.
           </h1>
           <p style={{ color: 'var(--text-light)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '440px' }}>
-            Share Lumora products and earn up to 30% commission on every sale through your referral link.
+            Share Lumora products and earn commission on every sale through your referral link.
           </p>
           <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <button

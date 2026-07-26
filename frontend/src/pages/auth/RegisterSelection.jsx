@@ -20,7 +20,7 @@ const ROLES = [
   {
     id: 'affiliate',
     title: 'Affiliate',
-    desc: 'Share referral links and earn up to 30% commission.',
+    desc: 'Share referral links and earn commission on every sale.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M11 5L6 9H2v6h4l5 4V5z"/>

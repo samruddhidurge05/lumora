@@ -158,7 +158,7 @@ export default function AffiliateActivation() {
                 }}>
                   {[
                     '✦ Unique referral link to share',
-                    '✦ Earn 20% commission on every sale',
+                    '✦ Earn commission on every sale',
                     '✦ Real-time earnings dashboard',
                     '✦ All existing purchases remain intact',
                   ].map((item, i) => (
