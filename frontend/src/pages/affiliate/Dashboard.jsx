@@ -334,7 +334,7 @@ export default function AffiliateDashboardHome({
         padding: '40px 44px',
         background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'nowrap', gap: '24px', position: 'relative', zIndex: 1,
+        gap: '24px', position: 'relative', zIndex: 1,
       }}>
         <div style={{ position: 'absolute', top: '-60px', right: '80px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,181,253,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
@@ -781,7 +781,12 @@ export default function AffiliateDashboardHome({
       </div>
 
       <style>{`
-        @media (max-width: 860px) { .aff-two-col { grid-template-columns: 1fr !important; } }
+        .aff-hero-banner { flex-wrap: nowrap !important; }
+        @media (max-width: 860px) { 
+          .aff-two-col { grid-template-columns: 1fr !important; } 
+          .aff-hero-banner { flex-wrap: wrap !important; justify-content: center !important; padding: 24px 20px !important; }
+          .aff-hero-widget { width: 100% !important; min-width: unset !important; }
+        }
       `}</style>
     </div>
   );
