@@ -13,6 +13,7 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import PolicyBanner from '../../components/policy/PolicyBanner';
+import ProtectedPreviewViewer from '../../components/product/ProtectedPreviewViewer';
 
 
 /* ─── FILTER TAB BASE ───────────────────────────────────────── */
@@ -1261,92 +1262,96 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
               )}
 
               {!loading && !errorMsg && (viewerMode === 'visual' || previewType === 'package' || !previewUrl) && (
-                <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#181524', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '820px', width: '100%', boxShadow: '0 25px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(196,181,253,0.3)' }}>
-                    
-                    {/* Visual Document Showcase Canvas */}
-                    <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                      <div style={{
-                        position: 'relative', display: 'inline-block', borderRadius: '18px', overflow: 'hidden',
-                        boxShadow: '0 20px 50px rgba(45,30,24,0.3)', border: '1px solid rgba(78,59,49,0.12)',
-                        background: '#FAF7F2', padding: '12px'
-                      }}>
-                        <img
-                          src={product.thumbnail || product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
-                          alt={product.name}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
-                          }}
-                          style={{ maxHeight: '340px', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
-                        />
+                <ProtectedPreviewViewer productTitle={product.name} style={{ width: '100%', height: '100%' }}>
+                  <div style={{ padding: '32px', width: '100%', height: '100%', overflowY: 'auto', background: '#181524', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '24px', padding: '36px 40px', maxWidth: '820px', width: '100%', boxShadow: '0 25px 70px rgba(0,0,0,0.4)', border: '1px solid rgba(196,181,253,0.3)' }}>
+                      
+                      {/* Visual Document Showcase Canvas */}
+                      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
                         <div style={{
-                          position: 'absolute', bottom: '20px', right: '20px',
-                          background: 'rgba(12,10,18,0.85)', backdropFilter: 'blur(10px)',
-                          color: '#FFFDF9', fontSize: '0.7rem', fontWeight: 800,
-                          padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.05em'
+                          position: 'relative', display: 'inline-block', borderRadius: '18px', overflow: 'hidden',
+                          boxShadow: '0 20px 50px rgba(45,30,24,0.3)', border: '1px solid rgba(78,59,49,0.12)',
+                          background: '#FAF7F2', padding: '12px'
                         }}>
-                          ✦ Online Inspection View
+                          <img
+                            src={product.thumbnail || product.preview || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80'}
+                            alt={product.name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80';
+                            }}
+                            style={{ maxHeight: '340px', width: 'auto', objectFit: 'contain', borderRadius: '12px' }}
+                          />
+                          <div style={{
+                            position: 'absolute', bottom: '20px', right: '20px',
+                            background: 'rgba(12,10,18,0.85)', backdropFilter: 'blur(10px)',
+                            color: '#FFFDF9', fontSize: '0.7rem', fontWeight: 800,
+                            padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.05em'
+                          }}>
+                            ✦ Online Inspection View
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: '260px' }}>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          {product.category || 'Digital Asset'} • {product.version || 'v1.0.0'}
-                        </span>
-                        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
-                          {product.name}
-                        </h3>
-                        <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
-                          Size: <strong>{product.fileSize || 'Available'}</strong> • Updated: <strong>{product.lastUpdated || 'Recently'}</strong>
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '260px' }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5A1E7E', background: 'rgba(123,63,160,0.1)', padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            {product.category || 'Digital Asset'} • {product.version || 'v1.0.0'}
+                          </span>
+                          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-espresso)', margin: '10px 0 6px' }}>
+                            {product.name}
+                          </h3>
+                          <p style={{ fontSize: '0.82rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500 }}>
+                            Size: <strong>{product.fileSize || 'Available'}</strong> • Updated: <strong>{product.lastUpdated || 'Recently'}</strong>
+                          </p>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {product.compatibility && product.compatibility.map(tag => (
+                            <span key={tag} style={{
+                              fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px',
+                              borderRadius: '8px', background: 'rgba(123,63,160,0.08)',
+                              color: '#5A1E7E', border: '1px solid rgba(123,63,160,0.18)'
+                            }}>{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                          <Shield size={20} style={{ color: '#3DB877' }} />
+                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#276749' }}>
+                            Online Inspection Mode Verified — Refund Eligibility Intact
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#2F855A', lineHeight: 1.6, margin: 0 }}>
+                          You are inspecting <strong>{product.name}</strong> online. Inspecting this document or asset online preserves your standard refund eligibility. To save the complete file package to your device, click the <strong>Download Product</strong> button.
                         </p>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {product.compatibility && product.compatibility.map(tag => (
-                          <span key={tag} style={{
-                            fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px',
-                            borderRadius: '8px', background: 'rgba(123,63,160,0.08)',
-                            color: '#5A1E7E', border: '1px solid rgba(123,63,160,0.18)'
-                          }}>{tag}</span>
-                        ))}
+                      <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <button
+                          onClick={() => setIsPreviewOpen(false)}
+                          style={{ padding: '11px 22px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
+                        >
+                          Close Preview
+                        </button>
+                        <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
                       </div>
-                    </div>
 
-                    <div style={{ background: 'rgba(61,184,119,0.06)', borderRadius: '18px', padding: '20px 24px', border: '1px solid rgba(61,184,119,0.22)', marginBottom: '24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                        <Shield size={20} style={{ color: '#3DB877' }} />
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#276749' }}>
-                          Online Inspection Mode Verified — Refund Eligibility Intact
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', color: '#2F855A', lineHeight: 1.6, margin: 0 }}>
-                        You are inspecting <strong>{product.name}</strong> online. Inspecting this document or asset online preserves your standard refund eligibility. To save the complete file package to your device, click the <strong>Download Product</strong> button.
-                      </p>
                     </div>
-
-                    <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <button
-                        onClick={() => setIsPreviewOpen(false)}
-                        style={{ padding: '11px 22px', borderRadius: '12px', background: 'rgba(78,59,49,0.08)', border: 'none', color: 'var(--color-espresso)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
-                      >
-                        Close Preview
-                      </button>
-                      <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
-                    </div>
-
                   </div>
-                </div>
+                </ProtectedPreviewViewer>
               )}
 
               {!loading && !errorMsg && viewerMode === 'stream' && previewUrl && (
-                <iframe
-                  src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-                  title={`PDF Web Viewer ${product.name}`}
-                  style={{ width: '100%', height: '100%', border: 'none', background: '#FFFFFF' }}
-                />
+                <ProtectedPreviewViewer productTitle={product.name} style={{ width: '100%', height: '100%' }}>
+                  <iframe
+                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                    title={`PDF Web Viewer ${product.name}`}
+                    style={{ width: '100%', height: '100%', border: 'none', background: '#FFFFFF' }}
+                  />
+                </ProtectedPreviewViewer>
               )}
             </div>
 

@@ -11,6 +11,8 @@ import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { ProductQrButton } from '../../components/product/ProductQrCode';
 import { calculateCommission } from '../../utils/referralUtils';
+import ProtectedPreviewViewer from '../../components/product/ProtectedPreviewViewer';
+
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -3260,36 +3262,38 @@ function ProductPreviewModal({ product, onClose }) {
         
         {/* Left Side: Cinematic Media Block */}
         <div className="w-full md:w-1/2 bg-[#1a0a2e] relative flex flex-col justify-center min-h-[300px] md:min-h-[500px]">
-          {product.videoUrl ? (
-            <video 
-              src={product.videoUrl} 
-              className="w-full h-full object-cover absolute inset-0"
-              autoPlay
-              loop
-              muted
-              controls
-            />
-          ) : (product.thumbnail || product.preview) ? (
-            <img 
-              src={product.thumbnail || product.preview}
-              alt={product.name} 
-              className="w-full h-full object-cover absolute inset-0"
-              onError={(e) => {
-                // thumbnail path missing on disk — fall through to preview, then placeholder
-                if (e.target.src !== (product.preview || '') && product.preview && e.target.src !== product.preview) {
-                  e.target.src = product.preview;
-                } else {
-                  e.target.style.display = 'none';
-                }
-              }}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[#4a2060] text-xs font-bold uppercase tracking-widest opacity-40">No Image</span>
-            </div>
-          )}
+          <ProtectedPreviewViewer productTitle={product.name || 'Product Preview'} style={{ height: '100%', width: '100%' }}>
+            {product.videoUrl ? (
+              <video 
+                src={product.videoUrl} 
+                className="w-full h-full object-cover absolute inset-0"
+                autoPlay
+                loop
+                muted
+                controls
+              />
+            ) : (product.thumbnail || product.preview) ? (
+              <img 
+                src={product.thumbnail || product.preview}
+                alt={product.name} 
+                className="w-full h-full object-cover absolute inset-0"
+                onError={(e) => {
+                  // thumbnail path missing on disk — fall through to preview, then placeholder
+                  if (e.target.src !== (product.preview || '') && product.preview && e.target.src !== product.preview) {
+                    e.target.src = product.preview;
+                  } else {
+                    e.target.style.display = 'none';
+                  }
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[#4a2060] text-xs font-bold uppercase tracking-widest opacity-40">No Image</span>
+              </div>
+            )}
+          </ProtectedPreviewViewer>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" style={{ zIndex: 10 }} />
           
           <div className="absolute bottom-6 left-6 z-10">
             <span className="px-3 py-1 rounded-full bg-[#D8BFE3]/30 text-white text-[9px] font-bold tracking-widest uppercase block mb-2 w-max">

@@ -110,9 +110,6 @@ export default function AffiliateEarnings({
   /* Available balance = approved (ready to withdraw) commissions */
   const availableBalance = approvedEarnings;
 
-  /* Commission rate from profile */
-  const commissionRate = profile?.commission_rate ?? 20;
-
   /* ── Monthly chart ──────────────────────────────────────────────────── */
   const monthlyEarnings = useMemo(() => buildMonthlyChart(activeCommissions), [activeCommissions]);
   const monthLabels     = useMemo(() => buildMonthLabels(), []);
@@ -130,8 +127,7 @@ export default function AffiliateEarnings({
     return m;
   }, [activeCommissions]);
 
-  /* ── YoY growth hint (best-effort from chart data) ────────────────────
-     Compare current month vs same month last year (first bar).            */
+  /* ── YoY growth hint (best-effort from chart data) ──────────────────── */
   const yoyLabel = useMemo(() => {
     const curr = monthlyEarnings[11];
     const prev = monthlyEarnings[0];
@@ -180,25 +176,25 @@ export default function AffiliateEarnings({
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
         {/* Header skeleton */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <div className="premium-flat-card" style={{ width: '120px', height: '12px', borderRadius: '6px', marginBottom: '10px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
-            <div className="premium-flat-card" style={{ width: '240px', height: '28px', borderRadius: '8px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
+            <div className="premium-flat-card" style={{ width: '200px', height: '24px', borderRadius: '8px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
           </div>
-          <div className="premium-flat-card" style={{ width: '180px', height: '44px', borderRadius: '12px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
+          <div className="premium-flat-card" style={{ width: '160px', height: '44px', borderRadius: '12px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
         </div>
         {/* Stat cards skeleton */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: '12px' }}>
           {[1,2,3,4].map(i => (
-            <div key={i} className="premium-flat-card" style={{ height: '90px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
+            <div key={i} className="premium-flat-card" style={{ height: '84px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
           ))}
         </div>
         {/* Chart skeleton */}
-        <div className="premium-flat-card" style={{ height: '240px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
+        <div className="premium-flat-card" style={{ height: '220px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
         {/* Table skeleton */}
-        <div className="premium-flat-card" style={{ height: '320px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
+        <div className="premium-flat-card" style={{ height: '300px', borderRadius: '16px', animation: 'skeletonPulse 1.4s ease-in-out infinite' }} />
         <style>{`@keyframes skeletonPulse { 0%,100%{opacity:.6} 50%{opacity:1} }`}</style>
       </div>
     );
@@ -211,9 +207,10 @@ export default function AffiliateEarnings({
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        minHeight: '320px', gap: '16px', padding: '48px',
+        minHeight: '280px', gap: '16px', padding: 'clamp(24px, 5vw, 48px)',
         background: 'rgba(255,255,255,0.70)', backdropFilter: 'blur(20px)',
         border: '1px solid rgba(239,68,68,0.18)', borderRadius: '20px', textAlign: 'center',
+        width: '100%', boxSizing: 'border-box'
       }}>
         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626' }}>
           <AlertCircle size={22} />
@@ -225,7 +222,7 @@ export default function AffiliateEarnings({
         {refresh && (
           <button
             onClick={refresh}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', boxShadow: '0 4px 14px rgba(123,63,160,0.35)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-sans)', boxShadow: '0 4px 14px rgba(123,63,160,0.35)', minHeight: '44px' }}
           >
             <RefreshCw size={13} /> Try Again
           </button>
@@ -238,20 +235,22 @@ export default function AffiliateEarnings({
      MAIN RENDER
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   return (
-    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' }}>
+    <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 2.5vw, 28px)', position: 'relative', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div className="aff-earnings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
+      <div className="aff-earnings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '14px', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Financial Overview</span>
-          <h2 className="text-editorial" style={{ fontSize: '2.2rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Earnings &amp; Payouts</h2>
+          <h2 className="text-editorial" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.15, wordBreak: 'break-word' }}>
+            Earnings &amp; Payouts
+          </h2>
         </div>
-        <div className="aff-earnings-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="aff-earnings-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {refresh && (
             <button
               onClick={refresh}
-              title="Refresh"
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.30)', background: 'rgba(255,255,255,0.70)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s' }}
+              title="Refresh Data"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '42px', height: '42px', minHeight: '42px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.30)', background: 'rgba(255,255,255,0.70)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(123,63,160,0.35)'; e.currentTarget.style.color = '#7B3FA0'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(196,181,253,0.30)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
             >
@@ -261,7 +260,7 @@ export default function AffiliateEarnings({
           <button
             onClick={() => setShowWithdrawal(true)}
             className="aff-withdrawal-btn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 24px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 20px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}
           >
             <ArrowUpRight size={14} /> Request Withdrawal
           </button>
@@ -269,7 +268,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── STAT CARDS ─────────────────────────────────────────────────────── */}
-      <div className="aff-stat-grid" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="aff-stat-grid" style={{ position: 'relative', zIndex: 1, width: '100%', boxSizing: 'border-box' }}>
         {[
           {
             label: 'Total Earnings',
@@ -300,11 +299,11 @@ export default function AffiliateEarnings({
             sub: 'Awaiting approval',
           },
         ].map((s, i) => (
-          <div key={i} className="premium-flat-card aff-earnings-stat-card" style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-              <div className="aff-stat-value" style={{ fontSize: '1.7rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1 }}>{s.value}</div>
-              <span style={{ fontSize: '0.68rem', color: 'var(--text-light)', display: 'block', marginTop: '6px', fontWeight: 500 }}>{s.sub}</span>
+          <div key={i} className="premium-flat-card aff-earnings-stat-card" style={{ padding: 'clamp(14px, 2.5vw, 22px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0, boxSizing: 'border-box' }}>
+            <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
+              <div className="aff-stat-value" style={{ fontSize: 'clamp(1.15rem, 3.5vw, 1.7rem)', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.value}</div>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-light)', display: 'block', marginTop: '4px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sub}</span>
             </div>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)', color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {s.icon}
@@ -314,79 +313,80 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
-      <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
-
+      <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
           { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },
           { label: 'Approved',          value: countByStatus.approved, color: '#4338CA' },
           { label: 'Pending',           value: countByStatus.pending,  color: '#B45309' },
         ].map((item, i) => (
-          <div key={i}>
-            <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</span>
-            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: item.color || 'var(--text-primary)', marginTop: '2px' }}>{item.value}</div>
+          <div key={i} className="aff-breakdown-item" style={{ minWidth: 0 }}>
+            <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{item.label}</span>
+            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: item.color || 'var(--text-primary)', marginTop: '2px' }}>{item.value}</div>
           </div>
         ))}
-        <div className="aff-breakdown-available" style={{ marginLeft: 'auto', textAlign: 'right' }}>
-          <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Available to Withdraw</span>
-          <div style={{ fontSize: '1.3rem', fontWeight: 700, color: availableBalance > 0 ? '#15803D' : 'var(--text-muted)', marginTop: '2px' }}>
+        <div className="aff-breakdown-available" style={{ marginLeft: 'auto', textAlign: 'right', minWidth: 0 }}>
+          <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>Available to Withdraw</span>
+          <div style={{ fontSize: '1.25rem', fontWeight: 700, color: availableBalance > 0 ? '#15803D' : 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             {formatINR(availableBalance)}
           </div>
         </div>
       </div>
 
       {/* ── MONTHLY CHART ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-chart-card" style={{ padding: '28px' }}>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="premium-flat-card aff-chart-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Trends</span>
-            <h3 className="text-editorial" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Monthly Earnings</h3>
+            <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Monthly Earnings</h3>
           </div>
           {yoyLabel && chartTotal > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#15803D', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.22)', padding: '5px 12px', borderRadius: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 600, color: '#15803D', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.22)', padding: '4px 10px', borderRadius: '20px' }}>
               <TrendingUp size={12} /> {yoyLabel}
             </div>
           )}
         </div>
 
         {chartTotal === 0 ? (
-          <div style={{ height: '160px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', border: '1px dashed rgba(196,181,253,0.40)', borderRadius: '12px' }}>
+          <div style={{ height: '160px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', border: '1px dashed rgba(196,181,253,0.40)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
             <BarChart2 size={32} style={{ color: 'rgba(196,181,253,0.70)' }} />
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>No commission data yet — your monthly chart will appear here</span>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '160px' }}>
-            {monthlyEarnings.map((val, i) => {
-              const pct       = (val / chartMax) * 100;
-              const isHighest = val === chartMax && val > 0;
-              const isCurrent = i === currentMonthIdx;
-              return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end' }}>
-                  <div
-                    title={`${monthLabels[i]}: ${formatINR(val)}`}
-                    style={{
-                      width: '100%',
-                      height: `${Math.max(pct, val > 0 ? 4 : 0)}%`,
-                      minHeight: val > 0 ? '4px' : '2px',
-                      borderRadius: '6px 6px 3px 3px',
-                      background: (isHighest || isCurrent)
-                        ? 'linear-gradient(180deg,#7B3FA0,#5A1E7E)'
-                        : val > 0
-                          ? 'rgba(196,181,253,0.50)'
-                          : 'rgba(196,181,253,0.15)',
-                      border: (isHighest || isCurrent)
-                        ? '1px solid rgba(123,63,160,0.30)'
-                        : '1px solid rgba(196,181,253,0.20)',
-                      transition: 'all 0.3s',
-                      cursor: 'default',
-                    }}
-                  />
-                  <span style={{ fontSize: '0.55rem', fontWeight: 600, color: (isHighest || isCurrent) ? '#7B3FA0' : 'var(--text-muted)' }}>
-                    {monthLabels[i]}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="aff-chart-wrapper" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', paddingBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(3px, 1.2vw, 8px)', height: '160px', minWidth: '280px', width: '100%' }}>
+              {monthlyEarnings.map((val, i) => {
+                const pct       = (val / chartMax) * 100;
+                const isHighest = val === chartMax && val > 0;
+                const isCurrent = i === currentMonthIdx;
+                return (
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end', minWidth: '18px' }}>
+                    <div
+                      title={`${monthLabels[i]}: ${formatINR(val)}`}
+                      style={{
+                        width: '100%',
+                        height: `${Math.max(pct, val > 0 ? 4 : 0)}%`,
+                        minHeight: val > 0 ? '4px' : '2px',
+                        borderRadius: '6px 6px 3px 3px',
+                        background: (isHighest || isCurrent)
+                          ? 'linear-gradient(180deg,#7B3FA0,#5A1E7E)'
+                          : val > 0
+                            ? 'rgba(196,181,253,0.50)'
+                            : 'rgba(196,181,253,0.15)',
+                        border: (isHighest || isCurrent)
+                          ? '1px solid rgba(123,63,160,0.30)'
+                          : '1px solid rgba(196,181,253,0.20)',
+                        transition: 'all 0.3s',
+                        cursor: 'default',
+                      }}
+                    />
+                    <span style={{ fontSize: 'clamp(0.50rem, 1.5vw, 0.58rem)', fontWeight: 600, color: (isHighest || isCurrent) ? '#7B3FA0' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      {monthLabels[i]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -396,16 +396,16 @@ export default function AffiliateEarnings({
         </div>
       </div>
 
-      {/* ── COMMISSION TABLE ─────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-table-card" style={{ padding: '28px', overflow: 'hidden' }}>
+      {/* ── COMMISSION LOG ───────────────────────────────────────────────────── */}
+      <div className="premium-flat-card aff-table-card" style={{ padding: 'clamp(16px, 3vw, 28px)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Commission Log</span>
-            <h3 className="text-editorial" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Commission History</h3>
+            <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Commission History</h3>
           </div>
 
           {/* Filter tabs */}
-          <div className="aff-filter-tabs" style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)' }}>
+          <div className="aff-filter-tabs" style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
             {['all','pending','approved','paid'].map(s => (
               <button
                 key={s}
@@ -419,6 +419,8 @@ export default function AffiliateEarnings({
                   transition: 'all 0.2s',
                   textTransform: 'capitalize',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  minHeight: '34px',
                 }}
               >
                 {s}{countByStatus[s] > 0 && s !== 'all' && (
@@ -429,8 +431,8 @@ export default function AffiliateEarnings({
           </div>
         </div>
 
-        <div className="aff-table-wrap" style={{ minWidth: 0 }}>
-          {/* Header */}
+        {/* Desktop 8-column Table View (Hidden on mobile via CSS) */}
+        <div className="aff-table-wrap aff-desktop-only" style={{ minWidth: 0, width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
             {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
               <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
@@ -490,17 +492,93 @@ export default function AffiliateEarnings({
             </div>
           )}
         </div>
+
+        {/* Mobile Responsive Card Rows View (Visible on mobile <768px via CSS) */}
+        <div className="aff-commission-mobile-cards aff-mobile-only" style={{ width: '100%' }}>
+          {filtered.length > 0 ? (
+            filtered.map((row) => {
+              const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
+              return (
+                <div key={row.id} className="aff-commission-mobile-card" style={{
+                  padding: '14px 16px',
+                  borderRadius: '14px',
+                  background: 'rgba(255,255,255,0.60)',
+                  border: '1px solid rgba(123,63,160,0.12)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                }}>
+                  {/* Top row: Product & Status */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.3, flex: 1, wordBreak: 'break-word' }}>
+                      {row.product}
+                    </div>
+                    <span style={{
+                      display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
+                      background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0
+                    }}>
+                      {st.label}
+                    </span>
+                  </div>
+
+                  {/* Financials: Commission & Sale Price */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: 'rgba(123,63,160,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
+                    <div>
+                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Commission</span>
+                      <span style={{ fontSize: '1rem', fontWeight: 800, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Sale Price</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
+                    </div>
+                  </div>
+
+                  {/* Meta details */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem', borderTop: '1px solid rgba(45,0,96,0.05)', paddingTop: '8px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Date & Order</span>
+                      <span style={{ fontWeight: 500, color: 'var(--text-light)', display: 'block' }}>{formatDate(row.date)}</span>
+                      <span style={{ fontWeight: 700, color: '#7B3FA0', fontSize: '0.72rem', display: 'block' }}>{row.orderId}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Customer & Source</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                      <span style={{ fontSize: '0.70rem', color: '#2D004D', fontWeight: 700, display: 'block' }}>
+                        {row.referralCode} ({row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ padding: '32px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.5)', borderRadius: '14px', border: '1px dashed rgba(196,181,253,0.4)' }}>
+              <DollarSign size={28} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '8px' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {activeCommissions.length === 0
+                  ? 'Share your referral link to start earning commissions.'
+                  : 'Try a different filter to see other commissions.'}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── RECENT PAYOUTS ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-payout-card" style={{ padding: '28px' }}>
+      <div className="premium-flat-card aff-payout-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ marginBottom: '20px' }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
-          <h3 className="text-editorial" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Payout Requests</h3>
+          <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Payout Requests</h3>
         </div>
 
         {activePayouts.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
+          <div style={{ padding: '36px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
             <Wallet size={30} style={{ color: 'rgba(196,181,253,0.70)', marginBottom: '10px' }} />
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>No payout requests yet</div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -508,42 +586,78 @@ export default function AffiliateEarnings({
             </div>
           </div>
         ) : (
-          <div className="aff-table-wrap" style={{ minWidth: 0 }}>
-            {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
-              {['Date', 'Amount', 'Method', 'Status'].map(h => (
-                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-              ))}
+          <>
+            {/* Desktop Payout Table (Hidden on mobile <640px via CSS) */}
+            <div className="aff-table-wrap aff-payout-desktop-only" style={{ minWidth: 0, width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
+                {['Date', 'Amount', 'Method', 'Status'].map(h => (
+                  <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+                ))}
+              </div>
+              {activePayouts.map((p, idx) => {
+                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                return (
+                  <div
+                    key={p.id}
+                    style={{
+                      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                      gap: '12px', padding: '13px 16px',
+                      borderRadius: '10px', minWidth: '480px',
+                      borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
+                      transition: 'background 0.2s',
+                      alignItems: 'center',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
+                    <div>
+                      <span style={{
+                        display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
+                        background: st.bg, border: `1px solid ${st.border}`, color: st.color,
+                      }}>{st.label}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            {activePayouts.map((p, idx) => {
-              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-                    gap: '12px', padding: '13px 16px',
-                    borderRadius: '10px', minWidth: '480px',
-                    borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
-                    transition: 'background 0.2s',
+
+            {/* Mobile Payout Cards (Visible on mobile <640px via CSS) */}
+            <div className="aff-payout-mobile-cards aff-payout-mobile-only" style={{ width: '100%' }}>
+              {activePayouts.map((p) => {
+                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                return (
+                  <div key={p.id} style={{
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.60)',
+                    border: '1px solid rgba(123,63,160,0.12)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
-                  <div>
+                    marginBottom: '8px',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
+                        {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+                      </div>
+                    </div>
                     <span style={{
                       display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
-                      background: st.bg, border: `1px solid ${st.border}`, color: st.color,
-                    }}>{st.label}</span>
+                      background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0
+                    }}>
+                      {st.label}
+                    </span>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
@@ -552,16 +666,18 @@ export default function AffiliateEarnings({
         <div style={{
           position: 'fixed', inset: 0,
           background: 'rgba(45,0,77,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+          overflowY: 'auto'
         }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowWithdrawal(false); }}
         >
           <div className="glass-card" style={{
-            width: '100%', maxWidth: '440px',
-            background: 'rgba(255,255,255,0.94)',
+            width: 'calc(100% - 32px)', maxWidth: '440px',
+            background: 'rgba(255,255,255,0.96)',
             border: '1px solid rgba(123,63,160,0.28)',
             boxShadow: '0 24px 64px rgba(45,0,96,0.22)',
-            padding: '36px', borderRadius: '24px',
+            padding: 'clamp(20px, 5vw, 36px)', borderRadius: '24px',
+            maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box'
           }}>
             {withdrawSuccess ? (
               <div style={{ textAlign: 'center', padding: '12px 0' }}>
@@ -573,9 +689,9 @@ export default function AffiliateEarnings({
               </div>
             ) : (
               <>
-                <div style={{ marginBottom: '24px' }}>
+                <div style={{ marginBottom: '20px' }}>
                   <span className="caption-premium" style={{ color: '#7B3FA0' }}>Withdraw Funds</span>
-                  <h3 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Request Payout</h3>
+                  <h3 className="text-editorial" style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Request Payout</h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '6px' }}>
                     Available balance:{' '}
                     <strong style={{ color: availableBalance > 0 ? '#7B3FA0' : '#B45309' }}>
@@ -617,25 +733,26 @@ export default function AffiliateEarnings({
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleWithdrawal}
                     disabled={submittingWithdraw || availableBalance === 0}
                     style={{
-                      flex: 1, padding: '12px', fontSize: '0.84rem', fontWeight: 700,
+                      flex: 1, padding: '12px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700,
                       borderRadius: '12px', border: 'none',
                       background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff',
                       cursor: (submittingWithdraw || availableBalance === 0) ? 'not-allowed' : 'pointer',
                       opacity: (submittingWithdraw || availableBalance === 0) ? 0.65 : 1,
                       fontFamily: 'var(--font-sans)',
                       boxShadow: '0 4px 16px rgba(123,63,160,0.36)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}
                   >
                     {submittingWithdraw ? 'Submitting…' : 'Confirm'}
                   </button>
                   <button
                     onClick={() => { setShowWithdrawal(false); setWithdrawError(null); setWithdrawAmount(''); }}
-                    style={{ flex: 1, padding: '12px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: '1.5px solid rgba(185,157,216,0.35)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+                    style={{ flex: 1, padding: '12px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: '1.5px solid rgba(185,157,216,0.35)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     Cancel
                   </button>

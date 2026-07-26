@@ -1386,11 +1386,25 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 
 /* ════════════════════════════════════════════════════════════════════
-   AFFILIATE EARNINGS PAGE — Full Mobile Fix
+   AFFILIATE EARNINGS PAGE — Production Mobile & Responsive System
    Uses class names added directly to JSX elements in Earnings.jsx.
-   No attribute selectors. No inline style guessing.
-   Breakpoint: max-width 900px covers all phones + small tablets.
 ════════════════════════════════════════════════════════════════════ */
+
+.aff-desktop-only { display: block !important; }
+.aff-mobile-only { display: none !important; }
+
+.aff-payout-desktop-only { display: block !important; }
+.aff-payout-mobile-only { display: none !important; }
+
+@media (max-width: 767px) {
+  .aff-desktop-only { display: none !important; }
+  .aff-mobile-only { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+}
+
+@media (max-width: 639px) {
+  .aff-payout-desktop-only { display: none !important; }
+  .aff-payout-mobile-only { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+}
 
 /* 1. TOPBAR: Stack "Earnings & Payouts" title + "Request Withdrawal" button */
 @media (max-width: 900px) {
@@ -1414,6 +1428,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     width: 100% !important;
     padding: 11px 16px !important;
     font-size: 0.82rem !important;
+    min-height: 44px !important;
   }
 }
 
@@ -1434,7 +1449,20 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
 }
 
-/* 3. COMMISSION BREAKDOWN STRIP (middle single row with Rate/Total/Paid/Pending/Available) */
+@media (max-width: 480px) {
+  .aff-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .aff-earnings-stat-card {
+    padding: 12px 10px !important;
+  }
+  .aff-stat-value {
+    font-size: 1.15rem !important;
+  }
+}
+
+/* 3. COMMISSION BREAKDOWN STRIP */
 @media (max-width: 900px) {
   .aff-earnings-breakdown {
     display: grid !important;
@@ -1444,13 +1472,13 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     align-items: start !important;
   }
   .aff-breakdown-divider {
-    display: none !important;   /* Hide vertical separator line */
+    display: none !important;
   }
   .aff-breakdown-rate {
-    grid-column: 1 / -1 !important;  /* Commission Rate spans full width */
+    grid-column: 1 / -1 !important;
   }
   .aff-breakdown-available {
-    grid-column: 1 / -1 !important;  /* "Available to Withdraw" spans full width */
+    grid-column: 1 / -1 !important;
     text-align: left !important;
     margin-left: 0 !important;
     border-top: 1px solid rgba(45,0,96,0.08) !important;
