@@ -1386,7 +1386,130 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 
 /* ════════════════════════════════════════════════════════════════════
-   15. VENDOR PAGES  (Tables → Cards on mobile)
+   AFFILIATE EARNINGS PAGE — Full Mobile Fix
+   Uses class names added directly to JSX elements in Earnings.jsx.
+   No attribute selectors. No inline style guessing.
+   Breakpoint: max-width 900px covers all phones + small tablets.
+════════════════════════════════════════════════════════════════════ */
+
+/* 1. TOPBAR: Stack "Earnings & Payouts" title + "Request Withdrawal" button */
+@media (max-width: 900px) {
+  .aff-earnings-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .aff-earnings-header h2 {
+    font-size: 1.8rem !important;
+    line-height: 1.1 !important;
+  }
+  .aff-earnings-header-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .aff-withdrawal-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 11px 16px !important;
+    font-size: 0.82rem !important;
+  }
+}
+
+/* 2. FOUR STAT CARDS: 2×2 grid, compact padding, smaller value font */
+@media (max-width: 900px) {
+  .aff-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .aff-earnings-stat-card {
+    padding: 14px 12px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .aff-stat-value {
+    font-size: 1.3rem !important;
+    line-height: 1 !important;
+  }
+}
+
+/* 3. COMMISSION BREAKDOWN STRIP (middle single row with Rate/Total/Paid/Pending/Available) */
+@media (max-width: 900px) {
+  .aff-earnings-breakdown {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px 10px !important;
+    padding: 16px !important;
+    align-items: start !important;
+  }
+  .aff-breakdown-divider {
+    display: none !important;   /* Hide vertical separator line */
+  }
+  .aff-breakdown-rate {
+    grid-column: 1 / -1 !important;  /* Commission Rate spans full width */
+  }
+  .aff-breakdown-available {
+    grid-column: 1 / -1 !important;  /* "Available to Withdraw" spans full width */
+    text-align: left !important;
+    margin-left: 0 !important;
+    border-top: 1px solid rgba(45,0,96,0.08) !important;
+    padding-top: 12px !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* 4. MONTHLY EARNINGS CHART CARD */
+@media (max-width: 900px) {
+  .aff-chart-card {
+    padding: 20px 16px !important;
+  }
+}
+
+/* 5. COMMISSION HISTORY TABLE CARD + scrollable table inside */
+@media (max-width: 900px) {
+  .aff-table-card {
+    padding: 20px 16px !important;
+    overflow: hidden !important;
+  }
+  .aff-table-card .aff-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* Filter tabs row: horizontal scroll so all 4 fit without wrap */
+  .aff-filter-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+  }
+  .aff-filter-tabs::-webkit-scrollbar { display: none; }
+  .aff-filter-tabs > button {
+    flex-shrink: 0 !important;
+    padding: 6px 10px !important;
+    font-size: 0.68rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* 6. RECENT PAYOUT REQUESTS CARD (last section) */
+@media (max-width: 900px) {
+  .aff-payout-card {
+    padding: 20px 16px !important;
+  }
+  .aff-payout-card .aff-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+}
+
+/* ── END AFFILIATE EARNINGS PAGE ─── */
+
+/* ════════════════════════════════════════════════════════════════════
 ════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   /* Hide standard v-table on mobile */

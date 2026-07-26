@@ -246,7 +246,7 @@ export default function AffiliateEarnings({
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Financial Overview</span>
           <h2 className="text-editorial" style={{ fontSize: '2.2rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Earnings &amp; Payouts</h2>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="aff-earnings-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {refresh && (
             <button
               onClick={refresh}
@@ -260,6 +260,7 @@ export default function AffiliateEarnings({
           )}
           <button
             onClick={() => setShowWithdrawal(true)}
+            className="aff-withdrawal-btn"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 24px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)' }}
           >
             <ArrowUpRight size={14} /> Request Withdrawal
@@ -299,10 +300,10 @@ export default function AffiliateEarnings({
             sub: 'Awaiting approval',
           },
         ].map((s, i) => (
-          <div key={i} className="premium-flat-card" style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div key={i} className="premium-flat-card aff-earnings-stat-card" style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-              <div style={{ fontSize: '1.7rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1 }}>{s.value}</div>
+              <div className="aff-stat-value" style={{ fontSize: '1.7rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1 }}>{s.value}</div>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-light)', display: 'block', marginTop: '6px', fontWeight: 500 }}>{s.sub}</span>
             </div>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)', color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -314,11 +315,11 @@ export default function AffiliateEarnings({
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
       <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
-        <div>
+        <div className="aff-breakdown-rate">
           <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Commission Rate</span>
           <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#7B3FA0', marginTop: '2px' }}>{commissionRate}%</div>
         </div>
-        <div style={{ width: '1px', height: '36px', background: 'rgba(45,0,96,0.07)' }} />
+        <div className="aff-breakdown-divider" style={{ width: '1px', height: '36px', background: 'rgba(45,0,96,0.07)' }} />
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
           { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },
@@ -330,7 +331,7 @@ export default function AffiliateEarnings({
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: item.color || 'var(--text-primary)', marginTop: '2px' }}>{item.value}</div>
           </div>
         ))}
-        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+        <div className="aff-breakdown-available" style={{ marginLeft: 'auto', textAlign: 'right' }}>
           <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Available to Withdraw</span>
           <div style={{ fontSize: '1.3rem', fontWeight: 700, color: availableBalance > 0 ? '#15803D' : 'var(--text-muted)', marginTop: '2px' }}>
             {formatINR(availableBalance)}
@@ -648,119 +649,6 @@ export default function AffiliateEarnings({
           </div>
         </div>
       )}
-
-      {/* ─── Mobile responsive overrides ─── */}
-      <style>{`
-        @keyframes skeletonPulse { 0%,100%{opacity:.6} 50%{opacity:1} }
-
-        @media (max-width: 640px) {
-
-          /* ── Header: stack title above button ── */
-          .aff-earnings-header {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 12px !important;
-          }
-          .aff-earnings-header > div:last-child {
-            width: 100% !important;
-          }
-          .aff-earnings-header > div:last-child > button:last-child {
-            width: 100% !important;
-            justify-content: center !important;
-          }
-
-          /* ── Stat cards: 2 col, compact padding ── */
-          .aff-stat-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 10px !important;
-          }
-          .aff-stat-grid > .premium-flat-card {
-            padding: 14px 12px !important;
-          }
-          .aff-stat-grid > .premium-flat-card > div > div[style] {
-            font-size: 1.3rem !important;
-          }
-
-          /* ── Commission breakdown strip: 2-col grid ── */
-          .aff-earnings-breakdown {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 14px !important;
-            padding: 16px !important;
-          }
-          /* Hide the vertical divider on mobile */
-          .aff-earnings-breakdown > div[style*="width: '1px'"] {
-            display: none !important;
-          }
-          /* Available to withdraw: full row */
-          .aff-earnings-breakdown > div[style*="marginLeft: 'auto'"] {
-            grid-column: 1 / -1 !important;
-            text-align: left !important;
-            margin-left: 0 !important;
-            border-top: 1px solid rgba(45,0,96,0.06) !important;
-            padding-top: 10px !important;
-          }
-
-          /* ── Chart card: reduce height ── */
-          .aff-chart-card {
-            padding: 20px 16px !important;
-          }
-
-          /* ── Commission table card: ensure outer clips ── */
-          .aff-table-card {
-            padding: 20px 16px !important;
-            overflow: hidden !important;
-          }
-          .aff-table-card .aff-table-wrap {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            width: 100% !important;
-          }
-
-          /* ── Filter tabs: scroll horizontally ── */
-          .aff-filter-tabs {
-            overflow-x: auto !important;
-            flex-wrap: nowrap !important;
-            -webkit-overflow-scrolling: touch !important;
-            scrollbar-width: none !important;
-            padding-bottom: 2px !important;
-          }
-          .aff-filter-tabs::-webkit-scrollbar { display: none; }
-          .aff-filter-tabs > button {
-            padding: 6px 10px !important;
-            font-size: 0.68rem !important;
-            flex-shrink: 0 !important;
-          }
-
-          /* ── Payout card ── */
-          .aff-payout-card {
-            padding: 20px 16px !important;
-          }
-
-          /* ── Empty state text alignment ── */
-          .aff-table-card > div:last-child > div[style*="textAlign: 'center'"],
-          .aff-payout-card > div[style*="textAlign: 'center'"] {
-            padding: 32px 16px !important;
-          }
-
-          /* ── Page title size ── */
-          .aff-earnings-header h2 {
-            font-size: 1.8rem !important;
-          }
-        }
-
-        @media (max-width: 400px) {
-          .aff-stat-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .aff-stat-grid > .premium-flat-card {
-            padding: 12px 10px !important;
-          }
-          .aff-stat-grid > .premium-flat-card > div > div[style] {
-            font-size: 1.1rem !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
