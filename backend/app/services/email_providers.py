@@ -108,6 +108,10 @@ class GmailProvider(BaseEmailProvider):
         smtp_from = getattr(settings, "SMTP_FROM", os.getenv("SMTP_FROM", "noreply@lumora.design"))
         reply_to = os.getenv("SMTP_REPLY_TO", "support@lumora.design")
 
+        # Align sender email address with authenticated Gmail SMTP user to prevent SPF/DKIM spoofing rejections
+        if smtp_user and "@gmail.com" in smtp_user.lower() and ("noreply@lumora.design" in smtp_from or not smtp_from):
+            smtp_from = smtp_user
+
         sender_header = f"Lumora Admin <{smtp_from}>" if "<" not in smtp_from else smtp_from
 
         msg = MIMEMultipart("alternative")
@@ -127,12 +131,17 @@ class GmailProvider(BaseEmailProvider):
                 server.starttls()
                 if smtp_user and smtp_password:
                     server.login(smtp_user, smtp_password)
-                server.sendmail(smtp_from, [to_email], msg.as_string())
+                send_response = server.sendmail(smtp_from, [to_email], msg.as_string())
 
             latency_ms = int((time.time() - start_time) * 1000)
+            logger.info(
+                "[GmailProvider] SMTP sendmail completed successfully to %s via %s:%s (job_id=%s, latency=%dms, response=%s)",
+                to_email, smtp_host, smtp_port, job_id, latency_ms, send_response
+            )
             return True, None, latency_ms
         except Exception as exc:
             latency_ms = int((time.time() - start_time) * 1000)
+            logger.error("[GmailProvider] SMTP Error for %s (job_id=%s): %s", to_email, job_id, exc)
             return False, f"GmailProvider SMTP Error ({type(exc).__name__}): {exc}", latency_ms
 
     def check_health(self) -> Dict[str, Any]:
