@@ -385,7 +385,7 @@ def download_product(
     owned = db.query(OrderItem).join(Order).filter(
         Order.user_id == current_user.id,
         OrderItem.product_id == product_id,
-        Order.status.in_(["completed", "paid"])
+        Order.status == "completed"
     ).first()
         
     is_owner = (str(product.vendor_id) == str(current_user.id)) or (product.seller == current_user.name)
@@ -401,7 +401,7 @@ def download_product(
     user_downloads = db.query(OrderItem).join(Order).filter(
         Order.user_id == current_user.id,
         OrderItem.product_id == product_id,
-        Order.status.in_(["completed", "paid"])
+        Order.status == "completed"
     ).count()
     
     # Get last download time from downloads collection if exists
@@ -413,7 +413,9 @@ def download_product(
     token = generate_download_token(current_user.id, product_id)
     
     # Determine if the download asset is actually available
-    download_available = bool(product.storage_path or product.file_url or getattr(product, 'pcloud_download_link', None))
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    download_available = has_b2 or has_local
     
     response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
@@ -459,7 +461,7 @@ def get_download_center(
         User, Product.vendor_id == cast(User.id, String)
     ).filter(
         Order.user_id == current_user.id,
-        Order.status.in_(["completed", "paid"])
+        Order.status == "completed"
     ).order_by(Order.created_at.desc()).all()
     
     downloads = []
@@ -468,7 +470,9 @@ def get_download_center(
         token = generate_download_token(current_user.id, product.id)
         
         # Determine if the download asset is actually available
-        download_available = bool(product.storage_path or product.file_url or getattr(product, 'pcloud_download_link', None))
+        has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+        has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+        download_available = has_b2 or has_local
         
         downloads.append({
             "order_id": order.id,
@@ -534,7 +538,7 @@ def download_product_file(
     owned = db.query(OrderItem).join(Order).filter(
         Order.user_id == user_id,
         OrderItem.product_id == product_id,
-        Order.status.in_(["completed", "paid"])
+        Order.status == "completed"
     ).first()
 
     is_owner = (str(product.vendor_id) == str(user_id)) or (product.seller == user.name)
@@ -546,8 +550,11 @@ def download_product_file(
             detail="You are not authorized to download this product."
         )
 
-    storage_path = getattr(product, 'pcloud_download_link', None) or product.storage_path or product.file_url
-    if not storage_path:
+    storage_path = product.storage_path or product.file_url
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    
+    if not storage_path or not (has_b2 or has_local):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product file is currently unavailable."
@@ -644,7 +651,7 @@ def preview_product_stream(
     owned = db.query(OrderItem).join(Order).filter(
         Order.user_id == user_id,
         OrderItem.product_id == product_id,
-        Order.status.in_(["completed", "paid"])
+        Order.status == "completed"
     ).first()
 
     is_owner = (str(product.vendor_id) == str(user_id)) or (product.seller == user.name)
@@ -656,8 +663,11 @@ def preview_product_stream(
             detail="You are not authorized to preview this product."
         )
 
-    storage_path = getattr(product, 'pcloud_download_link', None) or product.storage_path or product.file_url
-    if not storage_path:
+    storage_path = product.storage_path or product.file_url
+    has_b2 = bool((product.storage_path and "b2://" in product.storage_path) or (product.file_url and "backblazeb2.com" in product.file_url))
+    has_local = bool((product.storage_path and "local://" in product.storage_path) or (product.file_url and "/uploads/" in product.file_url))
+    
+    if not storage_path or not (has_b2 or has_local):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product file is currently unavailable for preview."
