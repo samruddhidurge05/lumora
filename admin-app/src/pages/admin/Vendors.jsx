@@ -17,7 +17,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from './components/AdminLayout';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { backendFetch } from '../../utils/api';
 import { PageHeader, StatsGrid, DashboardCard, TableContainer } from './components/AdminComponents';
 import {
@@ -129,23 +129,27 @@ export default function Vendors() {
     });
   }, []);
 
-  // ── REST fallback fetch ──────────────────────────────────────────────────
-  // Token refresh is handled by AuthContext — no need to reacquire here.
+  // ── Firestore Fallback Fetch ────────────────────────────────────────────────
   const fetchVendorsRest = useCallback(async () => {
     try {
-      const data = await backendFetch('/admin/vendors/');
-      setVendors(sortByStatus(Array.isArray(data) ? data : []));
+      const vendorQuery = query(collection(db, 'users'), where('role', 'in', ['vendor', 'Vendor']));
+      const snap = await getDocs(vendorQuery);
+      const data = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      setVendors(sortByStatus(data));
+      setError(null);
     } catch (err) {
-      setError('Failed to load vendors. Check backend connection.');
+      setError('Unable to fetch vendor records. Please verify network permissions.');
     }
   }, [sortByStatus]);
 
   const fetchAffiliatesRest = useCallback(async () => {
     try {
-      const data = await backendFetch('/admin/affiliates/');
-      setAffiliates(sortByStatus(Array.isArray(data) ? data : []));
+      const affiliateQuery = query(collection(db, 'users'), where('role', 'in', ['affiliate', 'Affiliate']));
+      const snap = await getDocs(affiliateQuery);
+      const data = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      setAffiliates(sortByStatus(data));
     } catch (err) {
-      console.warn('[Vendors] REST affiliates fallback failed:', err.message);
+      console.warn('[Vendors] Firestore affiliate fallback failed:', err.message);
     }
   }, [sortByStatus]);
 
@@ -413,9 +417,9 @@ export default function Vendors() {
             </div>
           )}
 
-          {/* Table */}
+          {/* Desktop Table View (>= 768px) */}
           {!loading && !error && (activeTab === 'vendors' ? vendors.length > 0 : affiliates.length > 0) && (
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
@@ -443,10 +447,8 @@ export default function Vendors() {
                           const rawCreatedAt = vendor.createdAt;
                           const joinedDate = (() => {
                             if (!rawCreatedAt) return '—';
-                            // Firestore Timestamp object
                             if (rawCreatedAt?.toDate) return rawCreatedAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                             if (rawCreatedAt?.seconds) return new Date(rawCreatedAt.seconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                            // ISO string or plain date string
                             const d = new Date(rawCreatedAt);
                             if (isNaN(d.getTime())) return '—';
                             return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -460,10 +462,7 @@ export default function Vendors() {
                                 background: vendor.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
                                 transition: 'background 0.2s',
                               }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = vendor.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent'; }}
                             >
-                              {/* Name */}
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   <div style={{
@@ -480,30 +479,24 @@ export default function Vendors() {
                                 </div>
                               </td>
 
-                              {/* Email */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>
                                   {vendor.email || '—'}
                                 </span>
                               </td>
 
-                              {/* Status */}
                               <td style={{ padding: '14px 20px' }}>
                                 <StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} />
                               </td>
 
-                              {/* Joined */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '11px', color: '#7B3FA0', fontWeight: 300 }}>
                                   {joinedDate}
                                 </span>
                               </td>
 
-                              {/* Actions */}
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-
-                                  {/* Enable button */}
                                   {vendor.status !== 'active' && (
                                     <button
                                       disabled={busy}
@@ -516,7 +509,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Restrict button */}
                                   {vendor.status !== 'restricted' && (
                                     <button
                                       disabled={busy}
@@ -529,7 +521,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Disable button */}
                                   {vendor.status !== 'disabled' && (
                                     <button
                                       disabled={busy}
@@ -542,7 +533,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Loading indicator */}
                                   {busy && (
                                     <div style={{
                                       width: 16, height: 16,
@@ -573,10 +563,7 @@ export default function Vendors() {
                                 background: affiliate.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
                                 transition: 'background 0.2s',
                               }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = affiliate.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent'; }}
                             >
-                              {/* Name */}
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   <div style={{
@@ -593,14 +580,12 @@ export default function Vendors() {
                                 </div>
                               </td>
 
-                              {/* Email */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>
                                   {affiliate.email || '—'}
                                 </span>
                               </td>
 
-                              {/* Code */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{
                                   fontSize: '11px',
@@ -616,37 +601,30 @@ export default function Vendors() {
                                 </span>
                               </td>
 
-                              {/* Clicks */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
                                   {affiliate.totalClicks || 0}
                                 </span>
                               </td>
 
-                              {/* Conversions */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
                                   {affiliate.totalConversions || 0}
                                 </span>
                               </td>
 
-                              {/* Earnings */}
                               <td style={{ padding: '14px 20px' }}>
                                 <span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>
                                   {earnings}
                                 </span>
                               </td>
 
-                              {/* Status */}
                               <td style={{ padding: '14px 20px' }}>
                                 <StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} />
                               </td>
 
-                              {/* Actions */}
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-
-                                  {/* Enable button */}
                                   {affiliate.status !== 'active' && (
                                     <button
                                       disabled={busy}
@@ -659,7 +637,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Restrict button */}
                                   {affiliate.status !== 'restricted' && (
                                     <button
                                       disabled={busy}
@@ -672,7 +649,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Disable button */}
                                   {affiliate.status !== 'disabled' && (
                                     <button
                                       disabled={busy}
@@ -685,7 +661,6 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {/* Loading indicator */}
                                   {busy && (
                                     <div style={{
                                       width: 16, height: 16,
@@ -706,6 +681,109 @@ export default function Vendors() {
                 </table>
               </div>
             )}
+
+          {/* Mobile Stacked Card View (< 768px) */}
+          {!loading && !error && (activeTab === 'vendors' ? vendors.length > 0 : affiliates.length > 0) && (
+            <div className="md:hidden flex flex-col gap-3 p-3">
+              {activeTab === 'vendors'
+                ? vendors.map((vendor) => {
+                    const uid = vendor.uid || vendor.id;
+                    const busy = !!actionLoading[uid];
+                    return (
+                      <div key={`m-v-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#D8BFE3] to-[#B886D0] flex items-center justify-center text-white text-xs font-bold">
+                              {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
+                            </div>
+                            <span className="text-xs font-bold text-[#2D004D]">{getUserName(vendor, '—')}</span>
+                          </div>
+                          <StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} />
+                        </div>
+
+                        <div className="text-[11px] text-[#7B3FA0]">
+                          <p>Email: <span className="font-semibold text-[#2D004D]">{vendor.email || '—'}</span></p>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                          {vendor.status !== 'active' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, approveVendor, `"${getUserName(vendor)}" enabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#10B981]/10 text-[#059669] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Play" size={12} /> Enable
+                            </button>
+                          )}
+                          {vendor.status !== 'restricted' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, restrictVendor, `"${getUserName(vendor)}" restricted`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#F59E0B]/10 text-[#B45309] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="AlertTriangle" size={12} /> Restrict
+                            </button>
+                          )}
+                          {vendor.status !== 'disabled' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, suspendVendor, `"${getUserName(vendor)}" disabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#EF4444]/10 text-[#DC2626] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Pause" size={12} /> Disable
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                : affiliates.map((affiliate) => {
+                    const uid = affiliate.uid || affiliate.id;
+                    const busy = !!actionLoading[uid];
+                    return (
+                      <div key={`m-a-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#B886D0] to-[#7B3FA0] flex items-center justify-center text-white text-xs font-bold">
+                              {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
+                            </div>
+                            <span className="text-xs font-bold text-[#2D004D]">{getUserName(affiliate, '—')}</span>
+                          </div>
+                          <StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-[#7B3FA0]">
+                          <p>Code: <span className="font-mono font-bold text-[#7B3FA0]">{affiliate.affiliateCode || '—'}</span></p>
+                          <p>Clicks: <span className="font-bold text-[#2D004D]">{affiliate.totalClicks || 0}</span></p>
+                          <p>Conversions: <span className="font-bold text-[#2D004D]">{affiliate.totalConversions || 0}</span></p>
+                          <p>Earnings: <span className="font-bold text-[#9B2C5E]">₹{(affiliate.totalCommission || 0).toLocaleString()}</span></p>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                          {affiliate.status !== 'active' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, approveAffiliate, `"${getUserName(affiliate)}" enabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#10B981]/10 text-[#059669] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Play" size={12} /> Enable
+                            </button>
+                          )}
+                          {affiliate.status !== 'disabled' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, disableAffiliate, `"${affiliate.name}" disabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#EF4444]/10 text-[#DC2626] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Pause" size={12} /> Disable
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+            </div>
+          )}
           </TableContainer>
       </main>
 

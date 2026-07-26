@@ -380,22 +380,8 @@ export default function Payments() {
 
                   {/* Loading skeleton */}
                   {telemetry.loading && (
-                    <div className="p-4 flex flex-col gap-2">
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="h-12 rounded-xl bg-[#F5E9DD]/40 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Error state */}
-                  {!telemetry.loading && error && (
-                    <div className="py-12 flex flex-col items-center gap-3 text-center">
-                      <p className="text-sm font-bold text-red-400">{error}</p>
-                      <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#2D004D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7B3FA0] transition-colors">Retry</button>
-                    </div>
-                  )}
-
-                  <div className="overflow-x-auto w-full">
+                    <div className="p-4 flex flex-col ga                  {/* Desktop Table View (>= 768px) */}
+                  <div className="hidden md:block overflow-x-auto w-full">
                     {!telemetry.loading && !error && pagedOrders.length > 0 ? (
                       <table className="w-full border-collapse text-left">
                         <thead>
@@ -456,6 +442,83 @@ export default function Payments() {
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest ${orderStyles[o.status] || 'bg-stone-100'}`}>
                                     {o.status || 'Pending'}
                                   </span>
+                                </td>
+                                <td className="py-4 px-4 text-[10px] text-[#7B3FA0]">
+                                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ) : null}
+                  </div>
+
+                  {/* Mobile Stacked Card View (< 768px) */}
+                  <div className="md:hidden flex flex-col gap-3 p-3">
+                    {!telemetry.loading && !error && pagedOrders.length > 0 ? (
+                      pagedOrders.map((o) => {
+                        const paymentStyles = {
+                          Paid: 'bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80',
+                          Unpaid: 'bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80',
+                          Failed: 'bg-red-500/10 text-red-700 border-red-200',
+                          Refunded: 'bg-stone-100 text-stone-500 border-stone-200'
+                        };
+
+                        const orderStyles = {
+                          Completed: 'bg-[#B886D0]/40 text-[#5A1E7E]',
+                          Processing: 'bg-[#D8BFE3]/40 text-[#47607a]',
+                          Pending: 'bg-[#D8BFE3]/40 text-[#7a5940]',
+                          Failed: 'bg-red-500/10 text-red-700',
+                          Refunded: 'bg-stone-100 text-stone-500'
+                        };
+
+                        return (
+                          <div 
+                            key={`mobile-pay-${o.id}`}
+                            className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5"
+                          >
+                            <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                              <span className="font-mono text-xs font-bold text-[#2D004D]">
+                                Tx: {o.id.slice(0, 12)}
+                              </span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[8px] font-extrabold uppercase tracking-widest ${paymentStyles[o.paymentStatus] || 'bg-stone-100'}`}>
+                                {o.paymentStatus || 'Unpaid'}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-xs font-bold text-[#2D004D] truncate">{o.customerName || 'Customer'}</span>
+                                <span className="text-[10px] text-[#7B3FA0] truncate">{o.customerEmail}</span>
+                                {o.orderId && <span className="text-[9px] font-mono text-[#8E6AA8] mt-0.5">Order #{o.orderId}</span>}
+                              </div>
+                              <div className="flex flex-col items-end flex-shrink-0">
+                                <span className="text-sm font-black text-[#2D004D]">₹{(o.total ?? o.price ?? 0).toLocaleString()}</span>
+                                <span className="text-[8px] font-extrabold text-[#7B3FA0] uppercase">{o.paymentMethod || 'card'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px]">
+                              <span className="text-[#7B3FA0]">
+                                {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}
+                              </span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest ${orderStyles[o.status] || 'bg-stone-100'}`}>
+                                Order: {o.status || 'Pending'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : null}
+                  </div>
+
+                  {!telemetry.loading && !error && pagedOrders.length === 0 && (
+                    <div className="py-12 text-center text-[#7B3FA0]">
+                      <p className="text-2xl mb-2">💸</p>
+                      <p className="text-xs font-bold uppercase tracking-widest">No transactions found</p>
+                    </div>
+                  )}   </span>
                                 </td>
                                 <td className="py-4 px-4 text-[10px] text-[#7B3FA0]">
                                   {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}

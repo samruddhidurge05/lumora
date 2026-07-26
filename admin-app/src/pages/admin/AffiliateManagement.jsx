@@ -15,6 +15,8 @@ import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
 import { backendFetch, getMediaUrl } from '../../utils/api';
 import AffiliatePayoutModal from '../../components/AffiliatePayoutModal';
+import { db } from '../../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 // ── Color palette tokens ──────────────────────────────────────────────────────
 const P  = '#7B3FA0';
@@ -615,8 +617,20 @@ export default function AffiliateManagement() {
   const loadAffiliates = useCallback(async () => {
     try {
       const d = await backendFetch('/admin/affiliates/');
-      setAffiliates(Array.isArray(d) ? d : []);
+      if (Array.isArray(d) && d.length > 0) {
+        setAffiliates(d);
+        return;
+      }
     } catch(e) {
+      console.warn('[AffiliateManagement] REST loadAffiliates fallback to Firestore:', e.message);
+    }
+    try {
+      const q = query(collection(db, 'users'), where('role', 'in', ['affiliate', 'Affiliate']));
+      const snap = await getDocs(q);
+      const data = snap.docs.map(doc => ({ id: doc.id, uid: doc.id, ...doc.data() }));
+      setAffiliates(data);
+    } catch (err) {
+      console.error('[AffiliateManagement] Firestore fallback failed:', err);
       setAffiliates([]);
     }
   }, []);

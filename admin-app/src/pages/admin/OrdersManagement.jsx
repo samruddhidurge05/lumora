@@ -1330,8 +1330,112 @@ export default function OrdersManagement() {
                           </tbody>
                         </table>
                       </div>
-                    </>
-                  ) : (
+
+                          {/* Mobile Card View (< 768px) */}
+                          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4">
+                            <AnimatePresence initial={false}>
+                              {processedOrders.map((o) => {
+                                const isFocused = selectedOrder?.id === o.id;
+                                const isChecked = selectedRowIds.includes(o.id);
+                                const statusStyles = {
+                                  Completed: "bg-[#B886D0]/40 text-[#5A1E7E] border-[#B886D0]/80",
+                                  Processing: "bg-[#D8BFE3]/40 text-[#47607a] border-[#D8BFE3]/80",
+                                  Pending: "bg-[#D8BFE3]/40 text-[#7a5940] border-[#D8BFE3]/80",
+                                  Failed: "bg-[#D8BFE3]/40 text-[#8c4854] border-[#D8BFE3]/80",
+                                  Refunded: "bg-stone-100 text-stone-500 border-stone-200",
+                                  Disputed: "bg-[#D8BFE3] text-[#FF8597] border-[#FF8597]/20 animate-pulse"
+                                };
+
+                                return (
+                                  <motion.div
+                                    key={`mobile-${o.id}`}
+                                    layoutId={`mobile-row-${o.id}`}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    onClick={() => {
+                                      sysSound.playTap();
+                                      setSelectedOrderId(o.id);
+                                    }}
+                                    className={`p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3 transition-all cursor-pointer ${
+                                      isFocused ? 'ring-2 ring-[#7B3FA0]/40 bg-white' : ''
+                                    }`}
+                                  >
+                                    {/* Card Header: Checkbox + ID + Status */}
+                                    <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-2.5">
+                                      <div className="flex items-center gap-2.5">
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleRowSelection(o.id);
+                                          }}
+                                          className="rounded border-stone-300 accent-[#D8BFE3] w-4 h-4"
+                                        />
+                                        <span className="font-mono text-xs font-bold text-[#2D004D]">
+                                          {o.orderId || o.id?.slice(0, 10)}
+                                        </span>
+                                      </div>
+                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${statusStyles[o.status] || "bg-stone-100"}`}>
+                                        {o.status}
+                                      </span>
+                                    </div>
+
+                                    {/* Customer & Product */}
+                                    <div className="flex justify-between items-start gap-2">
+                                      <div className="flex flex-col min-w-0">
+                                        <span className="text-xs font-bold text-[#2D004D] truncate">
+                                          {o.customerName || 'Customer'}
+                                        </span>
+                                        <span className="text-[10px] text-[#8E6AA8] truncate">
+                                          {o.customerEmail || '—'}
+                                        </span>
+                                        <span className="text-[10px] text-[#7B3FA0] font-medium mt-1 truncate">
+                                          📦 {getProductName(o)}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-col items-end flex-shrink-0">
+                                        <span className="text-sm font-black text-[#2D004D]">₹{getOrderPrice(o)}</span>
+                                        <span className="text-[8px] text-[#8E6AA8] uppercase font-bold tracking-widest">{getProductType(o)}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Risk Bar & Actions Footer */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-stone-100/80 gap-2">
+                                      <div className="flex items-center gap-2 flex-1 max-w-[140px]">
+                                        <span className="text-[8px] font-extrabold text-[#7B3FA0] uppercase tracking-wider">Risk</span>
+                                        <div className="h-1.5 flex-1 bg-stone-100 rounded-full overflow-hidden border border-stone-200/20">
+                                          <div
+                                            className={`h-full rounded-full ${getRiskScore(o) >= 75 ? 'bg-[#FF8597]' : getRiskScore(o) >= 40 ? 'bg-[#ffb685]' : 'bg-[#10B981]'}`}
+                                            style={{ width: `${getRiskScore(o)}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-[9px] font-bold text-[#7B3FA0]">{getRiskScore(o)}%</span>
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                          onClick={() => handleUpdateStatus(o.id, "Completed")}
+                                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-[#D8BFE3]/20 text-[#7B3FA0] hover:bg-[#7B3FA0] hover:text-white transition-colors min-h-[36px]"
+                                        >
+                                          Complete
+                                        </button>
+                                        <button
+                                          onClick={() => handleRefundOrder(o.id)}
+                                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-stone-100 text-stone-600 hover:bg-red-50 hover:text-red-600 transition-colors min-h-[36px]"
+                                        >
+                                          Refund
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </AnimatePresence>
+                          </div>
+                        </>
+                      ) : (
 
                         // Empty state visual system
                         <div className="py-20 flex flex-col items-center justify-center text-center px-6">
