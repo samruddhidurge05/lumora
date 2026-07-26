@@ -125,7 +125,7 @@ export default function AcceptInvite() {
     } catch (err) {
       // Email mismatch: backend returns 403
       if (err.status === 403) {
-        setStatus('error');
+        setStatus('email_mismatch');
         setErrorMsg(err.message || 'This invitation was sent to a different email address. Please sign in with the invited email.');
       } else {
         setStatus('error');
@@ -163,6 +163,18 @@ export default function AcceptInvite() {
       await signOut(auth);
     } catch (_) {}
     window.location.replace('/admin/login');
+  };
+
+  // ── Error recovery: sign out current mismatched user and go to login with identity scope ──
+  const handleGoToAdminLoginOnError = async () => {
+    try {
+      clearBackendToken();
+      localStorage.setItem('lumora_active_role', 'admin');
+      const { signOut } = await import('firebase/auth');
+      await signOut(auth);
+    } catch (_) {}
+    const targetPath = `/admin/accept-invite?token=${encodeURIComponent(token)}`;
+    navigate(`/admin/login?redirect=${encodeURIComponent(targetPath)}&auth_mode=identity`);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -321,6 +333,34 @@ export default function AcceptInvite() {
           </div>
         )}
 
+        {/* ── Email Mismatch Error ── */}
+        {status === 'email_mismatch' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.5rem' }}>✉️</div>
+            <h2 style={{ color: '#2D004D', fontWeight: 700, margin: '0 0 12px' }}>Email Address Mismatch</h2>
+            <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 12px' }}>
+              You are currently signed in as <strong>{user?.email}</strong>, but this invitation was sent to <strong>{invitation?.email}</strong>.
+            </p>
+            <p style={{ color: '#8E6AA8', fontSize: '0.78rem', lineHeight: 1.5, margin: '0 0 24px' }}>
+              Please sign in with <strong>{invitation?.email}</strong> to accept this administrator invitation.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={handleGoToAdminLoginOnError}
+                style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+              >
+                Sign In as {invitation?.email || 'Invited Email'}
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                style={{ padding: '12px 28px', borderRadius: '12px', border: '1px solid rgba(123,63,160,0.3)', background: 'transparent', color: '#5A1E7E', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
+              >
+                Return to Marketplace
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Error ── */}
         {status === 'error' && (
           <div style={{ textAlign: 'center' }}>
@@ -329,7 +369,7 @@ export default function AcceptInvite() {
             <p style={{ color: '#7B3FA0', fontSize: '0.88rem', lineHeight: 1.6, margin: '0 0 28px' }}>{errorMsg}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
-                onClick={() => navigate('/admin/login')}
+                onClick={handleGoToAdminLoginOnError}
                 style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' }}
               >
                 Go to Admin Login
