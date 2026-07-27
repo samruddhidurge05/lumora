@@ -399,7 +399,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION LOG ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-table-card" style={{ padding: 'clamp(16px, 3vw, 28px)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+      <div className="premium-flat-card aff-table-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Commission Log</span>

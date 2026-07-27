@@ -289,7 +289,7 @@ function AffiliateDashboardInner() {
       )}
 
       {/* ── MAIN CONTENT AREA ─────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: '100vh', position: 'relative', zIndex: 10, minWidth: 0, boxSizing: 'border-box' }} className="aff-main-area">
+      <div style={{ flex: 1, minHeight: '100vh', position: 'relative', zIndex: 10, minWidth: 0, boxSizing: 'border-box', width: 0 }} className="aff-main-area">
 
         {/* Top bar */}
         <header style={{
@@ -305,7 +305,6 @@ function AffiliateDashboardInner() {
           transition: 'all 0.3s',
           width: '100%',
           boxSizing: 'border-box',
-          overflow: 'hidden',
         }}>
           {/* Mobile hamburger */}
           <button

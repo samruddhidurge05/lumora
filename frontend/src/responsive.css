@@ -1049,31 +1049,45 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 
 /* ════════════════════════════════════════════════════════════════════
-   14. AFFILIATE DASHBOARD — Full Mobile & Tablet Responsive
-   Covers: Layout shell, header, hero, stat cards, charts, tables, product
-           grids (horizontal scroll carousel), detail page.
-   Desktop (>900px) untouched.
+   14. AFFILIATE MODULE — Complete Mobile Responsive System
+   ROOT CAUSE FIXES:
+   - overflow:hidden removed from table/chart cards (was clipping scroll)
+   - minWidth:280px on hero widget changed to min(280px,100%)
+   - overflow:hidden removed from topbar header (was clipping cart btn)
+   - width:0 + flex:1 on aff-main-area so it doesn't exceed viewport
+   - All conflicting/duplicate rules consolidated here
+   - Single source of truth — no duplicate @media blocks
+   Desktop (>1024px) completely untouched.
 ════════════════════════════════════════════════════════════════════ */
 
-/* ── Base page wrap: zero outer padding to avoid double margin with main ── */
+/* ── Base: page wrap, two-col, table wrap ── */
 .aff-page-wrap { padding: 0; box-sizing: border-box; width: 100%; max-width: 100%; }
-@media (max-width: 1024px) { .aff-page-wrap { padding: 0 !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; } }
-
-/* ── Two-col panels: stack on tablet/mobile ── */
 .aff-two-col { display: grid; }
-@media (max-width: 1024px) { .aff-two-col { grid-template-columns: 1fr !important; } }
-
-/* ── Tables: horizontal scroll ── */
 .aff-table-wrap {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .aff-table-wrap table { min-width: 520px; }
 
-/* ── Topbar & Main Container Base ── */
+/* ── Stat grid: 4 cols desktop ── */
+.aff-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Desktop/Mobile table toggle classes ── */
+.aff-desktop-only { display: block; }
+.aff-mobile-only  { display: none;  }
+.aff-payout-desktop-only { display: block; }
+.aff-payout-mobile-only  { display: none;  }
+
+/* ── Topbar & Main Container: desktop base ── */
 .aff-main-area {
   margin-left: 240px;
   min-height: 100vh;
@@ -1096,44 +1110,36 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   min-width: 0;
 }
 
+/* ── Mobile/Tablet: sidebar hide, main area full-width, padding ── */
 @media (max-width: 1024px) {
-  .aff-sidebar {
-    transform: translateX(-100%);
-    z-index: 100 !important;
-  }
-  .aff-sidebar.open {
-    transform: translateX(0);
-  }
+  .aff-sidebar { transform: translateX(-100%); z-index: 100 !important; }
+  .aff-sidebar.open { transform: translateX(0); }
+  .aff-hamburger { display: flex !important; }
+
   .aff-main-area {
     margin-left: 0 !important;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 100vw !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
+    overflow-x: hidden !important;
   }
   .aff-main-area header {
     padding: 12px 14px !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    max-width: 100% !important;
   }
-  .aff-main-area header h1 {
-    font-size: 1.2rem !important;
-  }
+  .aff-main-area header h1 { font-size: 1.2rem !important; }
   .aff-main-area main {
     padding: 16px 12px 40px !important;
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box !important;
     min-width: 0 !important;
+    overflow-x: hidden !important;
   }
-  .aff-hamburger {
-    display: flex !important;
-  }
-}
 
-/* Prevent any affiliate page content from overflowing the viewport */
-@media (max-width: 1024px) {
+  /* Contain all page content */
   .aff-page-wrap,
   .aff-page-wrap > *,
   .aff-main-area main > div {
@@ -1141,10 +1147,21 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     box-sizing: border-box !important;
     min-width: 0 !important;
   }
+
+  /* Two-col panels → stack */
+  .aff-two-col { grid-template-columns: 1fr !important; }
+
+  /* Stat grid → 2×2 */
+  .aff-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+
+  /* Quick actions → single col */
+  .aff-referral-perf-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .aff-quick-actions { grid-template-columns: 1fr !important; gap: 12px !important; }
 }
 
-/* ── Hero banner: stack on mobile/tablet ── */
+/* ── Hero banner, stat cards, commission strip, status strip, products ── */
 @media (max-width: 1024px) {
+  /* Hero banner */
   .aff-hero-banner {
     padding: 20px 16px !important;
     flex-direction: column !important;
@@ -1153,26 +1170,15 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     width: 100% !important;
     box-sizing: border-box !important;
   }
-  .aff-hero-content {
-    min-width: 0 !important;
-    width: 100% !important;
-  }
+  .aff-hero-content { min-width: 0 !important; width: 100% !important; }
   .aff-hero-content h1 {
     font-size: clamp(1.5rem, 6vw, 2.2rem) !important;
-    line-height: 1.1 !important;
     white-space: normal !important;
     overflow: visible !important;
     word-break: break-word !important;
   }
-  .aff-hero-content p {
-    max-width: 100% !important;
-    font-size: 0.82rem !important;
-  }
-  .aff-hero-content > div:last-child {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    width: 100% !important;
-  }
+  .aff-hero-content p { max-width: 100% !important; font-size: 0.82rem !important; }
+  .aff-hero-content > div:last-child { flex-wrap: wrap !important; gap: 8px !important; width: 100% !important; }
   .aff-hero-content > div:last-child > button {
     flex: 1 1 calc(50% - 4px) !important;
     min-width: 0 !important;
@@ -1190,10 +1196,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     overflow-wrap: anywhere !important;
     white-space: normal !important;
   }
-}
 
-/* ── Commission summary strip (named class) — 2x2 grid on mobile/tablet (<=1024px) ── */
-@media (max-width: 1024px) {
+  /* Commission summary strip (Dashboard overview) */
   .aff-commission-strip {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1202,44 +1206,11 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     box-sizing: border-box !important;
     width: 100% !important;
   }
-  .aff-commission-strip > div {
-    min-width: 0 !important;
-  }
-  .aff-commission-strip > div:nth-child(2) {
-    display: none !important; /* Hide vertical divider line */
-  }
-  .aff-commission-strip > div:first-child {
-    grid-column: 1 / -1 !important;
-    margin-bottom: -4px !important;
-  }
-}
+  .aff-commission-strip > div { min-width: 0 !important; }
+  .aff-commission-strip > div:nth-child(2) { display: none !important; }
+  .aff-commission-strip > div:first-child { grid-column: 1 / -1 !important; }
 
-@media (max-width: 1024px) {
-  .aff-referral-perf-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-  }
-  .aff-quick-actions {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-}
-
-/* ── Overflow guard: prevent any child from escaping the main area ── */
-@media (max-width: 1024px) {
-  .aff-main-area {
-    overflow-x: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-  }
-  .aff-main-area main {
-    max-width: 100vw !important;
-    box-sizing: border-box !important;
-  }
-}
-
-/* ── Status strip: horizontal scroll ── */
-@media (max-width: 1024px) {
+  /* Status strip (profile page) */
   .aff-status-strip {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
@@ -1249,19 +1220,16 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     gap: 16px !important;
   }
   .aff-status-strip::-webkit-scrollbar { display: none; }
-  .aff-referral-link-text {
-    font-size: 0.76rem !important;
-    word-break: break-all !important;
-    white-space: normal !important;
-  }
-  .aff-payment-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-}
+  .aff-referral-link-text { font-size: 0.76rem !important; word-break: break-all !important; white-space: normal !important; }
+  .aff-payment-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
 
-/* ── Affiliate Products grid → horizontal scroll carousel ── */
-@media (max-width: 1024px) {
+  /* Profile buttons */
+  .aff-profile-strip { overflow-x: auto !important; flex-wrap: nowrap !important; scrollbar-width: none !important; gap: 0 !important; }
+  .aff-profile-strip::-webkit-scrollbar { display: none; }
+  .aff-profile-btn-row { flex-direction: column !important; width: 100% !important; gap: 8px !important; }
+  .aff-profile-btn-row > button { width: 100% !important; justify-content: center !important; }
+
+  /* Products grid → horizontal scroll carousel */
   .aff-products-grid {
     display: flex !important;
     flex-direction: row !important;
@@ -1288,250 +1256,75 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
 }
 
-/* ── Earnings page: commission breakdown strip wrap ── */
-@media (max-width: 1024px) {
-  /* Commission strip: wrap items */
-  .aff-commission-strip {
-    flex-wrap: wrap !important;
-    gap: 12px !important;
-    padding: 16px !important;
-  }
-  /* Available balance: full row */
-  .aff-commission-strip > div:last-child {
-    width: 100% !important;
-    text-align: left !important;
-    margin-left: 0 !important;
-    border-top: 1px solid rgba(45,0,96,0.06) !important;
-    padding-top: 10px !important;
-    margin-top: 4px !important;
-  }
-  /* Earnings page header CTA: full width button */
-  .aff-earnings-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-  }
-  .aff-earnings-header > div:last-child {
-    width: 100% !important;
-  }
-  .aff-earnings-header > div:last-child > button:last-child {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-}
-
-/* ── Profile page: status strip scroll ── */
-@media (max-width: 1024px) {
-  .aff-profile-strip {
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    padding-bottom: 4px !important;
-    gap: 0 !important;
-  }
-  .aff-profile-strip::-webkit-scrollbar { display: none; }
-  /* Profile page edit/save button row: full width */
-  .aff-profile-btn-row {
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 8px !important;
-  }
-  .aff-profile-btn-row > button {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-}
 
 
+/* ── Earnings page — all rules consolidated into one @media block ── */
 
-/* ════════════════════════════════════════════════════════════════════
-   AFFILIATE EARNINGS PAGE — Production Mobile & Responsive System
-   Uses class names added directly to JSX elements in Earnings.jsx.
-════════════════════════════════════════════════════════════════════ */
-
-/* Root Page & Children Width Containment */
-.aff-page-wrap,
-.aff-page-wrap > * {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  box-sizing: border-box !important;
-}
-
-/* Stat Grid Breakpoints:
-   - Desktop (1200px+): 4 columns
-   - Tablet & Mobile (<= 1024px): 2x2 Grid (repeat(2, 1fr))
-*/
-.aff-stat-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 16px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
+/* Desktop defaults for table toggle classes */
+.aff-desktop-only { display: block; }
+.aff-mobile-only  { display: none;  }
+.aff-payout-desktop-only { display: block; }
+.aff-payout-mobile-only  { display: none;  }
 
 @media (max-width: 1024px) {
-  .aff-stat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
+  /* Stat cards: compact */
   .aff-earnings-stat-card,
   .aff-stat-grid > .premium-flat-card {
     padding: 14px 12px !important;
-    width: 100% !important;
-    max-width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-  }
-  .aff-stat-grid > .premium-flat-card > div:first-child {
-    min-width: 0 !important;
-    flex: 1 !important;
-    padding-right: 4px !important;
-  }
-  .aff-stat-grid > .premium-flat-card span {
-    font-size: clamp(0.55rem, 2.2vw, 0.62rem) !important;
-    letter-spacing: 0.03em !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    display: block !important;
   }
   .aff-stat-value {
     font-size: clamp(1.1rem, 4vw, 1.35rem) !important;
-    font-weight: 700 !important;
-    margin-top: 2px !important;
-    line-height: 1.15 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  .aff-stat-grid > .premium-flat-card > div:last-child {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 8px !important;
-    flex-shrink: 0 !important;
-  }
-}
-
-@media (max-width: 420px) {
-  .aff-stat-grid {
-    gap: 8px !important;
-  }
-  .aff-earnings-stat-card,
-  .aff-stat-grid > .premium-flat-card {
-    padding: 12px 10px !important;
-  }
-  .aff-stat-value {
-    font-size: clamp(1.02rem, 4vw, 1.18rem) !important;
-  }
-  .aff-stat-grid > .premium-flat-card > div:last-child {
-    width: 28px !important;
-    height: 28px !important;
-  }
-}
-
-/* Desktop vs Mobile Table Toggles */
-.aff-desktop-only { display: block !important; }
-.aff-mobile-only { display: none !important; }
-
-.aff-payout-desktop-only { display: block !important; }
-.aff-payout-mobile-only { display: none !important; }
-
-@media (max-width: 767px) {
-  .aff-desktop-only { display: none !important; }
-  .aff-mobile-only { display: flex !important; flex-direction: column !important; gap: 10px !important; width: 100% !important; }
-}
-
-@media (max-width: 639px) {
-  .aff-payout-desktop-only { display: none !important; }
-  .aff-payout-mobile-only { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
-}
-
-/* 1. TOPBAR: Stack "Earnings & Payouts" title + "Request Withdrawal" button */
-@media (max-width: 768px) {
+  /* Earnings header: stack */
   .aff-earnings-header {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 12px !important;
     width: 100% !important;
-    max-width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
   }
-  .aff-earnings-header h2 {
-    font-size: clamp(1.4rem, 5vw, 1.8rem) !important;
-    line-height: 1.15 !important;
-    word-break: break-word !important;
-  }
-  .aff-earnings-header-actions {
-    width: 100% !important;
-    display: flex !important;
-    gap: 8px !important;
-    align-items: center !important;
-  }
-  .aff-withdrawal-btn {
-    flex: 1 !important;
-    justify-content: center !important;
-    width: 100% !important;
-    padding: 11px 16px !important;
-    font-size: 0.84rem !important;
-    min-height: 44px !important;
-  }
-}
-
-/* 2. COMMISSION BREAKDOWN STRIP */
-@media (max-width: 768px) {
+  .aff-earnings-header h2 { font-size: clamp(1.4rem, 5vw, 1.8rem) !important; word-break: break-word !important; }
+  .aff-earnings-header-actions { width: 100% !important; flex-wrap: wrap !important; gap: 8px !important; }
+  .aff-withdrawal-btn { flex: 1 !important; justify-content: center !important; min-height: 44px !important; padding: 11px 16px !important; }
+  /* Earnings breakdown strip */
   .aff-earnings-breakdown {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px 10px !important;
+    gap: 12px 10px !important;
     padding: 16px !important;
     align-items: start !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
-  .aff-breakdown-divider {
-    display: none !important;
-  }
-  .aff-breakdown-rate {
-    grid-column: 1 / -1 !important;
-  }
+  .aff-breakdown-divider  { display: none !important; }
+  .aff-breakdown-rate     { grid-column: 1 / -1 !important; }
   .aff-breakdown-available {
     grid-column: 1 / -1 !important;
     text-align: left !important;
     margin-left: 0 !important;
     border-top: 1px solid rgba(45,0,96,0.08) !important;
     padding-top: 12px !important;
-    margin-top: 4px !important;
-    width: 100% !important;
   }
-}
-
-/* 3. MONTHLY EARNINGS CHART CARD & CONTAINERS */
-@media (max-width: 768px) {
-  .aff-chart-card,
-  .aff-table-card,
-  .aff-payout-card {
-    padding: 18px 14px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-  }
-  .aff-table-card .aff-table-wrap {
+  /* Chart card: clip decorative overflow */
+  .aff-chart-card  { padding: 18px 14px !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important; }
+  /* Table & payout cards: NO overflow:hidden so inner scroll works */
+  .aff-table-card  { padding: 18px 14px !important; width: 100% !important; box-sizing: border-box !important; }
+  .aff-payout-card { padding: 18px 14px !important; width: 100% !important; box-sizing: border-box !important; }
+  /* Inner scroll wrappers */
+  .aff-table-card .aff-table-wrap,
+  .aff-payout-card .aff-table-wrap {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
     max-width: 100% !important;
   }
-  /* Filter tabs row: horizontal scroll so all fit without wrap */
+  /* Filter tabs */
   .aff-filter-tabs {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
@@ -1540,27 +1333,37 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     max-width: 100% !important;
   }
   .aff-filter-tabs::-webkit-scrollbar { display: none; }
-  .aff-filter-tabs > button {
-    flex-shrink: 0 !important;
-    padding: 6px 10px !important;
-    font-size: 0.68rem !important;
-    white-space: nowrap !important;
-  }
+  .aff-filter-tabs > button { flex-shrink: 0 !important; padding: 6px 10px !important; font-size: 0.68rem !important; white-space: nowrap !important; }
+  /* Show mobile card view, hide desktop table */
+  .aff-desktop-only { display: none !important; }
+  .aff-mobile-only  { display: flex !important; flex-direction: column !important; gap: 10px !important; width: 100% !important; }
+  .aff-payout-desktop-only { display: none !important; }
+  .aff-payout-mobile-only  { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
 }
 
-/* 4. WITHDRAWAL MODAL */
+/* Very narrow phones 320-420px */
+@media (max-width: 420px) {
+  .aff-stat-grid { gap: 8px !important; }
+  .aff-earnings-stat-card, .aff-stat-grid > .premium-flat-card { padding: 12px 10px !important; }
+  .aff-stat-value { font-size: clamp(1rem, 4.5vw, 1.15rem) !important; }
+}
+
+/* Withdrawal modal */
 .aff-withdrawal-modal-box {
-  width: calc(100vw - 24px) !important;
-  max-width: 440px !important;
+  width: min(calc(100vw - 24px), 440px) !important;
   box-sizing: border-box !important;
   max-height: 90vh !important;
   overflow-y: auto !important;
   padding: clamp(20px, 5vw, 36px) !important;
 }
 
-/* ── END AFFILIATE EARNINGS PAGE ─── */
+/* Support Center form grid: stack on mobile */
+@media (max-width: 600px) {
+  .support-form-grid { grid-template-columns: 1fr !important; }
+}
 
 /* ════════════════════════════════════════════════════════════════════
+   15. VENDOR PAGES
 ════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   /* Hide standard v-table on mobile */

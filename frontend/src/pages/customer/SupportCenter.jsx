@@ -149,7 +149,7 @@ export default function SupportCenter() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fade-in 0.8s ease', width: '100%' }}>
       {/* Sub Navigation */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(123, 63, 160, 0.1)', paddingBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(123, 63, 160, 0.1)', paddingBottom: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {[
           { id: 'tickets', label: 'Tickets', icon: <FileText size={14} /> },
           { id: 'faq', label: 'FAQ', icon: <MessageSquare size={14} /> },
@@ -270,7 +270,7 @@ export default function SupportCenter() {
             <form onSubmit={handleSubmit} className="glass-card" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid rgba(123, 63, 160, 0.25)', borderRadius: '20px' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-espresso)' }}>SUBMIT SUPPORT DISPATCH</div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '16px' }}>
+              <div className="support-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-mocha)' }}>TICKET TITLE / SUBJECT</label>
                   <input

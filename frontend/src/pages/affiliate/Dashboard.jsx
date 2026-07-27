@@ -377,7 +377,7 @@ export default function AffiliateDashboardHome({
         <div className="aff-hero-widget" style={{
           background: 'rgba(255,255,255,0.80)', backdropFilter: 'blur(20px)',
           border: '1px solid rgba(196,181,253,0.35)', borderRadius: '16px',
-          padding: '20px 24px', minWidth: '280px',
+          padding: '20px 24px', minWidth: 'min(280px, 100%)',
           boxShadow: '0 8px 32px rgba(123,63,160,0.10)', position: 'relative', zIndex: 2,
         }}>
           <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>Your Referral Link</div>
