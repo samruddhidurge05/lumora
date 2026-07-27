@@ -1,9 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   DollarSign, Clock, CheckCircle, ArrowUpRight, TrendingUp,
   AlertCircle, RefreshCw, BarChart2, Wallet,
 } from 'lucide-react';
 import { backendFetch } from '../../utils/api';
+
+/* ── Responsive hook: works on every phone regardless of DPI ── */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < breakpoint;
+  });
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [breakpoint]);
+  return isMobile;
+}
 
 /* ── Status style map ─────────────────────────────────────────────────────── */
 const STATUS_STYLE = {
@@ -116,6 +131,9 @@ export default function AffiliateEarnings({
   const chartMax        = Math.max(...monthlyEarnings, 1);
   const chartTotal      = monthlyEarnings.reduce((a, b) => a + b, 0);
   const currentMonthIdx = 11; // always the last bar = current month
+
+  /* ── Mobile detection via JS (works on all phones, not CSS-dependent) ── */
+  const isMobile = useIsMobile(768);
 
   /* ── Filtered commission list ────────────────────────────────────────── */
   const filtered = activeCommissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
@@ -238,14 +256,20 @@ export default function AffiliateEarnings({
     <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 2.5vw, 28px)', position: 'relative', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div className="aff-earnings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '14px', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'stretch' : 'flex-end',
+        gap: '14px', width: '100%', boxSizing: 'border-box',
+      }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Financial Overview</span>
           <h2 className="text-editorial" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.15, wordBreak: 'break-word' }}>
             Earnings &amp; Payouts
           </h2>
         </div>
-        <div className="aff-earnings-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
           {refresh && (
             <button
               onClick={refresh}
@@ -259,8 +283,15 @@ export default function AffiliateEarnings({
           )}
           <button
             onClick={() => setShowWithdrawal(true)}
-            className="aff-withdrawal-btn"
-            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 20px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '11px 20px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700,
+              borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff',
+              cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)',
+              fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+              flex: isMobile ? 1 : 'none',
+            }}
           >
             <ArrowUpRight size={14} /> Request Withdrawal
           </button>
@@ -268,7 +299,12 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── STAT CARDS ─────────────────────────────────────────────────────── */}
-      <div className="aff-stat-grid" style={{ position: 'relative', zIndex: 1, width: '100%', boxSizing: 'border-box' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+        gap: isMobile ? '10px' : '16px',
+        width: '100%', boxSizing: 'border-box',
+      }}>
         {[
           {
             label: 'Total Earnings',
@@ -315,19 +351,34 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
-      <div className="premium-flat-card aff-earnings-breakdown" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
+      <div className="premium-flat-card" style={{
+        padding: isMobile ? '14px' : '16px 20px',
+        display: isMobile ? 'grid' : 'flex',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : undefined,
+        alignItems: isMobile ? 'start' : 'center',
+        gap: isMobile ? '12px' : '24px',
+        flexWrap: 'wrap',
+        width: '100%', boxSizing: 'border-box',
+      }}>
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
           { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },
           { label: 'Approved',          value: countByStatus.approved, color: '#4338CA' },
           { label: 'Pending',           value: countByStatus.pending,  color: '#B45309' },
         ].map((item, i) => (
-          <div key={i} className="aff-breakdown-item" style={{ minWidth: 0 }}>
+          <div key={i} style={{ minWidth: 0 }}>
             <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{item.label}</span>
             <div style={{ fontSize: '1.15rem', fontWeight: 700, color: item.color || 'var(--text-primary)', marginTop: '2px' }}>{item.value}</div>
           </div>
         ))}
-        <div className="aff-breakdown-available" style={{ marginLeft: 'auto', textAlign: 'right', minWidth: 0 }}>
+        <div style={{
+          gridColumn: isMobile ? '1 / -1' : undefined,
+          marginLeft: isMobile ? 0 : 'auto',
+          textAlign: isMobile ? 'left' : 'right',
+          minWidth: 0,
+          borderTop: isMobile ? '1px solid rgba(45,0,96,0.07)' : 'none',
+          paddingTop: isMobile ? '8px' : 0,
+        }}>
           <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>Available to Withdraw</span>
           <div style={{ fontSize: '1.25rem', fontWeight: 700, color: availableBalance > 0 ? '#15803D' : 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             {formatINR(availableBalance)}
@@ -433,143 +484,107 @@ export default function AffiliateEarnings({
           </div>
         </div>
 
-        {/* Desktop 8-column Table View (Hidden on mobile via CSS) */}
-        <div className="aff-table-wrap aff-desktop-only" style={{ minWidth: 0, width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
-            {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
-              <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-            ))}
+        {/* Commission table — desktop full table OR mobile cards based on JS */}
+        {isMobile ? (
+          /* ── MOBILE CARD VIEW ── */
+          <div style={{ width: '100%' }}>
+            {filtered.length > 0 ? (
+              filtered.map((row) => {
+                const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
+                return (
+                  <div key={row.id} style={{
+                    padding: '14px', borderRadius: '14px',
+                    background: 'rgba(255,255,255,0.60)',
+                    border: '1px solid rgba(123,63,160,0.12)',
+                    display: 'flex', flexDirection: 'column', gap: '10px',
+                    marginBottom: '10px', boxSizing: 'border-box', width: '100%',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.3, flex: 1, wordBreak: 'break-word' }}>{row.product}</div>
+                      <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: 'rgba(123,63,160,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
+                      <div>
+                        <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Commission</span>
+                        <span style={{ fontSize: '1rem', fontWeight: 800, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Sale Price</span>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem', borderTop: '1px solid rgba(45,0,96,0.05)', paddingTop: '8px' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Date & Order</span>
+                        <span style={{ fontWeight: 500, color: 'var(--text-light)', display: 'block' }}>{formatDate(row.date)}</span>
+                        <span style={{ fontWeight: 700, color: '#7B3FA0', fontSize: '0.72rem', display: 'block' }}>{row.orderId}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Customer</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                        <span style={{ fontSize: '0.70rem', color: '#2D004D', fontWeight: 700, display: 'block' }}>
+                          {row.referralCode} {row.attributionSource === 'coupon_code' ? '🏷️' : '🔗'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '32px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.4)', borderRadius: '12px' }}>
+                <DollarSign size={28} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '8px' }} />
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter.'}
+                </div>
+              </div>
+            )}
           </div>
-
-          {filtered.length > 0 ? (
-            filtered.map((row, idx) => {
-              const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
-              return (
-                <div
-                  key={row.id}
-                  style={{
-                    display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr',
-                    gap: '10px', padding: '13px 16px',
-                    borderRadius: '10px',
-                    borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
-                    transition: 'background 0.2s',
-                    alignItems: 'center',
-                    minWidth: '780px',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(row.date)}</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7B3FA0' }}>{row.orderId}</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
-                  <span style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
-                  <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{row.referralCode}</span>
-                    <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                      {row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
-                  <div>
-                    <span style={{
-                      display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
-                      background: st.bg, border: `1px solid ${st.border}`, color: st.color,
-                    }}>{st.label}</span>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div style={{ padding: '48px', textAlign: 'center' }}>
-              <DollarSign size={32} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '12px' }} />
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                {activeCommissions.length === 0
-                  ? 'Share your referral link to start earning commissions.'
-                  : 'Try a different filter to see other commissions.'}
-              </div>
+        ) : (
+          /* ── DESKTOP TABLE VIEW ── */
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
+              {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
+                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+              ))}
             </div>
-          )}
-        </div>
-
-        {/* Mobile Responsive Card Rows View (Visible on mobile <768px via CSS) */}
-        <div className="aff-commission-mobile-cards aff-mobile-only" style={{ width: '100%' }}>
-          {filtered.length > 0 ? (
-            filtered.map((row) => {
-              const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
-              return (
-                <div key={row.id} className="aff-commission-mobile-card" style={{
-                  padding: '14px 16px',
-                  borderRadius: '14px',
-                  background: 'rgba(255,255,255,0.60)',
-                  border: '1px solid rgba(123,63,160,0.12)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  marginBottom: '10px',
-                  boxSizing: 'border-box',
-                  width: '100%',
-                }}>
-                  {/* Top row: Product & Status */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.3, flex: 1, wordBreak: 'break-word' }}>
-                      {row.product}
-                    </div>
-                    <span style={{
-                      display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
-                      background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0
-                    }}>
-                      {st.label}
-                    </span>
-                  </div>
-
-                  {/* Financials: Commission & Sale Price */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: 'rgba(123,63,160,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
+            {filtered.length > 0 ? (
+              filtered.map((row, idx) => {
+                const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
+                return (
+                  <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '13px 16px', borderRadius: '10px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center', minWidth: '780px' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(row.date)}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7B3FA0' }}>{row.orderId}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                    <span style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
                     <div>
-                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Commission</span>
-                      <span style={{ fontSize: '1rem', fontWeight: 800, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{row.referralCode}</span>
+                      <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'}</span>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Sale Price</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
-                    </div>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
+                    <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
                   </div>
-
-                  {/* Meta details */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem', borderTop: '1px solid rgba(45,0,96,0.05)', paddingTop: '8px' }}>
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Date & Order</span>
-                      <span style={{ fontWeight: 500, color: 'var(--text-light)', display: 'block' }}>{formatDate(row.date)}</span>
-                      <span style={{ fontWeight: 700, color: '#7B3FA0', fontSize: '0.72rem', display: 'block' }}>{row.orderId}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Customer & Source</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
-                      <span style={{ fontSize: '0.70rem', color: '#2D004D', fontWeight: 700, display: 'block' }}>
-                        {row.referralCode} ({row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'})
-                      </span>
-                    </div>
-                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '48px', textAlign: 'center' }}>
+                <DollarSign size={32} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '12px' }} />
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
                 </div>
-              );
-            })
-          ) : (
-            <div style={{ padding: '32px 16px', textAlign: 'center', background: 'rgba(255,255,255,0.5)', borderRadius: '14px', border: '1px dashed rgba(196,181,253,0.4)' }}>
-              <DollarSign size={28} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '8px' }} />
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter to see other commissions.'}
+                </div>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                {activeCommissions.length === 0
-                  ? 'Share your referral link to start earning commissions.'
-                  : 'Try a different filter to see other commissions.'}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── RECENT PAYOUTS ───────────────────────────────────────────────────── */}
@@ -587,79 +602,47 @@ export default function AffiliateEarnings({
               Once you request a withdrawal, your payout history will appear here.
             </div>
           </div>
+        ) : isMobile ? (
+          /* Mobile payout cards */
+          <div style={{ width: '100%' }}>
+            {activePayouts.map((p) => {
+              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+              return (
+                <div key={p.id} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(123,63,160,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
+                  <div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
+                      {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+                    </div>
+                  </div>
+                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <>
-            {/* Desktop Payout Table (Hidden on mobile <640px via CSS) */}
-            <div className="aff-table-wrap aff-payout-desktop-only" style={{ minWidth: 0, width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
-                {['Date', 'Amount', 'Method', 'Status'].map(h => (
-                  <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-                ))}
-              </div>
-              {activePayouts.map((p, idx) => {
-                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
-                return (
-                  <div
-                    key={p.id}
-                    style={{
-                      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-                      gap: '12px', padding: '13px 16px',
-                      borderRadius: '10px', minWidth: '480px',
-                      borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none',
-                      transition: 'background 0.2s',
-                      alignItems: 'center',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
-                    <div>
-                      <span style={{
-                        display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
-                        background: st.bg, border: `1px solid ${st.border}`, color: st.color,
-                      }}>{st.label}</span>
-                    </div>
-                  </div>
-                );
-              })}
+          /* Desktop payout table */
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
+              {['Date', 'Amount', 'Method', 'Status'].map(h => (
+                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+              ))}
             </div>
-
-            {/* Mobile Payout Cards (Visible on mobile <640px via CSS) */}
-            <div className="aff-payout-mobile-cards aff-payout-mobile-only" style={{ width: '100%' }}>
-              {activePayouts.map((p) => {
-                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
-                return (
-                  <div key={p.id} style={{
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    background: 'rgba(255,255,255,0.60)',
-                    border: '1px solid rgba(123,63,160,0.12)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '8px',
-                    width: '100%',
-                    boxSizing: 'border-box'
-                  }}>
-                    <div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
-                        {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
-                      </div>
-                    </div>
-                    <span style={{
-                      display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700,
-                      background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0
-                    }}>
-                      {st.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+            {activePayouts.map((p, idx) => {
+              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+              return (
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', minWidth: '480px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
+                  <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
