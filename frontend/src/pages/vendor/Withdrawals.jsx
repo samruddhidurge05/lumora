@@ -75,8 +75,8 @@ export default function Withdrawals() {
     }
 
     const numAmount = Number(amount);
-    if (!amount || numAmount < 500) {
-      setFormError('Minimum withdrawal amount is ₹500.');
+    if (!amount || numAmount < 10) {
+      setFormError('Minimum withdrawal amount is ₹10.');
       return;
     }
 
@@ -281,13 +281,13 @@ export default function Withdrawals() {
                 <div className="v-field">
                   <label className="v-label">Amount (₹)</label>
                   <input className="v-input" type="number" placeholder="Enter amount"
-                    min="500" max={available} value={amount}
+                    min="10" max={available} value={amount}
                     disabled={hasPending || submitting}
                     onChange={e => setAmount(e.target.value)} />
-                  <div className="v-field-hint">Available: ₹{available.toLocaleString()} · Min: ₹500</div>
+                  <div className="v-field-hint">Available: ₹{available.toLocaleString()} · Min: ₹10</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  {[5000, 10000, 25000].map(q => (
+                  {[100, 500, 1000].map(q => (
                     <button key={q} type="button" className="v-btn v-btn-secondary v-btn-sm"
                       disabled={hasPending || submitting || q > available}
                       onClick={() => setAmount(String(Math.min(q, available)))}>
@@ -295,7 +295,7 @@ export default function Withdrawals() {
                     </button>
                   ))}
                   <button type="button" className="v-btn v-btn-secondary v-btn-sm"
-                    disabled={hasPending || submitting || available < 500}
+                    disabled={hasPending || submitting || available < 10}
                     onClick={() => setAmount(String(available))}>Max</button>
                 </div>
                 <div className="v-field">
@@ -322,7 +322,7 @@ export default function Withdrawals() {
                   </div>
                 )}
 
-                {amount && Number(amount) >= 500 && Number(amount) <= available && (
+                {amount && Number(amount) >= 10 && Number(amount) <= available && (
                   <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(168,85,247,0.04)',
                     border: '1px solid rgba(168,85,247,0.12)', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--v-text3)', marginBottom: 8 }}>
@@ -340,7 +340,7 @@ export default function Withdrawals() {
                 
                 <button type="submit" className="v-btn v-btn-primary v-btn-lg"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} 
-                  disabled={hasPending || submitting || !amount || Number(amount) < 500}>
+                  disabled={hasPending || submitting || !amount || Number(amount) < 10}>
                   {submitting ? (
                     <>
                       <RefreshCw size={14} style={{ animation: 'spin 1.5s linear infinite' }} />
@@ -365,7 +365,7 @@ export default function Withdrawals() {
             {[
               'UPI withdrawals are processed instantly',
               'Bank transfers take 2-3 business days',
-              'Minimum withdrawal amount is ₹500',
+              'Minimum withdrawal amount is ₹10',
               'No withdrawal fees on Lumora',
             ].map((t, i) => (
               <div key={i} style={{ fontSize: 12, color: 'var(--v-text2)', marginBottom: 6, display: 'flex', gap: 6 }}>

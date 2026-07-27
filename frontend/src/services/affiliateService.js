@@ -357,10 +357,9 @@ export const affiliateService = {
     await batch.commit();
   },
 
-  // Request withdrawal (payout)
   requestPayout: async (affiliateId, amount) => {
-    if (!amount || isNaN(amount) || Number(amount) < 500) {
-      throw new Error('Minimum withdrawal limit is ₹500.');
+    if (!amount || isNaN(amount) || Number(amount) < 10) {
+      throw new Error('Minimum withdrawal limit is ₹10.');
     }
 
     // Phase 5: Block payout requests if suspended

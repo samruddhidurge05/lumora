@@ -24,7 +24,15 @@ import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
 import { clearBackendToken, syncWithBackend } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
-import { getFriendlyError } from '../../../admin-app/src/shared/communication';
+
+const getFriendlyError = (err) => {
+  if (err.code === 'auth/popup-closed-by-user') return { message: 'Sign-in cancelled' };
+  if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') return { message: 'Incorrect email or password.' };
+  const msg = (err.message || '').toLowerCase();
+  if (msg.includes('no account found') || msg.includes('google identity')) return { message: 'This account is not registered as a platform administrator.' };
+  if (msg.includes('not authorised') || msg.includes('not authorized') || msg.includes('only administrators') || msg.includes('not admin') || msg.includes('403') || err.status === 403) return { message: 'This account is not authorised as a platform administrator.' };
+  return { message: err.message || 'Sign-in failed. Please try again.' };
+};
 
 /* ─── Google "G" SVG logo ─────────────────────────────────────────────────── */
 function GoogleLogo() {

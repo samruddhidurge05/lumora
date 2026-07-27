@@ -49,7 +49,7 @@ from app.api.affiliate.schemas import (
 router = APIRouter()
 
 SITE_URL        = os.getenv("VITE_SITE_URL", "http://localhost:5173")
-MIN_PAYOUT_INR  = 500.0   # minimum withdrawal amount in INR
+MIN_PAYOUT_INR  = 10.0   # minimum withdrawal amount in INR
 
 
 from sqlalchemy.exc import IntegrityError
