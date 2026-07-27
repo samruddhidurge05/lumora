@@ -386,7 +386,7 @@ export default function Vendors() {
           {loading && (
             <div className="flex items-center justify-center py-20 gap-3 text-[#7B3FA0]">
               <div className="w-5 h-5 border-2 border-[#B886D0] border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm">Loading records from Firestore…</span>
+              <span className="text-sm">Loading records…</span>
             </div>
           )}
 

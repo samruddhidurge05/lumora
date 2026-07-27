@@ -631,19 +631,26 @@ export default function Analytics() {
 
         {/* Global Controls & Mode Switchers (Stripe/Bloomberg Hybrid Control Center) */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className={`w-2.5 h-2.5 rounded-full ${isLoading ? 'bg-yellow-400 animate-spin' : 'bg-[#B886D0] animate-pulse'}`} />
-            <span className="text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">{isLoading ? 'Loading Firestore Data...' : 'Live Data Active'}</span>
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#F8F3FB] border border-[#F3EAF8] shadow-xs">
+            <div className="relative flex h-2.5 w-2.5 items-center justify-center">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLoading ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isLoading ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+            </div>
+            <span className="text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">
+              {isLoading ? 'Syncing Realtime Analytics...' : 'Live Data Active'}
+            </span>
             <button
               onClick={() => {
                 sysSound.playTap();
                 setLiveSimulation(!liveSimulation);
               }}
-              className={`p-1 px-2.5 rounded-lg text-[9px] font-extrabold tracking-wider uppercase transition-all duration-300 ${
-                liveSimulation ? 'bg-[#2D004D] text-[#F8F3FB]' : 'bg-white text-[#7B3FA0] border border-stone-200/50'
+              className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider uppercase transition-all duration-300 ${
+                liveSimulation
+                  ? 'bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white shadow-xs'
+                  : 'bg-white text-[#7B3FA0] border border-[#F3EAF8] hover:bg-[#F3EAF8]'
               }`}
             >
-              {liveSimulation ? 'Live' : 'Paused'}
+              {liveSimulation ? 'LIVE' : 'PAUSED'}
             </button>
           </div>
 

@@ -158,7 +158,7 @@ export default function PlatformSettings() {
                   <RefreshCw size={22} className="animate-spin text-[#7B3FA0]" />
                 </div>
               </div>
-              <h3 className="text-base font-serif font-black text-[#2D004D]">Connecting to Firestore Database</h3>
+              <h3 className="text-base font-serif font-black text-[#2D004D]">Connecting to Realtime Platform Data</h3>
               <p className="text-[9px] text-[#7B3FA0] mt-1.5 uppercase font-bold tracking-widest animate-pulse">
                 Fetching global platform parameters...
               </p>
