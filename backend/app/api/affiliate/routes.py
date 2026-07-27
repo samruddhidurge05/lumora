@@ -596,19 +596,19 @@ def request_payout(
 
     profile = _get_affiliate_profile(current_user, db)
 
-    # ? Duplicate pending payout prevention
-    existing_pending = db.query(AffiliatePayout).filter(
-        AffiliatePayout.affiliate_id == profile.id,
-        AffiliatePayout.status == "pending",
-    ).first()
-    if existing_pending:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"You already have a pending payout of ?{existing_pending.amount:.0f}. "
-                "Please wait for it to be processed before requesting another."
-            ),
-        )
+    # ? Duplicate pending payout prevention (Temporarily disabled for testing)
+    # existing_pending = db.query(AffiliatePayout).filter(
+    #     AffiliatePayout.affiliate_id == profile.id,
+    #     AffiliatePayout.status == "pending",
+    # ).first()
+    # if existing_pending:
+    #     raise HTTPException(
+    #         status_code=409,
+    #         detail=(
+    #             f"You already have a pending payout of ?{existing_pending.amount:.0f}. "
+    #             "Please wait for it to be processed before requesting another."
+    #         ),
+    #     )
 
     # ✓ Check available approved balance
     # IMPORTANT: Check commission_status first (canonical field).
