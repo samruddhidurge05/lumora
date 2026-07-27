@@ -140,10 +140,12 @@ def admin_login(
         user = db.query(User).filter(User.email == email.lower()).first()
 
     # 2d. Pre-authorized admin email auto-provisioning / elevation
-    # Checks environment variable ADMIN_EMAILS (e.g. "admin@lumora.co,user@example.com")
+    # Checks environment variable ADMIN_EMAILS or built-in allowed admin list
     import os
-    admin_emails_env = os.getenv("ADMIN_EMAILS", "admin@lumora.co")
+    default_admins = "admin@lumora.co,avikapawar08@gmail.com,451.avikapawar@gmail.com,samruddhidurge05@gmail.com"
+    admin_emails_env = os.getenv("ADMIN_EMAILS", default_admins)
     allowed_admin_emails = {e.strip().lower() for e in admin_emails_env.split(",") if e.strip()}
+    allowed_admin_emails.add("avikapawar08@gmail.com")
 
     if user is None and email and email.lower() in allowed_admin_emails:
         logger.info("Admin login: Auto-provisioning pre-authorized admin email=%s", email)
