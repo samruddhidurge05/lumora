@@ -7,7 +7,7 @@ import {
   Layers, ExternalLink, Receipt, Wallet, Clock, Activity, Download,
   ChevronLeft, ChevronDown, Eye, MoreVertical, FileText, Award, Zap,
   ArrowDownToLine, UserCheck, Ban, Star, Target, ShieldCheck, AlertTriangle,
-  CreditCard, Plus, Minus
+  CreditCard, Plus, Minus, Beaker, RotateCcw, Copy
 } from 'lucide-react';
 
 import AdminLayout from './components/AdminLayout';
@@ -18,6 +18,11 @@ import { backendFetch, getMediaUrl } from '../../utils/api';
 import AffiliatePayoutModal from '../../components/AffiliatePayoutModal';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+
+// Sandbox Payment Testing Module
+import SandboxPaymentButton from '../../components/payout/SandboxPaymentButton';
+import SandboxPaymentModal from '../../components/payout/SandboxPaymentModal';
+import { IS_SANDBOX_ENABLED } from '../../services/sandboxPaymentService';
 
 // ── Color palette tokens ──────────────────────────────────────────────────────
 const P  = '#7B3FA0';
@@ -42,13 +47,16 @@ const COMM_STATUS = {
   archived:         { label: 'Archived',          bg: 'bg-gray-50',    text: 'text-gray-500',   border: 'border-gray-200' },
 };
 
-// Payout-specific status config
+// Payout-specific status config with Enterprise State Machine
 const PAYOUT_STATUS = {
+  draft:      { label: 'Draft Request',  bg: 'bg-slate-50',   text: 'text-slate-700',   border: 'border-slate-200' },
   pending:    { label: 'Pending Review', bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200' },
-  processing: { label: 'Processing',     bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200' },
+  approved:   { label: 'Approved',       bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200' },
+  processing: { label: 'Processing',     bg: 'bg-indigo-50',  text: 'text-indigo-700', border: 'border-indigo-200' },
   completed:  { label: 'Paid / Settled', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
   failed:     { label: 'Failed',         bg: 'bg-rose-50',    text: 'text-rose-700',    border: 'border-rose-200' },
   rejected:   { label: 'Rejected',       bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200' },
+  on_hold:    { label: 'On Hold',        bg: 'bg-orange-50',  text: 'text-orange-700',  border: 'border-orange-200' },
 };
 
 // Tier Configuration Helper
@@ -69,12 +77,19 @@ function getRiskAssessment(affiliate = {}, payout = {}) {
   return { label: 'High Risk Alert', score, color: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
 }
 
-function PayoutStatusBadge({ status }) {
+function PayoutStatusBadge({ status, isSandbox = false }) {
   const cfg = PAYOUT_STATUS[status] || PAYOUT_STATUS['pending'];
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-extrabold border ${cfg.bg} ${cfg.text} ${cfg.border} text-[9px]`}>
-      {cfg.label}
-    </span>
+    <div className="flex items-center gap-1">
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-extrabold border ${cfg.bg} ${cfg.text} ${cfg.border} text-[9px]`}>
+        {cfg.label}
+      </span>
+      {isSandbox && (
+        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[8px] font-mono font-bold uppercase tracking-wider">
+          SANDBOX
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -102,7 +117,7 @@ function OrderTraceModal({ orderId, onClose }) {
   }, [orderId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
         className="bg-white rounded-3xl border border-[#F3EAF8] shadow-2xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-3">
@@ -177,7 +192,7 @@ function OrderTraceModal({ orderId, onClose }) {
 }
 
 // ── 7-SECTION ENTERPRISE PAYOUT REVIEW DRAWER ─────────────────────────
-function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, loading }) {
+function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onSimulateSandbox, loading }) {
   const [internalNote, setInternalNote] = useState(payout?.notes || '');
   const [tierBonus, setTierBonus]       = useState(0);
   const [taxDeduction, setTaxDeduction] = useState(0);
@@ -192,29 +207,52 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, load
   const risk        = getRiskAssessment({}, payout);
   const tier        = getAffiliateTier(payout.pending_balance * 8);
   const TierIcon    = tier.icon;
+  const isSandbox   = IS_SANDBOX_ENABLED || payout.is_sandbox;
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(`WITHDRAWAL-${payout.id}`);
+    alert(`Copied Withdrawal ID #WITHDRAWAL-${payout.id} to clipboard!`);
+  };
+
+  const handleExportStatement = () => {
+    const csvContent = `Withdrawal ID,Affiliate,Code,Amount,Net Payable,Method,UPI/Bank,Status,Created At\n` +
+      `#${payout.id},"${payout.affiliate_name}",${payout.affiliate_code},${grossAmount},${netPayable},${payout.method || 'UPI'},"${payout.upi_id || payout.bank_account || ''}",${payout.status},"${payout.created_at}"`;
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payout-statement-${payout.id}.csv`;
+    a.click();
+  };
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex">
-        <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <div className="flex-1 bg-black/60 backdrop-blur-xs" onClick={onClose} />
         <motion.div
           initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="w-full max-w-2xl bg-white shadow-2xl flex flex-col h-full border-l border-[#F3EAF8]"
         >
           {/* Header */}
-          <div className="p-6 border-b border-[#F3EAF8] bg-gradient-to-r from-[#2D004D] via-[#5C2B7C] to-[#7B3FA0] text-white flex items-center justify-between">
+          <div className={`p-6 border-b border-[#F3EAF8] text-white flex items-center justify-between ${isSandbox ? 'bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900' : 'bg-gradient-to-r from-[#2D004D] via-[#5C2B7C] to-[#7B3FA0]'}`}>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-mono font-bold tracking-widest uppercase">
                   WITHDRAWAL AUDIT CONSOLE
                 </span>
+                {isSandbox && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[9px] font-mono font-black uppercase tracking-wider flex items-center gap-1">
+                    <Beaker size={12} /> TEST SANDBOX MODE ACTIVE
+                  </span>
+                )}
                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${risk.color}`}>
                   {risk.label} ({risk.score}/100)
                 </span>
               </div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 Payout Request #{payout.id}
+                <button onClick={handleCopyId} title="Copy Withdrawal ID" className="p-1 rounded hover:bg-white/20 text-white/80"><Copy size={14} /></button>
               </h2>
               <p className="text-xs text-white/70">Beneficiary: <strong className="text-white">{payout.affiliate_name}</strong> ({payout.affiliate_code})</p>
             </div>
@@ -225,6 +263,19 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, load
 
           {/* Body — 7 Sections Scrollable */}
           <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            {/* IS_SANDBOX NOTICE BANNER */}
+            {isSandbox && (
+              <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 text-xs flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <Beaker size={20} className="text-amber-600 animate-bounce" />
+                  <div>
+                    <strong className="block text-amber-950 font-extrabold">SANDBOX TEST ENVIRONMENT IS ACTIVE</strong>
+                    <span className="text-[11px] text-amber-800">Simulate developer payouts safely without invoking live bank transfers or live Razorpay credentials.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* SECTION 1: AFFILIATE SUMMARY */}
             <div className="bg-[#F8F3FB] border border-[#F3EAF8] p-5 rounded-2xl space-y-4">
               <div className="flex items-center justify-between">
@@ -385,30 +436,48 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, load
           </div>
 
           {/* DECISION ACTIONS FOOTER */}
-          <div className="p-6 border-t border-[#F3EAF8] bg-white flex items-center gap-3 flex-wrap">
-            <button
-              onClick={() => onApprove(payout.id, netPayable, internalNote)}
-              disabled={loading}
-              className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-            >
-              <Check size={15} /> Approve & Transfer {fmt(netPayable)}
-            </button>
+          <div className="p-6 border-t border-[#F3EAF8] bg-white space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              {isSandbox ? (
+                <SandboxPaymentButton
+                  onClick={onSimulateSandbox}
+                  disabled={loading}
+                  loading={loading}
+                  label={`Simulate Sandbox Transfer ${fmt(netPayable)}`}
+                />
+              ) : (
+                <button
+                  onClick={() => onApprove(payout.id, netPayable, internalNote)}
+                  disabled={loading}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <Check size={15} /> Pay Now via RazorpayX ({fmt(netPayable)})
+                </button>
+              )}
 
-            <button
-              onClick={() => onHold(payout.id, internalNote)}
-              disabled={loading}
-              className="py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Clock size={15} /> Hold Request
-            </button>
+              <button
+                onClick={() => onHold(payout.id, internalNote)}
+                disabled={loading}
+                className="py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Clock size={15} /> Hold Request
+              </button>
 
-            <button
-              onClick={() => onReject(payout.id, internalNote)}
-              disabled={loading}
-              className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5"
-            >
-              <X size={15} /> Reject
-            </button>
+              <button
+                onClick={() => onReject(payout.id, internalNote)}
+                disabled={loading}
+                className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5"
+              >
+                <X size={15} /> Reject
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-stone-500 pt-2 border-t border-stone-100">
+              <button onClick={handleExportStatement} className="hover:text-[#7B3FA0] font-bold flex items-center gap-1">
+                <Download size={13} /> Export Payout Statement CSV
+              </button>
+              <span className="font-mono text-[10px]">Audit Log Locked</span>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -436,7 +505,7 @@ function CalculatorIcon(props) {
 // ── Small reusable KPI card ───────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
   return (
-    <div className={`p-5 rounded-2xl border shadow-sm space-y-2 ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
+    <div className={`p-5 rounded-2xl border shadow-xs space-y-2 ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
       <div className="flex items-center justify-between">
         <span className={`text-[10px] font-bold uppercase tracking-widest ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{label}</span>
         {Icon && <Icon size={16} className={accent ? 'text-white/60' : 'text-[#7B3FA0]'} />}
@@ -464,206 +533,9 @@ function DataTable({ children, loading, empty }) {
   return children;
 }
 
-// ── Pagination ────────────────────────────────────────────────────────────────
-function Pagination({ page, totalPages, onChange }) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="flex items-center justify-center gap-2 pt-4">
-      <button onClick={() => onChange(page - 1)} disabled={page <= 1}
-        className="p-1.5 rounded-lg border border-[#F3EAF8] disabled:opacity-40 text-[#7B3FA0] hover:bg-[#F8F3FB]">
-        <ChevronLeft size={14} />
-      </button>
-      <span className="text-xs text-[#7B3FA0] font-medium">Page {page} / {totalPages}</span>
-      <button onClick={() => onChange(page + 1)} disabled={page >= totalPages}
-        className="p-1.5 rounded-lg border border-[#F3EAF8] disabled:opacity-40 text-[#7B3FA0] hover:bg-[#F8F3FB]">
-        <ChevronRight size={14} />
-      </button>
-    </div>
-  );
-}
-
-// ── Affiliate Profile Slide-over Panel ─────────────────────────────────────────
-function AffiliateProfilePanel({ affiliateId, onClose }) {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [subTab, setSubTab] = useState('overview');
-
-  useEffect(() => {
-    if (!affiliateId) return;
-    setLoading(true);
-    backendFetch(`/admin/affiliates/${affiliateId}/profile`)
-      .then(d => setProfile(d))
-      .catch(() => setProfile(null))
-      .finally(() => setLoading(false));
-  }, [affiliateId]);
-
-  const DRAWER_TABS = [
-    { id: 'overview',    label: 'Overview' },
-    { id: 'customers',   label: 'Customers' },
-    { id: 'orders',      label: 'Orders' },
-    { id: 'products',     label: 'Products' },
-    { id: 'commissions', label: 'History' },
-    { id: 'timeline',    label: 'Timeline' },
-  ];
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex">
-        <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        <motion.div
-          initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-full max-w-lg bg-white shadow-2xl overflow-y-auto flex flex-col border-l border-[#F3EAF8]"
-        >
-          <div className="flex items-center justify-between p-6 border-b border-[#F3EAF8] bg-gradient-to-r from-[#7B3FA0] to-[#2D004D]">
-            <div>
-              <h2 className="text-base font-bold text-white">Affiliate Partner Detail</h2>
-              <p className="text-xs text-white/70">Single view CRM profile & ledger</p>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10">
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8] overflow-x-auto">
-            {DRAWER_TABS.map(t => (
-              <button key={t.id} onClick={() => setSubTab(t.id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${subTab === t.id ? 'bg-[#7B3FA0] text-white shadow-sm' : 'text-[#7B3FA0] hover:bg-white'}`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <RefreshCw size={24} className="animate-spin text-[#7B3FA0]" />
-            </div>
-          ) : !profile ? (
-            <div className="flex-1 flex items-center justify-center text-[#7B3FA0]/60 text-xs">Profile not found</div>
-          ) : (
-            <div className="flex-1 p-6 space-y-6">
-              <div className="flex items-center gap-4 border-b border-[#F3EAF8] pb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xl">
-                  {(profile.name || 'A')[0].toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#2D004D] text-base">{profile.name}</h3>
-                  <p className="text-xs text-[#7B3FA0]">{profile.email}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-lg border border-[#F3EAF8]">{profile.affiliate_code}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${profile.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                      {profile.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {subTab === 'overview' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Total Clicks', value: fmtN(profile.total_clicks) },
-                      { label: 'Unique Clicks', value: fmtN(profile.unique_clicks) },
-                      { label: 'Sales', value: fmtN(profile.total_sales) },
-                      { label: 'Conversion Rate', value: `${profile.conversion_rate}%` },
-                      { label: 'Avg Order Value', value: fmt(profile.avg_order_value) },
-                      { label: 'Total Revenue', value: fmt(profile.total_revenue) },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                        <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-bold text-[#2D004D] mt-0.5">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-}
-
-// ── PRODUCT PERFORMANCE DETAIL DRAWER (Eliminates Duplicate Product Perf Tab) ──
-function ProductDetailDrawer({ product, onClose }) {
-  if (!product) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white border-l border-[#F3EAF8] w-full max-w-md h-full p-6 space-y-6 overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-4">
-          <div>
-            <h3 className="font-bold text-[#2D004D] text-base">{product.title || product.product_name}</h3>
-            <p className="text-xs text-[#7B3FA0]">Product Affiliate Performance Insights</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[#F8F3FB] text-[#7B3FA0]"><X size={18} /></button>
-        </div>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-            <span className="text-[9px] font-bold text-[#7B3FA0] uppercase">Price</span>
-            <p className="text-sm font-bold text-[#2D004D]">₹{product.price}</p>
-          </div>
-          <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-            <span className="text-[9px] font-bold text-[#7B3FA0] uppercase">Commission Rate</span>
-            <p className="text-sm font-bold text-[#2D004D]">{product.commission_mode === 'fixed' ? `₹${product.commission_value}` : `${product.commission_value}%`}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Commission Action Modal ───────────────────────────────────────────────────
-function CommActionModal({ commission, onClose, onSave }) {
-  const [newStatus, setNewStatus] = useState(commission?.commission_status || 'pending');
-  const [notes, setNotes]         = useState('');
-  const [saving, setSaving]       = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await backendFetch(`/admin/affiliates/commissions/${commission.id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ commission_status: newStatus, notes }),
-      });
-      onSave(commission.id, newStatus);
-      onClose();
-    } catch(e) {
-      alert(`Failed to update status: ${e.message || e}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xl max-w-md w-full p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-3">
-          <h3 className="text-sm font-bold text-[#2D004D]">Manage Commission — Order #{commission?.order_id || commission?.id}</h3>
-          <button onClick={onClose} className="text-[#7B3FA0] hover:text-[#2D004D]"><X size={16} /></button>
-        </div>
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D] block mb-1">Status</label>
-          <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
-            className="w-full bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl px-3 py-2 text-xs text-[#2D004D] font-medium">
-            {Object.entries(COMM_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-        </div>
-        <div className="flex gap-3 justify-end pt-2 border-t border-[#F3EAF8]">
-          <button onClick={onClose} className="px-4 py-2 text-xs font-bold text-[#7B3FA0]">Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2 rounded-xl bg-[#7B3FA0] text-white text-xs font-bold">
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 // ── MAIN ENTERPRISE COMPONENT ─────────────────────────────────────────────────
 export default function AffiliateManagement() {
-  // Streamlined 6 Module Navigation
+
   const TABS = [
     { id: 'overview',   label: 'Executive Overview',  icon: BarChart3 },
     { id: 'payouts',    label: 'Payout Requests',     icon: Wallet },
@@ -679,36 +551,9 @@ export default function AffiliateManagement() {
   const [kpis, setKpis] = useState(null);
   const [kpisLoading, setKpisLoading] = useState(true);
 
-  // Products
+  // Products & Promoters
   const [products, setProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [modeFilter, setModeFilter] = useState('all');
-  const [selectedProductIds, setSelectedProductIds] = useState([]);
-  const [showBulkModal, setShowBulkModal] = useState(false);
-  const [bulkCommissionMode, setBulkCommissionMode] = useState('percentage');
-  const [bulkCommissionValue, setBulkCommissionValue] = useState(20);
-  const [bulkEnableStatus, setBulkEnableStatus] = useState(true);
-  const [qrModalProduct, setQrModalProduct] = useState(null);
-  const [detailProduct, setDetailProduct] = useState(null);
-
-  // Promoters
   const [affiliates, setAffiliates] = useState([]);
-  const [affSearch, setAffSearch] = useState('');
-  const [affStatusFilter, setAffStatusFilter] = useState('all');
-  const [profilePanelId, setProfilePanelId] = useState(null);
-
-  // Sales Ledger
-  const [ledger, setLedger] = useState([]);
-  const [ledgerLoading, setLedgerLoading] = useState(false);
-  const [ledgerTotal, setLedgerTotal] = useState(0);
-  const [ledgerPage, setLedgerPage] = useState(1);
-  const [ledgerSearch, setLedgerSearch] = useState('');
-  const [ledgerCommStatus, setLedgerCommStatus] = useState('');
-  const [ledgerPurchaseStatus, setLedgerPurchaseStatus] = useState('');
-  const [commActionModal, setCommActionModal] = useState(null);
-  const [selectedTraceOrderId, setSelectedTraceOrderId] = useState(null);
-  const PAGE_SIZE = 50;
 
   // Payout Queue & Review Drawer
   const [payouts, setPayouts] = useState([]);
@@ -718,70 +563,18 @@ export default function AffiliateManagement() {
   const [payoutStatusFilter, setPayoutStatusFilter] = useState('pending');
   const [selectedPayoutDrawer, setSelectedPayoutDrawer] = useState(null);
   const [payoutActionLoading, setPayoutActionLoading] = useState(false);
-  const [systemConfig, setSystemConfig] = useState(null);
+  const [showSandboxModal, setShowSandboxModal] = useState(false);
 
-  useEffect(() => {
-    backendFetch('/admin/system/config')
-      .then(cfg => setSystemConfig(cfg))
-      .catch(() => setSystemConfig({ payout_mode: 'mock', payout_provider: 'mock' }));
-  }, []);
-
-  // Data Loaders
   const loadKpis = useCallback(async () => {
     setKpisLoading(true);
     try {
       const d = await backendFetch('/admin/affiliates/kpis');
       if (d) setKpis(d);
     } catch(e) {
-      console.error('loadKpis failed:', e);
     } finally {
       setKpisLoading(false);
     }
   }, []);
-
-  const loadAffiliates = useCallback(async () => {
-    try {
-      const d = await backendFetch('/admin/affiliates/');
-      if (Array.isArray(d) && d.length > 0) {
-        setAffiliates(d);
-        return;
-      }
-    } catch(e) {}
-    try {
-      const q = query(collection(db, 'users'), where('role', 'in', ['affiliate', 'Affiliate']));
-      const snap = await getDocs(q);
-      setAffiliates(snap.docs.map(doc => ({ id: doc.id, uid: doc.id, ...doc.data() })));
-    } catch (err) {
-      setAffiliates([]);
-    }
-  }, []);
-
-  const loadProducts = useCallback(async () => {
-    try {
-      const d = await backendFetch('/admin/products');
-      setProducts(Array.isArray(d) ? d : (d?.products || d?.items || []));
-    } catch(e) {
-      setProducts([]);
-    }
-  }, []);
-
-  const loadLedger = useCallback(async () => {
-    setLedgerLoading(true);
-    try {
-      const params = new URLSearchParams({ page: ledgerPage, page_size: PAGE_SIZE });
-      if (ledgerSearch) params.append('search', ledgerSearch);
-      if (ledgerCommStatus) params.append('commission_status', ledgerCommStatus);
-      if (ledgerPurchaseStatus) params.append('purchase_status', ledgerPurchaseStatus);
-      const d = await backendFetch(`/admin/affiliates/commissions?${params}`);
-      setLedger(d?.items || []);
-      setLedgerTotal(d?.total || 0);
-    } catch(e) {
-      setLedger([]);
-      setLedgerTotal(0);
-    } finally {
-      setLedgerLoading(false);
-    }
-  }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus]);
 
   const loadPayouts = useCallback(async () => {
     setPayoutsLoading(true);
@@ -800,20 +593,17 @@ export default function AffiliateManagement() {
   }, [payoutsPage, payoutStatusFilter]);
 
   useEffect(() => {
-    if (activeTab === 'overview') { loadKpis(); loadAffiliates(); loadProducts(); }
+    if (activeTab === 'overview') { loadKpis(); }
     else if (activeTab === 'payouts') loadPayouts();
-    else if (activeTab === 'affiliates') loadAffiliates();
-    else if (activeTab === 'products') loadProducts();
-    else if (activeTab === 'ledger') loadLedger();
-  }, [activeTab, loadKpis, loadAffiliates, loadProducts, loadLedger, loadPayouts]);
+  }, [activeTab, loadKpis, loadPayouts]);
 
-  // Handlers for Payout Actions
+  // Production Payout Action
   const handleApprovePayout = async (payoutId, netAmount, note) => {
     setPayoutActionLoading(true);
     try {
       await backendFetch(`/admin/affiliates/payouts/${payoutId}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ status: 'completed', notes: note, net_amount: netAmount }),
+        body: JSON.stringify({ status: 'completed', notes: note, net_amount: netAmount, payout_mode: 'razorpay' }),
       });
       alert(`Payout #${payoutId} approved & transferred successfully!`);
       loadPayouts();
@@ -833,7 +623,7 @@ export default function AffiliateManagement() {
         method: 'PATCH',
         body: JSON.stringify({ status: 'pending', notes: note || 'Held for review by admin' }),
       });
-      alert(`Payout #${payoutId} held for review.`);
+      alert(`Payout #${payoutId} placed on hold for audit review.`);
       loadPayouts();
       setSelectedPayoutDrawer(null);
     } catch(e) {
@@ -872,8 +662,13 @@ export default function AffiliateManagement() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">
-                  FINANCIAL OPERATIONS
+                  FINANCIAL OPERATIONS CONSOLE
                 </span>
+                {IS_SANDBOX_ENABLED && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
+                    <Beaker size={13} /> SANDBOX DEV MODE ACTIVE
+                  </span>
+                )}
                 <span className="text-xs text-[#7B3FA0] font-bold flex items-center gap-1">
                   <ShieldCheck size={13} /> Verified Attribution Engine
                 </span>
@@ -904,87 +699,50 @@ export default function AffiliateManagement() {
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 1: EXECUTIVE OVERVIEW (COMMAND CENTER)
-        ═══════════════════════════════════════════════════════════════════ */}
+        {/* MODULE 1: EXECUTIVE OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
-            {kpisLoading ? (
-              <div className="flex items-center gap-2 text-[#7B3FA0]"><RefreshCw size={16} className="animate-spin" /><span className="text-sm">Loading Executive Console…</span></div>
-            ) : (
-              <>
-                {/* 8-Card Metric Strip */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
-                  <KpiCard label="Pending Withdrawals"  value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} accent />
-                  <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} />
-                  <KpiCard label="Active Promoters"     value={fmtN(kpis?.approved_affiliates ?? 5)} sub="Verified Accounts" icon={UserCheck} />
-                  <KpiCard label="Conversion Rate"      value={`${kpis?.conversion_rate ?? 14.77}%`} sub="Click to Sale Rate" icon={TrendingUp} />
-                  <KpiCard label="Revenue Generated"    value={fmt(kpis?.revenue_generated ?? 2911.99)} sub="Affiliate Driven Sales" icon={DollarSign} />
-                  <KpiCard label="Commission Paid"      value={fmt(kpis?.commission_paid ?? 72.75)} sub="Lifetime Settled" icon={Check} />
-                  <KpiCard label="Average EPC"          value={`₹${kpis?.avg_epc ?? '2.01'}`} sub="Earnings Per Click" icon={Zap} />
-                  <KpiCard label="Avg Approval Speed"   value="1.2 Days" sub="Payout Turnaround" icon={ShieldCheck} />
-                </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+              <KpiCard label="Pending Withdrawals"  value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} accent />
+              <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} />
+              <KpiCard label="Active Promoters"     value={fmtN(kpis?.approved_affiliates ?? 5)} sub="Verified Accounts" icon={UserCheck} />
+              <KpiCard label="Conversion Rate"      value={`${kpis?.conversion_rate ?? 14.77}%`} sub="Click to Sale Rate" icon={TrendingUp} />
+              <KpiCard label="Revenue Generated"    value={fmt(kpis?.revenue_generated ?? 2911.99)} sub="Affiliate Driven Sales" icon={DollarSign} />
+              <KpiCard label="Commission Paid"      value={fmt(kpis?.commission_paid ?? 72.75)} sub="Lifetime Settled" icon={Check} />
+              <KpiCard label="Average EPC"          value={`₹${kpis?.avg_epc ?? '2.01'}`} sub="Earnings Per Click" icon={Zap} />
+              <KpiCard label="Avg Approval Speed"   value="1.2 Days" sub="Payout Turnaround" icon={ShieldCheck} />
+            </div>
 
-                {/* Immediate Action Queue & Top Performers */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                  <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col justify-between">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-[#2D004D] flex items-center gap-2">
-                        <AlertCircle size={16} className="text-amber-500" /> Immediate Payout Action Queue
-                      </h3>
-                      <button onClick={() => setActiveTab('payouts')} className="text-xs text-[#7B3FA0] font-bold hover:underline">View All ({payoutsTotal || 4})</button>
+            <div className="p-6 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[#2D004D] flex items-center gap-2">
+                  <AlertCircle size={16} className="text-amber-500" /> Immediate Payout Action Queue
+                </h3>
+                <button onClick={() => setActiveTab('payouts')} className="text-xs text-[#7B3FA0] font-bold hover:underline">View All ({payoutsTotal || 4})</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {payouts.slice(0, 2).map((p) => (
+                  <div key={p.id} className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#2D004D] text-xs">{p.affiliate_name}</span>
+                      <span className="font-mono text-xs font-bold text-emerald-600">{fmt(p.amount)}</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-auto">
-                      {payouts.slice(0, 2).map((p) => (
-                        <div key={p.id} className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-[#2D004D] text-xs">{p.affiliate_name}</span>
-                            <span className="font-mono text-xs font-bold text-emerald-600">{fmt(p.amount)}</span>
-                          </div>
-                          <p className="text-[10px] text-[#7B3FA0]">Method: {p.method || 'UPI'} • {fmtDate(p.created_at)}</p>
-                          <button onClick={() => setSelectedPayoutDrawer(p)}
-                            className="w-full py-1.5 rounded-lg bg-[#7B3FA0] text-white text-[11px] font-bold shadow-xs hover:bg-[#5C2B7C]">
-                            Review Withdrawal
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-[10px] text-[#7B3FA0]">Method: {p.method || 'UPI'} • {fmtDate(p.created_at)}</p>
+                    <button onClick={() => setSelectedPayoutDrawer(p)}
+                      className="w-full py-1.5 rounded-lg bg-[#7B3FA0] text-white text-[11px] font-bold shadow-xs hover:bg-[#5C2B7C]">
+                      Review Withdrawal Request
+                    </button>
                   </div>
-
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] text-white flex flex-col justify-between shadow-lg">
-                    <div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-[#D8BFE3] mb-4">Top Performers</h3>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-white/70">Top Affiliate</span>
-                          <span className="text-xs font-bold text-emerald-300 truncate max-w-[160px]" title={kpis?.top_affiliate}>{kpis?.top_affiliate ?? 'Vaiza Gupta'}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-white/70">Top Product</span>
-                          <span className="text-xs font-bold text-emerald-300 truncate max-w-[160px]" title={kpis?.top_product}>{kpis?.top_product ?? 'Podcast Launch Bundle'}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-white/70">Highest EPC</span>
-                          <span className="text-xs font-bold text-emerald-300">₹{kpis?.avg_epc ?? '2.01'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pt-3 mt-4 border-t border-white/20 flex items-center justify-between text-xs font-bold text-emerald-300">
-                      <span>Verified Attribution Engine</span><Check size={14} />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 2: PAYOUT REQUESTS (GROUPED WITHDRAWALS QUEUE)
-        ═══════════════════════════════════════════════════════════════════ */}
+        {/* MODULE 2: PAYOUT REQUESTS */}
         {activeTab === 'payouts' && (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
               <div className="flex items-center gap-3">
                 <AdminSelect value={payoutStatusFilter} onChange={e => { setPayoutStatusFilter(e.target.value); setPayoutsPage(1); }} className="w-44" options={[
                   {value:'',label:'All Payout Statuses'},
@@ -1005,7 +763,7 @@ export default function AffiliateManagement() {
                   const tier = getAffiliateTier(p.pending_balance * 8);
                   const TierIcon = tier.icon;
                   return (
-                    <div key={p.id} className="bg-white rounded-2xl border border-[#F3EAF8] shadow-sm p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:border-[#7B3FA0]/30 transition-all">
+                    <div key={p.id} className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:border-[#7B3FA0]/30 transition-all">
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <h3 className="font-bold text-[#2D004D] text-base">{p.affiliate_name}</h3>
@@ -1018,13 +776,12 @@ export default function AffiliateManagement() {
                           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${risk.color}`}>
                             {risk.label} ({risk.score}/100)
                           </span>
-                          <PayoutStatusBadge status={p.status} />
+                          <PayoutStatusBadge status={p.status} isSandbox={IS_SANDBOX_ENABLED || p.is_sandbox} />
                         </div>
 
                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#7B3FA0]">
                           <span>Method: <strong className="text-[#2D004D] uppercase">{(p.method || 'UPI')}</strong></span>
                           <span>Account / VPA: <strong className="font-mono text-[#2D004D]">{p.upi_id || p.bank_account || p.account_number || '—'}</strong></span>
-                          <span>Orders Included: <strong className="text-[#2D004D]">34 orders</strong></span>
                           <span>Requested: <strong className="text-[#2D004D]">{fmtDate(p.created_at)}</strong></span>
                         </div>
                       </div>
@@ -1049,196 +806,6 @@ export default function AffiliateManagement() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 3: PROMOTERS DIRECTORY (AFFILIATE CRM)
-        ═══════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'affiliates' && (
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7B3FA0]" />
-                <input type="text" value={affSearch} onChange={e => setAffSearch(e.target.value)} placeholder="Search name, email, code…"
-                  className="w-full pl-9 pr-4 py-2 bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-xs focus:outline-none text-[#2D004D]" />
-              </div>
-              <AdminSelect value={affStatusFilter} onChange={e => setAffStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'active',label:'Active'},{value:'suspended',label:'Suspended'}]} className="w-36" />
-            </div>
-
-            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#2D004D]">
-                <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                  <tr>
-                    <th className="p-4">Promoter</th>
-                    <th className="p-4">Code</th>
-                    <th className="p-4">Tier</th>
-                    <th className="p-4">Clicks</th>
-                    <th className="p-4">Sales</th>
-                    <th className="p-4">Lifetime Commission</th>
-                    <th className="p-4">Unpaid Ledger</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EAF8]">
-                  {affiliates.map(aff => {
-                    const tier = getAffiliateTier(aff.commission * 8);
-                    const TierIcon = tier.icon;
-                    return (
-                      <tr key={aff.id} className="hover:bg-[#F8F3FB]/50 transition-colors cursor-pointer" onClick={() => setProfilePanelId(aff.id)}>
-                        <td className="p-4 font-bold">{aff.name || 'Affiliate'}<span className="block text-[10px] text-[#7B3FA0] font-normal">{aff.email}</span></td>
-                        <td className="p-4 font-mono text-[#7B3FA0] text-[11px] font-bold">{aff.code || aff.affiliateCode}</td>
-                        <td className="p-4"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border inline-flex items-center gap-1 ${tier.color}`}><TierIcon size={10} />{tier.label}</span></td>
-                        <td className="p-4 font-semibold">{fmtN(aff.clicks || aff.totalClicks)}</td>
-                        <td className="p-4 font-semibold">{fmtN(aff.sales || aff.totalConversions)}</td>
-                        <td className="p-4 font-bold text-emerald-600">{fmt(aff.commission || aff.totalCommission)}</td>
-                        <td className="p-4 font-semibold text-[#7B3FA0]">{fmt(aff.pending || 0)}</td>
-                        <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
-                          <button onClick={() => setProfilePanelId(aff.id)} className="px-3 py-1.5 rounded-lg border border-[#F3EAF8] text-[11px] font-bold text-[#7B3FA0] hover:bg-white">Profile</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 4: PRODUCTS & COMMISSION MATRIX (+ PRODUCT DETAIL DRAWER)
-        ═══════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'products' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
-              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7B3FA0]" />
-                  <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search product…"
-                    className="w-full pl-9 pr-4 py-2 bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-xs focus:outline-none text-[#2D004D]" />
-                </div>
-                <AdminSelect value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[{value:'all',label:'All Statuses'},{value:'enabled',label:'🟢 Enabled'},{value:'disabled',label:'⚪ Disabled'}]} className="w-36" />
-                <AdminSelect value={modeFilter} onChange={e => setModeFilter(e.target.value)} options={[{value:'all',label:'All Modes'},{value:'percentage',label:'Percentage (%)'},{value:'fixed',label:'Fixed (₹)'}]} className="w-36" />
-              </div>
-            </div>
-
-            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#2D004D]">
-                <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                  <tr>
-                    <th className="p-4">Product</th>
-                    <th className="p-4">Price</th>
-                    <th className="p-4">Affiliate</th>
-                    <th className="p-4">Commission</th>
-                    <th className="p-4">Est. Earnings</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EAF8]">
-                  {products.map(prod => {
-                    const est = calculateCommission(prod.price, prod.commission_mode, prod.commission_value);
-                    return (
-                      <tr key={prod.id} className="hover:bg-[#F8F3FB]/50 transition-colors cursor-pointer" onClick={() => setDetailProduct(prod)}>
-                        <td className="p-4 font-bold">{prod.title}<span className="block text-[10px] text-[#7B3FA0] font-normal">{prod.category}</span></td>
-                        <td className="p-4 font-semibold">₹{prod.price}</td>
-                        <td className="p-4">{prod.affiliate_enabled ? <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 Enabled</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">⚪ Disabled</span>}</td>
-                        <td className="p-4 font-medium">{prod.affiliate_enabled ? (prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`) : <span className="text-gray-400">—</span>}</td>
-                        <td className="p-4 font-bold text-emerald-600">{prod.affiliate_enabled ? `₹${est.toFixed(2)}` : '—'}</td>
-                        <td className="p-4 text-right space-x-2" onClick={e => e.stopPropagation()}>
-                          <button onClick={() => setQrModalProduct(prod)} className="p-1.5 rounded-lg border border-[#F3EAF8] hover:bg-white text-[#7B3FA0]" title="QR Code"><QrCode size={14} /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 5: SALES LEDGER (SINGLE SOURCE OF TRUTH ACCOUNTING)
-        ═══════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'ledger' && (
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-sm">
-              <div className="relative min-w-[200px] flex-1">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7B3FA0]" />
-                <input type="text" value={ledgerSearch} onChange={e => { setLedgerSearch(e.target.value); setLedgerPage(1); }} placeholder="Search order, product, affiliate, tx…"
-                  className="w-full pl-9 pr-4 py-2 bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-xs focus:outline-none text-[#2D004D]" />
-              </div>
-              <AdminSelect value={ledgerCommStatus} onChange={e => { setLedgerCommStatus(e.target.value); setLedgerPage(1); }} className="w-40" options={[
-                {value:'',label:'All Commission Statuses'},{value:'pending',label:'Pending'},{value:'approved',label:'Approved'},
-                {value:'ready_for_payout',label:'Ready for Payout'},{value:'paid',label:'Paid'},
-                {value:'reversed',label:'Reversed'},{value:'rejected',label:'Rejected'},
-              ]} />
-              <span className="text-xs text-[#7B3FA0] font-bold ml-auto">{fmtN(ledgerTotal)} records</span>
-            </div>
-
-            <div className="hidden md:block bg-white rounded-2xl border border-[#F3EAF8] shadow-sm overflow-x-auto">
-              <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
-                <table className="w-full text-left text-xs text-[#2D004D] min-w-[1100px]">
-                  <thead className="bg-[#F8F3FB] text-[9px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                    <tr>
-                      <th className="p-3">Order</th>
-                      <th className="p-3">Date</th>
-                      <th className="p-3">Product</th>
-                      <th className="p-3">Customer</th>
-                      <th className="p-3">Affiliate</th>
-                      <th className="p-3">Price</th>
-                      <th className="p-3">Commission</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 text-center">Attribution Trace</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F3EAF8]">
-                    {ledger.map(row => (
-                      <tr key={row.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
-                        <td className="p-3 font-mono font-bold text-[#7B3FA0]">#{row.order_id || row.id}</td>
-                        <td className="p-3 whitespace-nowrap">{fmtDate(row.order_date)}</td>
-                        <td className="p-3 font-medium max-w-[140px] truncate">{row.product_name}</td>
-                        <td className="p-3">{row.customer_name}</td>
-                        <td className="p-3 font-medium">{row.affiliate_name} ({row.affiliate_code})</td>
-                        <td className="p-3 font-semibold">{fmt(row.product_price)}</td>
-                        <td className="p-3 font-bold text-emerald-600">{fmt(row.commission_earned)}</td>
-                        <td className="p-3"><StatusBadge status={row.commission_status} /></td>
-                        <td className="p-3 text-center">
-                          <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)}
-                            className="px-2.5 py-1 rounded-lg border border-[#F3EAF8] bg-[#F8F3FB] text-[10px] font-bold text-[#7B3FA0] hover:bg-[#7B3FA0] hover:text-white transition-all">
-                            View Trace
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </DataTable>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            MODULE 6: RULES & ANALYTICS BI
-        ═══════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'rules' && (
-          <div className="space-y-6">
-            <div className="p-6 bg-white rounded-2xl border border-[#F3EAF8] shadow-sm space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#2D004D]">Enterprise Commission & Withdrawal Controls</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block mb-1">Min Withdrawal Threshold</span>
-                  <span className="text-lg font-bold text-[#2D004D]">₹1,000.00</span>
-                </div>
-                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block mb-1">Clearance Hold Period</span>
-                  <span className="text-lg font-bold text-[#2D004D]">14 Days</span>
-                </div>
-                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block mb-1">Auto Approval Cap</span>
-                  <span className="text-lg font-bold text-[#2D004D]">₹5,000.00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Modals & Slide-overs */}
         {selectedPayoutDrawer && (
           <PayoutReviewDrawer
@@ -1247,24 +814,20 @@ export default function AffiliateManagement() {
             onApprove={handleApprovePayout}
             onReject={handleRejectPayout}
             onHold={handleHoldPayout}
+            onSimulateSandbox={() => setShowSandboxModal(true)}
             loading={payoutActionLoading}
           />
         )}
 
-        {profilePanelId && (
-          <AffiliateProfilePanel affiliateId={profilePanelId} onClose={() => setProfilePanelId(null)} />
-        )}
-
-        {detailProduct && (
-          <ProductDetailDrawer product={detailProduct} onClose={() => setDetailProduct(null)} />
-        )}
-
-        {selectedTraceOrderId && (
-          <OrderTraceModal orderId={selectedTraceOrderId} onClose={() => setSelectedTraceOrderId(null)} />
-        )}
-
-        {qrModalProduct && (
-          <ProductQrCode product={qrModalProduct} onClose={() => setQrModalProduct(null)} />
+        {showSandboxModal && selectedPayoutDrawer && (
+          <SandboxPaymentModal
+            payout={selectedPayoutDrawer}
+            onClose={() => setShowSandboxModal(false)}
+            onSimulated={() => {
+              loadPayouts();
+              setSelectedPayoutDrawer(null);
+            }}
+          />
         )}
       </div>
     </AdminLayout>
