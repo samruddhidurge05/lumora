@@ -587,64 +587,79 @@ export default function AffiliateEarnings({
         )}
       </div>
 
-      {/* ── RECENT PAYOUTS ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-payout-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
-          <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Payout Requests</h3>
-        </div>
+      {/* ── PAYOUTS (PENDING & COMPLETED) ───────────────────────────────────────────────────── */}
+      {[
+        { 
+          title: 'Pending Requests', 
+          subtitle: 'Awaiting Admin Approval', 
+          list: activePayouts.filter(p => p.status === 'pending'),
+          emptyMsg: 'No pending requests',
+          emptyDesc: 'You have no withdrawal requests waiting for approval.'
+        },
+        { 
+          title: 'Completed Payouts', 
+          subtitle: 'Successfully Processed', 
+          list: activePayouts.filter(p => p.status !== 'pending'),
+          emptyMsg: 'No completed payouts',
+          emptyDesc: 'Once a withdrawal is processed, it will appear here.'
+        }
+      ].map((section, sectionIdx) => (
+        <div key={section.title} className="premium-flat-card aff-payout-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box', marginBottom: sectionIdx === 0 ? '20px' : '0' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <span className="caption-premium" style={{ color: '#7B3FA0', textTransform: 'uppercase' }}>{section.subtitle}</span>
+            <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>{section.title}</h3>
+          </div>
 
-        {activePayouts.length === 0 ? (
-          <div style={{ padding: '36px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
-            <Wallet size={30} style={{ color: 'rgba(196,181,253,0.70)', marginBottom: '10px' }} />
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>No payout requests yet</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Once you request a withdrawal, your payout history will appear here.
+          {section.list.length === 0 ? (
+            <div style={{ padding: '36px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
+              <Wallet size={30} style={{ color: 'rgba(196,181,253,0.70)', marginBottom: '10px' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{section.emptyMsg}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{section.emptyDesc}</div>
             </div>
-          </div>
-        ) : isMobile ? (
-          /* Mobile payout cards */
-          <div style={{ width: '100%' }}>
-            {activePayouts.map((p) => {
-              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
-              return (
-                <div key={p.id} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(123,63,160,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
-                  <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
-                      {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+          ) : isMobile ? (
+            /* Mobile payout cards */
+            <div style={{ width: '100%' }}>
+              {section.list.map((p) => {
+                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                return (
+                  <div key={p.id} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(123,63,160,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
+                        {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+                      </div>
                     </div>
+                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
                   </div>
-                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Desktop payout table */
-          <div style={{ overflowX: 'auto', width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
-              {['Date', 'Amount', 'Method', 'Status'].map(h => (
-                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-              ))}
+                );
+              })}
             </div>
-            {activePayouts.map((p, idx) => {
-              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
-              return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', minWidth: '480px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
-                  <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          ) : (
+            /* Desktop payout table */
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
+                {['Date', 'Amount', 'Method', 'Status'].map(h => (
+                  <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+                ))}
+              </div>
+              {section.list.map((p, idx) => {
+                const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                return (
+                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', minWidth: '480px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
+                    <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
 
       {/* ── WITHDRAWAL MODAL ─────────────────────────────────────────────────── */}
       {showWithdrawal && (
