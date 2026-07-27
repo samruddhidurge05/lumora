@@ -46,9 +46,19 @@ class AffiliateProfile(Base):
     pending_earnings     = Column(Float, default=0.0)    # commissions not yet approved
     paid_earnings        = Column(Float, default=0.0)    # commissions fully paid out
     rejected_earnings    = Column(Float, default=0.0)    # commissions rejected/reversed
+    frozen_balance       = Column(Float, default=0.0)    # funds locked in in-flight payout
     unique_clicks        = Column(Integer, default=0)    # deduplicated click count
     avg_order_value      = Column(Float, default=0.0)    # average sale amount they generate
     last_active_at       = Column(DateTime, nullable=True) # last click or sale event
+
+    # Enterprise Financial & KYC Profile
+    kyc_status               = Column(String(30), default="verified") # pending|submitted|verified|rejected
+    pan_number               = Column(String(20), nullable=True)
+    pan_holder_name          = Column(String(150), nullable=True)
+    gstin                    = Column(String(20), nullable=True)
+    is_bank_verified         = Column(Boolean, default=True)
+    razorpay_contact_id      = Column(String(100), nullable=True, index=True) # cont_xxx
+    razorpay_fund_account_id = Column(String(100), nullable=True, index=True) # fa_xxx
 
     # Status
     is_active       = Column(Boolean, default=True)
@@ -169,6 +179,15 @@ class AffiliatePayout(Base):
     # Status: pending | processing | completed | failed | rejected
     status          = Column(String(20), default="pending", index=True)
     notes           = Column(Text, nullable=True)
+
+    # Enterprise Accounting & Snapshot Engine
+    net_amount               = Column(Float, nullable=True)        # calculated payable total
+    tds_deduction            = Column(Float, default=0.0)          # tax withheld
+    tier_bonus               = Column(Float, default=0.0)          # bonus adjustment
+    utr                      = Column(String(100), nullable=True, index=True) # Bank Settlement UTR
+    snapshot_data            = Column(JSON, nullable=True)         # Immutable snapshot of orders & calculations
+    retry_count              = Column(Integer, default=0)          # Failure retry count
+    last_retried_at          = Column(DateTime, nullable=True)     # Timestamp of last retry attempt
 
     # ── Payout Provider Tracking (production columns — all nullable) ──────────
     # Populated when admin triggers payment; persisted before provider call
