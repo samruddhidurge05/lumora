@@ -632,25 +632,25 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Platform Subsystem Health Indicators */}
+            {/* Platform Health Status Indicators */}
             <div className="flex flex-col gap-2 pt-3 border-t border-stone-200/50">
-              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Subsystem Telemetry</span>
+              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Platform Status</span>
               <div className="grid grid-cols-2 gap-2 text-[9px]">
                 <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
-                  <span className="font-medium text-[#7B3FA0]">PostgreSQL DB</span>
-                  <span className="font-bold text-[#2563eb]">ONLINE</span>
+                  <span className="font-medium text-[#7B3FA0]">Core Services</span>
+                  <span className="font-bold text-[#2563eb]">Operational</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
-                  <span className="font-medium text-[#7B3FA0]">Firestore Sync</span>
-                  <span className="font-bold text-[#2563eb]">ACTIVE</span>
+                  <span className="font-medium text-[#7B3FA0]">Customer Experience</span>
+                  <span className="font-bold text-[#2563eb]">Healthy</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
-                  <span className="font-medium text-[#7B3FA0]">Storage (B2)</span>
-                  <span className="font-bold text-[#2563eb]">READY</span>
+                  <span className="font-medium text-[#7B3FA0]">File Management</span>
+                  <span className="font-bold text-[#2563eb]">Healthy</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg border border-[#F3EAF8]">
-                  <span className="font-medium text-[#7B3FA0]">Payment Gateway</span>
-                  <span className="font-bold text-[#2563eb]">READY</span>
+                  <span className="font-medium text-[#7B3FA0]">Payments</span>
+                  <span className="font-bold text-[#2563eb]">Available</span>
                 </div>
               </div>
             </div>

@@ -12,6 +12,7 @@ import {
 import {
   getDownloadErrorMessage,
 } from '../../services/downloadService.js';
+import { loadingMessages, emptyStates, getFriendlyError } from '../../shared/communication';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {

@@ -11,6 +11,7 @@ import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { ProductQrButton } from '../../components/product/ProductQrCode';
 import { calculateCommission } from '../../utils/referralUtils';
+import { loadingMessages, emptyStates, getFriendlyError } from '../../shared/communication';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {

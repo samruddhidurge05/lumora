@@ -24,6 +24,7 @@ import { auth } from '../../services/firebase';
 import { adminLogin } from '../../services/adminAuthService';
 import { clearBackendToken, syncWithBackend } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
+import { getFriendlyError } from '../../shared/communication';
 
 /* ─── Google "G" SVG logo ─────────────────────────────────────────────────── */
 function GoogleLogo() {
@@ -276,25 +277,8 @@ export default function AdminLogin() {
         localStorage.removeItem('lumora_active_role');
       }
 
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Sign-in cancelled');
-      } else if (
-        err.message?.toLowerCase().includes('no account found') ||
-        err.message?.toLowerCase().includes('google identity')
-      ) {
-        setError('This Google account is not registered as a platform administrator.');
-      } else if (
-        err.message?.toLowerCase().includes('not authorised') ||
-        err.message?.toLowerCase().includes('not authorized') ||
-        err.message?.toLowerCase().includes('only administrators') ||
-        err.message?.toLowerCase().includes('not admin')
-      ) {
-        setError('This account is not authorised as a platform administrator');
-      } else if (err.message?.includes('403') || err.status === 403) {
-        setError('This account is not authorised as a platform administrator');
-      } else {
-        setError('Sign-in failed. Please try again.');
-      }
+      const friendly = getFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setLoading(false);
     }
@@ -374,23 +358,8 @@ export default function AdminLogin() {
         localStorage.removeItem('lumora_active_role');
       }
 
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Incorrect email or password.');
-      } else if (
-        err.message?.toLowerCase().includes('no account found') ||
-        err.message?.toLowerCase().includes('google identity')
-      ) {
-        setError('This account is not registered as a platform administrator.');
-      } else if (
-        err.message?.toLowerCase().includes('not authorised') ||
-        err.message?.toLowerCase().includes('not authorized') ||
-        err.message?.toLowerCase().includes('only administrators') ||
-        err.status === 403
-      ) {
-        setError('This account is not authorised as a platform administrator.');
-      } else {
-        setError(err.message || 'Sign-in failed. Please try again.');
-      }
+      const friendly = getFriendlyError(err);
+      setError(friendly.message);
     } finally {
       setLoading(false);
     }
