@@ -103,7 +103,8 @@ def admin_login(
         )
 
     firebase_uid: Optional[str] = claims.get("uid")
-    email: Optional[str] = claims.get("email")
+    raw_email: Optional[str] = claims.get("email")
+    email: Optional[str] = raw_email.strip().lower() if raw_email else None
     email_verified: bool = claims.get("email_verified", False)
 
     logger.info("Admin login attempt - firebase_uid=%s email_verified=%s", firebase_uid, email_verified)

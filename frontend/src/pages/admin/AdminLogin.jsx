@@ -219,10 +219,21 @@ export default function AdminLogin() {
         navigate(redirectTarget, { replace: true });
       }
     } catch (err) {
+      if (auth.currentUser) {
+        try {
+          await signOut(auth);
+          clearBackendToken();
+        } catch (_) {}
+      }
       localStorage.removeItem('lumora_active_role');
 
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in cancelled');
+      } else if (
+        err.message?.toLowerCase().includes('no account found') ||
+        err.message?.toLowerCase().includes('google identity')
+      ) {
+        setError('This Google account is not registered as a platform administrator.');
       } else if (
         err.message?.toLowerCase().includes('not authorised') ||
         err.message?.toLowerCase().includes('not authorized') ||
@@ -274,10 +285,21 @@ export default function AdminLogin() {
         navigate(redirectTarget, { replace: true });
       }
     } catch (err) {
+      if (auth.currentUser) {
+        try {
+          await signOut(auth);
+          clearBackendToken();
+        } catch (_) {}
+      }
       localStorage.removeItem('lumora_active_role');
 
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('Incorrect email or password.');
+      } else if (
+        err.message?.toLowerCase().includes('no account found') ||
+        err.message?.toLowerCase().includes('google identity')
+      ) {
+        setError('This account is not registered as a platform administrator.');
       } else if (
         err.message?.toLowerCase().includes('not authorised') ||
         err.message?.toLowerCase().includes('not authorized') ||

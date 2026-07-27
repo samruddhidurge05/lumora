@@ -309,7 +309,12 @@ export const AuthProvider = ({ children }) => {
               });
               if (!token) {
                 console.error('[AuthContext] Timed out waiting for AdminLogin.jsx to store token');
-                // AdminLogin.jsx failed — do not redirect here, let its catch block handle it
+                // AdminLogin.jsx failed — clear backend token and sign out Firebase
+                // so background services do not attempt 401 API requests
+                clearBackendToken();
+                try { await signOut(auth); } catch (_) {}
+                setUser(null);
+                setUserRole(null);
                 setLoading(false);
                 return;
               }

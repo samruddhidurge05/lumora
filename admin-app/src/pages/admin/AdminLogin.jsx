@@ -256,10 +256,19 @@ export default function AdminLogin() {
       console.error('[AdminLogin] error.status:', err.status);
       console.error('[AdminLogin] lumora_active_role at catch time:', localStorage.getItem('lumora_active_role'));
       console.error('[AdminLogin] lumora_backend_token at catch time:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'null');
-      // NOTE: lumora_active_role is intentionally NOT removed here.
-      // Removing it after Firebase auth already succeeded causes onAuthStateChanged
-      // to take the customer branch and overwrite userRole — creating the login loop.
-      // It is only removed if Firebase itself failed (popup closed/blocked).
+
+      // If Firebase authenticated the user but backend admin login failed,
+      // teardown the Firebase session so the app does not remain in an invalid state.
+      if (auth.currentUser) {
+        console.warn('[AdminLogin] Teardown Firebase session on backend admin auth failure');
+        try {
+          await signOut(auth);
+          clearBackendToken();
+        } catch (signOutErr) {
+          console.warn('[AdminLogin] Firebase sign out error during cleanup:', signOutErr.message);
+        }
+      }
+
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked') {
         console.warn('[AdminLogin] popup closed/blocked — removing active_role hint');
         localStorage.removeItem('lumora_active_role');
@@ -267,6 +276,11 @@ export default function AdminLogin() {
 
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in cancelled');
+      } else if (
+        err.message?.toLowerCase().includes('no account found') ||
+        err.message?.toLowerCase().includes('google identity')
+      ) {
+        setError('This Google account is not registered as a platform administrator.');
       } else if (
         err.message?.toLowerCase().includes('not authorised') ||
         err.message?.toLowerCase().includes('not authorized') ||
@@ -336,6 +350,17 @@ export default function AdminLogin() {
       console.error('[AdminLogin] error.code:', err.code);
       console.error('[AdminLogin] error.message:', err.message);
       console.error('[AdminLogin] lumora_active_role at catch time:', localStorage.getItem('lumora_active_role'));
+
+      if (auth.currentUser) {
+        console.warn('[AdminLogin] Teardown Firebase session on email admin auth failure');
+        try {
+          await signOut(auth);
+          clearBackendToken();
+        } catch (signOutErr) {
+          console.warn('[AdminLogin] Firebase sign out error during cleanup:', signOutErr.message);
+        }
+      }
+
       // Only remove role hint if Firebase auth itself failed (bad credentials).
       // Do not remove it if Firebase succeeded but the backend call failed.
       if (
@@ -349,6 +374,11 @@ export default function AdminLogin() {
 
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('Incorrect email or password.');
+      } else if (
+        err.message?.toLowerCase().includes('no account found') ||
+        err.message?.toLowerCase().includes('google identity')
+      ) {
+        setError('This account is not registered as a platform administrator.');
       } else if (
         err.message?.toLowerCase().includes('not authorised') ||
         err.message?.toLowerCase().includes('not authorized') ||
