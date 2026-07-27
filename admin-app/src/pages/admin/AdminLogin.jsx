@@ -208,6 +208,7 @@ export default function AdminLogin() {
         localStorage.setItem('lumora_active_role', 'customer');
         console.log('[AdminLogin] identity mode → active_role set to customer');
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const result   = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         console.log('[AdminLogin] Firebase Sign-In SUCCESS (identity) uid:', firebaseUser.uid);
@@ -223,6 +224,7 @@ export default function AdminLogin() {
         // a race-condition 403 on one of the two requests.
         sessionStorage.setItem('lumora_admin_login_in_progress', '1');
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const result   = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         console.log('[AdminLogin] Firebase Sign-In SUCCESS uid:', firebaseUser.uid, 'email:', firebaseUser.email);

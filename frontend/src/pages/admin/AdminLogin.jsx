@@ -198,6 +198,7 @@ export default function AdminLogin() {
         // Log in in identity/customer scope to bypass admin elevation rules
         localStorage.setItem('lumora_active_role', 'customer');
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const result   = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         await syncWithBackend(firebaseUser, 'customer');
@@ -206,6 +207,7 @@ export default function AdminLogin() {
         // Enforce full admin checks
         localStorage.setItem('lumora_active_role', 'admin');
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         const result   = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         await adminLogin(firebaseUser);
