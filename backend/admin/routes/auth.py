@@ -139,8 +139,7 @@ def admin_login(
         )
         user = db.query(User).filter(User.email == email.lower()).first()
 
-    # 2d. Pre-authorized admin email auto-provisioning / elevation
-    # Checks environment variable ADMIN_EMAILS or built-in allowed admin list
+    # 2d. Pre-authorized admin & Invited admin email resolution
     import os
     default_admins = "admin@lumora.co,avikapawar08@gmail.com,451.avikapawar@gmail.com,samruddhidurge05@gmail.com"
     admin_emails_env = os.getenv("ADMIN_EMAILS", default_admins)
@@ -150,26 +149,81 @@ def admin_login(
 
     effective_email = email.lower() if email else (user.email.lower() if (user and user.email) else None)
 
-    if user is None and effective_email and effective_email in allowed_admin_emails:
-        logger.info("Admin login: Auto-provisioning pre-authorized admin email=%s", effective_email)
-        from app.core.security import get_password_hash
-        user = User(
-            name=claims.get("name") or effective_email.split("@")[0].capitalize(),
-            email=effective_email,
-            password_hash=get_password_hash("LumoraAdmin2024!"),
-            role="admin",
-            is_active=True,
-            is_verified=True,
-            firebase_uid=firebase_uid,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    # Check for pending admin invitations for this email
+    from app.models.admin_invitation import AdminInvitation
+    from app.models.admin_role import AdminRole
 
-    if user and user.role != "admin" and effective_email and effective_email in allowed_admin_emails:
-        logger.info("Admin login: Elevating pre-authorized email=%s to role='admin'", effective_email)
-        user.role = "admin"
-        db.commit()
+    pending_invite = None
+    if effective_email:
+        pending_invite = (
+            db.query(AdminInvitation)
+            .filter(
+                AdminInvitation.email == effective_email,
+                AdminInvitation.revoked_at.is_(None),
+                AdminInvitation.accepted_at.is_(None),
+            )
+            .order_by(AdminInvitation.id.desc())
+            .first()
+        )
+
+    is_authorized_admin = (
+        (effective_email and effective_email in allowed_admin_emails)
+        or (pending_invite is not None)
+    )
+
+    if is_authorized_admin:
+        role_level = pending_invite.role_level if pending_invite else (
+            "super_admin" if effective_email in {"admin@lumora.co", "avikapawar08@gmail.com", "451.avikapawar@gmail.com"} else "admin"
+        )
+
+        if user is None and effective_email:
+            logger.info("[admin_login] Auto-provisioning authorized admin email=%s", effective_email)
+            from app.core.security import get_password_hash
+            user = User(
+                name=claims.get("name") or (pending_invite.invited_name if pending_invite and pending_invite.invited_name else effective_email.split("@")[0].capitalize()),
+                email=effective_email,
+                password_hash=get_password_hash("LumoraAdmin2024!"),
+                role="admin",
+                is_active=True,
+                is_verified=True,
+                firebase_uid=firebase_uid,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        if user and user.role != "admin":
+            logger.info("[admin_login] Elevating authorized email=%s to role='admin'", effective_email)
+            user.role = "admin"
+            user.is_active = True
+            db.commit()
+
+        if firebase_uid and user and user.firebase_uid != firebase_uid:
+            logger.info("[admin_login] Binding firebase_uid=%s for user %s", firebase_uid, user.id)
+            user.firebase_uid = firebase_uid
+            db.commit()
+
+        if pending_invite:
+            logger.info("[admin_login] Marking invitation %s as accepted for email=%s", pending_invite.id, effective_email)
+            pending_invite.accepted_at = datetime.now(timezone.utc)
+            db.commit()
+
+        # Ensure active AdminRole record exists
+        admin_role_rec = db.query(AdminRole).filter(AdminRole.user_id == user.id).first()
+        if not admin_role_rec:
+            logger.info("[admin_login] Creating AdminRole record level=%s for user_id=%s", role_level, user.id)
+            admin_role_rec = AdminRole(
+                user_id=user.id,
+                role_level=role_level,
+                is_active=True,
+                activated_at=datetime.now(timezone.utc),
+            )
+            db.add(admin_role_rec)
+            db.commit()
+        elif not admin_role_rec.is_active:
+            admin_role_rec.is_active = True
+            admin_role_rec.role_level = role_level
+            db.commit()
 
     if user is None:
         _insert_audit_log(
