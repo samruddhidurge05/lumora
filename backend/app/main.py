@@ -243,13 +243,29 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_email_logs ADD COLUMN IF NOT EXISTS message_id VARCHAR(255)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
-            # affiliate_profiles — Phase 2 earnings breakdown
+            # affiliate_profiles — Phase 2 earnings breakdown & financial profile
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS pending_earnings   FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS paid_earnings      FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS rejected_earnings  FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS frozen_balance     FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS unique_clicks      INTEGER DEFAULT 0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS avg_order_value    FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS last_active_at     TIMESTAMP",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS kyc_status         VARCHAR(30) DEFAULT 'verified'",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS pan_number         VARCHAR(20)",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS pan_holder_name    VARCHAR(150)",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS gstin              VARCHAR(20)",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS is_bank_verified   BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS razorpay_contact_id VARCHAR(100)",
+            "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS razorpay_fund_account_id VARCHAR(100)",
+            # affiliate_payouts — Phase 2 snapshot & UTR reconciliation
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS net_amount          FLOAT",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS tds_deduction       FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS tier_bonus          FLOAT DEFAULT 0.0",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS utr                 VARCHAR(100)",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS snapshot_data       JSON",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS retry_count         INTEGER DEFAULT 0",
+            "ALTER TABLE affiliate_payouts ADD COLUMN IF NOT EXISTS last_retried_at     TIMESTAMP",
             # affiliate_commissions — Phase 2 full lifecycle fields
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS commission_type  VARCHAR(20) DEFAULT 'percentage'",
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS commission_rate  FLOAT DEFAULT 0.0",
@@ -417,9 +433,17 @@ def _run_schema_migrations() -> None:
                     ("pending_earnings",   "FLOAT DEFAULT 0.0"),
                     ("paid_earnings",      "FLOAT DEFAULT 0.0"),
                     ("rejected_earnings",  "FLOAT DEFAULT 0.0"),
+                    ("frozen_balance",     "FLOAT DEFAULT 0.0"),
                     ("unique_clicks",      "INTEGER DEFAULT 0"),
                     ("avg_order_value",    "FLOAT DEFAULT 0.0"),
                     ("last_active_at",     "DATETIME"),
+                    ("kyc_status",         "VARCHAR(30) DEFAULT 'verified'"),
+                    ("pan_number",         "VARCHAR(20)"),
+                    ("pan_holder_name",    "VARCHAR(150)"),
+                    ("gstin",              "VARCHAR(20)"),
+                    ("is_bank_verified",   "BOOLEAN DEFAULT 1"),
+                    ("razorpay_contact_id", "VARCHAR(100)"),
+                    ("razorpay_fund_account_id", "VARCHAR(100)"),
                 ]
                 for col_name, col_def in aff_prof_additions:
                     if col_name not in aff_prof_cols:
@@ -428,6 +452,25 @@ def _run_schema_migrations() -> None:
                             _logger.debug("[startup] SQLite affiliate_profiles.%s added OK", col_name)
                         except Exception as _col_err:
                             _logger.debug("[startup] SQLite affiliate_profiles.%s skipped: %s", col_name, _col_err)
+
+                # affiliate_payouts — Phase 2 snapshot & UTR reconciliation
+                aff_pay_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(affiliate_payouts)"))}
+                aff_pay_additions = [
+                    ("net_amount",        "FLOAT"),
+                    ("tds_deduction",     "FLOAT DEFAULT 0.0"),
+                    ("tier_bonus",        "FLOAT DEFAULT 0.0"),
+                    ("utr",               "VARCHAR(100)"),
+                    ("snapshot_data",     "JSON"),
+                    ("retry_count",       "INTEGER DEFAULT 0"),
+                    ("last_retried_at",   "DATETIME"),
+                ]
+                for col_name, col_def in aff_pay_additions:
+                    if col_name not in aff_pay_cols:
+                        try:
+                            conn.execute(_text(f"ALTER TABLE affiliate_payouts ADD COLUMN {col_name} {col_def}"))
+                            _logger.debug("[startup] SQLite affiliate_payouts.%s added OK", col_name)
+                        except Exception as _col_err:
+                            _logger.debug("[startup] SQLite affiliate_payouts.%s skipped: %s", col_name, _col_err)
 
                 # affiliate_commissions — Phase 2 lifecycle fields
                 aff_comm_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(affiliate_commissions)"))}
