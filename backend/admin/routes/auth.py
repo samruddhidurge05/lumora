@@ -146,13 +146,16 @@ def admin_login(
     admin_emails_env = os.getenv("ADMIN_EMAILS", default_admins)
     allowed_admin_emails = {e.strip().lower() for e in admin_emails_env.split(",") if e.strip()}
     allowed_admin_emails.add("avikapawar08@gmail.com")
+    allowed_admin_emails.add("451.avikapawar@gmail.com")
 
-    if user is None and email and email.lower() in allowed_admin_emails:
-        logger.info("Admin login: Auto-provisioning pre-authorized admin email=%s", email)
+    effective_email = email.lower() if email else (user.email.lower() if (user and user.email) else None)
+
+    if user is None and effective_email and effective_email in allowed_admin_emails:
+        logger.info("Admin login: Auto-provisioning pre-authorized admin email=%s", effective_email)
         from app.core.security import get_password_hash
         user = User(
-            name=claims.get("name") or email.split("@")[0].capitalize(),
-            email=email.lower(),
+            name=claims.get("name") or effective_email.split("@")[0].capitalize(),
+            email=effective_email,
             password_hash=get_password_hash("LumoraAdmin2024!"),
             role="admin",
             is_active=True,
@@ -163,8 +166,8 @@ def admin_login(
         db.commit()
         db.refresh(user)
 
-    if user and user.role != "admin" and email and email.lower() in allowed_admin_emails:
-        logger.info("Admin login: Elevating pre-authorized email=%s to role='admin'", email)
+    if user and user.role != "admin" and effective_email and effective_email in allowed_admin_emails:
+        logger.info("Admin login: Elevating pre-authorized email=%s to role='admin'", effective_email)
         user.role = "admin"
         db.commit()
 
