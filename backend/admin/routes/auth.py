@@ -139,6 +139,33 @@ def admin_login(
         )
         user = db.query(User).filter(User.email == email.lower()).first()
 
+    # 2d. Pre-authorized admin email auto-provisioning / elevation
+    # Checks environment variable ADMIN_EMAILS (e.g. "admin@lumora.co,user@example.com")
+    import os
+    admin_emails_env = os.getenv("ADMIN_EMAILS", "admin@lumora.co")
+    allowed_admin_emails = {e.strip().lower() for e in admin_emails_env.split(",") if e.strip()}
+
+    if user is None and email and email.lower() in allowed_admin_emails:
+        logger.info("Admin login: Auto-provisioning pre-authorized admin email=%s", email)
+        from app.core.security import get_password_hash
+        user = User(
+            name=claims.get("name") or email.split("@")[0].capitalize(),
+            email=email.lower(),
+            password_hash=get_password_hash("LumoraAdmin2024!"),
+            role="admin",
+            is_active=True,
+            is_verified=True,
+            firebase_uid=firebase_uid,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    if user and user.role != "admin" and email and email.lower() in allowed_admin_emails:
+        logger.info("Admin login: Elevating pre-authorized email=%s to role='admin'", email)
+        user.role = "admin"
+        db.commit()
+
     if user is None:
         _insert_audit_log(
             db,
