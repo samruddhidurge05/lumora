@@ -5,24 +5,24 @@ import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-1.5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 min-w-0 max-w-full">
+      <div className="flex-1 min-w-0 max-w-full">
+        <div className="flex items-center gap-3 mb-1.5 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
             MARKETPLACE ADMINISTRATION
           </span>
         </div>
-        <h1 className="text-xl sm:text-2xl md:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5">
+        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5 break-words">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed">
+          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed break-words">
             {subtitle}
           </p>
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 min-w-0 w-full sm:w-auto justify-start sm:justify-end">
           {actions}
         </div>
       )}

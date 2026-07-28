@@ -1090,7 +1090,7 @@ export default function OrdersManagement() {
                     {viewMode === "tickets" ? (
                       /* ── REFUND TICKETS TABLE ── */
                       refundTickets.length > 0 ? (
-                        <table className="w-full border-collapse text-left">
+                        <table className="w-full min-w-[650px] border-collapse text-left">
                           <thead>
                             <tr className="bg-stone-100/40 border-b border-stone-200/50">
                               <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
@@ -1166,7 +1166,7 @@ export default function OrdersManagement() {
                         <>
                           {/* Desktop Table View (>= 768px) */}
                           <div className="hidden md:block overflow-x-auto w-full">
-                            <table className="w-full border-collapse text-left">
+                            <table className="w-full min-w-[650px] border-collapse text-left">
                               <thead>
                                 <tr className="bg-stone-100/40 border-b border-stone-200/50">
                                   <th className="py-4 px-5 w-10">

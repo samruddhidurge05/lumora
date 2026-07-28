@@ -206,7 +206,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
           </div>
 
           {/* Sub Navigation Bar */}
-          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8]">
+          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x">
             {[
               { id: 'audit', label: 'Financial Audit' },
               { id: 'timeline', label: 'Audit Timeline' },
@@ -874,13 +874,13 @@ function CommissionActionModal({ commission, onClose, onSave }) {
 // ── Small reusable KPI card ───────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
   return (
-    <div className={`p-5 rounded-2xl border shadow-xs space-y-2 ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
-      <div className="flex items-center justify-between">
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{label}</span>
-        {Icon && <Icon size={16} className={accent ? 'text-white/60' : 'text-[#7B3FA0]'} />}
+    <div className={`p-3.5 sm:p-5 rounded-2xl border shadow-xs space-y-1.5 w-full min-w-0 max-w-full overflow-hidden ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`}>{label}</span>
+        {Icon && <Icon size={15} className={`shrink-0 ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`} />}
       </div>
-      <div className={`text-xl font-serif font-bold ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
-      {sub && <div className={`text-[10px] font-medium ${accent ? 'text-white/60' : 'text-[#7B3FA0]'}`}>{sub}</div>}
+      <div className={`text-base sm:text-xl font-serif font-bold truncate ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
+      {sub && <div className={`text-[9px] sm:text-[10px] font-medium truncate ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{sub}</div>}
     </div>
   );
 }
@@ -1440,7 +1440,7 @@ export default function AffiliateManagement() {
 
   return (
     <AdminLayout activePage="affiliate-management">
-      <div className="p-6 md:p-10 space-y-8 max-w-screen-2xl mx-auto">
+      <div className="p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-full overflow-x-hidden min-w-0">
         {/* Header Banner */}
         <div className="flex flex-col gap-4 border-b border-[#F3EAF8] pb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1470,7 +1470,7 @@ export default function AffiliateManagement() {
           </div>
 
           {/* Segmented Navigation Bar (6 Simplified Tabs) */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x">
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x max-w-full">
             {TABS.map(tab => {
               const IconComp = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1486,25 +1486,25 @@ export default function AffiliateManagement() {
 
         {/* ── TAB 1: EXECUTIVE OVERVIEW ────────────────────────────────────────── */}
         {activeTab === 'overview' && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Immediate Action Alert Queue */}
             {payoutsTotal > 0 && (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-4 shadow-xs">
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800"><AlertTriangle size={18} /></div>
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 shrink-0"><AlertTriangle size={18} /></div>
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider">Immediate Action Queue</h3>
-                    <p className="text-xs">There are <strong>{payoutsTotal}</strong> pending withdrawal request(s) requiring financial review before payout cycle cutoff.</p>
+                    <p className="text-xs leading-relaxed">There are <strong>{payoutsTotal}</strong> pending withdrawal request(s) requiring financial review before payout cycle cutoff.</p>
                   </div>
                 </div>
-                <button onClick={() => setActiveTab('payouts')} className="px-4 py-2 rounded-xl bg-amber-800 text-white text-xs font-bold hover:bg-amber-900 transition-all shrink-0">
+                <button onClick={() => setActiveTab('payouts')} className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-800 text-white text-xs font-bold hover:bg-amber-900 transition-all shrink-0 min-h-[42px] flex items-center justify-center">
                   Audit Requests Queue →
                 </button>
               </div>
             )}
 
             {/* Executive KPIs Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
               <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} accent />
               <KpiCard label="Pending Requests"    value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} />
               <KpiCard label="Today's Commission"  value={fmt(kpis?.today_commission ?? 18.50)} sub="Earned Today" icon={Zap} />

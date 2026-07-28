@@ -695,7 +695,7 @@ export default function Dashboard() {
               initial={{ scale: 0.95, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 30 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full border border-stone-200/50 shadow-2xl relative"
+              className="bg-white rounded-3xl p-5 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto border border-stone-200/50 shadow-2xl relative"
             >
               
               {/* Close Button */}

@@ -373,7 +373,7 @@ export default function CampaignManager() {
         </div>
 
         {/* 4 KPI Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0]">Active Affiliate Products</span>

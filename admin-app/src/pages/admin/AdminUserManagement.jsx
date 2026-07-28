@@ -758,8 +758,8 @@ export default function AdminUserManagement() {
       {showInvite && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9999,
                       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: '24px', padding: '32px',
-                        maxWidth: '480px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: '#fff', borderRadius: '24px', padding: '24px 20px',
+                        maxWidth: '480px', width: '92%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: '0 0 20px', color: '#2D004D', fontWeight: 700, fontSize: '1.1rem' }}>
               Invite Team Member
             </h3>
