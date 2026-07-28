@@ -7,7 +7,7 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// High-resolution Unsplash photos from 'digital products website' search query
+// High-resolution Unsplash photos for digital products & websites
 const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
   {
     id: 1,
@@ -86,7 +86,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── HIGH VISIBILITY FULL-SCREEN UNSPLASH BACKGROUND SLIDESHOW ── */}
+      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH DARK GRADIENT TINT ── */}
       <div style={styles.fullBgWrapper}>
         {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
           <div
@@ -94,102 +94,99 @@ export default function Hero() {
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 0.75 : 0, // FULLY VISIBLE high opacity (0.75)
-              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)', // Ken Burns slow zoom
+              opacity: idx === currentIndex ? 1.0 : 0, // FULL opacity image
+              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)', // Ken Burns zoom
               transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1), transform 4000ms ease-out',
             }}
           />
         ))}
 
-        {/* Minimal Vignette & Soft Gradient Tint to preserve edge contrast */}
+        {/* Elegant Dark Vignette Overlay ensuring text is 100% visible directly on top */}
         <div style={styles.fullBgOverlay} />
       </div>
 
-      {/* ── CENTERED HERO GLASS PANEL (Ensures text legibility while background is fully visible) ── */}
+      {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}
       <div style={styles.container}>
-        {/* Glass Card Wrapper around Hero Content */}
-        <div style={styles.heroGlassCard}>
-          {/* 1. Pill Badge */}
-          <div className="hero-badge" style={styles.badge}>
-            <Sparkles size={13} color="#7B3FA0" />
-            <span className="text-sans" style={styles.badgeText}>
-              PREMIUM DIGITAL MARKETPLACE
-            </span>
-          </div>
+        {/* 1. Pill Badge */}
+        <div className="hero-badge" style={styles.badge}>
+          <Sparkles size={13} color="#C084FC" />
+          <span className="text-sans" style={styles.badgeText}>
+            PREMIUM DIGITAL MARKETPLACE
+          </span>
+        </div>
 
-          {/* 2. Editorial Headline */}
-          <h1 className="hero-title" style={styles.title}>
-            Discover & Sell<br />
-            <span style={styles.titleHighlight}>Premium Digital</span><br />
-            Products
-          </h1>
+        {/* 2. Editorial Headline */}
+        <h1 className="hero-title" style={styles.title}>
+          Discover & Sell<br />
+          <span style={styles.titleHighlight}>Premium Digital</span><br />
+          Products
+        </h1>
 
-          {/* 3. Subtitle */}
-          <p className="hero-sub" style={styles.subtext}>
-            The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
-          </p>
+        {/* 3. Subtitle */}
+        <p className="hero-sub" style={styles.subtext}>
+          The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
+        </p>
 
-          {/* 4. Action Buttons */}
-          <div className="hero-ctas" style={styles.ctas}>
+        {/* 4. Action Buttons */}
+        <div className="hero-ctas" style={styles.ctas}>
+          <button 
+            onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
+            className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
+            style={styles.ctaSolid}
+          >
+            {user ? 'Go to Marketplace' : 'Get Started'}
+            <ArrowRight size={16} />
+          </button>
+
+          {!user && (
             <button 
-              onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
-              className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
-              style={styles.ctaSolid}
-            >
-              {user ? 'Go to Marketplace' : 'Get Started'}
-              <ArrowRight size={16} />
-            </button>
-
-            {!user && (
-              <button 
-                onClick={() => navigateTo('login')} 
-                className="btn-premium clickable" 
-                style={styles.ctaOutline}
-              >
-                Sign In
-              </button>
-            )}
-
-            <button 
-              onClick={() => navigateTo('marketplace')} 
+              onClick={() => navigateTo('login')} 
               className="btn-premium clickable" 
-              style={styles.ctaGlass}
+              style={styles.ctaOutline}
             >
-              <Compass size={15} color="#7B3FA0" />
-              Explore Products
+              Sign In
             </button>
-          </div>
+          )}
 
-          {/* 5. Live Background Image Title Badge & Indicators */}
-          <div style={styles.imageIndicatorBadge}>
-            <div style={styles.livePulseDot} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#2D004D' }}>
-              BACKGROUND: {activeImage.title}
-            </span>
-            <div style={{ display: 'flex', gap: '5px', marginLeft: 'auto', alignItems: 'center' }}>
-              {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  style={{
-                    width: i === currentIndex ? '18px' : '6px',
-                    height: '6px',
-                    borderRadius: '999px',
-                    background: i === currentIndex ? '#7B3FA0' : 'rgba(123, 63, 160, 0.35)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                  }}
-                />
-              ))}
-            </div>
+          <button 
+            onClick={() => navigateTo('marketplace')} 
+            className="btn-premium clickable" 
+            style={styles.ctaGlass}
+          >
+            <Compass size={15} color="#E9D5FF" />
+            Explore Products
+          </button>
+        </div>
+
+        {/* 5. Live Background Image Indicator Badge */}
+        <div style={styles.imageIndicatorBadge}>
+          <div style={styles.livePulseDot} />
+          <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#E9D5FF' }}>
+            SHOWCASE: {activeImage.title}
+          </span>
+          <div style={{ display: 'flex', gap: '5px', marginLeft: 'auto', alignItems: 'center' }}>
+            {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIndex(i)}
+                style={{
+                  width: i === currentIndex ? '18px' : '6px',
+                  height: '6px',
+                  borderRadius: '999px',
+                  background: i === currentIndex ? '#C084FC' : 'rgba(255, 255, 255, 0.4)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
           </div>
         </div>
 
         {/* 6. Centered Search Bar & Quick Categories */}
         <div className="hero-search-bar glass-card" style={styles.searchContainer}>
           <form onSubmit={handleSearchSubmit} style={styles.searchForm}>
-            <Search size={18} color="#7B3FA0" />
+            <Search size={18} color="#C084FC" />
             <input
               type="text"
               placeholder="Search 10,000+ premium UI kits, 3D assets, AI tools..."
@@ -216,13 +213,13 @@ export default function Hero() {
                 onClick={() => handleCategoryClick(cat.label)}
                 style={styles.categoryPill}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(123, 63, 160, 0.15)';
-                  e.currentTarget.style.color = '#7B3FA0';
+                  e.currentTarget.style.background = 'rgba(192, 132, 252, 0.30)';
+                  e.currentTarget.style.color = '#ffffff';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
-                  e.currentTarget.style.color = '#2D004D';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = '#F3E8FF';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
@@ -231,7 +228,7 @@ export default function Hero() {
             ))}
             <button
               onClick={() => navigateTo('marketplace')}
-              style={{ ...styles.categoryPill, background: 'rgba(123, 63, 160, 0.10)', color: '#7B3FA0', fontWeight: 800 }}
+              style={{ ...styles.categoryPill, background: 'rgba(192, 132, 252, 0.25)', color: '#F3E8FF', fontWeight: 800 }}
             >
               All →
             </button>
@@ -241,10 +238,10 @@ export default function Hero() {
         {/* 7. Stats Bar at Bottom */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
-            { icon: <Users size={16} color="#7B3FA0" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(123, 63, 160, 0.10)' },
-            { icon: <Download size={16} color="#D97706" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(217, 119, 6, 0.10)' },
-            { icon: <Shield size={16} color="#16A34A" />, value: '500+', label: 'Top Creators', bg: 'rgba(22, 163, 74, 0.10)' },
-            { icon: <CheckCircle size={16} color="#E11D48" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(225, 29, 72, 0.10)' },
+            { icon: <Users size={16} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
+            { icon: <Download size={16} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
+            { icon: <Shield size={16} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
+            { icon: <CheckCircle size={16} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
           ].map((s, i) => (
             <div key={i} style={styles.statItem}>
               <div style={{ ...styles.statIconBox, background: s.bg }}>
@@ -285,7 +282,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#1A0D28', // Dark base to make images pop!
+    background: '#0D0518',
   },
 
   /* Full Background Wrapper & Visible Slides */
@@ -303,12 +300,12 @@ const styles = {
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     willChange: 'opacity, transform',
-    filter: 'brightness(0.90) contrast(1.05)',
   },
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'radial-gradient(circle at center, rgba(26, 13, 40, 0.25) 0%, rgba(26, 13, 40, 0.55) 70%, rgba(26, 13, 40, 0.85) 100%)',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.55) 0%, rgba(13, 5, 24, 0.70) 50%, rgba(13, 5, 24, 0.90) 100%)',
+    backdropFilter: 'blur(1px)',
   },
 
   /* Relative Overlay Container (z-10) */
@@ -320,76 +317,63 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '20px',
+    gap: '24px',
     position: 'relative',
     zIndex: 10,
   },
 
-  /* Hero Glass Card around central typography to make high opacity background pop! */
-  heroGlassCard: {
-    width: '100%',
-    padding: '36px clamp(1.2rem, 4vw, 3rem)',
-    borderRadius: '32px',
-    background: 'rgba(255, 255, 255, 0.88)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.25), 0 2px 0 rgba(255, 255, 255, 0.8) inset',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    gap: '20px',
-  },
-
-  /* Badge */
+  /* Badge directly on background */
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '7px 16px',
+    padding: '8px 18px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    border: '1px solid rgba(192, 132, 252, 0.50)',
-    boxShadow: '0 4px 16px rgba(90, 30, 126, 0.08)',
+    background: 'rgba(255, 255, 255, 0.12)',
+    border: '1px solid rgba(192, 132, 252, 0.40)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
   },
   badgeText: {
-    fontSize: '0.72rem',
+    fontSize: '0.75rem',
     fontWeight: 800,
-    color: '#7B3FA0',
+    color: '#E9D5FF',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
   },
 
-  /* Headline */
+  /* Editorial Headline on background with text shadow */
   title: {
     fontFamily: 'var(--font-editorial)',
-    fontSize: 'clamp(2.8rem, 5.8vw, 4.6rem)',
+    fontSize: 'clamp(2.8rem, 6vw, 4.8rem)',
     fontWeight: 400,
-    color: '#2D004D',
+    color: '#FFFFFF',
     lineHeight: 1.08,
     letterSpacing: '-0.03em',
     margin: 0,
     maxWidth: '900px',
+    textShadow: '0 4px 24px rgba(0, 0, 0, 0.7)',
   },
   titleHighlight: {
     fontFamily: 'var(--font-editorial)',
     fontStyle: 'italic',
     fontWeight: 500,
-    background: 'linear-gradient(135deg, #7B3FA0 0%, #9333EA 50%, #C084FC 100%)',
+    background: 'linear-gradient(135deg, #D8B4FE 0%, #C084FC 50%, #E9D5FF 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     display: 'inline-block',
   },
 
-  /* Subtitle */
+  /* Subtitle on background */
   subtext: {
-    fontSize: 'clamp(1rem, 1.8vw, 1.15rem)',
+    fontSize: 'clamp(1.05rem, 1.9vw, 1.2rem)',
     lineHeight: 1.6,
-    color: '#4A2E59',
-    maxWidth: '680px',
+    color: '#F3E8FF',
+    maxWidth: '720px',
     margin: 0,
-    fontWeight: 600,
+    fontWeight: 500,
+    textShadow: '0 2px 16px rgba(0, 0, 0, 0.8)',
   },
 
   /* Buttons */
@@ -399,16 +383,16 @@ const styles = {
     justifyContent: 'center',
     gap: '14px',
     flexWrap: 'wrap',
-    marginTop: '4px',
+    marginTop: '6px',
   },
   ctaSolid: {
     padding: '14px 34px',
     borderRadius: '16px',
     fontSize: '0.94rem',
     fontWeight: 700,
-    background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+    background: 'linear-gradient(135deg, #9333EA, #6B21A8)',
     color: '#ffffff',
-    boxShadow: '0 10px 28px rgba(90, 30, 126, 0.35)',
+    boxShadow: '0 10px 32px rgba(147, 51, 234, 0.45)',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
@@ -418,22 +402,24 @@ const styles = {
     borderRadius: '16px',
     fontSize: '0.92rem',
     fontWeight: 700,
-    background: 'rgba(255, 255, 255, 0.95)',
-    border: '1.5px solid rgba(123, 63, 160, 0.40)',
-    color: '#7B3FA0',
-    boxShadow: '0 4px 14px rgba(90, 30, 126, 0.08)',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: '1.5px solid rgba(255, 255, 255, 0.35)',
+    color: '#ffffff',
+    backdropFilter: 'blur(12px)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
   },
   ctaGlass: {
     padding: '14px 28px',
     borderRadius: '16px',
     fontSize: '0.90rem',
     fontWeight: 700,
-    background: 'rgba(255, 255, 255, 0.90)',
-    border: '1px solid rgba(192, 132, 252, 0.45)',
-    color: '#2D004D',
+    background: 'rgba(255, 255, 255, 0.12)',
+    border: '1px solid rgba(192, 132, 252, 0.35)',
+    color: '#F3E8FF',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
+    backdropFilter: 'blur(12px)',
   },
 
   /* Live Background Image Indicator Badge */
@@ -441,11 +427,13 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '6px 16px',
+    padding: '8px 18px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    border: '1px solid rgba(192, 132, 252, 0.40)',
-    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+    background: 'rgba(255, 255, 255, 0.12)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
     marginTop: '6px',
     width: 'fit-content',
   },
@@ -453,36 +441,37 @@ const styles = {
     width: '7px',
     height: '7px',
     borderRadius: '50%',
-    background: '#16A34A',
+    background: '#4ADE80',
     animation: 'pulseDot 1.8s infinite ease-in-out',
   },
 
-  /* Search Container */
+  /* Search Container on background */
   searchContainer: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '14px',
-    padding: '16px 20px',
+    padding: '18px 22px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.92)',
-    backdropFilter: 'blur(30px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.20)',
+    background: 'rgba(255, 255, 255, 0.12)',
+    backdropFilter: 'blur(28px)',
+    WebkitBackdropFilter: 'blur(28px)',
+    border: '1.5px solid rgba(255, 255, 255, 0.25)',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
     width: '100%',
     maxWidth: '780px',
-    marginTop: '6px',
+    marginTop: '8px',
   },
   searchForm: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     width: '100%',
-    background: 'rgba(255, 255, 255, 0.98)',
+    background: 'rgba(255, 255, 255, 0.95)',
     padding: '8px 16px',
     borderRadius: '16px',
     border: '1px solid rgba(192, 132, 252, 0.40)',
-    boxShadow: '0 2px 8px rgba(90, 30, 126, 0.04) inset',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
   },
   searchInput: {
     border: 'none',
@@ -519,32 +508,33 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '5px',
-    padding: '7px 13px',
+    padding: '7px 14px',
     borderRadius: '12px',
-    background: 'rgba(255, 255, 255, 0.85)',
-    border: '1px solid rgba(192, 132, 252, 0.35)',
-    fontSize: '0.76rem',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    fontSize: '0.78rem',
     fontWeight: 700,
-    color: '#2D004D',
+    color: '#F3E8FF',
     cursor: 'pointer',
     transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
     fontFamily: 'var(--font-sans)',
   },
 
-  /* Stats Container */
+  /* Stats Container on background */
   statsContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
     gap: '16px',
     padding: '18px 24px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.90)',
+    background: 'rgba(255, 255, 255, 0.12)',
     backdropFilter: 'blur(28px)',
-    border: '1px solid rgba(255, 255, 255, 0.90)',
-    boxShadow: '0 10px 32px rgba(0, 0, 0, 0.20)',
+    WebkitBackdropFilter: 'blur(28px)',
+    border: '1.5px solid rgba(255, 255, 255, 0.22)',
+    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
     width: '100%',
     maxWidth: '820px',
-    marginTop: '6px',
+    marginTop: '8px',
   },
   statItem: {
     display: 'flex',
@@ -564,13 +554,14 @@ const styles = {
   statValue: {
     fontSize: '1.05rem',
     fontWeight: 800,
-    color: '#2D004D',
+    color: '#FFFFFF',
     lineHeight: 1.1,
     textAlign: 'left',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
   },
   statLabel: {
     fontSize: '0.66rem',
-    color: '#6B4F7A',
+    color: '#E9D5FF',
     fontWeight: 600,
     lineHeight: 1.2,
     textAlign: 'left',
