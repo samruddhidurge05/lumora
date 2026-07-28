@@ -64,6 +64,7 @@ class NotificationService:
         if vendor_user:
             NotificationService.create_notification(
                 db=db,
+                # pyrefly: ignore [bad-argument-type]
                 user_id=int(vendor_user.id),
                 title="Product Sold ?",
                 message=msg,
@@ -79,7 +80,7 @@ class NotificationService:
                     "orderId": order_id,
                     "buyerName": buyer_name,
                     "productName": product_name,
-                    "amount": amount,
+                    "amount": float(amount),
                     "type": "sale",
                     "read": False,
                     "createdAt": datetime.now(timezone.utc).isoformat() + "Z"

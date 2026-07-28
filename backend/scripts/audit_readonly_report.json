@@ -1,0 +1,2176 @@
+{
+  "timestamp": "2026-07-26T06:53:28.859649+00:00",
+  "total_products": 120,
+  "status_summary": {
+    "VALID": 1,
+    "MISSING_B2_OBJECT": 0,
+    "DATABASE_REFERENCE_MISSING": 1,
+    "TEMPORARY_PATH": 0,
+    "LEGACY_PROVIDER_PATH": 13,
+    "MIME_MISMATCH": 0,
+    "EXTENSION_MISMATCH": 0,
+    "CONTENT_MISMATCH": 0,
+    "REQUIRES_MANUAL_REVIEW": 105
+  },
+  "b2_status": "AUTHORIZED",
+  "products": [
+    {
+      "product_id": 1,
+      "title": "Modern SaaS Dashboard UI Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ui-kit-001.zip",
+      "pcloud_link": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0",
+      "original_filename": "ui-kit-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 2,
+      "title": "Fintech Mobile UI Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ui-kit-002.zip",
+      "pcloud_link": null,
+      "original_filename": "ui-kit-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 3,
+      "title": "Healthcare App UI Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ui-kit-003.zip",
+      "pcloud_link": null,
+      "original_filename": "ui-kit-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 4,
+      "title": "Ecommerce Mobile UI Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ui-kit-004.zip",
+      "pcloud_link": null,
+      "original_filename": "ui-kit-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 5,
+      "title": "Crypto Wallet UI Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ui-kit-005.zip",
+      "pcloud_link": null,
+      "original_filename": "ui-kit-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 6,
+      "title": "Business Landing Page Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/web-001.zip",
+      "pcloud_link": null,
+      "original_filename": "web-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 7,
+      "title": "Agency Website Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/web-002.zip",
+      "pcloud_link": null,
+      "original_filename": "web-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 8,
+      "title": "Restaurant Website Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/web-003.zip",
+      "pcloud_link": null,
+      "original_filename": "web-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 9,
+      "title": "Law Firm Website Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/web-004.zip",
+      "pcloud_link": null,
+      "original_filename": "web-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 10,
+      "title": "Portfolio Website Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/web-005.zip",
+      "pcloud_link": null,
+      "original_filename": "web-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 11,
+      "title": "React Admin Dashboard",
+      "postgresql_storage_path": null,
+      "file_url": "/products/react-001.zip",
+      "pcloud_link": null,
+      "original_filename": "react-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 12,
+      "title": "React Ecommerce Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/react-002.zip",
+      "pcloud_link": null,
+      "original_filename": "react-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 13,
+      "title": "React SaaS Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/react-003.zip",
+      "pcloud_link": null,
+      "original_filename": "react-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 14,
+      "title": "React CRM Dashboard",
+      "postgresql_storage_path": null,
+      "file_url": "/products/react-004.zip",
+      "pcloud_link": null,
+      "original_filename": "react-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 15,
+      "title": "React Analytics Dashboard",
+      "postgresql_storage_path": null,
+      "file_url": "/products/react-005.zip",
+      "pcloud_link": null,
+      "original_filename": "react-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 16,
+      "title": "Next.js SaaS Starter",
+      "postgresql_storage_path": null,
+      "file_url": "/products/next-001.zip",
+      "pcloud_link": null,
+      "original_filename": "next-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 17,
+      "title": "Next.js Ecommerce Starter",
+      "postgresql_storage_path": null,
+      "file_url": "/products/next-002.zip",
+      "pcloud_link": null,
+      "original_filename": "next-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 18,
+      "title": "Next.js Blog Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/next-003.zip",
+      "pcloud_link": null,
+      "original_filename": "next-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 19,
+      "title": "Next.js Portfolio Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/next-004.zip",
+      "pcloud_link": null,
+      "original_filename": "next-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 20,
+      "title": "Next.js Dashboard Starter",
+      "postgresql_storage_path": null,
+      "file_url": "/products/next-005.zip",
+      "pcloud_link": null,
+      "original_filename": "next-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 21,
+      "title": "AI Prompt Collection Pro",
+      "postgresql_storage_path": null,
+      "file_url": "/products/prompt-001.zip",
+      "pcloud_link": null,
+      "original_filename": "prompt-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 22,
+      "title": "Marketing Prompt Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/prompt-002.zip",
+      "pcloud_link": null,
+      "original_filename": "prompt-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 23,
+      "title": "Coding Prompt Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/prompt-003.zip",
+      "pcloud_link": null,
+      "original_filename": "prompt-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 24,
+      "title": "Content Creation Prompts",
+      "postgresql_storage_path": null,
+      "file_url": "/products/prompt-004.zip",
+      "pcloud_link": null,
+      "original_filename": "prompt-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 25,
+      "title": "Business Automation Prompts",
+      "postgresql_storage_path": null,
+      "file_url": "/products/prompt-005.zip",
+      "pcloud_link": null,
+      "original_filename": "prompt-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 26,
+      "title": "Instagram Carousel Canva Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-001.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 27,
+      "title": "Business Presentation Canva Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-002.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 28,
+      "title": "Real Estate Canva Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-003.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 29,
+      "title": "Restaurant Promotion Canva Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-004.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 30,
+      "title": "Fitness Coach Canva Templates",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-005.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 31,
+      "title": "Startup Pitch Canva Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-006.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-006.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 32,
+      "title": "YouTube Thumbnail Canva Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-007.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-007.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 33,
+      "title": "Wedding Invitation Canva Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-008.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-008.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 34,
+      "title": "Personal Branding Canva Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-009.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-009.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 35,
+      "title": "Event Promotion Canva Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/canva-010.zip",
+      "pcloud_link": null,
+      "original_filename": "canva-010.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 36,
+      "title": "Ultimate Productivity Notion System",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-001.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 37,
+      "title": "Student Planner Notion Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-002.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 38,
+      "title": "Freelancer CRM Notion Workspace",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-003.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 39,
+      "title": "Startup Operating System",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-004.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 40,
+      "title": "Content Creator Notion Dashboard",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-005.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 41,
+      "title": "Personal Finance Notion Tracker",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-006.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-006.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 42,
+      "title": "Job Application Notion Manager",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-007.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-007.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 43,
+      "title": "Habit Tracker Notion Template",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-008.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-008.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 44,
+      "title": "Project Management Workspace",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-009.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-009.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 45,
+      "title": "Goal Setting Notion Dashboard",
+      "postgresql_storage_path": null,
+      "file_url": "/products/notion-010.zip",
+      "pcloud_link": null,
+      "original_filename": "notion-010.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 46,
+      "title": "Executive Resume Template Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/resume-001.zip",
+      "pcloud_link": null,
+      "original_filename": "resume-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 47,
+      "title": "Modern ATS Resume Bundle",
+      "postgresql_storage_path": null,
+      "file_url": "/products/resume-002.zip",
+      "pcloud_link": null,
+      "original_filename": "resume-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 48,
+      "title": "Creative Designer Resume Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/resume-003.zip",
+      "pcloud_link": null,
+      "original_filename": "resume-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 49,
+      "title": "Tech Professional Resume Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/resume-004.zip",
+      "pcloud_link": null,
+      "original_filename": "resume-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 50,
+      "title": "Graduate Resume Starter Kit",
+      "postgresql_storage_path": null,
+      "file_url": "/products/resume-005.zip",
+      "pcloud_link": null,
+      "original_filename": "resume-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 51,
+      "title": "The Complete JavaScript Handbook",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-001.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-001.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 52,
+      "title": "Mastering React Development",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-002.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-002.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 53,
+      "title": "UI/UX Design Principles",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-003.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-003.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 54,
+      "title": "Startup Growth Strategies",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-004.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-004.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 55,
+      "title": "The Freelancer's Playbook",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-005.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-005.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 56,
+      "title": "Python for Beginners",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-006.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-006.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 57,
+      "title": "Modern Web Development",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-007.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-007.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 58,
+      "title": "Digital Marketing Blueprint",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-008.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-008.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 59,
+      "title": "Productivity for Developers",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-009.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-009.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 60,
+      "title": "Building SaaS Products",
+      "postgresql_storage_path": null,
+      "file_url": "/products/ebook-010.pdf",
+      "pcloud_link": null,
+      "original_filename": "ebook-010.pdf",
+      "mime_type": "application/pdf",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 61,
+      "title": "Complete React Bootcamp",
+      "postgresql_storage_path": null,
+      "file_url": "/products/course-001.zip",
+      "pcloud_link": null,
+      "original_filename": "course-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 62,
+      "title": "Next.js Full Stack Course",
+      "postgresql_storage_path": null,
+      "file_url": "/products/course-002.zip",
+      "pcloud_link": null,
+      "original_filename": "course-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 63,
+      "title": "UI/UX Design Masterclass",
+      "postgresql_storage_path": null,
+      "file_url": "/products/course-003.zip",
+      "pcloud_link": null,
+      "original_filename": "course-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 64,
+      "title": "Python Backend Development",
+      "postgresql_storage_path": null,
+      "file_url": "/products/course-004.zip",
+      "pcloud_link": null,
+      "original_filename": "course-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 65,
+      "title": "Digital Marketing Academy",
+      "postgresql_storage_path": null,
+      "file_url": "/products/course-005.zip",
+      "pcloud_link": null,
+      "original_filename": "course-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 66,
+      "title": "AI-Powered Code Assistant Node",
+      "postgresql_storage_path": null,
+      "file_url": "/products/online-courses-001.zip",
+      "pcloud_link": null,
+      "original_filename": "online-courses-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 67,
+      "title": "Midjourney Design Automation Pipeline",
+      "postgresql_storage_path": null,
+      "file_url": "/products/online-courses-002.zip",
+      "pcloud_link": null,
+      "original_filename": "online-courses-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 68,
+      "title": "ChatGPT Editorial Copywriter Pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/online-courses-003.zip",
+      "pcloud_link": null,
+      "original_filename": "online-courses-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 69,
+      "title": "Stable Diffusion Conceptual Art Presets",
+      "postgresql_storage_path": null,
+      "file_url": "/products/online-courses-004.zip",
+      "pcloud_link": null,
+      "original_filename": "online-courses-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 70,
+      "title": "AI Copilot Terminal Orchestration Node",
+      "postgresql_storage_path": null,
+      "file_url": "/products/online-courses-005.zip",
+      "pcloud_link": null,
+      "original_filename": "online-courses-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 71,
+      "title": "Icon Pack Collection 1",
+      "postgresql_storage_path": null,
+      "file_url": "/products/icon-packs-001.zip",
+      "pcloud_link": null,
+      "original_filename": "icon-packs-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 72,
+      "title": "Icon Pack Collection 2",
+      "postgresql_storage_path": null,
+      "file_url": "/products/icon-packs-002.zip",
+      "pcloud_link": null,
+      "original_filename": "icon-packs-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 73,
+      "title": "Icon Pack Collection 3",
+      "postgresql_storage_path": null,
+      "file_url": "/products/icon-packs-003.zip",
+      "pcloud_link": null,
+      "original_filename": "icon-packs-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 74,
+      "title": "Icon Pack Collection 4",
+      "postgresql_storage_path": null,
+      "file_url": "/products/icon-packs-004.zip",
+      "pcloud_link": null,
+      "original_filename": "icon-packs-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 75,
+      "title": "Icon Pack Collection 5",
+      "postgresql_storage_path": null,
+      "file_url": "/products/icon-packs-005.zip",
+      "pcloud_link": null,
+      "original_filename": "icon-packs-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 76,
+      "title": "Font Pack Collection 1",
+      "postgresql_storage_path": null,
+      "file_url": "/products/font-packs-001.zip",
+      "pcloud_link": null,
+      "original_filename": "font-packs-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 77,
+      "title": "Font Pack Collection 2",
+      "postgresql_storage_path": null,
+      "file_url": "/products/font-packs-002.zip",
+      "pcloud_link": null,
+      "original_filename": "font-packs-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 78,
+      "title": "Font Pack Collection 3",
+      "postgresql_storage_path": null,
+      "file_url": "/products/font-packs-003.zip",
+      "pcloud_link": null,
+      "original_filename": "font-packs-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 79,
+      "title": "Font Pack Collection 4",
+      "postgresql_storage_path": null,
+      "file_url": "/products/font-packs-004.zip",
+      "pcloud_link": null,
+      "original_filename": "font-packs-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 80,
+      "title": "Font Pack Collection 5",
+      "postgresql_storage_path": null,
+      "file_url": "/products/font-packs-005.zip",
+      "pcloud_link": null,
+      "original_filename": "font-packs-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 81,
+      "title": "Video Asset Collection 1",
+      "postgresql_storage_path": null,
+      "file_url": "/products/video-assets-001.zip",
+      "pcloud_link": null,
+      "original_filename": "video-assets-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 82,
+      "title": "Video Asset Collection 2",
+      "postgresql_storage_path": null,
+      "file_url": "/products/video-assets-002.zip",
+      "pcloud_link": null,
+      "original_filename": "video-assets-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 83,
+      "title": "Video Asset Collection 3",
+      "postgresql_storage_path": null,
+      "file_url": "/products/video-assets-003.zip",
+      "pcloud_link": null,
+      "original_filename": "video-assets-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 84,
+      "title": "Video Asset Collection 4",
+      "postgresql_storage_path": null,
+      "file_url": "/products/video-assets-004.zip",
+      "pcloud_link": null,
+      "original_filename": "video-assets-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 85,
+      "title": "Video Asset Collection 5",
+      "postgresql_storage_path": null,
+      "file_url": "/products/video-assets-005.zip",
+      "pcloud_link": null,
+      "original_filename": "video-assets-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 86,
+      "title": "Music Pack Collection 1",
+      "postgresql_storage_path": null,
+      "file_url": "/products/music-packs-001.zip",
+      "pcloud_link": null,
+      "original_filename": "music-packs-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 87,
+      "title": "Music Pack Collection 2",
+      "postgresql_storage_path": null,
+      "file_url": "/products/music-packs-002.zip",
+      "pcloud_link": null,
+      "original_filename": "music-packs-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 88,
+      "title": "Music Pack Collection 3",
+      "postgresql_storage_path": null,
+      "file_url": "/products/music-packs-003.zip",
+      "pcloud_link": null,
+      "original_filename": "music-packs-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 89,
+      "title": "Music Pack Collection 4",
+      "postgresql_storage_path": null,
+      "file_url": "/products/music-packs-004.zip",
+      "pcloud_link": null,
+      "original_filename": "music-packs-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 90,
+      "title": "Music Pack Collection 5",
+      "postgresql_storage_path": null,
+      "file_url": "/products/music-packs-005.zip",
+      "pcloud_link": null,
+      "original_filename": "music-packs-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 91,
+      "title": "Motion Graphic Collection 1",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-001.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-001.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 92,
+      "title": "Motion Graphic Collection 2",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-002.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-002.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 93,
+      "title": "Motion Graphic Collection 3",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-003.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-003.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 94,
+      "title": "Motion Graphic Collection 4",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-004.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-004.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 95,
+      "title": "Motion Graphic Collection 5",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-005.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-005.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 96,
+      "title": "Motion Graphic Collection 6",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-006.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-006.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 97,
+      "title": "Motion Graphic Collection 7",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-007.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-007.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 98,
+      "title": "Motion Graphic Collection 8",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-008.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-008.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 99,
+      "title": "Motion Graphic Collection 9",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-009.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-009.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 100,
+      "title": "Motion Graphic Collection 10",
+      "postgresql_storage_path": null,
+      "file_url": "/products/motion-graphics-010.zip",
+      "pcloud_link": null,
+      "original_filename": "motion-graphics-010.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 101,
+      "title": "Aura Daily Digital Journal",
+      "postgresql_storage_path": null,
+      "file_url": "/products/aura-journal-101.zip",
+      "pcloud_link": null,
+      "original_filename": "aura-journal-101.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48.2 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 102,
+      "title": "Lunar Manifestation Monthly Planner",
+      "postgresql_storage_path": null,
+      "file_url": "/products/lunar-manifest-102.zip",
+      "pcloud_link": null,
+      "original_filename": "lunar-manifest-102.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "12.4 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 103,
+      "title": "Aesthetic TikTok & Reels Content Hub",
+      "postgresql_storage_path": null,
+      "file_url": "/products/content-hub-103.zip",
+      "pcloud_link": null,
+      "original_filename": "content-hub-103.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "84.2 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 104,
+      "title": "daily diary",
+      "postgresql_storage_path": "local://uploads/vendors/5/products/104/files/8accae38-eb23-4882-b6c7-1c68b8b81e88.zip",
+      "file_url": "/uploads/vendors/5/products/104/files/8accae38-eb23-4882-b6c7-1c68b8b81e88.zip",
+      "pcloud_link": null,
+      "original_filename": "8accae38-eb23-4882-b6c7-1c68b8b81e88.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 105,
+      "title": "Test Product Alpha",
+      "postgresql_storage_path": null,
+      "file_url": "https://example.com/file.zip",
+      "pcloud_link": null,
+      "original_filename": "file.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Unclassified storage pattern requiring review."
+      ]
+    },
+    {
+      "product_id": 107,
+      "title": "demo",
+      "postgresql_storage_path": null,
+      "file_url": null,
+      "pcloud_link": null,
+      "original_filename": "product-107.bin",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "DATABASE_REFERENCE_MISSING",
+      "notes": [
+        "No storage_path or file_url recorded in database."
+      ]
+    },
+    {
+      "product_id": 108,
+      "title": "Resume Template Pack",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 109,
+      "title": "Resume Template Pack - Premium",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 110,
+      "title": "Resume template pack",
+      "postgresql_storage_path": null,
+      "file_url": "/products/product-110.zip",
+      "pcloud_link": null,
+      "original_filename": "product-110.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "REQUIRES_MANUAL_REVIEW",
+      "notes": [
+        "Relative product path needs verification or B2 migration."
+      ]
+    },
+    {
+      "product_id": 111,
+      "title": "digital planner",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389134413",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 112,
+      "title": "Instagram content calendar",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389234776",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 115,
+      "title": "UI Design Icon Pack & Guide",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389260091",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 116,
+      "title": "The Personal Budget Planner",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381223",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 117,
+      "title": "Study Planner & Exam Organizer",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405324",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 118,
+      "title": "The Freelancer Client Toolkit",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389423067",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 119,
+      "title": "The Healthy Habit Tracker",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90523943133",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 120,
+      "title": "The Small Business Startup Workbook",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526014883",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 121,
+      "title": "The Wedding Planning Toolkit",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528100583",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 122,
+      "title": "Meal Prep & Recipe Planner",
+      "postgresql_storage_path": null,
+      "file_url": "https://u.pcloud.link/publink/show?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182797",
+      "pcloud_link": null,
+      "original_filename": "show",
+      "mime_type": "application/octet-stream",
+      "b2_object_exists": false,
+      "b2_object_key": null,
+      "b2_file_size": 0,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "LEGACY_PROVIDER_PATH",
+      "notes": [
+        "Product references legacy pCloud storage provider."
+      ]
+    },
+    {
+      "product_id": 123,
+      "title": "Study Planner & Exam Organizer",
+      "postgresql_storage_path": "b2://lumora-products/private/products/123/72ca1182-8654-498c-afd1-d462eca5ed86.zip",
+      "file_url": "https://f005.backblazeb2.com/file/lumora-products/private/products/123/72ca1182-8654-498c-afd1-d462eca5ed86.zip",
+      "pcloud_link": null,
+      "original_filename": "72ca1182-8654-498c-afd1-d462eca5ed86.zip",
+      "mime_type": "application/x-zip-compressed",
+      "b2_object_exists": true,
+      "b2_object_key": "private/products/123/72ca1182-8654-498c-afd1-d462eca5ed86.zip",
+      "b2_file_size": 16,
+      "database_file_size": "48 MB",
+      "checksum": null,
+      "storage_status": "VALID",
+      "notes": []
+    }
+  ]
+}
