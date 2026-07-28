@@ -339,7 +339,7 @@ export function AdminSelect({
   const generatedId = useId();
   const listboxId = `admin-select-listbox-${id || generatedId}`;
 
-  // Close on click outside
+  // Close on click outside (handles both mouse and mobile touch events)
   useEffect(() => {
     function handleClickOutside(event) {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -347,7 +347,11 @@ export function AdminSelect({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   // Format options if passed as raw strings, numbers or objects
@@ -466,13 +470,15 @@ export function AdminSelect({
       </button>
 
       {isOpen && (
-        <div 
-          id={listboxId}
-          role="listbox"
-          tabIndex={-1}
-          aria-label={ariaLabel || placeholder || name}
-          className="absolute right-0 sm:left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
-        >
+        <>
+          <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setIsOpen(false)} />
+          <div 
+            id={listboxId}
+            role="listbox"
+            tabIndex={-1}
+            aria-label={ariaLabel || placeholder || name}
+            className="absolute right-0 sm:left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);
             const isFocused = index === focusedIndex;
@@ -508,6 +514,7 @@ export function AdminSelect({
             );
           })}
         </div>
+      </>
       )}
     </div>
   );

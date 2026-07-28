@@ -656,7 +656,7 @@ export default function Settings() {
               <div className="lg:col-span-5 flex flex-col gap-6">
                 
                 {/* 8. PREVIEW IMPACT PANEL */}
-                <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-5 sticky top-24">
+                <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-5 relative lg:sticky lg:top-24">
                   <div>
                     <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1">Real-time Simulation</h4>
                     <h3 className="text-base font-serif font-black text-[#2D004D]">Live Ecosystem Preview</h3>

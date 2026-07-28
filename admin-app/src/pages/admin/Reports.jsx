@@ -518,7 +518,7 @@ export default function Reports() {
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
 
         {/* --- 1. STICKY REPORT CONTROL BAR --- */}
-        <section className="mb-8 sticky top-24 z-30 transition-all duration-300">
+        <section className="mb-8 relative z-20 transition-all duration-300">
           <div className="glass-surface rounded-3xl p-5 border border-white/50 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             
             <div className="flex items-center gap-4">

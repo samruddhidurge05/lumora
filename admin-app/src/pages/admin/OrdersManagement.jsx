@@ -1555,7 +1555,7 @@ export default function OrdersManagement() {
               </div>
 
               {/* RIGHT 40% PANEL: TRANSACTION DETAILS & ANOMALY ANALYSIS */}
-              <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 sticky top-24">
+              <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 relative lg:sticky lg:top-24">
 
                 {viewMode === "tickets" ? (
                   /* ── REFUND TICKET DETAIL PANEL ── */
