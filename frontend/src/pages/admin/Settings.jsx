@@ -178,23 +178,53 @@ export default function Settings() {
       return;
     }
     const newValue = !platformSettings[key];
+    const updatedSettings = { ...platformSettings, [key]: newValue };
+    
+    if (key === 'vendorSellingEnabled' || key === 'vendorRegistrationEnabled' || key === 'vendor_enabled') {
+      const isVendorSelling = key === 'vendorSellingEnabled' ? newValue : (platformSettings.vendorSellingEnabled !== false);
+      const isVendorReg = key === 'vendorRegistrationEnabled' ? newValue : (platformSettings.vendorRegistrationEnabled !== false);
+      updatedSettings.vendor_enabled = isVendorSelling && isVendorReg;
+      updatedSettings.vendorSellingEnabled = isVendorSelling;
+      updatedSettings.vendorRegistrationEnabled = isVendorReg;
+    } else if (key === 'affiliateProgramEnabled' || key === 'affiliate_enabled') {
+      updatedSettings.affiliateProgramEnabled = newValue;
+      updatedSettings.affiliate_enabled = newValue;
+    }
+
     // Optimistic UI update
-    setPlatformSettings(prev => ({ ...prev, [key]: newValue }));
+    setPlatformSettings(updatedSettings);
     setTogglingKey(key);
     sysSound.playTap();
     try {
-      // Use backend PUT /api/admin/settings/ — auth token injected by backendFetch
-      await backendFetch('/admin/settings/', {
-        method: 'PUT',
-        body: JSON.stringify({ [key]: newValue }),
-      });
+      if (key === 'vendorSellingEnabled' || key === 'vendorRegistrationEnabled' || key === 'vendor_enabled') {
+        await backendFetch('/admin/settings/vendor-marketplace', {
+          method: 'PUT',
+          body: JSON.stringify({
+            vendor_enabled: updatedSettings.vendor_enabled,
+            vendorSellingEnabled: updatedSettings.vendorSellingEnabled,
+            vendorRegistrationEnabled: updatedSettings.vendorRegistrationEnabled,
+          }),
+        });
+      } else if (key === 'affiliateProgramEnabled' || key === 'affiliate_enabled') {
+        await backendFetch('/admin/settings/affiliate-program', {
+          method: 'PUT',
+          body: JSON.stringify({
+            affiliateProgramEnabled: updatedSettings.affiliateProgramEnabled,
+            affiliate_enabled: updatedSettings.affiliate_enabled,
+          }),
+        });
+      } else {
+        await backendFetch('/admin/settings/', {
+          method: 'PUT',
+          body: JSON.stringify({ [key]: newValue }),
+        });
+      }
       setLastSaved(new Date().toLocaleTimeString());
       const label = key.replace(/([A-Z])/g, ' $1').trim();
       triggerNotification(`${label} ${newValue ? 'enabled' : 'disabled'}.`);
       sysSound.playSuccess();
     } catch (err) {
       console.error('[Settings] platform toggle FAILED — reverting UI:', err.message);
-      // Revert to actual state by re-running init
       const current = await initPlatformSettings().catch(() => platformSettings);
       setPlatformSettings(current);
       triggerNotification(`Failed to save: ${err.message}`, 'error');

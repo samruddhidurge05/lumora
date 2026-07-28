@@ -256,7 +256,7 @@ export default function AffiliateEarnings({
     <div className="aff-page-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 2.5vw, 28px)', position: 'relative', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="aff-earnings-header" style={{
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
@@ -269,12 +269,12 @@ export default function AffiliateEarnings({
             Earnings &amp; Payouts
           </h2>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+        <div className="aff-earnings-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
           {refresh && (
             <button
               onClick={refresh}
               title="Refresh Data"
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '42px', height: '42px', minHeight: '42px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.30)', background: 'rgba(255,255,255,0.70)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '42px', height: '42px', minWidth: '42px', minHeight: '44px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.30)', background: 'rgba(255,255,255,0.70)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(123,63,160,0.35)'; e.currentTarget.style.color = '#7B3FA0'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(196,181,253,0.30)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
             >
@@ -283,6 +283,7 @@ export default function AffiliateEarnings({
           )}
           <button
             onClick={() => setShowWithdrawal(true)}
+            className="aff-withdrawal-btn"
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               padding: '11px 20px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700,
@@ -299,7 +300,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── STAT CARDS ─────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="aff-stat-grid" style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
         gap: isMobile ? '10px' : '16px',
@@ -351,7 +352,7 @@ export default function AffiliateEarnings({
       </div>
 
       {/* ── COMMISSION BREAKDOWN STRIP ──────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{
+      <div className="premium-flat-card aff-earnings-breakdown" style={{
         padding: isMobile ? '14px' : '16px 20px',
         display: isMobile ? 'grid' : 'flex',
         gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : undefined,
@@ -371,7 +372,7 @@ export default function AffiliateEarnings({
             <div style={{ fontSize: '1.15rem', fontWeight: 700, color: item.color || 'var(--text-primary)', marginTop: '2px' }}>{item.value}</div>
           </div>
         ))}
-        <div style={{
+        <div className="aff-breakdown-available" style={{
           gridColumn: isMobile ? '1 / -1' : undefined,
           marginLeft: isMobile ? 0 : 'auto',
           textAlign: isMobile ? 'left' : 'right',
@@ -484,167 +485,181 @@ export default function AffiliateEarnings({
           </div>
         </div>
 
-        {/* Commission table — desktop full table OR mobile cards based on JS */}
-        {isMobile ? (
-          /* ── MOBILE CARD VIEW ── */
-          <div style={{ width: '100%' }}>
-            {filtered.length > 0 ? (
-              filtered.map((row) => {
-                const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
-                return (
-                  <div key={row.id} style={{
-                    padding: '14px', borderRadius: '14px',
-                    background: 'rgba(255,255,255,0.60)',
-                    border: '1px solid rgba(123,63,160,0.12)',
-                    display: 'flex', flexDirection: 'column', gap: '10px',
-                    marginBottom: '10px', boxSizing: 'border-box', width: '100%',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.3, flex: 1, wordBreak: 'break-word' }}>{row.product}</div>
-                      <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: 'rgba(123,63,160,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
-                      <div>
-                        <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Commission</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 800, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Sale Price</span>
-                        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem', borderTop: '1px solid rgba(45,0,96,0.05)', paddingTop: '8px' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Date & Order</span>
-                        <span style={{ fontWeight: 500, color: 'var(--text-light)', display: 'block' }}>{formatDate(row.date)}</span>
-                        <span style={{ fontWeight: 700, color: '#7B3FA0', fontSize: '0.72rem', display: 'block' }}>{row.orderId}</span>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Customer</span>
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
-                        <span style={{ fontSize: '0.70rem', color: '#2D004D', fontWeight: 700, display: 'block' }}>
-                          {row.referralCode} {row.attributionSource === 'coupon_code' ? '🏷️' : '🔗'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ padding: '32px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.4)', borderRadius: '12px' }}>
-                <DollarSign size={28} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '8px' }} />
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter.'}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* ── DESKTOP TABLE VIEW ── */
-          <div style={{ overflowX: 'auto', width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
-              {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
-                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-              ))}
-            </div>
-            {filtered.length > 0 ? (
-              filtered.map((row, idx) => {
-                const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
-                return (
-                  <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '13px 16px', borderRadius: '10px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center', minWidth: '780px' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(row.date)}</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7B3FA0' }}>{row.orderId}</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
-                    <span style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
-                    <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{row.referralCode}</span>
-                      <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'}</span>
-                    </div>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
-                    <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ padding: '48px', textAlign: 'center' }}>
-                <DollarSign size={32} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '12px' }} />
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter to see other commissions.'}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── RECENT PAYOUTS ───────────────────────────────────────────────────── */}
-      <div className="premium-flat-card aff-payout-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
-          <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Payout Requests</h3>
-        </div>
-
-        {activePayouts.length === 0 ? (
-          <div style={{ padding: '36px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
-            <Wallet size={30} style={{ color: 'rgba(196,181,253,0.70)', marginBottom: '10px' }} />
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>No payout requests yet</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Once you request a withdrawal, your payout history will appear here.
-            </div>
-          </div>
-        ) : isMobile ? (
-          /* Mobile payout cards */
-          <div style={{ width: '100%' }}>
-            {activePayouts.map((p) => {
-              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+        {/* ── MOBILE CARD VIEW (CSS toggled via .aff-mobile-only) ── */}
+        <div className="aff-mobile-only" style={{ width: '100%' }}>
+          {filtered.length > 0 ? (
+            filtered.map((row) => {
+              const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
               return (
-                <div key={p.id} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(123,63,160,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
-                  <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
-                      {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+                <div key={row.id} style={{
+                  padding: '14px', borderRadius: '14px',
+                  background: 'rgba(255,255,255,0.60)',
+                  border: '1px solid rgba(123,63,160,0.12)',
+                  display: 'flex', flexDirection: 'column', gap: '10px',
+                  marginBottom: '10px', boxSizing: 'border-box', width: '100%',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.3, flex: 1, wordBreak: 'break-word' }}>{row.product}</div>
+                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: 'rgba(123,63,160,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
+                    <div>
+                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Commission</span>
+                      <span style={{ fontSize: '1rem', fontWeight: 800, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Sale Price</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
                     </div>
                   </div>
-                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem', borderTop: '1px solid rgba(45,0,96,0.05)', paddingTop: '8px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Date &amp; Order</span>
+                      <span style={{ fontWeight: 500, color: 'var(--text-light)', display: 'block' }}>{formatDate(row.date)}</span>
+                      <span style={{ fontWeight: 700, color: '#7B3FA0', fontSize: '0.72rem', display: 'block' }}>{row.orderId}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem', display: 'block' }}>Customer</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                      <span style={{ fontSize: '0.70rem', color: '#2D004D', fontWeight: 700, display: 'block' }}>
+                        {row.referralCode} {row.attributionSource === 'coupon_code' ? '🏷️' : '🔗'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               );
-            })}
-          </div>
-        ) : (
-          /* Desktop payout table */
-          <div style={{ overflowX: 'auto', width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
-              {['Date', 'Amount', 'Method', 'Status'].map(h => (
-                <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-              ))}
+            })
+          ) : (
+            <div style={{ padding: '32px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.4)', borderRadius: '12px' }}>
+              <DollarSign size={28} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '8px' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter.'}
+              </div>
             </div>
-            {activePayouts.map((p, idx) => {
-              const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+          )}
+        </div>
+
+        {/* ── DESKTOP TABLE VIEW (CSS toggled via .aff-desktop-only) ── */}
+        <div className="aff-desktop-only aff-table-wrap" style={{ overflowX: 'auto', width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '780px' }}>
+            {['Date', 'Order ID', 'Customer', 'Product', 'Code / Source', 'Sale Price', 'Commission', 'Status'].map(h => (
+              <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+            ))}
+          </div>
+          {filtered.length > 0 ? (
+            filtered.map((row, idx) => {
+              const st = STATUS_STYLE[row.status] || STATUS_STYLE.pending;
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', minWidth: '480px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
+                <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr 1.2fr 2fr 1.3fr 1fr 1.1fr 1fr', gap: '10px', padding: '13px 16px', borderRadius: '10px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center', minWidth: '780px' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(row.date)}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7B3FA0' }}>{row.orderId}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.customerName}</span>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product}</span>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{row.referralCode}</span>
+                    <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{row.attributionSource === 'coupon_code' ? '🏷️ Coupon' : '🔗 Link'}</span>
+                  </div>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{formatINR(row.saleAmount)}</span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(row.commission)}</span>
                   <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          ) : (
+            <div style={{ padding: '48px', textAlign: 'center' }}>
+              <DollarSign size={32} style={{ color: 'rgba(196,181,253,0.60)', marginBottom: '12px' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                {activeCommissions.length === 0 ? 'No commissions yet' : `No ${statusFilter} commissions`}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {activeCommissions.length === 0 ? 'Share your referral link to start earning commissions.' : 'Try a different filter to see other commissions.'}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* ── PAYOUTS (PENDING & COMPLETED) ───────────────────────────────────────────────────── */}
+      {[
+        { 
+          title: 'Pending Requests', 
+          subtitle: 'Awaiting Admin Approval', 
+          list: activePayouts.filter(p => p.status === 'pending'),
+          emptyMsg: 'No pending requests',
+          emptyDesc: 'You have no withdrawal requests waiting for approval.'
+        },
+        { 
+          title: 'Completed Payouts', 
+          subtitle: 'Successfully Processed', 
+          list: activePayouts.filter(p => p.status !== 'pending'),
+          emptyMsg: 'No completed payouts',
+          emptyDesc: 'Once a withdrawal is processed, it will appear here.'
+        }
+      ].map((section, sectionIdx) => (
+        <div key={section.title} className="premium-flat-card aff-payout-card" style={{ padding: 'clamp(16px, 3vw, 28px)', width: '100%', boxSizing: 'border-box', marginBottom: sectionIdx === 0 ? '20px' : '0' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <span className="caption-premium" style={{ color: '#7B3FA0', textTransform: 'uppercase' }}>{section.subtitle}</span>
+            <h3 className="text-editorial" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>{section.title}</h3>
+          </div>
+
+          {section.list.length === 0 ? (
+            <div style={{ padding: '36px 16px', textAlign: 'center', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
+              <Wallet size={30} style={{ color: 'rgba(196,181,253,0.70)', marginBottom: '10px' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{section.emptyMsg}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{section.emptyDesc}</div>
+            </div>
+          ) : (
+            <>
+              {/* Mobile payout cards */}
+              <div className="aff-payout-mobile-only" style={{ width: '100%' }}>
+                {section.list.map((p) => {
+                  const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                  return (
+                    <div key={p.id} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(123,63,160,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
+                      <div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
+                          {formatDate(p.date)} • <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{p.method}</span>
+                        </div>
+                      </div>
+                      <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop payout table */}
+              <div className="aff-payout-desktop-only aff-table-wrap" style={{ overflowX: 'auto', width: '100%' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px', minWidth: '480px' }}>
+                  {['Date', 'Amount', 'Method', 'Status'].map(h => (
+                    <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+                  ))}
+                </div>
+                {section.list.map((p, idx) => {
+                  const st = STATUS_STYLE[p.status] || STATUS_STYLE.pending;
+                  return (
+                    <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', minWidth: '480px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.date)}</span>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method}</span>
+                      <div><span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>{st.label}</span></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      ))}
 
       {/* ── WITHDRAWAL MODAL ─────────────────────────────────────────────────── */}
       {showWithdrawal && (

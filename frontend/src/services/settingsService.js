@@ -3,6 +3,7 @@ import { db } from './firebase';
 import { backendFetch } from '../utils/api';
 
 export const DEFAULT_PLATFORM_SETTINGS = {
+  vendor_enabled: true,
   vendorSellingEnabled: true,
   vendorRegistrationEnabled: true,
   affiliateProgramEnabled: true,
@@ -18,6 +19,22 @@ export const DEFAULT_PLATFORM_SETTINGS = {
   themeIntensity: 'rich',
   animationLevel: 'cinematic',
   glowEffects: true
+};
+
+export const fetchFeatureConfig = async () => {
+  try {
+    const res = await backendFetch('/settings/features');
+    if (res) return res;
+  } catch (err) {
+    console.warn('[settingsService] fetchFeatureConfig failed, fallback to defaults:', err);
+  }
+  return {
+    vendor_enabled: true,
+    vendorSellingEnabled: true,
+    vendorRegistrationEnabled: true,
+    affiliate_enabled: true,
+    affiliateProgramEnabled: true,
+  };
 };
 
 const docRef = doc(db, 'platformSettings', 'global');

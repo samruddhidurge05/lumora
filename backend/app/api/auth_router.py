@@ -3,7 +3,7 @@ from app.middleware.rate_limit import limiter
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import Optional
+from typing import Optional, cast, Any
 from pydantic import BaseModel, EmailStr
 from app.core.exceptions import LumoraException
 
@@ -48,11 +48,13 @@ def get_current_user(
         payload = decode_access_token(token)
         # BUG-11 FIX: always cast sub to int, regardless of how it was encoded
         raw_id = payload.get("sub")
-        user_id: int = int(raw_id)
-        if user_id is None:
+        if raw_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
+        user_id: int = int(raw_id)
+    except HTTPException:
+        raise
     except (Exception, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
@@ -157,7 +159,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
             detail="This account uses Firebase sign-in. Please use the Firebase login flow."
         )
     try:
-        password_valid = verify_password(body.password, user.password_hash)
+        password_valid = verify_password(body.password, str(user.password_hash))
     except Exception:
         # Malformed hash - never crash as 500
         raise HTTPException(
@@ -171,15 +173,15 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
-        user_id=user.id,
+        user_id=cast(int, user.id),
         activity_type="login",
         details="Logged in via standard email/password."
     )
     db.commit()
     from app.utils.logger import log_structured_event
     log_structured_event(
-        user_id=user.id,
-        role=user.role,
+        user_id=cast(int, user.id),
+        role=str(user.role) if user.role is not None else None,
         action="user_login",
         module="auth",
         status="success",
@@ -257,11 +259,11 @@ def update_me(
     db: Session = Depends(get_db)
 ):
     if user_in.name is not None:
-        current_user.name = user_in.name
+        setattr(current_user, "name", user_in.name)
     if user_in.role is not None:
-        current_user.role = user_in.role
+        setattr(current_user, "role", user_in.role)
     if user_in.firebase_uid is not None:
-        current_user.firebase_uid = user_in.firebase_uid
+        setattr(current_user, "firebase_uid", user_in.firebase_uid)
     db.commit()
     db.refresh(current_user)
     return current_user
@@ -339,12 +341,12 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
         # (never downgrade vendor/affiliate ? customer on re-login from the wrong tile)
         changed = False
         if email_verified and not user.is_verified:
-            user.is_verified = True
+            setattr(user, "is_verified", True)
             changed = True
         # Sync Firebase UID to user if missing or mismatched
         fb_uid = claims.get("uid")
         if fb_uid and user.firebase_uid != fb_uid:
-            user.firebase_uid = fb_uid
+            setattr(user, "firebase_uid", fb_uid)
             changed = True
         # Only update role when the user currently has the default 'customer' role
         # AND the incoming role is more specific.  This prevents a vendor who logs
@@ -356,7 +358,7 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Cannot elevate to admin role.",
                 )
-            user.role = role
+            setattr(user, "role", role)
             changed = True
         if changed:
             db.commit()
@@ -393,15 +395,15 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
-        user_id=user.id,
+        user_id=cast(int, user.id),
         activity_type="firebase_sync",
         details=f"Synced Firebase account. Role: {user.role or 'customer'}."
     )
     db.commit()
     from app.utils.logger import log_structured_event
     log_structured_event(
-        user_id=user.id,
-        role=user.role,
+        user_id=cast(int, user.id) if user and user.id is not None else None,
+        role=str(user.role) if user.role is not None else None,
         action="firebase_login",
         module="auth",
         status="success",

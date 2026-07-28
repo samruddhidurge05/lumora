@@ -55,6 +55,9 @@ class LocalStorageProvider(BaseStorageProvider):
         self.upload_dir = upload_dir
         os.makedirs(upload_dir, exist_ok=True)
 
+    def is_available(self) -> bool:
+        return True
+
     def _get_absolute_path(self, relative_path: str) -> str:
         # Strip local:// scheme
         clean_path = relative_path.replace("local://", "")
@@ -318,6 +321,14 @@ class B2StorageProvider(BaseStorageProvider):
 
     def is_available(self) -> bool:
         return bool(self.auth_token and self.api_url and self.bucket_id and self.b2_status == "AUTHORIZED")
+
+    def _clean_b2_key(self, storage_path: str) -> str:
+        if not storage_path:
+            return ""
+        prefix = f"b2://{self.bucket_name}/"
+        if storage_path.startswith(prefix):
+            return storage_path[len(prefix):]
+        return storage_path.replace("b2://", "")
 
     def _ensure_auth(self):
         if self.b2_status == "TRANSACTION_CAP_EXCEEDED":
@@ -689,7 +700,7 @@ class StorageService:
     def validate_file(self, file_bytes: bytes, filename: str, is_image: bool = False) -> str:
         if file_bytes is None or len(file_bytes) == 0:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=422,
                 detail="File is empty or zero bytes."
             )
 
@@ -708,7 +719,7 @@ class StorageService:
         for phrase in BLOCKED_PHRASES:
             if phrase in file_lower:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=422,
                     detail=f"File content rejected: Obvious placeholder/test content '{phrase.decode(errors='ignore')}' detected."
                 )
 
@@ -729,13 +740,13 @@ class StorageService:
         blocked_exts = {".exe", ".bat", ".sh", ".cmd", ".com", ".scr", ".msi", ".dll", ".pif", ".application", ".gadget", ".wsf", ".vbs", ".asp", ".aspx", ".php", ".jsp", ".cgi"}
         if ext in blocked_exts:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=422,
                 detail="Executable files are strictly blocked for security."
             )
 
         if ext not in allowed_exts:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=422,
                 detail=f"File extension '{ext}' not allowed. Allowed: {', '.join(sorted(allowed_exts))}"
             )
             
@@ -772,47 +783,47 @@ class StorageService:
 
             if not is_valid_image:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=422,
                     detail="Invalid image content: Magic signature mismatch. Not a valid image file."
                 )
 
             # Extension compatibility check
             if ext in {".jpg", ".jpeg"} and detected_format != "JPEG":
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with JPEG/JPG extension.")
+                raise HTTPException(status_code=422, detail="File content is not compatible with JPEG/JPG extension.")
             elif ext == ".png" and detected_format != "PNG":
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with PNG extension.")
+                raise HTTPException(status_code=422, detail="File content is not compatible with PNG extension.")
             elif ext == ".gif" and detected_format != "GIF":
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with GIF extension.")
+                raise HTTPException(status_code=422, detail="File content is not compatible with GIF extension.")
             elif ext == ".webp" and detected_format != "WEBP":
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with WEBP extension.")
+                raise HTTPException(status_code=422, detail="File content is not compatible with WEBP extension.")
             elif ext == ".svg" and detected_format != "SVG":
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not compatible with SVG extension.")
+                raise HTTPException(status_code=422, detail="File content is not compatible with SVG extension.")
         else:
             # Validate product file magic numbers at minimum for ZIP and PDF
             if ext in {".zip", ".epub", ".docx", ".xlsx", ".pptx", ".sketch", ".xd"}:
                 if not file_bytes.startswith(b"PK\x03\x04"):
-                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"File content is not a valid ZIP-based format ({ext}).")
+                    raise HTTPException(status_code=422, detail=f"File content is not a valid ZIP-based format ({ext}).")
             elif ext in {".pdf", ".ai"}:
                 if not (file_bytes.startswith(b"%PDF-") or (ext == ".ai" and file_bytes.startswith(b"%!"))):
-                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"File content is not a valid PDF or AI file ({ext}).")
+                    raise HTTPException(status_code=422, detail=f"File content is not a valid PDF or AI file ({ext}).")
             elif ext == ".psd" and not file_bytes.startswith(b"8BPS"):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid PSD file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid PSD file.")
             elif ext == ".fig" and not (file_bytes.startswith(b"PK\x03\x04") or file_bytes.startswith(b"fig-")):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid Figma (.fig) file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid Figma (.fig) file.")
             elif ext == ".mp4" and (len(file_bytes) < 8 or file_bytes[4:8] != b"ftyp"):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid MP4 file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid MP4 file.")
             elif ext == ".mp3" and not (file_bytes.startswith(b"ID3") or file_bytes.startswith((b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"))):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid MP3 file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid MP3 file.")
             elif ext == ".wav" and (len(file_bytes) < 12 or not (file_bytes.startswith(b"RIFF") and file_bytes[8:12] == b"WAVE")):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid WAV file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid WAV file.")
             elif ext in {".ttf", ".otf"} and not (file_bytes.startswith(b"\x00\x01\x00\x00") or file_bytes.startswith(b"OTTO")):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid Font file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid Font file.")
             elif ext == ".json":
                 try:
                     import json
                     json.loads(file_bytes.decode("utf-8"))
                 except Exception:
-                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid JSON string.")
+                    raise HTTPException(status_code=422, detail="File content is not a valid JSON string.")
             elif ext == ".csv":
                 try:
                     content_str = file_bytes.decode("utf-8-sig")
@@ -824,15 +835,15 @@ class StorageService:
                         if "\x00" in content_str:
                             raise ValueError()
                     except Exception:
-                        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not valid CSV text.")
+                        raise HTTPException(status_code=422, detail="File content is not valid CSV text.")
             elif ext == ".tar" and (len(file_bytes) < 262 or file_bytes[257:262] != b"ustar"):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid TAR archive.")
+                raise HTTPException(status_code=422, detail="File content is not a valid TAR archive.")
             elif ext in {".gz", ".tar.gz"} and not file_bytes.startswith(b"\x1f\x8b"):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid GZIP file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid GZIP file.")
             elif ext == ".rar" and not (file_bytes.startswith(b"Rar!\x1a\x07\x00") or file_bytes.startswith(b"Rar!\x1a\x07\x01\x00")):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid RAR file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid RAR file.")
             elif ext == ".7z" and not file_bytes.startswith(b"7z\xbc\xaf\x27\x1c"):
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File content is not a valid 7z file.")
+                raise HTTPException(status_code=422, detail="File content is not a valid 7z file.")
 
         return ext
 
@@ -1086,12 +1097,23 @@ class StorageService:
             except Exception:
                 pass
             # Controlled read check fallback for legacy local disk assets
-            clean_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+            clean_path = self.b2_provider._clean_b2_key(resolved_path)
             return self.local_provider.exists(f"local://uploads/{clean_path}")
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.exists(resolved_path)
         else:
             return self.local_provider.exists(resolved_path)
+
+    def check_health(self) -> Dict[str, Any]:
+        """Returns health metrics and availability status for storage providers."""
+        is_avail = self.provider.is_available() if hasattr(self.provider, "is_available") else True
+        return {
+            "status": "healthy" if is_avail else "unhealthy",
+            "active_provider": self.provider.__class__.__name__,
+            "b2_available": self.b2_provider.is_available(),
+            "firebase_available": self.firebase_provider.is_available(),
+            "local_available": self.local_provider.is_available(),
+        }
 
 # Instantiate singleton
 storage_service = StorageService()

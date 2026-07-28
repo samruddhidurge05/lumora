@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
-import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect } from './components/AdminComponents';
+import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
 import {
   fetchAllOrders,
@@ -1090,19 +1090,74 @@ export default function OrdersManagement() {
                     {viewMode === "tickets" ? (
                       /* ── REFUND TICKETS TABLE ── */
                       refundTickets.length > 0 ? (
-                        <table className="w-full border-collapse text-left">
-                          <thead>
-                            <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
-                              <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
-                              <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
+                        <>
+                          {/* Desktop Table View (>= 768px) */}
+                          <div className="hidden md:block overflow-x-auto w-full">
+                            <table className="w-full min-w-[650px] border-collapse text-left">
+                              <thead>
+                                <tr className="bg-stone-100/40 border-b border-stone-200/50">
+                                  <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
+                                  <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {refundTickets.map((t) => {
+                                  const isFocused = selectedTicketId === t.id;
+                                  const ticketStatusStyles = {
+                                    PENDING: "bg-amber-100/70 text-amber-700 border-amber-200",
+                                    UNDER_REVIEW: "bg-blue-100/70 text-blue-700 border-blue-200",
+                                    APPROVED: "bg-green-100/70 text-green-700 border-green-200",
+                                    PROCESSING: "bg-green-100/70 text-green-700 border-green-200 animate-pulse",
+                                    REFUNDED: "bg-green-100/70 text-green-700 border-green-200",
+                                    FAILED: "bg-red-100/70 text-red-700 border-red-200",
+                                    REJECTED: "bg-red-100/70 text-red-700 border-red-200",
+                                    CANCELLED: "bg-stone-100 text-stone-500 border-stone-200"
+                                  };
+                                  return (
+                                    <motion.tr
+                                      key={t.id}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
+                                        }`}
+                                      onClick={() => { sysSound.playTap(); setSelectedTicketId(t.id); }}
+                                    >
+                                      <td className="py-4 px-5 font-mono text-[11px] font-bold text-[#2D004D]">TKT-{t.id}</td>
+                                      <td className="py-4 px-4">
+                                        <div className="flex flex-col">
+                                          <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
+                                          <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
+                                        </div>
+                                      </td>
+                                      <td className="py-4 px-4 text-[11px] text-[#2D004D] max-w-[140px] truncate">{t.product_name}</td>
+                                      <td className="py-4 px-4 text-right font-black text-[#2D004D] text-xs">₹{t.requested_amount?.toFixed(2)}</td>
+                                      <td className="py-4 px-4 text-center">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
+                                          {t.status}
+                                        </span>
+                                      </td>
+                                      <td className="py-4 px-4 text-center">
+                                        <span className={`text-[10px] font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                                          {t.is_downloaded ? '🚨 YES' : '✅ NO'}
+                                        </span>
+                                      </td>
+                                      <td className="py-4 px-5 text-center text-[10px] text-[#7B3FA0]">
+                                        {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
+                                      </td>
+                                    </motion.tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Mobile Ticket Record Cards View (< 768px) */}
+                          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4">
                             {refundTickets.map((t) => {
                               const isFocused = selectedTicketId === t.id;
                               const ticketStatusStyles = {
@@ -1116,41 +1171,42 @@ export default function OrdersManagement() {
                                 CANCELLED: "bg-stone-100 text-stone-500 border-stone-200"
                               };
                               return (
-                                <motion.tr
-                                  key={t.id}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  className={`border-b border-stone-200/40 transition-all duration-300 hover:bg-white/65 cursor-pointer ${isFocused ? 'bg-white/90 shadow-[inset_3px_0_0_#D8BFE3]' : ''
-                                    }`}
+                                <div
+                                  key={`mob-tkt-${t.id}`}
                                   onClick={() => { sysSound.playTap(); setSelectedTicketId(t.id); }}
+                                  className={`p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5 transition-all cursor-pointer ${
+                                    isFocused ? 'ring-2 ring-[#7B3FA0]/40 bg-white' : ''
+                                  }`}
                                 >
-                                  <td className="py-4 px-5 font-mono text-[11px] font-bold text-[#2D004D]">TKT-{t.id}</td>
-                                  <td className="py-4 px-4">
-                                    <div className="flex flex-col">
-                                      <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
-                                      <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
-                                    </div>
-                                  </td>
-                                  <td className="py-4 px-4 text-[11px] text-[#2D004D] max-w-[140px] truncate">{t.product_name}</td>
-                                  <td className="py-4 px-4 text-right font-black text-[#2D004D] text-xs">₹{t.requested_amount?.toFixed(2)}</td>
-                                  <td className="py-4 px-4 text-center">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
+                                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                                    <span className="font-mono text-xs font-bold text-[#2D004D]">TKT-{t.id}</span>
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-widest ${ticketStatusStyles[t.status] || "bg-stone-100"}`}>
                                       {t.status}
                                     </span>
-                                  </td>
-                                  <td className="py-4 px-4 text-center">
-                                    <span className={`text-[10px] font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
-                                      {t.is_downloaded ? '🚨 YES' : '✅ NO'}
+                                  </div>
+                                  <div className="flex justify-between items-start gap-2">
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-xs font-bold text-[#2D004D]">Customer #{t.user_id}</span>
+                                      <span className="text-[10px] text-[#7B3FA0] font-medium mt-0.5 break-words">📦 {t.product_name}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end shrink-0">
+                                      <span className="text-sm font-black text-[#2D004D]">₹{t.requested_amount?.toFixed(2)}</span>
+                                      <span className="text-[9px] text-[#7B3FA0]">ORD-{t.order_id}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px]">
+                                    <span className={`font-bold ${t.is_downloaded ? 'text-red-500' : 'text-green-600'}`}>
+                                      {t.is_downloaded ? '🚨 Downloaded' : '✅ Not Downloaded'}
                                     </span>
-                                  </td>
-                                  <td className="py-4 px-5 text-center text-[10px] text-[#7B3FA0]">
-                                    {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
-                                  </td>
-                                </motion.tr>
+                                    <span className="text-[#7B3FA0] font-medium">
+                                      {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
+                                    </span>
+                                  </div>
+                                </div>
                               );
                             })}
-                          </tbody>
-                        </table>
+                          </div>
+                        </>
                       ) : (
                         <div className="py-20 flex flex-col items-center justify-center text-center px-6">
                           <div className="w-16 h-16 rounded-full border border-dashed border-[#D8BFE3] flex items-center justify-center mb-4">
@@ -1166,7 +1222,7 @@ export default function OrdersManagement() {
                         <>
                           {/* Desktop Table View (>= 768px) */}
                           <div className="hidden md:block overflow-x-auto w-full">
-                            <table className="w-full border-collapse text-left">
+                            <table className="w-full min-w-[650px] border-collapse text-left">
                               <thead>
                                 <tr className="bg-stone-100/40 border-b border-stone-200/50">
                                   <th className="py-4 px-5 w-10">
@@ -1499,7 +1555,7 @@ export default function OrdersManagement() {
               </div>
 
               {/* RIGHT 40% PANEL: TRANSACTION DETAILS & ANOMALY ANALYSIS */}
-              <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 sticky top-24">
+              <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6 relative lg:sticky lg:top-24">
 
                 {viewMode === "tickets" ? (
                   /* ── REFUND TICKET DETAIL PANEL ── */

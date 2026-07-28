@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import './auth.css';
 
 const ROLES = [
@@ -92,6 +93,13 @@ const roleCardVariants = {
 
 export default function LoginSelection() {
   const navigate = useNavigate();
+  const { vendor_enabled, affiliate_enabled = true } = useFeatureFlags();
+
+  const availableRoles = ROLES.filter(r => {
+    if (r.id === 'vendor' && !vendor_enabled) return false;
+    if (r.id === 'affiliate' && !affiliate_enabled) return false;
+    return true;
+  });
 
   return (
     <AuthBackground>
@@ -120,7 +128,7 @@ export default function LoginSelection() {
           </motion.p>
 
           <motion.div className="role-cards-container" variants={roleContainerVariants}>
-            {ROLES.map((role) => (
+            {availableRoles.map((role) => (
               <motion.div
                 key={role.id}
                 className="role-card"

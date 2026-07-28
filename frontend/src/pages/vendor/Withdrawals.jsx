@@ -86,8 +86,8 @@ export default function Withdrawals() {
     }
 
     const numAmount = Number(amount);
-    if (!amount || numAmount < 10) {
-      setFormError('Minimum withdrawal amount is ₹10.');
+    if (!amount || numAmount < 500) {
+      setFormError('Minimum withdrawal amount is ₹500.');
       return;
     }
 
@@ -134,30 +134,37 @@ export default function Withdrawals() {
     .reduce((s, h) => s + (h.amount || 0), 0);
 
   return (
-    <VendorLayout activePage="withdrawals" title="Withdrawals" subtitle="Manage your payout requests">
+    <VendorLayout activePage="withdrawals" title="Withdrawals" subtitle="Transfer your earnings to your bank account"
+      actions={
+        <button onClick={refreshAll} disabled={loading} className="v-btn v-btn-secondary v-btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <RefreshCw size={13} className={loading ? 'spin-icon' : ''} style={{ animation: loading ? 'spin 1.2s linear infinite' : 'none' }} />
+          {loading ? 'Syncing…' : 'Refresh'}
+        </button>
+      }
+    >
 
+      {/* Backend Error Banner */}
       {backendError && (
-        <div style={{
-          padding: '14px 20px',
-          borderRadius: '16px',
-          background: 'rgba(239, 68, 68, 0.08)',
-          border: '1px solid rgba(239, 68, 68, 0.2)',
-          color: '#DC2626',
-          fontSize: '13.5px',
-          display: 'flex',
+        <div style={{ 
+          marginBottom: 20, 
+          padding: '12px 18px', 
+          borderRadius: 12, 
+          background: 'rgba(239,68,68,0.07)', 
+          border: '1px solid rgba(239,68,68,0.22)', 
+          display: 'flex', 
+          alignItems: 'center', 
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          backdropFilter: 'blur(8px)'
+          color: '#dc2626', 
+          fontSize: '0.80rem', 
+          fontWeight: 600 
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <AlertCircle size={16} />
-            <span>{backendError}</span>
+            <span>Withdrawals service notice: {backendError}</span>
           </div>
           <button 
-            className="v-btn v-btn-sm" 
             style={{ 
-              background: 'rgba(239, 68, 68, 0.12)', 
+              background: 'rgba(239,68,68,0.12)', 
               color: '#DC2626', 
               border: 'none',
               padding: '6px 12px',
@@ -324,21 +331,21 @@ export default function Withdrawals() {
                 <div className="v-field">
                   <label className="v-label">Amount (₹)</label>
                   <input className="v-input" type="number" placeholder="Enter amount"
-                    min="10" max={available} value={amount}
+                    min="500" max={available} value={amount}
                     disabled={hasPending || submitting}
                     onChange={e => setAmount(e.target.value)} />
-                  <div className="v-field-hint">Available: ₹{available.toLocaleString()} · Min: ₹10</div>
+                  <div className="v-field-hint">Available: ₹{available.toLocaleString()} · Min: ₹500</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  {[100, 500, 1000].map(q => (
+                  {[500, 1000, 5000].map(q => (
                     <button key={q} type="button" className="v-btn v-btn-secondary v-btn-sm"
                       disabled={hasPending || submitting || q > available}
                       onClick={() => setAmount(String(Math.min(q, available)))}>
-                      ₹{(q / 1000).toFixed(0)}K
+                      {q >= 1000 ? `₹${(q / 1000).toFixed(0)}K` : `₹${q}`}
                     </button>
                   ))}
                   <button type="button" className="v-btn v-btn-secondary v-btn-sm"
-                    disabled={hasPending || submitting || available < 10}
+                    disabled={hasPending || submitting || available < 500}
                     onClick={() => setAmount(String(available))}>Max</button>
                 </div>
                 <div className="v-field">

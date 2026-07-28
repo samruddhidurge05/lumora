@@ -128,8 +128,8 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       )}
 
       {/* ── HEADER ────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
+      <div className="aff-products-search-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ minWidth: 0 }}>
           <span className="caption-premium" style={{ color: '#7B3FA0' }}>Affiliate Tools</span>
           <h2 className="text-editorial" style={{ fontSize: '2.2rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px' }}>Browse & Promote</h2>
           <p style={{ color: 'var(--text-light)', fontSize: '0.82rem', marginTop: '4px', fontWeight: 500 }}>
@@ -138,7 +138,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
         </div>
 
         {/* Search */}
-        <div className="glass-surface" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '30px', width: '280px', border: '1px solid rgba(123,63,160,0.22)' }}>
+        <div className="glass-surface" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '30px', width: 'min(280px, 100%)', border: '1px solid rgba(123,63,160,0.22)', boxSizing: 'border-box' }}>
           <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           <input
             type="text"
@@ -151,9 +151,9 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       </div>
 
       {/* ── CONTROLS ──────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="aff-category-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         {/* Categories */}
-        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }} className="aff-cat-scroll">
+        <div className="aff-category-strip" style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat}
@@ -275,7 +275,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                   </div>
 
                   {/* Action buttons */}
-                  <div style={{ display: 'flex', gap: '6px', marginTop: 'auto', flexWrap: 'wrap' }}>
+                  <div className="aff-product-card-actions" style={{ display: 'flex', gap: '6px', marginTop: 'auto', flexWrap: 'wrap' }}>
                     {/* View Details */}
                     <button
                       onClick={() => setSelectedProduct(product)}

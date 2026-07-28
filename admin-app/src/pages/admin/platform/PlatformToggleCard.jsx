@@ -26,8 +26,8 @@ export default function PlatformToggleCard({
 
   return (
     <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-5">
-      <div className="flex justify-between items-start">
-        <div className="max-w-[70%]">
+      <div className="flex flex-wrap justify-between items-start gap-3">
+        <div className="min-w-0 flex-1">
           <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1">Global System Control</h4>
           <h3 className="text-base font-serif font-black text-[#2D004D]">Global Platform Pause</h3>
           <p className="text-[9px] text-[#7B3FA0] mt-1">
@@ -39,7 +39,7 @@ export default function PlatformToggleCard({
         <button
           onClick={onToggle}
           disabled={isToggling}
-          className={`w-14 h-8 rounded-full transition-colors relative flex items-center p-1 flex-shrink-0 ml-4 ${
+          className={`w-14 h-8 rounded-full transition-colors relative flex items-center p-1 flex-shrink-0 ${
             isPlatformPaused ? 'bg-[#FF8597]' : 'bg-stone-200'
           } ${isToggling ? 'opacity-60' : 'cursor-pointer'}`}
           style={{ cursor: 'pointer', border: 'none', outline: 'none' }}

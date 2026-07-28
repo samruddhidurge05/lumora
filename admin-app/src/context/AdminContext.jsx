@@ -38,9 +38,31 @@ export const ROLE_PERMISSIONS = {
   analyst:    ['read:analytics', 'read:reports', 'read:audit_logs'],
 };
 
+const DEFAULT_SETTINGS = {
+  themeIntensity: "rich",
+  animationLevel: "cinematic",
+  dashboardDensity: "balanced",
+  currencyDisplay: "INR",
+  realtimeUpdates: true,
+  chartStyle: "smooth",
+  reviewVisibility: "all",
+  orderAutoRefresh: true,
+  aiInsightsLevel: "balanced",
+  glowEffects: true,
+  glassmorphismLevel: "standard"
+};
+
 export function AdminContextProvider({ children }) {
   const [adminProfile, setAdminProfile] = useState(null);
   const [loadError, setLoadError]       = useState(false);
+  const [settings, setSettings]         = useState(() => {
+    try {
+      const saved = localStorage.getItem("lumora-settings");
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  });
 
   useEffect(() => {
     backendFetch('/admin/me')
@@ -53,6 +75,34 @@ export function AdminContextProvider({ children }) {
         setLoadError(true);
       });
   }, []);
+
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      try {
+        const saved = localStorage.getItem("lumora-settings");
+        if (saved) setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
+      } catch (err) {
+        console.warn("[AdminContext] Error loading settings:", err);
+      }
+    };
+    window.addEventListener("lumoraSettingsUpdated", handleSettingsUpdate);
+    return () => window.removeEventListener("lumoraSettingsUpdated", handleSettingsUpdate);
+  }, []);
+
+  const updateSetting = (key, value) => {
+    const updated = { ...settings, [key]: value };
+    setSettings(updated);
+    localStorage.setItem("lumora-settings", JSON.stringify(updated));
+    window.dispatchEvent(new Event("lumoraSettingsUpdated"));
+  };
+
+  const currencySymbol = settings.currencyDisplay === "INR" ? "₹" : (settings.currencyDisplay === "EUR" ? "€" : "$");
+  
+  const formatCurrency = (val) => {
+    let factor = settings.currencyDisplay === "INR" ? 1 : (settings.currencyDisplay === "EUR" ? 1 / 92 : 1 / 85);
+    const amount = (val || 0) * factor;
+    return `${currencySymbol}${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  };
 
   /**
    * hasPermission(perm)
@@ -72,7 +122,15 @@ export function AdminContextProvider({ children }) {
   };
 
   return (
-    <AdminContext.Provider value={{ adminProfile, hasPermission, loadError }}>
+    <AdminContext.Provider value={{
+      adminProfile,
+      hasPermission,
+      loadError,
+      settings,
+      updateSetting,
+      currencySymbol,
+      formatCurrency
+    }}>
       {children}
     </AdminContext.Provider>
   );
@@ -81,6 +139,14 @@ export function AdminContextProvider({ children }) {
 export const useAdminContext = () => {
   const ctx = useContext(AdminContext);
   // Return safe defaults when used outside AdminContextProvider (non-admin routes).
-  if (!ctx) return { adminProfile: null, hasPermission: () => false, loadError: false };
+  if (!ctx) return {
+    adminProfile: null,
+    hasPermission: () => false,
+    loadError: false,
+    settings: DEFAULT_SETTINGS,
+    updateSetting: () => {},
+    currencySymbol: "₹",
+    formatCurrency: (val) => `₹${val || 0}`
+  };
   return ctx;
 };

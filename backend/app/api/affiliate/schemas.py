@@ -31,6 +31,10 @@ class AffiliateProfileResponse(BaseModel):
     preferred_currency: Optional[str] = None
     timezone: Optional[str] = None
     email_notifications: Optional[bool] = None
+    pan_number: Optional[str] = None
+    pan_holder_name: Optional[str] = None
+    kyc_status: Optional[str] = "verified"
+    is_bank_verified: Optional[bool] = True
     is_active: bool
     created_at: datetime
 
@@ -57,6 +61,8 @@ class AffiliateProfileUpdate(BaseModel):
     preferred_currency: Optional[str] = None
     timezone: Optional[str] = None
     email_notifications: Optional[bool] = None
+    pan_number: Optional[str] = None
+    pan_holder_name: Optional[str] = None
 
 
 # -- Commission -----------------------------------------------------------------

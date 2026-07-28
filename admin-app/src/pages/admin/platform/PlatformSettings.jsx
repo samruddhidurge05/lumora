@@ -117,7 +117,7 @@ export default function PlatformSettings() {
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
 
         {/* Header Block */}
-        <section className="mb-8 sticky top-24 z-30">
+        <section className="mb-8 relative md:sticky md:top-24 z-30">
           <div className="glass-surface rounded-3xl p-5 border border-white/50 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             
             <div className="flex items-center gap-4">

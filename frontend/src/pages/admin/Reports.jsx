@@ -1196,8 +1196,9 @@ export default function Reports() {
                       { value: '', label: 'All Statuses' },
                       { value: 'Pending', label: 'Pending' },
                       { value: 'Resolved', label: 'Resolved' },
-                      { value: 'Rejected', label: 'Rejected' }
+                      { value: 'Rejected', label: 'Rejected' },
                     ]}
+                    className="w-full sm:w-auto min-w-[140px]"
                   />
                 </div>
 
@@ -1219,8 +1220,10 @@ export default function Reports() {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                  <div className="w-full">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto w-full">
+                      <table className="w-full min-w-[650px] text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#F5E9DD]">
                           {['Product', 'Reporter', 'Title', 'Category', 'Severity', 'Status', 'Date', 'Actions'].map(col => (
@@ -1234,7 +1237,6 @@ export default function Reports() {
                           const isActioning = actionLoading === r.id;
                           return (
                             <tr key={r.id || `report-${idx}`} className="border-b border-[#F5E9DD]/40 hover:bg-[#F5E9DD]/20 transition-colors">
-                              {/* Product */}
                               <td className="py-3 pr-3">
                                 {r.productTitle || r.productId ? (
                                   <div className="flex items-center gap-2">
@@ -1263,13 +1265,9 @@ export default function Reports() {
                                   <span className="text-[9px] text-[#C4A4D8]">—</span>
                                 )}
                               </td>
-                              {/* Reporter */}
                               <td className="py-3 pr-3 text-[10px] font-semibold text-[#2D004D] whitespace-nowrap">{r.reporter || '—'}</td>
-                              {/* Title */}
                               <td className="py-3 pr-3 text-[10px] text-[#2D004D] max-w-[160px] truncate" title={r.title}>{r.title || '—'}</td>
-                              {/* Category */}
                               <td className="py-3 pr-3 text-[9px] text-[#7B3FA0] whitespace-nowrap">{r.category || '—'}</td>
-                              {/* Severity */}
                               <td className="py-3 pr-3">
                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
                                   r.severity === 'high'
@@ -1281,7 +1279,6 @@ export default function Reports() {
                                   {r.severity || 'low'}
                                 </span>
                               </td>
-                              {/* Status */}
                               <td className="py-3 pr-3">
                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
                                   r.status?.toLowerCase() === 'resolved'
@@ -1293,39 +1290,23 @@ export default function Reports() {
                                   {r.status || 'Pending'}
                                 </span>
                               </td>
-                              {/* Date */}
                               <td className="py-3 pr-3 text-[9px] text-[#7B3FA0] whitespace-nowrap">
                                 {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : '—'}
                               </td>
-                              {/* Actions */}
                               <td className="py-3">
                                 {isPending ? (
                                   <div className="flex items-center gap-1.5">
                                     <button
                                       disabled={isActioning}
                                       onClick={() => handleResolveReport(r.id)}
-                                      style={{
-                                        padding: '4px 10px', borderRadius: '8px', border: 'none',
-                                        background: isActioning ? 'rgba(5,150,105,0.05)' : 'rgba(5,150,105,0.10)',
-                                        color: '#059669', fontSize: '0.68rem', fontWeight: 800,
-                                        cursor: isActioning ? 'not-allowed' : 'pointer',
-                                        textTransform: 'uppercase', letterSpacing: '0.04em',
-                                        opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap',
-                                      }}
+                                      className="px-2.5 py-1.5 rounded-lg bg-[#059669]/10 text-[#059669] text-[10px] font-bold uppercase min-h-[36px]"
                                     >
-                                      {isActioning ? '…' : '✓ Mark as Resolved'}
+                                      {isActioning ? '…' : '✓ Resolve'}
                                     </button>
                                     <button
                                       disabled={isActioning}
                                       onClick={() => handleRejectReport(r.id)}
-                                      style={{
-                                        padding: '4px 10px', borderRadius: '8px', border: 'none',
-                                        background: isActioning ? 'rgba(220,38,38,0.04)' : 'rgba(220,38,38,0.08)',
-                                        color: '#DC2626', fontSize: '0.68rem', fontWeight: 800,
-                                        cursor: isActioning ? 'not-allowed' : 'pointer',
-                                        textTransform: 'uppercase', letterSpacing: '0.04em',
-                                        opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap',
-                                      }}
+                                      className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold uppercase min-h-[36px]"
                                     >
                                       ✕ Reject
                                     </button>
@@ -1342,7 +1323,68 @@ export default function Reports() {
                       </tbody>
                     </table>
                   </div>
-                )}
+
+                  {/* Mobile Stacked Cards */}
+                  <div className="md:hidden flex flex-col gap-3 p-3">
+                    {reportListItems.map((r, idx) => {
+                      const isPending = !r.status || r.status.toLowerCase() === 'pending';
+                      const isActioning = actionLoading === r.id;
+                      return (
+                        <div key={`m-report-${r.id || idx}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                          <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs font-bold text-[#2D004D] truncate">{r.title || 'Report'}</span>
+                            </div>
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                              r.status?.toLowerCase() === 'resolved'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : r.status?.toLowerCase() === 'rejected'
+                                ? 'bg-red-100 text-red-600'
+                                : 'bg-[#D8BFE3]/40 text-[#5A1E7E]'
+                            }`}>
+                              {r.status || 'Pending'}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-start text-[11px]">
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[#7B3FA0]">Reporter: <span className="font-semibold text-[#2D004D]">{r.reporter || '—'}</span></span>
+                              <span className="text-[#7B3FA0]">Product: <span className="font-semibold text-[#2D004D]">{r.productTitle || '—'}</span></span>
+                            </div>
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0 ${
+                              r.severity === 'high' ? 'bg-red-100 text-red-600' : 'bg-[#F5E9DD] text-[#7B3FA0]'
+                            }`}>
+                              {r.severity || 'low'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                            <span className="text-[10px] text-[#8E6AA8]">
+                              {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : '—'}
+                            </span>
+                            {isPending && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  disabled={isActioning}
+                                  onClick={() => handleResolveReport(r.id)}
+                                  className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold min-h-[40px]"
+                                >
+                                  ✓ Resolve
+                                </button>
+                                <button
+                                  disabled={isActioning}
+                                  onClick={() => handleRejectReport(r.id)}
+                                  className="px-3 py-2 rounded-xl bg-red-50 text-red-600 text-xs font-bold min-h-[40px]"
+                                >
+                                  ✕ Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
                 {/* Pagination */}
                 {reportTotalPages > 1 && (
@@ -1368,6 +1410,8 @@ export default function Reports() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
 
               </section>
 

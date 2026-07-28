@@ -1688,7 +1688,7 @@ export default function Analytics() {
                     <h3 className="text-lg font-serif font-black text-[#2D004D] mt-0.5">AI Insights Core</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     {data.aiInsights.map((insight) => (
                       <div
                         key={insight.id}

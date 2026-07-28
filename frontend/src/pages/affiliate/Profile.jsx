@@ -36,8 +36,8 @@ export default function AffiliateProfile({
     displayName: '', shortBio: '', country: '',
     youtube: '', instagram: '', linkedin: '',
     preferredCategories: [], promotionMethods: [],
-    primaryAudience: '', audienceSize: '', preferredLanguage: '',
-    preferredCurrency: 'USD', timezone: 'UTC', emailNotifications: true
+    preferredCurrency: 'USD', timezone: 'UTC', emailNotifications: true,
+    panNumber: '', panHolderName: ''
   });
   const [editing, setEditing]   = useState(false);
   const [saved, setSaved]       = useState(false);
@@ -86,14 +86,15 @@ export default function AffiliateProfile({
       preferredLanguage: parentProfile?.preferred_language || '',
       preferredCurrency: parentProfile?.preferred_currency || 'USD', 
       timezone: parentProfile?.timezone || 'UTC', 
-      emailNotifications: parentProfile?.email_notifications ?? true
+      emailNotifications: parentProfile?.email_notifications ?? true,
+      panNumber: parentProfile?.pan_number || '',
+      panHolderName: parentProfile?.pan_holder_name || ''
     });
   }, [parentProfile, user]);
 
-  // Calculate Profile Completion
   const calculateCompletion = () => {
     const required = [
-      'fullName', 'upiId', 'phone', 
+      'fullName', 'phone', 
       'shortBio', 'instagram', 'preferredCategories'
     ];
     let completed = 0;
@@ -107,7 +108,24 @@ export default function AffiliateProfile({
         else missing.push(field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1').trim());
       }
     });
-    return { percentage: Math.round((completed / required.length) * 100), missing };
+
+    let paymentCompleted = 0;
+    if (draft.panNumber && String(draft.panNumber).trim() !== '') {
+      if ((draft.upiId && String(draft.upiId).trim() !== '') || (draft.accountNumber && String(draft.accountNumber).trim() !== '' && draft.ifscCode && String(draft.ifscCode).trim() !== '')) {
+        paymentCompleted = 2;
+      } else {
+        paymentCompleted = 1;
+        missing.push('Payment Method (UPI or Bank)');
+      }
+    } else {
+      missing.push('PAN Number');
+      if (!((draft.upiId && String(draft.upiId).trim() !== '') || (draft.accountNumber && String(draft.accountNumber).trim() !== '' && draft.ifscCode && String(draft.ifscCode).trim() !== ''))) {
+         missing.push('Payment Method (UPI or Bank)');
+      }
+    }
+
+    const totalFields = required.length + 2;
+    return { percentage: Math.round(((completed + paymentCompleted) / totalFields) * 100), missing };
   };
   const { percentage, missing } = calculateCompletion();
 
@@ -136,7 +154,9 @@ export default function AffiliateProfile({
           preferred_language: draft.preferredLanguage || null,
           preferred_currency: draft.preferredCurrency || null,
           timezone:       draft.timezone      || null,
-          email_notifications: draft.emailNotifications
+          email_notifications: draft.emailNotifications,
+          pan_number: draft.panNumber || null,
+          pan_holder_name: draft.panHolderName || null
         }),
       });
       
@@ -181,7 +201,9 @@ export default function AffiliateProfile({
       preferredLanguage: parentProfile?.preferred_language || '',
       preferredCurrency: parentProfile?.preferred_currency || 'USD', 
       timezone: parentProfile?.timezone || 'UTC', 
-      emailNotifications: parentProfile?.email_notifications ?? true
+      emailNotifications: parentProfile?.email_notifications ?? true,
+      panNumber: parentProfile?.pan_number || '',
+      panHolderName: parentProfile?.pan_holder_name || ''
     });
     setEditing(false);
     setSaveError(null);
@@ -531,7 +553,7 @@ export default function AffiliateProfile({
       </div>
 
       {/* ── ACCOUNT STATUS STRIP ─────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+      <div className="premium-flat-card aff-status-strip-grid" style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', padding: '18px 24px' }}>
         {[
           { label: 'Status',          value: isActive ? 'Active' : 'Inactive', color: isActive ? '#15803D' : '#DC2626', icon: <Activity size={14} /> },
           { label: 'Commission Rate', value: `${commissionRate}%`,             color: '#7B3FA0',                         icon: <TrendingUp size={14} /> },
@@ -539,15 +561,14 @@ export default function AffiliateProfile({
           { label: 'Total Clicks',    value: totalClicks.toLocaleString(),      color: 'var(--text-primary)',             icon: <MousePointerClick size={14} /> },
           { label: 'Total Sales',     value: totalSales.toLocaleString(),       color: 'var(--text-primary)',             icon: <ShoppingBag size={14} /> },
         ].map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, boxSizing: 'border-box' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(123,63,160,0.05)', border: '1px solid rgba(196,181,253,0.20)', color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {item.icon}
             </div>
-            <div>
-              <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-              <div style={{ fontSize: '0.92rem', fontWeight: 700, color: item.color, marginTop: '1px' }}>{item.value}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{item.label}</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: item.color, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.value}</div>
             </div>
-            {i < 4 && <div style={{ width: '1px', height: '32px', background: 'rgba(45,0,96,0.06)', marginLeft: '16px' }} />}
           </div>
         ))}
       </div>
@@ -601,7 +622,7 @@ export default function AffiliateProfile({
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Promotion Profile</h3>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
+        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {personalField('Display Name', 'displayName', 'Public name')}
           {textAreaField('Short Bio', 'shortBio', 'I create UI/UX tutorials and review developer tools.', 300)}
           {selectField('Country', 'country', [
@@ -650,7 +671,7 @@ export default function AffiliateProfile({
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Audience Information</h3>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
+        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {selectField('Primary Audience', 'primaryAudience', ['Designers', 'Developers', 'Students', 'Businesses', 'Content Creators', 'Agencies', 'Entrepreneurs'])}
           {selectField('Audience Size', 'audienceSize', ['Under 1K', '1K – 10K', '10K – 50K', '50K – 100K', '100K+'])}
           {selectField('Preferred Language', 'preferredLanguage', ['English', 'Spanish', 'French', 'Hindi', 'German', 'Other'])}
@@ -767,6 +788,23 @@ export default function AffiliateProfile({
             </p>
           </div>
         )}
+      </div>
+
+      {/* ── ENTERPRISE KYC & TAX VERIFICATION (editable) ─────────────────── */}
+      <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={15} />
+          </div>
+          <div>
+            <span className="caption-premium" style={{ color: '#7B3FA0' }}>KYC Verification</span>
+            <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Enterprise KYC & Tax Verification</h3>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
+          {personalField('PAN Card Number', 'panNumber', 'e.g. ABCDE1234F')}
+          {personalField('PAN Holder Name', 'panHolderName', 'Legal name on PAN')}
+        </div>
       </div>
 
       {/* ── RECENT PAYOUTS ────────────────────────────────────────────────── */}

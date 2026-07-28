@@ -23,10 +23,15 @@
 }
 
 /* --- Admin Layout Grid System --- */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 .admin-layout-grid {
   display: flex;
   gap: var(--admin-spacing-32);
-  max-width: 100%;
+  max-width: 100vw;
   width: 100%;
   margin: 0 auto;
   padding: 0 var(--admin-spacing-32);
@@ -34,6 +39,7 @@
   position: relative;
   z-index: 1;
   align-items: flex-start;
+  overflow-x: hidden;
 }
 
 @media (max-width: 1024px) {
@@ -53,10 +59,24 @@
 .admin-main-content {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--admin-spacing-32);
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  .admin-main-content {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main-content {
+    gap: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -199,16 +219,32 @@
 
 /* Ensure equal spacing, alignment, and wrapping for stats cards */
 .admin-main-content .grid {
-  gap: var(--admin-spacing-24) !important;
+  gap: var(--admin-spacing-24);
 }
 
-/* Scoped to .stats-grid only — prevents universal grid > div padding from
-   clobbering non-stats grids on Analytics, Orders, and other complex layouts */
-.admin-main-content .stats-grid > div {
-  padding: var(--admin-spacing-24) !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+@media (max-width: 767px) {
+  .admin-main-content .grid {
+    gap: 10px !important;
+  }
+}
+
+/* Scoped to .stats-grid items — equal height, flex column, responsive compact padding */
+.admin-main-content .stats-grid > div,
+.admin-main-content .stats-grid > button {
+  padding: 16px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 767px) {
+  .admin-main-content .stats-grid > div,
+  .admin-main-content .stats-grid > button {
+    padding: 10px 12px !important;
+    min-height: 80px !important;
+  }
 }
 
 /* --- Table Standardization --- */
@@ -522,21 +558,30 @@
     padding: 0 var(--admin-spacing-8);
   }
 
-  /* Responsive Stats & Metric Cards */
+  /*
+   * ── KPI / STATS GRIDS: STAY 2-COLUMN ──────────────────────────────────────
+   * The StatsGrid component already outputs Tailwind grid-cols-2 on mobile.
+   * Do NOT override .stats-grid or .grid-cols-2 here — that would collapse
+   * every KPI card to one column and destroy information density.
+   *
+   * ONLY collapse layouts that are genuinely too wide for a phone:
+   * grid-cols-4 (4 wide) and grid-cols-3 (3 wide) → 2-column on tablet/mobile.
+   * On very small screens (<= 480px), the Tailwind max-[320px]:grid-cols-1
+   * inside StatsGrid handles the single-column fallback automatically.
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  .admin-main-content .grid-cols-6,
   .admin-main-content .grid-cols-4,
   .admin-main-content .grid-cols-3,
   .admin-main-content .stats-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
-    gap: var(--admin-spacing-16) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
 
-  .admin-main-content .grid-cols-2 {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
-  }
+  /* stats-grid keeps its own Tailwind grid-cols-2 — no override needed */
 
   /* Filter and Action Header Flex Wrapping */
-  .admin-main-content .flex-wrap-mobile,
-  .admin-main-content div[class*="justify-between"] {
+  .admin-main-content .flex-wrap-mobile {
     flex-wrap: wrap;
     gap: var(--admin-spacing-12, 12px);
   }

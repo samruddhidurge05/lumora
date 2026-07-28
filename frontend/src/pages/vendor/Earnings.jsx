@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useDashboard, useOrders, useWithdrawals } from '../../hooks/useVendorData';
@@ -47,6 +48,7 @@ function MiniBar({ data, height = 60 }) {
 }
 
 export default function Earnings() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const isMobile = useIsMobile();
   
@@ -189,8 +191,8 @@ export default function Earnings() {
       {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Gross Revenue', value: formatRevenue(totalGross), delta: '+18.4%', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
-          { label: 'Net Earnings',  value: formatRevenue(totalNet),   delta: '+17.8%', up: true, icon: <Wallet size={18} style={{ color: '#7B3FA0' }} /> },
+          { label: 'Gross Revenue', value: formatRevenue(totalGross), delta: 'Gross', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
+          { label: 'Net Earnings',  value: formatRevenue(totalNet),   delta: '85% Share', up: true, icon: <Wallet size={18} style={{ color: '#7B3FA0' }} /> },
           { label: 'Platform Fees', value: formatRevenue(totalFees),  delta: '15%',    up: false, icon: <Percent size={17} style={{ color: '#9ca3af' }} /> },
           { label: 'Available Balance', value: `₹${available.toLocaleString()}`, delta: 'Payout Ready', up: true, icon: <CheckCircle2 size={18} style={{ color: '#16a34a' }} /> },
           { label: 'Pending Earnings', value: `₹${pendingEarnings.toLocaleString()}`, delta: 'Processing', up: false, icon: <Clock size={18} style={{ color: '#d97706' }} /> },
@@ -266,7 +268,7 @@ export default function Earnings() {
             </div>
           </div>
           <button className="v-btn v-btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            onClick={() => { window.history.pushState({}, '', '/vendor/withdrawals'); window.dispatchEvent(new PopStateEvent('popstate')); }}>
+            onClick={() => navigate('/vendor/withdrawals')}>
             💸 Request Payout
           </button>
         </div>

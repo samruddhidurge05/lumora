@@ -465,7 +465,7 @@ export default function Dashboard() {
         </StatsGrid>
 
         {/* --- OPERATIONAL COMMAND CENTER LAYER --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8 md:mb-12">
           
           {/* 1. Live Activity Stream (Event Log) - 4 cols */}
           <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
@@ -695,7 +695,7 @@ export default function Dashboard() {
               initial={{ scale: 0.95, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 30 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full border border-stone-200/50 shadow-2xl relative"
+              className="bg-white rounded-3xl p-5 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto border border-stone-200/50 shadow-2xl relative"
             >
               
               {/* Close Button */}

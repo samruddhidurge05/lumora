@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AdminLayout from './components/AdminLayout';
 import { AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
-import { MessageSquare, RefreshCw, Send, ChevronRight } from 'lucide-react';
+import { MessageSquare, RefreshCw, Send, ChevronRight, Headset, Sparkles, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
+
+// ── Feature Flag: Set to true to activate Version 2.0 Support Messaging Engine ──
+const SUPPORT_MODULE_ENABLED = false;
 
 const STATUS_OPTIONS = ['open', 'pending', 'resolved', 'closed'];
 
@@ -15,6 +18,76 @@ function statusColor(s) {
 }
 
 export default function AdminSupportInbox() {
+  // ── Version 1.0 Staged Feature Gate ──────────────────────────────────────────
+  if (!SUPPORT_MODULE_ENABLED) {
+    return (
+      <AdminLayout activePage="support">
+        <div style={{ padding: '32px 24px', minHeight: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-surface" style={{
+            maxWidth: '680px', width: '100%', padding: '48px 36px', borderRadius: '28px',
+            border: '1px solid rgba(196,181,253,0.35)', background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(246,244,255,0.88))',
+            boxShadow: '0 20px 60px rgba(90,30,126,0.08)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '22px',
+            boxSizing: 'border-box'
+          }}>
+            {/* Header Icon */}
+            <div style={{
+              width: '72px', height: '72px', borderRadius: '24px',
+              background: 'linear-gradient(135deg, rgba(123,63,160,0.12), rgba(90,30,126,0.06))',
+              border: '1.5px solid rgba(196,181,253,0.40)', color: '#7B3FA0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(123,63,160,0.12)'
+            }}>
+              <Headset size={36} />
+            </div>
+
+            {/* Title & Badge */}
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 14px', borderRadius: '20px', background: 'rgba(123,63,160,0.08)', border: '1px solid rgba(196,181,253,0.30)', color: '#7B3FA0', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
+                <Sparkles size={12} /> Coming in Version 2.0
+              </div>
+              <h1 style={{ fontFamily: 'var(--font-editorial, serif)', fontSize: '2.2rem', fontWeight: 400, color: '#2D004D', margin: 0, lineHeight: 1.1 }}>
+                Support Center
+              </h1>
+              <p style={{ fontSize: '0.88rem', color: '#8B6B5B', marginTop: '10px', lineHeight: 1.6, maxWidth: '500px', marginInline: 'auto' }}>
+                The Lumora Support Center is currently under active development as an enterprise feature for Version 2.0.
+              </p>
+            </div>
+
+            {/* Feature List Grid */}
+            <div className="w-full bg-white/75 border border-[#C4B5FD]/20 rounded-2xl p-4 sm:p-6 grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5 text-left box-border">
+              {[
+                'Live Customer Conversations',
+                'Real-time Ticket Management',
+                'Internal Team Collaboration',
+                'SLA Tracking & Timers',
+                'AI-Assisted Support',
+                'File & Media Attachments',
+                'Customer History Timeline'
+              ].map((feat, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', fontWeight: 600, color: '#2D004D' }}>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(34,197,94,0.12)', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CheckCircle2 size={12} />
+                  </div>
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', width: '100%', marginTop: '6px' }}>
+              <button disabled style={{ padding: '12px 28px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', fontSize: '0.84rem', fontWeight: 700, opacity: 0.85, cursor: 'not-allowed', fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={15} /> Coming in Version 2.0
+              </button>
+              <button disabled style={{ padding: '12px 24px', borderRadius: '14px', border: '1px solid rgba(196,181,253,0.35)', background: 'rgba(255,255,255,0.80)', color: '#7B3FA0', fontSize: '0.84rem', fontWeight: 700, cursor: 'default', fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={15} /> Core Marketplace Features Fully Operational
+              </button>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   const [tickets, setTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');

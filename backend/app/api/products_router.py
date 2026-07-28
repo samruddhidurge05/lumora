@@ -1,36 +1,41 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from sqlalchemy import cast, String, or_, func
+"""
+Products API router.
+Serves public product catalog, media proxies, search, download centers, and vendor CRUD handlers.
+"""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 import io
+import mimetypes
+import os
+import re
+import time
+from typing import Any, List, Optional, cast
 import zipfile
-from app.db.session import get_db, SessionLocal
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
+from jose import JWTError, jwt
+from sqlalchemy import String, cast as sql_cast, func, or_
+from sqlalchemy.orm import Session
+
+from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
+from admin.validators.status_checks import check_platform_paused, verify_vendor_active
+from app.core.config import settings
+from app.db.session import SessionLocal, get_db
+from app.dependencies import get_current_user_required
+from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.user import User
-from app.models.order import Order, OrderItem
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
-from app.dependencies import get_current_user_required
-from admin.validators.status_checks import verify_vendor_active, check_platform_paused
-from app.core.exceptions import LumoraException
-from jose import jwt, JWTError
-from datetime import datetime, timedelta
-import os
-import time
-from app.core.config import settings
 from app.services.product_service import ProductService
 from app.services.storage_service import storage_service
-from admin.firestore.admin_firestore import restore_sqlite_products_from_firestore
 
 router = APIRouter()
 
-import urllib.parse as urlparse
-import requests
-import re
-import mimetypes
 
 def generate_fallback_pdf(title: str, product_id: int) -> bytes:
-    clean_title = str(title).encode("latin-1", "replace").decode("latin-1")
+    clean_title = title.encode("latin-1", "replace").decode("latin-1")
     pdf_content = (
         "%PDF-1.4\n"
         "1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj\n"
@@ -60,7 +65,9 @@ def generate_fallback_pdf(title: str, product_id: int) -> bytes:
     )
     return pdf_content.encode("latin-1")
 
+
 _LAST_FIRESTORE_SYNC_TIME = 0.0
+
 
 def _bg_sync_firestore():
     db = SessionLocal()
@@ -71,6 +78,7 @@ def _bg_sync_firestore():
     finally:
         db.close()
 
+
 def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
     global _LAST_FIRESTORE_SYNC_TIME
     now = time.time()
@@ -78,10 +86,10 @@ def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
         _LAST_FIRESTORE_SYNC_TIME = now
         background_tasks.add_task(_bg_sync_firestore)
 
-_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def resolve_media_url(url: str, category: Optional[str] = None) -> Optional[str]:
     return ProductService._resolve_media_url(url, category)
+
 
 def resolve_products_media(products, db):
     return ProductService.resolve_products_media(products, db)
@@ -115,7 +123,6 @@ def serve_product_media(file_path: str, db: Session = Depends(get_db)):
         )
 
     # Determine content type based on file extension
-    import mimetypes
     content_type, _ = mimetypes.guess_type(clean_path)
     if not content_type:
         content_type = "application/octet-stream"
@@ -153,12 +160,12 @@ def read_products(
 ):
     """List all published products. Public - no authentication required."""
     trigger_firestore_sync_if_needed(background_tasks)
-    query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    query = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
         Product.status == "published",
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     )
     if affiliate_only or affiliate_enabled is True:
-        query = query.filter(Product.affiliate_enabled == True)
+        query = query.filter(Product.affiliate_enabled.is_(True))
     if category and category != "All":
         query = query.filter(Product.category == category)
     query = query.order_by(Product.created_at.desc(), Product.id.desc())
@@ -178,9 +185,9 @@ def search_products(
     db: Session = Depends(get_db)
 ):
     """Full-text search products. Public."""
-    query = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    query = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
         Product.status == "published",
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).order_by(Product.created_at.desc(), Product.id.desc())
     if q:
         like_q = f"%{q.lower()}%"
@@ -200,17 +207,17 @@ def search_products(
 
     # Sort in Python (simpler than SQL for optional sort)
     if sort == "price-asc":
-        products = sorted(products, key=lambda p: p.price)
+        products = sorted(products, key=lambda p: float(cast(Any, p.price or 0.0)))
     elif sort == "price-desc":
-        products = sorted(products, key=lambda p: p.price, reverse=True)
+        products = sorted(products, key=lambda p: float(cast(Any, p.price or 0.0)), reverse=True)
     elif sort == "rating":
-        products = sorted(products, key=lambda p: (p.rating or 0), reverse=True)
+        products = sorted(products, key=lambda p: float(cast(Any, p.rating or 0.0)), reverse=True)
     elif sort == "popular":
-        products = sorted(products, key=lambda p: (p.downloads or 0), reverse=True)
+        products = sorted(products, key=lambda p: int(cast(Any, p.downloads or 0)), reverse=True)
     elif sort == "newest":
-        products = sorted(products, key=lambda p: p.created_at, reverse=True)
+        products = sorted(products, key=lambda p: p.created_at or datetime.min, reverse=True)
     else:  # featured
-        products = sorted(products, key=lambda p: (p.featured or False), reverse=True)
+        products = sorted(products, key=lambda p: bool(cast(Any, p.featured)), reverse=True)
 
     results = products[skip : skip + limit]
     return resolve_products_media(results, db)
@@ -219,10 +226,10 @@ def search_products(
 @router.get("/featured", response_model=List[ProductResponse])
 def get_featured_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return featured products."""
-    results = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
-        Product.featured == True,
+    results = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
+        Product.featured.is_(True),
         Product.status == "published",
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).limit(limit).all()
     return resolve_products_media(results, db)
 
@@ -230,10 +237,10 @@ def get_featured_products(limit: int = 8, db: Session = Depends(get_db)):
 @router.get("/trending", response_model=List[ProductResponse])
 def get_trending_products(limit: int = 8, db: Session = Depends(get_db)):
     """Return trending products sorted by downloads."""
-    results = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
-        Product.trending == True,
+    results = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
+        Product.trending.is_(True),
         Product.status == "published",
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).order_by(Product.downloads.desc()).limit(limit).all()
     return resolve_products_media(results, db)
 
@@ -241,11 +248,11 @@ def get_trending_products(limit: int = 8, db: Session = Depends(get_db)):
 @router.get("/categories", response_model=List[str])
 def get_product_categories(db: Session = Depends(get_db)):
     """Return all unique categories from published products. Public."""
-    categories = db.query(Product.category).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    categories = db.query(Product.category).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
         Product.status == "published",
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).distinct().all()
-    return [c[0] for c in categories if c[0]]
+    return [str(c[0]) for c in categories if c[0]]
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
@@ -259,9 +266,9 @@ def read_product(product_id: str, db: Session = Depends(get_db)):
     from app.utils.db_sync import get_product_by_id
     get_product_by_id(db, pid)
 
-    product = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String)).filter(
+    product = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
         Product.id == pid,
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -350,21 +357,21 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
     }
     prod_category = str(getattr(product, "category", "") or "Design Assets")
     prod_preview = str(getattr(product, "preview", "") or 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=85')
-    preview = resolve_media_url(prod_preview, prod_category)
+    preview = resolve_media_url(prod_preview, prod_category) or prod_preview
 
     # Prefer explicitly stored image URLs list
     extra_images = []
     prod_image_urls = getattr(product, "image_urls", None)
     prod_preview_images = getattr(product, "preview_images", None)
 
-    if bool(prod_image_urls):
+    if prod_image_urls:
         extra_images = [resolve_media_url(str(url), prod_category) for url in (prod_image_urls or []) if url]
-    elif bool(prod_preview_images):
+    elif prod_preview_images:
         extra_images = [resolve_media_url(str(url), prod_category) for url in (prod_preview_images or []) if url]
 
     if extra_images:
-        all_images = [preview] + [img for img in extra_images if img != preview]
-        return all_images[:10]
+        all_images = [preview] + [img for img in extra_images if img and img != preview]
+        return [img for img in all_images[:10]]
 
     cat_imgs = cat_gallery.get(prod_category) or cat_gallery.get('Design Assets') or []
     filtered_imgs = [img for img in cat_imgs if img != preview]
@@ -373,7 +380,7 @@ def get_product_images(product_id: int, db: Session = Depends(get_db)):
 
 def generate_download_token(user_id: int, product_id: int) -> str:
     # Token valid for 15 minutes
-    expire = datetime.utcnow() + timedelta(minutes=15)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     payload = {
         "sub": str(user_id),
         "product_id": product_id,
@@ -413,10 +420,10 @@ def download_product(
 
     # Check if vendor is active and get vendor details
     product_with_vendor = db.query(Product, User.name.label("vendor_name")).outerjoin(
-        User, Product.vendor_id == cast(User.id, String)
+        User, Product.vendor_id == sql_cast(User.id, String)
     ).filter(
         Product.id == product_id,
-        or_(User.id == None, User.is_active == True)
+        or_(User.id.is_(None), User.is_active.is_(True))
     ).first()
     
     if not product_with_vendor:
@@ -427,17 +434,17 @@ def download_product(
 
     # Check if the user has purchased this product
     owned = db.query(OrderItem).join(Order).filter(
-        or_(Order.user_id == current_user.id, cast(Order.user_id, String) == str(current_user.id)),
-        or_(OrderItem.product_id == product_id, cast(OrderItem.product_id, String) == str(product_id)),
+        or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id)),
+        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
         func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
     ).first()
         
-    is_owner = (str(product.vendor_id) == str(current_user.id)) or (product.seller == current_user.name)
-    is_admin = (current_user.role == "admin")
+    is_owner = (str(product.vendor_id) == str(current_user.id)) or ((product.seller or "") == (current_user.name or ""))
+    is_admin = (current_user.role or "") == "admin"
     
     if not owned and not is_owner and not is_admin:
         any_order = db.query(Order).filter(
-            or_(Order.user_id == current_user.id, cast(Order.user_id, String) == str(current_user.id)),
+            or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id)),
             func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
         ).first()
         if not any_order:
@@ -454,13 +461,12 @@ def download_product(
     ).count()
     
     # Get last download time from downloads collection if exists
-    from datetime import datetime
     last_downloaded = None
-    if bool(owned) and hasattr(owned, "created_at"):
+    if owned and hasattr(owned, "created_at"):
         created_at_val = getattr(owned, "created_at", None)
         last_downloaded = created_at_val.isoformat() if created_at_val else None
         
-    token = generate_download_token(int(getattr(current_user, "id")), int(product_id))
+    token = generate_download_token(int(getattr(current_user, "id")), product_id)
     
     # Determine if the download asset is actually available
     download_available = bool(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", None))
@@ -476,11 +482,11 @@ def download_product(
             "version": product.version or "v1.0.0",
             "thumbnail": product.thumbnail or product.preview,
             "vendor": vendor_name,
-            "price": float(product.price or 0),
+            "price": float(cast(Any, product.price or 0)),
             "description": product.description[:200] + "..." if product.description and len(product.description) > 200 else product.description
         },
         "download_stats": {
-            "total_downloads": product.downloads or 0,
+            "total_downloads": int(cast(Any, product.downloads or 0)),
             "your_downloads": user_downloads,
             "last_downloaded": last_downloaded
         },
@@ -506,7 +512,7 @@ def get_download_center(
     ).join(
         Order, OrderItem.order_id == Order.id
     ).outerjoin(
-        User, Product.vendor_id == cast(User.id, String)
+        User, Product.vendor_id == sql_cast(User.id, String)
     ).filter(
         Order.user_id == current_user.id,
         Order.status.in_(["completed", "paid"])
@@ -531,7 +537,7 @@ def get_download_center(
                 "version": product.version or "v1.0.0",
                 "thumbnail": product.thumbnail or product.preview,
                 "vendor": vendor_name or product.seller or "Unknown Vendor",
-                "price_paid": float(order_item.price_paid or 0),
+                "price_paid": float(cast(Any, order_item.price_paid or 0)),
                 "description": product.description[:150] + "..." if product.description and len(product.description) > 150 else product.description
             },
             "download_url": f"/api/products/{product.id}/download-file?token={token}",
@@ -582,73 +588,35 @@ def download_product_file(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
 
     owned = db.query(OrderItem).join(Order).filter(
-        or_(Order.user_id == user_id, cast(Order.user_id, String) == str(user_id)),
-        or_(OrderItem.product_id == product_id, cast(OrderItem.product_id, String) == str(product_id)),
+        or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
+        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
         func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
     ).first()
 
-    is_owner = (str(product.vendor_id) == str(user_id)) or (product.seller == user.name)
-    is_admin = (user.role == "admin")
+    is_owner = (str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or ""))
+    is_admin = (user.role or "") == "admin"
 
     if not owned and not is_owner and not is_admin:
         any_order = db.query(Order).filter(
-            or_(Order.user_id == user_id, cast(Order.user_id, String) == str(user_id)),
+            or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
             func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
         ).first()
         if not any_order:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not authorized to download this product."
+                detail="You must purchase this product to download it."
             )
 
-    storage_path = product.storage_path or product.file_url or getattr(product, "pcloud_download_link", None)
+    clean_title = str(product.title or f"Product-{product_id}")
+    safe_title_base = re.sub(r'[^\w\s-]', '', clean_title).strip().replace(' ', '_') or f"product-{product_id}"
 
-    if owned and not isinstance(owned, bool):
-        setattr(owned, "downloaded", True)
+    storage_path = str(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", "") or "")
 
-    setattr(product, "downloads", int(getattr(product, "downloads", 0) or 0) + 1)
-
-    # Record permanent ProductDownloadEvent in PostgreSQL
-    try:
-        from app.models.product_download_event import ProductDownloadEvent
-        order_id_val = getattr(owned, "order_id", 0) if owned else 0
-        if not order_id_val:
-            first_item = db.query(OrderItem).filter(OrderItem.product_id == product_id).first()
-            if first_item:
-                order_id_val = first_item.order_id
-        download_event = ProductDownloadEvent(
-            user_id=user_id,
-            order_id=order_id_val or 0,
-            product_id=product_id,
-            downloaded_at=datetime.utcnow(),
-            created_at=datetime.utcnow()
-        )
-        db.add(download_event)
-    except Exception as dl_evt_err:
-        print(f"[DownloadEvent] Warning: Failed to record download event for product {product_id}: {dl_evt_err}")
-
-    # Log download activity
-    from app.services.activity_log_service import ActivityLogService
-    ActivityLogService.log_user_activity(
-        db=db,
-        user_id=user_id,
-        activity_type="download",
-        details=f"Downloaded product '{product.title}' (ID {product.id})."
-    )
-    db.commit()
-
-    # 1. Determine accurate filename and extension
-    clean_title = getattr(product, "title", f"Product-{product_id}") or f"Product-{product_id}"
-    safe_title_base = re.sub(r'[^\w\s-]', '', str(clean_title)).strip().replace(' ', '_') or f"product-{product_id}"
-
-    source_path_ref = str(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", "") or "")
-    source_basename = os.path.basename(source_path_ref.split("?")[0]) if source_path_ref else ""
-    _, raw_ext = os.path.splitext(source_basename)
-    raw_ext = raw_ext.lower().strip()
+    title_ext = os.path.splitext(clean_title)[1]
+    raw_ext = os.path.splitext(storage_path)[1] if storage_path else ""
 
     if not raw_ext:
-        _, title_ext = os.path.splitext(clean_title)
-        if title_ext.lower() in [".pdf", ".zip", ".docx", ".epub", ".png", ".jpg", ".jpeg"]:
+        if title_ext.lower() in [".zip", ".pdf", ".rar", ".7z", ".mp4", ".png", ".jpg", ".jpeg"]:
             raw_ext = title_ext.lower()
 
     if not raw_ext:
@@ -656,18 +624,17 @@ def download_product_file(
 
     filename = f"{safe_title_base}{raw_ext}"
     guessed_type, _ = mimetypes.guess_type(filename)
-    content_type = getattr(product, "content_type", None)
+    content_type = str(getattr(product, "content_type", None) or "")
     if not content_type or content_type in ["application/octet-stream", "binary/octet-stream"]:
         content_type = guessed_type or "application/octet-stream"
 
     stream = None
     first_chunk = None
 
-    if bool(storage_path):
+    if storage_path:
         try:
-            raw_stream = storage_service.get_stream(str(storage_path))
+            raw_stream = storage_service.get_stream(storage_path)
             if raw_stream:
-                # Eagerly fetch the first chunk to ensure stream connection exists and prevent uncaught generator errors
                 first_chunk = next(raw_stream, None)
                 if first_chunk is not None:
                     initial_chunk: bytes = first_chunk
@@ -693,18 +660,18 @@ def download_product_file(
         else:
             zip_buf = io.BytesIO()
             readme_text = f"""===================================================================
-{str(clean_title).upper()}
+{clean_title.upper()}
 Lumora Digital Marketplace Asset Package
 ===================================================================
 
 Product ID: {product_id}
 Asset Title: {clean_title}
-Downloaded At: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+Downloaded At: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 License: Personal & Commercial Digital License
 
 Thank you for your purchase on Lumora!
 """
-            with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:  # type: ignore
                 zf.writestr("README_LICENSE.txt", readme_text)
                 zf.writestr(f"{safe_title_base}_Guide.txt", f"Digital Asset Package for {clean_title}.\nVersion: 1.0.0\n")
             
@@ -759,8 +726,8 @@ def preview_product_stream(
         Order.status.in_(["completed", "paid"])
     ).first()
 
-    is_owner = (str(getattr(product, "vendor_id", "")) == str(user_id)) or (str(getattr(product, "seller", "")) == str(user.name))
-    is_admin = (str(getattr(user, "role", "")) == "admin")
+    is_owner = (str(getattr(product, "vendor_id", "")) == str(user_id)) or ((getattr(product, "seller", "") or "") == (getattr(user, "name", "") or ""))
+    is_admin = (getattr(user, "role", "") or "") == "admin"
 
     if not owned and not is_owner and not is_admin:
         raise HTTPException(
@@ -768,13 +735,13 @@ def preview_product_stream(
             detail="You are not authorized to preview this product."
         )
 
-    clean_title = getattr(product, "title", f"Product-{product_id}") or f"Product-{product_id}"
-    safe_title_base = re.sub(r'[^\w\s-]', '', str(clean_title)).strip().replace(' ', '_') or f"product-{product_id}"
+    clean_title = str(getattr(product, "title", f"Product-{product_id}") or f"Product-{product_id}")
+    safe_title_base = re.sub(r'[^\w\s-]', '', clean_title).strip().replace(' ', '_') or f"product-{product_id}"
     filename = f"{safe_title_base}.pdf"
 
-    storage_path = product.storage_path or product.file_url or getattr(product, "pcloud_download_link", None)
-    storage_path_lower = (storage_path or "").lower()
-    file_url_lower = (product.file_url or "").lower()
+    storage_path = str(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", "") or "")
+    storage_path_lower = storage_path.lower()
+    file_url_lower = str(product.file_url or "").lower()
 
     is_archive = any(ext in storage_path_lower or ext in file_url_lower for ext in (".zip", ".rar", ".7z", ".tar", ".gz"))
 
@@ -789,9 +756,9 @@ def preview_product_stream(
         filename = f"{safe_title_base}{ext}"
 
     stream = None
-    if bool(storage_path) and not is_archive:
+    if storage_path and not is_archive:
         try:
-            raw_stream = storage_service.get_stream(str(storage_path))
+            raw_stream = storage_service.get_stream(storage_path)
             if raw_stream:
                 first_chunk = next(raw_stream, None)
                 if first_chunk is not None:
@@ -810,7 +777,6 @@ def preview_product_stream(
             stream = None
 
     if stream is None:
-        # Serve valid inline PDF document preview for online inspection
         fallback_bytes = generate_fallback_pdf(clean_title, product_id)
         content_type = "application/pdf"
         filename = f"{safe_title_base}.pdf"
@@ -820,7 +786,7 @@ def preview_product_stream(
 
     return StreamingResponse(
         stream,
-        media_type=str(content_type),
+        media_type=content_type,
         headers={
             "Content-Disposition": f'inline; filename="{filename}"',
             "X-Frame-Options": "ALLOWALL",
@@ -885,7 +851,6 @@ def get_refund_eligibility(
         }
 
 
-
 # -- Protected write endpoints (JWT required) ----------------------------------
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
@@ -916,8 +881,8 @@ def create_product(
         )
 
     if product_in.affiliate_enabled:
-        comm_val = float(product_in.commission_value or 0.0)
-        prod_price = float(product_in.price or 0.0)
+        comm_val = float(cast(Any, product_in.commission_value) or 0.0)
+        prod_price = float(cast(Any, product_in.price) or 0.0)
         if comm_val < 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -937,12 +902,8 @@ def create_product(
                 )
 
     # -- IDEMPOTENCY: Double-click / network-retry protection ------------------
-    # Only deduplicate if same vendor, title, AND price > 0 within 10 seconds.
-    # Zero-price products are excluded to avoid blocking legitimate re-submissions
-    # after a failed form save.
     vendor_id = str(current_user.id)
-    from datetime import datetime, timedelta
-    window_start = datetime.utcnow() - timedelta(seconds=10)
+    window_start = datetime.now(timezone.utc) - timedelta(seconds=10)
     recent_duplicate = None
     if product_in.price > 0:
         recent_duplicate = db.query(Product).filter(
@@ -955,8 +916,6 @@ def create_product(
         return recent_duplicate
 
     role = (current_user.role or "").lower()
-    # For admins: respect the submitted status (published / draft).
-    # For vendors: always start at pending_review regardless of submitted value.
     if role == "admin":
         submitted_status = (product_in.status or "published").lower()
         initial_status = submitted_status if submitted_status in ("published", "draft") else "published"
@@ -976,8 +935,8 @@ def create_product(
         tags=product_in.tags,
         highlights=product_in.highlights,
         badge=product_in.badge,
-        seller=str(product_in.seller or current_user.name),
-        affiliate_enabled=bool(product_in.affiliate_enabled) if product_in.affiliate_enabled is not None else False,
+        seller=str(product_in.seller or current_user.name),  # type: ignore
+        affiliate_enabled=bool(product_in.affiliate_enabled) if product_in.affiliate_enabled is not None else False,  # type: ignore
         commission_type=product_in.commission_type or "percentage",
         commission_value=product_in.commission_value or 0.0,
         short_desc=product_in.short_desc,
@@ -1034,7 +993,7 @@ def update_product(
 
     # Resource ownership check
     user_uid = str(current_user.id)
-    if str(current_user.role) != "admin" and (str(product.vendor_id) != user_uid and str(product.seller) != str(current_user.name)):
+    if (current_user.role or "") != "admin" and (str(product.vendor_id) != user_uid and (product.seller or "") != (current_user.name or "")):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to modify this product.",
@@ -1046,10 +1005,10 @@ def update_product(
             detail="Price cannot be negative.",
         )
 
-    aff_enabled = bool(product_in.affiliate_enabled) if product_in.affiliate_enabled is not None else bool(getattr(product, "affiliate_enabled", False))
-    comm_type = str(product_in.commission_type) if product_in.commission_type is not None else str(getattr(product, "commission_type", "percentage"))
-    comm_value = float(product_in.commission_value) if product_in.commission_value is not None else float(getattr(product, "commission_value", 0.0) or 0.0)
-    prod_price = float(product_in.price) if product_in.price is not None else float(getattr(product, "price", 0.0) or 0.0)
+    aff_enabled = product_in.affiliate_enabled if product_in.affiliate_enabled is not None else bool(getattr(product, "affiliate_enabled", False))
+    comm_type = product_in.commission_type if product_in.commission_type is not None else str(getattr(product, "commission_type", "percentage"))
+    comm_value = float(cast(Any, product_in.commission_value) or getattr(product, "commission_value", 0.0) or 0.0)
+    prod_price = float(cast(Any, product_in.price) or getattr(product, "price", 0.0) or 0.0)
 
     if aff_enabled:
         if comm_value < 0:
@@ -1102,7 +1061,7 @@ def delete_product(
 
     # Resource ownership check
     user_uid = str(current_user.id)
-    if str(current_user.role) != "admin" and (str(product.vendor_id) != user_uid and str(product.seller) != str(current_user.name)):
+    if (current_user.role or "") != "admin" and (str(product.vendor_id) != user_uid and (product.seller or "") != (current_user.name or "")):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this product.",
@@ -1123,12 +1082,11 @@ def get_purchase_complete_popup(
     db: Session = Depends(get_db)
 ):
     """
-    Get post-purchase download popup data for immediate download and navigation to downloads section.
+    Get post-purchase download popup data for navigation to downloads section.
     Called after successful payment to show download popup with product details.
     """
     check_platform_paused()
     
-    # Verify the order belongs to the current user
     order = db.query(Order).filter(
         Order.id == order_id,
         Order.user_id == current_user.id,
@@ -1141,40 +1099,38 @@ def get_purchase_complete_popup(
             detail="Order not found or not accessible"
         )
     
-    # Get all order items with product and vendor details
     order_items_with_details = db.query(
         OrderItem, Product, User.name.label("vendor_name")
     ).join(
         Product, OrderItem.product_id == Product.id
     ).outerjoin(
-        User, Product.vendor_id == cast(User.id, String)
+        User, Product.vendor_id == sql_cast(User.id, String)
     ).filter(
         OrderItem.order_id == order_id
     ).all()
     
     popup_products = []
-    total_value = 0
+    total_value = 0.0
     
     for order_item, product, vendor_name in order_items_with_details:
-        # Generate download token for immediate download
         token = generate_download_token(int(getattr(current_user, "id")), int(getattr(product, "id")))
         download_url = f"/api/products/{product.id}/download-file?token={token}"
         
         popup_products.append({
             "product_id": product.id,
-            "name": product.name or product.title,
+            "name": product.title or "Untitled",
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",
             "thumbnail": product.thumbnail or product.preview,
             "vendor": vendor_name or product.seller or "Unknown Vendor",
-            "price_paid": float(order_item.price_paid or 0),
+            "price_paid": float(cast(Any, order_item.price_paid or 0)),
             "description": product.description[:100] + "..." if product.description and len(product.description) > 100 else product.description,
             "download_url": download_url,
-            "auto_download": True,  # Trigger automatic download
+            "auto_download": False,  # Automatic device downloads disabled per project policy
             "token_expires_in": "15 minutes"
         })
-        total_value += float(order_item.price_paid or 0)
+        total_value += float(cast(Any, order_item.price_paid or 0))
     
     return {
         "success": True,
@@ -1189,14 +1145,14 @@ def get_purchase_complete_popup(
         },
         "products": popup_products,
         "popup_actions": {
-            "download_all": True,  # Enable bulk download
-            "go_to_downloads": "/downloads",  # Navigation URL
-            "continue_shopping": "/products"  # Continue shopping URL
+            "download_all": True,
+            "go_to_downloads": "/downloads",
+            "continue_shopping": "/products"
         },
         "messages": {
             "title": "Purchase Complete!",
             "subtitle": f"Your {len(popup_products)} product{'s' if len(popup_products) > 1 else ''} {'are' if len(popup_products) > 1 else 'is'} ready for download",
-            "download_message": "Your download will start automatically. You can also access all your purchases in the Downloads section.",
+            "download_message": "You can access and download all your purchases in the Downloads section of your dashboard.",
             "thank_you": "Thank you for your purchase!"
         }
     }
@@ -1211,15 +1167,6 @@ def bulk_update_affiliate_settings(
     """
     Bulk update product affiliate settings.
     Requires Admin privileges.
-    Payload:
-      {
-        "product_ids": [1, 2, 3],
-        "affiliate_enabled": bool,
-        "commission_mode": "percentage" | "fixed",
-        "commission_value": float,
-        "cookie_days": int,
-        "status": "active" | "paused"
-      }
     """
     if current_user.role not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Admin permissions required")

@@ -86,6 +86,8 @@ class PayoutProvider(ABC):
         bank_name: Optional[str],
         affiliate_name: str,
         reference_note: str,          # e.g. "Lumora Affiliate Payout #42"
+        existing_contact_id: Optional[str] = None,
+        existing_fund_account_id: Optional[str] = None,
     ) -> PayoutResult:
         """
         Dispatch a payout to the affiliate's bank / UPI account.

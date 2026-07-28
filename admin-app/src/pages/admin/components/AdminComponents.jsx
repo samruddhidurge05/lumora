@@ -1,28 +1,28 @@
 import React, { useState, useEffect, useRef, useId } from 'react';
-import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, ChevronUp, Check, Grid, Filter, X, Sliders } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-1.5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 md:mb-6 min-w-0 max-w-full">
+      <div className="flex-1 min-w-0 max-w-full">
+        <div className="flex items-center gap-3 mb-1 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
             MARKETPLACE ADMINISTRATION
           </span>
         </div>
-        <h1 className="text-xl sm:text-2xl md:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1 break-words">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed">
+          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed break-words">
             {subtitle}
           </p>
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 min-w-0 w-full sm:w-auto justify-start sm:justify-end">
           {actions}
         </div>
       )}
@@ -31,48 +31,50 @@ export function PageHeader({ title, subtitle, actions }) {
 }
 
 // ─── 2. STATS GRID ─────────────────────────────────────────────────────────
-// Responsive 8px system grid container for statistics/analytics cards
-export function StatsGrid({ children, columns = 4 }) {
+// Responsive 8px system grid container for statistics/analytics cards (2-column base on mobile)
+export function StatsGrid({ children, columns = 4, className = "" }) {
   const gridColsClass = 
     columns === 6 
-      ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
+      ? "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+      : columns === 3
+        ? "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        : "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
       
   return (
-    <div className={`stats-grid ${gridColsClass} gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8`}>
+    <div className={`stats-grid ${gridColsClass} gap-2.5 sm:gap-3.5 md:gap-5 mb-4 md:mb-6 ${className}`}>
       {children}
     </div>
   );
 }
 
 // ─── 3. DASHBOARD CARD (STATS CARD) ───────────────────────────────────────
-// Identical statistics/metrics display cards following the design guidelines
+// High-density, compact statistics/metrics display cards for enterprise mobile UX
 export function DashboardCard({ title, value, icon: IconComponent, trend, trendLabel, onClick, chart, isLoading }) {
   const cardContent = (
     <>
-      <div className="flex items-center justify-between mb-2 text-[#7B3FA0]">
-        <span className="text-[8px] font-extrabold tracking-widest uppercase">{title}</span>
+      <div className="flex items-center justify-between mb-0.5 sm:mb-1 text-[#7B3FA0] min-w-0">
+        <span className="text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase truncate max-w-[80%]">{title}</span>
         {IconComponent && typeof IconComponent === 'function' ? (
-          <IconComponent size={14} className="text-[#7B3FA0]" />
+          <IconComponent size={11} className="text-[#7B3FA0] shrink-0 ml-1" />
         ) : (
           IconComponent
         )}
       </div>
       
-      <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-[#2D004D] mb-1 transition-colors group-hover:text-[#5A1E7E]">
+      <h3 className="text-xs sm:text-base md:text-xl font-serif font-black text-[#2D004D] mb-0.5 transition-colors group-hover:text-[#5A1E7E] leading-tight truncate">
         {isLoading ? (
-          <div className="h-7 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
+          <div className="h-4 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
         ) : (
           value
         )}
       </h3>
       
-      <div className="flex items-center justify-between mt-1.5 min-h-[18px]">
+      <div className="flex items-center justify-between mt-0.5 min-h-[12px] sm:min-h-[14px]">
         {isLoading ? (
-          <div className="h-3 bg-[#381347]/5 animate-pulse rounded-md w-1/2" />
+          <div className="h-2 bg-[#381347]/5 animate-pulse rounded-md w-1/2" />
         ) : (
           trend !== undefined && (
-            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-0.5 ${
+            <span className={`text-[7px] sm:text-[8px] font-bold px-1 py-0.2 rounded inline-flex items-center gap-0.5 ${
               parseFloat(trend) >= 0 || trend.toString().startsWith('+')
                 ? 'text-[#059669] bg-[#10B981]/10' 
                 : 'text-[#DC2626] bg-[#EF4444]/10'
@@ -84,7 +86,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
       </div>
       
       {chart && (
-        <div className="h-8 w-full mt-2 overflow-visible">
+        <div className="h-3.5 sm:h-5 md:h-6 w-full mt-0.5 sm:mt-1 overflow-visible">
           {isLoading ? (
             <div className="h-full bg-[#381347]/5 animate-pulse rounded-md w-full" />
           ) : (
@@ -95,14 +97,14 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     </>
   );
 
-  const baseClass = "glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-white/50 hover:border-white/90 hover:-translate-y-1 transition-all duration-500 shadow-sm relative overflow-hidden group h-auto";
+  const baseClass = "glass-surface rounded-lg sm:rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 border border-white/50 hover:border-white/90 hover:-translate-y-0.5 transition-all duration-300 shadow-sm relative overflow-hidden group min-h-[76px] sm:min-h-[96px] md:min-h-[110px] flex flex-col justify-between h-full w-full box-border";
   
   if (onClick) {
     return (
       <button 
         type="button" 
         onClick={onClick} 
-        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 min-h-[44px]`}
+        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 min-h-[76px] sm:min-h-[96px]`}
       >
         {cardContent}
       </button>
@@ -117,12 +119,12 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
 }
 
 // ─── 4. GLASS CARD (GENERAL WRAPPER) ──────────────────────────────────────
-// Custom container element matching design details
+// Custom container element matching design details with compressed padding
 export function GlassCard({ children, className = '', title, subtitle, headerActions }) {
   return (
-    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/50 shadow-sm relative overflow-hidden h-auto ${className}`}>
+    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 border border-white/50 shadow-sm relative overflow-hidden h-auto ${className}`}>
       {(title || subtitle || headerActions) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-stone-200/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3.5 mb-3.5 sm:mb-4 pb-2.5 sm:pb-3 border-b border-stone-200/50">
           <div>
             {subtitle && <h4 className="text-[8px] sm:text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{subtitle}</h4>}
             {title && <h2 className="text-base sm:text-lg font-serif font-black text-[#2D004D] mt-0.5">{title}</h2>}
@@ -149,32 +151,32 @@ export function FilterBar({
   actions 
 }) {
   return (
-    <div className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-30 overflow-visible">
-      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3 relative z-30 overflow-visible">
+    <div className="glass-surface rounded-2xl p-3 sm:p-3.5 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 relative z-30 overflow-visible">
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5 relative z-30 overflow-visible">
         {onSearchChange !== undefined && (
           <div className="relative flex-1 min-w-[200px] md:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" size={15} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" size={14} />
             <input
               type="text"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="w-full pl-10 pr-4 h-[42px] glass-input rounded-xl text-xs"
+              className="w-full pl-9 pr-3.5 h-[38px] sm:h-[40px] glass-input rounded-xl text-xs"
             />
           </div>
         )}
         
         {/* Render optional selector panels */}
         {filters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2.5 relative z-30 overflow-visible">
+          <div className="flex flex-wrap items-center gap-2 relative z-30 overflow-visible">
             {filters}
           </div>
         )}
       </div>
       
       {actions && (
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap min-w-0">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap min-w-0">
           {actions}
         </div>
       )}
@@ -183,11 +185,7 @@ export function FilterBar({
 }
 
 // ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
-// Standardized card wrapper for table sections. Children are rendered directly
-// inside the card — they must include their own <table> / <tr> / <td> structure.
-// NOTE: This is intentionally a <div> wrapper, not a <table>, so that callers
-// can pass any content (headers, spinners, overflow wrappers, full tables, etc.)
-// without triggering validateDOMNesting warnings.
+// Standardized card wrapper for table sections with high-density padding
 export function TableContainer({
   headers = [],
   children,
@@ -207,15 +205,15 @@ export function TableContainer({
 
   if (isManagedTable) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="w-full overflow-x-auto rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm">
+      <div className="flex flex-col gap-3.5">
+        <div className="w-full overflow-x-auto rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#8E6AA8]/5 border-b border-[#8E6AA8]/10">
                 {headers.map((h, idx) => (
                   <th
                     key={idx}
-                    className="p-4 text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase select-none"
+                    className="px-3.5 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase select-none"
                     style={h.style}
                   >
                     {h.label}
@@ -228,8 +226,8 @@ export function TableContainer({
                 Array.from({ length: 5 }).map((_, rIdx) => (
                   <tr key={rIdx} className="border-b border-[#8E6AA8]/5 animate-pulse bg-white/30">
                     {Array.from({ length: cols }).map((_, cIdx) => (
-                      <td key={cIdx} className="p-4">
-                        <div className="h-4 bg-[#381347]/10 rounded w-3/4 my-1" />
+                      <td key={cIdx} className="px-3.5 py-3">
+                        <div className="h-3.5 bg-[#381347]/10 rounded w-3/4 my-0.5" />
                       </td>
                     ))}
                   </tr>
@@ -251,7 +249,7 @@ export function TableContainer({
           </table>
         </div>
         {pagination && (
-          <div className="flex items-center justify-between px-4 py-2 mt-2">
+          <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
             {pagination}
           </div>
         )}
@@ -261,10 +259,10 @@ export function TableContainer({
 
   // Plain card wrapper — used by pages that manage their own table structure
   return (
-    <div className="w-full rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden">
+    <div className="w-full rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden">
       {children}
       {pagination && (
-        <div className="flex items-center justify-between px-4 py-2 mt-2">
+        <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
           {pagination}
         </div>
       )}
@@ -276,12 +274,12 @@ export function TableContainer({
 // Visually appealing vector card for tables/sections without entries
 export function EmptyState({ title, description, action }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-12 bg-white/40 rounded-3xl border border-dashed border-[#8E6AA8]/20 min-h-[300px]">
-      <div className="w-16 h-16 rounded-2xl bg-[#D8BFE3]/15 flex items-center justify-center text-[#7B3FA0] mb-4">
-        <Inbox size={28} className="opacity-75" />
+    <div className="flex flex-col items-center justify-center text-center p-8 sm:p-10 bg-white/40 rounded-3xl border border-dashed border-[#8E6AA8]/20 min-h-[220px] sm:min-h-[260px]">
+      <div className="w-12 h-12 rounded-xl bg-[#D8BFE3]/15 flex items-center justify-center text-[#7B3FA0] mb-3">
+        <Inbox size={24} className="opacity-75" />
       </div>
-      <h3 className="text-base font-serif font-black text-[#2D004D] mb-1.5">{title}</h3>
-      <p className="text-xs text-[#7B3FA0] max-w-sm leading-relaxed mb-6">{description}</p>
+      <h3 className="text-base font-serif font-black text-[#2D004D] mb-1">{title}</h3>
+      <p className="text-xs text-[#7B3FA0] max-w-sm leading-relaxed mb-4">{description}</p>
       {action && (
         <div className="flex justify-center">
           {action}
@@ -341,7 +339,7 @@ export function AdminSelect({
   const generatedId = useId();
   const listboxId = `admin-select-listbox-${id || generatedId}`;
 
-  // Close on click outside
+  // Close on click outside (handles both mouse and mobile touch events)
   useEffect(() => {
     function handleClickOutside(event) {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -349,7 +347,11 @@ export function AdminSelect({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   // Format options if passed as raw strings, numbers or objects
@@ -468,13 +470,15 @@ export function AdminSelect({
       </button>
 
       {isOpen && (
-        <div 
-          id={listboxId}
-          role="listbox"
-          tabIndex={-1}
-          aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] w-max max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
-        >
+        <>
+          <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setIsOpen(false)} />
+          <div 
+            id={listboxId}
+            role="listbox"
+            tabIndex={-1}
+            aria-label={ariaLabel || placeholder || name}
+            className="absolute right-0 sm:left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);
             const isFocused = index === focusedIndex;
@@ -509,6 +513,244 @@ export function AdminSelect({
               </button>
             );
           })}
+        </div>
+      </>
+      )}
+    </div>
+  );
+}
+
+// ─── 8. MOBILE SECTION SWITCHER (NAV REDESIGN) ──────────────────────────────
+// Enterprise mobile section navigation: Pill list on desktop, Dropdown + Bottom Sheet on mobile.
+export function MobileSectionSwitcher({ sections = [], activeSection, onChange, className = "" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const activeObj = sections.find(s => s.id === activeSection) || sections[0] || { id: '', label: 'Select Section' };
+  const ActiveIcon = activeObj.icon;
+
+  return (
+    <div className={`w-full ${className}`}>
+      {/* Desktop View (>= 768px): Horizontal Pill Bar */}
+      <div className="hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/70 backdrop-blur-md border border-stone-200/50 shadow-xs flex-wrap">
+        {sections.map(sec => {
+          const isActive = sec.id === activeSection;
+          const SecIcon = sec.icon;
+          return (
+            <button
+              key={sec.id}
+              onClick={() => onChange(sec.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border-none cursor-pointer ${
+                isActive
+                  ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5A1E7E] text-white shadow-sm'
+                  : 'text-[#7B3FA0] hover:bg-[#F3EAF8]/60 hover:text-[#2D004D]'
+              }`}
+            >
+              {SecIcon && <SecIcon size={14} />}
+              <span>{sec.label}</span>
+              {sec.count !== undefined && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-[#F3EAF8] text-[#7B3FA0]'
+                }`}>
+                  {sec.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mobile View (< 768px): Dropdown Switcher Bar */}
+      <div className="md:hidden w-full">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full px-4 py-3 rounded-2xl bg-white/95 border border-[#C4B5FD]/70 shadow-sm flex items-center justify-between text-xs font-bold text-[#2D004D] active:scale-[0.99] transition-all"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-[9px] uppercase tracking-widest font-extrabold text-[#7B3FA0]">Section:</span>
+            {ActiveIcon && <ActiveIcon size={15} className="text-[#7B3FA0] shrink-0" />}
+            <span className="truncate font-black">{activeObj.label}</span>
+            {activeObj.count !== undefined && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#F8F3FB] text-[#7B3FA0] border border-[#F3EAF8]">
+                {activeObj.count}
+              </span>
+            )}
+          </div>
+          <ChevronDown size={16} className="text-[#7B3FA0] shrink-0 ml-2" />
+        </button>
+
+        {/* Bottom Sheet Drawer for Section Selection */}
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+            <div 
+              className="fixed inset-0" 
+              onClick={() => setIsOpen(false)} 
+            />
+            <div className="relative w-full max-h-[85vh] bg-white rounded-t-3xl p-5 shadow-2xl flex flex-col gap-4 z-10 border-t border-stone-200 overflow-y-auto animate-in slide-in-from-bottom duration-250">
+              <div className="w-12 h-1.5 rounded-full bg-stone-300 mx-auto -mt-1 mb-1" />
+              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-[#7B3FA0]">Switch View</span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-full bg-stone-100 text-[#7B3FA0] hover:bg-stone-200 transition-colors border-none"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {sections.map(sec => {
+                  const isActive = sec.id === activeSection;
+                  const SecIcon = sec.icon;
+                  return (
+                    <button
+                      key={sec.id}
+                      onClick={() => {
+                        onChange(sec.id);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full min-h-[48px] px-4 py-3 rounded-2xl text-left text-xs font-bold flex items-center justify-between transition-all border-none cursor-pointer ${
+                        isActive
+                          ? 'bg-[#7B3FA0]/15 text-[#7B3FA0] border border-[#7B3FA0]/30 font-black'
+                          : 'bg-[#F8F3FB]/50 text-[#2D004D] hover:bg-[#F8F3FB]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {SecIcon && <SecIcon size={16} className={isActive ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />}
+                        <span>{sec.label}</span>
+                      </div>
+                      {sec.count !== undefined && (
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          isActive ? 'bg-[#7B3FA0] text-white' : 'bg-[#F3EAF8] text-[#7B3FA0]'
+                        }`}>
+                          {sec.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── 9. MOBILE FILTER DRAWER & TRIGGER ─────────────────────────────────────
+// Mobile slide-up Bottom Sheet for filters (Sort, Status, Category, Range)
+export function MobileFilterTrigger({ activeCount = 0, onClick, label = "Filter & Sort" }) {
+  return (
+    <button
+      onClick={onClick}
+      className="md:hidden flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-white border border-[#C4B5FD]/70 text-[#7B3FA0] text-xs font-extrabold shadow-xs active:scale-95 transition-all"
+    >
+      <Sliders size={14} />
+      <span>{label}</span>
+      {activeCount > 0 && (
+        <span className="w-5 h-5 rounded-full bg-[#7B3FA0] text-white text-[10px] font-extrabold flex items-center justify-center">
+          {activeCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
+export function MobileFilterDrawer({ isOpen, onClose, onApply, onReset, title = "Filter & Sort", children }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="fixed inset-0" onClick={onClose} />
+      <div className="relative w-full max-h-[90vh] bg-white rounded-t-3xl p-5 shadow-2xl flex flex-col gap-4 z-10 border-t border-stone-200 overflow-y-auto animate-in slide-in-from-bottom duration-250">
+        <div className="w-12 h-1.5 rounded-full bg-stone-300 mx-auto -mt-1 mb-1" />
+        <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-[#7B3FA0]" />
+            <h3 className="text-sm font-serif font-black text-[#2D004D]">{title}</h3>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full bg-stone-100 text-[#7B3FA0] hover:bg-stone-200 border-none cursor-pointer">
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-4 py-2">
+          {children}
+        </div>
+
+        <div className="flex items-center gap-3 pt-3 border-t border-stone-100 mt-2">
+          {onReset && (
+            <button
+              onClick={() => { onReset(); onClose(); }}
+              className="flex-1 min-h-[44px] py-3 rounded-xl border border-stone-200 bg-stone-50 text-stone-600 text-xs font-bold transition-all"
+            >
+              Reset Filters
+            </button>
+          )}
+          <button
+            onClick={() => { if (onApply) onApply(); onClose(); }}
+            className="flex-1 min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#5A1E7E] text-white text-xs font-bold shadow-md transition-all"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 10. MOBILE RECORD CARD & EXPANDABLE DETAILS ───────────────────────────
+// Enterprise-grade mobile card record view with progressive disclosure accordion
+export function MobileRecordCard({ title, subtitle, badge, status, price, avatar, details, actions, children, onClick }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div 
+      onClick={onClick}
+      className="md:hidden p-4 rounded-2xl bg-white border border-stone-200/70 shadow-xs flex flex-col gap-3 transition-all hover:border-[#7B3FA0]/40"
+    >
+      {/* Header Row */}
+      <div className="flex items-start justify-between gap-3 border-b border-stone-100 pb-2.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {avatar && (
+            <div className="shrink-0">{avatar}</div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h4 className="font-bold text-[#2D004D] text-xs leading-snug break-words">{title}</h4>
+            {subtitle && <p className="text-[10px] text-[#7B3FA0] mt-0.5 truncate">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="flex flex-col items-end shrink-0 gap-1">
+          {status && <div>{status}</div>}
+          {price && <span className="font-black text-xs text-[#2D004D]">{price}</span>}
+          {badge && <div>{badge}</div>}
+        </div>
+      </div>
+
+      {/* Main Grid / Body Content */}
+      {children && <div className="text-xs text-[#2D004D] space-y-2">{children}</div>}
+
+      {/* Expandable Secondary Details Drawer */}
+      {details && (
+        <div className="border-t border-stone-100 pt-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+            className="w-full flex items-center justify-between py-1 text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider border-none bg-transparent cursor-pointer"
+          >
+            <span>{isExpanded ? 'Hide Details' : 'View Full Details'}</span>
+            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {isExpanded && (
+            <div className="mt-2.5 p-3 rounded-xl bg-[#F8F3FB]/70 border border-[#F3EAF8] text-xs text-[#2D004D] space-y-2 animate-in fade-in duration-150">
+              {details}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Action Footer Bar (Minimum 44px touch targets) */}
+      {actions && (
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          {actions}
         </div>
       )}
     </div>

@@ -53,8 +53,10 @@ def public_vendor_profile(vendor_id: str, db_session=None):
     from sqlalchemy.orm import Session as _Session
     from app.models.user import User as UserModel
     from app.models.product import Product as ProductModel
+    from admin.validators.status_checks import check_vendor_marketplace_enabled
 
     with _Session(engine) as db_s:
+        check_vendor_marketplace_enabled(db_s)
         # Try to find vendor by Firebase uid stored as vendor_id
         products = db_s.query(ProductModel).filter(
             (ProductModel.vendor_id == vendor_id) | (ProductModel.seller == vendor_id)
@@ -156,7 +158,7 @@ def request_withdrawal(vendor_id: str, body: WithdrawalSchema, vendor: dict = De
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized to request withdrawal")
     if body.amount < 500:
-        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ?500")
+        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ₹500")
     return create_withdrawal({**body.model_dump(), "vendor_id": vendor_id})
 
 

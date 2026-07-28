@@ -20,19 +20,18 @@
   
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-blur: 40px;
-
-  /* Scoped Admin UI Controls Tokens (Non-Global) */
-  --admin-ui-select-bg: rgba(255, 255, 255, 0.78);
-  --admin-ui-select-border: rgba(196, 181, 253, 0.45);
-  --admin-ui-shadow-hover: 0 8px 24px rgba(90, 30, 126, 0.12);
-  --admin-ui-focus-ring: 0 0 0 3px rgba(123, 63, 160, 0.18);
 }
 
 /* --- Admin Layout Grid System --- */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 .admin-layout-grid {
   display: flex;
   gap: var(--admin-spacing-32);
-  max-width: 100%;
+  max-width: 100vw;
   width: 100%;
   margin: 0 auto;
   padding: 0 var(--admin-spacing-32);
@@ -40,6 +39,7 @@
   position: relative;
   z-index: 1;
   align-items: flex-start;
+  overflow-x: hidden;
 }
 
 @media (max-width: 1024px) {
@@ -59,10 +59,24 @@
 .admin-main-content {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--admin-spacing-32);
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  .admin-main-content {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main-content {
+    gap: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -208,8 +222,9 @@
   gap: var(--admin-spacing-24) !important;
 }
 
-/* Ensure equal height on grid cards in dashboards */
-.admin-main-content .grid > div {
+/* Scoped to .stats-grid only — prevents universal grid > div padding from
+   clobbering non-stats grids on Analytics, Orders, and other complex layouts */
+.admin-main-content .stats-grid > div {
   padding: var(--admin-spacing-24) !important;
   display: flex;
   flex-direction: column;
@@ -266,127 +281,8 @@
   scrollbar-color: rgba(123, 63, 160, 0.22) transparent;
 }
 
-/* --- Form & Input Controls Enhancement (Scoped to Admin Views) --- */
-.admin-main-content input[type="text"],
-.admin-main-content input[type="email"],
-.admin-main-content input[type="password"],
-.admin-main-content input[type="number"],
-.admin-main-content input[type="search"],
-.admin-main-content input[type="date"],
-.admin-main-content textarea,
-.admin-main-content .glass-input,
-.admin-page-container input[type="text"],
-.admin-page-container input[type="search"],
-.admin-page-container .glass-input {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(196, 181, 253, 0.5) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.9) !important;
-  border-radius: 10px !important;
-  padding: 8px 12px !important;
-  font-size: 0.81rem !important;
-  font-weight: 600 !important;
-  font-family: inherit !important;
-  color: #2D004D !important;
-  height: 40px !important;
-  box-sizing: border-box !important;
-  box-shadow: 0 1px 4px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
 
-.admin-main-content input[type="text"]:focus,
-.admin-main-content input[type="email"]:focus,
-.admin-main-content input[type="password"]:focus,
-.admin-main-content input[type="number"]:focus,
-.admin-main-content input[type="search"]:focus,
-.admin-main-content input[type="date"]:focus,
-.admin-main-content textarea:focus,
-.admin-main-content .glass-input:focus,
-.admin-page-container input[type="text"]:focus,
-.admin-page-container input[type="search"]:focus {
-  outline: none !important;
-  border-color: #7B3FA0 !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.18), 0 4px 14px rgba(90, 30, 126, 0.08) !important;
-}
-
-/* --- Native Select Dropdowns Polish (Refined Sleek SaaS Arrow & Popup) --- */
-.admin-main-content select,
-.admin-main-content select[class],
-.admin-page-container select,
-select.glass-input {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237B3FA0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
-  background-position: right 12px center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
-  padding-right: 32px !important;
-  padding-left: 12px !important;
-  background-color: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(14px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
-  border: 1px solid rgba(196, 181, 253, 0.5) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.9) !important;
-  border-radius: 10px !important;
-  font-size: 0.81rem !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
-  color: #2D004D !important;
-  height: 40px !important;
-  min-width: 130px !important;
-  box-sizing: border-box !important;
-  cursor: pointer !important;
-  box-shadow: 0 1px 4px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.admin-main-content select:hover,
-.admin-main-content select[class]:hover,
-.admin-page-container select:hover {
-  background-color: #ffffff !important;
-  border-color: #7B3FA0 !important;
-  box-shadow: 0 4px 14px rgba(123, 63, 160, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-  transform: translateY(-1px) !important;
-}
-
-.admin-main-content select:focus,
-.admin-main-content select[class]:focus,
-.admin-page-container select:focus {
-  outline: none !important;
-  border-color: #7B3FA0 !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.18), 0 6px 18px rgba(90, 30, 126, 0.1) !important;
-  transform: translateY(0) !important;
-}
-
-/* High contrast clean rendering for Windows/Mac browser native popup menus */
-.admin-main-content select option,
-.admin-page-container select option,
-select option {
-  background-color: #ffffff !important;
-  color: #1F2937 !important;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  padding: 8px 12px !important;
-}
-
-.admin-main-content select option:checked,
-.admin-page-container select option:checked,
-select option:checked {
-  background-color: #F3E8FF !important;
-  color: #7B3FA0 !important;
-  font-weight: 700 !important;
-}
-
-.admin-main-content textarea {
-  height: auto !important;
-  min-height: 100px !important;
-}
-
+/* --- Form Design Standardization --- */
 /* Forms Labels */
 .admin-main-content label,
 .admin-main-content .text-xs.font-extrabold {
@@ -397,17 +293,16 @@ select option:checked {
   color: #7B3FA0 !important;
 }
 
-/* --- Action Buttons Enhancement --- */
+/* --- Buttons Standardization --- */
 .admin-main-content button,
-.admin-main-content .btn-premium,
-.admin-page-container button {
-  border-radius: 10px !important;
-  font-family: inherit !important;
-  font-size: 0.81rem !important;
-  font-weight: 600 !important;
-  height: 40px !important;
+.admin-main-content .btn-premium {
+  border-radius: var(--admin-radius-button) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  height: 42px !important;
   box-sizing: border-box !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 /* Fix generic small icon buttons/tabs height stretching */
@@ -420,29 +315,17 @@ select option:checked {
   height: auto !important;
 }
 
-/* Primary Action Button */
-.btn-admin-primary,
-.admin-main-content .btn-admin-primary,
-.admin-page-container .btn-admin-primary {
-  background: linear-gradient(135deg, #7B3FA0 0%, #5A1E7E 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(90, 30, 126, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  letter-spacing: 0.01em !important;
-  cursor: pointer !important;
+/* Button Variants */
+.btn-admin-primary {
+  background: linear-gradient(135deg, #7B3FA0, #5A1E7E) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(90, 30, 126, 0.2) !important;
 }
-.btn-admin-primary:hover,
-.admin-main-content .btn-admin-primary:hover,
-.admin-page-container .btn-admin-primary:hover {
-  background: linear-gradient(135deg, #8B4FAF 0%, #6A2E8E 100%) !important;
-  box-shadow: 0 6px 20px rgba(90, 30, 126, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-  transform: translateY(-1.5px) !important;
-}
-.btn-admin-primary:active,
-.admin-main-content .btn-admin-primary:active,
-.admin-page-container .btn-admin-primary:active {
-  transform: translateY(0) scale(0.98) !important;
-  box-shadow: 0 2px 6px rgba(90, 30, 126, 0.2) !important;
+.btn-admin-primary:hover {
+  background: linear-gradient(135deg, #8B4FAF, #6A2E8E) !important;
+  box-shadow: 0 8px 24px rgba(90, 30, 126, 0.3) !important;
+  transform: translateY(-2px) !important;
 }
 .btn-admin-primary:disabled {
   background: #E9D5FF !important;
@@ -452,32 +335,16 @@ select option:checked {
   box-shadow: none !important;
 }
 
-/* Secondary Action Button */
-.btn-admin-secondary,
-.admin-main-content .btn-admin-secondary,
-.admin-page-container .btn-admin-secondary {
-  border: 1px solid rgba(196, 181, 253, 0.5) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.9) !important;
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+.btn-admin-secondary {
+  border: 1.5px solid rgba(196, 181, 253, 0.4) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
   color: #2D004D !important;
-  box-shadow: 0 1px 4px rgba(90, 30, 126, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  cursor: pointer !important;
 }
-.btn-admin-secondary:hover,
-.admin-main-content .btn-admin-secondary:hover,
-.admin-page-container .btn-admin-secondary:hover {
-  background: #ffffff !important;
-  border-color: #7B3FA0 !important;
-  color: #2D004D !important;
-  transform: translateY(-1.5px) !important;
-  box-shadow: 0 4px 16px rgba(123, 63, 160, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-}
-.btn-admin-secondary:active,
-.admin-main-content .btn-admin-secondary:active,
-.admin-page-container .btn-admin-secondary:active {
-  transform: translateY(0) scale(0.98) !important;
+.btn-admin-secondary:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(123, 63, 160, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(90, 30, 126, 0.08) !important;
 }
 .btn-admin-secondary:disabled {
   opacity: 0.5 !important;
@@ -485,88 +352,78 @@ select option:checked {
   transform: none !important;
 }
 
-/* Danger Button */
-.btn-admin-danger,
-.admin-main-content .btn-admin-danger {
-  background: rgba(239, 68, 68, 0.08) !important;
-  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+.btn-admin-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.25) !important;
   color: #DC2626 !important;
-  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.04) !important;
-  cursor: pointer !important;
 }
-.btn-admin-danger:hover,
-.admin-main-content .btn-admin-danger:hover {
+.btn-admin-danger:hover {
   background: #DC2626 !important;
   border-color: transparent !important;
-  color: #ffffff !important;
-  transform: translateY(-1.5px) !important;
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2) !important;
-}
-.btn-admin-danger:active,
-.admin-main-content .btn-admin-danger:active {
-  transform: translateY(0) scale(0.98) !important;
+  color: #fff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.2) !important;
 }
 
-/* Success Button */
-.btn-admin-success,
-.admin-main-content .btn-admin-success {
-  background: rgba(16, 185, 129, 0.08) !important;
-  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+.btn-admin-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
   color: #059669 !important;
-  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.04) !important;
-  cursor: pointer !important;
 }
-.btn-admin-success:hover,
-.admin-main-content .btn-admin-success:hover {
+.btn-admin-success:hover {
   background: #059669 !important;
   border-color: transparent !important;
-  color: #ffffff !important;
-  transform: translateY(-1.5px) !important;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2) !important;
-}
-.btn-admin-success:active,
-.admin-main-content .btn-admin-success:active {
-  transform: translateY(0) scale(0.98) !important;
+  color: #fff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2) !important;
 }
 
-/* Ghost Button */
-.btn-admin-ghost,
-.admin-main-content .btn-admin-ghost {
+.btn-admin-ghost {
   background: transparent !important;
-  border: 1px solid transparent !important;
+  border: 1.5px solid transparent !important;
   color: #7B3FA0 !important;
-  cursor: pointer !important;
 }
-.btn-admin-ghost:hover,
-.admin-main-content .btn-admin-ghost:hover {
-  background: rgba(123, 63, 160, 0.08) !important;
+.btn-admin-ghost:hover {
+  background: rgba(123, 63, 160, 0.06) !important;
   color: #2D004D !important;
   transform: translateY(-1px) !important;
 }
-.btn-admin-ghost:active,
-.admin-main-content .btn-admin-ghost:active {
-  transform: translateY(0) scale(0.98) !important;
+
+/* Generalized inputs to include search, number, email, password */
+.admin-main-content input[type="text"],
+.admin-main-content input[type="email"],
+.admin-main-content input[type="password"],
+.admin-main-content input[type="number"],
+.admin-main-content input[type="search"],
+.admin-main-content input[type="date"],
+.admin-main-content select,
+.admin-main-content textarea,
+.admin-main-content .glass-input {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.35) !important;
+  border-radius: var(--admin-radius-input) !important;
+  padding: 10px 14px !important;
+  font-size: 0.82rem !important;
+  font-family: inherit !important;
+  color: #2D004D !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.22s, box-shadow 0.22s, background-color 0.22s !important;
 }
 
-/* Custom Webkit Scrollbars for Admin Controls & Dropdown Containers */
-.admin-main-content ::-webkit-scrollbar,
-.admin-page-container ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.admin-main-content ::-webkit-scrollbar-track,
-.admin-page-container ::-webkit-scrollbar-track {
-  background: rgba(142, 106, 168, 0.06);
-  border-radius: 4px;
-}
-.admin-main-content ::-webkit-scrollbar-thumb,
-.admin-page-container ::-webkit-scrollbar-thumb {
-  background: rgba(123, 63, 160, 0.32);
-  border-radius: 4px;
-}
-.admin-main-content ::-webkit-scrollbar-thumb:hover,
-.admin-page-container ::-webkit-scrollbar-thumb:hover {
-  background: rgba(123, 63, 160, 0.6);
+.admin-main-content input[type="text"]:focus,
+.admin-main-content input[type="email"]:focus,
+.admin-main-content input[type="password"]:focus,
+.admin-main-content input[type="number"]:focus,
+.admin-main-content input[type="search"]:focus,
+.admin-main-content input[type="date"]:focus,
+.admin-main-content select:focus,
+.admin-main-content textarea:focus {
+  outline: none !important;
+  border-color: #7B3FA0 !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 0 0 3px rgba(123, 63, 160, 0.14) !important;
 }
 
 /* --- Spacing Scale Enforcement --- */
@@ -582,18 +439,166 @@ select option:checked {
 .admin-mb-32 { margin-bottom: var(--admin-spacing-32) !important; }
 .admin-mb-48 { margin-bottom: var(--admin-spacing-48) !important; }
 
-/* --- Responsive & Structural Overrides --- */
+/* --- Sidebar toggle & logout hover (replaces inline JS handlers) --- */
+.admin-sidebar-toggle:hover {
+  background: rgba(123, 63, 160, 0.12) !important;
+}
+
+.admin-logout-btn {
+  transition: background 0.2s, color 0.2s !important;
+}
+
+.admin-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+}
+
+/* --- Focus ring normalization --- */
+.admin-layout-grid *:focus-visible {
+  outline: 2px solid rgba(123, 63, 160, 0.50) !important;
+  outline-offset: 2px !important;
+}
+
+/* --- Touch Targets & Ergonomics System (>= 44px) --- */
+@media (max-width: 767px) {
+  .admin-main-content button,
+  .admin-main-content a,
+  .admin-main-content input[type="text"],
+  .admin-main-content input[type="email"],
+  .admin-main-content input[type="password"],
+  .admin-main-content input[type="number"],
+  .admin-main-content select {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  /* Prevent body scroll bounce on iOS when modal is open */
+  body.admin-modal-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* --- iOS Momentum & Smooth Scroll Utility --- */
+.admin-scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* --- Mobile Bottom Sheet Adaptor --- */
+@media (max-width: 767px) {
+  .admin-modal-sheet {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .admin-modal-sheet-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 24px !important;
+    border-top-right-radius: 24px !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* --- Comprehensive Responsive & Structural System (320px - 1920px+) --- */
+
+/* Ultra-Wide Monitors (>= 1728px) */
+@media (min-width: 1728px) {
+  .admin-layout-grid {
+    max-width: 1680px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop & Laptop (1025px - 1440px) */
+@media (max-width: 1280px) {
+  .admin-layout-grid {
+    padding: 0 var(--admin-spacing-24);
+    gap: var(--admin-spacing-24);
+  }
+}
+
+/* Tablet Breakpoints (768px - 1024px) */
 @media (max-width: 1024px) {
   .admin-layout-grid {
     flex-direction: column;
     padding: 0 var(--admin-spacing-16);
-    gap: var(--admin-spacing-24);
+    gap: var(--admin-spacing-16);
   }
   .admin-sidebar {
-    width: 100% !important;
-    height: auto !important;
     position: relative !important;
     top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Mobile Devices & Small Tablets (< 768px) */
+@media (max-width: 768px) {
+  .admin-layout-grid {
+    padding: 0 var(--admin-spacing-8);
+  }
+
+  /* Responsive Stats & Metric Cards */
+  .admin-main-content .grid-cols-4,
+  .admin-main-content .grid-cols-3,
+  .admin-main-content .stats-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    gap: var(--admin-spacing-16) !important;
+  }
+
+  .admin-main-content .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Filter and Action Header Flex Wrapping */
+  .admin-main-content .flex-wrap-mobile {
+    flex-wrap: wrap;
+    gap: var(--admin-spacing-12, 12px);
+  }
+
+  /* Table horizontal scroll container */
+  .admin-main-content .overflow-x-auto {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--admin-radius-input);
+    margin-bottom: var(--admin-spacing-16);
+  }
+
+  /* Touch target sizes (>= 44px) on mobile */
+  .admin-main-content button,
+  .admin-main-content a.admin-nav-item,
+  .admin-main-content input,
+  .admin-main-content select {
+    min-height: 44px !important;
+  }
+}
+
+/* Extra Small Mobile Devices (< 480px / 320px - 390px) */
+@media (max-width: 480px) {
+  .admin-main-content {
+    gap: var(--admin-spacing-16);
+  }
+
+  .admin-main-content h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .admin-main-content th,
+  .admin-main-content td {
+    padding: var(--admin-spacing-8) !important;
+    font-size: 0.75rem !important;
+  }
+
+  .admin-main-content .glass-surface,
+  .admin-main-content .glass-card,
+  .admin-main-content .premium-flat-card {
+    padding: var(--admin-spacing-16) !important;
+    border-radius: 16px !important;
   }
 }
 

@@ -170,7 +170,7 @@ export default function PromotionsManagement() {
         </div>
 
         {/* Stats Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div className="grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
           <div className="glass-surface" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#8E6AA8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Challenges</span>

@@ -7,7 +7,7 @@ from starlette.responses import JSONResponse
 limiter = Limiter(key_func=get_remote_address)
 
 
-async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+async def _rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
     origin = request.headers.get("origin")
     res = JSONResponse(
         status_code=429,

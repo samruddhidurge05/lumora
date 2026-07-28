@@ -1,490 +1,378 @@
-import React, { useEffect, useRef } from 'react';
-import { ArrowRight, Star, TrendingUp, Shield, Zap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  ArrowRight, Star, TrendingUp, Shield, Zap, Search, Users, Download,
+  Sparkles, Compass, Layers, Cpu, Box, Type, CheckCircle, ExternalLink, RefreshCw
+} from 'lucide-react';
 import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-const FEATURED = [
-  { name: 'Solace Mobile System', price: '₹4,720', cat: 'Mobile Templates', rating: 4.9, img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80' },
-  { name: 'Zephyr AI Creator Suite', price: '₹6,320', cat: 'AI Tools', rating: 4.8, img: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=400&q=80' },
-  { name: 'Aura Glassmorphic Kit', price: '₹3,120', cat: 'Web Templates', rating: 4.7, img: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=400&q=80' },
+// High-resolution Unsplash photos for digital products & websites
+const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
+  {
+    id: 1,
+    title: 'Digital Product Analytics & Web Dashboard',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 2,
+    title: 'Modern Web Design & Digital Product UI',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 3,
+    title: 'Digital Tech Workspace & Modern Web Products',
+    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 4,
+    title: 'Digital Design System & Mobile Prototypes',
+    image: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 5,
+    title: 'Mobile App UX/UI Product Design',
+    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 6,
+    title: 'Digital Creators & Innovative UI Studio',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80',
+  }
 ];
 
 export default function Hero() {
   const { navigateTo } = useApp();
   const { user } = useAuth();
   const heroRef = useRef(null);
+  
+  // Active background image index
+  const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Cycle background images every 4 seconds (4000ms) with smooth opacity fade
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % UNSPLASH_DIGITAL_PRODUCT_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Entrance Animations
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo('.hero-badge', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
-      gsap.fromTo('.hero-title', { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.0, delay: 0.35, ease: 'power4.out' });
-      gsap.fromTo('.hero-sub', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.55, ease: 'power3.out' });
-      gsap.fromTo('.hero-ctas', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.70, ease: 'power3.out' });
-      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.85, ease: 'power3.out' });
-      gsap.fromTo('.hero-cards > .card-stagger', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.50, stagger: 0.15, ease: 'power3.out' });
+      gsap.fromTo('.hero-badge', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.1, ease: 'power3.out' });
+      gsap.fromTo('.hero-title', { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.9, delay: 0.2, ease: 'power4.out' });
+      gsap.fromTo('.hero-sub', { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.35, ease: 'power3.out' });
+      gsap.fromTo('.hero-ctas', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.5, ease: 'power3.out' });
+      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.65, ease: 'power3.out' });
     }, heroRef);
     return () => ctx.revert();
   }, []);
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* Background ambient decorative glows */}
-      <div style={styles.glowOrb1} />
-      <div style={styles.glowOrb2} />
+      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH DARK VIGNETTE ── */}
+      <div style={styles.fullBgWrapper}>
+        {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
+          <div
+            key={item.id}
+            style={{
+              ...styles.fullBgImage,
+              backgroundImage: `url(${item.image})`,
+              opacity: idx === currentIndex ? 1.0 : 0,
+              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)',
+              transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1), transform 4000ms ease-out',
+            }}
+          />
+        ))}
 
-      <div className="hero-grid" style={styles.grid}>
-        {/* LEFT SECTION: Branding, Headline and Action Controls */}
-        <div style={styles.leftCol}>
-          {/* Immersive Badge */}
-          <div className="hero-badge" style={styles.badge}>
-            <span style={styles.badgeDot} />
-            <span className="text-sans" style={styles.badgeText}>
-              PREMIUM DIGITAL MARKETPLACE
-            </span>
-          </div>
+        {/* Dark Vignette Overlay for rich rich colors */}
+        <div style={styles.fullBgOverlay} />
+        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section without turning whitish */}
+        <div style={styles.bottomSoftBlend} />
+      </div>
 
-          {/* Premium Editorial Headline */}
-          <h1 className="hero-title" style={styles.title}>
-            Discover & Sell<br />
-            <span style={styles.titleHighlight}>Premium Digital</span><br />
-            Products
-          </h1>
+      {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}
+      <div style={styles.container}>
+        {/* 1. Pill Badge */}
+        <div className="hero-badge" style={styles.badge}>
+          <Sparkles size={13} color="#C084FC" />
+          <span className="text-sans" style={styles.badgeText}>
+            PREMIUM DIGITAL MARKETPLACE
+          </span>
+        </div>
 
-          {/* Descriptive Subtext */}
-          <p className="hero-sub" style={styles.subtext}>
-            The go-to marketplace for UI kits, templates, AI tools, courses, and digital assets — crafted by world-class creators.
-          </p>
+        {/* 2. Editorial Headline */}
+        <h1 className="hero-title" style={styles.title}>
+          Discover & Sell<br />
+          <span style={styles.titleHighlight}>Premium Digital</span><br />
+          Products
+        </h1>
 
-          {/* Action CTAs */}
-          <div className="hero-ctas" style={styles.ctas}>
-            {user ? (
-              <>
-                <button 
-                  onClick={() => navigateTo('marketplace')} 
-                  className="btn-premium btn-premium-solid clickable" 
-                  style={styles.ctaSolid}
-                >
-                  Browse Products
-                  <ArrowRight size={16} />
-                </button>
-                <button 
-                  onClick={() => navigateTo('dashboard')} 
-                  className="btn-premium clickable" 
-                  style={styles.ctaOutline}
-                >
-                  My Dashboard
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => navigateTo('login-selection')} 
-                  className="btn-premium btn-premium-solid clickable" 
-                  style={styles.ctaSolid}
-                >
-                  Sign In
-                  <ArrowRight size={16} />
-                </button>
-                <button 
-                  onClick={() => navigateTo('register-selection')} 
-                  className="btn-premium clickable" 
-                  style={styles.ctaOutline}
-                >
-                  Create Account
-                </button>
-              </>
-            )}
-          </div>
+        {/* 3. Subtitle */}
+        <p className="hero-sub" style={styles.subtext}>
+          The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
+        </p>
 
-          {/* Platform Performance Ledger Stats */}
-          <div className="hero-stats" style={styles.statsContainer}>
-            {[
-              { value: '12K+', label: 'Digital Products' },
-              { value: '45K+', label: 'Happy Customers' },
-              { value: '₹16 Cr+', label: 'Creator Earnings' },
-            ].map((s, i) => (
-              <div key={i} style={styles.statItem}>
+        {/* 4. Action Buttons */}
+        <div className="hero-ctas" style={styles.ctas}>
+          <button 
+            onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
+            className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
+            style={styles.ctaSolid}
+          >
+            {user ? 'Go to Marketplace' : 'Get Started'}
+            <ArrowRight size={16} />
+          </button>
+
+          {!user && (
+            <button 
+              onClick={() => navigateTo('login')} 
+              className="btn-premium clickable" 
+              style={styles.ctaOutline}
+            >
+              Sign In
+            </button>
+          )}
+
+          <button 
+            onClick={() => navigateTo('marketplace')} 
+            className="btn-premium clickable" 
+            style={styles.ctaGlass}
+          >
+            <Compass size={15} color="#E9D5FF" />
+            Explore Products
+          </button>
+        </div>
+
+        {/* 5. Compact Slim Stats Bar */}
+        <div className="hero-stats glass-card" style={styles.statsContainer}>
+          {[
+            { icon: <Users size={14} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
+            { icon: <Download size={14} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
+            { icon: <Shield size={14} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
+            { icon: <CheckCircle size={14} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
+          ].map((s, i) => (
+            <div key={i} style={styles.statItem}>
+              <div style={{ ...styles.statIconBox, background: s.bg }}>
+                {s.icon}
+              </div>
+              <div>
                 <div style={styles.statValue}>{s.value}</div>
                 <div style={styles.statLabel}>{s.label}</div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RIGHT SECTION: Vertically aligned structured featured cards */}
-        <div className="hero-cards" style={styles.rightCol}>
-          {/* Trust assurances row */}
-          <div style={styles.badgeRow}>
-            {[
-              { icon: <Shield size={12} />, text: 'Secure Payments' },
-              { icon: <Zap size={12} />, text: 'Instant Download' },
-            ].map((b, i) => (
-              <div key={i} style={styles.trustBadge}>
-                {b.icon} {b.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Vertical Glassmorphic Cards Stack */}
-          {FEATURED.map((item, index) => (
-            <div 
-              key={index}
-              className="glass-card clickable card-stagger"
-              onClick={() => navigateTo('marketplace')}
-              style={{
-                ...styles.card,
-                // Soft alternating horizontal alignment shift for a classier offset look
-                transform: `translateX(${(index - 1) * 12}px)`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = `translateX(${(index - 1) * 12}px) translateY(-6px) scale(1.02)`;
-                e.currentTarget.style.boxShadow = '0 25px 50px rgba(45, 0, 96, 0.12)';
-                e.currentTarget.style.borderColor = 'rgba(123, 63, 160, 0.35)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = `translateX(${(index - 1) * 12}px) translateY(0px) scale(1)`;
-                e.currentTarget.style.boxShadow = '0 15px 30px rgba(45, 0, 96, 0.06)';
-                e.currentTarget.style.borderColor = 'rgba(216, 191, 227, 0.22)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.55)';
-              }}
-            >
-              {/* Product Visual Container (Image is oriented vertically) */}
-              <div style={styles.cardImageWrapper}>
-                <img 
-                  src={item.img} 
-                  alt={item.name} 
-                  style={styles.cardImage} 
-                />
-              </div>
-
-              {/* Product Meta details */}
-              <div style={styles.cardDetails}>
-                <div style={styles.cardHeader}>
-                  <span className="caption-premium" style={styles.cardCategory}>
-                    {item.cat}
-                  </span>
-                  <span style={styles.cardRating}>
-                    <Star size={11} fill="var(--color-latte)" color="var(--color-latte)" />
-                    {item.rating}
-                  </span>
-                </div>
-                
-                <h3 className="text-editorial" style={styles.cardTitle}>
-                  {item.name}
-                </h3>
-
-                <div style={styles.cardFooter}>
-                  <span className="text-sans" style={styles.cardPrice}>
-                    {item.price}
-                  </span>
-                  <span className="text-sans" style={styles.cardAction}>
-                    Get Access →
-                  </span>
-                </div>
-              </div>
             </div>
           ))}
-
-          {/* Trending Highlight Badge */}
-          <div style={styles.trendingContainer}>
-            <div style={styles.trendingIconWrapper}>
-              <TrendingUp size={14} color="#fff" />
-            </div>
-            <div style={styles.trendingTextWrapper}>
-              <span style={styles.trendingLabel}>Trending:</span>
-              <span style={styles.trendingValue}>+2,400 sales this week</span>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .hero-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
-          .hero-cards { margin-top: 32px; }
-        }
-      `}</style>
+      </div>
     </section>
   );
 }
 
-// Consolidated premium stylesheet object to keep JSX neat, classy and professional
 const styles = {
   section: {
-    minHeight: '100vh',
-    padding: '140px clamp(1.5rem, 5vw, 6rem) 80px',
-    position: 'relative',
-    zIndex: 10,
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    background: 'transparent',
-  },
-  glowOrb1: {
-    position: 'absolute',
-    top: '-10%',
-    right: '-5%',
-    width: '600px',
-    height: '600px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(90, 30, 126, 0.35) 0%, transparent 65%)',
-    filter: 'blur(70px)',
-    pointerEvents: 'none',
-    zIndex: 0,
-  },
-  glowOrb2: {
-    position: 'absolute',
-    bottom: '0',
-    left: '-8%',
-    width: '500px',
-    height: '500px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(184, 134, 208, 0.15) 0%, transparent 65%)',
-    filter: 'blur(70px)',
-    pointerEvents: 'none',
-    zIndex: 0,
-  },
-  grid: {
-    width: '100%',
-    maxWidth: '1280px',
-    margin: '0 auto',
-    display: 'grid',
-    gridTemplateColumns: '1.15fr 0.85fr',
-    gap: '64px',
-    alignItems: 'center',
+    minHeight: '115vh',
+    padding: '140px clamp(1rem, 4vw, 3rem) 160px',
     position: 'relative',
     zIndex: 1,
-  },
-  leftCol: {
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#0D0518',
   },
+
+  /* Full Background Wrapper & Visible Slides */
+  fullBgWrapper: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 0,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+  },
+  fullBgImage: {
+    position: 'absolute',
+    inset: 0,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    willChange: 'opacity, transform',
+  },
+  fullBgOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.45) 0%, rgba(13, 5, 24, 0.60) 65%, rgba(13, 5, 24, 0.85) 100%)',
+    backdropFilter: 'blur(1px)',
+  },
+  bottomSoftBlend: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '110px',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0) 0%, rgba(250, 246, 240, 0.35) 60%, #FAF6F0 100%)',
+    pointerEvents: 'none',
+    zIndex: 2,
+  },
+
+  /* Relative Overlay Container (z-10) */
+  container: {
+    width: '100%',
+    maxWidth: '960px',
+    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '28px',
+    position: 'relative',
+    zIndex: 10,
+  },
+
+  /* Badge directly on background */
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '6px 14px',
-    borderRadius: '50px',
-    background: 'rgba(123, 63, 160, 0.06)',
-    border: '1px solid rgba(123, 63, 160, 0.12)',
-    marginBottom: '28px',
-  },
-  badgeDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: 'var(--purple-600)',
-    boxShadow: '0 0 8px rgba(123, 63, 160, 0.3)',
+    padding: '8px 18px',
+    borderRadius: '999px',
+    background: 'rgba(255, 255, 255, 0.12)',
+    border: '1px solid rgba(192, 132, 252, 0.40)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
   },
   badgeText: {
-    fontSize: '0.78rem',
-    fontWeight: 700,
-    color: 'var(--purple-850, #5A1E7E)',
-    letterSpacing: '0.06em',
+    fontSize: '0.75rem',
+    fontWeight: 800,
+    color: '#E9D5FF',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
   },
+
+  /* Editorial Headline on background with text shadow */
   title: {
     fontFamily: 'var(--font-editorial)',
+    fontSize: 'clamp(2.8rem, 6vw, 4.8rem)',
     fontWeight: 400,
-    fontSize: 'clamp(2.8rem, 5.2vw, 5.2rem)',
-    lineHeight: 1.05,
-    color: 'var(--text-primary)',
-    marginBottom: '24px',
+    color: '#FFFFFF',
+    lineHeight: 1.08,
     letterSpacing: '-0.03em',
+    margin: 0,
+    maxWidth: '900px',
+    textShadow: '0 4px 24px rgba(0, 0, 0, 0.7)',
   },
   titleHighlight: {
-    color: 'var(--color-mocha)',
-    fontStyle: 'italic',
+    fontFamily: 'var(--font-editorial)',
+    fontStyle: 'normal',
+    fontWeight: 800,
+    color: '#FFFFFF',
+    display: 'inline-block',
   },
+
+  /* Subtitle on background */
   subtext: {
-    fontSize: '1.05rem',
-    lineHeight: 1.65,
-    color: 'var(--text-secondary)',
-    maxWidth: '480px',
-    marginBottom: '40px',
-    fontWeight: 400,
+    fontSize: 'clamp(1.05rem, 1.9vw, 1.2rem)',
+    lineHeight: 1.6,
+    color: '#F3E8FF',
+    maxWidth: '720px',
+    margin: 0,
+    fontWeight: 500,
+    textShadow: '0 2px 16px rgba(0, 0, 0, 0.8)',
   },
+
+  /* Buttons */
   ctas: {
     display: 'flex',
-    gap: '12px',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '14px',
     flexWrap: 'wrap',
-    marginBottom: '52px',
+    marginTop: '6px',
   },
   ctaSolid: {
-    padding: '14px 32px',
-    fontSize: '0.92rem',
-    borderRadius: '12px',
+    padding: '14px 34px',
+    borderRadius: '16px',
+    fontSize: '0.94rem',
+    fontWeight: 700,
+    background: 'linear-gradient(135deg, #9333EA, #6B21A8)',
+    color: '#ffffff',
+    boxShadow: '0 10px 32px rgba(147, 51, 234, 0.45)',
+    display: 'inline-flex',
+    alignItems: 'center',
     gap: '8px',
   },
   ctaOutline: {
-    padding: '14px 32px',
+    padding: '14px 30px',
+    borderRadius: '16px',
     fontSize: '0.92rem',
-    borderRadius: '12px',
+    fontWeight: 700,
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: '1.5px solid rgba(255, 255, 255, 0.35)',
+    color: '#ffffff',
+    backdropFilter: 'blur(12px)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
   },
+  ctaGlass: {
+    padding: '14px 28px',
+    borderRadius: '16px',
+    fontSize: '0.90rem',
+    fontWeight: 700,
+    background: 'rgba(255, 255, 255, 0.12)',
+    border: '1px solid rgba(192, 132, 252, 0.35)',
+    color: '#F3E8FF',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    backdropFilter: 'blur(12px)',
+  },
+
+  /* Compact Slim Stats Container */
   statsContainer: {
-    display: 'flex',
-    gap: '36px',
-    flexWrap: 'wrap',
-    paddingTop: '32px',
-    borderTop: '1px solid rgba(216, 191, 227, 0.18)',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+    gap: '12px',
+    padding: '8px 20px',
+    borderRadius: '999px',
+    background: 'rgba(255, 255, 255, 0.12)',
+    backdropFilter: 'blur(28px)',
+    WebkitBackdropFilter: 'blur(28px)',
+    border: '1.5px solid rgba(255, 255, 255, 0.22)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.30)',
     width: '100%',
+    maxWidth: '780px',
+    marginTop: '48px',
   },
   statItem: {
     display: 'flex',
-    flexDirection: 'column',
-  },
-  statValue: {
-    fontSize: '1.85rem',
-    fontWeight: 700,
-    color: 'var(--text-primary)',
-    lineHeight: 1,
-    fontFamily: 'var(--font-editorial)',
-  },
-  statLabel: {
-    fontSize: '0.78rem',
-    color: 'var(--text-muted)',
-    fontWeight: 650,
-    marginTop: '6px',
-    letterSpacing: '0.04em',
-  },
-  rightCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-    position: 'relative',
-    zIndex: 1,
-    justifyContent: 'center',
-    width: '100%',
-  },
-  badgeRow: {
-    display: 'flex',
+    alignItems: 'center',
     gap: '8px',
-    marginBottom: '4px',
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
   },
-  trustBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '50px',
-    background: 'rgba(255, 255, 255, 0.72)',
-    border: '1px solid rgba(123, 63, 160, 0.15)',
-    boxShadow: '0 4px 12px rgba(123, 63, 160, 0.05)',
-    fontSize: '0.72rem',
-    fontWeight: 700,
-    color: 'var(--purple-800)',
-  },
-  card: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    padding: '18px',
-    borderRadius: '28px', // High border radius matching navbar theme
-    border: '1px solid rgba(216, 191, 227, 0.22)',
-    boxShadow: '0 15px 30px rgba(45, 0, 96, 0.06)',
-    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1))',
-    cursor: 'pointer',
-    position: 'relative',
-    overflow: 'hidden',
-    background: 'rgba(255, 255, 255, 0.55)',
-    backdropFilter: 'blur(20px)',
-  },
-  cardImageWrapper: {
-    width: '84px',
-    height: '84px',
-    borderRadius: '18px',
-    overflow: 'hidden',
-    flexShrink: 0,
-    boxShadow: '0 8px 20px rgba(45, 0, 96, 0.08)',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  cardDetails: {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardCategory: {
-    color: 'var(--color-mocha)',
-    fontSize: '0.68rem',
-  },
-  cardRating: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    color: 'var(--color-latte)',
-  },
-  cardTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 500,
-    color: 'var(--color-espresso)',
-    margin: '2px 0 4px',
-  },
-  cardFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardPrice: {
-    fontSize: '0.95rem',
-    fontWeight: 700,
-    color: 'var(--color-espresso)',
-  },
-  cardAction: {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: 'var(--color-mocha)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2px',
-  },
-  trendingContainer: {
-    padding: '10px 16px',
-    borderRadius: '16px',
-    background: 'rgba(123, 63, 160, 0.05)',
-    border: '1px solid rgba(123, 63, 160, 0.10)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    alignSelf: 'flex-start',
-    marginTop: '4px',
-  },
-  trendingIconWrapper: {
+  statIconBox: {
     width: '28px',
     height: '28px',
     borderRadius: '8px',
-    background: 'linear-gradient(135deg, var(--purple-600), var(--purple-800))',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  trendingTextWrapper: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
+  statValue: {
+    fontSize: '0.92rem',
+    fontWeight: 800,
+    color: '#FFFFFF',
+    lineHeight: 1.1,
+    textAlign: 'left',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
   },
-  trendingLabel: {
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    color: 'var(--purple-800)',
-  },
-  trendingValue: {
-    fontSize: '0.78rem',
+  statLabel: {
+    fontSize: '0.62rem',
+    color: '#E9D5FF',
     fontWeight: 600,
-    color: 'var(--color-espresso)',
+    lineHeight: 1.2,
+    textAlign: 'left',
   },
 };
