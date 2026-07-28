@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import useAuth from '../../hooks/useAuth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { saveVendorProfile } from '../services/firestore';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
 
 const DOC_STATUS = {
   approved: { label: 'Approved', cls: 'v-badge-green', icon: '✓' },
@@ -17,6 +27,7 @@ export default function Verification() {
   const [uploading, setUploading] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState(null);
+  const isMobile = useIsMobile();
 
   const panStatus = user?.verificationDocs?.pan?.status || 'required';
   const aadhaarStatus = user?.verificationDocs?.aadhaar?.status || 'required';
@@ -138,7 +149,7 @@ export default function Verification() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 24 }}>
         <div className="v-card v-card-pad">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
             <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
@@ -190,7 +201,7 @@ export default function Verification() {
 
       <div className="v-card v-card-pad" style={{ marginBottom: 24 }}>
         <div className="v-section-title" style={{ marginBottom: 20 }}>Verification Steps</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
           {STEPS.map((s, i) => (
             <div key={s.id} style={{
               padding: '16px', borderRadius: 14,
@@ -225,7 +236,7 @@ export default function Verification() {
           {DOCS.map(doc => {
             const st = DOC_STATUS[doc.status] || DOC_STATUS.required;
             return (
-              <div key={doc.id} style={{ padding: '16px 24px', borderBottom: '1px solid rgba(184,134,208,0.10)', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div key={doc.id} style={{ padding: '16px 24px', borderBottom: '1px solid rgba(184,134,208,0.10)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <input type="file" id={`file-input-${doc.id}`} style={{ display: 'none' }}
                   onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUpload(doc.id, file); }} />
                 <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0,

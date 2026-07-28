@@ -425,29 +425,285 @@
    Sidebar becomes a slide-in drawer — handled by responsive.css.
    Only content-area padding and compact stat cards adjusted here.
 ══════════════════════════════════════════════════════ */
+
+/* ── Hamburger: hidden on desktop, flex on mobile ── */
+.vendor-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1.5px solid rgba(196,148,230,0.35);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.vendor-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--v-purple);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  transform-origin: center;
+}
+.vendor-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.vendor-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.vendor-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Sidebar overlay backdrop ── */
+.vendor-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(45,0,77,0.30);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 90;
+}
+.vendor-sidebar-overlay.open { display: block; }
+
+/* ── Sidebar: desktop static, mobile slide-in drawer ── */
+.vendor-sidebar {
+  background: rgba(255,255,255,0.80);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+}
+
 @media (max-width: 900px) {
   .vendor-layout-grid {
     flex-direction: column !important;
-    min-height: calc(100vh - 58px) !important;
+    min-height: calc(100vh - 56px) !important;
   }
-  
+
   .vendor-main-content {
-    padding: 20px 14px !important;
+    padding: 16px 14px 40px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
   }
 
   .vendor-topnav {
-    padding: 10px 16px !important;
-    height: 56px !important;
+    padding: 10px 14px !important;
+    height: auto !important;
+    min-height: 56px !important;
   }
 
-  /* Compact grid cards on mobile dashboard */
+  /* Hamburger visible on mobile */
+  .vendor-hamburger { display: flex !important; }
+
+  /* Sidebar: off-screen by default, slide in when .open */
+  .vendor-sidebar {
+    position: fixed !important;
+    top: 56px !important;
+    left: 0 !important;
+    width: 260px !important;
+    height: calc(100vh - 56px) !important;
+    z-index: 100 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1) !important;
+    overflow-y: auto !important;
+    flex-shrink: 0 !important;
+    border-right: 1px solid rgba(196,148,230,0.22) !important;
+    box-shadow: 4px 0 32px rgba(45,0,96,0.12) !important;
+  }
+  .vendor-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  /* Hide username on small screens */
+  .vendor-topnav-username { display: none !important; }
+
+  /* Brand badge: hide on tiny screens */
+  .vendor-brand-badge { display: none !important; }
+
+  /* Compact stat grid */
+  .v-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .v-stat-card { padding: 14px !important; }
+  .v-stat-value { font-size: 1.5rem !important; }
+
+  /* Page header */
+  .vendor-page-title { font-size: 1.5rem !important; }
+  .vendor-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  .vendor-header-row > div:last-child { width: 100% !important; }
+  .vendor-header-row > div:last-child > .v-btn { width: 100% !important; justify-content: center !important; }
+
+  /* Form grids: 2-col → 1-col */
+  .v-form-row { grid-template-columns: 1fr !important; }
+
+  /* Hide desktop tables, show mobile cards */
+  .v-table-wrap { display: none !important; }
+  .v-mobile-cards { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+
+  /* Compact grid cards */
   .v-grid-4, .v-grid-3, .v-grid-2 {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
 
-  .v-stat-card {
-    padding: 16px !important;
+  /* Two-column layouts → single column */
+  .v-two-col { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .v-three-col { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+  /* Tabs: horizontal scroll */
+  .v-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+  }
+  .v-tabs::-webkit-scrollbar { display: none; }
+  .v-tab { flex-shrink: 0 !important; white-space: nowrap !important; }
+
+  /* Modal: bottom sheet style */
+  .v-modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .v-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+    padding: 24px 20px 32px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
   }
 }
 
+@media (max-width: 480px) {
+  .v-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .v-stat-card { padding: 12px !important; }
+  .v-stat-value { font-size: 1.3rem !important; }
+  .vendor-main-content { padding: 12px 10px 40px !important; }
+}
+
+/* ══════════════════════════════════════════════════════
+   VENDOR PAGES — Inline grid breakpoints
+   These override fixed-px column layouts used by:
+   Earnings (1fr 320px), Reviews (280px 1fr),
+   StoreSettings (1fr 300px), Withdrawals (1fr 380px),
+   Profile (300px 1fr), EditProduct reviews tab (200px 1fr)
+══════════════════════════════════════════════════════ */
+.v-sidebar-grid   { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+.v-sidebar-grid-r { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+.v-sidebar-grid-sm{ display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+.v-sidebar-grid-lg{ display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+.v-sidebar-grid-p { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.v-review-stats   { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+.v-earnings-split { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+.v-withdraw-split { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+
+@media (max-width: 900px) {
+  .v-sidebar-grid,
+  .v-sidebar-grid-r,
+  .v-sidebar-grid-sm,
+  .v-sidebar-grid-lg,
+  .v-sidebar-grid-p,
+  .v-review-stats,
+  .v-earnings-split,
+  .v-withdraw-split { grid-template-columns: 1fr !important; gap: 14px !important; }
+}
+
+/* Mobile card row for table replacements */
+.v-mobile-cards { display: none; }
+@media (max-width: 768px) {
+  .v-mobile-cards { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+  .v-table-wrap   { display: none !important; }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   VENDOR MOBILE — PRODUCTION POLISH (Round 4)
+   Fine-grained fixes for all pages at 320–480px
+══════════════════════════════════════════════════════ */
+
+/* v-field spacing on mobile */
+@media (max-width: 640px) {
+  .v-field { margin-bottom: 12px !important; }
+  .v-card-pad { padding: 16px !important; }
+  .v-btn { min-height: 44px; }
+  .v-btn-sm { min-height: 38px; padding: 8px 14px !important; font-size: 0.78rem !important; }
+  .v-input, .v-select, .v-textarea {
+    font-size: 16px !important; /* prevent iOS zoom on focus */
+    padding: 11px 14px !important;
+  }
+}
+
+/* Stat value + label compact on very small */
+@media (max-width: 380px) {
+  .v-stat-value { font-size: 1.2rem !important; }
+  .v-stat-card  { padding: 10px !important; }
+  .v-stat-icon  { width: 36px !important; height: 36px !important; }
+}
+
+/* Page header actions — always full-width on mobile */
+@media (max-width: 640px) {
+  .vendor-header-row .v-btn,
+  .vendor-header-row button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* v-badge wrapping prevention */
+.v-badge { white-space: nowrap; flex-shrink: 0; }
+
+/* Verification document row — keep info + badge + button sensible */
+@media (max-width: 480px) {
+  .v-doc-row-actions { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+}
+
+/* StoreSettings store preview — full width on mobile */
+@media (max-width: 640px) {
+  .v-store-preview { width: 100% !important; }
+}
+
+/* Order modal bottom sheet on mobile */
+@media (max-width: 600px) {
+  .v-order-modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    margin: 0 !important;
+    width: 100% !important;
+    align-self: flex-end !important;
+  }
+}
+
+/* Withdrawal quick-amount buttons row */
+@media (max-width: 480px) {
+  .v-quick-amounts { flex-wrap: wrap !important; }
+  .v-quick-amounts .v-btn { flex: 1 1 40% !important; }
+}
+
+/* Analytics period tabs */
+@media (max-width: 480px) {
+  .v-period-tabs { justify-content: stretch !important; }
+  .v-period-tabs .v-tab { flex: 1 !important; text-align: center !important; }
+}
+
+/* Scrollbar hide for horizontal tab strips */
+.v-tabs { scrollbar-width: none; }
+.v-tabs::-webkit-scrollbar { display: none; }
+
+/* Avatar preset grid in Profile */
+@media (max-width: 480px) {
+  .v-avatar-presets { gap: 6px !important; }
+}
+
+/* Make checkboxes & radio bigger touch targets on mobile */
+@media (max-width: 768px) {
+  input[type="checkbox"], input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer;
+  }
+}

@@ -17,6 +17,16 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 const MONTHS = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
 
 function MiniBar({ data, height = 60 }) {
@@ -38,6 +48,7 @@ function MiniBar({ data, height = 60 }) {
 
 export default function Earnings() {
   const [tab, setTab] = useState('all');
+  const isMobile = useIsMobile();
   
   const { data: dashboardData, loading: dashLoading, error: dashError, refresh: refreshDash } = useDashboard();
   const { orders: liveOrders, loading: ordersLoading, error: ordersError, refresh: refreshOrders } = useOrders();
@@ -198,7 +209,7 @@ export default function Earnings() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20, marginBottom: 24 }}>
         <div className="v-card v-card-pad">
           <div className="v-section-header">
             <div>
@@ -262,47 +273,87 @@ export default function Earnings() {
       </div>
 
       <div className="v-card">
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--v-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--v-border)', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
           <div className="v-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <FileText size={16} />
             <span>Transaction History</span>
           </div>
-          <div className="v-tabs" style={{ marginLeft: 'auto' }}>
+          <div className="v-tabs" style={{ marginLeft: isMobile ? 0 : 'auto', overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
             {['all','sale','withdrawal'].map(t => (
-              <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+              <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)} style={{ flexShrink: 0 }}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
         </div>
-        <div className="v-table-wrap">
-          <table className="v-table">
-            <thead>
-              <tr>
-                <th>Transaction ID</th><th>Description</th><th>Gross</th>
-                <th>Platform Fee</th><th>Net Amount</th><th>Date</th><th>Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(t => (
-                <tr key={t.id}>
-                  <td style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--v-mid)', fontWeight: 600 }}>{t.id}</td>
-                  <td style={{ fontSize: 13.5 }}>{t.product}</td>
-                  <td style={{ fontWeight: 500 }}>₹{(t.amount||0).toLocaleString()}</td>
-                  <td style={{ color: 'var(--v-text3)' }}>{t.fee > 0 ? `₹${t.fee}` : '—'}</td>
-                  <td style={{ fontWeight: 600, color: (t.net||0) < 0 ? '#dc2626' : '#16a34a' }}>
-                    {(t.net||0) < 0 ? '-' : '+'}₹{Math.abs(t.net||0).toLocaleString()}
-                  </td>
-                  <td style={{ fontSize: 12, color: 'var(--v-text3)' }}>{t.date}</td>
-                  <td>
-                    <span className={`v-badge ${t.type === 'sale' ? 'v-badge-green' : 'v-badge-blue'}`}>{t.type}</span>
-                  </td>
+
+        {isMobile ? (
+          /* Mobile transaction cards */
+          <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filtered.map(t => (
+              <div key={t.id} style={{ padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.70)', border: '1px solid rgba(196,148,230,0.18)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span className={`v-badge ${t.type === 'sale' ? 'v-badge-green' : 'v-badge-blue'}`}>{t.type}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--v-text3)' }}>{t.date}</span>
+                </div>
+                <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--v-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '8px' }}>{t.product}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(196,148,230,0.12)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--v-text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Gross</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--v-text2)' }}>₹{(t.amount||0).toLocaleString()}</span>
+                  </div>
+                  {t.fee > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--v-text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Fee</span>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--v-text3)' }}>₹{t.fee}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--v-text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Net</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: (t.net||0) < 0 ? '#dc2626' : '#16a34a' }}>
+                      {(t.net||0) < 0 ? '-' : '+'}₹{Math.abs(t.net||0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="v-empty">
+                <div className="v-empty-icon">📤</div>
+                <div className="v-empty-title">No transactions found</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="v-table-wrap">
+            <table className="v-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th><th>Description</th><th>Gross</th>
+                  <th>Platform Fee</th><th>Net Amount</th><th>Date</th><th>Type</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && (
+              </thead>
+              <tbody>
+                {filtered.map(t => (
+                  <tr key={t.id}>
+                    <td style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--v-mid)', fontWeight: 600 }}>{t.id}</td>
+                    <td style={{ fontSize: 13.5 }}>{t.product}</td>
+                    <td style={{ fontWeight: 500 }}>₹{(t.amount||0).toLocaleString()}</td>
+                    <td style={{ color: 'var(--v-text3)' }}>{t.fee > 0 ? `₹${t.fee}` : '—'}</td>
+                    <td style={{ fontWeight: 600, color: (t.net||0) < 0 ? '#dc2626' : '#16a34a' }}>
+                      {(t.net||0) < 0 ? '-' : '+'}₹{Math.abs(t.net||0).toLocaleString()}
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--v-text3)' }}>{t.date}</td>
+                    <td>
+                      <span className={`v-badge ${t.type === 'sale' ? 'v-badge-green' : 'v-badge-blue'}`}>{t.type}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {filtered.length === 0 && !isMobile && (
           <div className="v-empty">
             <div className="v-empty-icon">📤</div>
             <div className="v-empty-title">No transactions found</div>

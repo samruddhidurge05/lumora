@@ -4,8 +4,19 @@ import '../styles/vendor.css';
 import { useStoreSettings } from '../../hooks/useVendorData';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 export default function StoreSettings() {
   const [tab,    setTab]    = useState('branding');
+  const isMobile = useIsMobile();
 
   const [vacation,          setVacation]          = useState(false);
   const [vacationMsg,       setVacationMsg]        = useState('');
@@ -114,16 +125,16 @@ export default function StoreSettings() {
         </div>
       )}
 
-      <div className="v-tabs" style={{ marginBottom: 24 }}>
+      <div className="v-tabs" style={{ marginBottom: 24, overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
         {['branding','announcement','vacation','policies','notifications'].map(t => (
-          <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+          <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)} style={{ flexShrink: 0 }}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
 
       {tab === 'branding' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 20 }}>
           <div className="v-card v-card-pad">
             <div className="v-section-title" style={{ marginBottom: 20 }}>Store Identity</div>
             {[
@@ -142,7 +153,7 @@ export default function StoreSettings() {
                 onChange={e => setBranding(b => ({ ...b, bio: e.target.value }))} />
             </div>
             <div className="v-section-title" style={{ margin: '20px 0 16px', fontSize: 16 }}>Social Links</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="v-form-row">
               {[
                 { key: 'website',   label: 'Website',   placeholder: 'https://...' },
                 { key: 'twitter',   label: 'Twitter',   placeholder: '@handle' },
@@ -260,7 +271,7 @@ export default function StoreSettings() {
             <textarea className="v-textarea" rows={4} value={policies.refundPolicy}
               onChange={e => setPolicies(p => ({ ...p, refundPolicy: e.target.value }))} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="v-form-row">
             <div className="v-field">
               <label className="v-label">Support Email</label>
               <input className="v-input" value={policies.supportEmail}

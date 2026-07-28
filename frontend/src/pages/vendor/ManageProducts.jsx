@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, SlidersHorizontal, Grid3X3, List, Plus, Trash2,
@@ -9,6 +9,16 @@ import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
 import { useApp } from '../../context/AppContext';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -92,6 +102,7 @@ export default function ManageProducts() {
   const [selected, setSelected] = useState([]);
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const isMobile = useIsMobile();
 
   /* Debounced search — avoid calling API on every keystroke */
   const [searchInput, setSearchInput] = useState('');
@@ -191,48 +202,54 @@ export default function ManageProducts() {
       <div className="v-card v-card-pad" style={{ marginBottom:20 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
           {/* Search */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 1 220px', padding:'8px 14px', borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.28)', backdropFilter:'blur(12px)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 1 160px', minWidth:0, padding:'8px 14px', borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.28)', backdropFilter:'blur(12px)' }}>
             <Search size={14} style={{ color:'var(--v-text3)', flexShrink:0 }} />
             <input
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
               placeholder="Search products…"
-              style={{ background:'transparent', border:'none', outline:'none', fontSize:13, fontFamily:'var(--v-sans)', color:'var(--v-dark)', width:'100%' }}
+              style={{ background:'transparent', border:'none', outline:'none', fontSize:13, fontFamily:'var(--v-sans)', color:'var(--v-dark)', width:'100%', minWidth:0 }}
             />
           </div>
 
-          {/* Category */}
-          <select className="v-select" style={{ flex:'0 1 170px', marginBottom:0 }}
-            value={category || 'All'} onChange={e => handleFilter('category', e.target.value)}>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          {/* Category — hidden on tiny phones, shown at 480+ */}
+          {!isMobile && (
+            <select className="v-select" style={{ flex:'0 1 170px', marginBottom:0 }}
+              value={category || 'All'} onChange={e => handleFilter('category', e.target.value)}>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
 
           {/* Status */}
-          <select className="v-select" style={{ flex:'0 1 140px', marginBottom:0 }}
+          <select className="v-select" style={{ flex:'0 1 130px', marginBottom:0 }}
             value={status} onChange={e => handleFilter('status', e.target.value)}>
             {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
 
           {/* Sort */}
-          <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.28)' }}>
-            <SlidersHorizontal size={13} style={{ color:'var(--v-text3)' }} />
-            <select style={{ background:'transparent', border:'none', outline:'none', fontSize:13, fontFamily:'var(--v-sans)', fontWeight:600, color:'var(--v-dark)', cursor:'pointer' }}
-              value={sort} onChange={e => handleFilter('sort', e.target.value)}>
-              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
+          {!isMobile && (
+            <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.28)' }}>
+              <SlidersHorizontal size={13} style={{ color:'var(--v-text3)' }} />
+              <select style={{ background:'transparent', border:'none', outline:'none', fontSize:13, fontFamily:'var(--v-sans)', fontWeight:600, color:'var(--v-dark)', cursor:'pointer' }}
+                value={sort} onChange={e => handleFilter('sort', e.target.value)}>
+                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+          )}
 
-          {/* View toggle */}
-          <div style={{ display:'flex', gap:3, padding:4, borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.22)', marginLeft:'auto' }}>
-            {[['table', <List size={14} />], ['grid', <Grid3X3 size={14} />]].map(([m, icon]) => (
-              <button key={m} onClick={() => setView(m)}
-                style={{ width:30, height:30, borderRadius:7, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-                  background: view === m ? 'linear-gradient(135deg,#7B3FA0,#5A1E7E)' : 'transparent',
-                  color: view === m ? '#fff' : 'var(--v-text3)', transition:'all 0.2s' }}>
-                {icon}
-              </button>
-            ))}
-          </div>
+          {/* View toggle — hide on mobile (force card view) */}
+          {!isMobile && (
+            <div style={{ display:'flex', gap:3, padding:4, borderRadius:10, background:'rgba(255,255,255,0.80)', border:'1px solid rgba(196,148,230,0.22)', marginLeft:'auto' }}>
+              {[['table', <List size={14} />], ['grid', <Grid3X3 size={14} />]].map(([m, icon]) => (
+                <button key={m} onClick={() => setView(m)}
+                  style={{ width:30, height:30, borderRadius:7, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                    background: view === m ? 'linear-gradient(135deg,#7B3FA0,#5A1E7E)' : 'transparent',
+                    color: view === m ? '#fff' : 'var(--v-text3)', transition:'all 0.2s' }}>
+                  {icon}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Bulk actions */}
           {selected.length > 0 && (
@@ -242,6 +259,20 @@ export default function ManageProducts() {
             </button>
           )}
         </div>
+
+        {/* Mobile: category + sort row */}
+        {isMobile && (
+          <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
+            <select className="v-select" style={{ flex:'1 1 140px', marginBottom:0 }}
+              value={category || 'All'} onChange={e => handleFilter('category', e.target.value)}>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select className="v-select" style={{ flex:'1 1 120px', marginBottom:0 }}
+              value={sort} onChange={e => handleFilter('sort', e.target.value)}>
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* ── Loading skeleton ──────────────────────────────────────────── */}
@@ -273,84 +304,122 @@ export default function ManageProducts() {
         </div>
       )}
 
-      {/* ── Table view ───────────────────────────────────────────────── */}
-      {!loading && products.length > 0 && view === 'table' && (
+      {/* ── Table / Mobile card view ─────────────────────────────────── */}
+      {!loading && products.length > 0 && (view === 'table' || isMobile) && (
         <div className="v-card">
-          <div className="v-table-wrap">
-            <table className="v-table">
-              <thead>
-                <tr>
-                  <th style={{ width:36 }}>
-                    <input type="checkbox" style={{ accentColor:'#B886D0' }}
-                      checked={selected.length === products.length && products.length > 0}
-                      onChange={e => toggleAll(e.target.checked)} />
-                  </th>
-                  <th>Product</th>
-                  <th>Price</th>
-                  <th>Category</th>
-                  <th><Download size={12} style={{ display:'inline', marginRight:3 }} />Downloads</th>
-                  <th><Star size={12} style={{ display:'inline', marginRight:3 }} />Rating</th>
-                  <th>Health</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(p => (
-                  <tr key={p.id} style={{ opacity: deleting === p.id ? 0.4 : 1, transition:'opacity 0.2s' }}>
-                    <td>
+          {isMobile ? (
+            /* Mobile product cards */
+            <div style={{ padding:'12px', display:'flex', flexDirection:'column', gap:'10px' }}>
+              {products.map(p => (
+                <div key={p.id} style={{ padding:'12px', borderRadius:'14px', background:'rgba(255,255,255,0.70)', border:'1px solid rgba(196,148,230,0.18)', opacity: deleting === p.id ? 0.4 : 1 }}>
+                  <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+                    <Thumb src={p.thumbnail || p.preview} alt={p.title} size={48} />
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:700, fontSize:'0.85rem', color:'var(--v-dark)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.title}</div>
+                      <div style={{ display:'flex', alignItems:'center', gap:'8px', marginTop:'3px', flexWrap:'wrap' }}>
+                        <span style={{ fontWeight:800, fontSize:'0.88rem', color:'var(--v-deep)' }}>₹{Number(p.price).toLocaleString('en-IN')}</span>
+                        <span className={`v-badge ${statusBadgeClass(p.status)}`} style={{ fontSize:'10px' }}>
+                          <span className="v-badge-dot" />{p.status}
+                        </span>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', gap:'10px', marginTop:'4px' }}>
+                        <span style={{ fontSize:'11px', color:'var(--v-text3)' }}>↓ {(p.downloads||0).toLocaleString()}</span>
+                        <span style={{ fontSize:'11px', color:'#f59e0b' }}>★ {Number(p.rating||0).toFixed(1)}</span>
+                        <span style={{ fontSize:'10px', color:'var(--v-text3)' }}>{p.category}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:'8px', marginTop:'10px' }}>
+                    <button className="v-btn v-btn-secondary v-btn-sm" style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}
+                      onClick={() => goEdit(p)}>
+                      <Edit3 size={12} /> Edit
+                    </button>
+                    <button className="v-btn v-btn-ghost v-btn-sm"
+                      style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4, padding:'0 12px' }}
+                      onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="v-table-wrap">
+              <table className="v-table">
+                <thead>
+                  <tr>
+                    <th style={{ width:36 }}>
                       <input type="checkbox" style={{ accentColor:'#B886D0' }}
-                        checked={selected.includes(p.id)}
-                        onChange={() => toggleSelect(p.id)} />
-                    </td>
-                    <td>
-                      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <Thumb src={p.thumbnail || p.preview} alt={p.title} size={44} />
-                        <div>
-                          <div style={{ fontWeight:600, color:'var(--v-dark)', fontSize:13.5, maxWidth:220, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.title}</div>
-                          <div style={{ fontSize:11, color:'var(--v-text3)', marginTop:2 }}>ID: {p.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ fontWeight:700, color:'var(--v-deep)' }}>₹{Number(p.price).toLocaleString('en-IN')}</td>
-                    <td><span style={{ fontSize:11, fontWeight:600, color:'var(--v-text2)' }}>{p.category || '—'}</span></td>
-                    <td style={{ fontWeight:500, color:'var(--v-text2)' }}>{(p.downloads || 0).toLocaleString()}</td>
-                    <td>
-                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                        <span style={{ color:'#f59e0b', fontSize:13 }}>★</span>
-                        <span style={{ fontWeight:600, fontSize:13 }}>{Number(p.rating || 0).toFixed(1)}</span>
-                      </div>
-                    </td>
-                    <td><HealthBar score={p.healthScore || 75} /></td>
-                    <td>
-                      <span className={`v-badge ${statusBadgeClass(p.status)}`}>
-                        <span className="v-badge-dot" />
-                        {p.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display:'flex', gap:6 }}>
-                        <button className="v-btn v-btn-ghost v-btn-sm" onClick={() => goEdit(p)}
-                          style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <Edit3 size={12} /> Edit
-                        </button>
-                        <button className="v-btn v-btn-ghost v-btn-sm"
-                          style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4 }}
-                          onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
+                        checked={selected.length === products.length && products.length > 0}
+                        onChange={e => toggleAll(e.target.checked)} />
+                    </th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th><Download size={12} style={{ display:'inline', marginRight:3 }} />Downloads</th>
+                    <th><Star size={12} style={{ display:'inline', marginRight:3 }} />Rating</th>
+                    <th>Health</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {products.map(p => (
+                    <tr key={p.id} style={{ opacity: deleting === p.id ? 0.4 : 1, transition:'opacity 0.2s' }}>
+                      <td>
+                        <input type="checkbox" style={{ accentColor:'#B886D0' }}
+                          checked={selected.includes(p.id)}
+                          onChange={() => toggleSelect(p.id)} />
+                      </td>
+                      <td>
+                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                          <Thumb src={p.thumbnail || p.preview} alt={p.title} size={44} />
+                          <div>
+                            <div style={{ fontWeight:600, color:'var(--v-dark)', fontSize:13.5, maxWidth:220, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.title}</div>
+                            <div style={{ fontSize:11, color:'var(--v-text3)', marginTop:2 }}>ID: {p.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ fontWeight:700, color:'var(--v-deep)' }}>₹{Number(p.price).toLocaleString('en-IN')}</td>
+                      <td><span style={{ fontSize:11, fontWeight:600, color:'var(--v-text2)' }}>{p.category || '—'}</span></td>
+                      <td style={{ fontWeight:500, color:'var(--v-text2)' }}>{(p.downloads || 0).toLocaleString()}</td>
+                      <td>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <span style={{ color:'#f59e0b', fontSize:13 }}>★</span>
+                          <span style={{ fontWeight:600, fontSize:13 }}>{Number(p.rating || 0).toFixed(1)}</span>
+                        </div>
+                      </td>
+                      <td><HealthBar score={p.healthScore || 75} /></td>
+                      <td>
+                        <span className={`v-badge ${statusBadgeClass(p.status)}`}>
+                          <span className="v-badge-dot" />
+                          {p.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display:'flex', gap:6 }}>
+                          <button className="v-btn v-btn-ghost v-btn-sm" onClick={() => goEdit(p)}
+                            style={{ display:'flex', alignItems:'center', gap:4 }}>
+                            <Edit3 size={12} /> Edit
+                          </button>
+                          <button className="v-btn v-btn-ghost v-btn-sm"
+                            style={{ color:'#dc2626', display:'flex', alignItems:'center', gap:4 }}
+                            onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── Grid view ────────────────────────────────────────────────── */}
-      {!loading && products.length > 0 && view === 'grid' && (
+      {!loading && products.length > 0 && view === 'grid' && !isMobile && (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(230px,1fr))', gap:16 }}>
           {products.map(p => (
             <div key={p.id} className="v-card" style={{ overflow:'hidden', display:'flex', flexDirection:'column', transition:'transform 0.25s, box-shadow 0.25s', cursor:'pointer' }}

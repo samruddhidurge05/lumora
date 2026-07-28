@@ -4,10 +4,21 @@ import useAuth from '../../hooks/useAuth';
 import '../styles/vendor.css';
 import { useVendorProfile } from '../../hooks/useVendorData';
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 export default function Profile() {
   const { user, updateProfile } = useAuth();
   const { profile: backendProfile, loading: profileLoading, save: saveToBackend, saving } = useVendorProfile();
   const [saved, setSaved] = useState(false);
+  const isMobile = useIsMobile();
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -142,7 +153,7 @@ export default function Profile() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 24 }}>
         {/* ── Left sidebar ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="v-card v-card-pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -205,7 +216,7 @@ export default function Profile() {
             {/* Personal Information */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Personal & Profile Information</div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="v-form-row">
               <div className="v-field">
                 <label className="v-label">Display Name</label>
                 <input type="text" name="displayName" className="v-input" value={formData.displayName} onChange={handleChange} required />
@@ -216,7 +227,7 @@ export default function Profile() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="v-form-row">
               <div className="v-field">
                 <label className="v-label">Phone Number</label>
                 <input type="text" name="phone" className="v-input" value={formData.phone} onChange={handleChange} />
@@ -232,7 +243,7 @@ export default function Profile() {
             {/* Store Information */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Store Profile Information</div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="v-form-row">
               <div className="v-field">
                 <label className="v-label">Store / Handle Name</label>
                 <input type="text" name="storeName" className="v-input" value={formData.storeName} onChange={handleChange} />
@@ -253,7 +264,7 @@ export default function Profile() {
             {/* Social Profiles */}
             <div className="v-section-title" style={{ marginBottom: 20 }}>Social Profiles & Web Presence</div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="v-form-row">
               <div className="v-field">
                 <label className="v-label">Personal / Business Website</label>
                 <input type="text" name="website" className="v-input" value={formData.website} onChange={handleChange} placeholder="https://example.com" />
@@ -264,7 +275,7 @@ export default function Profile() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="v-form-row">
               <div className="v-field">
                 <label className="v-label">GitHub Handle</label>
                 <input type="text" name="github" className="v-input" value={formData.github} onChange={handleChange} placeholder="github.com/handle" />
@@ -327,7 +338,7 @@ export default function Profile() {
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
                 Option 2 — Bank Account
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="v-form-row">
                 <div className="v-field">
                   <label className="v-label">Account Holder Name</label>
                   <input type="text" name="accountHolderName" className="v-input" value={formData.accountHolderName} onChange={handleChange} placeholder="Full name on account" />

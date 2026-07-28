@@ -14,6 +14,16 @@ import {
   Send
 } from 'lucide-react';
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 const STATUS_MAP = {
   completed: { label: 'Completed', cls: 'v-badge-green' },
   pending:   { label: 'Pending',   cls: 'v-badge-amber' },
@@ -36,6 +46,7 @@ export default function Withdrawals() {
 
   const loading = withdrawalsLoading || ordersLoading;
   const backendError = withdrawalsError || ordersError;
+  const isMobile = useIsMobile();
 
   const refreshAll = () => {
     refreshWithdrawals();
@@ -191,7 +202,7 @@ export default function Withdrawals() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 20 }}>
 
         {/* Withdrawal History */}
         <div className="v-card">
@@ -206,6 +217,38 @@ export default function Withdrawals() {
             <div className="v-card v-card-pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 12 }}>
               <RefreshCw size={28} className="text-purple" style={{ animation: 'spin 2s linear infinite', color: 'var(--v-purple)' }} />
               <div style={{ color: 'var(--v-text3)', fontSize: 13, fontWeight: 500 }}>Loading withdrawal history...</div>
+            </div>
+          ) : isMobile ? (
+            /* Mobile withdrawal cards */
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {history.map((w, idx) => {
+                const st = STATUS_MAP[w.status] || STATUS_MAP.pending;
+                const dateStr = w.date || (w.createdAt ? new Date(w.createdAt).toLocaleDateString() : '—');
+                return (
+                  <div key={w.id || idx} style={{ padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.70)', border: '1px solid rgba(196,148,230,0.18)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', fontWeight: 700, color: 'var(--v-purple)' }}>{w.id || `WD-${idx+1}`}</span>
+                      <span className={`v-badge ${st.cls}`}>{st.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--v-deep)' }}>₹{(w.amount || 0).toLocaleString()}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--v-text3)', marginTop: '2px', textTransform: 'capitalize' }}>{w.method} · {dateStr}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--v-text3)' }}>ETA</div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--v-text2)' }}>{w.eta || 'Instant'}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {history.length === 0 && (
+                <div className="v-empty">
+                  <div className="v-empty-icon">📤</div>
+                  <div className="v-empty-title">No withdrawals yet</div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="v-table-wrap">
@@ -233,7 +276,7 @@ export default function Withdrawals() {
               </table>
             </div>
           )}
-          {!loading && history.length === 0 && (
+          {!loading && history.length === 0 && !isMobile && (
             <div className="v-empty">
               <div className="v-empty-icon">📤</div>
               <div className="v-empty-title">No withdrawals yet</div>

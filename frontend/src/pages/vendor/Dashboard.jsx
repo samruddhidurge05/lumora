@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DollarSign, Package, ShoppingBag, Star,
@@ -10,6 +10,16 @@ import {
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useDashboard } from '../../hooks/useVendorData';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
 
 /* ── Seller level config ─────────────────────────────────────────────────── */
 const LEVEL_CONFIG = {
@@ -85,6 +95,7 @@ export default function Dashboard() {
 
   const level = getLevel(totalSales);
   const cfg   = LEVEL_CONFIG[level];
+  const isMobile = useIsMobile();
 
   /* Revenue chart data ──────────────────────────────────────────────────── */
   const MONTHS_12 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -146,7 +157,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Revenue chart + Level ────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:'20px', marginBottom:'24px' }} className="v-two-col">
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap:'20px', marginBottom:'24px' }}>
 
         {/* Revenue sparkline */}
         <div className="v-card v-card-pad v-fade-in v-delay-1">
@@ -254,6 +265,23 @@ export default function Dashboard() {
             <ShoppingBag size={28} style={{ opacity:0.3, margin:'0 auto 10px', display:'block' }} />
             No orders yet. Share your products to get started.
           </div>
+        ) : isMobile ? (
+          /* Mobile card list */
+          <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            {recentOrders.map((o, i) => (
+              <div key={o.id || i} style={{ padding:'12px 14px', borderRadius:'12px', background:'rgba(255,255,255,0.70)', border:'1px solid rgba(196,148,230,0.18)' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
+                  <span style={{ fontFamily:'monospace', fontSize:'0.75rem', fontWeight:700, color:'var(--v-purple)' }}>{o.id}</span>
+                  <span style={{ fontSize:'11px', fontWeight:700, padding:'2px 8px', borderRadius:'20px', background:`${STATUS_COLOR[o.status] || '#6b7280'}18`, color: STATUS_COLOR[o.status] || '#6b7280', textTransform:'capitalize' }}>{o.status}</span>
+                </div>
+                <div style={{ fontSize:'0.82rem', fontWeight:600, color:'var(--v-deep)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'4px' }}>{o.product}</div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontSize:'0.75rem', color:'var(--v-text3)' }}>{o.customer} · {relTime(o.date)}</span>
+                  <span style={{ fontWeight:700, color:'var(--v-deep)', fontSize:'0.85rem' }}>₹{Math.round(o.amount).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div style={{ overflowX:'auto' }}>
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'13px' }}>
@@ -288,7 +316,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── 3-column: Activity + Recent Products + Quick Actions ─────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 260px', gap:'20px', marginBottom:'24px' }} className="v-three-col">
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 260px', gap:'20px', marginBottom:'24px' }}>
 
         {/* Activity Feed */}
         <div className="v-card v-card-pad v-fade-in v-delay-2">
@@ -455,7 +483,7 @@ export default function Dashboard() {
             Full Report <ArrowRight size={12} />
           </button>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px' }} className="v-earnings-grid">
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:'16px' }} className="v-earnings-grid">
           {[
             { label:'Gross Revenue',   value: loading ? null : `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`,                  icon:<DollarSign size={16}/>,  color:'rgba(184,134,208,0.18)' },
             { label:'Net Earnings',    value: loading ? null : `₹${Math.round(totalRevenue * 0.85).toLocaleString('en-IN')}`,            icon:<TrendingUp size={16}/>,  color:'rgba(123,63,160,0.12)'  },
@@ -477,14 +505,6 @@ export default function Dashboard() {
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width:1024px){
-          .v-two-col   { grid-template-columns: 1fr !important; }
-          .v-three-col { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width:640px){
-          .v-three-col    { grid-template-columns: 1fr !important; }
-          .v-earnings-grid { grid-template-columns: 1fr 1fr !important; }
-        }
       `}</style>
     </VendorLayout>
   );

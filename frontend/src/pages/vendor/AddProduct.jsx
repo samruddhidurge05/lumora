@@ -1,6 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Circle, X, CheckCircle2, Upload, Image, FileText } from 'lucide-react';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts, useVendorProfileComplete } from '../../hooks/useVendorData';
@@ -332,6 +342,7 @@ export default function AddProduct() {
   };
 
   const { refetchProducts } = useApp();
+  const isMobile = useIsMobile();
 
   /* ── Save to backend ──────────────────────────────────────────────── */
   const doSave = async (statusVal) => {
@@ -408,7 +419,7 @@ export default function AddProduct() {
       )}
 
       <form onSubmit={handlePublish}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:20 }} className="v-form-grid">
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap:20 }}>
 
           {/* ── Left: main fields ─────────────────────────────────────── */}
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
@@ -429,7 +440,7 @@ export default function AddProduct() {
                   value={form.short_desc} onChange={e => set('short_desc', e.target.value)} />
               </div>
 
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom: 14 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom: 14 }} className="v-form-row">
                 <div className="v-field">
                   <label className="v-label">Category *</label>
                   <select className="v-select" value={form.category} onChange={e => set('category', e.target.value)}>
@@ -444,7 +455,7 @@ export default function AddProduct() {
                 </div>
               </div>
 
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="v-form-row">
                 <div className="v-field">
                   <label className="v-label">Price (₹) *</label>
                   <input className="v-input" type="number" placeholder="499" min="0" step="1"
@@ -573,7 +584,7 @@ export default function AddProduct() {
 
               {form.affiliate_enabled && (
                 <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="v-form-row">
                     <div className="v-field">
                       <label className="v-label">Commission Type</label>
                       <select

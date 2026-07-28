@@ -8,6 +8,16 @@ import { backendFetch } from '../../utils/api';
 import { uploadFile } from '../../services/storageService';
 import { useApp } from '../../context/AppContext';
 
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 const CATEGORIES = [
   'UI Kits','Icon Packs','Templates','Fonts','Illustrations','Mockups',
   'Plugins','3D Assets','Photography','Music','Website Templates',
@@ -65,6 +75,7 @@ export default function EditProduct() {
 
   const { updateProduct } = useVendorProducts();
   const { refetchProducts } = useApp();
+  const isMobile = useIsMobile();
 
   const [product,   setProduct]   = useState(state?.product || null);
   const [loading,   setLoading]   = useState(!state?.product);
@@ -372,12 +383,13 @@ export default function EditProduct() {
       )}
 
       {/* Tabs */}
-      <div className="v-tabs" style={{ marginBottom:24 }}>
+      <div className="v-tabs" style={{ marginBottom:24, overflowX:'auto', flexWrap:'nowrap', WebkitOverflowScrolling:'touch' }}>
         {[
           { id:'details', label:'✏️ Edit Details' },
           { id:'reviews', label:`💬 Reviews (${reviews.length})` },
         ].map(t => (
           <button key={t.id} className={`v-tab${activeTab === t.id ? ' active' : ''}`}
+            style={{ flexShrink:0 }}
             onClick={() => setActiveTab(t.id)}>{t.label}</button>
         ))}
       </div>
@@ -385,7 +397,7 @@ export default function EditProduct() {
       {/* ── Details tab ─────────────────────────────────────────────── */}
       {activeTab === 'details' && (
         <form onSubmit={handleSave}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:20 }} className="v-edit-grid">
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap:20 }}>
             <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
               <div className="v-card v-card-pad">
@@ -399,7 +411,7 @@ export default function EditProduct() {
                   <input className="v-input" placeholder="A brief, engaging 1-sentence summary of your product."
                     value={form.short_desc} onChange={e => set('short_desc', e.target.value)} />
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom: 14 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom: 14 }} className="v-form-row">
                   <div className="v-field">
                     <label className="v-label">Category</label>
                     <select className="v-select" value={form.category} onChange={e => set('category', e.target.value)}>
@@ -413,7 +425,7 @@ export default function EditProduct() {
                       value={form.subcategory} onChange={e => set('subcategory', e.target.value)} />
                   </div>
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="v-form-row">
                   <div className="v-field">
                     <label className="v-label">Price (₹)</label>
                     <input className="v-input" type="number" min="0" step="1"
@@ -538,7 +550,7 @@ export default function EditProduct() {
 
                 {form.affiliate_enabled && (
                   <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="v-form-row">
                       <div className="v-field">
                         <label className="v-label">Commission Type</label>
                         <select
@@ -854,7 +866,7 @@ export default function EditProduct() {
       {/* ── Reviews tab ─────────────────────────────────────────────── */}
       {activeTab === 'reviews' && (
         <div>
-          <div style={{ display:'grid', gridTemplateColumns:'200px 1fr', gap:20, marginBottom:24 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap:20, marginBottom:24 }}>
             <div className="v-card v-card-pad" style={{ textAlign:'center' }}>
               <div style={{ fontFamily:'var(--v-serif)', fontSize:52, color:'var(--v-dark)', lineHeight:1 }}>{avgRating}</div>
               <Stars rating={avgRating} />

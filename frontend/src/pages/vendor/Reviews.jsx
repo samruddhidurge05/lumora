@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useReviews, useVendorProducts } from '../../hooks/useVendorData';
@@ -11,6 +11,16 @@ import {
   Award,
   Sparkles
 } from 'lucide-react';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
 
 function Stars({ rating, size = 14 }) {
   const roundedRating = Math.round(Number(rating) || 0);
@@ -49,6 +59,7 @@ export default function Reviews() {
   const [replyText, setReplyText] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [replyError, setReplyError] = useState({});
+  const isMobile = useIsMobile();
 
   const loading = isLoading || productsLoading;
   const backendError = reviewsError || productsError;
@@ -148,7 +159,7 @@ export default function Reviews() {
 
       {loading ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '280px 1fr', gap: 20, marginBottom: 24 }}>
             <div className="v-card" style={{ height: 160, position: 'relative', overflow: 'hidden' }}>
               <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -174,7 +185,7 @@ export default function Reviews() {
         </>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '280px 1fr', gap: 20, marginBottom: 24 }}>
             <div className="v-card v-card-pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 8 }}>
               <div style={{ fontFamily: 'var(--v-serif)', fontSize: 56, color: 'var(--v-dark)', lineHeight: 1 }}>{avgRating}</div>
               <Stars rating={avgRating} size={20} />
@@ -215,7 +226,7 @@ export default function Reviews() {
               </div>
             </div>
             {topProductsList.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
                 {topProductsList.map(p => (
                   <div key={p.id} style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(216,191,227,0.12)', border: '1px solid rgba(184,134,208,0.18)' }}>
                     <div style={{ fontWeight: 500, color: 'var(--v-dark)', fontSize: 13.5, marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.title}>{p.title}</div>
@@ -239,14 +250,14 @@ export default function Reviews() {
           </div>
 
           <div className="v-card">
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--v-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--v-border)', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
               <div className="v-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <MessageSquare size={16} />
                 <span>All Reviews</span>
               </div>
-              <div className="v-tabs" style={{ marginLeft: 'auto' }}>
+              <div className="v-tabs" style={{ marginLeft: isMobile ? 0 : 'auto', overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
                 {['all', '5', '4', '3', '2', '1'].map(t => (
-                  <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+                  <button key={t} className={`v-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)} style={{ flexShrink: 0 }}>
                     {t === 'all' ? 'All' : `${t}★`}
                   </button>
                 ))}
@@ -258,10 +269,12 @@ export default function Reviews() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <div className="v-avatar v-avatar-md">{(r.customer || 'Customer')[0]}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 10, marginBottom: 4 }}>
                         <span style={{ fontWeight: 500, color: 'var(--v-dark)', fontSize: 13.5 }}>{r.customer || 'Customer'}</span>
-                        <Stars rating={r.rating} size={13} />
-                        <span style={{ fontSize: 11, color: 'var(--v-text3)', marginLeft: 'auto' }}>{r.date}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10 }}>
+                          <Stars rating={r.rating} size={13} />
+                          <span style={{ fontSize: 11, color: 'var(--v-text3)', marginLeft: isMobile ? 0 : 'auto' }}>{r.date}</span>
+                        </div>
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--v-text3)', marginBottom: 8 }}>on {r.product || 'Unknown Product'}</div>
                       <div style={{ fontSize: 13.5, color: 'var(--v-text)', lineHeight: 1.55 }}>{r.comment || 'No comment text provided.'}</div>
@@ -285,7 +298,7 @@ export default function Reviews() {
                       )}
 
                       {replyOpen[r.id] && (
-                        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                        <div style={{ marginTop: 12, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
                           <textarea 
                             className="v-textarea" 
                             rows={2} 
@@ -297,7 +310,7 @@ export default function Reviews() {
                           />
                           <button 
                             className="v-btn v-btn-primary v-btn-sm" 
-                            style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 4 }}
+                            style={{ alignSelf: isMobile ? 'flex-end' : 'flex-end', display: 'flex', alignItems: 'center', gap: 4 }}
                             onClick={() => handleReplySubmit(r.id)}
                             disabled={submitting[r.id] || !replyText[r.id]?.trim()}
                           >

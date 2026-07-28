@@ -3,6 +3,18 @@ import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useOrders } from '../../hooks/useVendorData';
 import { backendFetch } from '../../utils/api';
+
+/* ── Mobile detection hook ── */
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < bp);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, [bp]);
+  return m;
+}
+
 import { 
   Package, 
   Clock, 
@@ -176,6 +188,7 @@ function OrderModal({ order, onClose, onUpdateStatus, loadingIds }) {
 }
 
 export default function Orders() {
+  const isMobile = useIsMobile();
   const { orders: liveOrders, loading: backendLoading, error: backendError, refresh } = useOrders();
   const [localOrders, setLocalOrders] = useState([]);
   const [tab,        setTab]        = useState('all');
@@ -334,15 +347,15 @@ export default function Orders() {
       {/* Search & Tabs Controls */}
       <div className="v-card v-card-pad" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: 1, maxWidth: 280 }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, maxWidth: isMobile ? '100%' : 280 }}>
             <Search size={16} style={{ position: 'absolute', left: 12, color: 'var(--v-text3)' }} />
             <input className="v-input" style={{ paddingLeft: 36, width: '100%' }}
               placeholder="Search orders..." value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>
-          <div className="v-tabs" style={{ display: 'flex', gap: 4 }}>
+          <div className="v-tabs" style={{ overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
             {Object.entries(counts).map(([k, v]) => (
-              <button key={k} className={`v-tab${tab === k ? ' active' : ''}`} onClick={() => setTab(k)}>
+              <button key={k} className={`v-tab${tab === k ? ' active' : ''}`} onClick={() => setTab(k)} style={{ flexShrink: 0 }}>
                 {k.charAt(0).toUpperCase() + k.slice(1)}{' '}
                 <span style={{ opacity: 0.6, fontSize: 11 }}>({v})</span>
               </button>
@@ -351,8 +364,8 @@ export default function Orders() {
           
           {/* Bulk Actions */}
           {selected.length > 0 && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', animation: 'fade-in 0.2s ease' }}>
-              <select className="v-select" style={{ height: 32, padding: '4px 28px 4px 10px', fontSize: 12 }}
+            <div style={{ width: '100%', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', animation: 'fade-in 0.2s ease' }}>
+              <select className="v-select" style={{ flex: '1 1 140px', padding: '4px 28px 4px 10px', fontSize: 12 }}
                 value={bulkStatus} onChange={e => setBulkStatus(e.target.value)}>
                 <option value="completed">Mark Completed</option>
                 <option value="processing">Mark Processing</option>
@@ -362,14 +375,14 @@ export default function Orders() {
               </select>
               <button 
                 className="v-btn v-btn-primary v-btn-sm" 
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '0 0 auto' }}
                 onClick={() => handleUpdateStatus(selected, bulkStatus)}
                 disabled={loadingIds.some(id => selected.includes(id))}
               >
                 {loadingIds.some(id => selected.includes(id)) ? (
                   <RefreshCw size={12} style={{ animation: 'spin 1.5s linear infinite' }} />
                 ) : null}
-                Apply to ({selected.length})
+                Apply ({selected.length})
               </button>
               <button className="v-btn v-btn-ghost v-btn-sm" onClick={() => setSelected([])}>Clear</button>
             </div>
@@ -384,7 +397,36 @@ export default function Orders() {
         </div>
       ) : (
         <div className="v-card">
-          <div className="v-table-wrap">
+          {isMobile ? (
+            /* ── Mobile card view ── */
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {filtered.map(o => {
+                const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+                const customerName = o.customer || o.customerName || 'Customer';
+                const productName  = o.product  || o.productName  || '—';
+                const dateStr = o.date ? new Date(o.date).toLocaleDateString() : '—';
+                return (
+                  <div key={o.id} onClick={() => setViewOrder(o)} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.70)', border: '1px solid rgba(196,148,230,0.18)', cursor: 'pointer', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                      <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', fontWeight: 700, color: 'var(--v-purple)' }}>{o.id}</div>
+                      <span className={`v-badge ${st.cls}`}>{st.label}</span>
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--v-deep)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{productName}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(196,148,230,0.12)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--v-text3)' }}>{customerName} · {dateStr}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--v-deep)', fontSize: '0.88rem' }}>₹{(o.amount || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {filtered.length === 0 && (
+                <div className="v-empty"><div className="v-empty-icon">📦</div><div className="v-empty-title">No orders found</div></div>
+              )}
+            </div>
+          ) : (
+            /* ── Desktop table view ── */
+            <>
+            <div className="v-table-wrap">
             <table className="v-table">
               <thead>
                 <tr>
@@ -477,6 +519,8 @@ export default function Orders() {
               <div className="v-empty-title">No orders found</div>
               <div className="v-empty-sub">Try adjusting your search or filter</div>
             </div>
+          )}
+          </>
           )}
         </div>
       )}
