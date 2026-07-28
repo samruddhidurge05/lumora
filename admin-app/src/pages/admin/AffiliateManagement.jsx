@@ -1444,27 +1444,27 @@ export default function AffiliateManagement() {
         {/* Header Banner */}
         <div className="flex flex-col gap-4 border-b border-[#F3EAF8] pb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[9px] font-black tracking-widest uppercase">
                   ENTERPRISE CONSOLE
                 </span>
                 {IS_SANDBOX_ENABLED && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
-                    <Beaker size={13} /> SANDBOX DEV MODE ACTIVE
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-mono font-bold uppercase flex items-center gap-1">
+                    <Beaker size={12} /> SANDBOX DEV MODE ACTIVE
                   </span>
                 )}
-                <span className="text-xs text-[#7B3FA0] font-bold flex items-center gap-1">
-                  <ShieldCheck size={13} /> Verified Attribution Engine
+                <span className="text-[11px] text-[#7B3FA0] font-bold flex items-center gap-1">
+                  <ShieldCheck size={12} /> Verified Attribution Engine
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-serif text-[#2D004D] font-bold">Affiliate Operations Console</h1>
-              <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-bold leading-tight break-words">Affiliate Operations Console</h1>
+              <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl leading-relaxed">
                 Restored executive dashboard, promoters CRM, products matrix, sales ledger, and RazorpayX payouts.
               </p>
             </div>
             <button onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all shadow-md">
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all shadow-md shrink-0 min-h-[42px]">
               <ArrowDownToLine size={14} /> Export Operations CSV
             </button>
           </div>
@@ -1692,8 +1692,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="py-3.5 px-4">Promoter</th>
@@ -1790,8 +1790,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="py-3.5 px-4 w-10">

@@ -577,7 +577,7 @@ export default function Payments() {
 
                   <div className="overflow-x-auto w-full">
                     {vendorPayouts.length > 0 ? (
-                      <table className="w-full border-collapse text-left">
+                      <table className="w-full min-w-[460px] border-collapse text-left">
                         <thead>
                           <tr className="bg-stone-100/40 border-b border-stone-200/50">
                             {['Vendor', 'Sales', 'Comm. (5%)', 'Paid', 'Pending'].map(h => (

@@ -473,7 +473,7 @@ export function AdminSelect({
           role="listbox"
           tabIndex={-1}
           aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] w-max max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
         >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);

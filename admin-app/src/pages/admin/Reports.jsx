@@ -1185,25 +1185,21 @@ export default function Reports() {
                   </div>
 
                   {/* Status Filter */}
-                  <div className="relative">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => {
-                        sysSound.playTap();
-                        setStatusFilter(e.target.value);
-                        setReportPage(1);
-                      }}
-                      className="appearance-none bg-white hover:bg-[#F5E9DD]/50 border border-[#F5E9DD] rounded-xl pl-4 pr-8 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] focus:outline-none cursor-pointer transition-colors"
-                    >
-                      <option value="">All Statuses</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
-                      <Icon name="ChevronDown" size={10} />
-                    </div>
-                  </div>
+                  <AdminSelect
+                    value={statusFilter}
+                    onChange={(e) => {
+                      sysSound.playTap();
+                      setStatusFilter(e.target.value);
+                      setReportPage(1);
+                    }}
+                    options={[
+                      { value: '', label: 'All Statuses' },
+                      { value: 'Pending', label: 'Pending' },
+                      { value: 'Resolved', label: 'Resolved' },
+                      { value: 'Rejected', label: 'Rejected' },
+                    ]}
+                    className="w-full sm:w-auto min-w-[140px]"
+                  />
                 </div>
 
                 {/* Table */}
@@ -1226,8 +1222,8 @@ export default function Reports() {
                 ) : (
                   <div className="w-full">
                     {/* Desktop Table View */}
-                    <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <div className="hidden md:block overflow-x-auto w-full">
+                      <table className="w-full min-w-[650px] text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#F5E9DD]">
                           {['Product', 'Reporter', 'Title', 'Category', 'Severity', 'Status', 'Date', 'Actions'].map(col => (

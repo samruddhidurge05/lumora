@@ -809,20 +809,20 @@ export default function Reviews() {
                         placeholder="Search testimonials or items..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-white/80 border border-[#F5E9DD] rounded-xl pl-9 pr-4 py-2 text-[11px] text-[#2D004D] placeholder-stone-400 focus:outline-none"
+                        className="w-full bg-white/80 border border-[#F5E9DD] rounded-xl pl-10 pr-4 py-2 text-[11px] text-[#2D004D] placeholder-stone-400 focus:outline-none"
                       />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7B3FA0]">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none">
                         <Icon name="Search" size={12} />
                       </div>
                     </div>
 
                     {/* Sentiment select */}
-                    <div className="flex gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex gap-2 w-full sm:w-auto justify-start sm:justify-end overflow-x-auto scrollbar-none max-w-full pb-1 sm:pb-0">
                       {['all', 'positive', 'neutral', 'negative'].map((s) => (
                         <button
                           key={s}
                           onClick={() => { sysSound.playTap(); setSentimentFilter(s); }}
-                          className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest uppercase transition-all ${
+                          className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest uppercase transition-all shrink-0 ${
                             sentimentFilter === s 
                               ? 'bg-[#2D004D] text-white shadow-sm' 
                               : 'bg-white/50 text-[#7B3FA0] hover:text-[#2D004D]'
@@ -835,7 +835,7 @@ export default function Reviews() {
                       {/* Verified purchases filter */}
                       <button
                         onClick={() => { sysSound.playTap(); setVerifiedOnly(!verifiedOnly); }}
-                        className={`p-2 rounded-lg border flex items-center justify-center transition-colors ${
+                        className={`p-2 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
                           verifiedOnly 
                             ? 'bg-[#D8BFE3]/40 border-[#D8BFE3] text-[#2D004D]' 
                             : 'bg-white/50 border-[#F3EAF8] text-[#7B3FA0]'
