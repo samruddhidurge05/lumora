@@ -14,16 +14,21 @@
  * call sites remain unchanged.
  */
 
+const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+
 const API_BASE = (() => {
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  if (base.startsWith('/') && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
-    return `${origin.replace(/\/$/, '')}${base}`;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
+    return `${origin.replace(/\/$/, '')}${base.startsWith('/') ? base : '/' + base}`;
   }
   return base;
 })();
 
 const BACKEND_ORIGIN = (() => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
+  }
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
   if (base.startsWith('/')) {
     return import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
