@@ -170,6 +170,8 @@ class RazorpayPayoutProvider(PayoutProvider):
         bank_name: Optional[str],
         affiliate_name: str,
         reference_note: str,
+        existing_contact_id: Optional[str] = None,
+        existing_fund_account_id: Optional[str] = None,
     ) -> PayoutResult:
         """
         Dispatch a real payout via Razorpay X API.
@@ -180,14 +182,12 @@ class RazorpayPayoutProvider(PayoutProvider):
         amount_paise = int(round(amount_inr * 100))
 
         try:
-            # Step 1: Create contact
-            contact_id = self._create_contact(
+            contact_id = existing_contact_id or self._create_contact(
                 affiliate_name=affiliate_name,
                 affiliate_id=affiliate_id,
             )
 
-            # Step 2: Create or fetch fund account
-            fund_account_id = self._get_or_create_fund_account(
+            fund_account_id = existing_fund_account_id or self._get_or_create_fund_account(
                 contact_id=contact_id,
                 method=method,
                 upi_id=upi_id,
@@ -196,7 +196,6 @@ class RazorpayPayoutProvider(PayoutProvider):
                 bank_name=bank_name,
             )
 
-            # Step 3: Dispatch payout
             payout_payload = {
                 "account_number": self.key_id,      # Razorpay X account number
                 "fund_account_id": fund_account_id,
@@ -239,3 +238,4 @@ class RazorpayPayoutProvider(PayoutProvider):
                 failure_reason=str(exc),
                 raw={"error": str(exc)},
             )
+

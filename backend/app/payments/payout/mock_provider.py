@@ -57,6 +57,8 @@ class MockPayoutProvider(PayoutProvider):
         bank_name: Optional[str],
         affiliate_name: str,
         reference_note: str,
+        existing_contact_id: Optional[str] = None,
+        existing_fund_account_id: Optional[str] = None,
     ) -> PayoutResult:
         """
         Simulate a successful payout.
