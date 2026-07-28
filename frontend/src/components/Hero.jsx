@@ -7,7 +7,7 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// High-quality background images: UI design mockups, 3D assets, AI dashboards, template previews
+// Curated high-resolution Unsplash images for digital product design, 3D assets, & AI dashboards
 const FULL_BACKGROUND_IMAGES = [
   {
     id: 1,
@@ -15,7 +15,7 @@ const FULL_BACKGROUND_IMAGES = [
     category: 'UI Kits',
     price: '$49',
     rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 2,
@@ -23,31 +23,47 @@ const FULL_BACKGROUND_IMAGES = [
     category: 'Templates',
     price: '$59',
     rating: '5.0',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 3,
+    title: 'UX/UI Mobile App & Design System',
+    category: 'Design Systems',
+    price: '$69',
+    rating: '4.9',
+    image: 'https://images.unsplash.com/photo-1542744094-3a317272018a?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 4,
     title: 'AI Neural Prompt & Art Generator',
     category: 'AI Tools',
     price: '$39',
     rating: '4.8',
-    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1600&q=80',
-  },
-  {
-    id: 4,
-    title: 'Minimalist E-Commerce Design System',
-    category: 'Design Systems',
-    price: '$79',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 5,
+    title: 'Minimalist E-Commerce Website Wireframe',
+    category: 'Web Templates',
+    price: '$79',
+    rating: '4.9',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 6,
     title: 'Cyberpunk 3D Icon & Asset Bundle',
     category: '3D Assets',
     price: '$29',
     rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 7,
+    title: 'Mobile Wireframe & Prototype System',
+    category: 'Mobile Kits',
+    price: '$45',
+    rating: '4.8',
+    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
   }
 ];
 
@@ -60,7 +76,7 @@ export default function Hero() {
   // Current active full background image index
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Cycle background full image every 5 seconds (5000ms) with clean unmount cleanup
+  // Cycle Unsplash background images every 5 seconds (5000ms) with clean unmount cleanup
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % FULL_BACKGROUND_IMAGES.length);
@@ -97,7 +113,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── BACKGROUND LAYER: FULL-SCREEN CAROUSEL WITH KEN BURNS & LOW OPACITY ── */}
+      {/* ── BACKGROUND LAYER: FULL-SCREEN UNSPLASH IMAGE CAROUSEL WITH KEN BURNS EFFECT ── */}
       <div style={styles.fullBgWrapper}>
         {FULL_BACKGROUND_IMAGES.map((item, idx) => (
           <div
@@ -105,18 +121,18 @@ export default function Hero() {
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 0.16 : 0, // Subtle low opacity (0.12 - 0.20)
-              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns effect: scale-110 vs scale-100
-              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out', // 2000ms cross-fade, 5000ms scale
+              opacity: idx === currentIndex ? 0.22 : 0, // Crisp Unsplash background opacity
+              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns scale-110 effect
+              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out', // 2000ms crossfade, 5000ms zoom
             }}
           />
         ))}
 
-        {/* Soft light overlay matching theme with subtle backdrop blur */}
+        {/* Theme Light Backdrop Overlay ensuring contrast */}
         <div style={styles.fullBgOverlay} />
       </div>
 
-      {/* ── RELATIVE OVERLAY LAYER (z-10): ALL HERO CONTENT & COMPONENTS INTACT ── */}
+      {/* ── RELATIVE OVERLAY LAYER (z-10): ALL HERO CONTENT INTACT ── */}
       <div style={styles.container}>
         {/* 1. Pill Badge */}
         <div className="hero-badge" style={styles.badge}>
@@ -138,7 +154,7 @@ export default function Hero() {
           The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
         </p>
 
-        {/* 4. Action Buttons (Sign In / Get Started / Explore) */}
+        {/* 4. Action Buttons */}
         <div className="hero-ctas" style={styles.ctas}>
           <button 
             onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
@@ -169,11 +185,11 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Live Showcase Ticker */}
+        {/* 5. Unsplash Image Showcase Ticker */}
         <div className="hero-ticker glass-card" style={styles.tickerCard}>
           <div style={styles.tickerBadgeLeft}>
             <div style={styles.livePulseDot} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7B3FA0' }}>BACKGROUND SHOWCASE</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7B3FA0' }}>UNSPLASH SHOWCASE</span>
           </div>
 
           <div style={styles.tickerCenter}>
@@ -330,7 +346,7 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(250, 246, 240, 0.82)', // Matching light theme overlay
+    background: 'rgba(250, 246, 240, 0.78)', // Light theme overlay matching site style
     backdropFilter: 'blur(2px)', // Subtle backdrop blur
   },
 
