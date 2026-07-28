@@ -103,11 +103,11 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { label: 'Explore',     icon: <Compass size={15} />,       href: '#products' },
-    { label: 'Categories',  icon: <Sparkles size={15} />,      href: '#categories' },
-    { label: 'Showcase',    icon: <Home size={15} />,          href: '#home' },
-    ...(!user ? [{ label: 'Partnership', icon: <Users size={15} />, href: '/partnerships', badge: 'New' }] : []),
-    ...(user  ? [{ label: 'Dashboard',   icon: <LayoutDashboard size={15} />, href: '#dashboard' }] : []),
+    { label: 'Explore',     icon: <Compass size={15} color="#7B3FA0" />,       href: '#products' },
+    { label: 'Categories',  icon: <Sparkles size={15} color="#7B3FA0" />,      href: '#categories' },
+    { label: 'Showcase',    icon: <Home size={15} color="#7B3FA0" />,          href: '#home' },
+    ...(!user ? [{ label: 'Partnership', icon: <Users size={15} color="#7B3FA0" />, href: '/partnerships', badge: 'New' }] : []),
+    ...(user  ? [{ label: 'Dashboard',   icon: <LayoutDashboard size={15} color="#7B3FA0" />, href: '#dashboard' }] : []),
   ];
 
   return (
@@ -115,7 +115,7 @@ export default function Navbar() {
       className="lumora-navbar-header"
       style={{
         position: 'fixed',
-        top: scrolled ? '1rem' : '2rem',
+        top: scrolled ? '1rem' : '1.5rem',
         left: '50%',
         transform: 'translateX(-50%)',
         width: scrolled ? 'min(1200px, 92%)' : 'min(1340px, 94%)',
@@ -129,17 +129,14 @@ export default function Navbar() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: scrolled ? '10px 20px' : '14px 32px',
+          padding: scrolled ? '10px 24px' : '14px 34px',
           borderRadius: '100px',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          background: scrolled ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)',
-          backdropFilter: 'blur(24px) saturate(180%) brightness(1.02)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%) brightness(1.02)',
-          boxShadow: scrolled
-            ? '0 10px 30px rgba(90,30,126,0.12), inset 0 1px 0 rgba(255,255,255,0.40)'
-            : '0 4px 20px rgba(90,30,126,0.05), inset 0 1px 0 rgba(255,255,255,0.30)',
-          border: '1px solid',
-          borderColor: scrolled ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(30px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1)',
+          border: '1.5px solid rgba(255, 255, 255, 0.95)',
           position: 'relative',
         }}
       >
@@ -149,8 +146,8 @@ export default function Navbar() {
           onClick={(e) => { e.preventDefault(); navigateTo('landing'); }}
           className="text-editorial lumora-navbar-logo"
           style={{
-            fontSize: '1.8rem', fontWeight: 500, textDecoration: 'none',
-            color: 'var(--color-espresso)', letterSpacing: '-0.03em',
+            fontSize: '1.85rem', fontWeight: 600, textDecoration: 'none',
+            color: '#2D004D', letterSpacing: '-0.03em',
             display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0,
           }}
         >
@@ -168,19 +165,19 @@ export default function Navbar() {
               href={item.href}
               onClick={(e) => handleNavClick(e, item)}
               style={{
-                fontSize: '0.85rem', fontWeight: 600,
-                color: 'var(--color-mocha)', textDecoration: 'none',
+                fontSize: '0.88rem', fontWeight: 700,
+                color: '#2D004D', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: '6px',
                 position: 'relative', padding: '6px 0',
-                transition: 'color 0.3s cubic-bezier(0.16,1,0.3,1)',
+                transition: 'color 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--color-espresso)';
+                e.currentTarget.style.color = '#7B3FA0';
                 const dot = e.currentTarget.querySelector('.dot');
                 if (dot) dot.style.transform = 'translateX(-50%) scale(1)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--color-mocha)';
+                e.currentTarget.style.color = '#2D004D';
                 const dot = e.currentTarget.querySelector('.dot');
                 if (dot) dot.style.transform = 'translateX(-50%) scale(0)';
               }}
@@ -191,9 +188,9 @@ export default function Navbar() {
                 <span style={{
                   fontSize: '0.6rem',
                   fontWeight: 800,
-                  padding: '2px 7px',
+                  padding: '3px 8px',
                   borderRadius: '10px',
-                  background: 'rgba(216, 191, 227, 0.45)',
+                  background: 'rgba(123, 63, 160, 0.15)',
                   color: '#7B3FA0',
                   lineHeight: 1,
                   textTransform: 'uppercase',
@@ -208,7 +205,7 @@ export default function Navbar() {
                   position: 'absolute', bottom: -4, left: '50%',
                   transform: 'translateX(-50%) scale(0)',
                   width: '4px', height: '4px', borderRadius: '50%',
-                  backgroundColor: 'var(--color-latte)',
+                  backgroundColor: '#7B3FA0',
                   transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
                   transformOrigin: 'center center',
                 }}
@@ -226,15 +223,15 @@ export default function Navbar() {
                 onClick={(e) => { e.preventDefault(); handleLogout(); }}
                 className="text-sans lumora-navbar-signin"
                 style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: 'var(--color-espresso)',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  color: '#2D004D',
                   textDecoration: 'none',
                   transition: 'opacity 0.3s',
                   cursor: 'pointer'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#7B3FA0'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#2D004D'}
               >
                 Sign Out
               </a>
@@ -244,8 +241,13 @@ export default function Navbar() {
                 onClick={(e) => { e.preventDefault(); handleDashboardClick(); }}
                 className="btn-premium btn-shine-sweep lumora-navbar-cta"
                 style={{
-                  padding: scrolled ? '10px 22px' : '14px 28px',
-                  fontSize: scrolled ? '0.85rem' : '0.9rem',
+                  padding: scrolled ? '10px 22px' : '12px 26px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                  color: '#ffffff',
+                  borderRadius: '14px',
+                  boxShadow: '0 6px 20px rgba(90, 30, 126, 0.30)',
                   willChange: 'transform',
                   cursor: 'pointer'
                 }}
@@ -262,15 +264,15 @@ export default function Navbar() {
                 onClick={(e) => { e.preventDefault(); navigateTo('login', 'customer'); }}
                 className="text-sans lumora-navbar-signin"
                 style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: 'var(--color-espresso)',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  color: '#2D004D',
                   textDecoration: 'none',
                   transition: 'opacity 0.3s',
                   cursor: 'pointer'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#7B3FA0'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#2D004D'}
               >
                 Sign In
               </a>
@@ -280,8 +282,13 @@ export default function Navbar() {
                 onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); }}
                 className="btn-premium btn-shine-sweep lumora-navbar-cta"
                 style={{
-                  padding: scrolled ? '10px 22px' : '14px 28px',
-                  fontSize: scrolled ? '0.85rem' : '0.9rem',
+                  padding: scrolled ? '10px 22px' : '12px 26px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                  color: '#ffffff',
+                  borderRadius: '14px',
+                  boxShadow: '0 6px 20px rgba(90, 30, 126, 0.30)',
                   willChange: 'transform',
                   cursor: 'pointer'
                 }}
@@ -299,43 +306,126 @@ export default function Navbar() {
           className={`lumora-nav-hamburger${mobileOpen ? ' open' : ''}`}
           onClick={() => setMobileOpen(o => !o)}
           aria-label="Toggle menu"
-          style={{ cursor: 'pointer' }}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
         >
-          <span />
-          <span />
-          <span />
+          <span style={{ background: '#2D004D' }} />
+          <span style={{ background: '#2D004D' }} />
+          <span style={{ background: '#2D004D' }} />
         </button>
+      </div>
 
-        {/* Mobile Dropdown Menu */}
-        <div ref={mobileRef} className={`lumora-mobile-nav${mobileOpen ? ' open' : ''}`}>
+      {/* Mobile Drawer Menu */}
+      {mobileOpen && (
+        <div
+          ref={mobileRef}
+          className="lumora-mobile-menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 12px)',
+            left: 0,
+            right: 0,
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(30px)',
+            borderRadius: '24px',
+            padding: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            zIndex: 10000,
+          }}
+        >
           {navItems.map((item, index) => (
-            <a key={index} href={item.href} onClick={(e) => handleNavClick(e, item)}>
-              <span style={{ color: '#7B3FA0', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+            <a
+              key={index}
+              href={item.href}
+              onClick={(e) => handleNavClick(e, item)}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: '#2D004D',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 0',
+              }}
+            >
+              {item.icon}
               {item.label}
+              {item.badge && (
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  padding: '3px 8px',
+                  borderRadius: '10px',
+                  background: 'rgba(123, 63, 160, 0.15)',
+                  color: '#7B3FA0',
+                }}>
+                  {item.badge}
+                </span>
+              )}
             </a>
           ))}
-          <div className="mob-divider" />
-          <div className="mob-auth-row">
-            {user ? (
-              <>
-                <button onClick={handleLogout}>Sign Out</button>
-                <a href="#" onClick={(e) => { e.preventDefault(); handleDashboardClick(); }} className="mob-cta">
-                  Dashboard
-                </a>
-              </>
-            ) : (
-              <>
-                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('login', 'customer'); closeMobile(); }}>
-                  Sign In
-                </a>
-                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); closeMobile(); }} className="mob-cta">
-                  Get Started
-                </a>
-              </>
-            )}
-          </div>
+
+          <div style={{ height: '1px', background: 'rgba(123, 63, 160, 0.15)', margin: '8px 0' }} />
+
+          {user ? (
+            <button
+              onClick={handleLogout}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '14px',
+                background: 'rgba(225, 29, 72, 0.10)',
+                color: '#E11D48',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+              }}
+            >
+              Sign Out
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => { closeMobile(); navigateTo('login', 'customer'); }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '14px',
+                  background: 'rgba(123, 63, 160, 0.10)',
+                  color: '#7B3FA0',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => { closeMobile(); navigateTo('register', 'customer'); }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Get Started
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </header>
   );
 }
