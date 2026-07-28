@@ -69,25 +69,81 @@ function getRiskAssessment(affiliate = {}, payout = {}) {
   return { label: 'High Risk Alert', score, color: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
 }
 
+// Verification Radar helper function
+export function getPayoutRadarStatus(payout) {
+  if (!payout) return { status: 'RED', label: 'Unverified Account', missing: ['Invalid payout record'] };
+
+  const method = (payout.method || 'upi').toLowerCase();
+  const upiId = payout.upi_id || payout.vpa || payout.upi || '';
+  const bankAcc = payout.bank_account || payout.account_number || '';
+  const ifsc = payout.ifsc_code || payout.ifsc || '';
+  const pan = payout.pan_number || payout.pan || '';
+  const panName = payout.pan_holder_name || payout.pan_name || '';
+
+  const missing = [];
+
+  // Payment method validation
+  let paymentValid = false;
+  if (method === 'upi') {
+    if (upiId && upiId.includes('@')) {
+      paymentValid = true;
+    } else {
+      missing.push('Valid UPI ID (must contain "@", e.g. user@upi)');
+    }
+  } else if (method === 'bank_transfer' || method === 'bank') {
+    if (bankAcc && bankAcc.length >= 6 && ifsc && ifsc.length >= 11) {
+      paymentValid = true;
+    } else {
+      if (!bankAcc || bankAcc.length < 6) missing.push('Bank Account Number (minimum 6 digits)');
+      if (!ifsc || ifsc.length < 11) missing.push('Bank IFSC Code (11 characters)');
+    }
+  } else {
+    if (upiId || (bankAcc && ifsc)) {
+      paymentValid = true;
+    } else {
+      missing.push('Valid Payout Account Details (UPI or Bank)');
+    }
+  }
+
+  // KYC validation
+  let kycValid = false;
+  if (pan && pan.length >= 10) {
+    kycValid = true;
+  } else {
+    missing.push('PAN Card Number (min 10 characters)');
+  }
+
+  if (paymentValid && kycValid) {
+    return { status: 'GREEN', label: 'Bank & KYC Verified', missing: [] };
+  } else if (paymentValid && !kycValid) {
+    return { status: 'YELLOW', label: 'KYC Review Pending', missing };
+  } else {
+    return { status: 'RED', label: 'Unverified Payout Account', missing };
+  }
+}
+
 // Bank Account & KYC Verification Badge Helper
-function BankVerificationBadge({ isVerified = true, kycStatus = 'verified' }) {
-  if (kycStatus === 'verified' && isVerified) {
+function BankVerificationBadge({ radarStatus, isVerified = true, kycStatus = 'verified' }) {
+  const status = radarStatus?.status || (kycStatus === 'verified' && isVerified ? 'GREEN' : kycStatus === 'pending' ? 'YELLOW' : 'RED');
+  const label = radarStatus?.label || (status === 'GREEN' ? 'Bank & KYC Verified' : status === 'YELLOW' ? 'KYC Review Pending' : 'Unverified Payout Account');
+
+  if (status === 'GREEN') {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-        <CheckCircle2 size={11} /> Bank & KYC Verified
+        <CheckCircle2 size={11} /> {label}
       </span>
     );
   }
-  if (kycStatus === 'pending') {
+  if (status === 'YELLOW') {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-        <Clock size={11} /> KYC Review Pending
+        <Clock size={11} /> {label}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-      <AlertOctagon size={11} /> Unverified Payout Account
+      <AlertOctagon size={11} /> {label}
     </span>
   );
 }
@@ -154,6 +210,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
   const TierIcon    = tier.icon;
   const isSandbox   = IS_SANDBOX_ENABLED || payout.is_sandbox;
   const utrNumber   = payout.razorpay_payout_id ? `UTR-RZP-${payout.id}9923` : (payout.utr || '—');
+  const radarStatus = getPayoutRadarStatus(payout);
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(`WITHDRAWAL-${payout.id}`);
@@ -187,7 +244,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-mono font-bold tracking-widest uppercase">
                   WITHDRAWAL AUDIT CONSOLE
                 </span>
-                <BankVerificationBadge isVerified={true} kycStatus="verified" />
+                <BankVerificationBadge radarStatus={radarStatus} isVerified={true} kycStatus="verified" />
                 {isSandbox && (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[9px] font-mono font-black uppercase tracking-wider flex items-center gap-1">
                     <Beaker size={12} /> TEST SANDBOX MODE
@@ -228,6 +285,27 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                   <span>Immutable Snapshot Hash: <strong>SHA256-{payout.id}883a91f</strong></span>
                   <span className="font-bold text-emerald-700">Frozen & Locked</span>
                 </div>
+
+                {radarStatus.status !== 'GREEN' && (
+                  <div className={`p-4 rounded-2xl border flex items-start gap-3 ${radarStatus.status === 'RED' ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                    <AlertTriangle size={18} className="shrink-0 mt-0.5 text-rose-600" />
+                    <div className="text-xs space-y-1">
+                      <h4 className="font-extrabold uppercase tracking-wide text-[10px]">
+                        {radarStatus.status === 'RED' ? '🔴 Critical Pre-Payment Verification Failure' : '🟡 KYC Verification Warning'}
+                      </h4>
+                      <p className="leading-relaxed">
+                        {radarStatus.status === 'RED' 
+                          ? 'Automated RazorpayX payout is BLOCKED because essential payment or KYC details are missing:' 
+                          : 'Affiliate bank details are provided, but tax KYC (PAN) details are incomplete:'}
+                      </p>
+                      <ul className="list-disc list-inside font-semibold space-y-0.5 pt-1">
+                        {radarStatus.missing.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
 
                 {/* SECTION 1: AFFILIATE SUMMARY */}
                 <div className="bg-[#F8F3FB] border border-[#F3EAF8] p-5 rounded-2xl space-y-4">
@@ -417,10 +495,10 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
               ) : (
                 <button
                   onClick={() => onApprove(payout.id, netPayable, internalNote)}
-                  disabled={loading}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  disabled={loading || radarStatus.status === 'RED'}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Check size={15} /> PAY NOW VIA RAZORPAYX ({fmt(netPayable)})
+                  <Check size={15} /> {radarStatus.status === 'RED' ? 'PAYMENT BLOCKED (UNVERIFIED)' : `PAY NOW VIA RAZORPAYX (${fmt(netPayable)})`}
                 </button>
               )}
 
@@ -1623,6 +1701,7 @@ export default function AffiliateManagement() {
               <div className="grid grid-cols-1 gap-4">
                 {payouts.map(p => {
                   const risk = getRiskAssessment({}, p);
+                  const radar = getPayoutRadarStatus(p);
                   const tier = getAffiliateTier(p.pending_balance * 8);
                   const TierIcon = tier.icon;
                   return (
@@ -1633,7 +1712,7 @@ export default function AffiliateManagement() {
                           <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2.5 py-0.5 rounded-lg border border-[#F3EAF8]">
                             {p.affiliate_code}
                           </span>
-                          <BankVerificationBadge isVerified={true} kycStatus="verified" />
+                          <BankVerificationBadge radarStatus={radar} isVerified={true} kycStatus="verified" />
                           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${tier.color}`}>
                             <TierIcon size={12} /> {tier.label}
                           </span>
