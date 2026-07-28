@@ -345,7 +345,7 @@ const styles = {
     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.30)',
     width: '100%',
     maxWidth: '780px',
-    marginTop: '6px',
+    marginTop: '48px',
   },
   statItem: {
     display: 'flex',
