@@ -7,37 +7,37 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// High-resolution, bright Unsplash photos for digital products & 3D creative assets (no dark laptop screens)
+// High-resolution Unsplash photos for digital products & websites
 const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
   {
     id: 1,
-    title: '3D Vibrant Digital Abstract & Fluid Art',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Product Analytics & Web Dashboard',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 2,
-    title: 'Modern UI Design & Color Palette Canvas',
-    image: 'https://images.unsplash.com/photo-1600132806370-bf17e65e942f?auto=format&fit=crop&w=1920&q=80',
+    title: 'Modern Web Design & Digital Product UI',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 3,
-    title: 'SaaS Data Analytics & Interactive Metrics',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Tech Workspace & Modern Web Products',
+    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 4,
-    title: 'Vibrant 3D Digital Product Geometry',
-    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Design System & Mobile Prototypes',
+    image: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 5,
-    title: 'Creative Studio & Digital Design System',
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1920&q=80',
+    title: 'Mobile App UX/UI Product Design',
+    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 6,
-    title: 'Bright Digital Creation & UX Workspace',
-    image: 'https://images.unsplash.com/photo-1542744094-3a3172720188?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Creators & Innovative UI Studio',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80',
   }
 ];
 
