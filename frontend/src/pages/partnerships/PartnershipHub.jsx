@@ -259,42 +259,17 @@ export default function PartnershipHub() {
                       ))}
                     </ul>
 
-                    <button className="btn-premium btn-premium-solid" style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}>
+                    <button 
+                      className={`btn-premium ${hoveredButton === 'vendor' ? 'btn-premium-solid' : ''}`} 
+                      onMouseEnter={() => setHoveredButton('vendor')}
+                      onMouseLeave={() => setHoveredButton(null)}
+                      style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
+                    >
                       Learn More <ArrowRight size={14} />
                     </button>
                   </div>
-<<<<<<< HEAD
-
-                  <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
-                    Become a Vendor
-                  </h3>
-
-                  <p style={{ color: '#6B4F7A', marginBottom: '20px', lineHeight: 1.65, fontSize: '.9rem' }}>
-                    Sell your digital products to a global audience of professionals and creators.
-                  </p>
-
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {['Global reach', 'Secure payouts', 'Full creative control'].map((item, i) => (
-                      <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.83rem', color: '#2D004D', fontWeight: 600 }}>
-                        <Check size={14} color="var(--color-latte)" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button 
-                    className={`btn-premium ${hoveredButton === 'vendor' ? 'btn-premium-solid' : ''}`} 
-                    onMouseEnter={() => setHoveredButton('vendor')}
-                    onMouseLeave={() => setHoveredButton(null)}
-                    style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
-                  >
-                    Learn More <ArrowRight size={14} />
-                  </button>
-                </div>
-              </Reveal>
-=======
                 </Reveal>
               )}
->>>>>>> 869c0fd (feat(admin): vendor enable/disable, marketplace toggle, and auth type safety fixes)
             </div>
           </div>
         </section>
