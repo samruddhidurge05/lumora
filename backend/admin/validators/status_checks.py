@@ -16,7 +16,7 @@ def check_platform_paused():
     pause_msg = "Platform is temporarily paused."
     
     if firebase_connected and db is not None:
-        settings = get_platform_settings()
+        settings = get_platform_settings() or {}
         if settings.get("isPlatformPaused", False):
             is_paused = True
             pause_msg = settings.get("pauseMessage") or "Platform is temporarily paused."
@@ -46,9 +46,21 @@ def check_platform_paused():
             message=pause_msg
         )
 
+def check_vendor_marketplace_enabled(db_session=None):
+    from app.api.settings_router import get_vendor_enabled_state
+    state = get_vendor_enabled_state(db_session)
+    if not state.get("vendor_enabled", True):
+        raise LumoraException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="VENDOR_MARKETPLACE_DISABLED",
+            message="Vendor Marketplace is currently unavailable."
+        )
+
 def verify_vendor_active(current_user: User = Depends(get_current_user_required)):
     if current_user.role == "admin":
         return
+
+    check_vendor_marketplace_enabled()
 
     if current_user.role not in ("vendor", "affiliate"):
         raise LumoraException(

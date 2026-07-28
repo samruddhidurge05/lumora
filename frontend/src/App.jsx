@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppContextProvider, useApp } from './context/AppContext';
@@ -9,6 +9,27 @@ import NavigationProgress from './components/NavigationProgress';
 import CartDrawer from './components/cart/CartDrawer';
 
 import DownloadReadyPopup from './components/download/DownloadReadyPopup';
+import { useFeatureFlags } from './hooks/useFeatureFlags';
+
+const VendorUnavailable = safeLazy(() => import('./components/common/VendorUnavailable'));
+
+function VendorRouteGuard({ children }) {
+  const { vendor_enabled } = useFeatureFlags();
+  if (!vendor_enabled) {
+    return <VendorUnavailable />;
+  }
+  return children;
+}
+
+function AuthVendorGuard({ children }) {
+  const { vendor_enabled } = useFeatureFlags();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
+  if (role === 'vendor' && !vendor_enabled) {
+    return <VendorUnavailable />;
+  }
+  return children;
+}
 
 // Helper for lazy loading with automatic retry & reload on deployment chunk updates
 function safeLazy(importFn) {
@@ -518,8 +539,8 @@ function AppContent() {
           <Route path="/auth/login-selection"    element={<Navigate to="/auth/login?role=customer" replace />} />
 
           <Route path="/auth/register-selection" element={<Navigate to="/auth/register?role=customer" replace />} />
-          <Route path="/auth/login"              element={<Login />} />
-          <Route path="/auth/register"           element={<Register />} />
+          <Route path="/auth/login"              element={<AuthVendorGuard><Login /></AuthVendorGuard>} />
+          <Route path="/auth/register"           element={<AuthVendorGuard><Register /></AuthVendorGuard>} />
           <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
           <Route path="/auth/verify-email"       element={<VerifyEmail />} />
 
@@ -530,12 +551,12 @@ function AppContent() {
           {/* ── Partnership routes ── */}
           <Route path="/partnerships"           element={<PartnershipHub />} />
           <Route path="/partnerships/affiliate" element={<Affiliate />} />
-          <Route path="/partnerships/vendor"    element={<Vendor />} />
+          <Route path="/partnerships/vendor"    element={<VendorRouteGuard><Vendor /></VendorRouteGuard>} />
           <Route path="/partnership/affiliate"  element={<JoinAffiliate />} />
-          <Route path="/partnership/vendor"     element={<JoinVendor />} />
+          <Route path="/partnership/vendor"     element={<VendorRouteGuard><JoinVendor /></VendorRouteGuard>} />
 
           {/* ── Protected dashboard routes ── */}
-          <Route path="/vendor" element={<Navigate to="/vendor/dashboard" replace />} />
+          <Route path="/vendor" element={<VendorRouteGuard><Navigate to="/vendor/dashboard" replace /></VendorRouteGuard>} />
           <Route path="/affiliate" element={<Navigate to="/affiliate/dashboard" replace />} />
           {/* /affiliate/activate — open to any authenticated user; AffiliateActivation handles its own guard */}
           <Route path="/affiliate/activate" element={<AffiliateActivation />} />
@@ -555,46 +576,48 @@ function AppContent() {
           />
           <Route path="/vendor/dashboard"
             element={
-              <ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor">
-                <VendorDashboard />
-              </ProtectedRoute>
+              <VendorRouteGuard>
+                <ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor">
+                  <VendorDashboard />
+                </ProtectedRoute>
+              </VendorRouteGuard>
             }
           />
           <Route path="/vendor/orders"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorOrders /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/products"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProducts /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProducts /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/add-product"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAddProduct /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAddProduct /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/edit-product/:id"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEditProduct /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEditProduct /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/analytics"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAnalytics /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAnalytics /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/earnings"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEarnings /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorEarnings /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/withdrawals"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorWithdrawals /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorWithdrawals /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/reviews"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorReviews /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorReviews /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/affiliate"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAffiliate /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorAffiliate /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/verification"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorVerification /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorVerification /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/store-settings"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorStoreSettings /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorStoreSettings /></ProtectedRoute></VendorRouteGuard>}
           />
           <Route path="/vendor/profile"
-            element={<ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProfile /></ProtectedRoute>}
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProfile /></ProtectedRoute></VendorRouteGuard>}
           />
 
           {/* ── Admin routes ── */}

@@ -165,7 +165,7 @@ def get_platform_settings():
         doc_ref = db.collection("platformSettings").document("global")
         snap = doc_ref.get()
         if snap.exists:
-            return snap.to_dict()
+            return snap.to_dict() or {}
     except Exception:
         # Silently swallow quota/offline errors - platform settings are non-critical.
         # Caller falls back to local state or defaults.

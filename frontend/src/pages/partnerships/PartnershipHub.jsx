@@ -5,6 +5,7 @@ import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import { ArrowRight, Share2, Store, Check, Shield, TrendingUp, Users, Headphones } from 'lucide-react';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
 /* ── Scroll-triggered reveal wrapper (matches Home.jsx) ── */
 function Reveal({ children, delay = 0, style = {} }) {
@@ -24,6 +25,7 @@ function Reveal({ children, delay = 0, style = {} }) {
 export default function PartnershipHub() {
   const navigate = useNavigate();
   const [hoveredButton, setHoveredButton] = useState(null);
+  const { vendor_enabled } = useFeatureFlags();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -149,10 +151,10 @@ export default function PartnershipHub() {
             <Reveal>
               <div style={{ textAlign: 'center', marginBottom: '52px' }}>
                 <p style={{ fontSize: '.65rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
-                  Two Paths, One Platform
+                  {vendor_enabled ? 'Two Paths, One Platform' : 'Partnership Opportunity'}
                 </p>
                 <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 400, color: '#2D004D' }}>
-                  Choose Your Path
+                  {vendor_enabled ? 'Choose Your Path' : 'Become an Affiliate'}
                 </h2>
               </div>
             </Reveal>
@@ -214,31 +216,54 @@ export default function PartnershipHub() {
               </Reveal>
 
               {/* ── Vendor Card ── */}
-              <Reveal delay={0.12}>
-                <div
-                  className="glass-card"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate('/partnerships/vendor')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/vendor'); } }}
-                  style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
-                  }}
-                >
-                  <div style={{
-                    width: '46px', height: '46px', borderRadius: '13px',
-                    background: 'rgba(255, 214, 186, 0.45)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: '18px', color: '#5A1E7E',
-                  }}>
-                    <Store size={22} />
+              {vendor_enabled && (
+                <Reveal delay={0.12}>
+                  <div
+                    className="glass-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate('/partnerships/vendor')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/vendor'); } }}
+                    style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = 'translateY(-6px)';
+                      e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
+                    }}
+                  >
+                    <div style={{
+                      width: '46px', height: '46px', borderRadius: '13px',
+                      background: 'rgba(255, 214, 186, 0.45)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: '18px', color: '#5A1E7E',
+                    }}>
+                      <Store size={22} />
+                    </div>
+
+                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
+                      Become a Vendor
+                    </h3>
+
+                    <p style={{ color: '#6B4F7A', marginBottom: '20px', lineHeight: 1.65, fontSize: '.9rem' }}>
+                      Sell your digital products to a global audience of professionals and creators.
+                    </p>
+
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {['Global reach', 'Secure payouts', 'Full creative control'].map((item, i) => (
+                        <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.83rem', color: '#2D004D', fontWeight: 600 }}>
+                          <Check size={14} color="var(--color-latte)" /> {item}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button className="btn-premium btn-premium-solid" style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}>
+                      Learn More <ArrowRight size={14} />
+                    </button>
                   </div>
+<<<<<<< HEAD
 
                   <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
                     Become a Vendor
@@ -266,6 +291,10 @@ export default function PartnershipHub() {
                   </button>
                 </div>
               </Reveal>
+=======
+                </Reveal>
+              )}
+>>>>>>> 869c0fd (feat(admin): vendor enable/disable, marketplace toggle, and auth type safety fixes)
             </div>
           </div>
         </section>

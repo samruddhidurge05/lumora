@@ -73,6 +73,7 @@ from app.admin_api.products.routes import router as admin_products_router
 from app.admin_api.admin_users.routes import router as admin_users_router
 from app.api.refunds_router import router as refunds_router
 from app.api.payout_webhook_router import router as payout_webhook_router
+from app.api.settings_router import router as public_settings_router
 
 # -- Startup Configuration Validation -----------------------------------------
 def _validate_startup_config() -> None:
@@ -908,6 +909,7 @@ app.include_router(admin_products_router,      prefix="/api/admin/products",    
 app.include_router(admin_users_router,         prefix="/api/admin",                tags=["Admin Team"])
 app.include_router(refunds_router,             prefix="/api/refunds",              tags=["Refund Requests"])
 app.include_router(payout_webhook_router,      prefix="/api/webhooks",             tags=["Webhooks"])
+app.include_router(public_settings_router,     prefix="/api/settings",             tags=["Settings"])
 
 
 # -- Static files --------------------------------------------------------------
@@ -1011,7 +1013,7 @@ def get_public_platform_status():
     if firebase_connected and db is not None:
         try:
             from admin.firestore.admin_firestore import get_platform_settings
-            settings = get_platform_settings()
+            settings = get_platform_settings() or {}
             return {
                 "isPlatformPaused": settings.get("isPlatformPaused", False),
                 "maintenanceMessage": settings.get("pauseMessage") or "Platform maintenance is currently active.",
@@ -1022,10 +1024,11 @@ def get_public_platform_status():
 
     try:
         from admin.routes.settings import _local_platform_state
+        local_state = _local_platform_state or {}
         return {
-            "isPlatformPaused": _local_platform_state.get("isPlatformPaused", False),
-            "maintenanceMessage": _local_platform_state.get("pauseMessage") or "Platform maintenance is currently active.",
-            "updatedAt": _local_platform_state.get("lastUpdated") or "",
+            "isPlatformPaused": local_state.get("isPlatformPaused", False),
+            "maintenanceMessage": local_state.get("pauseMessage") or "Platform maintenance is currently active.",
+            "updatedAt": local_state.get("lastUpdated") or "",
         }
     except Exception:
         return {

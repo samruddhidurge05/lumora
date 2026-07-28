@@ -53,8 +53,10 @@ def public_vendor_profile(vendor_id: str, db_session=None):
     from sqlalchemy.orm import Session as _Session
     from app.models.user import User as UserModel
     from app.models.product import Product as ProductModel
+    from admin.validators.status_checks import check_vendor_marketplace_enabled
 
     with _Session(engine) as db_s:
+        check_vendor_marketplace_enabled(db_s)
         # Try to find vendor by Firebase uid stored as vendor_id
         products = db_s.query(ProductModel).filter(
             (ProductModel.vendor_id == vendor_id) | (ProductModel.seller == vendor_id)

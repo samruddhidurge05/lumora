@@ -113,8 +113,16 @@ def update_settings(
     db: Session = Depends(get_db),
     admin_user=Depends(require_admin_role),
 ):
+    # Always persist keys into SQLite platform_settings table first
+    try:
+        for k, v in data.items():
+            _set_platform_setting(db, k, v, admin_user.id)
+    except Exception as exc:
+        logger.error("[settings] SQLite write error on update_settings: %s", exc)
+
+    _local_platform_state.update(data)
+
     if not firebase_connected or fdb is None:
-        _local_platform_state.update(data)
         try:
             log_admin_action(
                 db=db,
@@ -126,8 +134,8 @@ def update_settings(
             )
         except Exception as exc:
             logger.error("[settings] audit_log insert failed on update_settings: %s", exc)
-            # Requirements 10.14: audit failure must not prevent the primary action.
         return {"success": True, "settings": _local_platform_state}
+
     try:
         doc_ref = fdb.collection("platformSettings").document("global")
         doc_ref.set(data, merge=True)
@@ -142,10 +150,76 @@ def update_settings(
             )
         except Exception as exc:
             logger.error("[settings] audit_log insert failed on update_settings: %s", exc)
-            # Requirements 10.14: audit failure must not prevent the primary action.
         return {"success": True, "settings": get_platform_settings()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/vendor-marketplace")
+def update_vendor_marketplace_setting(
+    data: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role),
+):
+    """
+    PUT /api/admin/settings/vendor-marketplace
+    Toggles vendor_enabled feature flag.
+    Request body: {"vendor_enabled": bool}
+    """
+    vendor_enabled = data.get("vendor_enabled")
+    if vendor_enabled is None and "vendorSellingEnabled" in data:
+        vendor_enabled = data.get("vendorSellingEnabled")
+    if vendor_enabled is None and "vendorRegistrationEnabled" in data:
+        vendor_enabled = data.get("vendorRegistrationEnabled")
+
+    if vendor_enabled is None:
+        raise HTTPException(status_code=400, detail="Missing vendor_enabled or toggle field in request body")
+
+    vendor_enabled = bool(vendor_enabled)
+
+    # Prepare update payload
+    update_payload = {
+        "vendor_enabled": vendor_enabled,
+        "vendorSellingEnabled": data.get("vendorSellingEnabled", vendor_enabled),
+        "vendorRegistrationEnabled": data.get("vendorRegistrationEnabled", vendor_enabled),
+    }
+
+    # 1. Authoritative write to SQLite platform_settings table
+    try:
+        for k, v in update_payload.items():
+            _set_platform_setting(db, k, v, admin_user.id)
+    except Exception as exc:
+        logger.error("[settings] SQLite write failed for vendor-marketplace: %s", exc)
+
+    _local_platform_state.update(update_payload)
+
+    # 2. Audit log
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_user.id,
+            action="vendor_marketplace_toggled",
+            target_type=None,
+            target_id=None,
+            metadata={"vendor_enabled": vendor_enabled},
+        )
+    except Exception as exc:
+        logger.error("[settings] audit_log insert failed for vendor-marketplace: %s", exc)
+
+    # 3. Best-effort Firestore sync
+    if firebase_connected and fdb is not None:
+        try:
+            doc_ref = fdb.collection("platformSettings").document("global")
+            doc_ref.set(update_payload, merge=True)
+        except Exception as exc:
+            logger.error("[settings] Firestore sync failed for vendor-marketplace toggle: %s", exc)
+
+    return {
+        "success": True,
+        "vendor_enabled": vendor_enabled,
+        "vendorSellingEnabled": update_payload["vendorSellingEnabled"],
+        "vendorRegistrationEnabled": update_payload["vendorRegistrationEnabled"],
+    }
 
 
 @router.post("/pause")

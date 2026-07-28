@@ -55,6 +55,9 @@ class LocalStorageProvider(BaseStorageProvider):
         self.upload_dir = upload_dir
         os.makedirs(upload_dir, exist_ok=True)
 
+    def is_available(self) -> bool:
+        return True
+
     def _get_absolute_path(self, relative_path: str) -> str:
         # Strip local:// scheme
         clean_path = relative_path.replace("local://", "")
@@ -1100,6 +1103,17 @@ class StorageService:
             return self.provider.exists(resolved_path)
         else:
             return self.local_provider.exists(resolved_path)
+
+    def check_health(self) -> Dict[str, Any]:
+        """Returns health metrics and availability status for storage providers."""
+        is_avail = self.provider.is_available() if hasattr(self.provider, "is_available") else True
+        return {
+            "status": "healthy" if is_avail else "unhealthy",
+            "active_provider": self.provider.__class__.__name__,
+            "b2_available": self.b2_provider.is_available(),
+            "firebase_available": self.firebase_provider.is_available(),
+            "local_available": self.local_provider.is_available(),
+        }
 
 # Instantiate singleton
 storage_service = StorageService()

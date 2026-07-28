@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AuthBackground from '../../components/AuthBackground';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import './auth.css';
 
 const ROLES = [
@@ -92,6 +93,9 @@ const roleCardVariants = {
 
 export default function RegisterSelection() {
   const navigate = useNavigate();
+  const { vendor_enabled } = useFeatureFlags();
+
+  const availableRoles = vendor_enabled ? ROLES : ROLES.filter(r => r.id !== 'vendor');
 
   return (
     <AuthBackground>
@@ -120,7 +124,7 @@ export default function RegisterSelection() {
           </motion.p>
 
           <motion.div className="role-cards-container" variants={roleContainerVariants}>
-            {ROLES.map((role) => (
+            {availableRoles.map((role) => (
               <motion.div
                 key={role.id}
                 className="role-card"
