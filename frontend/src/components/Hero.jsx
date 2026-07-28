@@ -332,12 +332,45 @@ export default function Hero() {
 
       {/* Responsive Styles */}
       <style>{`
+        /* Tablet: stack grid, shrink composite */
         @media (max-width: 1024px) {
-          .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
-          .hero-composite { min-height: 480px !important; }
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+          .hero-composite {
+            height: 380px !important;
+            max-width: 520px !important;
+            margin: 0 auto !important;
+          }
         }
+
+        /* Large mobile: scale composite down */
+        @media (max-width: 768px) {
+          .hero-composite {
+            height: 340px !important;
+            max-width: 420px !important;
+            transform: scale(0.88) !important;
+            transform-origin: top center !important;
+            margin-bottom: -32px !important;
+          }
+        }
+
+        /* Small mobile: show smaller composite, stack search bar */
         @media (max-width: 640px) {
-          .hero-search-bar { flex-direction: column !important; gap: 16px !important; }
+          .hero-search-bar { flex-direction: column !important; gap: 12px !important; }
+          .hero-composite {
+            display: flex !important;
+            height: 300px !important;
+            max-width: 360px !important;
+            transform: scale(0.78) !important;
+            transform-origin: top center !important;
+            margin-bottom: -48px !important;
+          }
+        }
+
+        /* Very small screens: hide to avoid clutter */
+        @media (max-width: 400px) {
           .hero-composite { display: none !important; }
         }
       `}</style>
@@ -484,7 +517,7 @@ const styles = {
   rightCol: {
     position: 'relative',
     width: '100%',
-    height: '540px',
+    height: '440px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -495,92 +528,92 @@ const styles = {
   /* Sales Overview: top-left, slight counter-clockwise tilt */
   salesOverviewCard: {
     position: 'absolute',
-    top: '0px',
-    left: '0px',
-    width: '230px',
-    padding: '16px',
-    borderRadius: '20px',
+    top: '20px',
+    left: '20px',
+    width: '210px',
+    padding: '14px',
+    borderRadius: '18px',
     background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(32px)',
     border: '1px solid rgba(255, 255, 255, 0.95)',
     boxShadow: '0 8px 32px rgba(90, 30, 126, 0.10), 0 1px 0 rgba(255,255,255,0.8) inset',
     zIndex: 3,
-    transform: 'rotate(-3deg) translateY(0px)',
+    transform: 'rotate(-2deg)',
   },
 
   /* Rating card: top-right, slight clockwise tilt */
   ratingBadgeCard: {
     position: 'absolute',
-    top: '0px',
-    right: '0px',
-    padding: '14px 18px',
-    borderRadius: '20px',
+    top: '20px',
+    right: '20px',
+    padding: '12px 16px',
+    borderRadius: '18px',
     background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(32px)',
     border: '1px solid rgba(255, 255, 255, 0.95)',
     boxShadow: '0 8px 32px rgba(90, 30, 126, 0.10)',
     zIndex: 4,
-    transform: 'rotate(2.5deg)',
+    transform: 'rotate(2deg)',
   },
 
-  /* Center: product card (was phoneMockupFrame) — the hero card, straight, elevated */
+  /* Center: product card — the hero card, slightly elevated */
   phoneMockupFrame: {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: 'translate(-50%, -46%) rotate(-1deg)',
-    width: '240px',
-    padding: '16px',
-    borderRadius: '24px',
+    transform: 'translate(-50%, -50%) rotate(-1deg)',
+    width: '220px',
+    padding: '14px',
+    borderRadius: '22px',
     background: 'rgba(255, 255, 255, 0.97)',
     backdropFilter: 'blur(40px)',
     border: '1.5px solid rgba(192, 132, 252, 0.45)',
-    boxShadow: '0 24px 64px rgba(90, 30, 126, 0.18), 0 1px 0 rgba(255,255,255,1) inset',
+    boxShadow: '0 20px 56px rgba(90, 30, 126, 0.18), 0 1px 0 rgba(255,255,255,1) inset',
     zIndex: 5,
   },
 
   /* Bottom-left dark AI card */
   darkAiCard: {
     position: 'absolute',
-    bottom: '10px',
-    left: '10px',
-    width: '175px',
-    padding: '14px',
-    borderRadius: '20px',
+    bottom: '20px',
+    left: '20px',
+    width: '160px',
+    padding: '12px',
+    borderRadius: '18px',
     background: 'linear-gradient(145deg, #2D004D 0%, #1a0030 100%)',
     backdropFilter: 'blur(30px)',
     border: '1px solid rgba(147, 51, 234, 0.30)',
-    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.22)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.22)',
     zIndex: 4,
-    transform: 'rotate(-2.5deg)',
+    transform: 'rotate(-2deg)',
   },
 
   /* Bottom-right dark design card */
   darkDesignCard: {
     position: 'absolute',
-    bottom: '10px',
-    right: '0px',
-    width: '178px',
-    padding: '14px',
-    borderRadius: '20px',
+    bottom: '20px',
+    right: '20px',
+    width: '162px',
+    padding: '12px',
+    borderRadius: '18px',
     background: 'linear-gradient(145deg, #190030 0%, #0f0020 100%)',
     backdropFilter: 'blur(30px)',
     border: '1px solid rgba(192, 132, 252, 0.28)',
-    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.20)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.20)',
     zIndex: 4,
-    transform: 'rotate(2deg)',
+    transform: 'rotate(1.5deg)',
   },
 
   /* Pill badges */
   topMarketplaceBadge: {
     position: 'absolute',
-    top: '100px',
-    right: '-8px',
-    padding: '6px 13px',
+    top: '80px',
+    right: '0px',
+    padding: '5px 11px',
     borderRadius: '999px',
     background: 'rgba(255, 255, 255, 0.95)',
     border: '1px solid rgba(192, 132, 252, 0.35)',
-    fontSize: '0.68rem',
+    fontSize: '0.65rem',
     fontWeight: 800,
     color: '#7B3FA0',
     boxShadow: '0 6px 20px rgba(90, 30, 126, 0.10)',
@@ -588,13 +621,13 @@ const styles = {
   },
   instantAccessBadge: {
     position: 'absolute',
-    bottom: '155px',
-    right: '-8px',
-    padding: '6px 13px',
+    bottom: '130px',
+    right: '0px',
+    padding: '5px 11px',
     borderRadius: '999px',
     background: 'rgba(255, 255, 255, 0.95)',
     border: '1px solid rgba(192, 132, 252, 0.35)',
-    fontSize: '0.68rem',
+    fontSize: '0.65rem',
     fontWeight: 800,
     color: '#7B3FA0',
     boxShadow: '0 6px 20px rgba(90, 30, 126, 0.10)',
@@ -602,14 +635,14 @@ const styles = {
   },
   salesGrowthWidget: {
     position: 'absolute',
-    bottom: '-8px',
+    bottom: '0px',
     left: '50%',
     transform: 'translateX(-50%)',
-    padding: '10px 18px',
-    borderRadius: '16px',
+    padding: '8px 16px',
+    borderRadius: '14px',
     background: 'rgba(255, 255, 255, 0.95)',
     border: '1px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 8px 28px rgba(90, 30, 126, 0.12)',
+    boxShadow: '0 8px 24px rgba(90, 30, 126, 0.12)',
     zIndex: 6,
     whiteSpace: 'nowrap',
   },
