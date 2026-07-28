@@ -206,7 +206,7 @@ export default function Analytics() {
     .slice(0, 4)
     .map(p => ({
       ...p,
-      growth: p.sales > 5 ? 15 : 5
+      growth: totalRevenue > 0 ? Math.round((p.revenue / totalRevenue) * 100) : 0
     }));
 
   // Customer retention
@@ -311,10 +311,10 @@ export default function Analytics() {
       ) : (
         <div className="v-stat-grid" style={{ marginBottom: 24 }}>
           {[
-            { label: 'Total Revenue',    value: formatRevenue(totalRevenue), delta: '+18.4%', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
-            { label: 'Total Orders',     value: totalOrders,                 delta: '+12.1%', up: true, icon: <Package size={18} style={{ color: '#7B3FA0' }} /> },
-            { label: 'Avg Conversion',   value: avgConv !== null ? `${avgConv.toFixed(1)}%` : '—', delta: avgConv !== null ? '+0.8pp' : 'Live', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
-            { label: 'Avg Order Value',  value: `₹${avgOrderValue.toLocaleString()}`, delta: '+5.2%', up: true, icon: <CreditCard size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Total Revenue',    value: formatRevenue(totalRevenue), delta: 'Gross', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Total Orders',     value: totalOrders,                 delta: 'Total', up: true, icon: <Package size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Avg Conversion',   value: avgConv !== null ? `${avgConv.toFixed(1)}%` : '—', delta: 'Rates', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Avg Order Value',  value: `₹${avgOrderValue.toLocaleString()}`, delta: 'Avg/Order', up: true, icon: <CreditCard size={18} style={{ color: '#7B3FA0' }} /> },
           ].map((s, i) => (
             <div key={i} className="v-card v-stat-card">
               <div className="v-stat-header">

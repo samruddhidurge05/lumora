@@ -103,8 +103,8 @@ export default function Dashboard() {
 
   /* Stat cards ────────────────────────────────────────────────────────────── */
   const STATS = [
-    { label: 'Total Revenue',     value: loading ? null : `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`,  delta: '+18.4%', up: true,  icon: <DollarSign  size={20} />, bg: 'rgba(184,134,208,0.16)' },
-    { label: 'Total Orders',      value: loading ? null : String(totalSales),                                        delta: '+12.1%', up: true,  icon: <ShoppingBag size={20} />, bg: 'rgba(123,63,160,0.12)'  },
+    { label: 'Total Revenue',     value: loading ? null : `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`,  delta: 'Gross', up: true,  icon: <DollarSign  size={20} />, bg: 'rgba(184,134,208,0.16)' },
+    { label: 'Total Orders',      value: loading ? null : String(totalSales),                                        delta: 'Total', up: true,  icon: <ShoppingBag size={20} />, bg: 'rgba(123,63,160,0.12)'  },
     { label: 'Active Products',   value: loading ? null : String(activeCount),                                       delta: `${activeCount} live`, up: true, icon: <Package size={20} />,    bg: 'rgba(216,191,227,0.20)' },
     { label: 'Avg. Rating',       value: loading ? null : (Number(avgRating) || 0).toFixed(1),                       delta: '/ 5.0',  up: true,  icon: <Star        size={20} />, bg: 'rgba(90,30,126,0.10)'   },
   ];
