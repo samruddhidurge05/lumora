@@ -7,67 +7,47 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// High-quality showcase product images that rapidly change in the background
-const SHOWCASE_PRODUCTS = [
+// Diverse, high-resolution full digital product showcase images
+const FULL_BACKGROUND_IMAGES = [
   {
     id: 1,
-    title: '3D Glassmorphism UI Kit',
+    title: '3D Glassmorphism UI Kit & Components',
     category: 'UI Kits',
     price: '$49',
     rating: '4.9',
-    downloads: '1.2k',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-    tag: 'Figma UI'
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 2,
-    title: 'SaaS Analytics Dashboard',
+    title: 'SaaS Analytics Dashboard Pro',
     category: 'Templates',
     price: '$59',
     rating: '5.0',
-    downloads: '3.4k',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
-    tag: 'React & Vite'
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 3,
-    title: 'AI Prompt Matrix Generator',
+    title: 'AI Neural Prompt & Art Generator',
     category: 'AI Tools',
     price: '$39',
     rating: '4.8',
-    downloads: '2.1k',
-    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80',
-    tag: 'Midjourney AI'
+    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 4,
-    title: 'E-Commerce Design System',
+    title: 'Minimalist E-Commerce Design System',
     category: 'Design Systems',
     price: '$79',
     rating: '4.9',
-    downloads: '980',
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
-    tag: 'Figma Pro'
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1600&q=80',
   },
   {
     id: 5,
-    title: 'Cyberpunk 3D Icon Bundle',
+    title: 'Cyberpunk 3D Icon & Asset Bundle',
     category: '3D Assets',
     price: '$29',
     rating: '4.9',
-    downloads: '4.5k',
-    image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=800&q=80',
-    tag: '3D Render'
-  },
-  {
-    id: 6,
-    title: 'Vibrant Geometric Wallpapers',
-    category: 'Graphics',
-    price: '$19',
-    rating: '4.7',
-    downloads: '5.1k',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-    tag: '4K Assets'
+    image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=1600&q=80',
   }
 ];
 
@@ -77,21 +57,15 @@ export default function Hero() {
   const heroRef = useRef(null);
   const [localSearch, setLocalSearch] = useState('');
   
-  // Dynamic indices for background slideshows
-  const [bgIndex, setBgIndex] = useState(0);
-  const [cardIndex1, setCardIndex1] = useState(0);
-  const [cardIndex2, setCardIndex2] = useState(2);
-  const [cardIndex3, setCardIndex3] = useState(4);
+  // Current active full background image index
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Rapidly change images every 1.8s
+  // Cycle background full image opacity every 2 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % SHOWCASE_PRODUCTS.length);
-      setCardIndex1((prev) => (prev + 1) % SHOWCASE_PRODUCTS.length);
-      setCardIndex2((prev) => (prev + 2) % SHOWCASE_PRODUCTS.length);
-      setCardIndex3((prev) => (prev + 3) % SHOWCASE_PRODUCTS.length);
-    }, 1800);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % FULL_BACKGROUND_IMAGES.length);
+    }, 2000);
+    return () => clearInterval(timer);
   }, []);
 
   // Entrance Animations
@@ -119,63 +93,27 @@ export default function Hero() {
     navigateTo('marketplace');
   };
 
-  const activeProduct = SHOWCASE_PRODUCTS[bgIndex];
-  const prod1 = SHOWCASE_PRODUCTS[cardIndex1];
-  const prod2 = SHOWCASE_PRODUCTS[cardIndex2];
-  const prod3 = SHOWCASE_PRODUCTS[cardIndex3];
+  const activeItem = FULL_BACKGROUND_IMAGES[currentIndex];
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── HIGH VISIBILITY DYNAMIC BACKGROUND IMAGE SLIDESHOW ── */}
-      <div style={styles.bgSlideshowContainer}>
-        {SHOWCASE_PRODUCTS.map((prod, index) => (
+      {/* ── FULL BACKGROUND IMAGES SLIDESHOW WITH OPACITY FADE ── */}
+      <div style={styles.fullBgWrapper}>
+        {FULL_BACKGROUND_IMAGES.map((item, idx) => (
           <div
-            key={index}
+            key={item.id}
             style={{
-              ...styles.bgSlideImage,
-              backgroundImage: `url(${prod.image})`,
-              opacity: index === bgIndex ? 0.32 : 0,
-              transform: index === bgIndex ? 'scale(1.05)' : 'scale(1.0)',
-              transition: 'opacity 0.6s ease-in-out, transform 1.8s ease-out',
+              ...styles.fullBgImage,
+              backgroundImage: `url(${item.image})`,
+              opacity: idx === currentIndex ? 0.55 : 0,
+              transform: idx === currentIndex ? 'scale(1.03)' : 'scale(1.0)',
+              transition: 'opacity 1.0s cubic-bezier(0.4, 0, 0.2, 1), transform 2.0s ease-out',
             }}
           />
         ))}
 
-        {/* Soft Vignette Overlay keeping text readable */}
-        <div style={styles.bgGradientOverlay} />
-
-        {/* ── VISIBLE FLOATING PRODUCT IMAGE CARDS IN BACKGROUND ── */}
-        <div style={styles.floatingCardsWrapper}>
-          {/* Top-Left Floating Product Card */}
-          <div style={styles.floatingCardTL} className="animate-float">
-            <img src={prod1.image} alt="" style={styles.floatingCardImg} />
-            <div style={styles.floatingCardOverlay}>
-              <span style={styles.floatingCardTag}>{prod1.category}</span>
-              <div style={styles.floatingCardTitle}>{prod1.title}</div>
-              <div style={styles.floatingCardPrice}>{prod1.price}</div>
-            </div>
-          </div>
-
-          {/* Top-Right Floating Product Card */}
-          <div style={{ ...styles.floatingCardTR, animationDelay: '0.8s' }} className="animate-float">
-            <img src={prod2.image} alt="" style={styles.floatingCardImg} />
-            <div style={styles.floatingCardOverlay}>
-              <span style={styles.floatingCardTag}>{prod2.category}</span>
-              <div style={styles.floatingCardTitle}>{prod2.title}</div>
-              <div style={styles.floatingCardPrice}>{prod2.price}</div>
-            </div>
-          </div>
-
-          {/* Bottom-Right Floating Product Card */}
-          <div style={{ ...styles.floatingCardBR, animationDelay: '1.4s' }} className="animate-float">
-            <img src={prod3.image} alt="" style={styles.floatingCardImg} />
-            <div style={styles.floatingCardOverlay}>
-              <span style={styles.floatingCardTag}>{prod3.category}</span>
-              <div style={styles.floatingCardTitle}>{prod3.title}</div>
-              <div style={styles.floatingCardPrice}>{prod3.price}</div>
-            </div>
-          </div>
-        </div>
+        {/* Semi-transparent Light Backdrop Gradient Overlay for text contrast */}
+        <div style={styles.fullBgOverlay} />
       </div>
 
       {/* ── CENTERED HERO CONTENT ── */}
@@ -231,39 +169,39 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Live Changing Background Image Ticker */}
+        {/* 5. Live Showcase Bar with Active Full Image Info */}
         <div className="hero-ticker glass-card" style={styles.tickerCard}>
           <div style={styles.tickerBadgeLeft}>
             <div style={styles.livePulseDot} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7B3FA0' }}>RAPID IMAGE SHOWCASE</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7B3FA0' }}>BACKGROUND SHOWCASE</span>
           </div>
 
           <div style={styles.tickerCenter}>
-            <img src={activeProduct.image} alt="" style={styles.tickerThumb} />
+            <img src={activeItem.image} alt="" style={styles.tickerThumb} />
             <div>
               <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#2D004D', display: 'block' }}>
-                {activeProduct.title}
+                {activeItem.title}
               </span>
               <span style={{ fontSize: '0.70rem', color: '#6B4F7A', fontWeight: 600 }}>
-                {activeProduct.category} • <strong style={{ color: '#16A34A' }}>{activeProduct.price}</strong> • ⭐ {activeProduct.rating}
+                {activeItem.category} • <strong style={{ color: '#16A34A' }}>{activeItem.price}</strong> • ⭐ {activeItem.rating}
               </span>
             </div>
           </div>
 
-          {/* Dynamic Image Counter Dots */}
-          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-            {SHOWCASE_PRODUCTS.map((_, i) => (
+          {/* Opacity Cycle Progress Indicator Dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {FULL_BACKGROUND_IMAGES.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setBgIndex(i)}
+                onClick={() => setCurrentIndex(i)}
                 style={{
-                  width: i === bgIndex ? '18px' : '6px',
-                  height: '6px',
+                  width: i === currentIndex ? '20px' : '7px',
+                  height: '7px',
                   borderRadius: '999px',
-                  background: i === bgIndex ? '#7B3FA0' : 'rgba(123, 63, 160, 0.3)',
+                  background: i === currentIndex ? '#7B3FA0' : 'rgba(123, 63, 160, 0.35)',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.4s ease',
                 }}
               />
             ))}
@@ -305,7 +243,7 @@ export default function Hero() {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.70)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.80)';
                   e.currentTarget.style.color = '#2D004D';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
@@ -350,9 +288,6 @@ export default function Hero() {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.4); opacity: 0.5; }
         }
-        @media (max-width: 1024px) {
-          .floatingCardsWrapper { display: none !important; }
-        }
         @media (max-width: 768px) {
           .hero-search-bar { flex-direction: column !important; gap: 14px !important; }
           .hero-ticker { flex-direction: column !important; text-align: center !important; gap: 8px !important; }
@@ -363,7 +298,7 @@ export default function Hero() {
 }
 
 // Consolidated Stylesheet matching user's exact specification:
-// Centered layout with clearly visible rapid background images & floating product image cards
+// Full background images with opacity changing smoothly one after another
 const styles = {
   section: {
     minHeight: '100vh',
@@ -378,108 +313,27 @@ const styles = {
     background: '#FAF6F0',
   },
 
-  /* Background Rapid Slideshow Container */
-  bgSlideshowContainer: {
+  /* Full Background Wrapper & Opacity Cycling Slides */
+  fullBgWrapper: {
     position: 'absolute',
     inset: 0,
     zIndex: 0,
     overflow: 'hidden',
     pointerEvents: 'none',
   },
-  bgSlideImage: {
+  fullBgImage: {
     position: 'absolute',
     inset: 0,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    filter: 'brightness(0.95)',
+    backgroundRepeat: 'no-repeat',
+    willChange: 'opacity, transform',
   },
-  bgGradientOverlay: {
+  fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'radial-gradient(circle at center, rgba(250, 246, 240, 0.72) 0%, rgba(250, 246, 240, 0.88) 60%, #FAF6F0 100%)',
-    backdropFilter: 'blur(3px)',
-  },
-
-  /* Floating Product Image Cards in Background */
-  floatingCardsWrapper: {
-    position: 'absolute',
-    inset: 0,
-    pointerEvents: 'none',
-    zIndex: 1,
-  },
-  floatingCardTL: {
-    position: 'absolute',
-    top: '12%',
-    left: '4%',
-    width: '200px',
-    height: '130px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 12px 32px rgba(90, 30, 126, 0.15)',
-    border: '2px solid rgba(255, 255, 255, 0.9)',
-    transform: 'rotate(-4deg)',
-    transition: 'all 0.6s ease',
-  },
-  floatingCardTR: {
-    position: 'absolute',
-    top: '14%',
-    right: '4%',
-    width: '210px',
-    height: '135px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 12px 32px rgba(90, 30, 126, 0.15)',
-    border: '2px solid rgba(255, 255, 255, 0.9)',
-    transform: 'rotate(5deg)',
-    transition: 'all 0.6s ease',
-  },
-  floatingCardBR: {
-    position: 'absolute',
-    bottom: '15%',
-    right: '5%',
-    width: '190px',
-    height: '125px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 12px 32px rgba(90, 30, 126, 0.15)',
-    border: '2px solid rgba(255, 255, 255, 0.9)',
-    transform: 'rotate(-3deg)',
-    transition: 'all 0.6s ease',
-  },
-  floatingCardImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  floatingCardOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: '8px 10px',
-    background: 'linear-gradient(180deg, transparent 0%, rgba(29, 0, 51, 0.82) 100%)',
-    color: '#ffffff',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  },
-  floatingCardTag: {
-    fontSize: '0.55rem',
-    fontWeight: 800,
-    color: '#C084FC',
-    textTransform: 'uppercase',
-  },
-  floatingCardTitle: {
-    fontSize: '0.68rem',
-    fontWeight: 800,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  floatingCardPrice: {
-    fontSize: '0.65rem',
-    fontWeight: 900,
-    color: '#4ADE80',
+    background: 'radial-gradient(circle at center, rgba(250, 246, 240, 0.65) 0%, rgba(250, 246, 240, 0.85) 60%, #FAF6F0 100%)',
+    backdropFilter: 'blur(2px)',
   },
 
   /* Main Centered Container */
@@ -503,7 +357,7 @@ const styles = {
     gap: '8px',
     padding: '7px 16px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.90)',
+    background: 'rgba(255, 255, 255, 0.92)',
     border: '1px solid rgba(192, 132, 252, 0.50)',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 4px 16px rgba(90, 30, 126, 0.08)',
@@ -526,7 +380,7 @@ const styles = {
     letterSpacing: '-0.03em',
     margin: 0,
     maxWidth: '900px',
-    textShadow: '0 2px 10px rgba(255, 255, 255, 0.8)',
+    textShadow: '0 2px 14px rgba(255, 255, 255, 0.9)',
   },
   titleHighlight: {
     fontFamily: 'var(--font-editorial)',
@@ -542,10 +396,11 @@ const styles = {
   subtext: {
     fontSize: 'clamp(1rem, 1.8vw, 1.15rem)',
     lineHeight: 1.6,
-    color: '#553664',
+    color: '#4A2E59',
     maxWidth: '680px',
     margin: 0,
-    fontWeight: 500,
+    fontWeight: 600,
+    textShadow: '0 1px 8px rgba(255, 255, 255, 0.8)',
   },
 
   /* Buttons */
@@ -564,7 +419,7 @@ const styles = {
     fontWeight: 700,
     background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
     color: '#ffffff',
-    boxShadow: '0 10px 28px rgba(90, 30, 126, 0.32)',
+    boxShadow: '0 10px 28px rgba(90, 30, 126, 0.35)',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
@@ -575,17 +430,17 @@ const styles = {
     fontSize: '0.92rem',
     fontWeight: 700,
     background: 'rgba(255, 255, 255, 0.95)',
-    border: '1.5px solid rgba(123, 63, 160, 0.35)',
+    border: '1.5px solid rgba(123, 63, 160, 0.40)',
     color: '#7B3FA0',
-    boxShadow: '0 4px 14px rgba(90, 30, 126, 0.06)',
+    boxShadow: '0 4px 14px rgba(90, 30, 126, 0.08)',
   },
   ctaGlass: {
     padding: '14px 28px',
     borderRadius: '16px',
     fontSize: '0.90rem',
     fontWeight: 700,
-    background: 'rgba(255, 255, 255, 0.85)',
-    border: '1px solid rgba(192, 132, 252, 0.40)',
+    background: 'rgba(255, 255, 255, 0.90)',
+    border: '1px solid rgba(192, 132, 252, 0.45)',
     color: '#2D004D',
     display: 'inline-flex',
     alignItems: 'center',
@@ -601,10 +456,10 @@ const styles = {
     gap: '16px',
     padding: '8px 18px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.92)',
+    background: 'rgba(255, 255, 255, 0.94)',
     backdropFilter: 'blur(20px)',
     border: '1.5px solid rgba(192, 132, 252, 0.50)',
-    boxShadow: '0 8px 24px rgba(90, 30, 126, 0.10)',
+    boxShadow: '0 8px 24px rgba(90, 30, 126, 0.12)',
     marginTop: '4px',
     maxWidth: '720px',
     width: '100%',
@@ -646,10 +501,10 @@ const styles = {
     gap: '14px',
     padding: '16px 20px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.90)',
+    background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(30px)',
     border: '1.5px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 16px 48px rgba(90, 30, 126, 0.12)',
+    boxShadow: '0 16px 48px rgba(90, 30, 126, 0.14)',
     width: '100%',
     maxWidth: '780px',
     marginTop: '6px',
@@ -659,7 +514,7 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     width: '100%',
-    background: 'rgba(255, 255, 255, 0.95)',
+    background: 'rgba(255, 255, 255, 0.98)',
     padding: '8px 16px',
     borderRadius: '16px',
     border: '1px solid rgba(192, 132, 252, 0.40)',
@@ -702,7 +557,7 @@ const styles = {
     gap: '5px',
     padding: '7px 13px',
     borderRadius: '12px',
-    background: 'rgba(255, 255, 255, 0.80)',
+    background: 'rgba(255, 255, 255, 0.85)',
     border: '1px solid rgba(192, 132, 252, 0.35)',
     fontSize: '0.76rem',
     fontWeight: 700,
@@ -719,10 +574,10 @@ const styles = {
     gap: '16px',
     padding: '18px 24px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.85)',
+    background: 'rgba(255, 255, 255, 0.90)',
     backdropFilter: 'blur(28px)',
     border: '1px solid rgba(255, 255, 255, 0.90)',
-    boxShadow: '0 10px 32px rgba(90, 30, 126, 0.08)',
+    boxShadow: '0 10px 32px rgba(90, 30, 126, 0.10)',
     width: '100%',
     maxWidth: '820px',
     marginTop: '6px',
