@@ -42,10 +42,9 @@ const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
 ];
 
 export default function Hero() {
-  const { navigateTo, setSearchQuery } = useApp();
+  const { navigateTo } = useApp();
   const { user } = useAuth();
   const heroRef = useRef(null);
-  const [localSearch, setLocalSearch] = useState('');
   
   // Active background image index
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,24 +64,10 @@ export default function Hero() {
       gsap.fromTo('.hero-title', { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.9, delay: 0.2, ease: 'power4.out' });
       gsap.fromTo('.hero-sub', { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.35, ease: 'power3.out' });
       gsap.fromTo('.hero-ctas', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.5, ease: 'power3.out' });
-      gsap.fromTo('.hero-search-bar', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.65, ease: 'power3.out' });
-      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.75, ease: 'power3.out' });
+      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.65, ease: 'power3.out' });
     }, heroRef);
     return () => ctx.revert();
   }, []);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (setSearchQuery) setSearchQuery(localSearch);
-    navigateTo('marketplace');
-  };
-
-  const handleCategoryClick = (catName) => {
-    if (setSearchQuery) setSearchQuery(catName);
-    navigateTo('marketplace');
-  };
-
-  const activeImage = UNSPLASH_DIGITAL_PRODUCT_IMAGES[currentIndex];
 
   return (
     <section ref={heroRef} style={styles.section}>
@@ -101,7 +86,7 @@ export default function Hero() {
           />
         ))}
 
-        {/* Elegant Dark Vignette Overlay ensuring text is 100% visible directly on top */}
+        {/* Dark Vignette Overlay ensuring text is 100% visible directly on top */}
         <div style={styles.fullBgOverlay} />
       </div>
 
@@ -158,84 +143,7 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Live Background Image Indicator Badge */}
-        <div style={styles.imageIndicatorBadge}>
-          <div style={styles.livePulseDot} />
-          <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#E9D5FF' }}>
-            SHOWCASE: {activeImage.title}
-          </span>
-          <div style={{ display: 'flex', gap: '5px', marginLeft: 'auto', alignItems: 'center' }}>
-            {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentIndex(i)}
-                style={{
-                  width: i === currentIndex ? '18px' : '6px',
-                  height: '6px',
-                  borderRadius: '999px',
-                  background: i === currentIndex ? '#C084FC' : 'rgba(255, 255, 255, 0.4)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 6. Centered Search Bar & Quick Categories */}
-        <div className="hero-search-bar glass-card" style={styles.searchContainer}>
-          <form onSubmit={handleSearchSubmit} style={styles.searchForm}>
-            <Search size={18} color="#C084FC" />
-            <input
-              type="text"
-              placeholder="Search 10,000+ premium UI kits, 3D assets, AI tools..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              style={styles.searchInput}
-            />
-            <button type="submit" style={styles.aiSearchBtn}>
-              <Sparkles size={14} /> AI Search
-            </button>
-          </form>
-
-          <div style={styles.categoriesRow}>
-            {[
-              { label: 'UI Kits', icon: <Layers size={13} /> },
-              { label: 'Templates', icon: <CheckCircle size={13} /> },
-              { label: 'AI Tools', icon: <Cpu size={13} /> },
-              { label: 'Icons', icon: <Sparkles size={13} /> },
-              { label: '3D Assets', icon: <Box size={13} /> },
-              { label: 'Fonts', icon: <Type size={13} /> },
-            ].map((cat, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleCategoryClick(cat.label)}
-                style={styles.categoryPill}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(192, 132, 252, 0.30)';
-                  e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.color = '#F3E8FF';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {cat.icon} {cat.label}
-              </button>
-            ))}
-            <button
-              onClick={() => navigateTo('marketplace')}
-              style={{ ...styles.categoryPill, background: 'rgba(192, 132, 252, 0.25)', color: '#F3E8FF', fontWeight: 800 }}
-            >
-              All →
-            </button>
-          </div>
-        </div>
-
-        {/* 7. Stats Bar at Bottom */}
+        {/* 5. Stats Bar at Bottom */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
             { icon: <Users size={16} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
@@ -262,9 +170,6 @@ export default function Hero() {
         @keyframes pulseDot {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.4); opacity: 0.5; }
-        }
-        @media (max-width: 768px) {
-          .hero-search-bar { flex-direction: column !important; gap: 14px !important; }
         }
       `}</style>
     </section>
@@ -317,7 +222,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '24px',
+    gap: '28px',
     position: 'relative',
     zIndex: 10,
   },
@@ -422,104 +327,6 @@ const styles = {
     backdropFilter: 'blur(12px)',
   },
 
-  /* Live Background Image Indicator Badge */
-  imageIndicatorBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 18px',
-    borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    border: '1px solid rgba(255, 255, 255, 0.25)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-    marginTop: '6px',
-    width: 'fit-content',
-  },
-  livePulseDot: {
-    width: '7px',
-    height: '7px',
-    borderRadius: '50%',
-    background: '#4ADE80',
-    animation: 'pulseDot 1.8s infinite ease-in-out',
-  },
-
-  /* Search Container on background */
-  searchContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '14px',
-    padding: '18px 22px',
-    borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    backdropFilter: 'blur(28px)',
-    WebkitBackdropFilter: 'blur(28px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.25)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
-    width: '100%',
-    maxWidth: '780px',
-    marginTop: '8px',
-  },
-  searchForm: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    width: '100%',
-    background: 'rgba(255, 255, 255, 0.95)',
-    padding: '8px 16px',
-    borderRadius: '16px',
-    border: '1px solid rgba(192, 132, 252, 0.40)',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-  },
-  searchInput: {
-    border: 'none',
-    outline: 'none',
-    background: 'transparent',
-    fontSize: '0.90rem',
-    color: '#2D004D',
-    width: '100%',
-    fontFamily: 'var(--font-sans)',
-  },
-  aiSearchBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '8px 14px',
-    borderRadius: '10px',
-    background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-    color: '#ffffff',
-    fontSize: '0.75rem',
-    fontWeight: 800,
-    border: 'none',
-    cursor: 'pointer',
-    flexShrink: 0,
-    boxShadow: '0 4px 12px rgba(90, 30, 126, 0.25)',
-  },
-  categoriesRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  categoryPill: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
-    padding: '7px 14px',
-    borderRadius: '12px',
-    background: 'rgba(255, 255, 255, 0.15)',
-    border: '1px solid rgba(255, 255, 255, 0.25)',
-    fontSize: '0.78rem',
-    fontWeight: 700,
-    color: '#F3E8FF',
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-    fontFamily: 'var(--font-sans)',
-  },
-
   /* Stats Container on background */
   statsContainer: {
     display: 'grid',
@@ -534,7 +341,7 @@ const styles = {
     boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
     width: '100%',
     maxWidth: '820px',
-    marginTop: '8px',
+    marginTop: '12px',
   },
   statItem: {
     display: 'flex',
