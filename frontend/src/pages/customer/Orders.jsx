@@ -104,7 +104,7 @@ export default function CustomerOrders() {
             const isCompleted = (order.status || 'completed').toLowerCase() === 'completed';
 
             return (
-              <div key={order.id} className="glass-card" style={{ padding: '20px 24px', border: '1px solid rgba(196,148,230,0.22)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div key={order.id} className="glass-card hover-lift" style={{ padding: '20px 24px', border: '1px solid rgba(196,148,230,0.22)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {/* Header info */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid rgba(196,148,230,0.15)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

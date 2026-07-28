@@ -227,7 +227,7 @@ export default function Navbar() {
               <a 
                 href="#"
                 onClick={(e) => { e.preventDefault(); handleDashboardClick(); }}
-                className="btn-premium lumora-navbar-cta"
+                className="btn-premium btn-shine-sweep lumora-navbar-cta"
                 style={{
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',
@@ -263,7 +263,7 @@ export default function Navbar() {
               <a 
                 href="#"
                 onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); }}
-                className="btn-premium lumora-navbar-cta"
+                className="btn-premium btn-shine-sweep lumora-navbar-cta"
                 style={{
                   padding: scrolled ? '10px 22px' : '14px 28px',
                   fontSize: scrolled ? '0.85rem' : '0.9rem',

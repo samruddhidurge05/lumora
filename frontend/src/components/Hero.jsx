@@ -62,7 +62,7 @@ export default function Hero() {
               <>
                 <button 
                   onClick={() => navigateTo('marketplace')} 
-                  className="btn-premium btn-premium-solid clickable" 
+                  className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
                   style={styles.ctaSolid}
                 >
                   Browse Products
@@ -80,7 +80,7 @@ export default function Hero() {
               <>
                 <button 
                   onClick={() => navigateTo('login-selection')} 
-                  className="btn-premium btn-premium-solid clickable" 
+                  className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
                   style={styles.ctaSolid}
                 >
                   Sign In

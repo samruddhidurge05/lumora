@@ -154,7 +154,7 @@ export default function CustomerWishlist() {
         /* Wishlist Items Grid */
         <div className="wishlist-grid">
           {safeWishlist.map(p => (
-            <div key={p.id} className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,148,230,0.22)', display: 'flex', flexDirection: 'column' }}>
+            <div key={p.id} className="glass-card hover-lift" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,148,230,0.22)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ position: 'relative', height: '160px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigateTo('product-detail', p.id)}>
                 <img src={p.preview || p.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70'} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 {/* Remove item button */}
@@ -180,7 +180,7 @@ export default function CustomerWishlist() {
                     <ShoppingBag size={12} /> Add
                   </button>
                 </div>
-                <button onClick={() => buyNow(p)} style={{ width: '100%', padding: '9px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)' }}>
+                <button onClick={() => buyNow(p)} className="btn-shine-sweep" style={{ width: '100%', padding: '9px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(90,30,126,0.25)' }}>
                   Buy Now
                 </button>
               </div>
