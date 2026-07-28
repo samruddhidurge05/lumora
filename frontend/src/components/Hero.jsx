@@ -39,10 +39,6 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* Ambient background glows */}
-      <div style={styles.glowOrb1} />
-      <div style={styles.glowOrb2} />
-      <div style={styles.glowOrb3} />
 
       <div style={{ width: '100%', maxWidth: '1360px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '48px' }}>
         {/* TOP HERO GRID: Left Content + Right 3D Layered Composite */}
@@ -112,169 +108,167 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* ── RIGHT COLUMN: LAYERED 3D COMPOSITE SHOWCASE ── */}
+          {/* ── RIGHT COLUMN: 3D PHONE MOCKUP + FLOATING CARDS ── */}
           <div className="hero-composite" style={styles.rightCol}>
-            
-            {/* 1. TOP-LEFT: Sales Overview Glass Card */}
-            <div className="glass-card animate-float" style={styles.salesOverviewCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <div>
-                  <span style={{ fontSize: '0.65rem', color: '#6B4F7A', fontWeight: 700, textTransform: 'uppercase' }}>Sales Overview</span>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#2D004D' }}>$24,590</div>
-                  <span style={{ fontSize: '0.65rem', color: '#16A34A', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <TrendingUp size={11} /> +12.9% this month
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7B3FA0', background: 'rgba(123, 63, 160, 0.10)', padding: '3px 8px', borderRadius: '6px' }}>
-                  2026
-                </div>
-              </div>
 
-              {/* Sparkline Curve */}
-              <svg width="100%" height="45" viewBox="0 0 200 45" style={{ overflow: 'visible' }}>
-                <defs>
-                  <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7B3FA0" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#7B3FA0" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,35 Q30,10 60,25 T120,15 T180,8 L200,5" fill="none" stroke="#7B3FA0" strokeWidth="2.5" />
-                <path d="M0,35 Q30,10 60,25 T120,15 T180,8 L200,5 L200,45 L0,45 Z" fill="url(#purpleGrad)" />
-              </svg>
+            {/* === 3D PHONE FRAME === */}
+            <div style={styles.phoneOuter} className="animate-float">
+              {/* Phone body */}
+              <div style={styles.phoneBody}>
+                {/* Side buttons */}
+                <div style={styles.phoneSideBtn} />
+                <div style={{ ...styles.phoneSideBtn, top: '140px' }} />
+                <div style={styles.phonePowerBtn} />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(123, 63, 160, 0.12)' }}>
-                <div>
-                  <span style={{ fontSize: '0.6rem', color: '#6B4F7A', fontWeight: 600 }}>Total Sales</span>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#2D004D' }}>1.2M</div>
+                {/* Screen */}
+                <div style={styles.phoneScreen}>
+                  {/* Status bar */}
+                  <div style={styles.phoneStatusBar}>
+                    <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#2D004D' }}>9:41</span>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ width: '12px', height: '6px', border: '1.5px solid #2D004D', borderRadius: '2px', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: '1px', left: '1px', right: '1px', bottom: '1px', background: '#2D004D', borderRadius: '1px', width: '70%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dynamic island / notch */}
+                  <div style={styles.phoneDynamicIsland} />
+
+                  {/* App header */}
+                  <div style={styles.phoneAppHeader}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Sparkles size={11} color="#fff" />
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2D004D' }}>Lumora</span>
+                    </div>
+                    <span style={{ fontSize: '0.6rem', color: '#7B3FA0', fontWeight: 700, background: 'rgba(123,63,160,0.10)', padding: '2px 8px', borderRadius: '999px' }}>Top Market</span>
+                  </div>
+
+                  {/* Featured Product Card on screen */}
+                  <div style={styles.phoneProductCard}>
+                    <div style={{ background: 'linear-gradient(135deg, #7B3FA0 0%, #9333EA 50%, #C084FC 100%)', borderRadius: '10px', height: '70px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
+                      <Layers size={28} color="rgba(255,255,255,0.9)" />
+                    </div>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#2D004D', marginBottom: '2px' }}>Ultimate UI Kit</div>
+                    <div style={{ fontSize: '0.58rem', color: '#6B4F7A', marginBottom: '6px' }}>Beautifully crafted components</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginBottom: '8px' }}>
+                      <Star size={9} fill="#F59E0B" color="#F59E0B" />
+                      <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#2D004D' }}>4.9</span>
+                      <span style={{ fontSize: '0.55rem', color: '#6B4F7A' }}>(2.8k)</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#2D004D' }}>$49</span>
+                        <span style={{ fontSize: '0.55rem', color: '#9CA3AF', textDecoration: 'line-through', marginLeft: '3px' }}>$89</span>
+                      </div>
+                      <button onClick={() => navigateTo('marketplace')} style={{ padding: '5px 10px', borderRadius: '8px', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff', fontSize: '0.6rem', fontWeight: 800, border: 'none', cursor: 'pointer' }}>
+                        Add to Cart
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bottom Nav Bar */}
+                  <div style={styles.phoneBottomNav}>
+                    {[{ icon: <Compass size={14} />, label: 'Explore' }, { icon: <Star size={14} />, label: 'Saved' }, { icon: <Users size={14} />, label: 'Profile' }].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', opacity: i === 0 ? 1 : 0.4 }}>
+                        <div style={{ color: i === 0 ? '#7B3FA0' : '#6B4F7A' }}>{item.icon}</div>
+                        <span style={{ fontSize: '0.48rem', color: i === 0 ? '#7B3FA0' : '#6B4F7A', fontWeight: i === 0 ? 800 : 600 }}>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#16A34A', fontWeight: 700 }}>▲ 18.2%</div>
               </div>
             </div>
 
-            {/* 2. TOP-RIGHT: Rating Pill Badge Card */}
+            {/* === FLOATING CARDS AROUND PHONE === */}
+
+            {/* TOP-LEFT: Sales Overview */}
+            <div className="glass-card animate-float" style={styles.salesOverviewCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <div>
+                  <span style={{ fontSize: '0.6rem', color: '#6B4F7A', fontWeight: 700, textTransform: 'uppercase' }}>Sales Overview</span>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2D004D' }}>$24,590</div>
+                  <span style={{ fontSize: '0.6rem', color: '#16A34A', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <TrendingUp size={10} /> +12.9% this month
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#7B3FA0', background: 'rgba(123,63,160,0.10)', padding: '2px 7px', borderRadius: '5px' }}>2026</div>
+              </div>
+              <svg width="100%" height="38" viewBox="0 0 200 38" style={{ overflow: 'visible' }}>
+                <defs>
+                  <linearGradient id="purpleGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7B3FA0" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#7B3FA0" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,30 Q30,8 60,20 T120,12 T180,6 L200,4" fill="none" stroke="#7B3FA0" strokeWidth="2" />
+                <path d="M0,30 Q30,8 60,20 T120,12 T180,6 L200,4 L200,38 L0,38 Z" fill="url(#purpleGrad2)" />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid rgba(123,63,160,0.12)' }}>
+                <div>
+                  <span style={{ fontSize: '0.55rem', color: '#6B4F7A', fontWeight: 600 }}>Total Sales</span>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#2D004D' }}>1.2M</div>
+                </div>
+                <div style={{ fontSize: '0.6rem', color: '#16A34A', fontWeight: 700 }}>▲ 18.2%</div>
+              </div>
+            </div>
+
+            {/* TOP-RIGHT: Ratings badge */}
             <div className="glass-card" style={styles.ratingBadgeCard}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Star size={18} fill="#F59E0B" color="#F59E0B" />
+                <Star size={16} fill="#F59E0B" color="#F59E0B" />
                 <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#2D004D', lineHeight: 1.1 }}>4.9/5</div>
-                  <div style={{ fontSize: '0.65rem', color: '#6B4F7A', fontWeight: 600 }}>From 15K+ Reviews</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#2D004D', lineHeight: 1.1 }}>4.9/5</div>
+                  <div style={{ fontSize: '0.6rem', color: '#6B4F7A', fontWeight: 600 }}>From 15K+ Reviews</div>
                 </div>
               </div>
-              {/* Stacked Avatar Circles */}
               <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
                 {['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80',
                   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
                   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
                   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80',
                 ].map((url, idx) => (
-                  <img
-                    key={idx}
-                    src={url}
-                    alt="Reviewer Avatar"
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      border: '2px solid #ffffff',
-                      marginLeft: idx > 0 ? '-8px' : 0,
-                      objectFit: 'cover',
-                    }}
-                  />
+                  <img key={idx} src={url} alt="" style={{ width: '22px', height: '22px', borderRadius: '50%', border: '2px solid #fff', marginLeft: idx > 0 ? '-7px' : 0, objectFit: 'cover' }} />
                 ))}
-                <span style={{ fontSize: '0.6rem', fontWeight: 800, color: '#7B3FA0', marginLeft: '6px' }}>+12k</span>
+                <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#7B3FA0', marginLeft: '6px' }}>+12k</span>
               </div>
             </div>
 
-            {/* 3. CENTER MOBILE MOCKUP FRAME */}
-            <div className="glass-card" style={styles.phoneMockupFrame}>
-              {/* Phone Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid rgba(123, 63, 160, 0.12)' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2D004D', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7B3FA0' }} /> Lumora
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#6B4F7A' }}>9:41</span>
-              </div>
-
-              {/* Product Preview in Mobile */}
-              <div style={{ background: 'rgba(255, 255, 255, 0.85)', borderRadius: '14px', padding: '12px', border: '1px solid rgba(192, 132, 252, 0.35)' }}>
-                <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#2D004D', margin: '0 0 4px 0' }}>
-                  Ultimate UI Kit
-                </h4>
-                <p style={{ fontSize: '0.68rem', color: '#6B4F7A', margin: 0 }}>Beautifully crafted UI components</p>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '8px 0' }}>
-                  <Star size={11} fill="#F59E0B" color="#F59E0B" />
-                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#2D004D' }}>4.9</span>
-                  <span style={{ fontSize: '0.62rem', color: '#6B4F7A' }}>(2.8k)</span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                  <div>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#2D004D' }}>$49</span>
-                    <span style={{ fontSize: '0.65rem', color: '#9CA3AF', textDecoration: 'line-through', marginLeft: '4px' }}>$89</span>
-                  </div>
-                  <button 
-                    onClick={() => navigateTo('marketplace')}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      border: 'none',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(90, 30, 126, 0.30)',
-                    }}
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* 4. BOTTOM-LEFT DARK AI GENERATOR CARD */}
+            {/* BOTTOM-LEFT: Dark AI Card */}
             <div className="glass-card" style={styles.darkAiCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.58rem', fontWeight: 800, background: '#9333EA', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>AI</span>
-                <span style={{ fontSize: '0.62rem', color: '#C084FC', fontWeight: 600 }}>Generator</span>
+                <span style={{ fontSize: '0.55rem', fontWeight: 800, background: '#9333EA', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>AI</span>
+                <span style={{ fontSize: '0.6rem', color: '#C084FC', fontWeight: 600 }}>Generator</span>
               </div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>AI Image Generator</div>
-              <img
-                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80"
-                alt="AI Preview"
-                style={{ width: '100%', height: '70px', objectFit: 'cover', borderRadius: '10px', marginBottom: '8px' }}
-              />
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>AI Image Generator</div>
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80" alt="AI Preview" style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
             </div>
 
-            {/* 5. BOTTOM-RIGHT DARK DESIGN SYSTEM CARD */}
+            {/* BOTTOM-RIGHT: Design System */}
             <div className="glass-card" style={styles.darkDesignCard}>
-              <span style={{ fontSize: '0.6rem', color: '#C084FC', fontWeight: 700, textTransform: 'uppercase' }}>Design System</span>
-              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>Violet v2.0</div>
-              <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-                {['Figma', 'Sketch', 'XD', 'PS'].map((tool, idx) => (
-                  <span key={idx} style={{ fontSize: '0.58rem', fontWeight: 800, background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '3px 6px', borderRadius: '5px' }}>
-                    {tool}
-                  </span>
+              <span style={{ fontSize: '0.58rem', color: '#C084FC', fontWeight: 700, textTransform: 'uppercase' }}>Design System</span>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#fff', marginTop: '2px' }}>Violet v2.0</div>
+              <div style={{ display: 'flex', gap: '5px', marginTop: '8px', flexWrap: 'wrap' }}>
+                {['Figma', 'Sketch', 'XD'].map((tool, idx) => (
+                  <span key={idx} style={{ fontSize: '0.55rem', fontWeight: 800, background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '2px 5px', borderRadius: '4px' }}>{tool}</span>
                 ))}
               </div>
             </div>
 
-            {/* Floating Top Marketplace Badge */}
-            <div style={styles.topMarketplaceBadge}>
-              🏆 Top Marketplace
-            </div>
+            {/* Floating badge: Top Marketplace */}
+            <div style={styles.topMarketplaceBadge}>🏆 Top Marketplace</div>
 
-            {/* Floating Instant Access Badge */}
-            <div style={styles.instantAccessBadge}>
-              ⚡ Instant Access
-            </div>
+            {/* Floating badge: Instant Access */}
+            <div style={styles.instantAccessBadge}>⚡ Instant Access</div>
 
-            {/* Floating Sales Growth Widget */}
+            {/* Floating sales widget */}
             <div className="glass-card" style={styles.salesGrowthWidget}>
-              <span style={{ fontSize: '0.6rem', color: '#6B4F7A', fontWeight: 700 }}>This Week</span>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#2D004D' }}>+2,400 Sales</div>
-              <span style={{ fontSize: '0.6rem', color: '#16A34A', fontWeight: 700 }}>+18.2% vs last week</span>
+              <span style={{ fontSize: '0.58rem', color: '#6B4F7A', fontWeight: 700 }}>This Week</span>
+              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#2D004D' }}>+2,400 Sales</div>
+              <span style={{ fontSize: '0.58rem', color: '#16A34A', fontWeight: 700 }}>+18.2% vs last week</span>
             </div>
 
           </div>
@@ -361,42 +355,6 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     background: '#FAF6F0',
-  },
-  glowOrb1: {
-    position: 'absolute',
-    top: '-5%',
-    right: '10%',
-    width: '650px',
-    height: '650px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(192, 132, 252, 0.35) 0%, transparent 70%)',
-    filter: 'blur(80px)',
-    pointerEvents: 'none',
-    zIndex: 0,
-  },
-  glowOrb2: {
-    position: 'absolute',
-    top: '30%',
-    left: '-5%',
-    width: '550px',
-    height: '550px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(123, 63, 160, 0.20) 0%, transparent 65%)',
-    filter: 'blur(75px)',
-    pointerEvents: 'none',
-    zIndex: 0,
-  },
-  glowOrb3: {
-    position: 'absolute',
-    bottom: '5%',
-    right: '5%',
-    width: '450px',
-    height: '450px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(232, 180, 200, 0.25) 0%, transparent 65%)',
-    filter: 'blur(70px)',
-    pointerEvents: 'none',
-    zIndex: 0,
   },
   grid: {
     display: 'grid',
@@ -523,78 +481,155 @@ const styles = {
   rightCol: {
     position: 'relative',
     width: '100%',
-    height: '520px',
+    height: '560px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  /* 3D Composite Layer Cards */
+  /* ── 3D PHONE STYLES ── */
+  phoneOuter: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%) rotateY(-12deg) rotateX(4deg)',
+    transformStyle: 'preserve-3d',
+    zIndex: 5,
+    filter: 'drop-shadow(0 40px 60px rgba(90, 30, 126, 0.30))',
+  },
+  phoneBody: {
+    width: '200px',
+    height: '400px',
+    borderRadius: '36px',
+    background: 'linear-gradient(160deg, #1a0030 0%, #2D004D 60%, #3d006b 100%)',
+    padding: '10px',
+    boxShadow: '0 0 0 1.5px rgba(192,132,252,0.3), inset 0 1px 0 rgba(255,255,255,0.15), 0 50px 80px rgba(0,0,0,0.4)',
+    position: 'relative',
+  },
+  phoneSideBtn: {
+    position: 'absolute',
+    left: '-3px',
+    top: '100px',
+    width: '3px',
+    height: '30px',
+    background: 'rgba(255,255,255,0.25)',
+    borderRadius: '2px 0 0 2px',
+  },
+  phonePowerBtn: {
+    position: 'absolute',
+    right: '-3px',
+    top: '120px',
+    width: '3px',
+    height: '40px',
+    background: 'rgba(255,255,255,0.20)',
+    borderRadius: '0 2px 2px 0',
+  },
+  phoneScreen: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '28px',
+    background: '#FAF6F0',
+    overflow: 'hidden',
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  phoneStatusBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '8px 14px 4px',
+    flexShrink: 0,
+  },
+  phoneDynamicIsland: {
+    width: '70px',
+    height: '20px',
+    background: '#1a0030',
+    borderRadius: '999px',
+    margin: '0 auto 8px',
+    flexShrink: 0,
+  },
+  phoneAppHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0 12px 8px',
+    flexShrink: 0,
+  },
+  phoneProductCard: {
+    margin: '0 10px',
+    background: '#ffffff',
+    borderRadius: '14px',
+    padding: '12px',
+    boxShadow: '0 4px 16px rgba(90,30,126,0.10)',
+    border: '1px solid rgba(192,132,252,0.20)',
+    flex: 1,
+  },
+  phoneBottomNav: {
+    display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    padding: '8px 10px',
+    borderTop: '1px solid rgba(123,63,160,0.10)',
+    background: 'rgba(255,255,255,0.95)',
+    flexShrink: 0,
+  },
+
+  /* ── FLOATING CARDS ── */
   salesOverviewCard: {
     position: 'absolute',
-    top: '20px',
-    left: '10px',
-    width: '250px',
-    padding: '16px',
-    borderRadius: '20px',
-    background: 'rgba(255, 255, 255, 0.75)',
-    backdropFilter: 'blur(30px)',
-    border: '1px solid rgba(255, 255, 255, 0.90)',
-    boxShadow: '0 20px 50px rgba(90, 30, 126, 0.14)',
-    zIndex: 3,
-  },
-  ratingBadgeCard: {
-    position: 'absolute',
     top: '10px',
-    right: '30px',
-    padding: '14px 18px',
-    borderRadius: '20px',
-    background: 'rgba(255, 255, 255, 0.85)',
+    left: '0px',
+    width: '210px',
+    padding: '14px',
+    borderRadius: '18px',
+    background: 'rgba(255, 255, 255, 0.80)',
     backdropFilter: 'blur(30px)',
     border: '1px solid rgba(255, 255, 255, 0.90)',
     boxShadow: '0 16px 40px rgba(90, 30, 126, 0.12)',
-    zIndex: 4,
+    zIndex: 3,
+    transform: 'rotate(-2deg)',
   },
-  phoneMockupFrame: {
+  ratingBadgeCard: {
     position: 'absolute',
-    top: '90px',
-    right: '90px',
-    width: '230px',
-    padding: '14px',
-    borderRadius: '28px',
-    background: 'rgba(255, 255, 255, 0.90)',
-    backdropFilter: 'blur(40px)',
-    border: '2px solid rgba(192, 132, 252, 0.60)',
-    boxShadow: '0 30px 70px rgba(90, 30, 126, 0.22)',
-    zIndex: 5,
-    transform: 'rotate(-4deg)',
+    top: '8px',
+    right: '10px',
+    padding: '12px 16px',
+    borderRadius: '18px',
+    background: 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(30px)',
+    border: '1px solid rgba(255, 255, 255, 0.90)',
+    boxShadow: '0 14px 36px rgba(90, 30, 126, 0.11)',
+    zIndex: 4,
+    transform: 'rotate(2deg)',
   },
   darkAiCard: {
     position: 'absolute',
-    bottom: '30px',
-    left: '60px',
-    width: '180px',
-    padding: '14px',
-    borderRadius: '20px',
-    background: 'rgba(45, 0, 77, 0.90)',
+    bottom: '40px',
+    left: '20px',
+    width: '162px',
+    padding: '12px',
+    borderRadius: '18px',
+    background: 'rgba(45, 0, 77, 0.92)',
     backdropFilter: 'blur(30px)',
-    border: '1px solid rgba(147, 51, 234, 0.40)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+    border: '1px solid rgba(147, 51, 234, 0.35)',
+    boxShadow: '0 16px 44px rgba(0, 0, 0, 0.28)',
     zIndex: 4,
-    transform: 'rotate(-2deg)',
+    transform: 'rotate(-3deg)',
   },
   darkDesignCard: {
     position: 'absolute',
-    bottom: '20px',
-    right: '20px',
-    width: '190px',
-    padding: '14px',
-    borderRadius: '20px',
-    background: 'rgba(25, 0, 48, 0.92)',
+    bottom: '28px',
+    right: '8px',
+    width: '165px',
+    padding: '12px',
+    borderRadius: '18px',
+    background: 'rgba(25, 0, 48, 0.93)',
     backdropFilter: 'blur(30px)',
-    border: '1px solid rgba(192, 132, 252, 0.40)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+    border: '1px solid rgba(192, 132, 252, 0.35)',
+    boxShadow: '0 16px 44px rgba(0, 0, 0, 0.25)',
     zIndex: 4,
+    transform: 'rotate(2deg)',
   },
   topMarketplaceBadge: {
     position: 'absolute',
