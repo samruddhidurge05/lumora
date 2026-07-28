@@ -7,7 +7,7 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// Diverse, high-resolution full digital product showcase images
+// High-quality background images: UI design mockups, 3D assets, AI dashboards, template previews
 const FULL_BACKGROUND_IMAGES = [
   {
     id: 1,
@@ -60,11 +60,11 @@ export default function Hero() {
   // Current active full background image index
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Cycle background full image opacity every 2 seconds
+  // Cycle background full image every 5 seconds (5000ms) with clean unmount cleanup
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % FULL_BACKGROUND_IMAGES.length);
-    }, 2000);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -97,7 +97,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── FULL BACKGROUND IMAGES SLIDESHOW WITH OPACITY FADE ── */}
+      {/* ── BACKGROUND LAYER: FULL-SCREEN CAROUSEL WITH KEN BURNS & LOW OPACITY ── */}
       <div style={styles.fullBgWrapper}>
         {FULL_BACKGROUND_IMAGES.map((item, idx) => (
           <div
@@ -105,18 +105,18 @@ export default function Hero() {
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 0.55 : 0,
-              transform: idx === currentIndex ? 'scale(1.03)' : 'scale(1.0)',
-              transition: 'opacity 1.0s cubic-bezier(0.4, 0, 0.2, 1), transform 2.0s ease-out',
+              opacity: idx === currentIndex ? 0.16 : 0, // Subtle low opacity (0.12 - 0.20)
+              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns effect: scale-110 vs scale-100
+              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out', // 2000ms cross-fade, 5000ms scale
             }}
           />
         ))}
 
-        {/* Semi-transparent Light Backdrop Gradient Overlay for text contrast */}
+        {/* Soft light overlay matching theme with subtle backdrop blur */}
         <div style={styles.fullBgOverlay} />
       </div>
 
-      {/* ── CENTERED HERO CONTENT ── */}
+      {/* ── RELATIVE OVERLAY LAYER (z-10): ALL HERO CONTENT & COMPONENTS INTACT ── */}
       <div style={styles.container}>
         {/* 1. Pill Badge */}
         <div className="hero-badge" style={styles.badge}>
@@ -138,7 +138,7 @@ export default function Hero() {
           The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
         </p>
 
-        {/* 4. Action Buttons (Sign In / Get Started) */}
+        {/* 4. Action Buttons (Sign In / Get Started / Explore) */}
         <div className="hero-ctas" style={styles.ctas}>
           <button 
             onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
@@ -169,7 +169,7 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Live Showcase Bar with Active Full Image Info */}
+        {/* 5. Live Showcase Ticker */}
         <div className="hero-ticker glass-card" style={styles.tickerCard}>
           <div style={styles.tickerBadgeLeft}>
             <div style={styles.livePulseDot} />
@@ -188,7 +188,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Opacity Cycle Progress Indicator Dots */}
+          {/* Carousel Indicators */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             {FULL_BACKGROUND_IMAGES.map((_, i) => (
               <button
@@ -297,14 +297,12 @@ export default function Hero() {
   );
 }
 
-// Consolidated Stylesheet matching user's exact specification:
-// Full background images with opacity changing smoothly one after another
 const styles = {
   section: {
     minHeight: '100vh',
     padding: '130px clamp(1.5rem, 5vw, 4rem) 60px',
     position: 'relative',
-    zIndex: 10,
+    zIndex: 1,
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
@@ -313,7 +311,7 @@ const styles = {
     background: '#FAF6F0',
   },
 
-  /* Full Background Wrapper & Opacity Cycling Slides */
+  /* Background Wrapper & Ken Burns Opacity Slides */
   fullBgWrapper: {
     position: 'absolute',
     inset: 0,
@@ -332,11 +330,11 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'radial-gradient(circle at center, rgba(250, 246, 240, 0.65) 0%, rgba(250, 246, 240, 0.85) 60%, #FAF6F0 100%)',
-    backdropFilter: 'blur(2px)',
+    background: 'rgba(250, 246, 240, 0.82)', // Matching light theme overlay
+    backdropFilter: 'blur(2px)', // Subtle backdrop blur
   },
 
-  /* Main Centered Container */
+  /* Relative Overlay Container (z-10) */
   container: {
     width: '100%',
     maxWidth: '960px',
@@ -347,7 +345,7 @@ const styles = {
     textAlign: 'center',
     gap: '22px',
     position: 'relative',
-    zIndex: 2,
+    zIndex: 10,
   },
 
   /* Badge */
@@ -380,7 +378,6 @@ const styles = {
     letterSpacing: '-0.03em',
     margin: 0,
     maxWidth: '900px',
-    textShadow: '0 2px 14px rgba(255, 255, 255, 0.9)',
   },
   titleHighlight: {
     fontFamily: 'var(--font-editorial)',
@@ -400,7 +397,6 @@ const styles = {
     maxWidth: '680px',
     margin: 0,
     fontWeight: 600,
-    textShadow: '0 1px 8px rgba(255, 255, 255, 0.8)',
   },
 
   /* Buttons */
@@ -448,7 +444,7 @@ const styles = {
     backdropFilter: 'blur(10px)',
   },
 
-  /* Live Showcase Ticker Badge */
+  /* Ticker */
   tickerCard: {
     display: 'flex',
     alignItems: 'center',
@@ -493,7 +489,7 @@ const styles = {
     border: '1px solid rgba(123, 63, 160, 0.2)',
   },
 
-  /* Centered Search Bar & Quick Categories */
+  /* Search Container */
   searchContainer: {
     display: 'flex',
     flexDirection: 'column',
