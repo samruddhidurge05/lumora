@@ -45,23 +45,34 @@ def update_vendor_status_in_firestore(uid: str, status_val: str):
 def get_vendor_status_from_firestore(uid: str) -> str:
     """
     Get vendor status from Firestore users or vendors collection.
-    Falls back to 'active' when Firestore is unavailable.
+    Falls back to 'active' when Firestore is unavailable or over quota (429).
     """
     if not firebase_connected or db is None:
         return "active"
-    
-    # Check users doc
-    user_ref = db.collection("users").document(uid)
-    user_snap = user_ref.get()
-    if user_snap.exists:
-        data = user_snap.to_dict()
-        return data.get("accountStatus", "active").lower()
-        
-    # Fallback to vendors collection
-    vendor_ref = db.collection("vendors").document(uid)
-    vendor_snap = vendor_ref.get()
-    if vendor_snap.exists:
-        data = vendor_snap.to_dict()
-        return data.get("status", "active").lower()
-        
-    return "active"
+
+    try:
+        # Check users doc
+        user_ref = db.collection("users").document(uid)
+        user_snap = user_ref.get()
+        if user_snap.exists:
+            data = user_snap.to_dict()
+            return data.get("accountStatus", "active").lower()
+
+        # Fallback to vendors collection
+        vendor_ref = db.collection("vendors").document(uid)
+        vendor_snap = vendor_ref.get()
+        if vendor_snap.exists:
+            data = vendor_snap.to_dict()
+            return data.get("status", "active").lower()
+
+        return "active"
+    except Exception as exc:
+        # Firestore unavailable (429 Quota Exceeded, network error, etc.)
+        # Fail open: treat vendor as active so SQL-level checks remain in effect.
+        import logging
+        logging.getLogger(__name__).warning(
+            "get_vendor_status_from_firestore: Firestore call failed for uid=%s (%s). "
+            "Falling back to 'active'.",
+            uid, exc,
+        )
+        return "active"
