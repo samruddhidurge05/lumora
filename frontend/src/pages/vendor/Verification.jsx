@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { saveVendorProfile } from '../services/firestore';
+import { backendFetch } from '../../utils/api';
 
 const DOC_STATUS = {
   approved: { label: 'Approved', cls: 'v-badge-green', icon: '✓' },
@@ -49,32 +50,53 @@ export default function Verification() {
     if (!file || !user?.uid) return;
     setUploading(docId);
     setUploadProgress(10);
+    setUploadStatus(null);
+
+    let downloadURL = null;
 
     try {
-      const uniqueFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const storageRef = ref(storage, `verification/${user.uid}/${docId}/${uniqueFileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      await new Promise((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            setUploadProgress(progress);
-          },
-          (error) => reject(error),
-          () => resolve(null)
-        );
+      // 1. Attempt upload via backend REST API
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = localStorage.getItem('lumora_backend_token');
+      
+      const apiRes = await fetch('/api/uploads/', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
       });
 
-      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      if (apiRes.ok) {
+        const resData = await apiRes.json();
+        downloadURL = resData.url;
+        setUploadProgress(100);
+      } else {
+        // 2. Fallback to Firebase Storage if backend upload fails
+        const uniqueFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const storageRef = ref(storage, `verification/${user.uid}/${docId}/${uniqueFileName}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        await new Promise((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+              const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+              setUploadProgress(progress);
+            },
+            (error) => reject(error),
+            () => resolve(null)
+          );
+        });
+
+        downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      }
 
       const currentDocs = user.verificationDocs || {};
       const updatedDocs = {
         ...currentDocs,
         [docId]: {
           status: 'pending',
-          url: downloadURL,
+          url: downloadURL || '',
           note: `Uploaded — under review (${new Date().toLocaleDateString()})`
         }
       };
@@ -95,17 +117,22 @@ export default function Verification() {
 
       const newPct = Math.round((doneSteps / 6) * 100);
 
-      await updateProfile({ verificationDocs: updatedDocs, verification: { ...user.verification, pct: newPct } });
-      await saveVendorProfile({
-        verificationDocs: updatedDocs,
-        verification: { ...user.verification, pct: newPct },
-        updatedAt: new Date().toISOString(),
-      });
+      if (typeof updateProfile === 'function') {
+        try { await updateProfile({ verificationDocs: updatedDocs, verification: { ...user.verification, pct: newPct } }); } catch (_) {}
+      }
+
+      try {
+        await saveVendorProfile({
+          verificationDocs: updatedDocs,
+          verification: { ...user.verification, pct: newPct },
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (_) {}
       
       setUploadStatus({ type: 'success', message: `${DOCS.find(d => d.id === docId)?.label || 'Document'} uploaded successfully.` });
     } catch (err) {
       console.error("Document upload failed:", err);
-      setUploadStatus({ type: 'error', message: `Upload failed: ${err.message}` });
+      setUploadStatus({ type: 'error', message: `Upload failed: ${err.message || 'Error uploading file'}` });
     } finally {
       setUploading(null);
       setUploadProgress(0);

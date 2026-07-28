@@ -313,7 +313,7 @@ export default function Analytics() {
           {[
             { label: 'Total Revenue',    value: formatRevenue(totalRevenue), delta: '+18.4%', up: true, icon: <DollarSign size={18} style={{ color: '#7B3FA0' }} /> },
             { label: 'Total Orders',     value: totalOrders,                 delta: '+12.1%', up: true, icon: <Package size={18} style={{ color: '#7B3FA0' }} /> },
-            { label: 'Avg Conversion',   value: avgConv !== null ? `${avgConv.toFixed(1)}%` : '—', delta: '+0.8pp', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
+            { label: 'Avg Conversion',   value: avgConv !== null ? `${avgConv.toFixed(1)}%` : '—', delta: avgConv !== null ? '+0.8pp' : 'Live', up: true, icon: <Target size={18} style={{ color: '#7B3FA0' }} /> },
             { label: 'Avg Order Value',  value: `₹${avgOrderValue.toLocaleString()}`, delta: '+5.2%', up: true, icon: <CreditCard size={18} style={{ color: '#7B3FA0' }} /> },
           ].map((s, i) => (
             <div key={i} className="v-card v-stat-card">

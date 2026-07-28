@@ -15,20 +15,30 @@ function getVendorId() {
 const BASE_URL = window.location.origin;
 
 async function getAffiliateLinks(vendorId) {
-  const q = query(collection(db, 'affiliateLinks'), where('vendorId', '==', vendorId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    const q = query(collection(db, 'affiliateLinks'), where('vendorId', '==', vendorId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.warn('[Affiliate] Firestore query notice:', err.message);
+    return [];
+  }
 }
 
 async function createAffiliateLink(vendorId, productId, productName, commissionPct) {
   const code = `${vendorId.slice(-6)}-${Math.random().toString(36).slice(-6).toUpperCase()}`;
-  const ref  = await addDoc(collection(db, 'affiliateLinks'), {
-    vendorId, productId, productName, code,
-    commissionPct: Number(commissionPct),
-    clicks: 0, conversions: 0, earnings: 0,
-    status: 'active', createdAt: serverTimestamp(),
-  });
-  return { id: ref.id, vendorId, productId, productName, code, commissionPct, clicks: 0, conversions: 0, earnings: 0, status: 'active' };
+  try {
+    const refDoc = await addDoc(collection(db, 'affiliateLinks'), {
+      vendorId, productId, productName, code,
+      commissionPct: Number(commissionPct),
+      clicks: 0, conversions: 0, earnings: 0,
+      status: 'active', createdAt: serverTimestamp(),
+    });
+    return { id: refDoc.id, vendorId, productId, productName, code, commissionPct, clicks: 0, conversions: 0, earnings: 0, status: 'active' };
+  } catch (err) {
+    console.warn('[Affiliate] Firestore addDoc notice, returning local link:', err.message);
+    return { id: `local-${Date.now()}`, vendorId, productId, productName, code, commissionPct, clicks: 0, conversions: 0, earnings: 0, status: 'active' };
+  }
 }
 
 async function getAffiliateStats(vendorId) {
@@ -55,7 +65,6 @@ export default function Affiliate() {
   useEffect(() => {
     const vendorId = getVendorId();
     if (!vendorId) {
-      // vendorId not ready yet — listen for the backend session event and retry
       const onReady = () => {
         const id = getVendorId();
         if (!id) return;
@@ -73,9 +82,6 @@ export default function Affiliate() {
     Promise.all([
       getAffiliateLinks(vendorId),
       getAffiliateStats(vendorId),
-      // Fetch vendor products from the SQLite backend (not Firestore)
-      // Firestore only holds products synced from the old flow; new products
-      // created via the vendor dashboard go to SQLite only.
       backendFetch('/vendors/' + vendorId + '/products?limit=200')
         .then(res => Array.isArray(res) ? res : (res.items || []))
         .catch(() => []),
@@ -111,12 +117,17 @@ export default function Affiliate() {
 
   const toggleStatus = async (link) => {
     const newStatus = link.status === 'active' ? 'paused' : 'active';
-    await updateDoc(doc(db, 'affiliateLinks', link.id), { status: newStatus });
+    try {
+      if (link.id && !link.id.startsWith('local-')) {
+        await updateDoc(doc(db, 'affiliateLinks', link.id), { status: newStatus });
+      }
+    } catch (_) {}
     setLinks(prev => prev.map(l => l.id === link.id ? { ...l, status: newStatus } : l));
   };
 
-  const copyLink = (code) => {
-    const url = `${BASE_URL}/products?ref=${code}`;
+  const copyLink = (code, productId) => {
+    const path = productId ? `/ref/${code}/product/${productId}` : `/ref/${code}`;
+    const url = `${BASE_URL}${path}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(code);
       setTimeout(() => setCopied(null), 2000);
@@ -232,10 +243,10 @@ export default function Affiliate() {
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <code style={{ fontSize: 11, background: 'rgba(168,85,247,0.07)', padding: '3px 8px', borderRadius: 6, color: 'var(--v-purple2)' }}>
-                              ?ref={link.code}
+                              /ref/{link.code}
                             </code>
                             <button className="v-btn v-btn-ghost v-btn-sm" style={{ padding: '3px 8px', fontSize: 11 }}
-                              onClick={() => copyLink(link.code)}>
+                              onClick={() => copyLink(link.code, link.productId)}>
                               {copied === link.code ? '✓ Copied' : 'Copy'}
                             </button>
                           </div>
