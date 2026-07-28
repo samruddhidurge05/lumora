@@ -71,7 +71,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH DARK GRADIENT TINT ── */}
+      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH SMOOTH BOTTOM BLEND ── */}
       <div style={styles.fullBgWrapper}>
         {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
           <div
@@ -86,8 +86,9 @@ export default function Hero() {
           />
         ))}
 
-        {/* Dark Vignette Overlay ensuring text is 100% visible directly on top */}
+        {/* Dark to Cream Gradient Overlay for smooth merge with cream section below */}
         <div style={styles.fullBgOverlay} />
+        <div style={styles.bottomMergeGrad} />
       </div>
 
       {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}
@@ -143,13 +144,13 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Stats Bar at Bottom */}
+        {/* 5. Stats Bar at Bottom with Glassmorphism */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
-            { icon: <Users size={16} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
-            { icon: <Download size={16} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
-            { icon: <Shield size={16} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
-            { icon: <CheckCircle size={16} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
+            { icon: <Users size={16} color="#7B3FA0" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(123, 63, 160, 0.12)' },
+            { icon: <Download size={16} color="#D97706" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(217, 119, 6, 0.12)' },
+            { icon: <Shield size={16} color="#16A34A" />, value: '500+', label: 'Top Creators', bg: 'rgba(22, 163, 74, 0.12)' },
+            { icon: <CheckCircle size={16} color="#E11D48" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(225, 29, 72, 0.12)' },
           ].map((s, i) => (
             <div key={i} style={styles.statItem}>
               <div style={{ ...styles.statIconBox, background: s.bg }}>
@@ -187,7 +188,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#0D0518',
+    background: '#FAF6F0',
   },
 
   /* Full Background Wrapper & Visible Slides */
@@ -209,8 +210,18 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.55) 0%, rgba(13, 5, 24, 0.70) 50%, rgba(13, 5, 24, 0.90) 100%)',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.55) 0%, rgba(13, 5, 24, 0.65) 50%, rgba(13, 5, 24, 0.82) 80%, #FAF6F0 100%)',
     backdropFilter: 'blur(1px)',
+  },
+  bottomMergeGrad: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '240px',
+    background: 'linear-gradient(180deg, transparent 0%, rgba(250, 246, 240, 0.40) 30%, rgba(250, 246, 240, 0.85) 70%, #FAF6F0 100%)',
+    pointerEvents: 'none',
+    zIndex: 2,
   },
 
   /* Relative Overlay Container (z-10) */
@@ -234,7 +245,7 @@ const styles = {
     gap: '8px',
     padding: '8px 18px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.12)',
+    background: 'rgba(255, 255, 255, 0.15)',
     border: '1px solid rgba(192, 132, 252, 0.40)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
@@ -327,18 +338,18 @@ const styles = {
     backdropFilter: 'blur(12px)',
   },
 
-  /* Stats Container on background */
+  /* Stats Container smoothly blending into bottom section */
   statsContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
     gap: '16px',
     padding: '18px 24px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.12)',
+    background: 'rgba(255, 255, 255, 0.85)',
     backdropFilter: 'blur(28px)',
     WebkitBackdropFilter: 'blur(28px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.22)',
-    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
+    border: '1.5px solid rgba(255, 255, 255, 0.95)',
+    boxShadow: '0 16px 40px rgba(90, 30, 126, 0.12)',
     width: '100%',
     maxWidth: '820px',
     marginTop: '12px',
@@ -361,14 +372,13 @@ const styles = {
   statValue: {
     fontSize: '1.05rem',
     fontWeight: 800,
-    color: '#FFFFFF',
+    color: '#2D004D',
     lineHeight: 1.1,
     textAlign: 'left',
-    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
   },
   statLabel: {
     fontSize: '0.66rem',
-    color: '#E9D5FF',
+    color: '#6B4F7A',
     fontWeight: 600,
     lineHeight: 1.2,
     textAlign: 'left',
