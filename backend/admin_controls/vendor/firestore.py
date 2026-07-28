@@ -55,14 +55,14 @@ def get_vendor_status_from_firestore(uid: str) -> str:
         user_ref = db.collection("users").document(uid)
         user_snap = user_ref.get()
         if user_snap.exists:
-            data = user_snap.to_dict()
+            data = user_snap.to_dict() or {}
             return data.get("accountStatus", "active").lower()
 
         # Fallback to vendors collection
         vendor_ref = db.collection("vendors").document(uid)
         vendor_snap = vendor_ref.get()
         if vendor_snap.exists:
-            data = vendor_snap.to_dict()
+            data = vendor_snap.to_dict() or {}
             return data.get("status", "active").lower()
 
         return "active"
