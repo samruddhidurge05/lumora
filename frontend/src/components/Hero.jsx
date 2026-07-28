@@ -7,63 +7,37 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// Curated high-resolution Unsplash images for digital product design, 3D assets, & AI dashboards
-const FULL_BACKGROUND_IMAGES = [
+// Stunning, attractive Unsplash 3D & digital art background images (no product UI screenshots)
+const BACKGROUND_ARTWORK_IMAGES = [
   {
     id: 1,
-    title: '3D Glassmorphism UI Kit & Components',
-    category: 'UI Kits',
-    price: '$49',
-    rating: '4.9',
+    title: 'Violet Silk 3D Fluid Waves',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 2,
-    title: 'SaaS Analytics Dashboard Pro',
-    category: 'Templates',
-    price: '$59',
-    rating: '5.0',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 3,
-    title: 'UX/UI Mobile App & Design System',
-    category: 'Design Systems',
-    price: '$69',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1542744094-3a317272018a?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 4,
-    title: 'AI Neural Prompt & Art Generator',
-    category: 'AI Tools',
-    price: '$39',
-    rating: '4.8',
+    title: 'Iridescent 3D Gradient Sphere',
     image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1920&q=80',
   },
   {
-    id: 5,
-    title: 'Minimalist E-Commerce Website Wireframe',
-    category: 'Web Templates',
-    price: '$79',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
+    id: 3,
+    title: 'Soft Glowing Prism & Pastel Gradient',
+    image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=1920&q=80',
   },
   {
-    id: 6,
-    title: 'Cyberpunk 3D Icon & Asset Bundle',
-    category: '3D Assets',
-    price: '$29',
-    rating: '4.9',
+    id: 4,
+    title: 'Cyberpunk Neon Mesh Texture',
     image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=1920&q=80',
   },
   {
-    id: 7,
-    title: 'Mobile Wireframe & Prototype System',
-    category: 'Mobile Kits',
-    price: '$45',
-    rating: '4.8',
-    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
+    id: 5,
+    title: 'Futuristic 3D Glass Geometry',
+    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1920&q=80',
+  },
+  {
+    id: 6,
+    title: 'Ethereal Cosmic Color Flow',
+    image: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1920&q=80',
   }
 ];
 
@@ -73,13 +47,13 @@ export default function Hero() {
   const heroRef = useRef(null);
   const [localSearch, setLocalSearch] = useState('');
   
-  // Current active full background image index
+  // Current active full background artwork index
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Cycle Unsplash background images every 5 seconds (5000ms) with clean unmount cleanup
+  // Cycle background images every 5 seconds (5000ms) with smooth opacity fade
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % FULL_BACKGROUND_IMAGES.length);
+      setCurrentIndex((prev) => (prev + 1) % BACKGROUND_ARTWORK_IMAGES.length);
     }, 5000);
     return () => clearInterval(timer);
   }, []);
@@ -91,9 +65,8 @@ export default function Hero() {
       gsap.fromTo('.hero-title', { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.9, delay: 0.2, ease: 'power4.out' });
       gsap.fromTo('.hero-sub', { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.35, ease: 'power3.out' });
       gsap.fromTo('.hero-ctas', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.5, ease: 'power3.out' });
-      gsap.fromTo('.hero-ticker', { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.7, delay: 0.6, ease: 'power3.out' });
-      gsap.fromTo('.hero-search-bar', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.7, ease: 'power3.out' });
-      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.8, ease: 'power3.out' });
+      gsap.fromTo('.hero-search-bar', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.65, ease: 'power3.out' });
+      gsap.fromTo('.hero-stats', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, delay: 0.75, ease: 'power3.out' });
     }, heroRef);
     return () => ctx.revert();
   }, []);
@@ -109,30 +82,30 @@ export default function Hero() {
     navigateTo('marketplace');
   };
 
-  const activeItem = FULL_BACKGROUND_IMAGES[currentIndex];
+  const activeArtwork = BACKGROUND_ARTWORK_IMAGES[currentIndex];
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── BACKGROUND LAYER: FULL-SCREEN UNSPLASH IMAGE CAROUSEL WITH KEN BURNS EFFECT ── */}
+      {/* ── ATTRACTIVE UNSPLASH 3D/ARTWORK BACKGROUND CAROUSEL ── */}
       <div style={styles.fullBgWrapper}>
-        {FULL_BACKGROUND_IMAGES.map((item, idx) => (
+        {BACKGROUND_ARTWORK_IMAGES.map((item, idx) => (
           <div
             key={item.id}
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 0.22 : 0, // Crisp Unsplash background opacity
-              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns scale-110 effect
-              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out', // 2000ms crossfade, 5000ms zoom
+              opacity: idx === currentIndex ? 0.25 : 0, // Vibrant opacity
+              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns slow scale
+              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out',
             }}
           />
         ))}
 
-        {/* Theme Light Backdrop Overlay ensuring contrast */}
+        {/* Soft Theme Overlay ensuring text contrast */}
         <div style={styles.fullBgOverlay} />
       </div>
 
-      {/* ── RELATIVE OVERLAY LAYER (z-10): ALL HERO CONTENT INTACT ── */}
+      {/* ── CENTERED HERO CONTENT ── */}
       <div style={styles.container}>
         {/* 1. Pill Badge */}
         <div className="hero-badge" style={styles.badge}>
@@ -185,46 +158,7 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Unsplash Image Showcase Ticker */}
-        <div className="hero-ticker glass-card" style={styles.tickerCard}>
-          <div style={styles.tickerBadgeLeft}>
-            <div style={styles.livePulseDot} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7B3FA0' }}>UNSPLASH SHOWCASE</span>
-          </div>
-
-          <div style={styles.tickerCenter}>
-            <img src={activeItem.image} alt="" style={styles.tickerThumb} />
-            <div>
-              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#2D004D', display: 'block' }}>
-                {activeItem.title}
-              </span>
-              <span style={{ fontSize: '0.70rem', color: '#6B4F7A', fontWeight: 600 }}>
-                {activeItem.category} • <strong style={{ color: '#16A34A' }}>{activeItem.price}</strong> • ⭐ {activeItem.rating}
-              </span>
-            </div>
-          </div>
-
-          {/* Carousel Indicators */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            {FULL_BACKGROUND_IMAGES.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentIndex(i)}
-                style={{
-                  width: i === currentIndex ? '20px' : '7px',
-                  height: '7px',
-                  borderRadius: '999px',
-                  background: i === currentIndex ? '#7B3FA0' : 'rgba(123, 63, 160, 0.35)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.4s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 6. Centered Search Bar & Quick Categories */}
+        {/* 5. Centered Search Bar & Quick Categories */}
         <div className="hero-search-bar glass-card" style={styles.searchContainer}>
           <form onSubmit={handleSearchSubmit} style={styles.searchForm}>
             <Search size={18} color="#7B3FA0" />
@@ -259,7 +193,7 @@ export default function Hero() {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.80)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
                   e.currentTarget.style.color = '#2D004D';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
@@ -276,7 +210,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* 7. Stats Bar at Bottom */}
+        {/* 6. Stats Bar at Bottom */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
             { icon: <Users size={16} color="#7B3FA0" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(123, 63, 160, 0.10)' },
@@ -300,13 +234,8 @@ export default function Hero() {
 
       {/* Responsive CSS */}
       <style>{`
-        @keyframes pulseDot {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.5; }
-        }
         @media (max-width: 768px) {
           .hero-search-bar { flex-direction: column !important; gap: 14px !important; }
-          .hero-ticker { flex-direction: column !important; text-align: center !important; gap: 8px !important; }
         }
       `}</style>
     </section>
@@ -346,8 +275,8 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(250, 246, 240, 0.78)', // Light theme overlay matching site style
-    backdropFilter: 'blur(2px)', // Subtle backdrop blur
+    background: 'rgba(250, 246, 240, 0.75)', // Elegant theme overlay
+    backdropFilter: 'blur(2px)', // Soft blur
   },
 
   /* Relative Overlay Container (z-10) */
@@ -359,7 +288,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '22px',
+    gap: '24px',
     position: 'relative',
     zIndex: 10,
   },
@@ -458,51 +387,6 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
     backdropFilter: 'blur(10px)',
-  },
-
-  /* Ticker */
-  tickerCard: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '16px',
-    padding: '8px 18px',
-    borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.94)',
-    backdropFilter: 'blur(20px)',
-    border: '1.5px solid rgba(192, 132, 252, 0.50)',
-    boxShadow: '0 8px 24px rgba(90, 30, 126, 0.12)',
-    marginTop: '4px',
-    maxWidth: '720px',
-    width: '100%',
-  },
-  tickerBadgeLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    background: 'rgba(123, 63, 160, 0.12)',
-    padding: '4px 12px',
-    borderRadius: '999px',
-    flexShrink: 0,
-  },
-  livePulseDot: {
-    width: '7px',
-    height: '7px',
-    borderRadius: '50%',
-    background: '#16A34A',
-    animation: 'pulseDot 1.8s infinite ease-in-out',
-  },
-  tickerCenter: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  tickerThumb: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '6px',
-    objectFit: 'cover',
-    border: '1px solid rgba(123, 63, 160, 0.2)',
   },
 
   /* Search Container */
