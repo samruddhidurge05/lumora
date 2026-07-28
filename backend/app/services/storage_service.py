@@ -319,6 +319,14 @@ class B2StorageProvider(BaseStorageProvider):
     def is_available(self) -> bool:
         return bool(self.auth_token and self.api_url and self.bucket_id and self.b2_status == "AUTHORIZED")
 
+    def _clean_b2_key(self, storage_path: str) -> str:
+        if not storage_path:
+            return ""
+        prefix = f"b2://{self.bucket_name}/"
+        if storage_path.startswith(prefix):
+            return storage_path[len(prefix):]
+        return storage_path.replace("b2://", "")
+
     def _ensure_auth(self):
         if self.b2_status == "TRANSACTION_CAP_EXCEEDED":
             return
@@ -1086,7 +1094,7 @@ class StorageService:
             except Exception:
                 pass
             # Controlled read check fallback for legacy local disk assets
-            clean_path = resolved_path.replace(f"b2://{self.b2_provider.bucket_name}/", "")
+            clean_path = self.b2_provider._clean_b2_key(resolved_path)
             return self.local_provider.exists(f"local://uploads/{clean_path}")
         elif resolved_path.startswith("gs://") and isinstance(self.provider, FirebaseStorageProvider):
             return self.provider.exists(resolved_path)
