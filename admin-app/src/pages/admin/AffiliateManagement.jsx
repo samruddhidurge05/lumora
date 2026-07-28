@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 import AdminLayout from './components/AdminLayout';
-import { AdminSelect } from './components/AdminComponents';
+import { AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 import { backendFetch } from '../../utils/api';
@@ -1547,19 +1547,12 @@ export default function AffiliateManagement() {
             </button>
           </div>
 
-          {/* Segmented Navigation Bar (6 Simplified Tabs) */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x max-w-full">
-            {TABS.map(tab => {
-              const IconComp = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap shrink-0 snap-start min-h-[38px] ${isActive ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5C2B7C] text-white shadow-md' : 'text-[#7B3FA0] hover:bg-white/60'}`}>
-                  <IconComp size={14} /><span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Segmented Navigation Bar (Enterprise Mobile Redesign) */}
+          <MobileSectionSwitcher
+            sections={TABS.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
+            activeSection={activeTab}
+            onChange={setActiveTab}
+          />
         </div>
 
         {/* ── TAB 1: EXECUTIVE OVERVIEW ────────────────────────────────────────── */}
@@ -2001,7 +1994,8 @@ export default function AffiliateManagement() {
 
             <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
               <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                       <tr>
@@ -2043,6 +2037,40 @@ export default function AffiliateManagement() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Record Cards View (< 768px) */}
+                <div className="md:hidden flex flex-col gap-3 p-3.5">
+                  {ledger.map(row => (
+                    <div key={`mob-ledger-${row.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3">
+                      <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-2.5">
+                        <span className="font-mono text-xs font-bold text-[#7B3FA0]">#{row.order_id || row.id}</span>
+                        <StatusBadge status={row.commission_status || row.status} size="xs" />
+                      </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[#2D004D] text-xs truncate">{row.customer_name || 'Customer'}</p>
+                          <p className="text-[10px] text-[#7B3FA0] mt-0.5 truncate">Promoter: <strong className="text-[#2D004D]">{row.affiliate_name}</strong></p>
+                          <p className="text-[10px] font-medium text-stone-600 mt-0.5 truncate">📦 {row.product_name || 'Product'}</p>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="font-bold text-xs text-[#2D004D]">{fmt(row.sale_amount)}</span>
+                          <span className="text-[10px] font-bold text-emerald-600">Comm: {fmt(row.commission_earned)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-[#F3EAF8]">
+                        <span className="text-[10px] text-[#7B3FA0]">{fmtDate(row.date)}</span>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-xs font-bold transition-all">
+                            Trace
+                          </button>
+                          <button onClick={() => setCommActionModal(row)} className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-xs font-bold transition-all">
+                            Edit Status
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / 50)} onChange={setLedgerPage} />

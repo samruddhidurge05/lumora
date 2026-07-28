@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useId } from 'react';
-import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, ChevronUp, Check, Grid, Filter, X, Sliders } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
@@ -507,6 +507,243 @@ export function AdminSelect({
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 8. MOBILE SECTION SWITCHER (NAV REDESIGN) ──────────────────────────────
+// Enterprise mobile section navigation: Pill list on desktop, Dropdown + Bottom Sheet on mobile.
+export function MobileSectionSwitcher({ sections = [], activeSection, onChange, className = "" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const activeObj = sections.find(s => s.id === activeSection) || sections[0] || { id: '', label: 'Select Section' };
+  const ActiveIcon = activeObj.icon;
+
+  return (
+    <div className={`w-full ${className}`}>
+      {/* Desktop View (>= 768px): Horizontal Pill Bar */}
+      <div className="hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/70 backdrop-blur-md border border-stone-200/50 shadow-xs flex-wrap">
+        {sections.map(sec => {
+          const isActive = sec.id === activeSection;
+          const SecIcon = sec.icon;
+          return (
+            <button
+              key={sec.id}
+              onClick={() => onChange(sec.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border-none cursor-pointer ${
+                isActive
+                  ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5A1E7E] text-white shadow-sm'
+                  : 'text-[#7B3FA0] hover:bg-[#F3EAF8]/60 hover:text-[#2D004D]'
+              }`}
+            >
+              {SecIcon && <SecIcon size={14} />}
+              <span>{sec.label}</span>
+              {sec.count !== undefined && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-[#F3EAF8] text-[#7B3FA0]'
+                }`}>
+                  {sec.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mobile View (< 768px): Dropdown Switcher Bar */}
+      <div className="md:hidden w-full">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full px-4 py-3 rounded-2xl bg-white/95 border border-[#C4B5FD]/70 shadow-sm flex items-center justify-between text-xs font-bold text-[#2D004D] active:scale-[0.99] transition-all"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-[9px] uppercase tracking-widest font-extrabold text-[#7B3FA0]">Section:</span>
+            {ActiveIcon && <ActiveIcon size={15} className="text-[#7B3FA0] shrink-0" />}
+            <span className="truncate font-black">{activeObj.label}</span>
+            {activeObj.count !== undefined && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#F8F3FB] text-[#7B3FA0] border border-[#F3EAF8]">
+                {activeObj.count}
+              </span>
+            )}
+          </div>
+          <ChevronDown size={16} className="text-[#7B3FA0] shrink-0 ml-2" />
+        </button>
+
+        {/* Bottom Sheet Drawer for Section Selection */}
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+            <div 
+              className="fixed inset-0" 
+              onClick={() => setIsOpen(false)} 
+            />
+            <div className="relative w-full max-h-[85vh] bg-white rounded-t-3xl p-5 shadow-2xl flex flex-col gap-4 z-10 border-t border-stone-200 overflow-y-auto animate-in slide-in-from-bottom duration-250">
+              <div className="w-12 h-1.5 rounded-full bg-stone-300 mx-auto -mt-1 mb-1" />
+              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-[#7B3FA0]">Switch View</span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-full bg-stone-100 text-[#7B3FA0] hover:bg-stone-200 transition-colors border-none"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {sections.map(sec => {
+                  const isActive = sec.id === activeSection;
+                  const SecIcon = sec.icon;
+                  return (
+                    <button
+                      key={sec.id}
+                      onClick={() => {
+                        onChange(sec.id);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full min-h-[48px] px-4 py-3 rounded-2xl text-left text-xs font-bold flex items-center justify-between transition-all border-none cursor-pointer ${
+                        isActive
+                          ? 'bg-[#7B3FA0]/15 text-[#7B3FA0] border border-[#7B3FA0]/30 font-black'
+                          : 'bg-[#F8F3FB]/50 text-[#2D004D] hover:bg-[#F8F3FB]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {SecIcon && <SecIcon size={16} className={isActive ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />}
+                        <span>{sec.label}</span>
+                      </div>
+                      {sec.count !== undefined && (
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          isActive ? 'bg-[#7B3FA0] text-white' : 'bg-[#F3EAF8] text-[#7B3FA0]'
+                        }`}>
+                          {sec.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── 9. MOBILE FILTER DRAWER & TRIGGER ─────────────────────────────────────
+// Mobile slide-up Bottom Sheet for filters (Sort, Status, Category, Range)
+export function MobileFilterTrigger({ activeCount = 0, onClick, label = "Filter & Sort" }) {
+  return (
+    <button
+      onClick={onClick}
+      className="md:hidden flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-white border border-[#C4B5FD]/70 text-[#7B3FA0] text-xs font-extrabold shadow-xs active:scale-95 transition-all"
+    >
+      <Sliders size={14} />
+      <span>{label}</span>
+      {activeCount > 0 && (
+        <span className="w-5 h-5 rounded-full bg-[#7B3FA0] text-white text-[10px] font-extrabold flex items-center justify-center">
+          {activeCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
+export function MobileFilterDrawer({ isOpen, onClose, onApply, onReset, title = "Filter & Sort", children }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="fixed inset-0" onClick={onClose} />
+      <div className="relative w-full max-h-[90vh] bg-white rounded-t-3xl p-5 shadow-2xl flex flex-col gap-4 z-10 border-t border-stone-200 overflow-y-auto animate-in slide-in-from-bottom duration-250">
+        <div className="w-12 h-1.5 rounded-full bg-stone-300 mx-auto -mt-1 mb-1" />
+        <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-[#7B3FA0]" />
+            <h3 className="text-sm font-serif font-black text-[#2D004D]">{title}</h3>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full bg-stone-100 text-[#7B3FA0] hover:bg-stone-200 border-none cursor-pointer">
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-4 py-2">
+          {children}
+        </div>
+
+        <div className="flex items-center gap-3 pt-3 border-t border-stone-100 mt-2">
+          {onReset && (
+            <button
+              onClick={() => { onReset(); onClose(); }}
+              className="flex-1 min-h-[44px] py-3 rounded-xl border border-stone-200 bg-stone-50 text-stone-600 text-xs font-bold transition-all"
+            >
+              Reset Filters
+            </button>
+          )}
+          <button
+            onClick={() => { if (onApply) onApply(); onClose(); }}
+            className="flex-1 min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#5A1E7E] text-white text-xs font-bold shadow-md transition-all"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 10. MOBILE RECORD CARD & EXPANDABLE DETAILS ───────────────────────────
+// Enterprise-grade mobile card record view with progressive disclosure accordion
+export function MobileRecordCard({ title, subtitle, badge, status, price, avatar, details, actions, children, onClick }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div 
+      onClick={onClick}
+      className="md:hidden p-4 rounded-2xl bg-white border border-stone-200/70 shadow-xs flex flex-col gap-3 transition-all hover:border-[#7B3FA0]/40"
+    >
+      {/* Header Row */}
+      <div className="flex items-start justify-between gap-3 border-b border-stone-100 pb-2.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {avatar && (
+            <div className="shrink-0">{avatar}</div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h4 className="font-bold text-[#2D004D] text-xs leading-snug break-words">{title}</h4>
+            {subtitle && <p className="text-[10px] text-[#7B3FA0] mt-0.5 truncate">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="flex flex-col items-end shrink-0 gap-1">
+          {status && <div>{status}</div>}
+          {price && <span className="font-black text-xs text-[#2D004D]">{price}</span>}
+          {badge && <div>{badge}</div>}
+        </div>
+      </div>
+
+      {/* Main Grid / Body Content */}
+      {children && <div className="text-xs text-[#2D004D] space-y-2">{children}</div>}
+
+      {/* Expandable Secondary Details Drawer */}
+      {details && (
+        <div className="border-t border-stone-100 pt-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+            className="w-full flex items-center justify-between py-1 text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider border-none bg-transparent cursor-pointer"
+          >
+            <span>{isExpanded ? 'Hide Details' : 'View Full Details'}</span>
+            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {isExpanded && (
+            <div className="mt-2.5 p-3 rounded-xl bg-[#F8F3FB]/70 border border-[#F3EAF8] text-xs text-[#2D004D] space-y-2 animate-in fade-in duration-150">
+              {details}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Action Footer Bar (Minimum 44px touch targets) */}
+      {actions && (
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          {actions}
         </div>
       )}
     </div>
