@@ -1229,30 +1229,27 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .aff-profile-btn-row { flex-direction: column !important; width: 100% !important; gap: 8px !important; }
   .aff-profile-btn-row > button { width: 100% !important; justify-content: center !important; }
 
-  /* Products grid → horizontal scroll carousel */
+  /* Products grid → responsive 1-col mobile / 2-col tablet grid */
   .aff-products-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    display: grid !important;
+    grid-template-columns: repeat(1, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .aff-products-grid::-webkit-scrollbar { display: none; }
+  @media (min-width: 540px) and (max-width: 1024px) {
+    .aff-products-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
   .aff-products-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     min-width: 0 !important;
-    scroll-snap-align: start !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -1368,6 +1365,119 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 @media (max-width: 600px) {
   .support-form-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   14b. AFFILIATE PROFILE PAGE — Mobile Deep Fixes
+   Root cause fixes:
+   - Account status strip (5 items) overflows on phones — convert to 2-col grid
+   - Header h2 text too large for 375px phones
+   - Profile hero card (avatar + name) overflows on narrow screens
+   - Promotion/Audience grids must collapse to 1-col on mobile
+   - Action buttons in header must stack on narrow screens
+   - Form grids must collapse to 1 col on mobile
+════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  /* Profile header: title scales down */
+  .aff-page-wrap h2.text-editorial {
+    font-size: clamp(1.4rem, 5.5vw, 2rem) !important;
+  }
+
+  /* Avatar hero: wrap tightly */
+  .aff-page-wrap .glass-card[style*="alignItems: center"] {
+    padding: 20px 18px !important;
+    gap: 16px !important;
+  }
+
+  /* Account status strip → 2-col grid on mobile */
+  .aff-status-strip-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    padding: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Profile action button row → stack vertically */
+  .aff-profile-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .aff-profile-action-row > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Profile form grids → single column */
+  .aff-profile-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Promotion profile grid → 1 col */
+  .aff-page-wrap .premium-flat-card [style*="repeat(auto-fit, minmax(240px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Products page search bar + filter: prevent overflow on mobile
+──────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .aff-products-search-bar {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .aff-products-search-bar > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Category filter pills → horizontal scroll */
+  .aff-category-strip {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+    gap: 6px !important;
+  }
+  .aff-category-strip::-webkit-scrollbar { display: none; }
+  .aff-category-strip > button { flex-shrink: 0 !important; }
+
+  /* Product grid card actions → wrap on narrow screens */
+  .aff-product-card-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .aff-product-card-actions > button {
+    flex: 1 1 calc(50% - 3px) !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Very narrow phones (≤390px): extra density + overflow guards
+──────────────────────────────────────────────────────────────────── */
+@media (max-width: 390px) {
+  .aff-hero-content h1 { font-size: clamp(1.25rem, 6.5vw, 1.7rem) !important; }
+  .aff-hero-banner { padding: 16px 12px !important; }
+  .aff-main-area main { padding: 12px 10px 40px !important; }
+  .aff-stat-grid { gap: 7px !important; }
+  .aff-stat-grid > .premium-flat-card,
+  .aff-stat-grid > .aff-earnings-stat-card { padding: 10px 8px !important; }
+  .aff-stat-value { font-size: clamp(0.95rem, 5vw, 1.1rem) !important; }
+  .aff-commission-strip { padding: 12px 10px !important; gap: 8px !important; }
+  .aff-earnings-breakdown { padding: 12px 10px !important; }
+}
+
+
 
 /* ════════════════════════════════════════════════════════════════════
    15. VENDOR PAGES

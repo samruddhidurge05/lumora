@@ -553,7 +553,7 @@ export default function AffiliateProfile({
       </div>
 
       {/* ── ACCOUNT STATUS STRIP ─────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+      <div className="premium-flat-card aff-status-strip-grid" style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', padding: '18px 24px' }}>
         {[
           { label: 'Status',          value: isActive ? 'Active' : 'Inactive', color: isActive ? '#15803D' : '#DC2626', icon: <Activity size={14} /> },
           { label: 'Commission Rate', value: `${commissionRate}%`,             color: '#7B3FA0',                         icon: <TrendingUp size={14} /> },
@@ -561,15 +561,14 @@ export default function AffiliateProfile({
           { label: 'Total Clicks',    value: totalClicks.toLocaleString(),      color: 'var(--text-primary)',             icon: <MousePointerClick size={14} /> },
           { label: 'Total Sales',     value: totalSales.toLocaleString(),       color: 'var(--text-primary)',             icon: <ShoppingBag size={14} /> },
         ].map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, boxSizing: 'border-box' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(123,63,160,0.05)', border: '1px solid rgba(196,181,253,0.20)', color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {item.icon}
             </div>
-            <div>
-              <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-              <div style={{ fontSize: '0.92rem', fontWeight: 700, color: item.color, marginTop: '1px' }}>{item.value}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{item.label}</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: item.color, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.value}</div>
             </div>
-            {i < 4 && <div style={{ width: '1px', height: '32px', background: 'rgba(45,0,96,0.06)', marginLeft: '16px' }} />}
           </div>
         ))}
       </div>
@@ -623,7 +622,7 @@ export default function AffiliateProfile({
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Promotion Profile</h3>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
+        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {personalField('Display Name', 'displayName', 'Public name')}
           {textAreaField('Short Bio', 'shortBio', 'I create UI/UX tutorials and review developer tools.', 300)}
           {selectField('Country', 'country', [
@@ -672,7 +671,7 @@ export default function AffiliateProfile({
             <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Audience Information</h3>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
+        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {selectField('Primary Audience', 'primaryAudience', ['Designers', 'Developers', 'Students', 'Businesses', 'Content Creators', 'Agencies', 'Entrepreneurs'])}
           {selectField('Audience Size', 'audienceSize', ['Under 1K', '1K – 10K', '10K – 50K', '50K – 100K', '100K+'])}
           {selectField('Preferred Language', 'preferredLanguage', ['English', 'Spanish', 'French', 'Hindi', 'German', 'Other'])}

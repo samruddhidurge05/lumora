@@ -447,20 +447,21 @@ export default function AffiliateDashboardHome({
             trend: 'Unique clicks',
           },
         ].map((stat, idx) => (
-          <div key={idx} className="premium-flat-card" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{stat.label}</span>
-              <div style={{ fontSize: '1.7rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1 }}>{stat.value}</div>
-              <span style={{ fontSize: '0.68rem', color: 'var(--text-light)', display: 'block', marginTop: '6px', fontWeight: 500 }}>{stat.sub}</span>
-              <span style={{ fontSize: '0.65rem', color: '#7B3FA0', display: 'block', marginTop: '3px', fontWeight: 600 }}>{stat.trend}</span>
+          <div key={idx} className="premium-flat-card aff-earnings-stat-card" style={{ padding: 'clamp(10px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', width: '100%' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', truncate: true, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{stat.label}</span>
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '8px',
+                background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)',
+                color: 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                {stat.icon}
+              </div>
             </div>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '8px',
-              background: 'rgba(45,0,96,0.03)', border: '1px solid rgba(45,0,96,0.06)',
-              color: 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              {stat.icon}
+            <div>
+              <div className="aff-stat-value" style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.6rem)', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.value}</div>
+              <span style={{ fontSize: '0.62rem', color: 'var(--text-light)', display: 'block', marginTop: '3px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.sub}</span>
             </div>
           </div>
         ))}
