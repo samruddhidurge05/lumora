@@ -61,6 +61,19 @@ const getUserName = (u, fallback = '—') => {
   return fallback;
 };
 
+// ── Helper to derive normalized status across multiple field variants ────────
+export const getNormalizedStatus = (item) => {
+  if (!item) return 'active';
+  const raw = (item.status || item.accountStatus || item.account_status || '').toString().toLowerCase().trim();
+  if (raw === 'disabled' || raw === 'suspended' || raw === 'rejected' || item.is_active === false || item.isActive === false) {
+    return 'disabled';
+  }
+  if (raw === 'restricted' || raw === 'pending') {
+    return 'restricted';
+  }
+  return 'active';
+};
+
 // ── Status badge ───────────────────────────────────────────────────────────────
 function StatusBadge({ label, statusType }) {
   let bg = 'rgba(123,63,160,0.10)';
@@ -255,16 +268,16 @@ export default function Vendors() {
 
 
 
-  // ── Derived stats ─────────────────────────────────────────────────────────
+// ── Derived stats ─────────────────────────────────────────────────────────
   const totalVendors    = vendors.length;
-  const approvedCount   = vendors.filter(v => v.status === 'active').length;
-  const pendingCount    = vendors.filter(v => v.status === 'restricted').length;
-  const suspendedCount  = vendors.filter(v => v.status === 'disabled').length;
+  const approvedCount   = vendors.filter(v => getNormalizedStatus(v) === 'active').length;
+  const pendingCount    = vendors.filter(v => getNormalizedStatus(v) === 'restricted').length;
+  const suspendedCount  = vendors.filter(v => getNormalizedStatus(v) === 'disabled').length;
 
   const totalAffiliates = affiliates.length;
   const totalClicks     = affiliates.reduce((sum, a) => sum + (a.totalClicks || 0), 0);
   const totalCommission = affiliates.reduce((sum, a) => sum + (a.totalCommission || 0), 0);
-  const suspendedAffs   = affiliates.filter(a => a.status === 'disabled').length;
+  const suspendedAffs   = affiliates.filter(a => getNormalizedStatus(a) === 'disabled').length;
 
   const stats = activeTab === 'vendors' 
     ? [
@@ -445,6 +458,7 @@ export default function Vendors() {
                           const uid = vendor.uid || vendor.id;
                           const busy = !!actionLoading[uid];
                           const rawCreatedAt = vendor.createdAt;
+                          const normStatus = getNormalizedStatus(vendor);
                           const joinedDate = (() => {
                             if (!rawCreatedAt) return '—';
                             if (rawCreatedAt?.toDate) return rawCreatedAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -459,7 +473,7 @@ export default function Vendors() {
                               key={uid}
                               style={{
                                 borderBottom: idx < vendors.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
-                                background: vendor.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
+                                background: normStatus === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
                                 transition: 'background 0.2s',
                               }}
                             >
@@ -486,7 +500,7 @@ export default function Vendors() {
                               </td>
 
                               <td style={{ padding: '14px 20px' }}>
-                                <StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} />
+                                <StatusBadge label={normStatus} statusType={normStatus} />
                               </td>
 
                               <td style={{ padding: '14px 20px' }}>
@@ -497,7 +511,7 @@ export default function Vendors() {
 
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {vendor.status !== 'active' && (
+                                  {normStatus !== 'active' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, approveVendor, `"${getUserName(vendor)}" enabled (Active)`)}
@@ -509,7 +523,7 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {vendor.status !== 'restricted' && (
+                                  {normStatus !== 'restricted' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, restrictVendor, `"${getUserName(vendor)}" status restricted`)}
@@ -521,7 +535,7 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {vendor.status !== 'disabled' && (
+                                  {normStatus !== 'disabled' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, suspendVendor, `"${getUserName(vendor)}" disabled`)}
@@ -551,6 +565,7 @@ export default function Vendors() {
                       : affiliates.map((affiliate, idx) => {
                           const uid = affiliate.uid || affiliate.id;
                           const busy = !!actionLoading[uid];
+                          const normStatus = getNormalizedStatus(affiliate);
                           const earnings = affiliate.totalCommission !== undefined
                             ? `₹${affiliate.totalCommission.toLocaleString()}`
                             : '₹0';
@@ -560,7 +575,7 @@ export default function Vendors() {
                               key={uid}
                               style={{
                                 borderBottom: idx < affiliates.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
-                                background: affiliate.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
+                                background: normStatus === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
                                 transition: 'background 0.2s',
                               }}
                             >
@@ -620,12 +635,12 @@ export default function Vendors() {
                               </td>
 
                               <td style={{ padding: '14px 20px' }}>
-                                <StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} />
+                                <StatusBadge label={normStatus} statusType={normStatus} />
                               </td>
 
                               <td style={{ padding: '14px 20px' }}>
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {affiliate.status !== 'active' && (
+                                  {normStatus !== 'active' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, approveAffiliate, `"${getUserName(affiliate)}" enabled (Active)`)}
@@ -637,7 +652,7 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {affiliate.status !== 'restricted' && (
+                                  {normStatus !== 'restricted' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, restrictAffiliate, `"${affiliate.name}" status restricted`)}
@@ -649,7 +664,7 @@ export default function Vendors() {
                                     </button>
                                   )}
 
-                                  {affiliate.status !== 'disabled' && (
+                                  {normStatus !== 'disabled' && (
                                     <button
                                       disabled={busy}
                                       onClick={() => runAction(uid, disableAffiliate, `"${affiliate.name}" disabled`)}
@@ -689,6 +704,7 @@ export default function Vendors() {
                 ? vendors.map((vendor) => {
                     const uid = vendor.uid || vendor.id;
                     const busy = !!actionLoading[uid];
+                    const normStatus = getNormalizedStatus(vendor);
                     return (
                       <div key={`m-v-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
                         <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
@@ -698,7 +714,7 @@ export default function Vendors() {
                             </div>
                             <span className="text-xs font-bold text-[#2D004D]">{getUserName(vendor, '—')}</span>
                           </div>
-                          <StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} />
+                          <StatusBadge label={normStatus} statusType={normStatus} />
                         </div>
 
                         <div className="text-[11px] text-[#7B3FA0]">
@@ -706,7 +722,7 @@ export default function Vendors() {
                         </div>
 
                         <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
-                          {vendor.status !== 'active' && (
+                          {normStatus !== 'active' && (
                             <button
                               disabled={busy}
                               onClick={() => runAction(uid, approveVendor, `"${getUserName(vendor)}" enabled`)}
@@ -715,7 +731,7 @@ export default function Vendors() {
                               <Icon name="Play" size={12} /> Enable
                             </button>
                           )}
-                          {vendor.status !== 'restricted' && (
+                          {normStatus !== 'restricted' && (
                             <button
                               disabled={busy}
                               onClick={() => runAction(uid, restrictVendor, `"${getUserName(vendor)}" restricted`)}
@@ -724,7 +740,7 @@ export default function Vendors() {
                               <Icon name="AlertTriangle" size={12} /> Restrict
                             </button>
                           )}
-                          {vendor.status !== 'disabled' && (
+                          {normStatus !== 'disabled' && (
                             <button
                               disabled={busy}
                               onClick={() => runAction(uid, suspendVendor, `"${getUserName(vendor)}" disabled`)}
@@ -740,6 +756,7 @@ export default function Vendors() {
                 : affiliates.map((affiliate) => {
                     const uid = affiliate.uid || affiliate.id;
                     const busy = !!actionLoading[uid];
+                    const normStatus = getNormalizedStatus(affiliate);
                     return (
                       <div key={`m-a-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
                         <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
@@ -749,7 +766,7 @@ export default function Vendors() {
                             </div>
                             <span className="text-xs font-bold text-[#2D004D]">{getUserName(affiliate, '—')}</span>
                           </div>
-                          <StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} />
+                          <StatusBadge label={normStatus} statusType={normStatus} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 text-[10px] text-[#7B3FA0]">
@@ -760,7 +777,7 @@ export default function Vendors() {
                         </div>
 
                         <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
-                          {affiliate.status !== 'active' && (
+                          {normStatus !== 'active' && (
                             <button
                               disabled={busy}
                               onClick={() => runAction(uid, approveAffiliate, `"${getUserName(affiliate)}" enabled`)}
@@ -769,7 +786,7 @@ export default function Vendors() {
                               <Icon name="Play" size={12} /> Enable
                             </button>
                           )}
-                          {affiliate.status !== 'disabled' && (
+                          {normStatus !== 'disabled' && (
                             <button
                               disabled={busy}
                               onClick={() => runAction(uid, disableAffiliate, `"${affiliate.name}" disabled`)}

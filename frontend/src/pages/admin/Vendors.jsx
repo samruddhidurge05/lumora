@@ -52,13 +52,6 @@ const Icon = ({ name, size = 16, className = '' }) => {
   );
 };
 
-// ── Status badge ───────────────────────────────────────────────────────────────
-function StatusBadge({ label, statusType }) {
-  let bg = 'rgba(123,63,160,0.10)';
-  let border = 'rgba(184,134,208,0.30)';
-  let color = '#7B3FA0';
-  let dot = '#B886D0';
-
 // ── Helper to derive display name across all user name fields ────────────────
 const getUserName = (u, fallback = '—') => {
   if (!u) return fallback;
@@ -67,6 +60,26 @@ const getUserName = (u, fallback = '—') => {
   if (u.email && u.email.includes('@')) return u.email.split('@')[0];
   return fallback;
 };
+
+// ── Helper to derive normalized status across multiple field variants ────────
+export const getNormalizedStatus = (item) => {
+  if (!item) return 'active';
+  const raw = (item.status || item.accountStatus || item.account_status || '').toString().toLowerCase().trim();
+  if (raw === 'disabled' || raw === 'suspended' || raw === 'rejected' || item.is_active === false || item.isActive === false) {
+    return 'disabled';
+  }
+  if (raw === 'restricted' || raw === 'pending') {
+    return 'restricted';
+  }
+  return 'active';
+};
+
+// ── Status badge ───────────────────────────────────────────────────────────────
+function StatusBadge({ label, statusType }) {
+  let bg = 'rgba(123,63,160,0.10)';
+  let border = 'rgba(184,134,208,0.30)';
+  let color = '#7B3FA0';
+  let dot = '#B886D0';
 
   if (statusType === 'restricted') {
     bg = 'rgba(245,158,11,0.10)';
@@ -249,20 +262,18 @@ export default function Vendors() {
     }
   }, [activeTab, fetchVendorsRest, fetchAffiliatesRest]);
 
-
-
   // ── Derived stats ─────────────────────────────────────────────────────────
   const totalVendors    = vendors.length;
-  const approvedCount   = vendors.filter(v => v.status === 'active').length;
-  const pendingCount    = vendors.filter(v => v.status === 'restricted').length;
-  const suspendedCount  = vendors.filter(v => v.status === 'disabled').length;
+  const approvedCount   = vendors.filter(v => getNormalizedStatus(v) === 'active').length;
+  const pendingCount    = vendors.filter(v => getNormalizedStatus(v) === 'restricted').length;
+  const suspendedCount  = vendors.filter(v => getNormalizedStatus(v) === 'disabled').length;
 
   const totalAffiliates = affiliates.length;
   const totalClicks     = affiliates.reduce((sum, a) => sum + (a.totalClicks || 0), 0);
   const totalCommission = affiliates.reduce((sum, a) => sum + (a.totalCommission || 0), 0);
-  const suspendedAffs   = affiliates.filter(a => a.status === 'disabled').length;
+  const suspendedAffs   = affiliates.filter(a => getNormalizedStatus(a) === 'disabled').length;
 
-  const stats = activeTab === 'vendors' 
+  const stats = activeTab === 'vendors'
     ? [
         { label: 'Total Vendors',  value: totalVendors,   color: '#7B3FA0' },
         { label: 'Active (Full)',  value: approvedCount,  color: '#059669' },
@@ -313,14 +324,9 @@ export default function Vendors() {
               onClick={async () => {
                 setLoading(true);
                 setError(null);
-                const sortByStatus = (arr) => [...arr].sort((a, b) => {
-                  if (a.status !== 'active' && b.status === 'active') return -1;
-                  if (a.status === 'active' && b.status !== 'active') return 1;
-                  return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-                });
                 await Promise.all([
-                  fetchVendorsRest(sortByStatus),
-                  fetchAffiliatesRest(sortByStatus),
+                  fetchVendorsRest(),
+                  fetchAffiliatesRest(),
                 ]);
                 setLoading(false);
                 notify('Synced from backend');
@@ -413,187 +419,385 @@ export default function Vendors() {
             </div>
           )}
 
-          {/* Table — dual render: desktop table + mobile card stack */}
+          {/* Desktop Table View (>= 768px) */}
           {!loading && !error && (activeTab === 'vendors' ? vendors.length > 0 : affiliates.length > 0) && (
-            <>
-              {/* ── Desktop Table View (≥ 768px) ── */}
-              <div className="hidden md:block overflow-x-auto">
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
-                      {tableHeaders.map(h => (
-                        <th key={h} style={{
-                          padding: '12px 20px', textAlign: 'left', fontSize: '9px',
-                          fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-                          color: '#7B3FA0', whiteSpace: 'nowrap',
-                        }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeTab === 'vendors'
-                      ? vendors.map((vendor, idx) => {
-                          const uid = vendor.uid || vendor.id;
-                          const busy = !!actionLoading[uid];
-                          const joinedDate = vendor.createdAt
-                            ? new Date(vendor.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                            : '—';
-                          return (
-                            <tr key={uid} style={{
-                              borderBottom: idx < vendors.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
-                              background: vendor.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
-                              transition: 'background 0.2s',
-                            }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = vendor.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent'; }}
-                            >
-                              <td style={{ padding: '14px 20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #D8BFE3, #B886D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                                    {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
-                                  </div>
-                                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>{getUserName(vendor, '—')}</span>
-                                </div>
-                              </td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>{vendor.email || '—'}</span></td>
-                              <td style={{ padding: '14px 20px' }}><StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} /></td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '11px', color: '#7B3FA0', fontWeight: 300 }}>{joinedDate}</span></td>
-                              <td style={{ padding: '14px 20px' }}>
-                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {vendor.status !== 'active' && <button disabled={busy} onClick={() => runAction(uid, approveVendor, `"${vendor.name}" enabled (Active)`)} style={btnStyle('#059669', busy)}><Icon name="Play" size={12} />Enable</button>}
-                                  {vendor.status !== 'restricted' && <button disabled={busy} onClick={() => runAction(uid, restrictVendor, `"${vendor.name}" status restricted`)} style={btnStyle('#B45309', busy)}><Icon name="AlertTriangle" size={12} />Restrict</button>}
-                                  {vendor.status !== 'disabled' && <button disabled={busy} onClick={() => runAction(uid, suspendVendor, `"${vendor.name}" disabled`)} style={btnStyle('#DC2626', busy)}><Icon name="Pause" size={12} />Disable</button>}
-                                  {busy && <div style={{ width: 16, height: 16, border: '2px solid #D8BFE3', borderTopColor: '#7B3FA0', borderRadius: '50%', animation: 'spin 0.7s linear infinite', alignSelf: 'center' }} />}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      : affiliates.map((affiliate, idx) => {
-                          const uid = affiliate.uid || affiliate.id;
-                          const busy = !!actionLoading[uid];
-                          const earnings = affiliate.totalCommission !== undefined ? `₹${affiliate.totalCommission.toLocaleString()}` : '₹0';
-                          return (
-                            <tr key={uid} style={{
-                              borderBottom: idx < affiliates.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
-                              background: affiliate.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
-                              transition: 'background 0.2s',
-                            }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(216,191,227,0.06)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = affiliate.status === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent'; }}
-                            >
-                              <td style={{ padding: '14px 20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #B886D0, #7B3FA0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                                    {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
-                                  </div>
-                                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>{getUserName(affiliate, '—')}</span>
-                                </div>
-                              </td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>{affiliate.email || '—'}</span></td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: '#7B3FA0', background: 'rgba(123,63,160,0.08)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(123,63,160,0.15)' }}>{affiliate.affiliateCode || '—'}</span></td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>{affiliate.totalClicks || 0}</span></td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>{affiliate.totalConversions || 0}</span></td>
-                              <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>{earnings}</span></td>
-                              <td style={{ padding: '14px 20px' }}><StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} /></td>
-                              <td style={{ padding: '14px 20px' }}>
-                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {affiliate.status !== 'active' && <button disabled={busy} onClick={() => runAction(uid, approveAffiliate, `"${affiliate.name}" enabled (Active)`)} style={btnStyle('#059669', busy)}><Icon name="Play" size={12} />Enable</button>}
-                                  {affiliate.status !== 'restricted' && <button disabled={busy} onClick={() => runAction(uid, restrictAffiliate, `"${affiliate.name}" status restricted`)} style={btnStyle('#B45309', busy)}><Icon name="AlertTriangle" size={12} />Restrict</button>}
-                                  {affiliate.status !== 'disabled' && <button disabled={busy} onClick={() => runAction(uid, disableAffiliate, `"${affiliate.name}" disabled`)} style={btnStyle('#DC2626', busy)}><Icon name="Pause" size={12} />Disable</button>}
-                                  {busy && <div style={{ width: 16, height: 16, border: '2px solid #D8BFE3', borderTopColor: '#7B3FA0', borderRadius: '50%', animation: 'spin 0.7s linear infinite', alignSelf: 'center' }} />}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                    }
-                  </tbody>
-                </table>
-              </div>
+            <div className="hidden md:block overflow-x-auto">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
+                    {tableHeaders.map(h => (
+                      <th key={h} style={{
+                        padding: '12px 20px',
+                        textAlign: 'left',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        letterSpacing: '1px',
+                        textTransform: 'uppercase',
+                        color: '#7B3FA0',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeTab === 'vendors'
+                    ? vendors.map((vendor, idx) => {
+                        const uid = vendor.uid || vendor.id;
+                        const busy = !!actionLoading[uid];
+                        const rawCreatedAt = vendor.createdAt;
+                        const normStatus = getNormalizedStatus(vendor);
+                        const joinedDate = (() => {
+                          if (!rawCreatedAt) return '—';
+                          if (rawCreatedAt?.toDate) return rawCreatedAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                          if (rawCreatedAt?.seconds) return new Date(rawCreatedAt.seconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                          const d = new Date(rawCreatedAt);
+                          if (isNaN(d.getTime())) return '—';
+                          return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        })();
 
-              {/* ── Mobile Card Stack (< 768px) ── */}
-              <div className="block md:hidden space-y-3 p-3">
-                {activeTab === 'vendors'
-                  ? vendors.map(vendor => {
-                      const uid = vendor.uid || vendor.id;
-                      const busy = !!actionLoading[uid];
-                      const joinedDate = vendor.createdAt
-                        ? new Date(vendor.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                        : '—';
-                      return (
-                        <div key={uid} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #D8BFE3, #B886D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                                {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
+                        return (
+                          <tr
+                            key={uid}
+                            style={{
+                              borderBottom: idx < vendors.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
+                              background: normStatus === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
+                              transition: 'background 0.2s',
+                            }}
+                          >
+                            <td style={{ padding: '14px 20px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                  width: 32, height: 32, borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #D8BFE3, #B886D0)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0,
+                                }}>
+                                  {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>
+                                  {getUserName(vendor, '—')}
+                                </span>
                               </div>
-                              <div>
-                                <p className="text-xs font-bold text-[#2D004D] leading-tight">{getUserName(vendor, '—')}</p>
-                                <p className="text-[10px] text-[#7B3FA0] leading-tight truncate max-w-[180px]">{vendor.email || '—'}</p>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>
+                                {vendor.email || '—'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <StatusBadge label={normStatus} statusType={normStatus} />
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '11px', color: '#7B3FA0', fontWeight: 300 }}>
+                                {joinedDate}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {normStatus !== 'active' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, approveVendor, `"${getUserName(vendor)}" enabled (Active)`)}
+                                    title="Enable vendor"
+                                    style={btnStyle('#059669', busy)}
+                                  >
+                                    <Icon name="Play" size={12} />
+                                    Enable
+                                  </button>
+                                )}
+
+                                {normStatus !== 'restricted' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, restrictVendor, `"${getUserName(vendor)}" status restricted`)}
+                                    title="Restrict vendor"
+                                    style={btnStyle('#B45309', busy)}
+                                  >
+                                    <Icon name="AlertTriangle" size={12} />
+                                    Restrict
+                                  </button>
+                                )}
+
+                                {normStatus !== 'disabled' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, suspendVendor, `"${getUserName(vendor)}" disabled`)}
+                                    title="Disable vendor"
+                                    style={btnStyle('#DC2626', busy)}
+                                  >
+                                    <Icon name="Pause" size={12} />
+                                    Disable
+                                  </button>
+                                )}
+
+                                {busy && (
+                                  <div style={{
+                                    width: 16, height: 16,
+                                    border: '2px solid #D8BFE3',
+                                    borderTopColor: '#7B3FA0',
+                                    borderRadius: '50%',
+                                    animation: 'spin 0.7s linear infinite',
+                                    alignSelf: 'center',
+                                  }} />
+                                )}
                               </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : affiliates.map((affiliate, idx) => {
+                        const uid = affiliate.uid || affiliate.id;
+                        const busy = !!actionLoading[uid];
+                        const normStatus = getNormalizedStatus(affiliate);
+                        const earnings = affiliate.totalCommission !== undefined
+                          ? `₹${affiliate.totalCommission.toLocaleString()}`
+                          : '₹0';
+
+                        return (
+                          <tr
+                            key={uid}
+                            style={{
+                              borderBottom: idx < affiliates.length - 1 ? '1px solid rgba(216,191,227,0.12)' : 'none',
+                              background: normStatus === 'disabled' ? 'rgba(155,44,94,0.03)' : 'transparent',
+                              transition: 'background 0.2s',
+                            }}
+                          >
+                            <td style={{ padding: '14px 20px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                  width: 32, height: 32, borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #B886D0, #7B3FA0)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0,
+                                }}>
+                                  {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#2D004D' }}>
+                                  {getUserName(affiliate, '—')}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>
+                                {affiliate.email || '—'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{
+                                fontSize: '11px',
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                color: '#7B3FA0',
+                                background: 'rgba(123, 63, 160, 0.08)',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(123, 63, 160, 0.15)'
+                              }}>
+                                {affiliate.affiliateCode || '—'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
+                                {affiliate.totalClicks || 0}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>
+                                {affiliate.totalConversions || 0}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#9B2C5E', fontWeight: 700 }}>
+                                {earnings}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <StatusBadge label={normStatus} statusType={normStatus} />
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {normStatus !== 'active' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, approveAffiliate, `"${getUserName(affiliate)}" enabled (Active)`)}
+                                    title="Enable affiliate"
+                                    style={btnStyle('#059669', busy)}
+                                  >
+                                    <Icon name="Play" size={12} />
+                                    Enable
+                                  </button>
+                                )}
+
+                                {normStatus !== 'restricted' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, restrictAffiliate, `"${getUserName(affiliate)}" status restricted`)}
+                                    title="Restrict affiliate"
+                                    style={btnStyle('#B45309', busy)}
+                                  >
+                                    <Icon name="AlertTriangle" size={12} />
+                                    Restrict
+                                  </button>
+                                )}
+
+                                {normStatus !== 'disabled' && (
+                                  <button
+                                    disabled={busy}
+                                    onClick={() => runAction(uid, disableAffiliate, `"${getUserName(affiliate)}" disabled`)}
+                                    title="Disable affiliate"
+                                    style={btnStyle('#DC2626', busy)}
+                                  >
+                                    <Icon name="Pause" size={12} />
+                                    Disable
+                                  </button>
+                                )}
+
+                                {busy && (
+                                  <div style={{
+                                    width: 16, height: 16,
+                                    border: '2px solid #D8BFE3',
+                                    borderTopColor: '#7B3FA0',
+                                    borderRadius: '50%',
+                                    animation: 'spin 0.7s linear infinite',
+                                    alignSelf: 'center',
+                                  }} />
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  }
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Mobile Stacked Card View (< 768px) */}
+          {!loading && !error && (activeTab === 'vendors' ? vendors.length > 0 : affiliates.length > 0) && (
+            <div className="md:hidden flex flex-col gap-3 p-3">
+              {activeTab === 'vendors'
+                ? vendors.map((vendor) => {
+                    const uid = vendor.uid || vendor.id;
+                    const busy = !!actionLoading[uid];
+                    const normStatus = getNormalizedStatus(vendor);
+                    return (
+                      <div key={`m-v-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#D8BFE3] to-[#B886D0] flex items-center justify-center text-white text-xs font-bold">
+                              {(getUserName(vendor, 'V')[0] || 'V').toUpperCase()}
                             </div>
-                            <StatusBadge label={vendor.status || 'active'} statusType={vendor.status || 'active'} />
+                            <span className="text-xs font-bold text-[#2D004D]">{getUserName(vendor, '—')}</span>
                           </div>
-                          <div className="text-[10px] text-[#7B3FA0] pt-1 border-t border-stone-100">Joined: {joinedDate}</div>
-                          <div className="flex flex-wrap gap-1.5 pt-0.5">
-                            {vendor.status !== 'active' && <button disabled={busy} onClick={() => runAction(uid, approveVendor, `"${vendor.name}" enabled`)} style={btnStyle('#059669', busy)}><Icon name="Play" size={11} />Enable</button>}
-                            {vendor.status !== 'restricted' && <button disabled={busy} onClick={() => runAction(uid, restrictVendor, `"${vendor.name}" restricted`)} style={btnStyle('#B45309', busy)}><Icon name="AlertTriangle" size={11} />Restrict</button>}
-                            {vendor.status !== 'disabled' && <button disabled={busy} onClick={() => runAction(uid, suspendVendor, `"${vendor.name}" disabled`)} style={btnStyle('#DC2626', busy)}><Icon name="Pause" size={11} />Disable</button>}
-                            {busy && <div style={{ width: 14, height: 14, border: '2px solid #D8BFE3', borderTopColor: '#7B3FA0', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />}
-                          </div>
+                          <StatusBadge label={normStatus} statusType={normStatus} />
                         </div>
-                      );
-                    })
-                  : affiliates.map(affiliate => {
-                      const uid = affiliate.uid || affiliate.id;
-                      const busy = !!actionLoading[uid];
-                      const earnings = affiliate.totalCommission !== undefined ? `₹${affiliate.totalCommission.toLocaleString()}` : '₹0';
-                      return (
-                        <div key={uid} className="p-3.5 bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #B886D0, #7B3FA0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                                {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="text-xs font-bold text-[#2D004D] leading-tight">{getUserName(affiliate, '—')}</p>
-                                <p className="text-[10px] text-[#7B3FA0] leading-tight truncate max-w-[160px]">{affiliate.email || '—'}</p>
-                              </div>
-                            </div>
-                            <StatusBadge label={affiliate.status || 'active'} statusType={affiliate.status || 'active'} />
-                          </div>
-                          <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-stone-100">
-                            <div className="text-center">
-                              <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Clicks</p>
-                              <p className="text-xs font-bold text-[#2D004D]">{affiliate.totalClicks || 0}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Conv.</p>
-                              <p className="text-xs font-bold text-[#2D004D]">{affiliate.totalConversions || 0}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-[9px] font-bold uppercase text-[#7B3FA0] tracking-wider">Earnings</p>
-                              <p className="text-xs font-bold text-[#9B2C5E]">{earnings}</p>
-                            </div>
-                          </div>
-                          {affiliate.affiliateCode && (
-                            <div className="text-[10px] text-[#7B3FA0]">Code: <span className="font-mono font-bold bg-[#7B3FA0]/10 px-1.5 py-0.5 rounded">{affiliate.affiliateCode}</span></div>
+
+                        <div className="text-[11px] text-[#7B3FA0]">
+                          <p>Email: <span className="font-semibold text-[#2D004D]">{vendor.email || '—'}</span></p>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                          {normStatus !== 'active' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, approveVendor, `"${getUserName(vendor)}" enabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#10B981]/10 text-[#059669] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Play" size={12} /> Enable
+                            </button>
                           )}
-                          <div className="flex flex-wrap gap-1.5 pt-0.5">
-                            {affiliate.status !== 'active' && <button disabled={busy} onClick={() => runAction(uid, approveAffiliate, `"${affiliate.name}" enabled`)} style={btnStyle('#059669', busy)}><Icon name="Play" size={11} />Enable</button>}
-                            {affiliate.status !== 'restricted' && <button disabled={busy} onClick={() => runAction(uid, restrictAffiliate, `"${affiliate.name}" restricted`)} style={btnStyle('#B45309', busy)}><Icon name="AlertTriangle" size={11} />Restrict</button>}
-                            {affiliate.status !== 'disabled' && <button disabled={busy} onClick={() => runAction(uid, disableAffiliate, `"${affiliate.name}" disabled`)} style={btnStyle('#DC2626', busy)}><Icon name="Pause" size={11} />Disable</button>}
-                            {busy && <div style={{ width: 14, height: 14, border: '2px solid #D8BFE3', borderTopColor: '#7B3FA0', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />}
-                          </div>
+                          {normStatus !== 'restricted' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, restrictVendor, `"${getUserName(vendor)}" restricted`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#F59E0B]/10 text-[#B45309] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="AlertTriangle" size={12} /> Restrict
+                            </button>
+                          )}
+                          {normStatus !== 'disabled' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, suspendVendor, `"${getUserName(vendor)}" disabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#EF4444]/10 text-[#DC2626] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Pause" size={12} /> Disable
+                            </button>
+                          )}
                         </div>
-                      );
-                    })
-                }
-              </div>
-            </>
+                      </div>
+                    );
+                  })
+                : affiliates.map((affiliate) => {
+                    const uid = affiliate.uid || affiliate.id;
+                    const busy = !!actionLoading[uid];
+                    const normStatus = getNormalizedStatus(affiliate);
+                    return (
+                      <div key={`m-a-${uid}`} className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#B886D0] to-[#7B3FA0] flex items-center justify-center text-white text-xs font-bold">
+                              {(getUserName(affiliate, 'A')[0] || 'A').toUpperCase()}
+                            </div>
+                            <span className="text-xs font-bold text-[#2D004D]">{getUserName(affiliate, '—')}</span>
+                          </div>
+                          <StatusBadge label={normStatus} statusType={normStatus} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-[#7B3FA0]">
+                          <p>Code: <span className="font-mono font-bold text-[#7B3FA0]">{affiliate.affiliateCode || '—'}</span></p>
+                          <p>Clicks: <span className="font-bold text-[#2D004D]">{affiliate.totalClicks || 0}</span></p>
+                          <p>Conversions: <span className="font-bold text-[#2D004D]">{affiliate.totalConversions || 0}</span></p>
+                          <p>Earnings: <span className="font-bold text-[#9B2C5E]">₹{(affiliate.totalCommission || 0).toLocaleString()}</span></p>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                          {normStatus !== 'active' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, approveAffiliate, `"${getUserName(affiliate)}" enabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#10B981]/10 text-[#059669] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Play" size={12} /> Enable
+                            </button>
+                          )}
+                          {normStatus !== 'restricted' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, restrictAffiliate, `"${getUserName(affiliate)}" restricted`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#F59E0B]/10 text-[#B45309] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="AlertTriangle" size={12} /> Restrict
+                            </button>
+                          )}
+                          {normStatus !== 'disabled' && (
+                            <button
+                              disabled={busy}
+                              onClick={() => runAction(uid, disableAffiliate, `"${getUserName(affiliate)}" disabled`)}
+                              className="px-3 py-1.5 rounded-lg bg-[#EF4444]/10 text-[#DC2626] text-[10px] font-bold min-h-[38px] flex items-center gap-1"
+                            >
+                              <Icon name="Pause" size={12} /> Disable
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+            </div>
           )}
           </TableContainer>
       </main>
