@@ -115,10 +115,10 @@ export default function Navbar() {
       className="lumora-navbar-header"
       style={{
         position: 'fixed',
-        top: scrolled ? '1rem' : '1.5rem',
+        top: scrolled ? '0.8rem' : '1.2rem',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: scrolled ? 'min(1200px, 92%)' : 'min(1340px, 94%)',
+        width: scrolled ? 'min(800px, 86%)' : 'min(880px, 88%)',
         zIndex: 9999,
         transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
@@ -129,7 +129,7 @@ export default function Navbar() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: scrolled ? '10px 24px' : '14px 34px',
+          padding: scrolled ? '8px 20px' : '10px 24px',
           borderRadius: '100px',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           background: 'rgba(255, 255, 255, 0.92)',
