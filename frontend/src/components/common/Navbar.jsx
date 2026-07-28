@@ -106,7 +106,7 @@ export default function Navbar() {
     { label: 'Explore',     icon: <Compass size={15} />,       href: '#products' },
     { label: 'Categories',  icon: <Sparkles size={15} />,      href: '#categories' },
     { label: 'Showcase',    icon: <Home size={15} />,          href: '#home' },
-    ...(!user ? [{ label: 'Partnership', icon: <Users size={15} />, href: '/partnerships' }] : []),
+    ...(!user ? [{ label: 'Partnership', icon: <Users size={15} />, href: '/partnerships', badge: 'New' }] : []),
     ...(user  ? [{ label: 'Dashboard',   icon: <LayoutDashboard size={15} />, href: '#dashboard' }] : []),
   ];
 
@@ -187,6 +187,21 @@ export default function Navbar() {
             >
               {item.icon}
               {item.label}
+              {item.badge && (
+                <span style={{
+                  fontSize: '0.6rem',
+                  fontWeight: 800,
+                  padding: '2px 7px',
+                  borderRadius: '10px',
+                  background: 'rgba(216, 191, 227, 0.45)',
+                  color: '#7B3FA0',
+                  lineHeight: 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}>
+                  {item.badge}
+                </span>
+              )}
               <span
                 className="dot"
                 style={{
