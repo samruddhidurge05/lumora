@@ -1267,7 +1267,14 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 .aff-payout-mobile-only  { display: none;  }
 
 @media (max-width: 1024px) {
-  /* Stat cards: compact */
+  /* Stat cards: compact 2x2 grid */
+  .aff-stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
   .aff-earnings-stat-card,
   .aff-stat-grid > .premium-flat-card {
     padding: 14px 12px !important;
