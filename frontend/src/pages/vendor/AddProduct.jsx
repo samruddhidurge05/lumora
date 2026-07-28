@@ -108,6 +108,8 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const { createProduct } = useVendorProducts();
   const { isProfileComplete, profileChecks, loading: profileLoading } = useVendorProfileComplete();
+  const { refetchProducts } = useApp();
+  const isMobile = useIsMobile();
 
   // ── ALL hooks must be declared unconditionally before any early return ──
   const [form, setForm] = useState({
@@ -342,9 +344,6 @@ export default function AddProduct() {
     }
     return null;
   };
-
-  const { refetchProducts } = useApp();
-  const isMobile = useIsMobile();
 
   /* ── Save to backend ──────────────────────────────────────────────── */
   const doSave = async (statusVal) => {
