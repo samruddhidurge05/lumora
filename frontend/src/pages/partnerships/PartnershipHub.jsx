@@ -23,7 +23,7 @@ function Reveal({ children, delay = 0, style = {} }) {
 
 export default function PartnershipHub() {
   const navigate = useNavigate();
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -171,12 +171,10 @@ export default function PartnershipHub() {
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = 'translateY(-6px)';
                     e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
-                    setHoveredCard('affiliate');
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
-                    setHoveredCard(null);
                   }}
                 >
                   <div style={{
@@ -204,7 +202,12 @@ export default function PartnershipHub() {
                     ))}
                   </ul>
 
-                  <button className={`btn-premium ${hoveredCard === 'affiliate' ? 'btn-premium-solid' : ''}`} style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}>
+                  <button 
+                    className={`btn-premium ${hoveredButton === 'affiliate' ? 'btn-premium-solid' : ''}`} 
+                    onMouseEnter={() => setHoveredButton('affiliate')}
+                    onMouseLeave={() => setHoveredButton(null)}
+                    style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
+                  >
                     Learn More <ArrowRight size={14} />
                   </button>
                 </div>
@@ -222,12 +225,10 @@ export default function PartnershipHub() {
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = 'translateY(-6px)';
                     e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
-                    setHoveredCard('vendor');
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
-                    setHoveredCard(null);
                   }}
                 >
                   <div style={{
@@ -255,7 +256,12 @@ export default function PartnershipHub() {
                     ))}
                   </ul>
 
-                  <button className={`btn-premium ${hoveredCard === 'vendor' ? 'btn-premium-solid' : ''}`} style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}>
+                  <button 
+                    className={`btn-premium ${hoveredButton === 'vendor' ? 'btn-premium-solid' : ''}`} 
+                    onMouseEnter={() => setHoveredButton('vendor')}
+                    onMouseLeave={() => setHoveredButton(null)}
+                    style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
+                  >
                     Learn More <ArrowRight size={14} />
                   </button>
                 </div>
