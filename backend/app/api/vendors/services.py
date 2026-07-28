@@ -74,6 +74,11 @@ def get_vendor_profile(vendor_id: str) -> Optional[dict]:
             "announcementActive": bool(v.announcement_active),
             "vacationMode":       bool(v.vacation_mode),
             "vacationMessage":    v.vacation_message,
+            # Personal fields
+            "phone":              v.phone,
+            "country":            v.country,
+            "github":             v.github,
+            "storeUrl":           v.store_url,
             # Payment information
             "upiId":              v.upi_id,
             "accountHolderName":  v.account_holder_name,
@@ -126,6 +131,11 @@ def get_or_create_vendor_profile(vendor_id: str, vendor_info: Optional[dict] = N
             "announcementActive": bool(v.announcement_active),
             "vacationMode":       bool(v.vacation_mode),
             "vacationMessage":    v.vacation_message,
+            # Personal fields
+            "phone":              v.phone,
+            "country":            v.country,
+            "github":             v.github,
+            "storeUrl":           v.store_url,
             "upiId":              v.upi_id,
             "accountHolderName":  v.account_holder_name,
             "bankName":           v.bank_name,
@@ -171,6 +181,14 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
                 v.vacation_mode = data.get("vacationMode")  # type: ignore
             if "vacationMessage" in data:
                 v.vacation_message = data.get("vacationMessage")  # type: ignore
+            if "phone" in data:
+                v.phone = str(data["phone"]) if data["phone"] else None  # type: ignore
+            if "country" in data:
+                v.country = str(data["country"]) if data["country"] else None  # type: ignore
+            if "github" in data:
+                v.github = str(data["github"]) if data["github"] else None  # type: ignore
+            if "storeUrl" in data:
+                v.store_url = str(data["storeUrl"]) if data["storeUrl"] else None  # type: ignore
             if "upiId" in data:
                 v.upi_id = str(data["upiId"]) if data["upiId"] else None  # type: ignore
             if "accountHolderName" in data:
@@ -213,6 +231,11 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
             "announcementActive":bool(v.announcement_active),
             "vacationMode":      bool(v.vacation_mode),
             "vacationMessage":   v.vacation_message,
+            # Personal fields
+            "phone":             v.phone,
+            "country":           v.country,
+            "github":            v.github,
+            "storeUrl":          v.store_url,
             "upiId":             v.upi_id,
             "accountHolderName": v.account_holder_name,
             "bankName":          v.bank_name,
