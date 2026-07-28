@@ -447,83 +447,161 @@ export default function CampaignManager() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#2D004D] min-w-[1000px]">
-                <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
-                  <tr>
-                    <th className="p-4">Product</th>
-                    <th className="p-4">Product ID</th>
-                    <th className="p-4">Affiliate Enabled</th>
-                    <th className="p-4">Commission %</th>
-                    <th className="p-4 text-center">Referral Links</th>
-                    <th className="p-4 text-center">Active Affiliates</th>
-                    <th className="p-4 text-center">Clicks</th>
-                    <th className="p-4 text-center">Conversions</th>
-                    <th className="p-4 text-right">Revenue</th>
-                    <th className="p-4">Created Date</th>
-                    <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F3EAF8]">
-                  {affiliateProducts.map(prod => (
-                    <tr 
-                      key={prod.id} 
-                      onClick={() => setSelectedProductId(prod.id)}
-                      className="hover:bg-[#F8F3FB]/60 transition-colors cursor-pointer"
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          {prod.thumbnail && (
-                            <img src={prod.thumbnail} alt="" className="w-9 h-9 rounded-lg object-cover border border-[#F3EAF8]" onError={e => e.target.style.display='none'} />
-                          )}
-                          <div>
-                            <p className="font-bold text-[#2D004D] text-xs">{prod.title}</p>
-                            <p className="text-[10px] text-[#7B3FA0]">{prod.category || 'General'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 font-mono font-bold text-[#7B3FA0]">#{prod.id}</td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          🟢 Enabled
-                        </span>
-                      </td>
-                      <td className="p-4 font-bold text-[#7B3FA0]">
-                        {prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`}
-                      </td>
-                      <td className="p-4 text-center font-bold">{fmtN(prod.referral_links_count)}</td>
-                      <td className="p-4 text-center font-bold text-[#7B3FA0]">{fmtN(prod.active_affiliates)}</td>
-                      <td className="p-4 text-center font-medium">{fmtN(prod.clicks)}</td>
-                      <td className="p-4 text-center font-bold text-emerald-600">{fmtN(prod.conversions)}</td>
-                      <td className="p-4 text-right font-bold text-[#2D004D]">{fmt(prod.revenue_generated)}</td>
-                      <td className="p-4 text-xs text-[#7B3FA0]">{prod.created_date || fmtDate(prod.created_at)}</td>
-                      <td className="p-4 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200 capitalize">
-                          {prod.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => setSelectedProductId(prod.id)}
-                            className="px-2.5 py-1 rounded-lg border border-[#F3EAF8] bg-white hover:bg-[#F8F3FB] text-[#7B3FA0] text-[11px] font-bold transition-all"
-                          >
-                            Details
-                          </button>
-                          <button 
-                            onClick={() => handleToggleProductAffiliate(prod.id, prod.affiliate_enabled)}
-                            className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px] font-bold transition-all"
-                          >
-                            Disable
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* Desktop Table View (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#2D004D] min-w-[1000px]">
+                  <thead className="bg-[#F8F3FB] text-[10px] uppercase tracking-wider font-extrabold text-[#7B3FA0] border-b border-[#F3EAF8]">
+                    <tr>
+                      <th className="p-4">Product</th>
+                      <th className="p-4">Product ID</th>
+                      <th className="p-4">Affiliate Enabled</th>
+                      <th className="p-4">Commission %</th>
+                      <th className="p-4 text-center">Referral Links</th>
+                      <th className="p-4 text-center">Active Affiliates</th>
+                      <th className="p-4 text-center">Clicks</th>
+                      <th className="p-4 text-center">Conversions</th>
+                      <th className="p-4 text-right">Revenue</th>
+                      <th className="p-4">Created Date</th>
+                      <th className="p-4 text-center">Status</th>
+                      <th className="p-4 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3EAF8]">
+                    {affiliateProducts.map(prod => (
+                      <tr 
+                        key={prod.id} 
+                        onClick={() => setSelectedProductId(prod.id)}
+                        className="hover:bg-[#F8F3FB]/60 transition-colors cursor-pointer"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            {prod.thumbnail && (
+                              <img src={prod.thumbnail} alt="" className="w-9 h-9 rounded-lg object-cover border border-[#F3EAF8]" onError={e => e.target.style.display='none'} />
+                            )}
+                            <div>
+                              <p className="font-bold text-[#2D004D] text-xs">{prod.title}</p>
+                              <p className="text-[10px] text-[#7B3FA0]">{prod.category || 'General'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 font-mono font-bold text-[#7B3FA0]">#{prod.id}</td>
+                        <td className="p-4">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            🟢 Enabled
+                          </span>
+                        </td>
+                        <td className="p-4 font-bold text-[#7B3FA0]">
+                          {prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`}
+                        </td>
+                        <td className="p-4 text-center font-bold">{fmtN(prod.referral_links_count)}</td>
+                        <td className="p-4 text-center font-bold text-[#7B3FA0]">{fmtN(prod.active_affiliates)}</td>
+                        <td className="p-4 text-center font-medium">{fmtN(prod.clicks)}</td>
+                        <td className="p-4 text-center font-bold text-emerald-600">{fmtN(prod.conversions)}</td>
+                        <td className="p-4 text-right font-bold text-[#2D004D]">{fmt(prod.revenue_generated)}</td>
+                        <td className="p-4 text-xs text-[#7B3FA0]">{prod.created_date || fmtDate(prod.created_at)}</td>
+                        <td className="p-4 text-center">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200 capitalize">
+                            {prod.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => setSelectedProductId(prod.id)}
+                              className="px-2.5 py-1 rounded-lg border border-[#F3EAF8] bg-white hover:bg-[#F8F3FB] text-[#7B3FA0] text-[11px] font-bold transition-all"
+                            >
+                              Details
+                            </button>
+                            <button 
+                              onClick={() => handleToggleProductAffiliate(prod.id, prod.affiliate_enabled)}
+                              className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-[11px] font-bold transition-all"
+                            >
+                              Disable
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Campaign Record Cards View (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3.5">
+                {affiliateProducts.map(prod => (
+                  <div
+                    key={`mob-campaign-${prod.id}`}
+                    onClick={() => setSelectedProductId(prod.id)}
+                    className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3 transition-all cursor-pointer hover:border-[#7B3FA0]/30"
+                  >
+                    <div className="flex items-start justify-between gap-3 border-b border-[#F3EAF8] pb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {prod.thumbnail && (
+                          <img src={prod.thumbnail} alt="" className="w-10 h-10 rounded-xl object-cover border border-[#F3EAF8] shrink-0" onError={e => e.target.style.display='none'} />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[#2D004D] text-xs leading-snug break-words">{prod.title}</p>
+                          <p className="text-[10px] text-[#7B3FA0] mt-0.5">{prod.category || 'General'}</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-md shrink-0">
+                        #{prod.id}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                      <span className="px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        🟢 Enabled
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full font-bold bg-[#F8F3FB] text-[#7B3FA0] border border-[#F3EAF8]">
+                        Rate: {prod.commission_mode === 'fixed' ? `Fixed ₹${prod.commission_value}` : `${prod.commission_value}%`}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 capitalize">
+                        {prod.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 bg-[#F8F3FB]/50 p-2.5 rounded-xl text-[10px]">
+                      <div>
+                        <span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Referral Links</span>
+                        <span className="font-bold text-[#2D004D]">{fmtN(prod.referral_links_count)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Active Promoters</span>
+                        <span className="font-bold text-[#2D004D]">{fmtN(prod.active_affiliates)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Clicks / Conversions</span>
+                        <span className="font-bold text-[#2D004D]">{fmtN(prod.clicks)} / <span className="text-emerald-600">{fmtN(prod.conversions)}</span></span>
+                      </div>
+                      <div>
+                        <span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Revenue Generated</span>
+                        <span className="font-bold text-[#2D004D]">{fmt(prod.revenue_generated)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-[#F3EAF8]" onClick={e => e.stopPropagation()}>
+                      <span className="text-[10px] text-[#7B3FA0]">Created: {prod.created_date || fmtDate(prod.created_at)}</span>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setSelectedProductId(prod.id)}
+                          className="px-3 py-1.5 rounded-lg border border-[#F3EAF8] bg-white hover:bg-[#F8F3FB] text-[#7B3FA0] text-xs font-bold transition-all"
+                        >
+                          Details
+                        </button>
+                        <button 
+                          onClick={() => handleToggleProductAffiliate(prod.id, prod.affiliate_enabled)}
+                          className="px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-all"
+                        >
+                          Disable
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 

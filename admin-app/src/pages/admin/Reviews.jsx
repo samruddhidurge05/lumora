@@ -1272,8 +1272,8 @@ export default function Reviews() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between mt-2 pt-2">
-                  <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2">
+                  <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded shrink-0 ${
                     selectedReview.sentiment === 'positive' 
                       ? 'bg-[#B886D0]/30 text-emerald-600' 
                       : (selectedReview.sentiment === 'neutral' ? 'bg-amber-100/40 text-amber-600' : 'bg-red-100/30 text-red-400')
@@ -1281,11 +1281,11 @@ export default function Reviews() {
                     {selectedReview.sentiment} Sentiment
                   </span>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 items-center">
                     <button
                       disabled={moderating}
                       onClick={() => handleModerateReview(selectedReview.id, selectedReview.flagged ? "unflag" : "flag")}
-                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer flex items-center gap-1 whitespace-nowrap"
                       style={{ background: selectedReview.flagged ? 'rgba(245,158,11,0.12)' : 'rgba(255,133,151,0.15)', color: selectedReview.flagged ? '#b45309' : '#FF8597', opacity: moderating ? 0.6 : 1 }}
                     >
                       <Icon name="AlertTriangle" size={10} />
@@ -1294,14 +1294,14 @@ export default function Reviews() {
                     <button
                       disabled={moderating}
                       onClick={() => { if (window.confirm("Delete this review permanently?")) handleModerateReview(selectedReview.id, "delete"); }}
-                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer whitespace-nowrap"
                       style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', opacity: moderating ? 0.6 : 1 }}
                     >
                       Delete
                     </button>
                     <button 
                       onClick={() => { sysSound.playTap(); setSelectedReview(null); }}
-                      className="px-4 py-1.5 bg-[#2D004D] text-white hover:bg-[#7B3FA0] rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer"
+                      className="px-4 py-1.5 bg-[#2D004D] text-white hover:bg-[#7B3FA0] rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border-none cursor-pointer whitespace-nowrap"
                     >
                       Close Details
                     </button>

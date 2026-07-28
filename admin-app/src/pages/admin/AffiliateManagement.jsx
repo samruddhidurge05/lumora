@@ -1771,12 +1771,13 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto w-full">
+              {/* Desktop Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto w-full">
                 <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="py-3.5 px-4">Promoter</th>
-                      <th className="py-3.5 px-4">Code & Tier</th>
+                      <th className="py-3.5 px-4">Code &amp; Tier</th>
                       <th className="py-3.5 px-4 text-right">Lifetime Revenue</th>
                       <th className="py-3.5 px-4 text-right">Lifetime Comm.</th>
                       <th className="py-3.5 px-4 text-right">Pending</th>
@@ -1818,18 +1819,49 @@ export default function AffiliateManagement() {
                             </span>
                           </td>
                           <td className="py-3.5 px-4 text-center">
-                            <button
-                              onClick={() => setProfilePanelId(a.id)}
-                              className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all"
-                            >
-                              CRM Profile
-                            </button>
+                            <button onClick={() => setProfilePanelId(a.id)} className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all">CRM Profile</button>
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Affiliate Cards (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3.5">
+                {filteredAffiliates.map(a => {
+                  const tier = getAffiliateTier(a.revenue);
+                  const TierIcon = tier.icon;
+                  return (
+                    <div key={`mob-aff-${a.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {(a.name || 'A')[0].toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#2D004D] text-xs truncate">{a.name}</p>
+                            <p className="text-[10px] text-[#7B3FA0] truncate">{a.email}</p>
+                          </div>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${a.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                          {a.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-bold text-xs text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded border border-[#F3EAF8]">{a.code}</span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${tier.color}`}><TierIcon size={10} /> {tier.label}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 bg-[#F8F3FB]/50 p-2.5 rounded-xl text-[10px]">
+                        <div><span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Revenue</span><span className="font-bold text-[#2D004D]">{fmt(a.revenue)}</span></div>
+                        <div><span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Commission</span><span className="font-bold text-emerald-600">{fmt(a.commission)}</span></div>
+                        <div><span className="text-[#7B3FA0] block text-[8px] font-bold uppercase tracking-wider">Pending</span><span className="font-bold text-amber-600">{fmt(a.pending)}</span></div>
+                      </div>
+                      <button onClick={() => setProfilePanelId(a.id)} className="w-full py-2 rounded-xl bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all text-center">View CRM Profile</button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1869,7 +1901,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto w-full">
+              {/* Desktop Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto w-full">
                 <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
@@ -1887,44 +1920,57 @@ export default function AffiliateManagement() {
                   <tbody className="divide-y divide-[#F3EAF8] text-[#2D004D]">
                     {filteredProducts.map(p => (
                       <tr key={p.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleSelectProduct(p.id)} className="rounded text-[#7B3FA0]" />
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <p className="font-bold text-[#2D004D]">{p.title}</p>
-                          <p className="text-[10px] text-[#7B3FA0]">{p.category || 'Digital Asset'}</p>
-                        </td>
+                        <td className="py-3.5 px-4"><input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleSelectProduct(p.id)} className="rounded text-[#7B3FA0]" /></td>
+                        <td className="py-3.5 px-4"><p className="font-bold text-[#2D004D]">{p.title}</p><p className="text-[10px] text-[#7B3FA0]">{p.category || 'Digital Asset'}</p></td>
                         <td className="py-3.5 px-4 font-bold text-[#2D004D]">{fmt(p.price)}</td>
                         <td className="py-3.5 px-4 text-center">
-                          <button
-                            onClick={() => handleToggleProductAffiliate(p.id)}
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${p.affiliate_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-500 border-stone-200'}`}
-                          >
-                            {p.affiliate_enabled ? 'Enabled' : 'Disabled'}
-                          </button>
+                          <button onClick={() => handleToggleProductAffiliate(p.id)} className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${p.affiliate_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-500 border-stone-200'}`}>{p.affiliate_enabled ? 'Enabled' : 'Disabled'}</button>
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#7B3FA0]">
-                          {p.commission_mode === 'fixed' ? `₹${p.commission_value || 500}` : `${p.commission_value || 20}%`}
-                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#7B3FA0]">{p.commission_mode === 'fixed' ? `₹${p.commission_value || 500}` : `${p.commission_value || 20}%`}</td>
                         <td className="py-3.5 px-4 text-stone-600 font-medium">{p.creator_name || 'Store Creator'}</td>
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => setQrModalProduct(p)} title="Generate QR Code" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]">
-                              <QrCode size={14} />
-                            </button>
-                            <button onClick={() => {
-                              const link = buildAffiliateReferralLink(p.id, 'DEMO');
-                              navigator.clipboard.writeText(link);
-                              alert('Copied referral link!');
-                            }} title="Copy Referral Link" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]">
-                              <Link2 size={14} />
-                            </button>
+                            <button onClick={() => setQrModalProduct(p)} title="Generate QR Code" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]"><QrCode size={14} /></button>
+                            <button onClick={() => { const link = buildAffiliateReferralLink(p.id, 'DEMO'); navigator.clipboard.writeText(link); alert('Copied referral link!'); }} title="Copy Referral Link" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]"><Link2 size={14} /></button>
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Product Cards (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3.5">
+                <div className="flex items-center gap-2 px-1 pb-1 border-b border-[#F3EAF8]">
+                  <input type="checkbox" checked={selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0} onChange={toggleSelectAll} className="rounded text-[#7B3FA0]" />
+                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase tracking-wider">Select All</span>
+                </div>
+                {filteredProducts.map(p => (
+                  <div key={`mob-prod-${p.id}`} className="p-4 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleSelectProduct(p.id)} className="rounded text-[#7B3FA0] shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#2D004D] text-xs break-words">{p.title}</p>
+                          <p className="text-[10px] text-[#7B3FA0]">{p.category || 'Digital Asset'}</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-sm text-[#2D004D] shrink-0">{fmt(p.price)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                      <button onClick={() => handleToggleProductAffiliate(p.id)} className={`px-3 py-1 rounded-full font-bold border transition-all ${p.affiliate_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-500 border-stone-200'}`}>{p.affiliate_enabled ? '🟢 Enabled' : '⚪ Disabled'}</button>
+                      <span className="font-mono font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded border border-[#F3EAF8]">Rate: {p.commission_mode === 'fixed' ? `₹${p.commission_value || 500}` : `${p.commission_value || 20}%`}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-[#F3EAF8]">
+                      <span className="text-[10px] text-[#7B3FA0]">Creator: <strong className="text-[#2D004D]">{p.creator_name || 'Store Creator'}</strong></span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setQrModalProduct(p)} title="Generate QR Code" className="p-2 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]"><QrCode size={14} /></button>
+                        <button onClick={() => { const link = buildAffiliateReferralLink(p.id, 'DEMO'); navigator.clipboard.writeText(link); alert('Copied referral link!'); }} title="Copy Referral Link" className="p-2 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]"><Link2 size={14} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
