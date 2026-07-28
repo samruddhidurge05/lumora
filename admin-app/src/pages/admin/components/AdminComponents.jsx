@@ -97,14 +97,14 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     </>
   );
 
-  const baseClass = "glass-surface rounded-lg sm:rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 border border-white/50 hover:border-white/90 hover:-translate-y-0.5 transition-all duration-300 shadow-sm relative overflow-hidden group min-h-[72px] sm:min-h-[96px] md:min-h-[110px] flex flex-col justify-between";
+  const baseClass = "glass-surface rounded-lg sm:rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 border border-white/50 hover:border-white/90 hover:-translate-y-0.5 transition-all duration-300 shadow-sm relative overflow-hidden group min-h-[76px] sm:min-h-[96px] md:min-h-[110px] flex flex-col justify-between h-full w-full box-border";
   
   if (onClick) {
     return (
       <button 
         type="button" 
         onClick={onClick} 
-        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 min-h-[44px]`}
+        className={`${baseClass} w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 min-h-[76px] sm:min-h-[96px]`}
       >
         {cardContent}
       </button>

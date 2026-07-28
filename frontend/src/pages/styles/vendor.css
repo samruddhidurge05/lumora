@@ -217,8 +217,9 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-@media (max-width:1024px) { .v-stat-grid { grid-template-columns: repeat(2,1fr); } }
-@media (max-width:640px)  { .v-stat-grid { grid-template-columns: 1fr; } }
+@media (max-width:1024px) { .v-stat-grid { grid-template-columns: repeat(2,1fr); gap: 12px; } }
+@media (max-width:640px)  { .v-stat-grid { grid-template-columns: repeat(2,1fr); gap: 10px; } }
+@media (max-width:320px)  { .v-stat-grid { grid-template-columns: 1fr; } }
 
 .v-stat-card   { padding: 22px; }
 .v-stat-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
@@ -425,6 +426,62 @@
    Sidebar becomes a slide-in drawer — handled by responsive.css.
    Only content-area padding and compact stat cards adjusted here.
 ══════════════════════════════════════════════════════ */
+/* ── Analytics 2-column chart grid (responsive) ─────────────────────────── */
+/* Used in Analytics.jsx for paired bar-chart cards (Revenue + Orders, etc.) */
+.v-analytics-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Stack to single column on narrow mobile */
+@media (max-width: 540px) {
+  .v-analytics-2col {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+}
+
+/* ── v-two-col: Revenue chart + Vendor Level panel (Dashboard) ───────────── */
+.v-two-col {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+
+@media (max-width: 720px) {
+  .v-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── v-three-col: Activity + Products + Quick Actions (Dashboard) ─────────── */
+.v-three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 260px;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .v-three-col {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .v-three-col {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+}
+
+
+
+/* ══════════════════════════════════════════════════════
+   VENDOR PORTAL MOBILE OVERRIDES (≤ 900px)
+   Sidebar becomes a slide-in drawer — handled by responsive.css.
+   Only content-area padding and compact stat cards adjusted here.
+══════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .vendor-layout-grid {
     flex-direction: column !important;
@@ -440,12 +497,8 @@
     height: 56px !important;
   }
 
-  /* Compact grid cards on mobile dashboard */
-  .v-grid-4, .v-grid-3, .v-grid-2 {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
+  /* v-stat-grid is already responsive (4→2→1) via vendor.css :root. */
+  /* No override needed here — just tighten the card padding on mobile. */
   .v-stat-card {
     padding: 16px !important;
   }

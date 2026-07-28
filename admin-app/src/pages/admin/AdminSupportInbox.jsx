@@ -54,11 +54,7 @@ export default function AdminSupportInbox() {
             </div>
 
             {/* Feature List Grid */}
-            <div style={{
-              width: '100%', background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(196,181,253,0.22)',
-              borderRadius: '20px', padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', textAlign: 'left',
-              boxSizing: 'border-box'
-            }}>
+            <div className="w-full bg-white/75 border border-[#C4B5FD]/20 rounded-2xl p-4 sm:p-6 grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5 text-left box-border">
               {[
                 'Live Customer Conversations',
                 'Real-time Ticket Management',

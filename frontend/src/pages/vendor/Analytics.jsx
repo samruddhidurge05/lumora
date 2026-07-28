@@ -297,7 +297,7 @@ export default function Analytics() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div className="v-stat-grid" style={{ marginBottom: 24 }}>
           {[1, 2, 3, 4].map(idx => (
             <div key={idx} className="v-card v-stat-card" style={{ height: 110, background: 'rgba(255,255,255,0.4)', position: 'relative', overflow: 'hidden' }}>
               <div style={{
@@ -331,7 +331,7 @@ export default function Analytics() {
       )}
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="v-analytics-2col" style={{ marginBottom: 24 }}>
           <div className="v-card" style={{ height: 220, position: 'relative', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -348,7 +348,7 @@ export default function Analytics() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="v-analytics-2col" style={{ marginBottom: 24 }}>
           <div className="v-card v-card-pad">
             <div className="v-section-header">
               <div>
@@ -393,7 +393,7 @@ export default function Analytics() {
       )}
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="v-analytics-2col" style={{ marginBottom: 24 }}>
           <div className="v-card" style={{ height: 240, position: 'relative', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -410,7 +410,7 @@ export default function Analytics() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="v-analytics-2col" style={{ marginBottom: 24 }}>
           <div className="v-card v-card-pad">
             <div className="v-section-header">
               <div>
@@ -494,7 +494,7 @@ export default function Analytics() {
             <Users size={16} />
             <span>Growth & Customer Metrics</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+          <div className="v-stat-grid">
             {[
               { label: 'New Customers',    value: newCustomersCount,  delta: '+22%', sub: 'this month', icon: <Users size={16} style={{ color: '#7B3FA0' }} />  },
               { label: 'Repeat Buyers',    value: `${repeatRate}%`,   delta: '+4pp', sub: 'retention rate', icon: <Target size={16} style={{ color: '#16a34a' }} />   },

@@ -146,7 +146,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Revenue chart + Level ────────────────────────────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:'20px', marginBottom:'24px' }} className="v-two-col">
+      <div style={{ gap:'20px', marginBottom:'24px' }} className="v-two-col">
 
         {/* Revenue sparkline */}
         <div className="v-card v-card-pad v-fade-in v-delay-1">
@@ -288,7 +288,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── 3-column: Activity + Recent Products + Quick Actions ─────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 260px', gap:'20px', marginBottom:'24px' }} className="v-three-col">
+      <div style={{ gap:'20px', marginBottom:'24px' }} className="v-three-col">
 
         {/* Activity Feed */}
         <div className="v-card v-card-pad v-fade-in v-delay-2">
