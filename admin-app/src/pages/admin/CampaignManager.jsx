@@ -373,41 +373,41 @@ export default function CampaignManager() {
         </div>
 
         {/* 4 KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-2">
+        <div className="grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-1 sm:space-y-2 min-h-[85px] sm:min-h-[110px] flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0]">Active Affiliate Products</span>
-              <ShoppingBag size={16} className="text-[#7B3FA0]" />
+              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0] truncate max-w-[80%]">Active Affiliate Products</span>
+              <ShoppingBag size={14} className="text-[#7B3FA0] shrink-0" />
             </div>
-            <div className="text-2xl font-serif font-bold text-[#2D004D]">{fmtN(metrics.totalEnabled)}</div>
-            <div className="text-[10px] font-medium text-[#7B3FA0]">Products currently promoted</div>
+            <div className="text-xs sm:text-2xl font-serif font-bold text-[#2D004D] truncate">{fmtN(metrics.totalEnabled)}</div>
+            <div className="text-[8px] sm:text-[10px] font-medium text-[#7B3FA0] truncate">Products currently promoted</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-2">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-1 sm:space-y-2 min-h-[85px] sm:min-h-[110px] flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0]">Total Referral Sales</span>
-              <Target size={16} className="text-emerald-600" />
+              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0] truncate max-w-[80%]">Total Referral Sales</span>
+              <Target size={14} className="text-emerald-600 shrink-0" />
             </div>
-            <div className="text-2xl font-serif font-bold text-emerald-600">{fmtN(metrics.totalSales)}</div>
-            <div className="text-[10px] font-medium text-[#7B3FA0]">Completed conversions</div>
+            <div className="text-xs sm:text-2xl font-serif font-bold text-emerald-600 truncate">{fmtN(metrics.totalSales)}</div>
+            <div className="text-[8px] sm:text-[10px] font-medium text-[#7B3FA0] truncate">Completed conversions</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-2">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-1 sm:space-y-2 min-h-[85px] sm:min-h-[110px] flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0]">Total Commission Paid</span>
-              <DollarSign size={16} className="text-[#7B3FA0]" />
+              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0] truncate max-w-[80%]">Total Commission Paid</span>
+              <DollarSign size={14} className="text-[#7B3FA0] shrink-0" />
             </div>
-            <div className="text-2xl font-serif font-bold text-[#2D004D]">{fmt(metrics.totalCommissionPaid)}</div>
-            <div className="text-[10px] font-medium text-[#7B3FA0]">Affiliate earnings distributed</div>
+            <div className="text-xs sm:text-2xl font-serif font-bold text-[#2D004D] truncate">{fmt(metrics.totalCommissionPaid)}</div>
+            <div className="text-[8px] sm:text-[10px] font-medium text-[#7B3FA0] truncate">Affiliate earnings distributed</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-2">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[#F3EAF8] shadow-sm space-y-1 sm:space-y-2 min-h-[85px] sm:min-h-[110px] flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0]">Active Promoters</span>
-              <Users size={16} className="text-[#7B3FA0]" />
+              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#7B3FA0] truncate max-w-[80%]">Active Promoters</span>
+              <Users size={14} className="text-[#7B3FA0] shrink-0" />
             </div>
-            <div className="text-2xl font-serif font-bold text-[#7B3FA0]">{fmtN(metrics.activeAffiliates)}</div>
-            <div className="text-[10px] font-medium text-[#7B3FA0]">Unique promoters advocating</div>
+            <div className="text-xs sm:text-2xl font-serif font-bold text-[#7B3FA0] truncate">{fmtN(metrics.activeAffiliates)}</div>
+            <div className="text-[8px] sm:text-[10px] font-medium text-[#7B3FA0] truncate">Unique promoters advocating</div>
           </div>
         </div>
 

@@ -952,13 +952,13 @@ function CommissionActionModal({ commission, onClose, onSave }) {
 // ── Small reusable KPI card ───────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
   return (
-    <div className={`p-3.5 sm:p-5 rounded-2xl border shadow-xs space-y-1.5 w-full min-w-0 max-w-full overflow-hidden ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
-      <div className="flex items-center justify-between gap-2 min-w-0">
-        <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`}>{label}</span>
-        {Icon && <Icon size={15} className={`shrink-0 ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`} />}
+    <div className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-xs space-y-1 w-full min-w-0 max-w-full overflow-hidden min-h-[72px] sm:min-h-[96px] ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
+      <div className="flex items-center justify-between gap-1.5 min-w-0">
+        <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-wider truncate ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`}>{label}</span>
+        {Icon && <Icon size={12} className={`shrink-0 ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`} />}
       </div>
-      <div className={`text-base sm:text-xl font-serif font-bold truncate ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
-      {sub && <div className={`text-[9px] sm:text-[10px] font-medium truncate ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{sub}</div>}
+      <div className={`text-xs sm:text-lg md:text-xl font-serif font-bold truncate ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
+      {sub && <div className={`text-[8px] sm:text-[10px] font-medium truncate ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{sub}</div>}
     </div>
   );
 }
@@ -1582,7 +1582,7 @@ export default function AffiliateManagement() {
             )}
 
             {/* Executive KPIs Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-4">
               <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} accent />
               <KpiCard label="Pending Requests"    value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} />
               <KpiCard label="Today's Commission"  value={fmt(kpis?.today_commission ?? 18.50)} sub="Earned Today" icon={Zap} />
