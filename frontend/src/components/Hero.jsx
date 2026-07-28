@@ -86,9 +86,9 @@ export default function Hero() {
           />
         ))}
 
-        {/* Dark Vignette Overlay for rich colors */}
+        {/* Dark Vignette Overlay for rich rich colors */}
         <div style={styles.fullBgOverlay} />
-        {/* Soft, subtle bottom edge transition mask */}
+        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section without turning whitish */}
         <div style={styles.bottomSoftBlend} />
       </div>
 
@@ -145,13 +145,13 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Stats Bar at Bottom - Compact & Narrow Width */}
+        {/* 5. Compact Slim Stats Bar */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
-            { icon: <Users size={15} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
-            { icon: <Download size={15} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
-            { icon: <Shield size={15} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
-            { icon: <CheckCircle size={15} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
+            { icon: <Users size={14} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
+            { icon: <Download size={14} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
+            { icon: <Shield size={14} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
+            { icon: <CheckCircle size={14} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
           ].map((s, i) => (
             <div key={i} style={styles.statItem}>
               <div style={{ ...styles.statIconBox, background: s.bg }}>
@@ -226,7 +226,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '26px',
+    gap: '28px',
     position: 'relative',
     zIndex: 10,
   },
@@ -292,7 +292,7 @@ const styles = {
     justifyContent: 'center',
     gap: '14px',
     flexWrap: 'wrap',
-    marginTop: '4px',
+    marginTop: '6px',
   },
   ctaSolid: {
     padding: '14px 34px',
@@ -331,20 +331,20 @@ const styles = {
     backdropFilter: 'blur(12px)',
   },
 
-  /* Stats Container - Compact & Reduced Width (640px) */
+  /* Compact Slim Stats Container */
   statsContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-    gap: '10px',
-    padding: '12px 18px',
-    borderRadius: '20px',
+    gap: '12px',
+    padding: '8px 20px',
+    borderRadius: '999px',
     background: 'rgba(255, 255, 255, 0.12)',
     backdropFilter: 'blur(28px)',
     WebkitBackdropFilter: 'blur(28px)',
     border: '1.5px solid rgba(255, 255, 255, 0.22)',
-    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.30)',
     width: '100%',
-    maxWidth: '640px',
+    maxWidth: '780px',
     marginTop: '6px',
   },
   statItem: {
@@ -354,16 +354,16 @@ const styles = {
     justifyContent: 'center',
   },
   statIconBox: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '9px',
+    width: '28px',
+    height: '28px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   statValue: {
-    fontSize: '0.96rem',
+    fontSize: '0.92rem',
     fontWeight: 800,
     color: '#FFFFFF',
     lineHeight: 1.1,
@@ -371,7 +371,7 @@ const styles = {
     textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
   },
   statLabel: {
-    fontSize: '0.64rem',
+    fontSize: '0.62rem',
     color: '#E9D5FF',
     fontWeight: 600,
     lineHeight: 1.2,
