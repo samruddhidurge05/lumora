@@ -31,48 +31,50 @@ export function PageHeader({ title, subtitle, actions }) {
 }
 
 // ─── 2. STATS GRID ─────────────────────────────────────────────────────────
-// Responsive 8px system grid container for statistics/analytics cards
-export function StatsGrid({ children, columns = 4 }) {
+// Responsive 8px system grid container for statistics/analytics cards (2-column base on mobile)
+export function StatsGrid({ children, columns = 4, className = "" }) {
   const gridColsClass = 
     columns === 6 
-      ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
+      ? "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+      : columns === 3
+        ? "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        : "grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
       
   return (
-    <div className={`stats-grid ${gridColsClass} gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8`}>
+    <div className={`stats-grid ${gridColsClass} gap-2.5 sm:gap-3.5 md:gap-5 mb-4 md:mb-6 ${className}`}>
       {children}
     </div>
   );
 }
 
 // ─── 3. DASHBOARD CARD (STATS CARD) ───────────────────────────────────────
-// Identical statistics/metrics display cards following the design guidelines
+// Compact, high-density statistics/metrics display cards for enterprise mobile UI
 export function DashboardCard({ title, value, icon: IconComponent, trend, trendLabel, onClick, chart, isLoading }) {
   const cardContent = (
     <>
-      <div className="flex items-center justify-between mb-2 text-[#7B3FA0]">
-        <span className="text-[8px] font-extrabold tracking-widest uppercase">{title}</span>
+      <div className="flex items-center justify-between mb-1 sm:mb-1.5 text-[#7B3FA0] min-w-0">
+        <span className="text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase truncate max-w-[80%]">{title}</span>
         {IconComponent && typeof IconComponent === 'function' ? (
-          <IconComponent size={14} className="text-[#7B3FA0]" />
+          <IconComponent size={12} className="text-[#7B3FA0] shrink-0 ml-1" />
         ) : (
           IconComponent
         )}
       </div>
       
-      <h3 className="text-lg sm:text-xl md:text-2xl font-serif font-black text-[#2D004D] mb-1 transition-colors group-hover:text-[#5A1E7E]">
+      <h3 className="text-sm sm:text-lg md:text-xl font-serif font-black text-[#2D004D] mb-0.5 sm:mb-1 transition-colors group-hover:text-[#5A1E7E] leading-tight truncate">
         {isLoading ? (
-          <div className="h-7 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
+          <div className="h-5 bg-[#381347]/10 animate-pulse rounded-md w-2/3" />
         ) : (
           value
         )}
       </h3>
       
-      <div className="flex items-center justify-between mt-1.5 min-h-[18px]">
+      <div className="flex items-center justify-between mt-0.5 sm:mt-1 min-h-[14px] sm:min-h-[16px]">
         {isLoading ? (
-          <div className="h-3 bg-[#381347]/5 animate-pulse rounded-md w-1/2" />
+          <div className="h-2.5 bg-[#381347]/5 animate-pulse rounded-md w-1/2" />
         ) : (
           trend !== undefined && (
-            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-0.5 ${
+            <span className={`text-[7px] sm:text-[8px] font-bold px-1.2 py-0.5 rounded inline-flex items-center gap-0.5 ${
               parseFloat(trend) >= 0 || trend.toString().startsWith('+')
                 ? 'text-[#059669] bg-[#10B981]/10' 
                 : 'text-[#DC2626] bg-[#EF4444]/10'
@@ -84,7 +86,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
       </div>
       
       {chart && (
-        <div className="h-8 w-full mt-2 overflow-visible">
+        <div className="h-5 sm:h-6 w-full mt-1 sm:mt-1.5 overflow-visible">
           {isLoading ? (
             <div className="h-full bg-[#381347]/5 animate-pulse rounded-md w-full" />
           ) : (
@@ -95,7 +97,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     </>
   );
 
-  const baseClass = "glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-white/50 hover:border-white/90 hover:-translate-y-1 transition-all duration-500 shadow-sm relative overflow-hidden group h-auto";
+  const baseClass = "glass-surface rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 border border-white/50 hover:border-white/90 hover:-translate-y-0.5 transition-all duration-300 shadow-sm relative overflow-hidden group min-h-[100px] sm:min-h-[120px] flex flex-col justify-between";
   
   if (onClick) {
     return (
