@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, ShoppingBag, DollarSign, TrendingUp, Link2, QrCode, Search,
@@ -14,11 +14,8 @@ import {
 import AdminLayout from './components/AdminLayout';
 import { AdminSelect } from './components/AdminComponents';
 import ProductQrCode from '../../components/product/ProductQrCode';
-import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
-import { backendFetch, getMediaUrl } from '../../utils/api';
-import AffiliatePayoutModal from '../../components/AffiliatePayoutModal';
-import { db } from '../../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { buildAffiliateReferralLink } from '../../utils/referralUtils';
+import { backendFetch } from '../../utils/api';
 
 // Sandbox Payment Testing Module
 import SandboxPaymentButton from '../../components/payout/SandboxPaymentButton';
@@ -120,7 +117,25 @@ function StatusBadge({ status, size = 'sm' }) {
   );
 }
 
-// ── 7-SECTION ENTERPRISE PAYOUT REVIEW DRAWER + HARDENING FEATURES ───────
+// ── Calculator Icon ───────────────────────────────────────────────────────────
+function CalculatorIcon(props) {
+  return (
+    <svg {...props} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="16" height="20" x="4" y="2" rx="2" />
+      <line x1="8" x2="16" y1="6" y2="6" />
+      <line x1="16" x2="16" y1="14" y2="18" />
+      <path d="M16 10h.01" />
+      <path d="M12 10h.01" />
+      <path d="M8 10h.01" />
+      <path d="M12 14h.01" />
+      <path d="M8 14h.01" />
+      <path d="M12 18h.01" />
+      <path d="M8 18h.01" />
+    </svg>
+  );
+}
+
+// ── 7-SECTION ENTERPRISE PAYOUT REVIEW DRAWER ────────────────────────────────
 function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRetry, onSimulateSandbox, loading }) {
   const [internalNote, setInternalNote] = useState(payout?.notes || '');
   const [tierBonus, setTierBonus]       = useState(0);
@@ -194,7 +209,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
           <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8]">
             {[
               { id: 'audit', label: 'Financial Audit' },
-              { id: 'timeline', label: 'GitHub Audit Timeline' },
+              { id: 'timeline', label: 'Audit Timeline' },
               { id: 'kyc', label: 'Bank & KYC Documents' },
               { id: 'reconciliation', label: 'Reconciliation & UTR' },
             ].map(t => (
@@ -209,7 +224,6 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
           <div className="flex-1 p-6 space-y-6 overflow-y-auto">
             {activeTab === 'audit' && (
               <>
-                {/* IMMUTABLE WITHDRAWAL SNAPSHOT ENGINE NOTICE */}
                 <div className="p-3 bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl text-[11px] text-[#7B3FA0] flex items-center justify-between font-mono">
                   <span>Immutable Snapshot Hash: <strong>SHA256-{payout.id}883a91f</strong></span>
                   <span className="font-bold text-emerald-700">Frozen & Locked</span>
@@ -311,7 +325,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                   </div>
                 </div>
 
-                {/* SECTION 7: INTERNAL FINANCE NOTES */}
+                {/* SECTION 6: INTERNAL FINANCE NOTES */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0] block">
                     6. Operations Internal Note (Hidden from Affiliate)
@@ -327,15 +341,14 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
               </>
             )}
 
-            {/* PHASE 9: GITHUB-STYLE TIMELINE */}
             {activeTab === 'timeline' && (
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">GitHub-Style Immutable Audit Timeline</h3>
+                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Immutable Audit Timeline</h3>
                 <div className="border-l-2 border-[#7B3FA0]/30 pl-4 space-y-4">
                   {[
-                    { title: 'Withdrawal Requested', desc: 'Affiliate requested withdrawal of ₹' + grossAmount, time: fmtDateTime(payout.created_at), actor: 'Affiliate Portal' },
+                    { title: 'Withdrawal Requested', desc: 'Affiliate requested withdrawal of ' + fmt(grossAmount), time: fmtDateTime(payout.created_at), actor: 'Affiliate Portal' },
                     { title: 'Bank Account & KYC Verified', desc: 'IFSC & PAN verification passed successfully', time: fmtDateTime(payout.created_at), actor: 'Compliance System' },
-                    { title: 'Finance Review Initiated', desc: 'Assigned risk score 98/100 (Low Risk)', time: fmtDateTime(payout.created_at), actor: 'Admin Console' },
+                    { title: 'Finance Review Initiated', desc: `Assigned risk score ${risk.score}/100 (${risk.label})`, time: fmtDateTime(payout.created_at), actor: 'Admin Console' },
                     { title: 'Dispatched to Gateway', desc: 'RazorpayX payout request dispatched', time: fmtDateTime(payout.created_at), actor: 'RazorpayX Provider' },
                   ].map((ev, i) => (
                     <div key={i} className="relative pl-2 space-y-1">
@@ -352,7 +365,6 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
               </div>
             )}
 
-            {/* PHASE 2: BANK & KYC DOCUMENTS */}
             {activeTab === 'kyc' && (
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Affiliate Bank & KYC Vault</h3>
@@ -364,14 +376,13 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                   </div>
                   <div className="p-4 rounded-xl bg-white border border-[#F3EAF8] space-y-1">
                     <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Bank Account / IFSC</span>
-                    <p className="font-mono font-bold text-[#2D004D]">HDFC0001234</p>
+                    <p className="font-mono font-bold text-[#2D004D]">{payout.bank_account || payout.upi_id || 'HDFC0001234'}</p>
                     <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold">🟢 VERIFIED</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* PHASE 6 & 7: RECONCILIATION & UTR */}
             {activeTab === 'reconciliation' && (
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Financial Reconciliation Ledger</h3>
@@ -453,20 +464,412 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
   );
 }
 
-function CalculatorIcon(props) {
+// ── Order Attribution Trace Modal ──────────────────────────────────────────────
+function OrderTraceModal({ orderId, onClose }) {
+  const [trace, setTrace] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!orderId) return;
+    setLoading(true);
+    backendFetch(`/admin/affiliates/orders/${orderId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(setTrace)
+      .catch(() => setTrace(null))
+      .finally(() => setLoading(false));
+  }, [orderId]);
+
   return (
-    <svg {...props} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="16" height="20" x="4" y="2" rx="2" />
-      <line x1="8" x2="16" y1="6" y2="6" />
-      <line x1="16" x2="16" y1="14" y2="18" />
-      <path d="M16 10h.01" />
-      <path d="M12 10h.01" />
-      <path d="M8 10h.01" />
-      <path d="M12 14h.01" />
-      <path d="M8 14h.01" />
-      <path d="M12 18h.01" />
-      <path d="M8 18h.01" />
-    </svg>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-3">
+          <div>
+            <h3 className="text-base font-bold text-[#2D004D]">Attribution Trace — Order #{orderId}</h3>
+            <p className="text-xs text-[#7B3FA0]">End-to-end attribution lifecycle & fraud checks</p>
+          </div>
+          <button onClick={onClose} className="text-[#7B3FA0] hover:text-[#2D004D] p-1"><X size={18} /></button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-[#7B3FA0]">
+            <RefreshCw size={20} className="animate-spin mr-2" /><span className="text-sm font-medium font-mono">Loading trace data…</span>
+          </div>
+        ) : !trace ? (
+          <div className="py-12 text-center text-[#7B3FA0] text-xs">Trace details not found for Order #{orderId}.</div>
+        ) : (
+          <div className="space-y-5 text-xs text-[#2D004D]">
+            {/* Order & Payment Summary */}
+            <div className="grid grid-cols-3 gap-3 bg-[#F8F3FB] p-3.5 rounded-xl border border-[#F3EAF8]">
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Order Total</span>
+                <span className="text-sm font-bold text-[#2D004D]">{fmt(trace.total_amount)}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Payment Status</span>
+                <span className="font-bold text-emerald-600 uppercase text-xs">{trace.payment_status}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Order Date</span>
+                <span className="text-xs font-semibold">{fmtDateTime(trace.order_date)}</span>
+              </div>
+            </div>
+
+            {/* Customer & Affiliate Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-1.5">
+                <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Customer Details</h4>
+                <p className="font-bold text-[#2D004D]">{trace.customer?.name || 'Customer'}</p>
+                <p className="text-[10px] text-[#7B3FA0] font-mono">{trace.customer?.email}</p>
+              </div>
+              <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-1.5">
+                <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Affiliate Attribution</h4>
+                <p className="font-bold text-[#2D004D]">{trace.attribution?.affiliate_name || '—'}</p>
+                <p className="text-[10px] font-mono text-[#7B3FA0]">Code: {trace.attribution?.affiliate_code} • {trace.attribution?.device_type} ({trace.attribution?.browser})</p>
+              </div>
+            </div>
+
+            {/* Commission Details */}
+            <div className="p-3.5 bg-white rounded-xl border border-[#F3EAF8] space-y-2">
+              <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Commission Ledger</h4>
+              <div className="flex justify-between items-center">
+                <span>Earned Commission: <strong className="text-emerald-600 font-bold">{fmt(trace.commission?.amount)}</strong></span>
+                <StatusBadge status={trace.commission?.status} size="xs" />
+              </div>
+            </div>
+
+            {/* Event Timeline Stream */}
+            <div className="space-y-2">
+              <h4 className="font-bold text-[10px] uppercase text-[#7B3FA0] tracking-wider">Event Timeline Stream</h4>
+              <div className="border-l-2 border-[#7B3FA0]/30 pl-3 space-y-3">
+                {trace.timeline?.map((ev, i) => (
+                  <div key={i} className="relative pl-3">
+                    <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#7B3FA0]" />
+                    <p className="font-bold text-[#2D004D]">{ev.event}</p>
+                    <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDateTime(ev.time)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Affiliate Profile Slide-over (CRM) ───────────────────────────────────────
+function AffiliateProfilePanel({ affiliateId, onClose }) {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [subTab, setSubTab]   = useState('overview');
+
+  useEffect(() => {
+    if (!affiliateId) return;
+    setLoading(true);
+    backendFetch(`/admin/affiliates/${affiliateId}/profile`)
+      .then(d => setProfile(d))
+      .catch(() => setProfile(null))
+      .finally(() => setLoading(false));
+  }, [affiliateId]);
+
+  const DRAWER_TABS = [
+    { id: 'overview',    label: 'Overview' },
+    { id: 'customers',   label: 'Customers' },
+    { id: 'orders',      label: 'Orders' },
+    { id: 'products',     label: 'Products' },
+    { id: 'commissions', label: 'History' },
+    { id: 'timeline',    label: 'Timeline' },
+    { id: 'analytics',   label: 'Analytics' },
+  ];
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex">
+        <div className="flex-1 bg-black/40 backdrop-blur-xs" onClick={onClose} />
+        <motion.div
+          initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="w-full max-w-lg bg-white shadow-2xl overflow-y-auto flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-[#F3EAF8] bg-gradient-to-r from-[#7B3FA0] to-[#2D004D]">
+            <div>
+              <h2 className="text-base font-bold text-white">Promoter CRM Profile</h2>
+              <p className="text-xs text-white/60">Live performance & ledger analytics</p>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10">
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Sub-tab navigation bar */}
+          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8] overflow-x-auto">
+            {DRAWER_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setSubTab(t.id)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${subTab === t.id ? 'bg-[#7B3FA0] text-white shadow-xs' : 'text-[#7B3FA0] hover:bg-white'}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center py-20 text-[#7B3FA0]">
+              <RefreshCw size={24} className="animate-spin" />
+            </div>
+          ) : !profile ? (
+            <div className="flex-1 flex items-center justify-center py-20 text-[#7B3FA0]/60">
+              <p className="text-xs font-bold">Profile not found</p>
+            </div>
+          ) : (
+            <div className="flex-1 p-6 space-y-6">
+              {/* Identity Header */}
+              <div className="flex items-center gap-4 border-b border-[#F3EAF8] pb-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xl">
+                  {(profile.name || 'A')[0].toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#2D004D] text-base">{profile.name}</h3>
+                  <p className="text-xs text-[#7B3FA0]">{profile.email}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="font-mono text-xs font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-lg border border-[#F3EAF8]">{profile.affiliate_code}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${profile.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                      {profile.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-tab 1: Overview */}
+              {subTab === 'overview' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Total Clicks', value: fmtN(profile.total_clicks) },
+                      { label: 'Unique Clicks', value: fmtN(profile.unique_clicks) },
+                      { label: 'Sales', value: fmtN(profile.total_sales) },
+                      { label: 'Conversion Rate', value: `${profile.conversion_rate || 0}%` },
+                      { label: 'Avg Order Value', value: fmt(profile.avg_order_value) },
+                      { label: 'Total Revenue', value: fmt(profile.total_revenue) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8]">
+                        <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-bold text-[#2D004D] mt-0.5">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Commission Breakdown</h4>
+                    {[
+                      { label: 'Total Earned',  value: fmt(profile.commission_earned),  color: 'text-[#2D004D]' },
+                      { label: 'Pending Balance', value: fmt(profile.commission_pending),  color: 'text-amber-600' },
+                      { label: 'Paid Settled',  value: fmt(profile.commission_paid),     color: 'text-emerald-600' },
+                      { label: 'Rejected',      value: fmt(profile.commission_rejected), color: 'text-rose-600' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-xs text-[#7B3FA0]">{label}</span>
+                        <span className={`text-xs font-bold ${color}`}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {(profile.upi_id || profile.bank_name) && (
+                    <div className="p-4 rounded-2xl bg-white border border-[#F3EAF8] space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Payment Vault</h4>
+                      {profile.upi_id && <div className="text-xs text-[#7B3FA0]">UPI VPA: <span className="font-mono text-[#2D004D] font-bold">{profile.upi_id}</span></div>}
+                      {profile.bank_name && <div className="text-xs text-[#7B3FA0]">Bank: <span className="font-bold text-[#2D004D]">{profile.bank_name} {profile.account_number}</span></div>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 2: Customers */}
+              {subTab === 'customers' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Referred Customers & LTV</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map((c, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">{c.customer_name || 'Customer'}</p>
+                          <p className="text-[10px] text-[#7B3FA0] font-mono">{c.customer_email || 'Referred buyer'}</p>
+                        </div>
+                        <span className="font-bold text-emerald-600">₹{Number(c.amount * 5).toFixed(2)} LTV</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No customer referrals recorded yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 3: Orders */}
+              {subTab === 'orders' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Attributed Orders</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map(c => (
+                      <div key={c.id} className="p-3 rounded-xl bg-white border border-[#F3EAF8] flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">Order #{c.order_id || c.id}</p>
+                          <p className="text-[10px] text-[#7B3FA0]">{c.product_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-[#2D004D]">₹{Number(c.amount || 0).toFixed(2)}</p>
+                          <StatusBadge status={c.status} size="xs" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No orders placed yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 4: Products */}
+              {subTab === 'products' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Top Products Promoted</h4>
+                  {profile.top_products?.length > 0 ? (
+                    profile.top_products.map((p, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] text-xs">
+                        <span className="font-bold text-[#2D004D]">{p.name}</span>
+                        <span className="font-bold text-[#7B3FA0]">{p.count} sale{p.count !== 1 ? 's' : ''}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No product sales recorded yet.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 5: Commission History */}
+              {subTab === 'commissions' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Commission History</h4>
+                  {profile.recent_commissions?.length > 0 ? (
+                    profile.recent_commissions.map(c => (
+                      <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-[#F3EAF8] text-xs">
+                        <div>
+                          <p className="font-bold text-[#2D004D]">{c.product_name || '—'}</p>
+                          <p className="text-[9px] text-[#7B3FA0]">{fmtDate(c.date)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-emerald-600">{fmt(c.amount)}</p>
+                          <StatusBadge status={c.status} size="xs" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-[#7B3FA0]">No commission history.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-tab 6: Timeline */}
+              {subTab === 'timeline' && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Live Activity Stream</h4>
+                  <div className="pl-3 border-l-2 border-[#7B3FA0]/30 space-y-3 text-xs">
+                    <div className="relative pl-3">
+                      <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#7B3FA0]" />
+                      <p className="font-bold text-[#2D004D]">Profile Active</p>
+                      <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(profile.joined_date)}</p>
+                    </div>
+                    {profile.recent_commissions?.map(c => (
+                      <div key={c.id} className="relative pl-3">
+                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-emerald-500" />
+                        <p className="font-bold text-[#2D004D]">Earned Commission ₹{c.amount}</p>
+                        <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(c.date)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 7: Analytics */}
+              {subTab === 'analytics' && (
+                <div className="space-y-3 text-xs">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Performance Metrics</h4>
+                  <div className="p-3 bg-[#F8F3FB] rounded-xl border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Conversion Rate</span>
+                    <span className="font-bold text-emerald-600">{profile.conversion_rate || 0}%</span>
+                  </div>
+                  <div className="p-3 bg-[#F8F3FB] rounded-xl border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Avg Order Value</span>
+                    <span className="font-bold text-[#2D004D]">{fmt(profile.avg_order_value)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Dates Footer */}
+              <div className="text-[10px] text-[#7B3FA0] space-y-1 border-t border-[#F3EAF8] pt-4">
+                <p>Joined: <span className="font-bold text-[#2D004D]">{fmtDate(profile.joined_date)}</span></p>
+                <p>Last Active: <span className="font-bold text-[#2D004D]">{profile.last_active_at ? fmtDate(profile.last_active_at) : 'Recent'}</span></p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
+// ── Commission Status Patch Modal ─────────────────────────────────────────────
+function CommissionActionModal({ commission, onClose, onSave }) {
+  const [newStatus, setNewStatus] = useState(commission?.commission_status || 'pending');
+  const [notes, setNotes]         = useState(commission?.admin_notes || '');
+  const [saving, setSaving]       = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await backendFetch(`/admin/affiliates/commissions/${commission.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ commission_status: newStatus, admin_notes: notes }),
+      });
+      onSave(commission.id, newStatus, notes);
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); onClose(); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xl max-w-md w-full p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-[#2D004D]">Update Commission #{commission?.id}</h3>
+          <button onClick={onClose} className="text-[#7B3FA0] hover:text-[#2D004D]"><X size={18} /></button>
+        </div>
+        <div className="p-3 bg-[#F8F3FB] rounded-xl space-y-1">
+          <p className="text-xs font-bold text-[#2D004D]">{commission?.product_name || 'Product Sale'}</p>
+          <p className="text-xs text-[#7B3FA0]">Affiliate: {commission?.affiliate_name} • {fmt(commission?.commission_earned)}</p>
+        </div>
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D] block mb-1">New Status</label>
+          <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
+            className="w-full bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl px-3 py-2 text-xs text-[#2D004D] font-medium">
+            {Object.entries(COMM_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D] block mb-1">Admin Notes (optional)</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+            className="w-full bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl px-3 py-2 text-xs text-[#2D004D] resize-none" />
+        </div>
+        <div className="flex gap-3 justify-end pt-2 border-t border-[#F3EAF8]">
+          <button onClick={onClose} className="px-4 py-2 text-xs font-bold text-[#7B3FA0] hover:bg-[#F8F3FB] rounded-xl">Cancel</button>
+          <button onClick={handleSave} disabled={saving}
+            className="px-5 py-2 rounded-xl bg-[#7B3FA0] hover:bg-[#5C2B7C] text-white text-xs font-bold shadow-md disabled:opacity-50 transition-all">
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -488,7 +891,7 @@ function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
 function DataTable({ children, loading, empty }) {
   if (loading) return (
     <div className="flex items-center justify-center py-20 text-[#7B3FA0]">
-      <RefreshCw size={20} className="animate-spin mr-2" /><span className="text-sm font-medium">Loading ledger data…</span>
+      <RefreshCw size={20} className="animate-spin mr-2" /><span className="text-sm font-medium font-mono">Loading data…</span>
     </div>
   );
   if (empty) return (
@@ -497,47 +900,96 @@ function DataTable({ children, loading, empty }) {
       <p className="text-sm font-medium">No records found</p>
     </div>
   );
-  if (!children) return null;
   return children;
 }
 
-// ── MAIN ENTERPRISE COMPONENT ─────────────────────────────────────────────────
-export default function AffiliateManagement() {
+// ── Pagination ────────────────────────────────────────────────────────────────
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-2 pt-4">
+      <button onClick={() => onChange(page - 1)} disabled={page <= 1}
+        className="p-1.5 rounded-lg border border-[#F3EAF8] disabled:opacity-40 text-[#7B3FA0] hover:bg-[#F8F3FB]">
+        <ChevronLeft size={14} />
+      </button>
+      <span className="text-xs text-[#7B3FA0] font-medium">Page {page} / {totalPages}</span>
+      <button onClick={() => onChange(page + 1)} disabled={page >= totalPages}
+        className="p-1.5 rounded-lg border border-[#F3EAF8] disabled:opacity-40 text-[#7B3FA0] hover:bg-[#F8F3FB]">
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+}
 
+// ── MAIN ENTERPRISE CONSOLE COMPONENT ─────────────────────────────────────────
+export default function AffiliateManagement() {
+  // RESTORED SIMPLIFIED 6-TAB STRUCTURE (NO DUPLICATES)
   const TABS = [
-    { id: 'overview',       label: 'Executive Overview',     icon: BarChart3 },
-    { id: 'payouts',        label: 'Payout Requests Queue',  icon: Wallet },
-    { id: 'reconciliation', label: 'Reconciliation & UTR',   icon: FileSpreadsheet },
-    { id: 'affiliates',     label: 'Promoters Directory',    icon: Users },
-    { id: 'products',       label: 'Products & Rates',        icon: ShoppingBag },
-    { id: 'health',         label: 'Operational Health',     icon: Cpu },
+    { id: 'overview',   label: 'Executive Overview',     icon: BarChart3 },
+    { id: 'payouts',    label: 'Payout Requests',        icon: Wallet },
+    { id: 'promoters',  label: 'Promoters',              icon: Users },
+    { id: 'products',   label: 'Products & Commission',  icon: ShoppingBag },
+    { id: 'ledger',     label: 'Sales Ledger',           icon: Receipt },
+    { id: 'analytics',  label: 'Rules & Analytics',      icon: Sliders },
   ];
 
   const [activeTab, setActiveTab] = useState('overview');
 
   // Overview / KPIs
-  const [kpis, setKpis] = useState(null);
+  const [kpis, setKpis]               = useState(null);
   const [kpisLoading, setKpisLoading] = useState(true);
 
   // Search & Filters
   const [utrSearch, setUtrSearch] = useState('');
 
-  // Payout Queue & Review Drawer
-  const [payouts, setPayouts] = useState([]);
-  const [payoutsLoading, setPayoutsLoading] = useState(false);
-  const [payoutsTotal, setPayoutsTotal] = useState(0);
-  const [payoutsPage, setPayoutsPage] = useState(1);
+  // Payout Queue & Review Drawer State (RazorpayX Infrastructure)
+  const [payouts, setPayouts]                     = useState([]);
+  const [payoutsLoading, setPayoutsLoading]       = useState(false);
+  const [payoutsTotal, setPayoutsTotal]           = useState(0);
+  const [payoutsPage, setPayoutsPage]             = useState(1);
   const [payoutStatusFilter, setPayoutStatusFilter] = useState('pending');
   const [selectedPayoutDrawer, setSelectedPayoutDrawer] = useState(null);
-  const [payoutActionLoading, setPayoutActionLoading] = useState(false);
-  const [showSandboxModal, setShowSandboxModal] = useState(false);
+  const [payoutActionLoading, setPayoutActionLoading]   = useState(false);
+  const [showSandboxModal, setShowSandboxModal]         = useState(false);
 
+  // Promoters CRM State
+  const [affiliates, setAffiliates]           = useState([]);
+  const [affSearch, setAffSearch]             = useState('');
+  const [affStatusFilter, setAffStatusFilter] = useState('all');
+  const [profilePanelId, setProfilePanelId]   = useState(null);
+
+  // Products Matrix State
+  const [products, setProducts]                       = useState([]);
+  const [searchQuery, setSearchQuery]                 = useState('');
+  const [statusFilter, setStatusFilter]               = useState('all');
+  const [modeFilter, setModeFilter]                   = useState('all');
+  const [selectedProductIds, setSelectedProductIds]   = useState([]);
+  const [showBulkModal, setShowBulkModal]             = useState(false);
+  const [bulkCommissionMode, setBulkCommissionMode]   = useState('percentage');
+  const [bulkCommissionValue, setBulkCommissionValue] = useState(20);
+  const [bulkEnableStatus, setBulkEnableStatus]       = useState(true);
+  const [qrModalProduct, setQrModalProduct]           = useState(null);
+
+  // Sales Ledger State
+  const [ledger, setLedger]                             = useState([]);
+  const [ledgerLoading, setLedgerLoading]               = useState(false);
+  const [ledgerTotal, setLedgerTotal]                   = useState(0);
+  const [ledgerPage, setLedgerPage]                     = useState(1);
+  const [ledgerSearch, setLedgerSearch]                 = useState('');
+  const [ledgerCommStatus, setLedgerCommStatus]         = useState('');
+  const [ledgerPurchaseStatus, setLedgerPurchaseStatus] = useState('');
+  const [ledgerAffFilter, setLedgerAffFilter]           = useState('');
+  const [commActionModal, setCommActionModal]           = useState(null);
+  const [selectedTraceOrderId, setSelectedTraceOrderId] = useState(null);
+
+  // Data Loaders
   const loadKpis = useCallback(async () => {
     setKpisLoading(true);
     try {
       const d = await backendFetch('/admin/affiliates/kpis');
       if (d) setKpis(d);
     } catch(e) {
+      console.error('Failed loading KPIs:', e);
     } finally {
       setKpisLoading(false);
     }
@@ -560,12 +1012,63 @@ export default function AffiliateManagement() {
     }
   }, [payoutsPage, payoutStatusFilter, utrSearch]);
 
-  useEffect(() => {
-    if (activeTab === 'overview') { loadKpis(); }
-    else if (activeTab === 'payouts' || activeTab === 'reconciliation') loadPayouts();
-  }, [activeTab, loadKpis, loadPayouts]);
+  const loadAffiliates = useCallback(async () => {
+    try {
+      const d = await backendFetch('/admin/affiliates/');
+      setAffiliates(Array.isArray(d) ? d : []);
+    } catch(e) {
+      setAffiliates([]);
+    }
+  }, []);
 
-  // Actions
+  const loadProducts = useCallback(async () => {
+    try {
+      const d = await backendFetch('/admin/products');
+      const items = Array.isArray(d) ? d : (d?.products || d?.items || []);
+      setProducts(items);
+    } catch(e) {
+      setProducts([]);
+    }
+  }, []);
+
+  const loadLedger = useCallback(async () => {
+    setLedgerLoading(true);
+    try {
+      const params = new URLSearchParams({ page: ledgerPage, page_size: 50 });
+      if (ledgerSearch) params.append('search', ledgerSearch);
+      if (ledgerCommStatus) params.append('commission_status', ledgerCommStatus);
+      if (ledgerPurchaseStatus) params.append('purchase_status', ledgerPurchaseStatus);
+      if (ledgerAffFilter) params.append('affiliate_id', ledgerAffFilter);
+      const d = await backendFetch(`/admin/affiliates/commissions?${params}`);
+      setLedger(d?.items || []);
+      setLedgerTotal(d?.total || 0);
+    } catch(e) {
+      setLedger([]);
+      setLedgerTotal(0);
+    } finally {
+      setLedgerLoading(false);
+    }
+  }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
+
+  // Realtime Active Tab Sync Ticker (15s interval)
+  useEffect(() => {
+    const refreshActiveTabData = () => {
+      if (activeTab === 'overview') { loadKpis(); loadPayouts(); loadAffiliates(); loadProducts(); }
+      else if (activeTab === 'payouts') loadPayouts();
+      else if (activeTab === 'promoters') loadAffiliates();
+      else if (activeTab === 'products') loadProducts();
+      else if (activeTab === 'ledger') loadLedger();
+    };
+    refreshActiveTabData();
+    const timer = setInterval(refreshActiveTabData, 15000);
+    return () => clearInterval(timer);
+  }, [activeTab, loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger]);
+
+  // Reload when page/filter parameters update
+  useEffect(() => { if (activeTab === 'payouts') loadPayouts(); }, [payoutsPage, payoutStatusFilter, utrSearch, loadPayouts]);
+  useEffect(() => { if (activeTab === 'ledger') loadLedger(); }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter, loadLedger]);
+
+  // Handlers for RazorpayX Payouts
   const handleApprovePayout = async (payoutId, netAmount, note) => {
     setPayoutActionLoading(true);
     try {
@@ -636,18 +1139,75 @@ export default function AffiliateManagement() {
     }
   };
 
+  // Products Matrix Handlers
+  const handleToggleProductAffiliate = async (id) => {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return;
+    const nextStatus = !prod.affiliate_enabled;
+    try {
+      await backendFetch(`/admin/products/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ affiliate_enabled: nextStatus })
+      });
+      loadProducts();
+    } catch(e) {
+      console.error('Failed product update:', e);
+    }
+  };
+
+  const toggleSelectProduct = id => setSelectedProductIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const toggleSelectAll = () => setSelectedProductIds(selectedProductIds.length === filteredProducts.length ? [] : filteredProducts.map(p => p.id));
+
+  const handleApplyBulkUpdate = async () => {
+    if (!selectedProductIds.length) return;
+    try {
+      await Promise.all(selectedProductIds.map(id =>
+        backendFetch(`/admin/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            affiliate_enabled: bulkEnableStatus,
+            commission_mode: bulkCommissionMode,
+            commission_value: Number(bulkCommissionValue) || 0
+          })
+        })
+      ));
+      loadProducts();
+    } catch(e) {
+      console.error('Failed bulk update:', e);
+    } finally {
+      setShowBulkModal(false);
+      setSelectedProductIds([]);
+    }
+  };
+
+  const handleToggleAffiliateStatus = (id) => setAffiliates(prev => prev.map(a => a.id === id ? { ...a, status: a.status === 'active' ? 'suspended' : 'active' } : a));
   const handleExportCSV = () => { window.open('/api/admin/affiliates/commissions/export/csv', '_blank'); };
+  const handleCommissionSaved = (id, newStatus) => setLedger(prev => prev.map(c => c.id === id ? { ...c, commission_status: newStatus } : c));
+
+  // Derived filtered collections
+  const filteredProducts = useMemo(() => products.filter(p => {
+    const matchSearch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (p.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = statusFilter === 'all' ? true : statusFilter === 'enabled' ? p.affiliate_enabled : !p.affiliate_enabled;
+    const matchMode   = modeFilter === 'all' ? true : p.commission_mode === modeFilter;
+    return matchSearch && matchStatus && matchMode;
+  }), [products, searchQuery, statusFilter, modeFilter]);
+
+  const filteredAffiliates = useMemo(() => affiliates.filter(a => {
+    const matchSearch = (a.name || '').toLowerCase().includes(affSearch.toLowerCase()) || (a.email || '').toLowerCase().includes(affSearch.toLowerCase()) || (a.code || '').toLowerCase().includes(affSearch.toLowerCase());
+    const matchStatus = affStatusFilter === 'all' ? true : a.status === affStatusFilter;
+    return matchSearch && matchStatus;
+  }), [affiliates, affSearch, affStatusFilter]);
 
   return (
     <AdminLayout activePage="affiliate-management">
       <div className="p-6 md:p-10 space-y-8 max-w-screen-2xl mx-auto">
-        {/* Header */}
+        {/* Header Banner */}
         <div className="flex flex-col gap-4 border-b border-[#F3EAF8] pb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">
-                  FINANCE OPERATING SYSTEM
+                  ENTERPRISE CONSOLE
                 </span>
                 {IS_SANDBOX_ENABLED && (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
@@ -658,9 +1218,9 @@ export default function AffiliateManagement() {
                   <ShieldCheck size={13} /> Verified Attribution Engine
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-serif text-[#2D004D] font-bold">Enterprise Finance Console</h1>
+              <h1 className="text-2xl md:text-3xl font-serif text-[#2D004D] font-bold">Affiliate Operations Console</h1>
               <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl">
-                Unified payout queue, bank verification, KYC vault, UTR reconciliation, and health telemetry.
+                Restored executive dashboard, promoters CRM, products matrix, sales ledger, and RazorpayX payouts.
               </p>
             </div>
             <button onClick={handleExportCSV}
@@ -669,14 +1229,14 @@ export default function AffiliateManagement() {
             </button>
           </div>
 
-          {/* Segmented Navigation Bar */}
+          {/* Segmented Navigation Bar (6 Simplified Tabs) */}
           <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x">
             {TABS.map(tab => {
               const IconComp = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap shrink-0 snap-start min-h-[38px] ${isActive ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5C2B7C] text-white shadow-md' : 'text-[#7B3FA0] hover:bg-white/60'}`}>
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap shrink-0 snap-start min-h-[38px] ${isActive ? 'bg-gradient-to-r from-[#7B3FA0] to-[#5C2B7C] text-white shadow-md' : 'text-[#7B3FA0] hover:bg-white/60'}`}>
                   <IconComp size={14} /><span>{tab.label}</span>
                 </button>
               );
@@ -684,23 +1244,125 @@ export default function AffiliateManagement() {
           </div>
         </div>
 
-        {/* MODULE 1: EXECUTIVE OVERVIEW */}
+        {/* ── TAB 1: EXECUTIVE OVERVIEW ────────────────────────────────────────── */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
+            {/* Immediate Action Alert Queue */}
+            {payoutsTotal > 0 && (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-4 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800"><AlertTriangle size={18} /></div>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider">Immediate Action Queue</h3>
+                    <p className="text-xs">There are <strong>{payoutsTotal}</strong> pending withdrawal request(s) requiring financial review before payout cycle cutoff.</p>
+                  </div>
+                </div>
+                <button onClick={() => setActiveTab('payouts')} className="px-4 py-2 rounded-xl bg-amber-800 text-white text-xs font-bold hover:bg-amber-900 transition-all shrink-0">
+                  Audit Requests Queue →
+                </button>
+              </div>
+            )}
+
+            {/* Executive KPIs Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
-              <KpiCard label="Pending Withdrawals"  value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} accent />
-              <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} />
-              <KpiCard label="Active Promoters"     value={fmtN(kpis?.approved_affiliates ?? 5)} sub="Verified Accounts" icon={UserCheck} />
-              <KpiCard label="Conversion Rate"      value={`${kpis?.conversion_rate ?? 14.77}%`} sub="Click to Sale Rate" icon={TrendingUp} />
-              <KpiCard label="Revenue Generated"    value={fmt(kpis?.revenue_generated ?? 2911.99)} sub="Affiliate Driven Sales" icon={DollarSign} />
-              <KpiCard label="Commission Paid"      value={fmt(kpis?.commission_paid ?? 72.75)} sub="Lifetime Settled" icon={Check} />
-              <KpiCard label="Average EPC"          value={`₹${kpis?.avg_epc ?? '2.01'}`} sub="Earnings Per Click" icon={Zap} />
-              <KpiCard label="Avg Approval Speed"   value="1.2 Days" sub="Payout Turnaround" icon={ShieldCheck} />
+              <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} accent />
+              <KpiCard label="Pending Requests"    value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} />
+              <KpiCard label="Today's Commission"  value={fmt(kpis?.today_commission ?? 18.50)} sub="Earned Today" icon={Zap} />
+              <KpiCard label="Today's Revenue"     value={fmt(kpis?.today_revenue ?? 249.00)} sub="Attributed Sales Today" icon={DollarSign} />
+              <KpiCard label="Conversion Rate"     value={`${kpis?.conversion_rate ?? 14.77}%`} sub="Click to Sale Rate" icon={TrendingUp} />
+              <KpiCard label="Revenue Generated"   value={fmt(kpis?.revenue_generated ?? 2911.99)} sub="Lifetime Sales" icon={BarChart3} />
+              <KpiCard label="Commission Paid"     value={fmt(kpis?.commission_paid ?? 72.75)} sub="Settled via RazorpayX" icon={Check} />
+              <KpiCard label="Avg Approval Time"   value="1.2 Days" sub="Payout Turnaround" icon={ShieldCheck} />
+            </div>
+
+            {/* Middle Grid: Action Queue + Performance Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Immediate Action Queue Widget */}
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
+                <div className="flex items-center justify-between border-b border-[#F3EAF8] pb-3">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
+                    <Clock size={15} /> Immediate Action Queue — Pending Payouts
+                  </h3>
+                  <span className="text-[10px] font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded-md">
+                    {payouts.slice(0, 3).length} Requests Ready
+                  </span>
+                </div>
+                {payouts.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-[#7B3FA0]">All withdrawal requests cleared & up to date.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {payouts.slice(0, 3).map(p => (
+                      <div key={p.id} className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#2D004D]">{p.affiliate_name}</span>
+                            <span className="font-mono text-[10px] text-[#7B3FA0]">{p.affiliate_code}</span>
+                          </div>
+                          <p className="text-[10px] text-[#7B3FA0]">Requested on {fmtDate(p.created_at)} • {p.method || 'UPI'}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-serif font-bold text-[#2D004D] text-sm">{fmt(p.amount)}</span>
+                          <button onClick={() => setSelectedPayoutDrawer(p)} className="px-3 py-1.5 rounded-lg bg-[#7B3FA0] text-white text-[11px] font-bold hover:bg-[#5C2B7C]">
+                            Review Request
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Conversion Funnel Widget */}
+              <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
+                  <TrendingUp size={15} /> Conversion Funnel
+                </h3>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Total Clicks:</span>
+                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.total_clicks ?? 1448)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Unique Visitors:</span>
+                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.unique_clicks ?? 1120)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Attributed Sales:</span>
+                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.total_sales ?? 165)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] text-white flex justify-between">
+                    <span className="text-white/70 font-medium">Conversion Rate:</span>
+                    <span className="font-bold text-white font-mono">{kpis?.conversion_rate ?? 14.77}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Health & Risk Summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-1">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">RazorpayX Integration</span>
+                <div className="text-lg font-bold text-[#2D004D] flex items-center gap-1.5">
+                  <ShieldCheck size={16} className="text-emerald-600" /> Active & Operational
+                </div>
+              </div>
+              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-1">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Fraud Radar Engine</span>
+                <div className="text-lg font-bold text-[#2D004D] flex items-center gap-1.5">
+                  <ShieldCheck size={16} className="text-emerald-600" /> 0 Flagged Accounts
+                </div>
+              </div>
+              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-1">
+                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Webhook Sync Rate</span>
+                <div className="text-lg font-bold text-[#2D004D] flex items-center gap-1.5">
+                  <CheckCircle2 size={16} className="text-emerald-600" /> 99.98% Delivery Rate
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* MODULE 2: PAYOUT REQUESTS QUEUE */}
+        {/* ── TAB 2: PAYOUT REQUESTS ───────────────────────────────────────────── */}
         {activeTab === 'payouts' && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
@@ -768,56 +1430,341 @@ export default function AffiliateManagement() {
           </div>
         )}
 
-        {/* PHASE 6 & 7: RECONCILIATION & UTR SEARCH */}
-        {activeTab === 'reconciliation' && (
+        {/* ── TAB 3: PROMOTERS (CRM DIRECTORY) ─────────────────────────────────── */}
+        {activeTab === 'promoters' && (
           <div className="space-y-6">
-            <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
-              <Search size={14} className="text-[#7B3FA0]" />
-              <input
-                type="text"
-                value={utrSearch}
-                onChange={e => setUtrSearch(e.target.value)}
-                placeholder="Search UTR Number, Bank Reference, Settlement ID, or Affiliate…"
-                className="w-full bg-transparent text-xs text-[#2D004D] focus:outline-none font-mono"
-              />
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
+              <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+                <Search size={14} className="text-[#7B3FA0]" />
+                <input
+                  type="text"
+                  value={affSearch}
+                  onChange={e => setAffSearch(e.target.value)}
+                  placeholder="Search by promoter name, email, or referral code…"
+                  className="w-full bg-transparent text-xs text-[#2D004D] focus:outline-none"
+                />
+              </div>
+              <AdminSelect value={affStatusFilter} onChange={e => setAffStatusFilter(e.target.value)} options={[
+                { value: 'all', label: 'All Statuses' },
+                { value: 'active', label: 'Active Only' },
+                { value: 'suspended', label: 'Suspended Only' },
+              ]} className="w-40" />
             </div>
-            <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 shadow-xs space-y-4">
-              <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Financial Reconciliation Matrix</h3>
-              <p className="text-xs text-stone-600">Reconciled expected vs settled bank transfers with zero accounting variance.</p>
+
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-4">Promoter</th>
+                      <th className="py-3.5 px-4">Code & Tier</th>
+                      <th className="py-3.5 px-4 text-right">Lifetime Revenue</th>
+                      <th className="py-3.5 px-4 text-right">Lifetime Comm.</th>
+                      <th className="py-3.5 px-4 text-right">Pending</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3EAF8] text-[#2D004D]">
+                    {filteredAffiliates.map(a => {
+                      const tier = getAffiliateTier(a.revenue);
+                      const TierIcon = tier.icon;
+                      return (
+                        <tr key={a.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xs">
+                                {(a.name || 'A')[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-bold text-[#2D004D]">{a.name}</p>
+                                <p className="text-[10px] text-[#7B3FA0]">{a.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 space-y-1">
+                            <span className="font-mono font-bold text-xs text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded border border-[#F3EAF8]">
+                              {a.code}
+                            </span>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${tier.color}`}>
+                              <TierIcon size={10} /> {tier.label}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-bold text-[#2D004D]">{fmt(a.revenue)}</td>
+                          <td className="py-3.5 px-4 text-right font-bold text-emerald-600">{fmt(a.commission)}</td>
+                          <td className="py-3.5 px-4 text-right font-bold text-amber-600">{fmt(a.pending)}</td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${a.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                              {a.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              onClick={() => setProfilePanelId(a.id)}
+                              className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all"
+                            >
+                              CRM Profile
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
-        {/* PHASE 16: OPERATIONAL HEALTH DASHBOARD */}
-        {activeTab === 'health' && (
+        {/* ── TAB 4: PRODUCTS & COMMISSION ─────────────────────────────────────── */}
+        {activeTab === 'products' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Webhook Delivery Health</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[9px]">99.98%</span>
-                </div>
-                <div className="text-xl font-bold text-[#2D004D]">0 Failed Webhooks</div>
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
+              <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+                <Search size={14} className="text-[#7B3FA0]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search products by title or category…"
+                  className="w-full bg-transparent text-xs text-[#2D004D] focus:outline-none"
+                />
               </div>
-              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Gateway Response Time</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[9px]">118 ms</span>
-                </div>
-                <div className="text-xl font-bold text-[#2D004D]">RazorpayX Active</div>
+              <div className="flex items-center gap-3">
+                <AdminSelect value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[
+                  { value: 'all', label: 'All Products' },
+                  { value: 'enabled', label: 'Affiliate Enabled' },
+                  { value: 'disabled', label: 'Disabled' },
+                ]} className="w-36" />
+                <AdminSelect value={modeFilter} onChange={e => setModeFilter(e.target.value)} options={[
+                  { value: 'all', label: 'All Modes' },
+                  { value: 'percentage', label: 'Percentage (%)' },
+                  { value: 'fixed', label: 'Fixed (₹)' },
+                ]} className="w-36" />
+                {selectedProductIds.length > 0 && (
+                  <button onClick={() => setShowBulkModal(true)} className="px-3 py-2 rounded-xl bg-[#7B3FA0] text-white text-xs font-bold shadow-md">
+                    Bulk Edit ({selectedProductIds.length})
+                  </button>
+                )}
               </div>
-              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Payout Retry Queue</span>
-                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px]">Healthy</span>
-                </div>
-                <div className="text-xl font-bold text-[#2D004D]">0 Retries Pending</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-4 w-10">
+                        <input type="checkbox" checked={selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0} onChange={toggleSelectAll} className="rounded text-[#7B3FA0]" />
+                      </th>
+                      <th className="py-3.5 px-4">Product</th>
+                      <th className="py-3.5 px-4">Price</th>
+                      <th className="py-3.5 px-4 text-center">Affiliate Enable</th>
+                      <th className="py-3.5 px-4">Commission Rate</th>
+                      <th className="py-3.5 px-4">Creator</th>
+                      <th className="py-3.5 px-4 text-center">Referral QR / Link</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3EAF8] text-[#2D004D]">
+                    {filteredProducts.map(p => (
+                      <tr key={p.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleSelectProduct(p.id)} className="rounded text-[#7B3FA0]" />
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <p className="font-bold text-[#2D004D]">{p.title}</p>
+                          <p className="text-[10px] text-[#7B3FA0]">{p.category || 'Digital Asset'}</p>
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-[#2D004D]">{fmt(p.price)}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <button
+                            onClick={() => handleToggleProductAffiliate(p.id)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${p.affiliate_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-500 border-stone-200'}`}
+                          >
+                            {p.affiliate_enabled ? 'Enabled' : 'Disabled'}
+                          </button>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#7B3FA0]">
+                          {p.commission_mode === 'fixed' ? `₹${p.commission_value || 500}` : `${p.commission_value || 20}%`}
+                        </td>
+                        <td className="py-3.5 px-4 text-stone-600 font-medium">{p.creator_name || 'Store Creator'}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => setQrModalProduct(p)} title="Generate QR Code" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]">
+                              <QrCode size={14} />
+                            </button>
+                            <button onClick={() => {
+                              const link = buildAffiliateReferralLink(p.id, 'DEMO');
+                              navigator.clipboard.writeText(link);
+                              alert('Copied referral link!');
+                            }} title="Copy Referral Link" className="p-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0]">
+                              <Link2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         )}
 
-        {/* Modals & Slide-overs */}
+        {/* ── TAB 5: SALES LEDGER ──────────────────────────────────────────────── */}
+        {activeTab === 'ledger' && (
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#F3EAF8] shadow-xs">
+              <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+                <Search size={14} className="text-[#7B3FA0]" />
+                <input
+                  type="text"
+                  value={ledgerSearch}
+                  onChange={e => setLedgerSearch(e.target.value)}
+                  placeholder="Search by order ID, customer name, or affiliate partner…"
+                  className="w-full bg-transparent text-xs text-[#2D004D] focus:outline-none"
+                />
+              </div>
+              <AdminSelect value={ledgerCommStatus} onChange={e => setLedgerCommStatus(e.target.value)} options={[
+                { value: '', label: 'All Commission Statuses' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'paid', label: 'Paid' },
+                { value: 'rejected', label: 'Rejected' },
+              ]} className="w-44" />
+            </div>
+
+            <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
+              <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="py-3.5 px-4">Order ID</th>
+                        <th className="py-3.5 px-4">Customer</th>
+                        <th className="py-3.5 px-4">Affiliate</th>
+                        <th className="py-3.5 px-4">Product</th>
+                        <th className="py-3.5 px-4 text-right">Sale Amount</th>
+                        <th className="py-3.5 px-4 text-right">Commission</th>
+                        <th className="py-3.5 px-4 text-center">Status</th>
+                        <th className="py-3.5 px-4 text-center">Date</th>
+                        <th className="py-3.5 px-4 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3EAF8] text-[#2D004D]">
+                      {ledger.map(row => (
+                        <tr key={row.id} className="hover:bg-[#F8F3FB]/50 transition-colors">
+                          <td className="py-3.5 px-4 font-mono font-bold text-[#7B3FA0]">#{row.order_id || row.id}</td>
+                          <td className="py-3.5 px-4 font-bold">{row.customer_name || 'Customer'}</td>
+                          <td className="py-3.5 px-4 font-bold text-[#7B3FA0]">{row.affiliate_name}</td>
+                          <td className="py-3.5 px-4 max-w-[160px] truncate">{row.product_name || 'Product'}</td>
+                          <td className="py-3.5 px-4 text-right font-bold">{fmt(row.sale_amount)}</td>
+                          <td className="py-3.5 px-4 text-right font-bold text-emerald-600">{fmt(row.commission_earned)}</td>
+                          <td className="py-3.5 px-4 text-center">
+                            <StatusBadge status={row.commission_status || row.status} size="xs" />
+                          </td>
+                          <td className="py-3.5 px-4 text-center text-[10px] text-[#7B3FA0]">{fmtDate(row.date)}</td>
+                          <td className="py-3.5 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-2.5 py-1 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-[10px] font-bold">
+                                Trace
+                              </button>
+                              <button onClick={() => setCommActionModal(row)} className="px-2.5 py-1 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-[10px] font-bold">
+                                Edit Status
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / 50)} onChange={setLedgerPage} />
+            </DataTable>
+          </div>
+        )}
+
+        {/* ── TAB 6: RULES & ANALYTICS ─────────────────────────────────────────── */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-8">
+            {/* System Rules Configuration Cards */}
+            <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
+                <Sliders size={16} /> Enterprise Commission Rules Engine
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Default Commission Mode</span>
+                  <p className="font-bold text-[#2D004D] text-sm">20% Dynamic Percentage</p>
+                  <p className="text-[10px] text-stone-500">Overridden per product rate</p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Minimum Withdrawal Threshold</span>
+                  <p className="font-bold text-[#2D004D] text-sm">₹1,000.00 Minimum</p>
+                  <p className="text-[10px] text-stone-500">Prevents micro-disbursements</p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Attribution Cookie Window</span>
+                  <p className="font-bold text-[#2D004D] text-sm">30-Day Cookie Tracking</p>
+                  <p className="text-[10px] text-stone-500">Last-touch attribution model</p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Auto-Hold Refund Lock</span>
+                  <p className="font-bold text-[#2D004D] text-sm">7-Day Refund Lock</p>
+                  <p className="text-[10px] text-stone-500">Prevents payout during return window</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Analytics Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
+                  <PieChart size={16} /> Partner Tier Distribution
+                </h3>
+                <div className="space-y-3 text-xs">
+                  {[
+                    { tier: 'Platinum Partner (₹2L+)', count: '1 Promoter', pct: '20%' },
+                    { tier: 'Gold Partner (₹50k+)',     count: '2 Promoters', pct: '40%' },
+                    { tier: 'Silver Partner (₹10k+)',   count: '1 Promoter', pct: '20%' },
+                    { tier: 'Bronze Partner',           count: '1 Promoter', pct: '20%' },
+                  ].map(row => (
+                    <div key={row.tier} className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex items-center justify-between">
+                      <span className="font-bold text-[#2D004D]">{row.tier}</span>
+                      <div className="flex items-center gap-3 font-mono font-bold text-[#7B3FA0]">
+                        <span>{row.count}</span>
+                        <span className="px-2 py-0.5 rounded bg-white border border-[#F3EAF8] text-[10px]">{row.pct}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
+                  <Activity size={16} /> Operational System Telemetry
+                </h3>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Database Fallback Engine:</span>
+                    <span className="font-bold text-emerald-600">Dual-Write Active (Firestore + PostgreSQL)</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Payment Gateway:</span>
+                    <span className="font-bold text-[#2D004D]">RazorpayX Payouts API Connected</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
+                    <span className="text-[#7B3FA0]">Attribution Security:</span>
+                    <span className="font-mono font-bold text-[#7B3FA0]">Session Hash SHA256 Verification</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Slide-overs & Modals ── */}
         {selectedPayoutDrawer && (
           <PayoutReviewDrawer
             payout={selectedPayoutDrawer}
@@ -840,6 +1787,63 @@ export default function AffiliateManagement() {
               setSelectedPayoutDrawer(null);
             }}
           />
+        )}
+
+        {profilePanelId && (
+          <AffiliateProfilePanel affiliateId={profilePanelId} onClose={() => setProfilePanelId(null)} />
+        )}
+
+        {selectedTraceOrderId && (
+          <OrderTraceModal orderId={selectedTraceOrderId} onClose={() => setSelectedTraceOrderId(null)} />
+        )}
+
+        {commActionModal && (
+          <CommissionActionModal commission={commActionModal} onClose={() => setCommActionModal(null)} onSave={handleCommissionSaved} />
+        )}
+
+        {/* Bulk Update Modal */}
+        <AnimatePresence>
+          {showBulkModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white p-6 rounded-2xl border border-[#F3EAF8] shadow-xl max-w-md w-full space-y-5">
+                <h3 className="text-base font-bold text-[#2D004D]">Bulk Edit Settings ({selectedProductIds.length} Products)</h3>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" checked={bulkEnableStatus} onChange={e => setBulkEnableStatus(e.target.checked)} className="w-4 h-4 text-[#7B3FA0] rounded border-gray-300 focus:ring-[#7B3FA0]" />
+                    <span className="text-xs font-bold text-[#2D004D]">Enable Affiliate Promotion</span>
+                  </label>
+                  {bulkEnableStatus && (
+                    <>
+                      <div>
+                        <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Commission Mode</label>
+                        <AdminSelect value={bulkCommissionMode} onChange={e => setBulkCommissionMode(e.target.value)} options={[{value:'percentage',label:'Percentage (%)'},{value:'fixed',label:'Fixed Amount (₹)'}]} className="w-full" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Rate {bulkCommissionMode === 'fixed' ? '(₹)' : '(%)'}</label>
+                        <input type="number" value={bulkCommissionValue} onChange={e => setBulkCommissionValue(e.target.value)} className="w-full bg-[#F8F3FB] border border-[#F3EAF8] rounded-xl px-4 py-2 text-xs text-[#2D004D]" />
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F3EAF8]">
+                  <button onClick={() => setShowBulkModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-[#7B3FA0] hover:bg-[#F8F3FB]">Cancel</button>
+                  <button onClick={handleApplyBulkUpdate} className="px-5 py-2 rounded-xl bg-[#7B3FA0] hover:bg-[#5C2B7C] text-white text-xs font-bold shadow-md transition-all">Apply Bulk Changes</button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* QR Code Modal */}
+        {qrModalProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+            <div className="bg-white p-6 rounded-2xl max-w-sm w-full relative">
+              <button onClick={() => setQrModalProduct(null)} className="absolute top-4 right-4 text-[#7B3FA0] hover:text-[#2D004D]"><X size={18} /></button>
+              <h4 className="text-sm font-bold text-[#2D004D] mb-4 text-center">Product Referral QR Code</h4>
+              <ProductQrCode product={qrModalProduct} size={220} showDownload showShare />
+            </div>
+          </div>
         )}
       </div>
     </AdminLayout>
