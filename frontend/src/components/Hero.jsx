@@ -172,8 +172,8 @@ export default function Hero() {
 
 const styles = {
   section: {
-    minHeight: '100vh',
-    padding: '130px clamp(1rem, 4vw, 3rem) 70px',
+    minHeight: '115vh',
+    padding: '140px clamp(1rem, 4vw, 3rem) 160px',
     position: 'relative',
     zIndex: 1,
     overflow: 'hidden',
@@ -203,7 +203,7 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.50) 0%, rgba(13, 5, 24, 0.65) 60%, rgba(13, 5, 24, 0.88) 100%)',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.45) 0%, rgba(13, 5, 24, 0.60) 65%, rgba(13, 5, 24, 0.85) 100%)',
     backdropFilter: 'blur(1px)',
   },
   bottomSoftBlend: {
@@ -211,8 +211,8 @@ const styles = {
     bottom: 0,
     left: 0,
     right: 0,
-    height: '90px',
-    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0) 0%, rgba(250, 246, 240, 0.40) 60%, #FAF6F0 100%)',
+    height: '110px',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0) 0%, rgba(250, 246, 240, 0.35) 60%, #FAF6F0 100%)',
     pointerEvents: 'none',
     zIndex: 2,
   },
