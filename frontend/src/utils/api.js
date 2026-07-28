@@ -17,14 +17,21 @@ import { syncWithBackend, clearBackendToken } from '../services/authService.js';
 
 const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
-const BACKEND_URL = (() => {
-  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+/** Production-aware backend API base URL. Import this instead of computing VITE_API_BASE_URL inline. */
+export const BACKEND_URL = (() => {
+  // On production (non-localhost), always point directly at the Render backend.
+  // VITE_BACKEND_ORIGIN overrides the hardcoded fallback if set on the Vercel project.
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}${base.startsWith('/') ? base : '/' + base}`;
+    return `${origin.replace(/\/$/, '')}/api`;
   }
-  return base;
+  // Dev: use VITE_API_BASE_URL (defaults to http://localhost:8000/api)
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 })();
+
+/** Backend origin (no /api suffix) — use for constructing media/download URLs */
+export const BACKEND_ORIGIN = BACKEND_URL.replace(/\/api\/?$/, '');
+
 
 let globalErrorListener = null;
 
