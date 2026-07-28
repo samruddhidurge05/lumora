@@ -1,28 +1,28 @@
 import React, { useState, useEffect, useRef, useId } from 'react';
-import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid, Filter, Layers, Sparkles } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 'lucide-react';
 
 // ─── 1. PAGE HEADER ────────────────────────────────────────────────────────
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-1.5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 min-w-0 max-w-full">
+      <div className="flex-1 min-w-0 max-w-full">
+        <div className="flex items-center gap-3 mb-1.5 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
             MARKETPLACE ADMINISTRATION
           </span>
         </div>
-        <h1 className="text-xl sm:text-2xl md:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5">
+        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5 break-words">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed">
+          <p className="text-[#7B3FA0] text-xs font-light max-w-2xl leading-relaxed break-words">
             {subtitle}
           </p>
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 min-w-0 w-full sm:w-auto justify-start sm:justify-end">
           {actions}
         </div>
       )}
@@ -39,7 +39,7 @@ export function StatsGrid({ children, columns = 4 }) {
       : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
       
   return (
-    <div className={`${gridColsClass} gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8`}>
+    <div className={`stats-grid ${gridColsClass} gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8`}>
       {children}
     </div>
   );
@@ -159,6 +159,7 @@ export function FilterBar({
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
               className="w-full pl-10 pr-4 h-[42px] glass-input rounded-xl text-xs"
             />
           </div>
@@ -173,7 +174,7 @@ export function FilterBar({
       </div>
       
       {actions && (
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap md:flex-shrink-0">
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap min-w-0">
           {actions}
         </div>
       )}
@@ -181,7 +182,6 @@ export function FilterBar({
   );
 }
 
-// ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
 // ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
 // Standardized card wrapper for table sections. Children are rendered directly
 // inside the card — they must include their own <table> / <tr> / <td> structure.
@@ -473,7 +473,7 @@ export function AdminSelect({
           role="listbox"
           tabIndex={-1}
           aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] w-max max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
         >
           {parsedOptions.map((opt, index) => {
             const isSelected = String(opt.value) === String(value);

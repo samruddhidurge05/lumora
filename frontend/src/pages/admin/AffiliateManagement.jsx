@@ -206,7 +206,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
           </div>
 
           {/* Sub Navigation Bar */}
-          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8]">
+          <div className="flex items-center gap-1 p-2 bg-[#F8F3FB] border-b border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x">
             {[
               { id: 'audit', label: 'Financial Audit' },
               { id: 'timeline', label: 'Audit Timeline' },
@@ -772,28 +772,26 @@ function AffiliateProfilePanel({ affiliateId, onClose }) {
 
               {/* Sub-tab 6: Timeline */}
               {subTab === 'timeline' && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Live Activity Stream</h4>
-                  <div className="pl-3 border-l-2 border-[#7B3FA0]/30 space-y-3 text-xs">
-                    <div className="relative pl-3">
-                      <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#7B3FA0]" />
-                      <p className="font-bold text-[#2D004D]">Profile Active</p>
-                      <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(profile.joined_date)}</p>
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Promoter Lifecycle Timeline</h4>
+                  <div className="border-l-2 border-[#7B3FA0]/30 pl-4 space-y-4 text-xs">
+                    <div className="relative pl-2 space-y-1">
+                      <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-[#7B3FA0] border-2 border-white" />
+                      <p className="font-bold text-[#2D004D]">Affiliate Activated</p>
+                      <p className="text-[10px] text-[#7B3FA0]">{fmtDate(profile.joined_date)}</p>
                     </div>
-                    {profile.recent_commissions?.map(c => (
-                      <div key={c.id} className="relative pl-3">
-                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-emerald-500" />
-                        <p className="font-bold text-[#2D004D]">Earned Commission ₹{c.amount}</p>
-                        <p className="text-[9px] text-[#7B3FA0] font-mono">{fmtDate(c.date)}</p>
-                      </div>
-                    ))}
+                    <div className="relative pl-2 space-y-1">
+                      <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-[#7B3FA0] border-2 border-white" />
+                      <p className="font-bold text-[#2D004D]">First Sale Attributed</p>
+                      <p className="text-[10px] text-[#7B3FA0]">Attributed via unique referral link</p>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Sub-tab 7: Analytics */}
               {subTab === 'analytics' && (
-                <div className="space-y-3 text-xs">
+                <div className="space-y-4 text-xs">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#2D004D]">Performance Metrics</h4>
                   <div className="p-3 bg-[#F8F3FB] rounded-xl border border-[#F3EAF8] flex justify-between">
                     <span className="text-[#7B3FA0]">Conversion Rate</span>
@@ -876,13 +874,13 @@ function CommissionActionModal({ commission, onClose, onSave }) {
 // ── Small reusable KPI card ───────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, accent = false }) {
   return (
-    <div className={`p-5 rounded-2xl border shadow-xs space-y-2 ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
-      <div className="flex items-center justify-between">
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{label}</span>
-        {Icon && <Icon size={16} className={accent ? 'text-white/60' : 'text-[#7B3FA0]'} />}
+    <div className={`p-3.5 sm:p-5 rounded-2xl border shadow-xs space-y-1.5 w-full min-w-0 max-w-full overflow-hidden ${accent ? 'bg-gradient-to-br from-[#7B3FA0] via-[#5C2B7C] to-[#2D004D] border-transparent text-white' : 'bg-white border-[#F3EAF8]'}`}>
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`}>{label}</span>
+        {Icon && <Icon size={15} className={`shrink-0 ${accent ? 'text-white/80' : 'text-[#7B3FA0]'}`} />}
       </div>
-      <div className={`text-xl font-serif font-bold ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
-      {sub && <div className={`text-[10px] font-medium ${accent ? 'text-white/60' : 'text-[#7B3FA0]'}`}>{sub}</div>}
+      <div className={`text-base sm:text-xl font-serif font-bold truncate ${accent ? 'text-white' : 'text-[#2D004D]'}`}>{value}</div>
+      {sub && <div className={`text-[9px] sm:text-[10px] font-medium truncate ${accent ? 'text-white/70' : 'text-[#7B3FA0]'}`}>{sub}</div>}
     </div>
   );
 }
@@ -1201,6 +1199,8 @@ export default function AffiliateManagement() {
   const [payoutsTotal, setPayoutsTotal]           = useState(0);
   const [payoutsPage, setPayoutsPage]             = useState(1);
   const [payoutStatusFilter, setPayoutStatusFilter] = useState('pending');
+  const [selectedPayoutDrawer, setSelectedPayoutDrawer] = useState(null);
+  const [payoutActionLoading, setPayoutActionLoading]   = useState(false);
   const [showSandboxModal, setShowSandboxModal]         = useState(false);
   const [showEnterprisePayoutModal, setShowEnterprisePayoutModal] = useState(null);
 
@@ -1440,37 +1440,37 @@ export default function AffiliateManagement() {
 
   return (
     <AdminLayout activePage="affiliate-management">
-      <div className="p-6 md:p-10 space-y-8 max-w-screen-2xl mx-auto">
+      <div className="p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-full overflow-x-hidden min-w-0">
         {/* Header Banner */}
         <div className="flex flex-col gap-4 border-b border-[#F3EAF8] pb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[9px] font-black tracking-widest uppercase">
                   ENTERPRISE CONSOLE
                 </span>
                 {IS_SANDBOX_ENABLED && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
-                    <Beaker size={13} /> SANDBOX DEV MODE ACTIVE
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-mono font-bold uppercase flex items-center gap-1">
+                    <Beaker size={12} /> SANDBOX DEV MODE ACTIVE
                   </span>
                 )}
-                <span className="text-xs text-[#7B3FA0] font-bold flex items-center gap-1">
-                  <ShieldCheck size={13} /> Verified Attribution Engine
+                <span className="text-[11px] text-[#7B3FA0] font-bold flex items-center gap-1">
+                  <ShieldCheck size={12} /> Verified Attribution Engine
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-serif text-[#2D004D] font-bold">Affiliate Operations Console</h1>
-              <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-bold leading-tight break-words">Affiliate Operations Console</h1>
+              <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl leading-relaxed">
                 Restored executive dashboard, promoters CRM, products matrix, sales ledger, and RazorpayX payouts.
               </p>
             </div>
             <button onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all shadow-md">
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2D004D] text-white text-xs font-bold hover:bg-[#7B3FA0] transition-all shadow-md shrink-0 min-h-[42px]">
               <ArrowDownToLine size={14} /> Export Operations CSV
             </button>
           </div>
 
           {/* Segmented Navigation Bar (6 Simplified Tabs) */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x">
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F8F3FB] border border-[#F3EAF8] overflow-x-auto scrollbar-none snap-x max-w-full">
             {TABS.map(tab => {
               const IconComp = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1486,25 +1486,25 @@ export default function AffiliateManagement() {
 
         {/* ── TAB 1: EXECUTIVE OVERVIEW ────────────────────────────────────────── */}
         {activeTab === 'overview' && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Immediate Action Alert Queue */}
             {payoutsTotal > 0 && (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-4 shadow-xs">
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800"><AlertTriangle size={18} /></div>
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 shrink-0"><AlertTriangle size={18} /></div>
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider">Immediate Action Queue</h3>
-                    <p className="text-xs">There are <strong>{payoutsTotal}</strong> pending withdrawal request(s) requiring financial review before payout cycle cutoff.</p>
+                    <p className="text-xs leading-relaxed">There are <strong>{payoutsTotal}</strong> pending withdrawal request(s) requiring financial review before payout cycle cutoff.</p>
                   </div>
                 </div>
-                <button onClick={() => setActiveTab('payouts')} className="px-4 py-2 rounded-xl bg-amber-800 text-white text-xs font-bold hover:bg-amber-900 transition-all shrink-0">
+                <button onClick={() => setActiveTab('payouts')} className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-800 text-white text-xs font-bold hover:bg-amber-900 transition-all shrink-0 min-h-[42px] flex items-center justify-center">
                   Audit Requests Queue →
                 </button>
               </div>
             )}
 
             {/* Executive KPIs Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
               <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} accent />
               <KpiCard label="Pending Requests"    value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} />
               <KpiCard label="Today's Commission"  value={fmt(kpis?.today_commission ?? 18.50)} sub="Earned Today" icon={Zap} />
@@ -1692,8 +1692,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="py-3.5 px-4">Promoter</th>
@@ -1790,8 +1790,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
                       <th className="py-3.5 px-4 w-10">
@@ -2081,6 +2081,7 @@ export default function AffiliateManagement() {
             <div className="bg-white p-6 rounded-2xl max-w-sm w-full relative">
               <button onClick={() => setQrModalProduct(null)} className="absolute top-4 right-4 text-[#7B3FA0] hover:text-[#2D004D]"><X size={18} /></button>
               <h4 className="text-sm font-bold text-[#2D004D] mb-4 text-center">Product Referral QR Code</h4>
+              <ProductQrCode product={qrModalProduct} size={220} showDownload showShare />
             </div>
           </div>
         )}

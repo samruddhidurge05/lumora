@@ -63,7 +63,7 @@ export default function AffiliatePayoutModal({ payout, systemConfig, onClose, on
           </div>
 
           {/* Payment Routing & Account Details */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="bg-stone-50 border border-stone-200/70 p-3.5 rounded-2xl space-y-1">
               <span className="text-[10px] font-medium text-stone-500 block">Payout Method</span>
               <p className="font-bold text-[#2D004D] uppercase flex items-center gap-1.5">
