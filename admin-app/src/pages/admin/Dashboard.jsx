@@ -465,7 +465,7 @@ export default function Dashboard() {
         </StatsGrid>
 
         {/* --- OPERATIONAL COMMAND CENTER LAYER --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8 md:mb-12">
           
           {/* 1. Live Activity Stream (Event Log) - 4 cols */}
           <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
