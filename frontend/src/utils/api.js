@@ -15,11 +15,13 @@
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
 
+const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+
 const BACKEND_URL = (() => {
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  if (base.startsWith('/') && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
-    return `${origin.replace(/\/$/, '')}${base}`;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
+    return `${origin.replace(/\/$/, '')}${base.startsWith('/') ? base : '/' + base}`;
   }
   return base;
 })();

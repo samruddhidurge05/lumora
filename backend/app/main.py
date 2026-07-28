@@ -865,6 +865,7 @@ _GUARANTEED_ORIGINS = [
     "http://localhost:3000",
     "https://lumora-admin-nine.vercel.app",
     "https://lumora.vercel.app",
+    "https://lumora-durgesamruddhi-gmailcoms-projects.vercel.app",
 ]
 _cors_origins_raw = os.getenv("CORS_ORIGINS", "")
 _env_origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
