@@ -7,37 +7,37 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// Stunning, attractive Unsplash 3D & digital art background images (no product UI screenshots)
-const BACKGROUND_ARTWORK_IMAGES = [
+// High-resolution Unsplash photos from 'digital products website' search query
+const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
   {
     id: 1,
-    title: 'Violet Silk 3D Fluid Waves',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Product Analytics & Web Dashboard',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 2,
-    title: 'Iridescent 3D Gradient Sphere',
-    image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1920&q=80',
+    title: 'Modern Web Design & Digital Product UI',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 3,
-    title: 'Soft Glowing Prism & Pastel Gradient',
-    image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=1920&q=80',
+    title: 'SaaS Product Interface & Data Metrics',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 4,
-    title: 'Cyberpunk Neon Mesh Texture',
-    image: 'https://images.unsplash.com/photo-1614680376593-902f749f7cfc?auto=format&fit=crop&w=1920&q=80',
+    title: 'Digital Design System & Mobile Prototypes',
+    image: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 5,
-    title: 'Futuristic 3D Glass Geometry',
-    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1920&q=80',
+    title: 'Mobile App UX/UI Product Design',
+    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
   },
   {
     id: 6,
-    title: 'Ethereal Cosmic Color Flow',
-    image: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1920&q=80',
+    title: 'Creative Web Studio & Product Showcase',
+    image: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1920&q=80',
   }
 ];
 
@@ -47,14 +47,14 @@ export default function Hero() {
   const heroRef = useRef(null);
   const [localSearch, setLocalSearch] = useState('');
   
-  // Current active full background artwork index
+  // Active background image index
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Cycle background images every 5 seconds (5000ms) with smooth opacity fade
+  // Cycle background images every 4 seconds (4000ms) with smooth opacity fade
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % BACKGROUND_ARTWORK_IMAGES.length);
-    }, 5000);
+      setCurrentIndex((prev) => (prev + 1) % UNSPLASH_DIGITAL_PRODUCT_IMAGES.length);
+    }, 4000);
     return () => clearInterval(timer);
   }, []);
 
@@ -82,83 +82,111 @@ export default function Hero() {
     navigateTo('marketplace');
   };
 
-  const activeArtwork = BACKGROUND_ARTWORK_IMAGES[currentIndex];
+  const activeImage = UNSPLASH_DIGITAL_PRODUCT_IMAGES[currentIndex];
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── ATTRACTIVE UNSPLASH 3D/ARTWORK BACKGROUND CAROUSEL ── */}
+      {/* ── HIGH VISIBILITY FULL-SCREEN UNSPLASH BACKGROUND SLIDESHOW ── */}
       <div style={styles.fullBgWrapper}>
-        {BACKGROUND_ARTWORK_IMAGES.map((item, idx) => (
+        {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
           <div
             key={item.id}
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 0.25 : 0, // Vibrant opacity
-              transform: idx === currentIndex ? 'scale(1.10)' : 'scale(1.00)', // Ken Burns slow scale
-              transition: 'opacity 2000ms ease-in-out, transform 5000ms ease-out',
+              opacity: idx === currentIndex ? 0.75 : 0, // FULLY VISIBLE high opacity (0.75)
+              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)', // Ken Burns slow zoom
+              transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1), transform 4000ms ease-out',
             }}
           />
         ))}
 
-        {/* Soft Theme Overlay ensuring text contrast */}
+        {/* Minimal Vignette & Soft Gradient Tint to preserve edge contrast */}
         <div style={styles.fullBgOverlay} />
       </div>
 
-      {/* ── CENTERED HERO CONTENT ── */}
+      {/* ── CENTERED HERO GLASS PANEL (Ensures text legibility while background is fully visible) ── */}
       <div style={styles.container}>
-        {/* 1. Pill Badge */}
-        <div className="hero-badge" style={styles.badge}>
-          <Sparkles size={13} color="#7B3FA0" />
-          <span className="text-sans" style={styles.badgeText}>
-            PREMIUM DIGITAL MARKETPLACE
-          </span>
-        </div>
+        {/* Glass Card Wrapper around Hero Content */}
+        <div style={styles.heroGlassCard}>
+          {/* 1. Pill Badge */}
+          <div className="hero-badge" style={styles.badge}>
+            <Sparkles size={13} color="#7B3FA0" />
+            <span className="text-sans" style={styles.badgeText}>
+              PREMIUM DIGITAL MARKETPLACE
+            </span>
+          </div>
 
-        {/* 2. Editorial Headline */}
-        <h1 className="hero-title" style={styles.title}>
-          Discover & Sell<br />
-          <span style={styles.titleHighlight}>Premium Digital</span><br />
-          Products
-        </h1>
+          {/* 2. Editorial Headline */}
+          <h1 className="hero-title" style={styles.title}>
+            Discover & Sell<br />
+            <span style={styles.titleHighlight}>Premium Digital</span><br />
+            Products
+          </h1>
 
-        {/* 3. Subtitle */}
-        <p className="hero-sub" style={styles.subtext}>
-          The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
-        </p>
+          {/* 3. Subtitle */}
+          <p className="hero-sub" style={styles.subtext}>
+            The curated marketplace for UI kits, templates, AI tools, and digital assets — crafted by world-class creators.
+          </p>
 
-        {/* 4. Action Buttons */}
-        <div className="hero-ctas" style={styles.ctas}>
-          <button 
-            onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
-            className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
-            style={styles.ctaSolid}
-          >
-            {user ? 'Go to Marketplace' : 'Get Started'}
-            <ArrowRight size={16} />
-          </button>
-
-          {!user && (
+          {/* 4. Action Buttons */}
+          <div className="hero-ctas" style={styles.ctas}>
             <button 
-              onClick={() => navigateTo('login')} 
-              className="btn-premium clickable" 
-              style={styles.ctaOutline}
+              onClick={() => navigateTo(user ? 'marketplace' : 'register-selection')} 
+              className="btn-premium btn-premium-solid btn-shine-sweep clickable" 
+              style={styles.ctaSolid}
             >
-              Sign In
+              {user ? 'Go to Marketplace' : 'Get Started'}
+              <ArrowRight size={16} />
             </button>
-          )}
 
-          <button 
-            onClick={() => navigateTo('marketplace')} 
-            className="btn-premium clickable" 
-            style={styles.ctaGlass}
-          >
-            <Compass size={15} color="#7B3FA0" />
-            Explore Products
-          </button>
+            {!user && (
+              <button 
+                onClick={() => navigateTo('login')} 
+                className="btn-premium clickable" 
+                style={styles.ctaOutline}
+              >
+                Sign In
+              </button>
+            )}
+
+            <button 
+              onClick={() => navigateTo('marketplace')} 
+              className="btn-premium clickable" 
+              style={styles.ctaGlass}
+            >
+              <Compass size={15} color="#7B3FA0" />
+              Explore Products
+            </button>
+          </div>
+
+          {/* 5. Live Background Image Title Badge & Indicators */}
+          <div style={styles.imageIndicatorBadge}>
+            <div style={styles.livePulseDot} />
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#2D004D' }}>
+              BACKGROUND: {activeImage.title}
+            </span>
+            <div style={{ display: 'flex', gap: '5px', marginLeft: 'auto', alignItems: 'center' }}>
+              {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  style={{
+                    width: i === currentIndex ? '18px' : '6px',
+                    height: '6px',
+                    borderRadius: '999px',
+                    background: i === currentIndex ? '#7B3FA0' : 'rgba(123, 63, 160, 0.35)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* 5. Centered Search Bar & Quick Categories */}
+        {/* 6. Centered Search Bar & Quick Categories */}
         <div className="hero-search-bar glass-card" style={styles.searchContainer}>
           <form onSubmit={handleSearchSubmit} style={styles.searchForm}>
             <Search size={18} color="#7B3FA0" />
@@ -210,7 +238,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* 6. Stats Bar at Bottom */}
+        {/* 7. Stats Bar at Bottom */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
             { icon: <Users size={16} color="#7B3FA0" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(123, 63, 160, 0.10)' },
@@ -234,6 +262,10 @@ export default function Hero() {
 
       {/* Responsive CSS */}
       <style>{`
+        @keyframes pulseDot {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.5; }
+        }
         @media (max-width: 768px) {
           .hero-search-bar { flex-direction: column !important; gap: 14px !important; }
         }
@@ -245,7 +277,7 @@ export default function Hero() {
 const styles = {
   section: {
     minHeight: '100vh',
-    padding: '130px clamp(1.5rem, 5vw, 4rem) 60px',
+    padding: '130px clamp(1rem, 4vw, 3rem) 60px',
     position: 'relative',
     zIndex: 1,
     overflow: 'hidden',
@@ -253,10 +285,10 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#FAF6F0',
+    background: '#1A0D28', // Dark base to make images pop!
   },
 
-  /* Background Wrapper & Ken Burns Opacity Slides */
+  /* Full Background Wrapper & Visible Slides */
   fullBgWrapper: {
     position: 'absolute',
     inset: 0,
@@ -271,12 +303,12 @@ const styles = {
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     willChange: 'opacity, transform',
+    filter: 'brightness(0.90) contrast(1.05)',
   },
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(250, 246, 240, 0.75)', // Elegant theme overlay
-    backdropFilter: 'blur(2px)', // Soft blur
+    background: 'radial-gradient(circle at center, rgba(26, 13, 40, 0.25) 0%, rgba(26, 13, 40, 0.55) 70%, rgba(26, 13, 40, 0.85) 100%)',
   },
 
   /* Relative Overlay Container (z-10) */
@@ -288,9 +320,26 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '24px',
+    gap: '20px',
     position: 'relative',
     zIndex: 10,
+  },
+
+  /* Hero Glass Card around central typography to make high opacity background pop! */
+  heroGlassCard: {
+    width: '100%',
+    padding: '36px clamp(1.2rem, 4vw, 3rem)',
+    borderRadius: '32px',
+    background: 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    border: '1.5px solid rgba(255, 255, 255, 0.95)',
+    boxShadow: '0 24px 64px rgba(0, 0, 0, 0.25), 0 2px 0 rgba(255, 255, 255, 0.8) inset',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '20px',
   },
 
   /* Badge */
@@ -300,9 +349,8 @@ const styles = {
     gap: '8px',
     padding: '7px 16px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.92)',
+    background: 'rgba(255, 255, 255, 0.95)',
     border: '1px solid rgba(192, 132, 252, 0.50)',
-    backdropFilter: 'blur(12px)',
     boxShadow: '0 4px 16px rgba(90, 30, 126, 0.08)',
   },
   badgeText: {
@@ -386,7 +434,27 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    backdropFilter: 'blur(10px)',
+  },
+
+  /* Live Background Image Indicator Badge */
+  imageIndicatorBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '6px 16px',
+    borderRadius: '999px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    border: '1px solid rgba(192, 132, 252, 0.40)',
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+    marginTop: '6px',
+    width: 'fit-content',
+  },
+  livePulseDot: {
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    background: '#16A34A',
+    animation: 'pulseDot 1.8s infinite ease-in-out',
   },
 
   /* Search Container */
@@ -400,7 +468,7 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(30px)',
     border: '1.5px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 16px 48px rgba(90, 30, 126, 0.14)',
+    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.20)',
     width: '100%',
     maxWidth: '780px',
     marginTop: '6px',
@@ -473,7 +541,7 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.90)',
     backdropFilter: 'blur(28px)',
     border: '1px solid rgba(255, 255, 255, 0.90)',
-    boxShadow: '0 10px 32px rgba(90, 30, 126, 0.10)',
+    boxShadow: '0 10px 32px rgba(0, 0, 0, 0.20)',
     width: '100%',
     maxWidth: '820px',
     marginTop: '6px',
