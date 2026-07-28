@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import Hero from '../../components/Hero';
 import ProductImage from '../../components/product/ProductImage';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -180,8 +181,6 @@ export default function Home() {
   const { user } = useAuth();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const { scrollYProgress } = useScroll();
-  const heroY       = useTransform(scrollYProgress, [0, 0.25], [0, -50]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.20], [1, 0.25]);
 
   // ── Deduplicate by ID (backend + JSON can both emit same product) ──
   const seenIds = new Set();
@@ -240,82 +239,7 @@ export default function Home() {
       <Navbar />
 
       {/* ═══════════ 1. HERO ═══════════ */}
-      <motion.div style={{ y:heroY, opacity:heroOpacity }}>
-        <section className="lumora-hero-section" style={{ minHeight:'100vh', position:'relative', display:'flex', alignItems:'center', padding:'clamp(6rem,12vw,10rem) clamp(1.5rem,6vw,7rem) 5rem', overflow:'hidden' }}>
-
-          <div style={{ maxWidth:'1280px', margin:'0 auto', width:'100%', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'64px', alignItems:'center', position:'relative', zIndex:2 }} className="hero-grid">            {/* LEFT */}
-            <div>
-              <motion.div initial={{opacity:0,y:22}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.1}}
-                style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'6px 16px', borderRadius:'100px', background:'rgba(220,198,255,0.30)', border:'1px solid rgba(220,198,255,0.55)', marginBottom:'28px' }}>
-                <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#7B3FA0', boxShadow:'0 0 8px rgba(123,63,160,.6)' }} />
-                <span style={{ fontSize:'.75rem', fontWeight:700, color:'#5A1E7E', letterSpacing:'.05em' }}>PREMIUM DIGITAL MARKETPLACE</span>
-              </motion.div>
-
-              <motion.h1 initial={{opacity:0,y:44}} animate={{opacity:1,y:0}} transition={{duration:.95,delay:.25,ease:[.16,1,.3,1]}}
-                className="home-hero-title"
-                style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(3rem,5.5vw,5.5rem)', fontWeight:400, lineHeight:1.06, color:'#2D004D', letterSpacing:'-.02em', marginBottom:'24px' }}>
-                Discover &amp; Sell<br/>
-                <span style={{ background:'linear-gradient(135deg,#7B3FA0,#C084FC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontStyle:'italic' }}>Premium Digital</span><br/>
-                Products
-              </motion.h1>
-
-              <motion.p initial={{opacity:0,y:28}} animate={{opacity:1,y:0}} transition={{duration:.8,delay:.4}}
-                className="home-hero-sub"
-                style={{ fontSize:'1.05rem', lineHeight:1.7, color:'#6B4F7A', maxWidth:'460px', marginBottom:'40px' }}>
-                The curated marketplace for UI kits, templates, AI tools and digital assets — crafted by world-class creators.
-              </motion.p>
-
-              <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.55}}
-                className="home-hero-ctas"
-                style={{ display:'flex', gap:'12px', flexWrap:'wrap', marginBottom:'52px' }}>
-                {user ? (
-                  <>
-                    <button onClick={()=>navigateTo('marketplace')} className="btn-premium btn-premium-solid" style={{ padding:'14px 32px', fontSize:'.95rem', borderRadius:'14px', gap:'8px' }}>Browse Products <ArrowRight size={16}/></button>
-                    <button onClick={()=>navigateTo('dashboard')}   className="btn-premium" style={{ padding:'14px 32px', fontSize:'.95rem', borderRadius:'14px' }}>My Dashboard</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={()=>navigateTo('register-selection')} className="btn-premium btn-premium-solid" style={{ padding:'14px 32px', fontSize:'.95rem', borderRadius:'14px', gap:'8px' }}>Get Started <ArrowRight size={16}/></button>
-                    <button onClick={()=>navigateTo('login-selection')}        className="btn-premium" style={{ padding:'14px 32px', fontSize:'.95rem', borderRadius:'14px' }}>Sign In</button>
-                  </>
-                )}
-              </motion.div>
-
-              {/* Stats */}
-              <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7,delay:.7}}
-                className="home-hero-stats"
-                style={{ display:'flex', gap:'36px', flexWrap:'wrap', paddingTop:'28px', borderTop:'1px solid rgba(220,198,255,.25)' }}>
-                {[{v:'103',s:'+',l:'Products'},{v:'45',s:'K+',l:'Customers'},{v:'16',s:'Cr+',l:'Earnings'}].map((s,i)=>(
-                  <div key={i}>
-                    <div style={{ fontFamily:'var(--font-editorial)', fontSize:'2rem', fontWeight:400, color:'#2D004D', lineHeight:1 }}><Counter end={s.v} suffix={s.s}/></div>
-                    <div style={{ fontSize:'.72rem', color:'#8B6B5B', fontWeight:600, marginTop:'4px' }}>{s.l}</div>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* RIGHT — floating glass cards */}
-            <div style={{ position:'relative', height:'520px' }} className="hero-cards">
-              {[
-                { src:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80', style:{ top:'8%', left:'4%', width:'320px', height:'200px', transform:'rotate(-5deg)' }},
-                { src:'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80', style:{ top:'33%', right:'4%', width:'300px', height:'220px', transform:'rotate(4deg)' }},
-                { src:'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80', style:{ bottom:'4%', left:'14%', width:'260px', height:'180px', transform:'rotate(-2deg)' }},
-              ].map((c,i)=>(
-                <motion.div key={i} initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} transition={{duration:1,delay:.4+i*.12,ease:[.16,1,.3,1]}}
-                  style={{ position:'absolute', ...c.style, borderRadius:'18px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.55)', boxShadow:'0 20px 50px rgba(90,30,126,.14)', ...c.style }}>
-                  <img src={c.src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                </motion.div>
-              ))}
-              {/* Trend pill */}
-              <motion.div initial={{opacity:0,scale:.8}} animate={{opacity:1,scale:1}} transition={{duration:.6,delay:1.0}}
-                style={{ position:'absolute', bottom:'14px', right:0, padding:'12px 18px', borderRadius:'16px', ...glass({ padding:'12px 18px', borderRadius:'16px', display:'flex', alignItems:'center', gap:'12px' }) }}>
-                <div style={{ width:'36px', height:'36px', borderRadius:'10px', background:'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display:'flex', alignItems:'center', justifyContent:'center' }}><TrendingUp size={16} color="#fff"/></div>
-                <div><div style={{ fontSize:'.68rem', fontWeight:700, color:'#8B6B5B' }}>THIS WEEK</div><div style={{ fontSize:'.85rem', fontWeight:700, color:'#2D004D' }}>+2,400 sales</div></div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-      </motion.div>
+      <Hero />
 
       {/* ═══════════ 2. CATEGORIES ═══════════ */}
       <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
