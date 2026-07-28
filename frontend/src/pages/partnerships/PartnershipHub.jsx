@@ -205,8 +205,8 @@ export default function PartnershipHub() {
                       ))}
                     </ul>
 
-                    <button 
-                      className={`btn-premium ${hoveredButton === 'affiliate' ? 'btn-premium-solid' : ''}`} 
+                    <button
+                      className={`btn-premium ${hoveredButton === 'affiliate' ? 'btn-premium-solid' : ''}`}
                       onMouseEnter={() => setHoveredButton('affiliate')}
                       onMouseLeave={() => setHoveredButton(null)}
                       style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
@@ -261,8 +261,8 @@ export default function PartnershipHub() {
                       ))}
                     </ul>
 
-                    <button 
-                      className={`btn-premium ${hoveredButton === 'vendor' ? 'btn-premium-solid' : ''}`} 
+                    <button
+                      className={`btn-premium ${hoveredButton === 'vendor' ? 'btn-premium-solid' : ''}`}
                       onMouseEnter={() => setHoveredButton('vendor')}
                       onMouseLeave={() => setHoveredButton(null)}
                       style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
