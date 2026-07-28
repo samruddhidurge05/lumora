@@ -24,20 +24,22 @@ const CATEGORIES = [
   'Productivity Tools','Social Media Kits','AI Tools','React Templates',
 ];
 
-/* ── Upload a file to Firebase Storage, return a public download URL ─────── */
+/* ── Upload a file to the backend storage, return a public download URL ─── */
 async function uploadToFirebase(file, folder, onProgress) {
-  const uid   = localStorage.getItem('lumora_backend_uid') || 'vendor';
-  const ext   = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-  const ts    = Date.now();
-  const path  = `${folder}/${uid}/${ts}_${file.name}`;
-  const url   = await uploadFile(file, path, onProgress);
+  // Determine whether this is an image or a product file based on folder + extension
+  const imageExts = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+  const isImage = folder.includes('preview') || folder.includes('image') || imageExts.test(file.name);
+  const type = isImage ? 'image' : 'file';
+
+  const result = await uploadFile(file, type, onProgress);
   return {
-    url,
-    relativeUrl: path,
+    url:         result.downloadUrl,
+    relativeUrl: result.storagePath,
     filename:    file.name,
-    sizeKb:      Math.round(file.size / 1024),
+    sizeKb:      Math.round((result.fileSize || file.size) / 1024),
   };
 }
+
 
 /* ── Compress image in-browser before uploading ──────────────────────────── */
 function compressImageToBlob(file, maxPx = 800, quality = 0.80) {

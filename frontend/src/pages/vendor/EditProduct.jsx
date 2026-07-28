@@ -25,7 +25,7 @@ const CATEGORIES = [
   'Productivity Tools','Social Media Kits','AI Tools','React Templates',
 ];
 
-/* ── Compress and upload preview image to Firebase Storage ───────────────── */
+/* ── Compress and upload preview image to backend storage ───────────────── */
 async function uploadImageToFirebase(file, maxPx = 800, quality = 0.80) {
   // 1. Compress client-side
   const compressed = await new Promise((resolve, reject) => {
@@ -51,10 +51,9 @@ async function uploadImageToFirebase(file, maxPx = 800, quality = 0.80) {
     reader.readAsDataURL(file);
   });
 
-  // 2. Upload to Firebase Storage via existing storageService.js
-  const uid  = localStorage.getItem('lumora_backend_uid') || 'vendor';
-  const path = `product-previews/${uid}/${Date.now()}_${compressed.name}`;
-  return await uploadFile(compressed, path);  // returns Firebase download URL
+  // 2. Upload to backend storage — pass type 'image' so it goes to /api/uploads/image
+  const result = await uploadFile(compressed, 'image');
+  return result.downloadUrl;  // return the URL string, not the whole object
 }
 
 function Stars({ rating }) {
@@ -213,16 +212,14 @@ export default function EditProduct() {
     setSaveError('');
     setUploadingFile(true); setFilePct(5);
     try {
-      const uid  = localStorage.getItem('lumora_backend_uid') || 'vendor';
-      const ts   = Date.now();
-      const path = `product-files/${uid}/${ts}_${file.name}`;
-      const url = await uploadFile(file, path, (pct) => {
+      // Pass type 'file' so it routes to /api/uploads/ (accepts ZIP/PDF/etc.)
+      const result = await uploadFile(file, 'file', (pct) => {
         setFilePct(Math.round(pct));
       });
       setFilePct(100);
-      set('file_url', url);
+      set('file_url', result.downloadUrl);
       set('fileName', file.name);
-      set('file_size', `${Math.round(file.size / 1024)} KB`);
+      set('file_size', `${Math.round((result.fileSize || file.size) / 1024)} KB`);
     } catch (err) {
       setSaveError(`File upload failed: ${err.message}`);
     } finally {
@@ -247,19 +244,17 @@ export default function EditProduct() {
     }
   };
 
-  /* ── Preview video: upload to Firebase Storage ─────────────────────── */
+  /* ── Preview video: upload to backend storage ─────────────────────── */
   const handleVideoChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingVideo(true); setVideoPct(5);
     setSaveError('');
     try {
-      const uid  = localStorage.getItem('lumora_backend_uid') || 'vendor';
-      const ts   = Date.now();
-      const path = `product-videos/${uid}/${ts}_${file.name}`;
-      const url = await uploadFile(file, path, (pct) => setVideoPct(Math.round(pct)));
+      // Pass type 'file' so it routes to /api/uploads/ (accepts mp4/webm etc.)
+      const result = await uploadFile(file, 'file', (pct) => setVideoPct(Math.round(pct)));
       setVideoPct(100);
-      set('preview_video', url);
+      set('preview_video', result.downloadUrl);
     } catch (err) {
       setSaveError(`Video upload failed: ${err.message}`);
     } finally {
