@@ -119,8 +119,8 @@ export default function AffiliateEarnings({
   /* ── Earnings totals — prefer live stats, fall back to computed ─────── */
   const totalEarnings    = stats?.total_earnings    ?? activeCommissions.reduce((a, c) => a + c.commission, 0);
   const paidEarnings     = stats?.paid_earnings     ?? activeCommissions.filter(c => c.status === 'paid').reduce((a, c) => a + c.commission, 0);
+  const pendingEarnings  = stats?.pending_earnings  ?? activeCommissions.filter(c => c.status === 'pending').reduce((a, c) => a + c.commission, 0);
   const approvedEarnings = activeCommissions.filter(c => c.status === 'approved').reduce((a, c) => a + c.commission, 0);
-  const pendingEarnings  = stats?.pending_earnings !== undefined ? Math.max(0, stats.pending_earnings - approvedEarnings) : activeCommissions.filter(c => c.status === 'pending').reduce((a, c) => a + c.commission, 0);
 
   /* Available balance = approved (ready to withdraw) commissions */
   const availableBalance = approvedEarnings;

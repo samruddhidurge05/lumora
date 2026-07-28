@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Link2, DollarSign, TrendingUp, Users,
   MousePointerClick, BarChart2, ArrowUpRight, Copy, Check,
   Activity, Sparkles, ShoppingBag, Star, AlertCircle, RefreshCw,
-  Clock, CheckCircle, XCircle, HelpCircle, User, Headset, Wallet
+  Clock, CheckCircle, XCircle, HelpCircle, User, Headset
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -164,15 +164,11 @@ export default function AffiliateDashboardHome({
     const paid     = list.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amt || 0), 0);
     const approved = list.filter(c => c.status === 'approved').reduce((s, c) => s + (c.commission_amt || 0), 0);
     const pending  = list.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amt || 0), 0);
-    
-    // stats.pending_earnings represents total unpaid balance, so subtract approved to get strict pending.
-    const truePending = stats?.pending_earnings !== undefined ? Math.max(0, stats.pending_earnings - approved) : pending;
-    
     return {
       paid:     stats?.paid_earnings    ?? paid,
       approved: approved,
-      pending:  truePending,
-      total:    stats?.total_earnings   ?? (paid + approved + truePending),
+      pending:  stats?.pending_earnings ?? pending,
+      total:    stats?.total_earnings   ?? (paid + approved + pending),
     };
   }, [commissions, stats]);
 
@@ -416,11 +412,11 @@ export default function AffiliateDashboardHome({
             trend: 'Total commission',
           },
           {
-            label: 'Unpaid Earnings',
+            label: 'Pending Earnings',
             value: formatINR(activeStats.pendingEarnings),
-            sub: 'Pending & Approved',
-            icon: <Wallet size={14} />,
-            trend: 'Awaiting payout',
+            sub: 'Awaiting approval/payout',
+            icon: <Clock size={14} />,
+            trend: 'In verification',
           },
           {
             label: 'Paid Earnings',
