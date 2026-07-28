@@ -67,6 +67,18 @@ html, body {
   overflow-x: hidden;
 }
 
+@media (max-width: 1024px) {
+  .admin-main-content {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main-content {
+    gap: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-main-content {
     gap: 16px;

@@ -5,14 +5,14 @@ import { Search, RefreshCw, AlertCircle, Inbox, ChevronDown, Check, Grid } from 
 // Consistent Page Header with Title, Subtitle, and Right-Aligned Actions
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 min-w-0 max-w-full">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 md:mb-6 min-w-0 max-w-full">
       <div className="flex-1 min-w-0 max-w-full">
-        <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+        <div className="flex items-center gap-3 mb-1 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
             MARKETPLACE ADMINISTRATION
           </span>
         </div>
-        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1.5 break-words">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1 break-words">
           {title}
         </h1>
         {subtitle && (
@@ -119,12 +119,12 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
 }
 
 // ─── 4. GLASS CARD (GENERAL WRAPPER) ──────────────────────────────────────
-// Custom container element matching design details
+// Custom container element matching design details with compressed padding
 export function GlassCard({ children, className = '', title, subtitle, headerActions }) {
   return (
-    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/50 shadow-sm relative overflow-hidden h-auto ${className}`}>
+    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 border border-white/50 shadow-sm relative overflow-hidden h-auto ${className}`}>
       {(title || subtitle || headerActions) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-stone-200/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3.5 mb-3.5 sm:mb-4 pb-2.5 sm:pb-3 border-b border-stone-200/50">
           <div>
             {subtitle && <h4 className="text-[8px] sm:text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{subtitle}</h4>}
             {title && <h2 className="text-base sm:text-lg font-serif font-black text-[#2D004D] mt-0.5">{title}</h2>}
@@ -151,32 +151,32 @@ export function FilterBar({
   actions 
 }) {
   return (
-    <div className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-30 overflow-visible">
-      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3 relative z-30 overflow-visible">
+    <div className="glass-surface rounded-2xl p-3 sm:p-3.5 border border-white/50 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 relative z-30 overflow-visible">
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5 relative z-30 overflow-visible">
         {onSearchChange !== undefined && (
           <div className="relative flex-1 min-w-[200px] md:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" size={15} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" size={14} />
             <input
               type="text"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="w-full pl-10 pr-4 h-[42px] glass-input rounded-xl text-xs"
+              className="w-full pl-9 pr-3.5 h-[38px] sm:h-[40px] glass-input rounded-xl text-xs"
             />
           </div>
         )}
         
         {/* Render optional selector panels */}
         {filters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2.5 relative z-30 overflow-visible">
+          <div className="flex flex-wrap items-center gap-2 relative z-30 overflow-visible">
             {filters}
           </div>
         )}
       </div>
       
       {actions && (
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap min-w-0">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap min-w-0">
           {actions}
         </div>
       )}
@@ -185,11 +185,7 @@ export function FilterBar({
 }
 
 // ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
-// Standardized card wrapper for table sections. Children are rendered directly
-// inside the card — they must include their own <table> / <tr> / <td> structure.
-// NOTE: This is intentionally a <div> wrapper, not a <table>, so that callers
-// can pass any content (headers, spinners, overflow wrappers, full tables, etc.)
-// without triggering validateDOMNesting warnings.
+// Standardized card wrapper for table sections with high-density padding
 export function TableContainer({
   headers = [],
   children,
@@ -209,15 +205,15 @@ export function TableContainer({
 
   if (isManagedTable) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="w-full overflow-x-auto rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm">
+      <div className="flex flex-col gap-3.5">
+        <div className="w-full overflow-x-auto rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#8E6AA8]/5 border-b border-[#8E6AA8]/10">
                 {headers.map((h, idx) => (
                   <th
                     key={idx}
-                    className="p-4 text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase select-none"
+                    className="px-3.5 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#7B3FA0] uppercase select-none"
                     style={h.style}
                   >
                     {h.label}
@@ -230,8 +226,8 @@ export function TableContainer({
                 Array.from({ length: 5 }).map((_, rIdx) => (
                   <tr key={rIdx} className="border-b border-[#8E6AA8]/5 animate-pulse bg-white/30">
                     {Array.from({ length: cols }).map((_, cIdx) => (
-                      <td key={cIdx} className="p-4">
-                        <div className="h-4 bg-[#381347]/10 rounded w-3/4 my-1" />
+                      <td key={cIdx} className="px-3.5 py-3">
+                        <div className="h-3.5 bg-[#381347]/10 rounded w-3/4 my-0.5" />
                       </td>
                     ))}
                   </tr>
@@ -253,7 +249,7 @@ export function TableContainer({
           </table>
         </div>
         {pagination && (
-          <div className="flex items-center justify-between px-4 py-2 mt-2">
+          <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
             {pagination}
           </div>
         )}
@@ -263,10 +259,10 @@ export function TableContainer({
 
   // Plain card wrapper — used by pages that manage their own table structure
   return (
-    <div className="w-full rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden">
+    <div className="w-full rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden">
       {children}
       {pagination && (
-        <div className="flex items-center justify-between px-4 py-2 mt-2">
+        <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
           {pagination}
         </div>
       )}
@@ -278,12 +274,12 @@ export function TableContainer({
 // Visually appealing vector card for tables/sections without entries
 export function EmptyState({ title, description, action }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-12 bg-white/40 rounded-3xl border border-dashed border-[#8E6AA8]/20 min-h-[300px]">
-      <div className="w-16 h-16 rounded-2xl bg-[#D8BFE3]/15 flex items-center justify-center text-[#7B3FA0] mb-4">
-        <Inbox size={28} className="opacity-75" />
+    <div className="flex flex-col items-center justify-center text-center p-8 sm:p-10 bg-white/40 rounded-3xl border border-dashed border-[#8E6AA8]/20 min-h-[220px] sm:min-h-[260px]">
+      <div className="w-12 h-12 rounded-xl bg-[#D8BFE3]/15 flex items-center justify-center text-[#7B3FA0] mb-3">
+        <Inbox size={24} className="opacity-75" />
       </div>
-      <h3 className="text-base font-serif font-black text-[#2D004D] mb-1.5">{title}</h3>
-      <p className="text-xs text-[#7B3FA0] max-w-sm leading-relaxed mb-6">{description}</p>
+      <h3 className="text-base font-serif font-black text-[#2D004D] mb-1">{title}</h3>
+      <p className="text-xs text-[#7B3FA0] max-w-sm leading-relaxed mb-4">{description}</p>
       {action && (
         <div className="flex justify-center">
           {action}
