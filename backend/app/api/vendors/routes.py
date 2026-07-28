@@ -158,7 +158,7 @@ def request_withdrawal(vendor_id: str, body: WithdrawalSchema, vendor: dict = De
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized to request withdrawal")
     if body.amount < 500:
-        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ?500")
+        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ₹500")
     return create_withdrawal({**body.model_dump(), "vendor_id": vendor_id})
 
 

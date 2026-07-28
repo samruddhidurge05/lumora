@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useDashboard, useOrders, useWithdrawals } from '../../hooks/useVendorData';
@@ -37,6 +38,7 @@ function MiniBar({ data, height = 60 }) {
 }
 
 export default function Earnings() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   
   const { data: dashboardData, loading: dashLoading, error: dashError, refresh: refreshDash } = useDashboard();
@@ -255,7 +257,7 @@ export default function Earnings() {
             </div>
           </div>
           <button className="v-btn v-btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            onClick={() => { window.history.pushState({}, '', '/vendor/withdrawals'); window.dispatchEvent(new PopStateEvent('popstate')); }}>
+            onClick={() => navigate('/vendor/withdrawals')}>
             💸 Request Payout
           </button>
         </div>

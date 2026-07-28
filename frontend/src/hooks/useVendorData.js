@@ -372,7 +372,7 @@ export function useWithdrawals() {
       .finally(function() { setSubmit(false); });
   }, []);
 
-  return { history: history, loading: loading, submitting: submitting, error: error, submit: submit };
+  return { history: history, loading: loading, submitting: submitting, error: error, submit: submit, refresh: refresh };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
