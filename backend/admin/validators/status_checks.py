@@ -164,13 +164,13 @@ def verify_upload_allowed(current_user: User = Depends(get_current_user_required
     """
     Upload authorization:
     - Admins are always allowed (skip vendor-specific Firestore check).
-    - Vendors must pass the full verify_vendor_active check.
+    - Vendors/Affiliates must pass the full verify_vendor_active check.
     - All other roles are rejected.
     """
     if current_user.role == "admin":
         return  # admin bypass - no vendor status check needed
 
-    if current_user.role == "vendor":
+    if current_user.role in ("vendor", "affiliate"):
         # Delegate to full vendor active check (SQLite + Firestore + platform pause)
         verify_vendor_active(current_user)
         return

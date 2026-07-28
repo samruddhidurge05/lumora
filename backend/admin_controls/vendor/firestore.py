@@ -56,14 +56,16 @@ def get_vendor_status_from_firestore(uid: str) -> str:
         user_snap = user_ref.get()
         if user_snap.exists:
             data = user_snap.to_dict() or {}
-            return data.get("accountStatus", "active").lower()
+            raw_st = data.get("accountStatus") or "active"
+            return str(raw_st).lower()
 
         # Fallback to vendors collection
         vendor_ref = db.collection("vendors").document(uid)
         vendor_snap = vendor_ref.get()
         if vendor_snap.exists:
             data = vendor_snap.to_dict() or {}
-            return data.get("status", "active").lower()
+            raw_st = data.get("status") or "active"
+            return str(raw_st).lower()
 
         return "active"
     except Exception as exc:

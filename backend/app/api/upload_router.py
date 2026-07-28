@@ -31,7 +31,7 @@ async def upload_product_file(
     Returns { filename, url, size } - store `url` in products.file_url.
     JWT required (vendor or admin only).
     """
-    if current_user.role not in ("vendor", "admin"):
+    if current_user.role not in ("vendor", "admin", "affiliate"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only vendors can upload product files.",

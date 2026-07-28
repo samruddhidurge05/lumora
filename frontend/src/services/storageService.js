@@ -14,27 +14,7 @@
  * call sites remain unchanged.
  */
 
-import { buildBackendUrl } from '../utils/api';
-
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
-
-const API_BASE = (() => {
-  // On production (non-localhost), always point directly at the Render backend.
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
-  }
-  // Dev: use VITE_API_BASE_URL (defaults to http://localhost:8000/api)
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-})();
-
-const BACKEND_ORIGIN = (() => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-  }
-  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  return base.replace(/\/api\/?$/, '') || 'http://localhost:8000';
-})();
+import { buildBackendUrl, BACKEND_ORIGIN } from '../utils/api';
 
 /**
  * Core upload helper — POSTs a file to the backend with JWT auth and progress.
