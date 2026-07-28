@@ -3,7 +3,7 @@ One-time migration: add missing KYC columns to affiliate_profiles table.
 Safe to run multiple times - skips columns that already exist.
 """
 from app.db.database import engine
-from sqlalchemy import text, inspect
+from sqlalchemy import text, inspect # type: ignore
 
 inspector = inspect(engine)
 
@@ -23,7 +23,7 @@ kyc_cols = [
     ('pan_number',               'VARCHAR(20)'),
     ('pan_holder_name',          'VARCHAR(150)'),
     ('gstin',                    'VARCHAR(20)'),
-    ('is_bank_verified',         'BOOLEAN DEFAULT 1'),
+    ('is_bank_verified',         'BOOLEAN DEFAULT true'),
     ('razorpay_contact_id',      'VARCHAR(100)'),
     ('razorpay_fund_account_id', 'VARCHAR(100)'),
 ]
