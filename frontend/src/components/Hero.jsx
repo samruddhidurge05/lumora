@@ -71,7 +71,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH SMOOTH BOTTOM BLEND ── */}
+      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH DARK VIGNETTE ── */}
       <div style={styles.fullBgWrapper}>
         {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
           <div
@@ -79,16 +79,17 @@ export default function Hero() {
             style={{
               ...styles.fullBgImage,
               backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 1.0 : 0, // FULL opacity image
-              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)', // Ken Burns zoom
+              opacity: idx === currentIndex ? 1.0 : 0,
+              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)',
               transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1), transform 4000ms ease-out',
             }}
           />
         ))}
 
-        {/* Dark to Cream Gradient Overlay for smooth merge with cream section below */}
+        {/* Dark Vignette Overlay for rich rich colors */}
         <div style={styles.fullBgOverlay} />
-        <div style={styles.bottomMergeGrad} />
+        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section without turning whitish */}
+        <div style={styles.bottomSoftBlend} />
       </div>
 
       {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}
@@ -144,13 +145,13 @@ export default function Hero() {
           </button>
         </div>
 
-        {/* 5. Stats Bar at Bottom with Glassmorphism */}
+        {/* 5. Stats Bar at Bottom with Glassmorphism matching Hero */}
         <div className="hero-stats glass-card" style={styles.statsContainer}>
           {[
-            { icon: <Users size={16} color="#7B3FA0" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(123, 63, 160, 0.12)' },
-            { icon: <Download size={16} color="#D97706" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(217, 119, 6, 0.12)' },
-            { icon: <Shield size={16} color="#16A34A" />, value: '500+', label: 'Top Creators', bg: 'rgba(22, 163, 74, 0.12)' },
-            { icon: <CheckCircle size={16} color="#E11D48" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(225, 29, 72, 0.12)' },
+            { icon: <Users size={16} color="#C084FC" />, value: '120K+', label: 'Happy Customers', bg: 'rgba(192, 132, 252, 0.15)' },
+            { icon: <Download size={16} color="#FBBF24" />, value: '1.2M+', label: 'Downloads', bg: 'rgba(251, 191, 36, 0.15)' },
+            { icon: <Shield size={16} color="#4ADE80" />, value: '500+', label: 'Top Creators', bg: 'rgba(74, 222, 128, 0.15)' },
+            { icon: <CheckCircle size={16} color="#FB7185" />, value: '97%', label: 'Satisfaction Rate', bg: 'rgba(251, 113, 133, 0.15)' },
           ].map((s, i) => (
             <div key={i} style={styles.statItem}>
               <div style={{ ...styles.statIconBox, background: s.bg }}>
@@ -165,14 +166,6 @@ export default function Hero() {
         </div>
 
       </div>
-
-      {/* Responsive CSS */}
-      <style>{`
-        @keyframes pulseDot {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.5; }
-        }
-      `}</style>
     </section>
   );
 }
@@ -180,7 +173,7 @@ export default function Hero() {
 const styles = {
   section: {
     minHeight: '100vh',
-    padding: '130px clamp(1rem, 4vw, 3rem) 60px',
+    padding: '130px clamp(1rem, 4vw, 3rem) 70px',
     position: 'relative',
     zIndex: 1,
     overflow: 'hidden',
@@ -188,7 +181,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#FAF6F0',
+    background: '#0D0518',
   },
 
   /* Full Background Wrapper & Visible Slides */
@@ -210,16 +203,16 @@ const styles = {
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.55) 0%, rgba(13, 5, 24, 0.65) 50%, rgba(13, 5, 24, 0.82) 80%, #FAF6F0 100%)',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.50) 0%, rgba(13, 5, 24, 0.65) 60%, rgba(13, 5, 24, 0.88) 100%)',
     backdropFilter: 'blur(1px)',
   },
-  bottomMergeGrad: {
+  bottomSoftBlend: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '240px',
-    background: 'linear-gradient(180deg, transparent 0%, rgba(250, 246, 240, 0.40) 30%, rgba(250, 246, 240, 0.85) 70%, #FAF6F0 100%)',
+    height: '90px',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0) 0%, rgba(250, 246, 240, 0.40) 60%, #FAF6F0 100%)',
     pointerEvents: 'none',
     zIndex: 2,
   },
@@ -245,7 +238,7 @@ const styles = {
     gap: '8px',
     padding: '8px 18px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.15)',
+    background: 'rgba(255, 255, 255, 0.12)',
     border: '1px solid rgba(192, 132, 252, 0.40)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
@@ -338,18 +331,18 @@ const styles = {
     backdropFilter: 'blur(12px)',
   },
 
-  /* Stats Container smoothly blending into bottom section */
+  /* Stats Container matching Hero dark glass theme */
   statsContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
     gap: '16px',
     padding: '18px 24px',
     borderRadius: '24px',
-    background: 'rgba(255, 255, 255, 0.85)',
+    background: 'rgba(255, 255, 255, 0.12)',
     backdropFilter: 'blur(28px)',
     WebkitBackdropFilter: 'blur(28px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.95)',
-    boxShadow: '0 16px 40px rgba(90, 30, 126, 0.12)',
+    border: '1.5px solid rgba(255, 255, 255, 0.22)',
+    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
     width: '100%',
     maxWidth: '820px',
     marginTop: '12px',
@@ -372,13 +365,14 @@ const styles = {
   statValue: {
     fontSize: '1.05rem',
     fontWeight: 800,
-    color: '#2D004D',
+    color: '#FFFFFF',
     lineHeight: 1.1,
     textAlign: 'left',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
   },
   statLabel: {
     fontSize: '0.66rem',
-    color: '#6B4F7A',
+    color: '#E9D5FF',
     fontWeight: 600,
     lineHeight: 1.2,
     textAlign: 'left',
