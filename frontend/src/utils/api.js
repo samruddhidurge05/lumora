@@ -40,6 +40,44 @@ export const registerGlobalErrorListener = (listener) => {
 };
 
 /**
+ * Safely resolves any relative or absolute endpoint into a clean backend URL
+ * without double hostnames or duplicated /api prefixes.
+ */
+export function buildBackendUrl(endpoint = '') {
+  let targetUrl = String(endpoint || '');
+
+  // Strip leading slash if attached to a full URL (e.g. "/https://...")
+  if (targetUrl.startsWith('/https://') || targetUrl.startsWith('/http://')) {
+    targetUrl = targetUrl.substring(1);
+  }
+
+  // Handle malformed doubled URLs (e.g. "https://domain.com/https://domain.com/api/...")
+  if (targetUrl.includes('://') && targetUrl.indexOf('://') !== targetUrl.lastIndexOf('://')) {
+    const secondProtocolIndex = targetUrl.indexOf('http', 5);
+    if (secondProtocolIndex !== -1) {
+      targetUrl = targetUrl.substring(secondProtocolIndex);
+    }
+  }
+
+  // If endpoint is relative, combine with BACKEND_URL
+  if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+    let cleanEndpoint = targetUrl;
+    if (cleanEndpoint.startsWith('/api/')) {
+      cleanEndpoint = cleanEndpoint.replace(/^\/api/, '');
+    } else if (cleanEndpoint.startsWith('api/')) {
+      cleanEndpoint = cleanEndpoint.replace(/^api\//, '/');
+    }
+    if (!cleanEndpoint.startsWith('/')) {
+      cleanEndpoint = '/' + cleanEndpoint;
+    }
+    const cleanBase = BACKEND_URL.replace(/\/$/, '');
+    targetUrl = `${cleanBase}${cleanEndpoint}`;
+  }
+
+  return targetUrl;
+}
+
+/**
  * Make an authenticated request to the FastAPI backend.
  *
  * @param {string} endpoint  e.g. '/vendors/1/stats'
@@ -83,7 +121,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     delete fetchOptions.body;
   }
 
-  const res = await fetch(`${BACKEND_URL}${endpoint}`, fetchOptions);
+  const targetUrl = buildBackendUrl(endpoint);
+  const res = await fetch(targetUrl, fetchOptions);
 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {

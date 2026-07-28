@@ -14,6 +14,8 @@
  * call sites remain unchanged.
  */
 
+import { buildBackendUrl } from '../utils/api';
+
 const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
 const API_BASE = (() => {
@@ -36,7 +38,6 @@ const BACKEND_ORIGIN = (() => {
 
 /**
  * Core upload helper — POSTs a file to the backend with JWT auth and progress.
- * Returns a result object: { downloadUrl, storagePath, fileName, fileSize }
  *
  * @param {File}     file        - File object to upload
  * @param {string}   endpoint    - e.g. '/api/uploads/image' or '/api/uploads/'
@@ -46,17 +47,7 @@ const BACKEND_ORIGIN = (() => {
 function _uploadToBackend(file, endpoint, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-
-    let uploadUrl = endpoint;
-    if (!endpoint.startsWith('http')) {
-      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-      if (cleanEndpoint.startsWith('/api/')) {
-        const baseOrigin = API_BASE.replace(/\/api\/?$/, '');
-        uploadUrl = `${baseOrigin}${cleanEndpoint}`;
-      } else {
-        uploadUrl = `${API_BASE}${cleanEndpoint}`;
-      }
-    }
+    const uploadUrl = buildBackendUrl(endpoint);
     xhr.open('POST', uploadUrl);
 
     // Attach JWT token
