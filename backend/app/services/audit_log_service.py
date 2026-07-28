@@ -8,10 +8,10 @@ def log_admin_action(
     db: Session,
     admin_user_id: int,
     action: str,
-    target_type: str = None,
-    target_id: str = None,
-    metadata: dict = None,
-    ip_address: str = None,
+    target_type: str | None = None,
+    target_id: str | None = None,
+    metadata: dict | None = None,
+    ip_address: str | None = None,
 ) -> AuditLog:
     entry = AuditLog(
         admin_user_id=admin_user_id,

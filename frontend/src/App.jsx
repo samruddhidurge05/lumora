@@ -12,6 +12,7 @@ import DownloadReadyPopup from './components/download/DownloadReadyPopup';
 import { useFeatureFlags } from './hooks/useFeatureFlags';
 
 const VendorUnavailable = safeLazy(() => import('./components/common/VendorUnavailable'));
+const AffiliateUnavailable = safeLazy(() => import('./components/common/AffiliateUnavailable'));
 
 function VendorRouteGuard({ children }) {
   const { vendor_enabled } = useFeatureFlags();
@@ -27,6 +28,24 @@ function AuthVendorGuard({ children }) {
   const role = searchParams.get('role');
   if (role === 'vendor' && !vendor_enabled) {
     return <VendorUnavailable />;
+  }
+  return children;
+}
+
+function AffiliateRouteGuard({ children }) {
+  const { affiliate_enabled = true } = useFeatureFlags();
+  if (!affiliate_enabled) {
+    return <AffiliateUnavailable />;
+  }
+  return children;
+}
+
+function AuthAffiliateGuard({ children }) {
+  const { affiliate_enabled = true } = useFeatureFlags();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
+  if (role === 'affiliate' && !affiliate_enabled) {
+    return <AffiliateUnavailable />;
   }
   return children;
 }
@@ -539,8 +558,8 @@ function AppContent() {
           <Route path="/auth/login-selection"    element={<Navigate to="/auth/login?role=customer" replace />} />
 
           <Route path="/auth/register-selection" element={<Navigate to="/auth/register?role=customer" replace />} />
-          <Route path="/auth/login"              element={<AuthVendorGuard><Login /></AuthVendorGuard>} />
-          <Route path="/auth/register"           element={<AuthVendorGuard><Register /></AuthVendorGuard>} />
+          <Route path="/auth/login"              element={<AuthVendorGuard><AuthAffiliateGuard><Login /></AuthAffiliateGuard></AuthVendorGuard>} />
+          <Route path="/auth/register"           element={<AuthVendorGuard><AuthAffiliateGuard><Register /></AuthAffiliateGuard></AuthVendorGuard>} />
           <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
           <Route path="/auth/verify-email"       element={<VerifyEmail />} />
 
@@ -550,21 +569,23 @@ function AppContent() {
 
           {/* ── Partnership routes ── */}
           <Route path="/partnerships"           element={<PartnershipHub />} />
-          <Route path="/partnerships/affiliate" element={<Affiliate />} />
+          <Route path="/partnerships/affiliate" element={<AffiliateRouteGuard><Affiliate /></AffiliateRouteGuard>} />
           <Route path="/partnerships/vendor"    element={<VendorRouteGuard><Vendor /></VendorRouteGuard>} />
-          <Route path="/partnership/affiliate"  element={<JoinAffiliate />} />
+          <Route path="/partnership/affiliate"  element={<AffiliateRouteGuard><JoinAffiliate /></AffiliateRouteGuard>} />
           <Route path="/partnership/vendor"     element={<VendorRouteGuard><JoinVendor /></VendorRouteGuard>} />
 
           {/* ── Protected dashboard routes ── */}
           <Route path="/vendor" element={<VendorRouteGuard><Navigate to="/vendor/dashboard" replace /></VendorRouteGuard>} />
-          <Route path="/affiliate" element={<Navigate to="/affiliate/dashboard" replace />} />
+          <Route path="/affiliate" element={<AffiliateRouteGuard><Navigate to="/affiliate/dashboard" replace /></AffiliateRouteGuard>} />
           {/* /affiliate/activate — open to any authenticated user; AffiliateActivation handles its own guard */}
-          <Route path="/affiliate/activate" element={<AffiliateActivation />} />
+          <Route path="/affiliate/activate" element={<AffiliateRouteGuard><AffiliateActivation /></AffiliateRouteGuard>} />
           <Route path="/affiliate/dashboard"
             element={
-              <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole={['affiliate', 'vendor']}>
-                <AffiliateDashboard />
-              </ProtectedRoute>
+              <AffiliateRouteGuard>
+                <ProtectedRoute redirectTo="/auth/login?role=affiliate" requiredRole={['affiliate', 'vendor']}>
+                  <AffiliateDashboard />
+                </ProtectedRoute>
+              </AffiliateRouteGuard>
             }
           />
           <Route path="/customer/dashboard"

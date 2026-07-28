@@ -93,9 +93,13 @@ const roleCardVariants = {
 
 export default function LoginSelection() {
   const navigate = useNavigate();
-  const { vendor_enabled } = useFeatureFlags();
+  const { vendor_enabled, affiliate_enabled = true } = useFeatureFlags();
 
-  const availableRoles = vendor_enabled ? ROLES : ROLES.filter(r => r.id !== 'vendor');
+  const availableRoles = ROLES.filter(r => {
+    if (r.id === 'vendor' && !vendor_enabled) return false;
+    if (r.id === 'affiliate' && !affiliate_enabled) return false;
+    return true;
+  });
 
   return (
     <AuthBackground>

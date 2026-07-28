@@ -32,6 +32,8 @@ export const fetchFeatureConfig = async () => {
     vendor_enabled: true,
     vendorSellingEnabled: true,
     vendorRegistrationEnabled: true,
+    affiliate_enabled: true,
+    affiliateProgramEnabled: true,
   };
 };
 

@@ -18,14 +18,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Settings"])
 
 
-def get_vendor_enabled_state(db: Session = None) -> dict:
+def get_vendor_enabled_state(db: Session | None = None) -> dict:
     """
-    Helper to check vendor_enabled, vendorSellingEnabled, and vendorRegistrationEnabled flags.
+    Helper to check feature flags: vendor_enabled, vendorSellingEnabled, vendorRegistrationEnabled,
+    affiliate_enabled, and affiliateProgramEnabled.
     SQLite platform_settings is the authoritative source of truth; Firestore is best-effort sync/fallback.
     """
     vendor_enabled = True
     vendor_selling = True
     vendor_reg = True
+    affiliate_enabled = True
 
     # 1. Authoritative check: SQLite platform_settings table
     db_session = db
@@ -44,15 +46,21 @@ def get_vendor_enabled_state(db: Session = None) -> dict:
             row_ve = db_session.query(PlatformSetting).filter(PlatformSetting.key == "vendor_enabled").first()
             row_vs = db_session.query(PlatformSetting).filter(PlatformSetting.key == "vendorSellingEnabled").first()
             row_vr = db_session.query(PlatformSetting).filter(PlatformSetting.key == "vendorRegistrationEnabled").first()
+            row_ae = db_session.query(PlatformSetting).filter(PlatformSetting.key == "affiliateProgramEnabled").first()
+            row_aff = db_session.query(PlatformSetting).filter(PlatformSetting.key == "affiliate_enabled").first()
 
-            if row_ve or row_vs or row_vr:
+            if row_ve or row_vs or row_vr or row_ae or row_aff:
                 sqlite_found = True
-                if row_ve:
-                    vendor_enabled = json.loads(row_ve.value).get("value", True)
-                if row_vs:
-                    vendor_selling = json.loads(row_vs.value).get("value", True)
-                if row_vr:
-                    vendor_reg = json.loads(row_vr.value).get("value", True)
+                if row_ve and row_ve.value:
+                    vendor_enabled = json.loads(str(row_ve.value)).get("value", True)
+                if row_vs and row_vs.value:
+                    vendor_selling = json.loads(str(row_vs.value)).get("value", True)
+                if row_vr and row_vr.value:
+                    vendor_reg = json.loads(str(row_vr.value)).get("value", True)
+                if row_ae and row_ae.value:
+                    affiliate_enabled = json.loads(str(row_ae.value)).get("value", True)
+                if row_aff and row_aff.value:
+                    affiliate_enabled = affiliate_enabled and json.loads(str(row_aff.value)).get("value", True)
         except Exception as exc:
             logger.error("[settings_router] SQLite read error for feature flags: %s", exc)
         finally:
@@ -60,11 +68,13 @@ def get_vendor_enabled_state(db: Session = None) -> dict:
                 db_session.close()
 
     if sqlite_found:
-        effective_enabled = vendor_enabled and vendor_selling and vendor_reg
+        effective_vendor_enabled = vendor_enabled and vendor_selling and vendor_reg
         return {
-            "vendor_enabled": effective_enabled,
+            "vendor_enabled": effective_vendor_enabled,
             "vendorSellingEnabled": vendor_selling,
             "vendorRegistrationEnabled": vendor_reg,
+            "affiliate_enabled": affiliate_enabled,
+            "affiliateProgramEnabled": affiliate_enabled,
         }
 
     # 2. Secondary check: Firestore
@@ -75,20 +85,25 @@ def get_vendor_enabled_state(db: Session = None) -> dict:
                 vendor_enabled = settings_dict.get("vendor_enabled", True)
                 vendor_selling = settings_dict.get("vendorSellingEnabled", True)
                 vendor_reg = settings_dict.get("vendorRegistrationEnabled", True)
-                effective_enabled = vendor_enabled and vendor_selling and vendor_reg
+                aff_enabled = settings_dict.get("affiliateProgramEnabled", settings_dict.get("affiliate_enabled", True))
+                effective_vendor_enabled = vendor_enabled and vendor_selling and vendor_reg
                 return {
-                    "vendor_enabled": effective_enabled,
+                    "vendor_enabled": effective_vendor_enabled,
                     "vendorSellingEnabled": vendor_selling,
                     "vendorRegistrationEnabled": vendor_reg,
+                    "affiliate_enabled": aff_enabled,
+                    "affiliateProgramEnabled": aff_enabled,
                 }
         except Exception as exc:
             logger.warning("[settings_router] Firestore read error: %s", exc)
 
-    effective_enabled = vendor_enabled and vendor_selling and vendor_reg
+    effective_vendor_enabled = vendor_enabled and vendor_selling and vendor_reg
     return {
-        "vendor_enabled": effective_enabled,
+        "vendor_enabled": effective_vendor_enabled,
         "vendorSellingEnabled": vendor_selling,
         "vendorRegistrationEnabled": vendor_reg,
+        "affiliate_enabled": affiliate_enabled,
+        "affiliateProgramEnabled": affiliate_enabled,
     }
 
 

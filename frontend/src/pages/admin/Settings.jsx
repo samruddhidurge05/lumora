@@ -186,6 +186,9 @@ export default function Settings() {
       updatedSettings.vendor_enabled = isVendorSelling && isVendorReg;
       updatedSettings.vendorSellingEnabled = isVendorSelling;
       updatedSettings.vendorRegistrationEnabled = isVendorReg;
+    } else if (key === 'affiliateProgramEnabled' || key === 'affiliate_enabled') {
+      updatedSettings.affiliateProgramEnabled = newValue;
+      updatedSettings.affiliate_enabled = newValue;
     }
 
     // Optimistic UI update
@@ -200,6 +203,14 @@ export default function Settings() {
             vendor_enabled: updatedSettings.vendor_enabled,
             vendorSellingEnabled: updatedSettings.vendorSellingEnabled,
             vendorRegistrationEnabled: updatedSettings.vendorRegistrationEnabled,
+          }),
+        });
+      } else if (key === 'affiliateProgramEnabled' || key === 'affiliate_enabled') {
+        await backendFetch('/admin/settings/affiliate-program', {
+          method: 'PUT',
+          body: JSON.stringify({
+            affiliateProgramEnabled: updatedSettings.affiliateProgramEnabled,
+            affiliate_enabled: updatedSettings.affiliate_enabled,
           }),
         });
       } else {

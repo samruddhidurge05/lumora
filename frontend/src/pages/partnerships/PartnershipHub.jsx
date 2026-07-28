@@ -25,7 +25,7 @@ function Reveal({ children, delay = 0, style = {} }) {
 export default function PartnershipHub() {
   const navigate = useNavigate();
   const [hoveredButton, setHoveredButton] = useState(null);
-  const { vendor_enabled } = useFeatureFlags();
+  const { vendor_enabled, affiliate_enabled = true } = useFeatureFlags();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -151,10 +151,10 @@ export default function PartnershipHub() {
             <Reveal>
               <div style={{ textAlign: 'center', marginBottom: '52px' }}>
                 <p style={{ fontSize: '.65rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
-                  {vendor_enabled ? 'Two Paths, One Platform' : 'Partnership Opportunity'}
+                  {(vendor_enabled && affiliate_enabled) ? 'Two Paths, One Platform' : 'Partnership Opportunity'}
                 </p>
                 <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 400, color: '#2D004D' }}>
-                  {vendor_enabled ? 'Choose Your Path' : 'Become an Affiliate'}
+                  {(vendor_enabled && affiliate_enabled) ? 'Choose Your Path' : vendor_enabled ? 'Become a Vendor' : affiliate_enabled ? 'Become an Affiliate' : 'Partnerships Currently Closed'}
                 </h2>
               </div>
             </Reveal>
@@ -162,58 +162,60 @@ export default function PartnershipHub() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
 
               {/* ── Affiliate Card ── */}
-              <Reveal delay={0.06}>
-                <div
-                  className="glass-card"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate('/partnerships/affiliate')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/affiliate'); } }}
-                  style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
-                  }}
-                >
-                  <div style={{
-                    width: '46px', height: '46px', borderRadius: '13px',
-                    background: 'rgba(220, 198, 255, 0.45)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: '18px', color: '#5A1E7E',
-                  }}>
-                    <Share2 size={22} />
-                  </div>
-
-                  <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
-                    Become an Affiliate
-                  </h3>
-
-                  <p style={{ color: '#6B4F7A', marginBottom: '20px', lineHeight: 1.65, fontSize: '.9rem' }}>
-                    Earn commissions by promoting premium digital products to your audience.
-                  </p>
-
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {['Flexible earnings', 'No inventory needed', 'Real‑time analytics'].map((item, i) => (
-                      <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.83rem', color: '#2D004D', fontWeight: 600 }}>
-                        <Check size={14} color="var(--color-latte)" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button 
-                    className={`btn-premium ${hoveredButton === 'affiliate' ? 'btn-premium-solid' : ''}`} 
-                    onMouseEnter={() => setHoveredButton('affiliate')}
-                    onMouseLeave={() => setHoveredButton(null)}
-                    style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
+              {affiliate_enabled && (
+                <Reveal delay={0.06}>
+                  <div
+                    className="glass-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate('/partnerships/affiliate')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/affiliate'); } }}
+                    style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = 'translateY(-6px)';
+                      e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
+                    }}
                   >
-                    Learn More <ArrowRight size={14} />
-                  </button>
-                </div>
-              </Reveal>
+                    <div style={{
+                      width: '46px', height: '46px', borderRadius: '13px',
+                      background: 'rgba(220, 198, 255, 0.45)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: '18px', color: '#5A1E7E',
+                    }}>
+                      <Share2 size={22} />
+                    </div>
+
+                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
+                      Become an Affiliate
+                    </h3>
+
+                    <p style={{ color: '#6B4F7A', marginBottom: '20px', lineHeight: 1.65, fontSize: '.9rem' }}>
+                      Earn commissions by promoting premium digital products to your audience.
+                    </p>
+
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {['Flexible earnings', 'No inventory needed', 'Real‑time analytics'].map((item, i) => (
+                        <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.83rem', color: '#2D004D', fontWeight: 600 }}>
+                          <Check size={14} color="var(--color-latte)" /> {item}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button 
+                      className={`btn-premium ${hoveredButton === 'affiliate' ? 'btn-premium-solid' : ''}`} 
+                      onMouseEnter={() => setHoveredButton('affiliate')}
+                      onMouseLeave={() => setHoveredButton(null)}
+                      style={{ width: '100%', height: '44px', padding: '0 16px', justifyContent: 'center', fontSize: '.85rem', marginTop: 'auto', borderRadius: '14px', fontWeight: 700 }}
+                    >
+                      Learn More <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </Reveal>
+              )}
 
               {/* ── Vendor Card ── */}
               {vendor_enabled && (
