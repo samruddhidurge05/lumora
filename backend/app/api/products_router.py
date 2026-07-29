@@ -259,12 +259,13 @@ def get_product_categories(db: Session = Depends(get_db)):
 def read_product(
     product_id: str,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Get a single product by numeric ID or human-readable slug.
-    Public - no authentication required for published products.
-    Draft, archived, pending_review, or disabled vendor products return 404 for public callers.
+    Public - no authentication required.
+    Only 'published' products are returned. Draft, archived, pending_review,
+    or disabled-vendor products return 404 for all public callers.
+    Vendors and admins preview non-published products through their own authenticated routes.
     """
     from sqlalchemy import func
     from app.utils.db_sync import get_product_by_id
@@ -293,18 +294,12 @@ def read_product(
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product unavailable")
 
-    # Enterprise Availability Guard:
-    # Public visitors may ONLY view products in 'published' status.
-    # Non-published (draft, pending_review, archived) are restricted to the owner vendor or admins.
-    is_admin = current_user is not None and (current_user.role or "").lower() == "admin"
-    is_owner = current_user is not None and (
-        str(product.vendor_id) == str(current_user.id) or (product.seller or "") == (current_user.name or "")
-    )
-
-    if (product.status or "published").lower() != "published" and not is_admin and not is_owner:
+    # Public availability guard: only published products are visible
+    if (product.status or "published").lower() != "published":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product unavailable")
 
     return resolve_products_media(product, db)
+
 
 
 @router.post("/{product_id}/qr-scan")
