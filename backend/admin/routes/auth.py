@@ -368,29 +368,230 @@ def admin_login(
 
 # -- GET /audit-logs --------------------------------------------------------
 
+import json as _json
+
+# Human-readable action label map
+_ACTION_LABELS: dict[str, str] = {
+    "admin_login_success":                "Admin Login Success",
+    "admin_login_failure":                "Admin Login Failure",
+    "admin_logout":                       "Admin Logout",
+    "admin_invited":                      "Admin Invited",
+    "admin_deactivated":                  "Admin Deactivated",
+    "admin_role_changed":                 "Admin Role Changed",
+    "admin_invitation_revoked":           "Invitation Revoked",
+    "product_created":                    "Product Created",
+    "product_updated":                    "Product Updated",
+    "product_deleted":                    "Product Deleted",
+    "product_status_patched":             "Product Status Changed",
+    "product_featured_patched":           "Product Featured Status Changed",
+    "product_affiliate_patched":          "Product Affiliate Setting Changed",
+    "Commission Created":                 "Commission Created",
+    "order_refund":                       "Order Refund Issued",
+    "order_status_change":                "Order Status Changed",
+    "order_dispute":                      "Order Dispute Raised",
+    "auto_affiliate_enrollment":          "Affiliate Auto-Enrollment",
+    "affiliate_enable":                   "Affiliate Enabled",
+    "affiliate_disable":                  "Affiliate Disabled",
+    "vendor_enable":                      "Vendor Enabled",
+    "vendor_disable":                     "Vendor Disabled",
+    "vendor_restrict":                    "Vendor Restricted",
+    "report_resolved":                    "Report Resolved",
+    "report_rejected":                    "Report Rejected",
+    "report_assigned":                    "Report Assigned",
+    "support_ticket_replied":             "Support Ticket Replied",
+    "support_ticket_status_changed":      "Support Ticket Status Changed",
+    "review_moderated":                   "Review Moderated",
+    "platform_pause":                     "Platform Paused",
+    "platform_resume":                    "Platform Resumed",
+    "admin_referral_link_created":        "Referral Link Created",
+    "admin_referral_link_deleted":        "Referral Link Deleted",
+    "admin_referral_link_status_changed": "Referral Link Status Changed",
+}
+
+_ACTION_CATEGORY_MAP: dict[str, str] = {
+    "admin_login_success":              "Security",
+    "admin_login_failure":              "Security",
+    "admin_logout":                     "Security",
+    "admin_invited":                    "Security",
+    "admin_deactivated":                "Security",
+    "admin_role_changed":               "Security",
+    "admin_invitation_revoked":         "Security",
+    "product_created":                  "Product",
+    "product_updated":                  "Product",
+    "product_deleted":                  "Product",
+    "product_status_patched":           "Product",
+    "product_featured_patched":         "Product",
+    "product_affiliate_patched":        "Product",
+    "Commission Created":               "Financial",
+    "order_refund":                     "Financial",
+    "order_status_change":              "Financial",
+    "order_dispute":                    "Financial",
+    "auto_affiliate_enrollment":        "Affiliate",
+    "affiliate_enable":                 "Affiliate",
+    "affiliate_disable":                "Affiliate",
+    "vendor_enable":                    "Vendor",
+    "vendor_disable":                   "Vendor",
+    "vendor_restrict":                  "Vendor",
+    "report_resolved":                  "Reports",
+    "report_rejected":                  "Reports",
+    "report_assigned":                  "Reports",
+    "support_ticket_replied":           "Support",
+    "support_ticket_status_changed":    "Support",
+    "review_moderated":                 "Content",
+    "platform_pause":                   "System",
+    "platform_resume":                  "System",
+    "admin_referral_link_created":      "Referral",
+    "admin_referral_link_deleted":      "Referral",
+    "admin_referral_link_status_changed": "Referral",
+}
+
+
+def _build_description(action: str, actor_name: str, target_label: str, meta: dict) -> str:
+    """Produce a human-readable sentence describing the audit event."""
+    actor = actor_name or "System"
+    target = target_label or "unknown resource"
+    reason = meta.get("reason", "") if meta else ""
+
+    templates: dict[str, str] = {
+        "admin_login_success":    f"{actor} logged into the Admin Portal successfully.",
+        "admin_login_failure":    f"Login attempt failed" + (f" — reason: {reason}." if reason else "."),
+        "admin_logout":           f"{actor} logged out of the Admin Portal.",
+        "admin_invited":          f"{actor} invited a new administrator.",
+        "admin_deactivated":      f"{actor} deactivated administrator account {target}.",
+        "admin_role_changed":     f"{actor} changed the role of {target}.",
+        "admin_invitation_revoked": f"{actor} revoked an admin invitation for {target}.",
+        "product_created":        f"{actor} created a new product ({target}).",
+        "product_updated":        f"{actor} updated product {target}.",
+        "product_deleted":        f"{actor} permanently deleted product {target}.",
+        "product_status_patched": f"{actor} changed the publish status of product {target}.",
+        "product_featured_patched": f"{actor} updated the featured status of product {target}.",
+        "product_affiliate_patched": f"{actor} changed affiliate settings for product {target}.",
+        "Commission Created":     f"System generated a commission for {target}.",
+        "order_refund":           f"{actor} issued a refund for order {target}.",
+        "order_status_change":    f"{actor} updated the status of order {target}.",
+        "order_dispute":          f"A dispute was raised on order {target}.",
+        "auto_affiliate_enrollment": f"{target} was automatically enrolled as an affiliate after completing registration.",
+        "affiliate_enable":       f"{actor} enabled affiliate account {target}.",
+        "affiliate_disable":      f"{actor} disabled affiliate account {target}.",
+        "vendor_enable":          f"{actor} enabled vendor account {target}.",
+        "vendor_disable":         f"{actor} disabled vendor account {target}.",
+        "vendor_restrict":        f"{actor} restricted vendor account {target}.",
+        "report_resolved":        f"{actor} resolved report {target}.",
+        "report_rejected":        f"{actor} rejected report {target}.",
+        "report_assigned":        f"{actor} assigned report {target} for review.",
+        "support_ticket_replied": f"{actor} replied to support ticket {target}.",
+        "support_ticket_status_changed": f"{actor} updated the status of support ticket {target}.",
+        "review_moderated":       f"{actor} moderated a review on {target}.",
+        "platform_pause":         f"{actor} paused the platform.",
+        "platform_resume":        f"{actor} resumed the platform.",
+        "admin_referral_link_created": f"{actor} created a new referral link.",
+        "admin_referral_link_deleted": f"{actor} deleted referral link {target}.",
+        "admin_referral_link_status_changed": f"{actor} updated the status of referral link {target}.",
+    }
+    return templates.get(action, f"{actor} performed action: {action.replace('_', ' ')}.")
+
+
+def _resolve_target_label(db: Session, target_type: Optional[str], target_id: Optional[str]) -> str:
+    """Resolve a human-readable label for a target entity without raising on failure."""
+    if not target_type or not target_id:
+        return ""
+    try:
+        from app.models.product import Product
+        tid = target_id.strip()
+
+        if target_type in ("user", "affiliate", "customer", "vendor"):
+            row = db.query(User.name, User.email).filter(User.id == int(tid)).first()
+            if row:
+                return f"{row.name} ({row.email})" if row.email else row.name
+
+        elif target_type == "product":
+            row = db.query(Product.title).filter(Product.id == int(tid)).first()
+            if row:
+                return row.title
+
+        elif target_type in ("order",):
+            return f"ORD-{tid}"
+
+        elif target_type == "affiliate_commission":
+            return f"Commission #{tid}"
+
+        elif target_type == "support_ticket":
+            return f"Ticket #{tid}"
+
+        elif target_type == "report":
+            return f"Report #{tid}"
+
+    except Exception:
+        pass
+    return f"{target_type} #{target_id}"
+
 
 @router.get("/audit-logs")
 def get_audit_logs(
     page: int = 1,
     page_size: int = 50,
     action: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     db: Session = Depends(get_db),
     _current_user: User = Depends(require_admin_role),
 ):
     """
-    Return paginated audit logs ordered by created_at descending.
+    Return paginated, fully-enriched audit logs ordered by created_at descending.
 
-    page      - minimum 1 (clamped)
-    page_size - range [1, 200] (clamped)
-    action    - optional exact-match filter on AuditLog.action
+    Query params:
+      page       - minimum 1 (clamped)
+      page_size  - range [1, 200] (clamped)
+      action     - optional exact-match filter on AuditLog.action
+      category   - optional filter: Security | Product | Financial | Affiliate | Vendor | ...
+      search     - optional text search on actor name or email
+      date_from  - ISO date string (YYYY-MM-DD), inclusive lower bound
+      date_to    - ISO date string (YYYY-MM-DD), inclusive upper bound
     """
-    # Clamp parameters
+    from datetime import date as _date
+    from app.models.product import Product  # local import — avoids circular deps
+
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
     query = db.query(AuditLog)
+
     if action:
         query = query.filter(AuditLog.action == action)
+
+    # Category filter — use stored column if populated, else derive from action map
+    if category:
+        stored_match = query.filter(AuditLog.category == category)
+        # Also include legacy rows (category IS NULL) whose action maps to this category
+        matching_actions = [a for a, c in _ACTION_CATEGORY_MAP.items() if c == category]
+        if matching_actions:
+            from sqlalchemy import or_
+            query = query.filter(
+                or_(
+                    AuditLog.category == category,
+                    (AuditLog.category.is_(None)) & (AuditLog.action.in_(matching_actions)),
+                )
+            )
+        else:
+            query = query.filter(AuditLog.category == category)
+
+    if date_from:
+        try:
+            df = datetime.strptime(date_from, "%Y-%m-%d")
+            query = query.filter(AuditLog.created_at >= df)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            dt = datetime.strptime(date_to, "%Y-%m-%d")
+            # Include whole day
+            dt = dt.replace(hour=23, minute=59, second=59)
+            query = query.filter(AuditLog.created_at <= dt)
+        except ValueError:
+            pass
 
     total: int = query.count()
     offset: int = (page - 1) * page_size
@@ -403,19 +604,81 @@ def get_audit_logs(
         .all()
     )
 
-    items = [
-        {
-            "id": row.id,
-            "admin_user_id": row.admin_user_id,
-            "action": row.action,
-            "target_type": row.target_type,
-            "target_id": row.target_id,
-            "metadata": row.metadata_json,
-            "ip_address": row.ip_address,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-        }
-        for row in rows
-    ]
+    # Batch-load actors (users) referenced in this page to avoid N+1 queries
+    actor_ids = list({r.admin_user_id for r in rows if r.admin_user_id is not None})
+    actors_by_id: dict[int, User] = {}
+    if actor_ids:
+        actor_rows = db.query(User).filter(User.id.in_(actor_ids)).all()
+        actors_by_id = {u.id: u for u in actor_rows}
+
+    items = []
+    for row in rows:
+        # ── Actor resolution ──────────────────────────────────────────────
+        actor_snapshot: dict | None = None
+        if row.actor_metadata:
+            try:
+                actor_snapshot = _json.loads(row.actor_metadata)
+            except Exception:
+                actor_snapshot = None
+
+        actor_user = actors_by_id.get(row.admin_user_id) if row.admin_user_id else None
+        actor_name  = (actor_snapshot or {}).get("name")  or (actor_user.name  if actor_user else None) or "System"
+        actor_email = (actor_snapshot or {}).get("email") or (actor_user.email if actor_user else None)
+        actor_role  = (actor_snapshot or {}).get("role")  or (actor_user.role  if actor_user else None)
+
+        # ── Target resolution ─────────────────────────────────────────────
+        target_label = _resolve_target_label(db, row.target_type, row.target_id)
+
+        # ── Search filter (applied post-resolution to match actor name/email) ──
+        if search:
+            s = search.lower()
+            haystack = f"{actor_name} {actor_email or ''}".lower()
+            if s not in haystack:
+                total -= 1
+                continue
+
+        # ── Category ──────────────────────────────────────────────────────
+        resolved_category = row.category or _ACTION_CATEGORY_MAP.get(row.action, "System")
+
+        # ── Metadata parsing ──────────────────────────────────────────────
+        parsed_meta: dict = {}
+        if row.metadata_json:
+            try:
+                parsed_meta = _json.loads(row.metadata_json)
+            except Exception:
+                parsed_meta = {"raw": row.metadata_json}
+
+        # ── Human-readable description ────────────────────────────────────
+        description = _build_description(row.action, actor_name, target_label, parsed_meta)
+
+        items.append({
+            # ── Backward-compatible fields ──
+            "id":             row.id,
+            "admin_user_id":  row.admin_user_id,
+            "action":         row.action,
+            "target_type":    row.target_type,
+            "target_id":      row.target_id,
+            "metadata":       row.metadata_json,
+            "ip_address":     row.ip_address,
+            "created_at":     row.created_at.isoformat() if row.created_at else None,
+            # ── Enriched enterprise fields ──
+            "action_label":   _ACTION_LABELS.get(row.action, row.action.replace("_", " ").title()),
+            "category":       resolved_category,
+            "description":    description,
+            "actor": {
+                "id":    row.admin_user_id,
+                "name":  actor_name,
+                "email": actor_email,
+                "role":  actor_role,
+                "type":  "System" if not row.admin_user_id else "Administrator",
+            },
+            "target": {
+                "type":  row.target_type,
+                "id":    row.target_id,
+                "label": target_label or None,
+            },
+            "metadata_parsed": parsed_meta,
+        })
 
     return {
         "total": total,
@@ -423,3 +686,4 @@ def get_audit_logs(
         "page_size": page_size,
         "items": items,
     }
+
