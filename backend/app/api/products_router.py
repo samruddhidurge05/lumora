@@ -902,25 +902,27 @@ def create_product(
                 )
 
     # -- IDEMPOTENCY: Double-click / network-retry protection ------------------
+    # Guard applies to all products including free ones (price=0)
     vendor_id = str(current_user.id)
     window_start = datetime.now(timezone.utc) - timedelta(seconds=10)
-    recent_duplicate = None
-    if product_in.price > 0:
-        recent_duplicate = db.query(Product).filter(
-            Product.vendor_id == vendor_id,
-            Product.title == product_in.title.strip(),
-            Product.price == product_in.price,
-            Product.created_at >= window_start,
-        ).first()
+    recent_duplicate = db.query(Product).filter(
+        Product.vendor_id == vendor_id,
+        Product.title == product_in.title.strip(),
+        Product.price == product_in.price,
+        Product.created_at >= window_start,
+    ).first()
     if recent_duplicate:
         return recent_duplicate
 
     role = (current_user.role or "").lower()
+    submitted_status = (product_in.status or "published").lower()
     if role == "admin":
-        submitted_status = (product_in.status or "published").lower()
+        # Admin can set any valid status
         initial_status = submitted_status if submitted_status in ("published", "draft") else "published"
     else:
-        initial_status = "pending_review"
+        # Vendors publish directly — respect submitted status (published/draft).
+        # Only unknown/invalid status values fall back to pending_review.
+        initial_status = submitted_status if submitted_status in ("published", "draft") else "pending_review"
 
     product = ProductService.create_product(
         db=db,

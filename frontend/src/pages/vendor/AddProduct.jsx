@@ -134,6 +134,7 @@ export default function AddProduct() {
     seo_title: '',
     seo_description: '',
     visibility: 'public',
+    installation_guide: '',
   });
 
   const [features, setFeatures] = useState(['']);

@@ -163,11 +163,12 @@ class ProductService:
                 if _is_external_url(temp_preview_url):
                     setattr(product, "preview", temp_preview_url)
                 else:
+                    preview_ext = _extract_file_extension(temp_preview_url, default_ext=".jpg")
                     preview_path, perm_preview = storage_service.move_to_permanent(
                         source_path=temp_preview_url,
                         vendor_id=vendor_id,
                         product_id=getattr(product, "id"),
-                        filename=f"{display_name}-preview.png",
+                        filename=f"{display_name}-preview{preview_ext}",
                         is_image=True,
                         asset_type="preview"
                     )
@@ -180,11 +181,12 @@ class ProductService:
                 if _is_external_url(temp_thumbnail_url):
                     setattr(product, "thumbnail", temp_thumbnail_url)
                 else:
+                    thumb_ext = _extract_file_extension(temp_thumbnail_url, default_ext=".jpg")
                     thumbnail_path, perm_thumbnail = storage_service.move_to_permanent(
                         source_path=temp_thumbnail_url,
                         vendor_id=vendor_id,
                         product_id=getattr(product, "id"),
-                        filename=f"{display_name}-thumbnail.png",
+                        filename=f"{display_name}-thumbnail{thumb_ext}",
                         is_image=True,
                         asset_type="thumbnail"
                     )
