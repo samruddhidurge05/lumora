@@ -446,10 +446,22 @@ class B2StorageProvider(BaseStorageProvider):
                 detail=f"B2 upload integrity check failed: SHA1 mismatch (expected {file_sha1}, got {reported_sha1})."
             )
 
+        b2_file_id = upload_data_resp.get("fileId", "")
+        b2_returned_name = upload_data_resp.get("fileName", b2_file_path)
+
         public_url = f"{self.download_url}/file/{self.bucket_name}/{b2_file_path}"
         storage_path = f"b2://{self.bucket_name}/{b2_file_path}"
 
-        self.cache.set(storage_path, {"exists": True, "size": len(file_bytes), "content_type": content_type})
+        cache_payload = {
+            "exists": True,
+            "size": len(file_bytes),
+            "content_type": content_type,
+            "file_id": b2_file_id,
+            "file_name": b2_returned_name
+        }
+        self.cache.set(storage_path, cache_payload)
+        self.cache.set(b2_file_path, cache_payload)
+        self.cache.set(public_url, cache_payload)
 
         return {
             "storage_path": storage_path,
@@ -517,10 +529,26 @@ class B2StorageProvider(BaseStorageProvider):
         self._ensure_auth()
         if not self.is_available() or not file_name:
             return "", ""
+
         clean_name = urllib.parse.unquote(file_name)
         quoted_name = urllib.parse.quote(clean_name)
         quoted_safe_name = urllib.parse.quote(clean_name, safe="/")
 
+        # 1. Fast Cache Lookup (saved during upload_file)
+        cache_keys = [
+            file_name,
+            clean_name,
+            quoted_name,
+            quoted_safe_name,
+            f"b2://{self.bucket_name}/{file_name}",
+            f"b2://{self.bucket_name}/{clean_name}",
+        ]
+        for k in cache_keys:
+            cached = self.cache.get(k)
+            if cached and isinstance(cached, dict) and cached.get("file_id"):
+                return cached["file_id"], cached.get("file_name") or clean_name
+
+        # 2. Direct B2 list candidates with prefix filter
         candidates = []
         for c in (clean_name, file_name, quoted_safe_name, quoted_name):
             if c and c not in candidates:
@@ -535,8 +563,9 @@ class B2StorageProvider(BaseStorageProvider):
                     headers={"Authorization": self.auth_token},
                     json={
                         "bucketId": self.bucket_id,
+                        "prefix": candidate,
                         "startFileName": candidate,
-                        "maxFileCount": 10
+                        "maxFileCount": 20
                     },
                     timeout=10
                 )
@@ -548,8 +577,9 @@ class B2StorageProvider(BaseStorageProvider):
                         headers={"Authorization": self.auth_token},
                         json={
                             "bucketId": self.bucket_id,
+                            "prefix": candidate,
                             "startFileName": candidate,
-                            "maxFileCount": 10
+                            "maxFileCount": 20
                         },
                         timeout=10
                     )
@@ -560,13 +590,39 @@ class B2StorageProvider(BaseStorageProvider):
                         if (
                             fn in (clean_name, file_name, quoted_safe_name, quoted_name)
                             or urllib.parse.unquote(fn) == clean_name
-                            or fn.endswith(clean_name.split("/")[-1])
+                            or clean_name.split("/")[-1] in fn
                         ):
                             return f.get("fileId", ""), fn
                 else:
                     self.cache.failed_b2_calls += 1
             except Exception:
                 self.cache.failed_b2_calls += 1
+
+        # 3. Parent Folder Scan Fallback
+        if "/" in clean_name:
+            folder_prefix = clean_name.rsplit("/", 1)[0] + "/"
+            target_basename = clean_name.rsplit("/", 1)[1]
+            endpoint = f"{self.api_url}/b2api/v2/b2_list_file_names"
+            self.cache.total_b2_requests += 1
+            try:
+                res = requests.post(
+                    endpoint,
+                    headers={"Authorization": self.auth_token},
+                    json={
+                        "bucketId": self.bucket_id,
+                        "prefix": folder_prefix,
+                        "maxFileCount": 100
+                    },
+                    timeout=10
+                )
+                if res.status_code == 200:
+                    files = res.json().get("files", [])
+                    for f in files:
+                        fn = f.get("fileName", "")
+                        if target_basename in fn or target_basename in urllib.parse.unquote(fn):
+                            return f.get("fileId", ""), fn
+            except Exception:
+                pass
 
         return "", ""
 
