@@ -41,7 +41,7 @@ let activeSyncPromise = null;
 export const syncWithBackend = async (firebaseUser, role = 'customer', forceRefresh = false) => {
   if (!firebaseUser) return null;
 
-  if (activeSyncPromise) {
+  if (activeSyncPromise && !forceRefresh) {
     return activeSyncPromise;
   }
 
