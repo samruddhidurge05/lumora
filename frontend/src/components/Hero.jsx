@@ -48,16 +48,16 @@ export default function Hero() {
       <div style={styles.container}>
         {/* 1. Pill Badge */}
         <div className="hero-badge" style={styles.badge}>
-          <Sparkles size={13} color="#C084FC" />
+          <Sparkles size={14} color="#D8B4FE" />
           <span className="text-sans" style={styles.badgeText}>
-            PREMIUM DIGITAL MARKETPLACE
+            LUMORA — PREMIUM DIGITAL MARKETPLACE
           </span>
         </div>
 
         {/* 2. Editorial Headline */}
         <h1 className="hero-title" style={styles.title}>
           Discover & Sell<br />
-          <span style={styles.titleHighlight}>Premium Digital</span><br />
+          <span style={styles.titleHighlight}>Lumora Premium Digital</span><br />
           Products
         </h1>
 
@@ -151,13 +151,13 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
     objectPosition: 'center',
-    filter: 'brightness(0.9) contrast(1.05)',
+    filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
   },
   fullBgOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.45) 0%, rgba(13, 5, 24, 0.60) 65%, rgba(13, 5, 24, 0.85) 100%)',
-    backdropFilter: 'blur(1px)',
+    background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.15) 0%, rgba(13, 5, 24, 0.28) 65%, rgba(13, 5, 24, 0.45) 100%)',
+    pointerEvents: 'none',
   },
   bottomSoftBlend: {
     position: 'absolute',
@@ -189,20 +189,21 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '8px 18px',
+    padding: '8px 20px',
     borderRadius: '999px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    border: '1px solid rgba(192, 132, 252, 0.40)',
+    background: 'rgba(23, 10, 38, 0.55)',
+    border: '1.5px solid rgba(192, 132, 252, 0.65)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+    boxShadow: '0 0 25px rgba(168, 85, 247, 0.40), inset 0 0 15px rgba(192, 132, 252, 0.20)',
   },
   badgeText: {
-    fontSize: '0.75rem',
+    fontSize: '0.78rem',
     fontWeight: 800,
-    color: '#E9D5FF',
-    letterSpacing: '0.12em',
+    color: '#F3E8FF',
+    letterSpacing: '0.14em',
     textTransform: 'uppercase',
+    textShadow: '0 0 10px rgba(192, 132, 252, 0.6)',
   },
 
   /* Editorial Headline on background with text shadow */
@@ -215,14 +216,17 @@ const styles = {
     letterSpacing: '-0.03em',
     margin: 0,
     maxWidth: '900px',
-    textShadow: '0 4px 24px rgba(0, 0, 0, 0.7)',
+    textShadow: '0 4px 30px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 0, 0, 0.70)',
   },
   titleHighlight: {
     fontFamily: 'var(--font-editorial)',
     fontStyle: 'normal',
     fontWeight: 800,
-    color: '#FFFFFF',
+    background: 'linear-gradient(135deg, #FFFFFF 20%, #E9D5FF 60%, #C084FC 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     display: 'inline-block',
+    filter: 'drop-shadow(0 4px 20px rgba(0, 0, 0, 0.9))',
   },
 
   /* Subtitle on background */
@@ -232,8 +236,8 @@ const styles = {
     color: '#F3E8FF',
     maxWidth: '720px',
     margin: 0,
-    fontWeight: 500,
-    textShadow: '0 2px 16px rgba(0, 0, 0, 0.8)',
+    fontWeight: 600,
+    textShadow: '0 2px 20px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8)',
   },
 
   /* Buttons */
