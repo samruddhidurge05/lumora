@@ -222,6 +222,15 @@ export default function ProductPage() {
           document.head.appendChild(metaDesc);
         }
         metaDesc.setAttribute('content', product.seoDescription || product.seo_description || product.description || '');
+
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+          canonical = document.createElement('link');
+          canonical.rel = 'canonical';
+          document.head.appendChild(canonical);
+        }
+        const { buildProductUrl } = await import('../../utils/referralUtils');
+        canonical.setAttribute('href', buildProductUrl(product));
       } catch (_) { }
     }
     if (product && user) trackProductViewing(user.uid, product);
@@ -289,15 +298,27 @@ export default function ProductPage() {
     }
     if (fetchError) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', fontFamily: 'var(--font-sans)', color: 'var(--color-espresso)' }}>
-          <h2>Product Not Found</h2>
-          <p style={{ color: 'var(--text-muted)' }}>The product may have been removed or does not exist.</p>
-          <button onClick={() => navigateTo('marketplace')} className="btn-premium btn-premium-solid" style={{ padding: '12px 24px', borderRadius: '10px' }}>Go to Marketplace</button>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '24px', fontFamily: 'var(--font-sans)', textAlign: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(216,191,227,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A1E7E' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2D004D', marginBottom: '8px' }}>This product is currently unavailable.</h2>
+            <p style={{ fontSize: '0.875rem', color: '#7B3FA0', maxWidth: '420px', margin: '0 auto', lineHeight: 1.6 }}>
+              It may have been archived, removed by the vendor, or is undergoing review.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '8px' }}>
+            <button onClick={() => navigateTo('marketplace')} className="btn-premium btn-premium-solid" style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 700 }}>
+              Browse Marketplace
+            </button>
+          </div>
         </div>
       );
     }
     return null;
   }
+
 
   const gallery = getGallery(product);
   const videoUrl = product.previewVideo || product.preview_video;

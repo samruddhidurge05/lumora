@@ -1,9 +1,12 @@
-/**
- * referralUtils.js — Single Source of Truth for Referral Links & Commission Calculations
- *
- * Provides identical calculation formulas and customer URL resolution across
- * Customer, Vendor, Affiliate, and Admin applications.
- */
+function slugify(text) {
+  if (!text) return '';
+  return String(text)
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 export function calculateCommission(price, mode = 'percentage', value = 0) {
   const numPrice = Number(price) || 0;
@@ -22,10 +25,10 @@ export function calculateCommission(price, mode = 'percentage', value = 0) {
 export function getCustomerBaseUrl() {
   if (typeof window !== 'undefined' && window.location) {
     const envUrl = 
+      import.meta.env?.VITE_MARKETPLACE_URL ||
       import.meta.env?.VITE_CUSTOMER_URL || 
       import.meta.env?.VITE_FRONTEND_URL || 
-      import.meta.env?.VITE_SITE_URL || 
-      import.meta.env?.VITE_MARKETPLACE_URL;
+      import.meta.env?.VITE_SITE_URL;
 
     if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
       return envUrl.replace(/\/+$/, '');
@@ -33,15 +36,16 @@ export function getCustomerBaseUrl() {
 
     const origin = window.location.origin;
 
+    // Never output admin host in customer URL — replace ports and admin host prefixes
     if (origin.includes(':5174') || origin.includes(':5175')) {
       return 'http://localhost:5173';
     }
 
-    if (origin.includes('lumora-admin') || origin.includes('-admin')) {
-      return origin.replace('-admin-nine', '').replace('-admin', '');
+    if (origin.includes('lumora-admin') || origin.includes('-admin') || origin.includes('admin.')) {
+      return origin.replace('-admin-nine', '').replace('-admin', '').replace('admin.', 'www.');
     }
 
-    // Force the production URL when viewing from a Vercel preview deployment
+    // Force production customer domain for Vercel preview deployments
     if (origin.includes('.vercel.app') && !origin.includes('lumora-lemon-seven')) {
       return 'https://lumora-lemon-seven.vercel.app';
     }
@@ -52,46 +56,39 @@ export function getCustomerBaseUrl() {
   return 'https://lumora-lemon-seven.vercel.app';
 }
 
-export function buildAffiliateReferralLink(product, affCode) {
+export function buildProductUrl(product, options = {}) {
   const baseUrl = getCustomerBaseUrl();
-  let productId = '';
-  if (product && typeof product === 'object') {
-    productId = product.slug || product.id || product.productId || '';
+  if (!product) return `${baseUrl}/#products`;
+
+  let slugPart = '';
+  if (typeof product === 'object') {
+    slugPart = product.slug || slugify(product.title || product.name || '') || product.id || product.productId || '';
   } else if (product) {
-    productId = String(product);
+    slugPart = String(product);
   }
 
-  const cleanRef = (affCode || '').trim();
+  const cleanSlug = slugify(slugPart) || String(product.id || product || '');
+  const refCode = options.refCode || (typeof product === 'object' ? (product.refCode || product.referralCode) : '');
+  const cleanRef = (refCode || '').trim();
 
-  if (cleanRef) {
-    if (productId) {
-      return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}/product/${productId}`;
-    }
-    return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}`;
+  const queryParams = [];
+  if (cleanRef) queryParams.push(`ref=${encodeURIComponent(cleanRef)}`);
+  if (options.qr) queryParams.push('src=qr');
+
+  const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+
+  if (cleanSlug) {
+    return `${baseUrl}/product/${cleanSlug}${queryString}`;
   }
 
-  if (productId) {
-    return `${baseUrl}/#product/${productId}`;
-  }
+  return `${baseUrl}/#products${queryString}`;
+}
 
-  return `${baseUrl}/#products`;
+export function buildAffiliateReferralLink(product, affCode) {
+  return buildProductUrl(product, { refCode: affCode });
 }
 
 export function buildAdminReferralLink(product, adminCode) {
-  const baseUrl = getCustomerBaseUrl();
-  let productId = '';
-  if (product && typeof product === 'object') {
-    productId = product.slug || product.id || product.productId || '';
-  } else if (product) {
-    productId = String(product);
-  }
-
-  const cleanRef = (adminCode || '').trim();
-  const refQuery = cleanRef ? `?ref=${encodeURIComponent(cleanRef)}` : '';
-
-  if (productId) {
-    return `${baseUrl}/#product/${productId}${refQuery}`;
-  }
-
-  return `${baseUrl}/#products${refQuery}`;
+  return buildProductUrl(product, { refCode: adminCode });
 }
+

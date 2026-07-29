@@ -22,12 +22,13 @@
  */
 import React, { useState, useCallback } from 'react';
 import { Download, Link2, Check, QrCode, X } from 'lucide-react';
-import { buildAffiliateReferralLink } from '../../utils/referralUtils';
+import { buildProductUrl as buildCanonicalUrl } from '../../utils/referralUtils';
 
-/* ── Build the product URL ─────────────────────────────────────── */
+/* ── Build the product URL for QR Codes ────────────────────────── */
 function buildProductUrl(product) {
-  return buildAffiliateReferralLink(product, product?.refCode || product?.referralCode || '');
+  return buildCanonicalUrl(product, { qr: true });
 }
+
 
 /* ── Build QR image URL via free public API (no key needed) ──── */
 function buildQrImageUrl(data, size = 180) {

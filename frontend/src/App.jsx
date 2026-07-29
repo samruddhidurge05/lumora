@@ -153,6 +153,8 @@ const VerifyEmail       = safeLazy(() => import('./pages/auth/VerifyEmail'));
 const JoinAffiliate     = safeLazy(() => import('./pages/marketplace/JoinAffiliate'));
 const JoinVendor        = safeLazy(() => import('./pages/marketplace/JoinVendor'));
 const ReferralRouteHandler = safeLazy(() => import('./pages/marketplace/ReferralRouteHandler'));
+const ProductRouteHandler  = safeLazy(() => import('./pages/marketplace/ProductRouteHandler'));
+
 
 // Partnerships
 const PartnershipHub    = safeLazy(() => import('./pages/partnerships/PartnershipHub'));
@@ -563,9 +565,14 @@ function AppContent() {
           <Route path="/auth/forgot-password"    element={<ForgotPassword />} />
           <Route path="/auth/verify-email"       element={<VerifyEmail />} />
 
+          {/* ── Public Product routes (Direct / QR Code access) ── */}
+          <Route path="/product/:productId"           element={<ProductRouteHandler />} />
+          <Route path="/p/:productId"                 element={<ProductRouteHandler />} />
+
           {/* ── Referral routes ── */}
           <Route path="/ref/:code/product/:productId" element={<ReferralRouteHandler />} />
           <Route path="/ref/:code"                    element={<ReferralRouteHandler />} />
+
 
           {/* ── Partnership routes ── */}
           <Route path="/partnerships"           element={<PartnershipHub />} />

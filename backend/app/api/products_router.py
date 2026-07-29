@@ -256,23 +256,82 @@ def get_product_categories(db: Session = Depends(get_db)):
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
-def read_product(product_id: str, db: Session = Depends(get_db)):
-    """Get a single product by ID. Public - no authentication required."""
-    try:
-        pid = int(product_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-
+def read_product(
+    product_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Get a single product by numeric ID or human-readable slug.
+    Public - no authentication required for published products.
+    Draft, archived, pending_review, or disabled vendor products return 404 for public callers.
+    """
+    from sqlalchemy import func
     from app.utils.db_sync import get_product_by_id
-    get_product_by_id(db, pid)
 
-    product = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String)).filter(
-        Product.id == pid,
+    query = db.query(Product).outerjoin(User, Product.vendor_id == sql_cast(User.id, String))
+
+    if product_id.isdigit():
+        pid = int(product_id)
+        get_product_by_id(db, pid)
+        query = query.filter(Product.id == pid)
+    else:
+        # Match by slug or title slugification
+        clean_slug = product_id.strip().lower()
+        query = query.filter(
+            or_(
+                func.lower(Product.title).replace(' ', '-') == clean_slug,
+                func.lower(Product.title) == clean_slug.replace('-', ' '),
+                Product.category.ilike(clean_slug)
+            )
+        )
+
+    product = query.filter(
         or_(User.id.is_(None), User.is_active.is_(True))
     ).first()
+
     if not product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product unavailable")
+
+    # Enterprise Availability Guard:
+    # Public visitors may ONLY view products in 'published' status.
+    # Non-published (draft, pending_review, archived) are restricted to the owner vendor or admins.
+    is_admin = current_user is not None and (current_user.role or "").lower() == "admin"
+    is_owner = current_user is not None and (
+        str(product.vendor_id) == str(current_user.id) or (product.seller or "") == (current_user.name or "")
+    )
+
+    if (product.status or "published").lower() != "published" and not is_admin and not is_owner:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product unavailable")
+
     return resolve_products_media(product, db)
+
+
+@router.post("/{product_id}/qr-scan")
+def track_qr_scan(product_id: str, db: Session = Depends(get_db)):
+    """Record QR scan analytics event on backend."""
+    try:
+        query = db.query(Product)
+        if product_id.isdigit():
+            query = query.filter(Product.id == int(product_id))
+        else:
+            clean_slug = product_id.strip().lower()
+            query = query.filter(
+                or_(
+                    func.lower(Product.title).replace(' ', '-') == clean_slug,
+                    func.lower(Product.title) == clean_slug.replace('-', ' ')
+                )
+            )
+        product = query.first()
+        if product:
+            # Increment product views / downloads metric as proxy for QR interest
+            product.views = (getattr(product, "views", 0) or 0) + 1
+            db.commit()
+            return {"status": "ok", "scanned_product_id": product.id}
+    except Exception:
+        pass
+    return {"status": "ok"}
+
 
 
 @router.get("/{product_id}/related", response_model=List[ProductResponse])
