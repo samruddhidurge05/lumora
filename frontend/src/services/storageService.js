@@ -110,7 +110,10 @@ async function _uploadToBackend(file, endpoint, onProgress, _isRetry = false) {
     xhr.addEventListener('abort', () => reject(new Error('Upload was cancelled.')));
 
     const formData = new FormData();
-    formData.append('file', file);
+    const isImgEndpoint = String(endpoint).includes('/image');
+    const rawName = file.name || (isImgEndpoint ? 'image.jpg' : 'file.bin');
+    const safeName = rawName.includes('.') ? rawName : `${rawName}${isImgEndpoint ? '.jpg' : '.bin'}`;
+    formData.append('file', file, safeName);
     xhr.send(formData);
   });
 }

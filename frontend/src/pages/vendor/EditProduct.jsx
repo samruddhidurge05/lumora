@@ -27,8 +27,15 @@ const CATEGORIES = [
 
 /* ── Compress and upload preview image to backend storage ───────────────── */
 async function uploadImageToFirebase(file, maxPx = 800, quality = 0.80) {
-  // 1. Compress client-side
-  const compressed = await new Promise((resolve, reject) => {
+  // 1. Compress client-side with robust filename & fallback handling
+  const compressed = await new Promise((resolve) => {
+    if (!file) { resolve(file); return; }
+    if (file.name && file.name.toLowerCase().endsWith('.svg')) { resolve(file); return; }
+
+    const rawName = file.name || 'preview.jpg';
+    const baseName = rawName.includes('.') ? rawName.substring(0, rawName.lastIndexOf('.')) : rawName;
+    const finalName = `${baseName || 'preview'}.jpg`;
+
     const reader = new FileReader();
     reader.onload = ev => {
       const img = new window.Image();
@@ -40,14 +47,14 @@ async function uploadImageToFirebase(file, maxPx = 800, quality = 0.80) {
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         canvas.toBlob(blob => {
-          if (!blob) { reject(new Error('Compression failed')); return; }
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], finalName, { type: 'image/jpeg' }));
         }, 'image/jpeg', quality);
       };
-      img.onerror = reject;
+      img.onerror = () => resolve(file);
       img.src = ev.target.result;
     };
-    reader.onerror = reject;
+    reader.onerror = () => resolve(file);
     reader.readAsDataURL(file);
   });
 

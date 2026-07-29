@@ -744,19 +744,13 @@ class StorageService:
                 detail="Executable files are strictly blocked for security."
             )
 
-        if ext not in allowed_exts:
-            raise HTTPException(
-                status_code=422,
-                detail=f"File extension '{ext}' not allowed. Allowed: {', '.join(sorted(allowed_exts))}"
-            )
-            
         if len(file_bytes) > max_size:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail=f"File exceeds maximum allowed size of {max_size // 1024 // 1024} MB."
             )
 
-        # Verify MIME content compatibility (magic numbers)
+        # Verify MIME content compatibility (magic numbers) & normalize extensions for valid images
         if is_image:
             is_valid_image = False
             detected_format = None
@@ -787,18 +781,25 @@ class StorageService:
                     detail="Invalid image content: Magic signature mismatch. Not a valid image file."
                 )
 
-            # Extension compatibility check
-            if ext in {".jpg", ".jpeg"} and detected_format != "JPEG":
-                raise HTTPException(status_code=422, detail="File content is not compatible with JPEG/JPG extension.")
-            elif ext == ".png" and detected_format != "PNG":
-                raise HTTPException(status_code=422, detail="File content is not compatible with PNG extension.")
-            elif ext == ".gif" and detected_format != "GIF":
-                raise HTTPException(status_code=422, detail="File content is not compatible with GIF extension.")
-            elif ext == ".webp" and detected_format != "WEBP":
-                raise HTTPException(status_code=422, detail="File content is not compatible with WEBP extension.")
-            elif ext == ".svg" and detected_format != "SVG":
-                raise HTTPException(status_code=422, detail="File content is not compatible with SVG extension.")
+            # Auto-normalize extension to match actual image byte format
+            format_ext_map = {
+                "JPEG": ".jpg",
+                "PNG": ".png",
+                "GIF": ".gif",
+                "WEBP": ".webp",
+                "SVG": ".svg"
+            }
+            expected_ext = format_ext_map.get(detected_format, ".jpg")
+            if not ext or ext not in allowed_exts or (ext in allowed_exts and ext != expected_ext and not (ext in {".jpg", ".jpeg"} and expected_ext == ".jpg")):
+                base_name = os.path.splitext(filename)[0] or "image"
+                filename = f"{base_name}{expected_ext}"
+                ext = expected_ext
         else:
+            if ext not in allowed_exts:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"File extension '{ext}' not allowed. Allowed: {', '.join(sorted(allowed_exts))}"
+                )
             # Validate product file magic numbers at minimum for ZIP and PDF
             if ext in {".zip", ".epub", ".docx", ".xlsx", ".pptx", ".sketch", ".xd"}:
                 if not file_bytes.startswith(b"PK\x03\x04"):
