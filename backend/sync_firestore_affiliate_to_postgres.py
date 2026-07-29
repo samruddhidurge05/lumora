@@ -56,9 +56,36 @@ for doc in aff_docs:
     # Find user by firebase_uid
     user = db.query(User).filter(User.firebase_uid == uid).first()
     if not user:
-        print(f"⚠ Skipping uid={uid}, code={aff_code}: User not found in PostgreSQL")
-        skipped += 1
-        continue
+        from firebase_admin import auth
+        try:
+            fb_user = auth.get_user(uid)
+            email = fb_user.email or f"{uid}@placeholder.com"
+            name = fb_user.display_name or "Unknown Affiliate"
+            
+            # Check if a user with this email already exists but missing firebase_uid
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                user.firebase_uid = uid
+                db.commit()
+                print(f"✓ Linked existing user_id={user.id} ({email}) to uid={uid}")
+            else:
+                user = User(
+                    name=name,
+                    email=email,
+                    password_hash="",  # Managed by firebase
+                    role="affiliate",
+                    firebase_uid=uid,
+                    is_active=True,
+                    is_verified=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+                print(f"✓ Created missing user_id={user.id} ({email}) for uid={uid}")
+        except Exception as e:
+            print(f"⚠ Skipping uid={uid}, code={aff_code}: User not found and failed to create: {e}")
+            skipped += 1
+            continue
     
     # Check if profile exists
     profile = db.query(AffiliateProfile).filter(
