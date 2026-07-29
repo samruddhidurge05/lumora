@@ -12,6 +12,7 @@ import { togglePriceAlertSubscription } from '../../services/priceAlertService';
 import { trackProductViewing } from '../../services/historyService';
 import { getReviewsApi, createReviewApi } from '../../api/reviewApi';
 import { backendFetch } from '../../utils/api';
+import { buildProductUrl } from '../../utils/referralUtils';
 import RefundPolicyCard from '../../components/policy/RefundPolicyCard';
 import RefundPolicyModal from '../../components/policy/RefundPolicyModal';
 import RefundAcknowledgementModal from '../../components/policy/RefundAcknowledgementModal';
@@ -229,7 +230,6 @@ export default function ProductPage() {
           canonical.rel = 'canonical';
           document.head.appendChild(canonical);
         }
-        const { buildProductUrl } = await import('../../utils/referralUtils');
         canonical.setAttribute('href', buildProductUrl(product));
       } catch (_) { }
     }
