@@ -864,7 +864,7 @@ def create_product(
     Create a new product.
     Requires a valid JWT. Only vendors (role='vendor') or admins may create products.
     """
-    if current_user.role not in ("vendor", "admin"):
+    if current_user.role not in ("vendor", "affiliate", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only vendors can create products.",
@@ -983,7 +983,7 @@ def update_product(
     Update an existing product (partial update - only provided fields are changed).
     Requires a valid JWT. Only product owner (vendor) or admin may update products.
     """
-    if current_user.role not in ("vendor", "admin"):
+    if current_user.role not in ("vendor", "affiliate", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only vendors can update products.",
@@ -1051,7 +1051,7 @@ def delete_product(
     Delete a product.
     Requires a valid JWT. Only product owner (vendor) or admin may delete products.
     """
-    if current_user.role not in ("vendor", "admin"):
+    if current_user.role not in ("vendor", "affiliate", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only vendors can delete products.",
