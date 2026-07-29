@@ -281,7 +281,7 @@ def read_product(
         clean_slug = product_id.strip().lower()
         query = query.filter(
             or_(
-                func.lower(Product.title).replace(' ', '-') == clean_slug,
+                func.replace(func.lower(Product.title), ' ', '-') == clean_slug,
                 func.lower(Product.title) == clean_slug.replace('-', ' '),
                 Product.category.ilike(clean_slug)
             )
@@ -313,11 +313,12 @@ def track_qr_scan(product_id: str, db: Session = Depends(get_db)):
             clean_slug = product_id.strip().lower()
             query = query.filter(
                 or_(
-                    func.lower(Product.title).replace(' ', '-') == clean_slug,
+                    func.replace(func.lower(Product.title), ' ', '-') == clean_slug,
                     func.lower(Product.title) == clean_slug.replace('-', ' ')
                 )
             )
         product = query.first()
+
         if product:
             # Increment product views / downloads metric as proxy for QR interest
             product.views = (getattr(product, "views", 0) or 0) + 1
