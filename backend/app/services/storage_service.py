@@ -416,7 +416,7 @@ class B2StorageProvider(BaseStorageProvider):
         upload_auth_token = upload_data["authorizationToken"]
 
         file_sha1 = hashlib.sha1(file_bytes).hexdigest()
-        encoded_file_name = urllib.parse.quote(b2_file_path)
+        encoded_file_name = urllib.parse.quote(b2_file_path, safe="/")
 
         self.cache.total_b2_requests += 1
         upload_res = requests.post(
@@ -469,7 +469,7 @@ class B2StorageProvider(BaseStorageProvider):
             )
 
         src_clean = source_path.replace(f"b2://{self.bucket_name}/", "")
-        file_id = self._get_file_id_by_name(src_clean)
+        file_id, actual_src_name = self._get_file_id_and_name(src_clean)
         if not file_id:
             if self.exists(target_path):
                 return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
@@ -510,45 +510,69 @@ class B2StorageProvider(BaseStorageProvider):
         self.cache.set(target_path, {"exists": True, "size": copy_res.json().get("contentLength", 0)})
         self.cache.invalidate(source_path)
 
-        self.delete_file_id(file_id, src_clean)
+        self.delete_file_id(file_id, actual_src_name or src_clean)
         return f"{download_domain}/file/{self.bucket_name}/{dest_clean}"
 
-    def _get_file_id_by_name(self, file_name: str) -> str:
+    def _get_file_id_and_name(self, file_name: str) -> Tuple[str, str]:
         self._ensure_auth()
-        if not self.is_available():
-            return ""
-        endpoint = f"{self.api_url}/b2api/v2/b2_list_file_names"
-        self.cache.total_b2_requests += 1
-        res = requests.post(
-            endpoint,
-            headers={"Authorization": self.auth_token},
-            json={
-                "bucketId": self.bucket_id,
-                "startFileName": file_name,
-                "maxFileCount": 1
-            },
-            timeout=10
-        )
-        if res.status_code == 401:
-            self._authorize()
+        if not self.is_available() or not file_name:
+            return "", ""
+        clean_name = urllib.parse.unquote(file_name)
+        quoted_name = urllib.parse.quote(clean_name)
+        quoted_safe_name = urllib.parse.quote(clean_name, safe="/")
+
+        candidates = []
+        for c in (clean_name, file_name, quoted_safe_name, quoted_name):
+            if c and c not in candidates:
+                candidates.append(c)
+
+        for candidate in candidates:
+            endpoint = f"{self.api_url}/b2api/v2/b2_list_file_names"
             self.cache.total_b2_requests += 1
-            res = requests.post(
-                endpoint,
-                headers={"Authorization": self.auth_token},
-                json={
-                    "bucketId": self.bucket_id,
-                    "startFileName": file_name,
-                    "maxFileCount": 1
-                },
-                timeout=10
-            )
-        if res.status_code == 200:
-            files = res.json().get("files", [])
-            if files and files[0].get("fileName") == file_name:
-                return files[0].get("fileId")
-        else:
-            self.cache.failed_b2_calls += 1
-        return ""
+            try:
+                res = requests.post(
+                    endpoint,
+                    headers={"Authorization": self.auth_token},
+                    json={
+                        "bucketId": self.bucket_id,
+                        "startFileName": candidate,
+                        "maxFileCount": 10
+                    },
+                    timeout=10
+                )
+                if res.status_code == 401:
+                    self._authorize()
+                    self.cache.total_b2_requests += 1
+                    res = requests.post(
+                        endpoint,
+                        headers={"Authorization": self.auth_token},
+                        json={
+                            "bucketId": self.bucket_id,
+                            "startFileName": candidate,
+                            "maxFileCount": 10
+                        },
+                        timeout=10
+                    )
+                if res.status_code == 200:
+                    files = res.json().get("files", [])
+                    for f in files:
+                        fn = f.get("fileName", "")
+                        if (
+                            fn in (clean_name, file_name, quoted_safe_name, quoted_name)
+                            or urllib.parse.unquote(fn) == clean_name
+                            or fn.endswith(clean_name.split("/")[-1])
+                        ):
+                            return f.get("fileId", ""), fn
+                else:
+                    self.cache.failed_b2_calls += 1
+            except Exception:
+                self.cache.failed_b2_calls += 1
+
+        return "", ""
+
+    def _get_file_id_by_name(self, file_name: str) -> str:
+        file_id, _ = self._get_file_id_and_name(file_name)
+        return file_id
 
     def delete_file_id(self, file_id: str, file_name: str) -> bool:
         self._ensure_auth()
@@ -582,9 +606,9 @@ class B2StorageProvider(BaseStorageProvider):
         if not storage_path:
             return False
         clean_name = storage_path.replace(f"b2://{self.bucket_name}/", "")
-        file_id = self._get_file_id_by_name(clean_name)
+        file_id, actual_file_name = self._get_file_id_and_name(clean_name)
         if file_id:
-            return self.delete_file_id(file_id, clean_name)
+            return self.delete_file_id(file_id, actual_file_name or clean_name)
         return False
 
     def get_file_stream(self, storage_path: str) -> Generator[bytes, None, None]:
