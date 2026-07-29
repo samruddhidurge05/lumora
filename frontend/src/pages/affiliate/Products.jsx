@@ -90,18 +90,23 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   };
 
   const formatCommission = (product) => {
-    if (product.commission_type === 'fixed') {
-      return `₹${Math.round(product.commission_value || 0)}`;
+    if (product.commission_type === 'fixed' && Number(product.commission_value) > 0) {
+      return `₹${Math.round(product.commission_value)}`;
     }
-    return `${product.commission_value != null ? product.commission_value : (COMMISSION_RATES[product.category] || 15)}%`;
+    const val = (product.commission_value && Number(product.commission_value) > 0)
+      ? Number(product.commission_value)
+      : (COMMISSION_RATES[product.category] || profile?.commission_rate || 20);
+    return `${val}%`;
   };
 
   const calcEarning = (product) => {
-    if (product.commission_type === 'fixed') {
-      return Math.round(product.commission_value || 0);
+    if (product.commission_type === 'fixed' && Number(product.commission_value) > 0) {
+      return Math.round(product.commission_value);
     }
     const priceINR = Math.round(product.price);
-    const rateVal = product.commission_value != null ? product.commission_value : (COMMISSION_RATES[product.category] || 15);
+    const rateVal = (product.commission_value && Number(product.commission_value) > 0)
+      ? Number(product.commission_value)
+      : (COMMISSION_RATES[product.category] || profile?.commission_rate || 20);
     return Math.round((priceINR * rateVal) / 100);
   };
 

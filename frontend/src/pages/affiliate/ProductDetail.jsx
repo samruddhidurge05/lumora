@@ -125,17 +125,20 @@ export default function AffiliateProductDetail({ product, onBack, profile, stats
   const REFERRAL_CODE = stats?.referral_code || profile?.referral_code || 'AFF001';
 
   /* ── Commission rate: prefer product-specific → profile rate → category default ── */
-  const isFixed = product?.commission_type === 'fixed';
-  const customCommVal = product?.commission_value;
+  const isFixed = product?.commission_type === 'fixed' && Number(product?.commission_value) > 0;
+  const customCommVal = (product?.commission_value && Number(product.commission_value) > 0)
+    ? Number(product.commission_value)
+    : null;
+  const effectiveRateNum = customCommVal ?? (profile?.commission_rate ?? COMMISSION_RATES[product?.category] ?? 20);
   const rate = isFixed
-    ? `₹${Math.round(customCommVal || 0)}`
-    : `${customCommVal != null ? customCommVal : (profile?.commission_rate ?? COMMISSION_RATES[product?.category] ?? 15)}%`;
+    ? `₹${Math.round(product?.commission_value || 0)}`
+    : `${effectiveRateNum}%`;
 
   /* ── Price + earning per sale ─────────────────────────────────────── */
   const priceINR  = Math.round(product?.price || 0);
   const earnPerSale = isFixed
-    ? Math.round(customCommVal || 0)
-    : Math.round((priceINR * parseFloat(rate)) / 100);
+    ? Math.round(product?.commission_value || 0)
+    : Math.round((priceINR * effectiveRateNum) / 100);
 
   /* ── Affiliate links built with live referral code ────────────────── */
   const affLink   = buildAffiliateReferralLink(product, REFERRAL_CODE);
