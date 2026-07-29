@@ -54,6 +54,14 @@ export default function ReferralRouteHandler() {
           } catch (err) {
             console.warn('[ReferralRouteHandler] Backend click tracking notice:', err);
           }
+        } else {
+          try {
+            await backendFetch(`/affiliate/track-click/${refCode}`, {
+              method: 'POST'
+            });
+          } catch (err) {
+            console.warn('[ReferralRouteHandler] Backend track-click notice:', err);
+          }
         }
 
         // Store pending referral in localStorage & sessionStorage for persistent cross-tab/refresh recovery

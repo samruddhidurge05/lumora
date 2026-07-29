@@ -674,6 +674,13 @@ export default function AffiliateDashboardHome({
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Sales Feed</span>
             <h3 className="text-editorial" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px' }}>Recent Referrals</h3>
           </div>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: 'earnings' }))}
+            className="btn-minimal"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem' }}
+          >
+            Full Ledger <ArrowUpRight size={11} />
+          </button>
         </div>
 
         {(!commissions || commissions.length === 0) ? (
@@ -684,40 +691,67 @@ export default function AffiliateDashboardHome({
         ) : (
           <div className="aff-table-wrap" style={{ minWidth: 0 }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '16px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px', minWidth: '540px' }}>
-              {['Product', 'Sale Amount', 'Commission', 'Status', 'Date'].map(h => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.4fr 1.2fr 1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '8px', minWidth: '680px' }}>
+              {['Product & Order', 'Customer', 'Link / Code', 'Sale Price', 'Commission', 'Status', 'Date'].map(h => (
                 <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
               ))}
             </div>
-            {commissions.slice(0, 5).map((comm, idx) => (
-              <div
-                key={comm.id || idx}
-                style={{
-                  display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
-                  gap: '16px', padding: '12px', borderRadius: '10px', minWidth: '540px',
-                  border: '1px solid transparent', transition: 'all 0.25s', alignItems: 'center',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.03)'; e.currentTarget.style.borderColor = 'rgba(196,181,253,0.20)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-              >
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comm.product_name || 'Referral Sale'}</span>
+            {commissions.slice(0, 6).map((comm, idx) => {
+              const codeUsed = comm.referral_code_used || comm.referral_code || comm.coupon_code || REFERRAL_CODE;
+              const isCoupon = comm.attribution_source === 'coupon_code';
+              return (
+                <div
+                  key={comm.id || idx}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '1.8fr 1.4fr 1.2fr 1fr 1fr 1fr 1fr',
+                    gap: '12px', padding: '12px', borderRadius: '10px', minWidth: '680px',
+                    border: '1px solid transparent', transition: 'all 0.25s', alignItems: 'center',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.03)'; e.currentTarget.style.borderColor = 'rgba(196,181,253,0.20)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {comm.product_name || 'Referral Product'}
+                    </span>
+                    {comm.order_id && (
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#7B3FA0' }}>
+                        #ORD-{comm.order_id}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {comm.customer_name || 'Customer'}
+                    </span>
+                    {comm.customer_email && (
+                      <span style={{ fontSize: '0.64rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {comm.customer_email}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2D004D' }}>{codeUsed}</span>
+                    <span style={{ display: 'block', fontSize: '0.60rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                      {isCoupon ? '🏷️ Coupon' : '🔗 Link'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-primary)' }}>{formatINR(comm.sale_amount)}</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(comm.commission_amt)}</span>
+                  <div>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: '12px', fontSize: '0.62rem', fontWeight: 750,
+                      background: (comm.commission_status || comm.status) === 'paid' ? 'rgba(34,197,94,0.1)' : (comm.commission_status || comm.status) === 'approved' ? 'rgba(99,102,241,0.1)' : 'rgba(245,158,11,0.1)',
+                      color: STATUS_COLOR[comm.commission_status || comm.status] || 'var(--text-muted)',
+                      textTransform: 'uppercase', letterSpacing: '0.05em'
+                    }}>
+                      {comm.commission_status || comm.status || 'pending'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>{relativeTime(comm.created_at || comm.date)}</span>
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>{formatINR(comm.sale_amount)}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(comm.commission_amt)}</span>
-                <div>
-                  <span style={{
-                    padding: '4px 10px', borderRadius: '12px', fontSize: '0.65rem', fontWeight: 750,
-                    background: comm.status === 'paid' ? 'rgba(34,197,94,0.1)' : comm.status === 'approved' ? 'rgba(99,102,241,0.1)' : 'rgba(245,158,11,0.1)',
-                    color: STATUS_COLOR[comm.status] || 'var(--text-muted)',
-                    textTransform: 'uppercase', letterSpacing: '0.05em'
-                  }}>
-                    {comm.status}
-                  </span>
-                </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{relativeTime(comm.created_at || comm.date)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

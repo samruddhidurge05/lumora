@@ -1142,6 +1142,44 @@ export function AppContextProvider({ children }) {
     return saved !== null ? Number(saved) : 70;
   });
 
+  // ── Global Referral Link Capture ─────────────────────────────────────────
+  // Inspects URL search params and hash on mount/navigation for ?ref= or ?r=
+  useEffect(() => {
+    try {
+      const searchStr = window.location.search;
+      const hashStr   = window.location.hash;
+      const urlParams = new URLSearchParams(searchStr);
+      let refCode = urlParams.get('ref') || urlParams.get('r');
+
+      if (!refCode && hashStr && hashStr.includes('?')) {
+        const queryInHash = hashStr.split('?')[1];
+        const hashParams  = new URLSearchParams(queryInHash);
+        refCode = hashParams.get('ref') || hashParams.get('r');
+      }
+
+      if (refCode) {
+        const cleanCode = refCode.trim().toUpperCase();
+        if (cleanCode) {
+          sessionStorage.setItem('lumora_aff_ref', cleanCode);
+          localStorage.setItem('lumora_aff_ref', cleanCode);
+
+          const pendingPayload = {
+            referral_code: cleanCode,
+            timestamp: Date.now()
+          };
+          localStorage.setItem('lumora_pending_referral', JSON.stringify(pendingPayload));
+
+          // Track click on backend (non-blocking)
+          const trackedKey = `lumora_tracked_click_${cleanCode}`;
+          if (!sessionStorage.getItem(trackedKey)) {
+            sessionStorage.setItem(trackedKey, 'true');
+            backendFetch(`/affiliate/track-click/${cleanCode}`, { method: 'POST' }).catch(() => {});
+          }
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   // Notifications — loaded from backend, start empty
   const [notifications, setNotifications] = useState([]);
 

@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
@@ -282,32 +283,53 @@ class PurchaseService:
                                         comm.id, aff.id, order.id, prod.id, user_id, commission_amt
                                     )
 
-                                    # 6e. Sync with legacy AffiliateReferral if present
-                                    if pending_ref:
-                                        pending_ref.status = "PURCHASED"
-                                        pending_ref.order_id = order.id
-                                        pending_ref.converted_at = now_time
-
-                                    # Also update matching AffiliateReferral by (customer_id, product_id)
+                                    # 6e. Sync with AffiliateReferral ledger
                                     r_rows = db.query(AffiliateReferral).filter(
                                         AffiliateReferral.affiliate_id == aff.id,
                                         AffiliateReferral.product_id == prod.id,
                                         AffiliateReferral.customer_id == user_id
                                     ).all()
-                                    # Also catch the no-product-id referral rows created by track-click
                                     r_rows_null = db.query(AffiliateReferral).filter(
                                         AffiliateReferral.affiliate_id == aff.id,
                                         AffiliateReferral.product_id.is_(None),
                                         AffiliateReferral.customer_id == user_id
                                     ).all()
-                                    for r_row in (r_rows + r_rows_null):
-                                        r_row.status = "PURCHASED"
-                                        r_row.order_id = order.id
-                                        r_row.converted_at = now_time
-                                        r_row.customer_id = user_id
-                                        r_row.attribution_source = attr_source
-                                        if coupon_code_used:
-                                            r_row.coupon_code = coupon_code_used
+                                    r_rows_unauth = db.query(AffiliateReferral).filter(
+                                        AffiliateReferral.affiliate_id == aff.id,
+                                        AffiliateReferral.referral_code == clean_code,
+                                        AffiliateReferral.customer_id.is_(None)
+                                    ).order_by(AffiliateReferral.clicked_at.desc()).all()
+
+                                    matching_set = set(r_rows + r_rows_null + r_rows_unauth)
+                                    if pending_ref:
+                                        matching_set.add(pending_ref)
+
+                                    if matching_set:
+                                        for r_row in matching_set:
+                                            r_row.status = "PURCHASED"
+                                            r_row.order_id = order.id
+                                            r_row.converted_at = now_time
+                                            r_row.customer_id = user_id
+                                            r_row.attribution_source = attr_source
+                                            if coupon_code_used:
+                                                r_row.coupon_code = coupon_code_used
+                                    else:
+                                        # Create persistent AffiliateReferral row so conversion ledger is complete
+                                        new_ref = AffiliateReferral(
+                                            affiliate_id=aff.id,
+                                            referral_code=clean_code,
+                                            product_id=prod.id,
+                                            customer_id=user_id,
+                                            order_id=order.id,
+                                            session_id=f"REF_CONV_{uuid.uuid4().hex[:12]}",
+                                            status="PURCHASED",
+                                            clicked_at=now_time,
+                                            authenticated_at=now_time,
+                                            converted_at=now_time,
+                                            attribution_source=attr_source,
+                                            coupon_code=coupon_code_used
+                                        )
+                                        db.add(new_ref)
 
                                     # Update affiliate stats with quantized money accumulation
                                     aff.total_earnings = quantize_money((aff.total_earnings or 0.0) + commission_amt)

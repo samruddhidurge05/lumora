@@ -287,20 +287,25 @@ def _get_affiliate_profile(user: User, db: Session) -> AffiliateProfile:
 
 
 def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats:
-    """Compute aggregated stats from profile + commission rows."""
+    """Compute aggregated stats from profile + commission rows (ground truth)."""
+    total_earnings_computed = sum(c.commission_amt for c in commissions if c.commission_amt is not None)
+    total_sales_computed    = len(commissions)
+    total_earnings          = max(profile.total_earnings or 0.0, total_earnings_computed)
+    total_sales             = max(profile.total_sales or 0, total_sales_computed)
+
     paid    = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "paid" or c.status == "paid")
     pending = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) in ("pending", "approved", "ready_for_payout") or c.status in ("pending", "approved", "ready_for_payout"))
     revenue = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
     conv    = round(
-        (profile.total_sales / profile.total_clicks * 100), 2
+        (total_sales / profile.total_clicks * 100), 2
     ) if profile.total_clicks else 0.0
     return AffiliateStats(
-        total_earnings=profile.total_earnings,
+        total_earnings=round(total_earnings, 2),
         total_clicks=profile.total_clicks,
-        total_sales=profile.total_sales,
-        pending_earnings=pending,
-        paid_earnings=paid,
-        revenue_generated=revenue,
+        total_sales=total_sales,
+        pending_earnings=round(pending, 2),
+        paid_earnings=round(paid, 2),
+        revenue_generated=round(revenue, 2),
         conversion_rate=conv,
         referral_code=profile.referral_code,
         referral_link=f"{SITE_URL}?ref={profile.referral_code}",
