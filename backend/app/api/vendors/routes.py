@@ -31,8 +31,23 @@ from .services import (
     get_vendor_products,
     get_vendor_dashboard,
     reply_to_vendor_review,
+    get_vendor_affiliate_summary,
+    get_vendor_affiliate_products,
+    update_vendor_product_affiliate_settings,
+    get_vendor_product_affiliate_performance,
+    get_vendor_affiliate_list,
+    get_vendor_affiliate_detail,
+    get_vendor_affiliate_orders,
+    get_vendor_affiliate_commission_ledger,
+    get_vendor_affiliate_withdrawals,
 )
-from .schemas import VendorProfileSchema, StoreSettingsSchema, WithdrawalSchema, ReviewReplySchema
+from .schemas import (
+    VendorProfileSchema,
+    StoreSettingsSchema,
+    WithdrawalSchema,
+    ReviewReplySchema,
+    VendorProductAffiliateSettingsSchema,
+)
 from pydantic import BaseModel
 
 class OrderStatusSchema(BaseModel):
@@ -267,3 +282,135 @@ def reply_to_review_route(
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("detail", "Failed to submit reply"))
     return res
+
+
+# -- Vendor Affiliate Management Console Routes --------------------------------
+
+@router.get("/{vendor_id}/affiliate/summary")
+def vendor_affiliate_summary(
+    vendor_id: str,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view affiliate summary")
+    return get_vendor_affiliate_summary(vendor_id)
+
+
+@router.get("/{vendor_id}/affiliate/products")
+def vendor_affiliate_products(
+    vendor_id: str,
+    search: str = "",
+    status: str = "",
+    program_status: str = "",
+    page: int = 1,
+    limit: int = 20,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view affiliate products")
+    return get_vendor_affiliate_products(
+        vendor_id,
+        search=search,
+        status_filter=status,
+        program_filter=program_status,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.put("/{vendor_id}/products/{product_id}/affiliate-settings")
+def update_product_affiliate_settings(
+    vendor_id: str,
+    product_id: int,
+    body: VendorProductAffiliateSettingsSchema,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to modify affiliate settings for this product")
+    res = update_vendor_product_affiliate_settings(vendor_id, product_id, body.model_dump())
+    if not res.get("success"):
+        raise HTTPException(status_code=403 if "authorized" in res.get("detail", "").lower() else 404, detail=res.get("detail"))
+    return res
+
+
+@router.get("/{vendor_id}/products/{product_id}/affiliate-performance")
+def vendor_product_affiliate_performance(
+    vendor_id: str,
+    product_id: int,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view product affiliate performance")
+    res = get_vendor_product_affiliate_performance(vendor_id, product_id)
+    if not res.get("success", True):
+        raise HTTPException(status_code=403 if "authorized" in res.get("detail", "").lower() else 404, detail=res.get("detail"))
+    return res
+
+
+@router.get("/{vendor_id}/affiliate/affiliates")
+def vendor_affiliate_list(
+    vendor_id: str,
+    search: str = "",
+    page: int = 1,
+    limit: int = 20,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view vendor affiliates")
+    return get_vendor_affiliate_list(vendor_id, search=search, page=page, limit=limit)
+
+
+@router.get("/{vendor_id}/affiliate/{affiliate_id}")
+def vendor_affiliate_detail(
+    vendor_id: str,
+    affiliate_id: int,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view affiliate details")
+    res = get_vendor_affiliate_detail(vendor_id, affiliate_id)
+    if not res.get("success", True):
+        raise HTTPException(status_code=403 if "authorized" in res.get("detail", "").lower() else 404, detail=res.get("detail"))
+    return res
+
+
+@router.get("/{vendor_id}/affiliate/{affiliate_id}/orders")
+def vendor_affiliate_orders(
+    vendor_id: str,
+    affiliate_id: int,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view affiliate orders")
+    return get_vendor_affiliate_orders(vendor_id, affiliate_id)
+
+
+@router.get("/{vendor_id}/affiliate/{affiliate_id}/ledger")
+def vendor_affiliate_commission_ledger(
+    vendor_id: str,
+    affiliate_id: int,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view commission ledger")
+    return get_vendor_affiliate_commission_ledger(vendor_id, affiliate_id)
+
+
+@router.get("/{vendor_id}/affiliate/{affiliate_id}/withdrawals")
+def vendor_affiliate_withdrawals(
+    vendor_id: str,
+    affiliate_id: int,
+    vendor: dict = Depends(get_current_vendor),
+    _active = Depends(verify_vendor_active)
+):
+    if vendor.get("uid") != vendor_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view affiliate withdrawals")
+    return get_vendor_affiliate_withdrawals(vendor_id, affiliate_id)

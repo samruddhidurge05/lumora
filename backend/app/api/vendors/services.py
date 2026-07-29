@@ -14,7 +14,10 @@ from app.models.order import Order, OrderItem
 from app.models.review import Review
 from app.models.user import User
 from app.models.withdrawal import Withdrawal
-from app.models.affiliate import AffiliateCommission
+from app.models.affiliate import (
+    AffiliateProfile, AffiliateCommission, ReferralAttribution,
+    ReferralLink, ReferralClick, AffiliatePayout, AffiliateReferral
+)
 
 
 def _get_db():
@@ -1020,5 +1023,727 @@ def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
             "page":  page,
             "pages": max(1, -(-total // limit)),  # ceil division
         }
+    finally:
+        db.close()
+
+
+# -- Vendor Affiliate Management Console ---------------------------------------
+
+def get_vendor_affiliate_summary(vendor_id: str) -> dict:
+    """
+    Overview Cards data for Vendor Affiliate Console.
+    Calculates metrics for all products belonging to this vendor.
+    """
+    db = _get_db()
+    try:
+        products = db.query(Product).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).all()
+        prod_ids = [int(cast(Any, p.id)) for p in products]
+
+        affiliate_enabled_count = sum(1 for p in products if p.affiliate_enabled)
+        total_products = len(products)
+
+        total_affiliate_sales = 0
+        pending_commission = 0.0
+        approved_commission = 0.0
+        paid_commission = 0.0
+        total_commission = 0.0
+        active_affiliates_count = 0
+        total_clicks = 0
+
+        if prod_ids:
+            # Commissions breakdown
+            commissions = db.query(AffiliateCommission).filter(
+                AffiliateCommission.product_id.in_(prod_ids)
+            ).all()
+
+            total_affiliate_sales = len(commissions)
+            for c in commissions:
+                amt = float(cast(Any, c.commission_amt or 0.0))
+                total_commission += amt
+                st = str(c.commission_status or c.status or "pending").lower()
+                if st in ("pending", "attributed"):
+                    pending_commission += amt
+                elif st in ("approved", "ready_for_payout"):
+                    approved_commission += amt
+                elif st == "paid":
+                    paid_commission += amt
+
+            # Active affiliates count
+            aff_ids = set()
+            for c in commissions:
+                if c.affiliate_id:
+                    aff_ids.add(int(cast(Any, c.affiliate_id)))
+
+            ref_links = db.query(ReferralLink).filter(
+                ReferralLink.product_id.in_(prod_ids)
+            ).all()
+            for rl in ref_links:
+                if rl.affiliate_id:
+                    aff_ids.add(int(cast(Any, rl.affiliate_id)))
+                total_clicks += int(cast(Any, rl.clicks_count or 0))
+
+            active_affiliates_count = len(aff_ids)
+
+        conversion_rate = round((total_affiliate_sales / total_clicks * 100), 1) if total_clicks > 0 else 0.0
+
+        return {
+            "affiliate_enabled_products": affiliate_enabled_count,
+            "total_products": total_products,
+            "total_affiliate_sales": total_affiliate_sales,
+            "pending_commission": round(pending_commission, 2),
+            "approved_commission": round(approved_commission, 2),
+            "paid_commission": round(paid_commission, 2),
+            "total_commission": round(total_commission, 2),
+            "active_affiliates": active_affiliates_count,
+            "total_clicks": total_clicks,
+            "conversion_rate": conversion_rate,
+            "payout_queue_status": "Queued for RazorpayX Processing" if (pending_commission + approved_commission) > 0 else "Awaiting Queue"
+        }
+    finally:
+        db.close()
+
+
+def get_vendor_affiliate_products(vendor_id: str, search: str = "",
+                                   status_filter: str = "", program_filter: str = "",
+                                   page: int = 1, limit: int = 20) -> dict:
+    """
+    Vendor products table for Affiliate Product Management Console.
+    Includes affiliate configuration and sales/commission metrics for each product.
+    """
+    page = max(1, page)
+    limit = max(1, min(100, limit))
+    db = _get_db()
+    try:
+        query = db.query(Product).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        )
+        if search:
+            like = f"%{search.lower()}%"
+            query = query.filter(
+                Product.title.ilike(like) | Product.category.ilike(like)
+            )
+        if status_filter == "enabled":
+            query = query.filter(Product.affiliate_enabled.is_(True))
+        elif status_filter == "disabled":
+            query = query.filter(Product.affiliate_enabled.is_(False))
+
+        if program_filter and program_filter != "all":
+            query = query.filter(Product.affiliate_program_status == program_filter)
+
+        query = query.order_by(Product.created_at.desc())
+        total = query.count()
+        products = query.offset((page - 1) * limit).limit(limit).all()
+
+        prod_ids = [int(cast(Any, p.id)) for p in products]
+
+        # Aggregate commissions per product
+        comm_map = {}
+        if prod_ids:
+            commissions = db.query(AffiliateCommission).filter(
+                AffiliateCommission.product_id.in_(prod_ids)
+            ).all()
+            for c in commissions:
+                pid = int(cast(Any, c.product_id))
+                if pid not in comm_map:
+                    comm_map[pid] = {
+                        "sales": 0, "total": 0.0, "pending": 0.0, "approved": 0.0, "paid": 0.0, "last_sale": None
+                    }
+                amt = float(cast(Any, c.commission_amt or 0.0))
+                comm_map[pid]["sales"] += 1
+                comm_map[pid]["total"] += amt
+                st = str(c.commission_status or c.status or "pending").lower()
+                if st in ("pending", "attributed"):
+                    comm_map[pid]["pending"] += amt
+                elif st in ("approved", "ready_for_payout"):
+                    comm_map[pid]["approved"] += amt
+                elif st == "paid":
+                    comm_map[pid]["paid"] += amt
+
+                c_date = _format_datetime(c.created_at)
+                if not comm_map[pid]["last_sale"] or (c_date and c_date > comm_map[pid]["last_sale"]):
+                    comm_map[pid]["last_sale"] = c_date
+
+        items = []
+        for p in products:
+            pid = int(cast(Any, p.id))
+            cm = comm_map.get(pid, {
+                "sales": 0, "total": 0.0, "pending": 0.0, "approved": 0.0, "paid": 0.0, "last_sale": None
+            })
+            payout_status = (
+                "Queued for RazorpayX Processing" if (cm["pending"] + cm["approved"]) > 0
+                else ("Paid" if cm["paid"] > 0 else "Awaiting Queue")
+            )
+            items.append({
+                "id": pid,
+                "title": str(p.title or "Untitled"),
+                "thumbnail": p.thumbnail or p.preview,
+                "category": str(p.category or "Uncategorized"),
+                "price": float(cast(Any, p.price or 0.0)),
+                "status": str(p.status or "published"),
+                "affiliate_enabled": bool(p.affiliate_enabled),
+                "commission_type": str(p.commission_type or "percentage"),
+                "commission_value": float(cast(Any, p.commission_value or 0.0)),
+                "affiliate_cookie_days": int(cast(Any, p.affiliate_cookie_days or 30)),
+                "affiliate_visibility": str(p.affiliate_visibility or "public"),
+                "affiliate_program_status": str(p.affiliate_program_status or "active"),
+                "affiliate_sales": cm["sales"],
+                "total_commission": round(cm["total"], 2),
+                "pending_commission": round(cm["pending"], 2),
+                "approved_commission": round(cm["approved"], 2),
+                "paid_commission": round(cm["paid"], 2),
+                "last_affiliate_sale": cm["last_sale"],
+                "payout_queue_status": payout_status,
+                "createdAt": _format_datetime(p.created_at),
+            })
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "pages": max(1, -(-total // limit)),
+        }
+    finally:
+        db.close()
+
+
+def update_vendor_product_affiliate_settings(vendor_id: str, product_id: int, settings: dict) -> dict:
+    """
+    Persist updated affiliate settings for a product.
+    Enforces strict vendor ownership verification.
+    """
+    db = _get_db()
+    try:
+        product = db.query(Product).filter(
+            Product.id == product_id,
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).first()
+
+        if not product:
+            return {"success": False, "detail": "Product not found or not authorized to modify settings"}
+
+        old_enabled = product.affiliate_enabled
+        old_val = product.commission_value
+
+        if "affiliate_enabled" in settings:
+            product.affiliate_enabled = bool(settings["affiliate_enabled"])  # type: ignore
+        if "commission_type" in settings:
+            product.commission_type = str(settings["commission_type"])  # type: ignore
+            product.commission_mode = str(settings["commission_type"])  # type: ignore
+        if "commission_value" in settings:
+            product.commission_value = float(settings["commission_value"])  # type: ignore
+        if "affiliate_cookie_days" in settings and settings["affiliate_cookie_days"] is not None:
+            product.affiliate_cookie_days = int(settings["affiliate_cookie_days"])  # type: ignore
+        if "affiliate_visibility" in settings and settings["affiliate_visibility"] is not None:
+            product.affiliate_visibility = str(settings["affiliate_visibility"])  # type: ignore
+        if "affiliate_program_status" in settings and settings["affiliate_program_status"] is not None:
+            product.affiliate_program_status = str(settings["affiliate_program_status"])  # type: ignore
+
+        db.commit()
+        db.refresh(product)
+
+        # Audit log
+        user = db.query(User).filter(User.firebase_uid == vendor_id).first()
+        if user:
+            from app.services.activity_log_service import ActivityLogService
+            ActivityLogService.log_user_activity(
+                db=db,
+                user_id=int(cast(Any, user.id)),
+                activity_type="update_affiliate_settings",
+                details=f"Updated affiliate settings for Product '{product.title}' (ID {product.id}). Enabled: {product.affiliate_enabled}, Rate: {product.commission_value} ({product.commission_type})."
+            )
+
+        return {
+            "success": True,
+            "product_id": product.id,
+            "affiliate_enabled": bool(product.affiliate_enabled),
+            "commission_type": str(product.commission_type),
+            "commission_value": float(cast(Any, product.commission_value or 0)),
+            "affiliate_cookie_days": int(cast(Any, product.affiliate_cookie_days or 30)),
+            "affiliate_visibility": str(product.affiliate_visibility or "public"),
+            "affiliate_program_status": str(product.affiliate_program_status or "active"),
+        }
+    finally:
+        db.close()
+
+
+def get_vendor_product_affiliate_performance(vendor_id: str, product_id: int) -> dict:
+    """
+    Product-level affiliate performance metrics and top affiliates list.
+    """
+    db = _get_db()
+    try:
+        product = db.query(Product).filter(
+            Product.id == product_id,
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).first()
+
+        if not product:
+            return {"success": False, "detail": "Product not found or not authorized"}
+
+        commissions = db.query(AffiliateCommission).filter(
+            AffiliateCommission.product_id == product_id
+        ).all()
+
+        ref_links = db.query(ReferralLink).filter(
+            ReferralLink.product_id == product_id
+        ).all()
+
+        total_clicks = sum(int(cast(Any, rl.clicks_count or 0)) for rl in ref_links)
+        aff_ids = {int(cast(Any, c.affiliate_id)) for c in commissions if c.affiliate_id}
+        for rl in ref_links:
+            if rl.affiliate_id:
+                aff_ids.add(int(cast(Any, rl.affiliate_id)))
+
+        sales = len(commissions)
+        revenue_generated = sum(float(cast(Any, c.sale_amount or 0.0)) for c in commissions)
+        commission_owed = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions)
+        commission_paid = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions if str(c.commission_status).lower() == "paid")
+        pending_commission = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions if str(c.commission_status).lower() in ("pending", "attributed"))
+
+        # Top Affiliates for this product
+        top_affiliates = []
+        if aff_ids:
+            aff_profiles = db.query(AffiliateProfile).filter(AffiliateProfile.id.in_(list(aff_ids))).all()
+            aff_map = {int(cast(Any, ap.id)): ap for ap in aff_profiles}
+
+            for aff_id in aff_ids:
+                ap = aff_map.get(aff_id)
+                aff_comms = [c for c in commissions if c.affiliate_id == aff_id]
+                aff_sales = len(aff_comms)
+                aff_comm_total = sum(float(cast(Any, c.commission_amt or 0.0)) for c in aff_comms)
+                aff_name = (ap.display_name if (ap and ap.display_name) else (ap.user.name if (ap and ap.user and ap.user.name) else f"Affiliate #{aff_id}"))
+
+                top_affiliates.append({
+                    "affiliate_id": aff_id,
+                    "name": aff_name,
+                    "referral_code": ap.referral_code if ap else "-",
+                    "sales": aff_sales,
+                    "commission_earned": round(aff_comm_total, 2)
+                })
+
+            top_affiliates.sort(key=lambda x: x["commission_earned"], reverse=True)
+
+        avg_conv = round((sales / total_clicks * 100), 1) if total_clicks > 0 else 0.0
+
+        return {
+            "product_id": product_id,
+            "title": product.title,
+            "affiliates_count": len(aff_ids),
+            "total_clicks": total_clicks,
+            "conversions": sales,
+            "sales": sales,
+            "revenue_generated": round(revenue_generated, 2),
+            "commission_owed": round(commission_owed, 2),
+            "commission_paid": round(commission_paid, 2),
+            "pending_commission": round(pending_commission, 2),
+            "avg_conversion_rate": avg_conv,
+            "top_affiliates": top_affiliates[:10]
+        }
+    finally:
+        db.close()
+
+
+# -- Affiliates View Backend APIs ----------------------------------------------
+
+def get_vendor_affiliate_list(vendor_id: str, search: str = "", page: int = 1, limit: int = 20) -> dict:
+    """
+    Affiliates tab list endpoint.
+    Returns all affiliates generating sales/clicks for this vendor's products.
+    """
+    db = _get_db()
+    try:
+        products = db.query(Product.id).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).all()
+        prod_ids = [int(cast(Any, p[0])) for p in products]
+
+        if not prod_ids:
+            return {"items": [], "total": 0, "page": 1, "pages": 1}
+
+        # Find affiliates with commissions or links for vendor's products
+        commissions = db.query(AffiliateCommission).filter(
+            AffiliateCommission.product_id.in_(prod_ids)
+        ).all()
+
+        ref_links = db.query(ReferralLink).filter(
+            ReferralLink.product_id.in_(prod_ids)
+        ).all()
+
+        aff_ids = set()
+        for c in commissions:
+            if c.affiliate_id:
+                aff_ids.add(int(cast(Any, c.affiliate_id)))
+        for rl in ref_links:
+            if rl.affiliate_id:
+                aff_ids.add(int(cast(Any, rl.affiliate_id)))
+
+        if not aff_ids:
+            return {"items": [], "total": 0, "page": 1, "pages": 1}
+
+        aff_profiles = db.query(AffiliateProfile).filter(AffiliateProfile.id.in_(list(aff_ids))).all()
+
+        if search:
+            like = f"%{search.lower()}%"
+            aff_profiles = [
+                ap for ap in aff_profiles
+                if (ap.display_name and search.lower() in ap.display_name.lower()) or
+                   (ap.user and ap.user.name and search.lower() in ap.user.name.lower()) or
+                   (ap.user and ap.user.email and search.lower() in ap.user.email.lower()) or
+                   (ap.referral_code and search.lower() in ap.referral_code.lower())
+            ]
+
+        # Aggregate metrics for each affiliate scoped ONLY to vendor's products
+        items = []
+        for ap in aff_profiles:
+            aff_id = int(cast(Any, ap.id))
+            ap_comms = [c for c in commissions if c.affiliate_id == aff_id]
+            ap_links = [rl for rl in ref_links if rl.affiliate_id == aff_id]
+
+            promoted_pids = {int(cast(Any, c.product_id)) for c in ap_comms if c.product_id}.union(
+                {int(cast(Any, rl.product_id)) for rl in ap_links if rl.product_id}
+            )
+
+            clicks_cnt = sum(int(cast(Any, rl.clicks_count or 0)) for rl in ap_links)
+            orders_cnt = len(ap_comms)
+            gross_sales = sum(float(cast(Any, c.sale_amount or 0.0)) for c in ap_comms)
+            comm_earned = sum(float(cast(Any, c.commission_amt or 0.0)) for c in ap_comms)
+            pending_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in ap_comms if str(c.commission_status or c.status or "").lower() in ("pending", "attributed"))
+            approved_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in ap_comms if str(c.commission_status or c.status or "").lower() in ("approved", "ready_for_payout"))
+            paid_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in ap_comms if str(c.commission_status or c.status or "").lower() == "paid")
+            rejected_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in ap_comms if str(c.commission_status or c.status or "").lower() in ("reversed", "rejected"))
+
+            last_sale_date = None
+            for c in ap_comms:
+                c_date = _format_datetime(c.created_at)
+                if not last_sale_date or (c_date and c_date > last_sale_date):
+                    last_sale_date = c_date
+
+            # Affiliate user info
+            user_name = ap.display_name or (ap.user.name if (ap.user and ap.user.name) else f"Affiliate #{aff_id}")
+            user_email = ap.user.email if (ap.user and ap.user.email) else "-"
+
+            # Latest payout status for this affiliate
+            latest_payout = db.query(AffiliatePayout).filter(
+                AffiliatePayout.affiliate_id == aff_id
+            ).order_by(AffiliatePayout.created_at.desc()).first()
+
+            payout_st = str(latest_payout.status or "Awaiting Queue") if latest_payout else "Awaiting Queue"
+            if (pending_comm + approved_comm) > 0:
+                withdrawal_status = "Queued for RazorpayX"
+            elif paid_comm > 0:
+                withdrawal_status = "Paid"
+            else:
+                withdrawal_status = payout_st
+
+            items.append({
+                "affiliate_id": aff_id,
+                "user_id": ap.user_id,
+                "name": user_name,
+                "email": user_email,
+                "referral_code": ap.referral_code,
+                "status": str(ap.status or "active"),
+                "joined_at": _format_datetime(ap.created_at),
+                "products_promoted": len(promoted_pids),
+                "total_clicks": clicks_cnt,
+                "unique_clicks": int(cast(Any, ap.unique_clicks or clicks_cnt)),
+                "conversions": orders_cnt,
+                "conversion_rate": round((orders_cnt / clicks_cnt * 100), 1) if clicks_cnt > 0 else 0.0,
+                "total_orders": orders_cnt,
+                "gross_sales": round(gross_sales, 2),
+                "commission_earned": round(comm_earned, 2),
+                "pending_commission": round(pending_comm, 2),
+                "approved_commission": round(approved_comm, 2),
+                "paid_commission": round(paid_comm, 2),
+                "rejected_commission": round(rejected_comm, 2),
+                "last_sale": last_sale_date,
+                "last_withdrawal": _format_datetime(latest_payout.created_at) if latest_payout else None,
+                "withdrawal_status": withdrawal_status,
+                "queue_position": 1 if (pending_comm + approved_comm) > 0 else 0
+            })
+
+        items.sort(key=lambda x: x["commission_earned"], reverse=True)
+        total_items = len(items)
+        paginated_items = items[(page - 1) * limit : page * limit]
+
+        return {
+            "items": paginated_items,
+            "total": total_items,
+            "page": page,
+            "pages": max(1, -(-total_items // limit)),
+        }
+    finally:
+        db.close()
+
+
+def get_vendor_affiliate_detail(vendor_id: str, affiliate_id: int) -> dict:
+    """
+    Detailed Profile drawer API for an affiliate associated with vendor's products.
+    """
+    db = _get_db()
+    try:
+        ap = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).first()
+        if not ap:
+            return {"success": False, "detail": "Affiliate not found"}
+
+        products = db.query(Product).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).all()
+        prod_ids = [int(cast(Any, p.id)) for p in products]
+
+        if not prod_ids:
+            return {"success": False, "detail": "Vendor has no products"}
+
+        # Scoped commissions for this affiliate on vendor's products
+        commissions = db.query(AffiliateCommission).filter(
+            AffiliateCommission.affiliate_id == affiliate_id,
+            AffiliateCommission.product_id.in_(prod_ids)
+        ).all()
+
+        if not commissions:
+            # Check if affiliate has referral links for vendor products
+            links_cnt = db.query(ReferralLink).filter(
+                ReferralLink.affiliate_id == affiliate_id,
+                ReferralLink.product_id.in_(prod_ids)
+            ).count()
+            if links_cnt == 0:
+                return {"success": False, "detail": "Not authorized: Affiliate has no association with this vendor"}
+
+        # Promoted products breakdown
+        promoted_products = []
+        prod_map = {int(cast(Any, p.id)): p for p in products}
+        p_comms_map = {}
+        for c in commissions:
+            pid = int(cast(Any, c.product_id))
+            if pid not in p_comms_map:
+                p_comms_map[pid] = []
+            p_comms_map[pid].append(c)
+
+        for pid, comms in p_comms_map.items():
+            p_obj = prod_map.get(pid)
+            if p_obj:
+                sales_cnt = len(comms)
+                rev = sum(float(cast(Any, c.sale_amount or 0.0)) for c in comms)
+                comm_amt = sum(float(cast(Any, c.commission_amt or 0.0)) for c in comms)
+                promoted_products.append({
+                    "product_id": pid,
+                    "title": p_obj.title,
+                    "thumbnail": p_obj.thumbnail or p_obj.preview,
+                    "commission_type": str(p_obj.commission_type or "percentage"),
+                    "commission_value": float(cast(Any, p_obj.commission_value or 0.0)),
+                    "sales": sales_cnt,
+                    "revenue": round(rev, 2),
+                    "commission_generated": round(comm_amt, 2),
+                    "program_status": str(p_obj.affiliate_program_status or "active")
+                })
+
+        user_name = ap.display_name or (ap.user.name if (ap.user and ap.user.name) else f"Affiliate #{affiliate_id}")
+        user_email = ap.user.email if (ap.user and ap.user.email) else "-"
+
+        gross_rev = sum(float(cast(Any, c.sale_amount or 0.0)) for c in commissions)
+        total_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions)
+        pending_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions if str(c.commission_status or c.status or "").lower() in ("pending", "attributed"))
+        approved_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions if str(c.commission_status or c.status or "").lower() in ("approved", "ready_for_payout"))
+        paid_comm = sum(float(cast(Any, c.commission_amt or 0.0)) for c in commissions if str(c.commission_status or c.status or "").lower() == "paid")
+
+        latest_payout = db.query(AffiliatePayout).filter(
+            AffiliatePayout.affiliate_id == affiliate_id
+        ).order_by(AffiliatePayout.created_at.desc()).first()
+
+        queue_status = (
+            "Queued for RazorpayX Processing" if (pending_comm + approved_comm) > 0
+            else ("Paid" if paid_comm > 0 else "Awaiting Queue")
+        )
+
+        return {
+            "profile": {
+                "affiliate_id": affiliate_id,
+                "name": user_name,
+                "email": user_email,
+                "country": ap.country or "India",
+                "joined_at": _format_datetime(ap.created_at),
+                "status": str(ap.status or "active"),
+                "referral_code": ap.referral_code,
+            },
+            "metrics": {
+                "total_promoted_products": len(promoted_products),
+                "lifetime_revenue": round(gross_rev, 2),
+                "lifetime_commission": round(total_comm, 2),
+                "pending_commission": round(pending_comm, 2),
+                "approved_commission": round(approved_comm, 2),
+                "paid_commission": round(paid_comm, 2),
+                "total_orders": len(commissions),
+                "avg_order_value": round(gross_rev / len(commissions), 2) if len(commissions) > 0 else 0.0,
+            },
+            "promoted_products": promoted_products,
+            "queue_status": queue_status,
+            "last_payout": _format_datetime(latest_payout.created_at) if latest_payout else None
+        }
+    finally:
+        db.close()
+
+
+def get_vendor_affiliate_orders(vendor_id: str, affiliate_id: int) -> dict:
+    """
+    Every order generated by this affiliate for vendor's products.
+    Includes authoritative totals at the bottom.
+    """
+    db = _get_db()
+    try:
+        products = db.query(Product.id).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).all()
+        prod_ids = [int(cast(Any, p[0])) for p in products]
+
+        if not prod_ids:
+            return {"orders": [], "totals": {"total_orders": 0, "total_revenue": 0.0, "total_commission": 0.0}}
+
+        commissions = db.query(AffiliateCommission).filter(
+            AffiliateCommission.affiliate_id == affiliate_id,
+            AffiliateCommission.product_id.in_(prod_ids)
+        ).order_by(AffiliateCommission.created_at.desc()).all()
+
+        orders_list = []
+        tot_rev = 0.0
+        tot_comm = 0.0
+
+        for c in commissions:
+            sale_amt = float(cast(Any, c.sale_amount or 0.0))
+            comm_amt = float(cast(Any, c.commission_amt or 0.0))
+            tot_rev += sale_amt
+            tot_comm += comm_amt
+
+            vendor_share = round(sale_amt * 0.85 - comm_amt, 2)
+            platform_share = round(sale_amt * 0.15, 2)
+
+            cust_name = c.customer_name or "Verified Customer"
+            cust_email = c.customer_email or "c***@lumora.io"
+
+            orders_list.append({
+                "commission_id": c.id,
+                "order_id": c.order_id,
+                "customer_name": cust_name,
+                "customer_email": cust_email,
+                "product_id": c.product_id,
+                "product_name": c.product_name or f"Product #{c.product_id}",
+                "purchase_date": _format_datetime(c.created_at),
+                "order_status": str(c.purchase_status or "completed"),
+                "payment_status": "Paid",
+                "price_paid": sale_amt,
+                "commission_generated": comm_amt,
+                "commission_status": str(c.commission_status or c.status or "pending"),
+                "refund_status": str(c.refund_status or "none"),
+                "vendor_share": max(0.0, vendor_share),
+                "platform_share": platform_share,
+            })
+
+        return {
+            "orders": orders_list,
+            "totals": {
+                "total_orders": len(orders_list),
+                "total_revenue": round(tot_rev, 2),
+                "total_commission": round(tot_comm, 2),
+            }
+        }
+    finally:
+        db.close()
+
+
+def get_vendor_affiliate_commission_ledger(vendor_id: str, affiliate_id: int) -> list[dict]:
+    """
+    Authoritative product-wise commission ledger for an affiliate on vendor's products.
+    """
+    db = _get_db()
+    try:
+        products = db.query(Product.id).filter(
+            (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
+        ).all()
+        prod_ids = [int(cast(Any, p[0])) for p in products]
+
+        if not prod_ids:
+            return []
+
+        commissions = db.query(AffiliateCommission).filter(
+            AffiliateCommission.affiliate_id == affiliate_id,
+            AffiliateCommission.product_id.in_(prod_ids)
+        ).order_by(AffiliateCommission.created_at.desc()).all()
+
+        ledger = []
+        for c in commissions:
+            sale_amt = float(cast(Any, c.sale_amount or 0.0))
+            comm_amt = float(cast(Any, c.commission_amt or 0.0))
+            refund_ded = float(cast(Any, c.refund_deduction or 0.0))
+            net_comm = max(0.0, comm_amt - refund_ded)
+
+            ledger.append({
+                "ledger_id": f"LDG-{c.id}",
+                "timestamp": _format_datetime(c.created_at),
+                "affiliate_id": affiliate_id,
+                "order_id": c.order_id,
+                "product_id": c.product_id,
+                "product_name": c.product_name or f"Product #{c.product_id}",
+                "sale_amount": sale_amt,
+                "commission_rate": float(cast(Any, c.commission_rate or 0.0)),
+                "commission_type": str(c.commission_type or "percentage"),
+                "commission_amount": comm_amt,
+                "adjustment": 0.0,
+                "refund": refund_ded,
+                "net_commission": net_comm,
+                "status": str(c.commission_status or c.status or "pending"),
+                "reason": "Direct Referral Purchase",
+                "audit_reference": f"REF-ORD-{c.order_id}"
+            })
+
+        return ledger
+    finally:
+        db.close()
+
+
+def get_vendor_affiliate_withdrawals(vendor_id: str, affiliate_id: int) -> list[dict]:
+    """
+    Read-only withdrawal monitoring & payout queue status for an affiliate.
+    """
+    db = _get_db()
+    try:
+        ap = db.query(AffiliateProfile).filter(AffiliateProfile.id == affiliate_id).first()
+        if not ap:
+            return []
+
+        payouts = db.query(AffiliatePayout).filter(
+            AffiliatePayout.affiliate_id == affiliate_id
+        ).order_by(AffiliatePayout.created_at.desc()).all()
+
+        results = []
+        aff_name = ap.display_name or (ap.user.name if (ap.user and ap.user.name) else f"Affiliate #{affiliate_id}")
+
+        for p in payouts:
+            st = str(p.status or "pending").lower()
+            if st == "pending":
+                queue_st = "Queued for RazorpayX"
+            elif st == "processing":
+                queue_st = "Processing"
+            elif st == "completed":
+                queue_st = "Paid"
+            elif st == "rejected":
+                queue_st = "Cancelled"
+            else:
+                queue_st = "Awaiting Queue"
+
+            results.append({
+                "payout_id": f"PO-{p.id}",
+                "affiliate_name": aff_name,
+                "request_date": _format_datetime(p.created_at),
+                "requested_amount": float(cast(Any, p.amount or 0.0)),
+                "net_amount": float(cast(Any, p.net_amount or p.amount or 0.0)),
+                "status": st,
+                "payout_queue_status": queue_st,
+                "estimated_queue_position": 1 if st in ("pending", "processing") else 0,
+                "last_queue_update": _format_datetime(p.updated_at or p.created_at),
+                "utr": p.utr,
+                "failure_reason": p.failure_reason
+            })
+
+        return results
     finally:
         db.close()

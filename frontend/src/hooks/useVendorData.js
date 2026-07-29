@@ -738,3 +738,183 @@ export function useVendorProfileComplete() {
     loading,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vendor Affiliate Management Console Hooks
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useVendorAffiliateSummary() {
+  const backendReady = useBackendReady();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const vendorId = useVendorId();
+
+  const refresh = useCallback(() => {
+    const id = getVendorId();
+    if (!id) {
+      setError('Vendor session not found');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    backendFetch('/vendors/' + id + '/affiliate/summary')
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!backendReady || !vendorId) return;
+    refresh();
+  }, [backendReady, vendorId, refresh]);
+
+  return { data, loading, error, refresh };
+}
+
+export function useVendorAffiliateProducts(params = {}) {
+  const { search = '', status = '', programStatus = '', page = 1, limit = 20 } = params;
+  const backendReady = useBackendReady();
+  const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const vendorId = useVendorId();
+
+  const refresh = useCallback(() => {
+    const id = getVendorId();
+    if (!id) {
+      setError('Vendor session not found');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    let q = `/vendors/${id}/affiliate/products?page=${page}&limit=${limit}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+    if (status) q += `&status=${encodeURIComponent(status)}`;
+    if (programStatus) q += `&program_status=${encodeURIComponent(programStatus)}`;
+
+    backendFetch(q)
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [search, status, programStatus, page, limit]);
+
+  useEffect(() => {
+    if (!backendReady || !vendorId) return;
+    refresh();
+  }, [backendReady, vendorId, refresh]);
+
+  return { products: data.items || [], total: data.total || 0, page: data.page || 1, pages: data.pages || 1, loading, error, refresh };
+}
+
+export async function updateVendorProductAffiliateSettings(productId, settingsData) {
+  const id = getVendorId();
+  if (!id) throw new Error('Vendor session not found');
+  return backendFetch(`/vendors/${id}/products/${productId}/affiliate-settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settingsData),
+  });
+}
+
+export function useVendorProductAffiliatePerformance(productId) {
+  const backendReady = useBackendReady();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const vendorId = useVendorId();
+
+  const refresh = useCallback(() => {
+    const id = getVendorId();
+    if (!id || !productId) return;
+    setLoading(true);
+    setError(null);
+    backendFetch(`/vendors/${id}/products/${productId}/affiliate-performance`)
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [productId]);
+
+  useEffect(() => {
+    if (!backendReady || !vendorId || !productId) return;
+    refresh();
+  }, [backendReady, vendorId, productId, refresh]);
+
+  return { data, loading, error, refresh };
+}
+
+export function useVendorAffiliateList(params = {}) {
+  const { search = '', page = 1, limit = 20 } = params;
+  const backendReady = useBackendReady();
+  const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const vendorId = useVendorId();
+
+  const refresh = useCallback(() => {
+    const id = getVendorId();
+    if (!id) {
+      setError('Vendor session not found');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    let q = `/vendors/${id}/affiliate/affiliates?page=${page}&limit=${limit}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+
+    backendFetch(q)
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [search, page, limit]);
+
+  useEffect(() => {
+    if (!backendReady || !vendorId) return;
+    refresh();
+  }, [backendReady, vendorId, refresh]);
+
+  return { affiliates: data.items || [], total: data.total || 0, page: data.page || 1, pages: data.pages || 1, loading, error, refresh };
+}
+
+export function useVendorAffiliateDetail(affiliateId) {
+  const backendReady = useBackendReady();
+  const [data, setData] = useState(null);
+  const [orders, setOrders] = useState({ orders: [], totals: { total_orders: 0, total_revenue: 0, total_commission: 0 } });
+  const [ledger, setLedger] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const vendorId = useVendorId();
+
+  const refresh = useCallback(() => {
+    const id = getVendorId();
+    if (!id || !affiliateId) return;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      backendFetch(`/vendors/${id}/affiliate/${affiliateId}`),
+      backendFetch(`/vendors/${id}/affiliate/${affiliateId}/orders`),
+      backendFetch(`/vendors/${id}/affiliate/${affiliateId}/ledger`),
+      backendFetch(`/vendors/${id}/affiliate/${affiliateId}/withdrawals`),
+    ])
+      .then(([detailRes, ordersRes, ledgerRes, withdrawalsRes]) => {
+        setData(detailRes);
+        setOrders(ordersRes);
+        setLedger(Array.isArray(ledgerRes) ? ledgerRes : []);
+        setWithdrawals(Array.isArray(withdrawalsRes) ? withdrawalsRes : []);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [affiliateId]);
+
+  useEffect(() => {
+    if (!backendReady || !vendorId || !affiliateId) return;
+    refresh();
+  }, [backendReady, vendorId, affiliateId, refresh]);
+
+  return { detail: data, orders, ledger, withdrawals, loading, error, refresh };
+}

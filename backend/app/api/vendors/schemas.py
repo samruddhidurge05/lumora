@@ -48,3 +48,12 @@ class WithdrawalSchema(BaseModel):
 class ReviewReplySchema(BaseModel):
     reply: str
 
+
+class VendorProductAffiliateSettingsSchema(BaseModel):
+    affiliate_enabled: bool = False
+    commission_type: str = "percentage"
+    commission_value: float = 0.0
+    affiliate_cookie_days: Optional[int] = 30
+    affiliate_visibility: Optional[str] = "public"
+    affiliate_program_status: Optional[str] = "active"
+
