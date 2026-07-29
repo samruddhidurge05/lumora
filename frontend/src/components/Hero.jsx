@@ -222,11 +222,10 @@ const styles = {
     fontFamily: 'var(--font-editorial)',
     fontStyle: 'normal',
     fontWeight: 800,
-    background: 'linear-gradient(135deg, #FFFFFF 20%, #E9D5FF 60%, #C084FC 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: '#FFFFFF',
+    WebkitTextFillColor: '#FFFFFF',
     display: 'inline-block',
-    filter: 'drop-shadow(0 4px 20px rgba(0, 0, 0, 0.9))',
+    textShadow: '0 4px 30px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.35)',
   },
 
   /* Subtitle on background */
