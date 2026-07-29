@@ -6,6 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { saveVendorProfile } from '../services/firestore';
 import { backendFetch } from '../../utils/api';
+import { uploadFile } from '../../services/storageService';
 
 function useIsMobile(bp = 768) {
   const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
@@ -67,21 +68,12 @@ export default function Verification() {
 
     try {
       // 1. Attempt upload via backend REST API
-      const formData = new FormData();
-      formData.append('file', file);
-      const token = localStorage.getItem('lumora_backend_token');
-      
-      const apiRes = await fetch('/api/uploads/', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-
-      if (apiRes.ok) {
-        const resData = await apiRes.json();
-        downloadURL = resData.url;
+      try {
+        const result = await uploadFile(file, 'file', (pct) => setUploadProgress(pct));
+        downloadURL = result.downloadUrl;
         setUploadProgress(100);
-      } else {
+      } catch (backendUploadErr) {
+        console.warn('[Verification] Backend upload failed, falling back to Firebase Storage:', backendUploadErr.message);
         // 2. Fallback to Firebase Storage if backend upload fails
         const uniqueFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const storageRef = ref(storage, `verification/${user.uid}/${docId}/${uniqueFileName}`);

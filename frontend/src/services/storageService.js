@@ -15,23 +15,42 @@
  */
 
 import { buildBackendUrl, BACKEND_ORIGIN } from '../utils/api';
+import { auth } from './firebase';
+import { syncWithBackend, clearBackendToken } from './authService';
 
 /**
  * Core upload helper — POSTs a file to the backend with JWT auth and progress.
+ * Includes automatic token readiness check and silent 401 token refresh & retry.
  *
  * @param {File}     file        - File object to upload
  * @param {string}   endpoint    - e.g. '/api/uploads/image' or '/api/uploads/'
  * @param {Function} [onProgress] - optional (percent: number) => void callback
+ * @param {boolean}  [_isRetry]  - internal retry flag for 401 token refresh
  * @returns {Promise<{ downloadUrl: string, storagePath: string, fileName: string, fileSize: number }>}
  */
-function _uploadToBackend(file, endpoint, onProgress) {
+async function _uploadToBackend(file, endpoint, onProgress, _isRetry = false) {
+  const firebaseUser = auth?.currentUser;
+  const activeRole = localStorage.getItem('lumora_active_role') || 'vendor';
+  let token = localStorage.getItem('lumora_backend_token');
+
+  // If token is missing but user is logged in, attempt a sync before initiating upload
+  if (!token && firebaseUser) {
+    try {
+      const synced = await syncWithBackend(firebaseUser, activeRole);
+      if (synced?.access_token) {
+        token = synced.access_token;
+      }
+    } catch (_) {
+      // Sync failed — proceed and let server respond
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const uploadUrl = buildBackendUrl(endpoint);
     xhr.open('POST', uploadUrl);
 
     // Attach JWT token
-    const token = localStorage.getItem('lumora_backend_token');
     if (token) {
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     }
@@ -46,7 +65,7 @@ function _uploadToBackend(file, endpoint, onProgress) {
       });
     }
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener('load', async () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const res = JSON.parse(xhr.responseText);
@@ -68,6 +87,18 @@ function _uploadToBackend(file, endpoint, onProgress) {
         } catch {
           reject(new Error('Invalid upload response from server.'));
         }
+      } else if (xhr.status === 401 && !_isRetry && firebaseUser) {
+        // Handle 401 Unauthorized — attempt silent token refresh and retry upload once
+        try {
+          const synced = await syncWithBackend(firebaseUser, activeRole, true);
+          if (synced?.access_token) {
+            const retryRes = await _uploadToBackend(file, endpoint, onProgress, true);
+            return resolve(retryRes);
+          }
+        } catch (_) {}
+
+        clearBackendToken();
+        reject(new Error('Session expired. Please log in again.'));
       } else {
         let detail = 'Upload failed';
         try { detail = JSON.parse(xhr.responseText).detail || detail; } catch (_) {}
