@@ -485,18 +485,28 @@ export function useVendorProducts(opts) {
     refresh();
   }, [refresh, backendReady, vendorId]);
 
+  const extractUrl = function(val) {
+    if (!val) return null;
+    if (typeof val === 'string') return val.trim() || null;
+    if (typeof val === 'object') return val.url || val.downloadUrl || val.relativeUrl || val.storagePath || null;
+    return String(val);
+  };
+
   const createProduct = useCallback(function(formData) {
     var tags = Array.isArray(formData.tags)
       ? formData.tags
       : (formData.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+    var previewUrl = extractUrl(formData.preview);
+    var thumbnailUrl = extractUrl(formData.thumbnail || formData.preview);
+    var fileUrl = extractUrl(formData.file_url || formData.file);
     var payload = {
       title:       formData.title,
       description: formData.description || '',
       category:    formData.category    || '',
       price:       Number(formData.price) || 0,
-      preview:     formData.preview     || null,
-      thumbnail:   formData.preview     || null,
-      file_url:    formData.file_url    || formData.file || null,
+      preview:     previewUrl,
+      thumbnail:   thumbnailUrl,
+      file_url:    fileUrl,
       license:     formData.license     || null,
       version:     formData.version     || 'v1.0.0',
       file_size:   formData.file_size   || null,
@@ -518,7 +528,7 @@ export function useVendorProducts(opts) {
       subcategory:         formData.subcategory         || null,
       discount:            Number(formData.discount)    || 0,
       preview_images:      formData.preview_images      || [],
-      preview_video:       formData.preview_video       || null,
+      preview_video:       extractUrl(formData.preview_video),
       seo_title:           formData.seo_title           || null,
       seo_description:     formData.seo_description     || null,
       visibility:          formData.visibility          || 'public'
@@ -540,8 +550,11 @@ export function useVendorProducts(opts) {
     if (formData.description !== undefined) payload.description = formData.description;
     if (formData.category    !== undefined) payload.category    = formData.category;
     if (formData.price       !== undefined) payload.price       = Number(formData.price);
-    if (formData.preview     !== undefined) { payload.preview   = formData.preview; payload.thumbnail = formData.preview; }
-    if (formData.file_url    !== undefined) payload.file_url    = formData.file_url;
+    if (formData.preview     !== undefined) { 
+      payload.preview = extractUrl(formData.preview); 
+      payload.thumbnail = extractUrl(formData.thumbnail || formData.preview); 
+    }
+    if (formData.file_url    !== undefined) payload.file_url    = extractUrl(formData.file_url);
     if (formData.file_size   !== undefined) payload.file_size   = formData.file_size;
     if (formData.license     !== undefined) payload.license     = formData.license;
     if (formData.version     !== undefined) payload.version     = formData.version;

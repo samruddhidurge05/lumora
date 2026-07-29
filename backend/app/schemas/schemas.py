@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Any
 
 # Product Schemas
 class ProductCreate(BaseModel):
@@ -44,6 +44,18 @@ class ProductCreate(BaseModel):
     visibility: str = "public"
     image_urls: Optional[list] = None
 
+    @field_validator("thumbnail", "preview", "file_url", "preview_video", mode="before")
+    @classmethod
+    def _sanitize_url_fields(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            return v.get("url") or v.get("downloadUrl") or v.get("relativeUrl") or v.get("storagePath") or None
+        if isinstance(v, str):
+            cleaned = v.strip()
+            return cleaned if cleaned else None
+        return str(v) if v else None
+
 
 class ProductUpdate(BaseModel):
     """Partial update schema - all fields optional so PATCH-style updates work."""
@@ -84,6 +96,18 @@ class ProductUpdate(BaseModel):
     seo_description: Optional[str] = None
     visibility: Optional[str] = None
     image_urls: Optional[list] = None
+
+    @field_validator("thumbnail", "preview", "file_url", "preview_video", mode="before")
+    @classmethod
+    def _sanitize_url_fields(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            return v.get("url") or v.get("downloadUrl") or v.get("relativeUrl") or v.get("storagePath") or None
+        if isinstance(v, str):
+            cleaned = v.strip()
+            return cleaned if cleaned else None
+        return str(v) if v else None
 
 
 class ProductResponse(BaseModel):
