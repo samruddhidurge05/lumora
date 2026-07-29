@@ -124,8 +124,8 @@ export default function Hero() {
 
 const styles = {
   section: {
-    minHeight: '115vh',
-    padding: '140px clamp(1rem, 4vw, 3rem) 160px',
+    minHeight: '100vh',
+    padding: '130px clamp(1rem, 4vw, 3rem) 140px',
     position: 'relative',
     zIndex: 1,
     overflow: 'hidden',
@@ -150,7 +150,7 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    objectPosition: 'center',
+    objectPosition: 'center 40%',
     filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
   },
   fullBgOverlay: {
