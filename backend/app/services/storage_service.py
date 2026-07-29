@@ -1000,14 +1000,18 @@ class StorageService:
         storage_path: str,
         size_bytes: int = 0,
         checksum_sha256: Optional[str] = None,
-        version: int = 1
+        version: int = 1,
+        db: Optional[Any] = None
     ):
         if not storage_path:
             return
         try:
-            from app.db.session import SessionLocal
             from app.models.storage_metadata import StorageMetadata
-            db = SessionLocal()
+            close_db = False
+            if db is None:
+                from app.db.session import SessionLocal
+                db = SessionLocal()
+                close_db = True
             try:
                 meta = db.query(StorageMetadata).filter(StorageMetadata.storage_path == storage_path).first()
                 if not meta:
@@ -1027,13 +1031,18 @@ class StorageService:
                     meta.verification_status = "verified"  # type: ignore
                     meta.verified_at = datetime.utcnow()  # type: ignore
                     meta.version = version  # type: ignore
-                db.commit()
+                if close_db:
+                    db.commit()
+                else:
+                    db.flush()
             except Exception as db_err:
-                db.rollback()
+                if close_db:
+                    db.rollback()
                 import logging
                 logging.getLogger(__name__).warning("[storage-service] Failed to persist shared StorageMetadata: %s", db_err)
             finally:
-                db.close()
+                if close_db:
+                    db.close()
         except Exception:
             pass
 
@@ -1048,7 +1057,8 @@ class StorageService:
         filename: str,
         is_image: bool = False,
         asset_type: Optional[str] = None,
-        version: int = 1
+        version: int = 1,
+        db: Optional[Any] = None
     ) -> Tuple[str, str]:
         if not source_path:
             return "", ""
@@ -1120,7 +1130,9 @@ class StorageService:
         cached_meta = self.b2_provider.cache.get(target_path)
         sz = cached_meta.get("size", 0) if cached_meta else 0
         sha = cached_meta.get("checksum_sha256") if cached_meta else None
-        self.record_storage_metadata(target_path, size_bytes=sz, checksum_sha256=sha, version=version)
+        self.record_storage_metadata(target_path, size_bytes=sz, checksum_sha256=sha, version=version, db=db)
+
+        return target_path, new_url
 
         return target_path, new_url
 

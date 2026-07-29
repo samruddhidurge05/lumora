@@ -152,7 +152,8 @@ class ProductService:
                         product_id=getattr(product, "id"),
                         filename=f"{display_name}{file_ext}",
                         is_image=False,
-                        asset_type="file"
+                        asset_type="file",
+                        db=db
                     )
                     if storage_path:
                         setattr(product, "storage_path", storage_path)
@@ -170,15 +171,24 @@ class ProductService:
                         product_id=getattr(product, "id"),
                         filename=f"{display_name}-preview{preview_ext}",
                         is_image=True,
-                        asset_type="preview"
+                        asset_type="preview",
+                        db=db
                     )
                     if preview_path:
                         setattr(product, "preview_path", preview_path)
                         setattr(product, "preview", perm_preview)
                         moved_files.append(preview_path)
 
+            # Fallback/Reuse: If temp_thumbnail_url is omitted or identical to temp_preview_url
+            if not temp_thumbnail_url and temp_preview_url:
+                temp_thumbnail_url = temp_preview_url
+
             if temp_thumbnail_url:
-                if _is_external_url(temp_thumbnail_url):
+                if temp_thumbnail_url == temp_preview_url:
+                    # Same temp upload asset used for preview and thumbnail — reuse moved permanent preview
+                    setattr(product, "thumbnail_path", getattr(product, "preview_path", None))
+                    setattr(product, "thumbnail", getattr(product, "preview", None))
+                elif _is_external_url(temp_thumbnail_url):
                     setattr(product, "thumbnail", temp_thumbnail_url)
                 else:
                     thumb_ext = _extract_file_extension(temp_thumbnail_url, default_ext=".jpg")
@@ -188,7 +198,8 @@ class ProductService:
                         product_id=getattr(product, "id"),
                         filename=f"{display_name}-thumbnail{thumb_ext}",
                         is_image=True,
-                        asset_type="thumbnail"
+                        asset_type="thumbnail",
+                        db=db
                     )
                     if thumbnail_path:
                         setattr(product, "thumbnail_path", thumbnail_path)
@@ -197,7 +208,7 @@ class ProductService:
 
             # Strict Physical Verification of Permanent Storage Objects before PostgreSQL Commit
             pref = os.getenv("STORAGE_PROVIDER", "b2").lower()
-            if pref == "b2" and not _is_test_environment():
+            if pref == "b2" and storage_service.b2_provider.is_available() and not _is_test_environment():
                 # Verify digital file if present
                 if temp_file_url and not _is_external_url(temp_file_url):
                     if not product.storage_path or not product.storage_path.startswith("b2://") or "/temp/" in product.storage_path:
@@ -304,7 +315,8 @@ class ProductService:
                             product_id=product_id,
                             filename=f"{display_name}{file_ext}",
                             is_image=False,
-                            asset_type="file"
+                            asset_type="file",
+                            db=db
                         )
                         setattr(product, "storage_path", new_storage_path)
                         setattr(product, "file_url", perm_url)
@@ -328,7 +340,8 @@ class ProductService:
                             product_id=product_id,
                             filename=f"{display_name}-preview.png",
                             is_image=True,
-                            asset_type="preview"
+                            asset_type="preview",
+                            db=db
                         )
                         setattr(product, "preview_path", new_preview_path)
                         setattr(product, "preview", perm_preview)
@@ -340,7 +353,10 @@ class ProductService:
             if "thumbnail" in update_data and update_data["thumbnail"] != product.thumbnail:
                 new_thumb = update_data["thumbnail"]
                 if new_thumb:
-                    if _is_external_url(new_thumb):
+                    if update_data.get("preview") and new_thumb == update_data["preview"]:
+                        setattr(product, "thumbnail_path", getattr(product, "preview_path", None))
+                        setattr(product, "thumbnail", getattr(product, "preview", None))
+                    elif _is_external_url(new_thumb):
                         setattr(product, "thumbnail", new_thumb)
                     elif "/products/" not in new_thumb:
                         if product.thumbnail_path:
@@ -351,7 +367,8 @@ class ProductService:
                             product_id=product_id,
                             filename=f"{display_name}-thumbnail.png",
                             is_image=True,
-                            asset_type="thumbnail"
+                            asset_type="thumbnail",
+                            db=db
                         )
                         setattr(product, "thumbnail_path", new_thumbnail_path)
                         setattr(product, "thumbnail", perm_thumbnail)
