@@ -734,6 +734,7 @@ class StorageService:
                 ".zip", ".pdf", ".fig", ".sketch", ".xd", ".psd", ".ai", ".epub",
                 ".docx", ".xlsx", ".pptx", ".mp4", ".mp3", ".wav", ".ttf", ".otf",
                 ".json", ".csv", ".tar", ".gz", ".rar", ".7z",
+                ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
             }
             max_size = int(os.getenv("MAX_UPLOAD_SIZE", 100 * 1024 * 1024)) # 100MB
             
@@ -789,7 +790,7 @@ class StorageService:
                 "WEBP": ".webp",
                 "SVG": ".svg"
             }
-            expected_ext = format_ext_map.get(detected_format, ".jpg")
+            expected_ext = format_ext_map.get(detected_format, ".jpg") if detected_format is not None else ".jpg"
             if not ext or ext not in allowed_exts or (ext in allowed_exts and ext != expected_ext and not (ext in {".jpg", ".jpeg"} and expected_ext == ".jpg")):
                 base_name = os.path.splitext(filename)[0] or "image"
                 filename = f"{base_name}{expected_ext}"
@@ -1042,7 +1043,7 @@ class StorageService:
         if not storage_path:
             raise HTTPException(status_code=404, detail="Empty storage path provided")
             
-        clean_path = str(storage_path).strip()
+        clean_path = storage_path.strip()
         resolved_path = self.resolve_storage_path_from_url(clean_path)
 
         if resolved_path.startswith("http://") or resolved_path.startswith("https://"):

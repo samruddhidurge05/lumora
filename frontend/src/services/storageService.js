@@ -150,7 +150,8 @@ export function uploadGalleryImage(file, onProgress) {
  * Upload any file by explicit type ('image' | 'file').
  */
 export function uploadFile(file, type, onProgress) {
-  const endpoint = type === 'image' ? '/api/uploads/image' : '/api/uploads/';
+  const isImg = type === 'image' || (typeof type === 'string' && (type.includes('image') || type.includes('preview'))) || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file?.name || '');
+  const endpoint = isImg ? '/api/uploads/image' : '/api/uploads/';
   return _uploadToBackend(file, endpoint, onProgress);
 }
 

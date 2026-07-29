@@ -26,17 +26,17 @@ const CATEGORIES = [
 
 /* ── Upload a file to the backend storage, return a public download URL ─── */
 async function uploadToFirebase(file, folder, onProgress) {
-  // Determine whether this is an image or a product file based on folder + extension
   const imageExts = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
-  const isImage = folder.includes('preview') || folder.includes('image') || imageExts.test(file.name);
+  const isVideo = String(folder).includes('video') || /\.(mp4|webm|mov|avi|mkv)$/i.test(file?.name || '');
+  const isImage = !isVideo && (String(folder).includes('preview') || String(folder).includes('image') || imageExts.test(file?.name || ''));
   const type = isImage ? 'image' : 'file';
 
   const result = await uploadFile(file, type, onProgress);
   return {
     url:         result.downloadUrl,
     relativeUrl: result.storagePath,
-    filename:    file.name,
-    sizeKb:      Math.round((result.fileSize || file.size) / 1024),
+    filename:    file?.name || 'file',
+    sizeKb:      Math.round((result.fileSize || file?.size || 0) / 1024),
   };
 }
 
