@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Mail, MessageSquare } from 'lucide-react';
 
+import { backendFetch } from '../../utils/api';
+
 export default function Contact({ role }) {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
@@ -15,20 +17,15 @@ export default function Contact({ role }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/contact/', {
+      await backendFetch('/contact/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: form,
       });
-      if (res.ok || res.status === 201) {
-        setSent(true);
-        setTimeout(() => setSent(false), 4000);
-        setForm({ name: '', email: '', subject: '', message: '' });
-      } else {
-        setError('Failed to send. Please try again.');
-      }
-    } catch {
-      setError('Failed to send. Please try again.');
+      setSent(true);
+      setTimeout(() => setSent(false), 5000);
+      setForm({ name: '', email: '', subject: '', message: '' });
+    } catch (err) {
+      setError(err?.message || 'Failed to send message. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -47,6 +44,7 @@ export default function Contact({ role }) {
       </p>
 
       {sent && <div style={{ padding: '14px 18px', borderRadius: '12px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', color: '#16a34a', fontSize: '0.85rem', fontWeight: 700, marginBottom: '24px' }}>✓ Message sent! We'll get back to you soon.</div>}
+      {error && <div style={{ padding: '14px 18px', borderRadius: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 700, marginBottom: '24px' }}>⚠ {error}</div>}
 
       <div className="glass-card" style={{ padding: '36px', background: 'rgba(255,253,249,0.80)' }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -56,8 +54,8 @@ export default function Contact({ role }) {
           </div>
           <div><label style={{ fontSize: '0.62rem', fontWeight: 700, color: '#7B3FA0', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subject</label><input style={inputStyle} value={form.subject} onChange={e => update('subject', e.target.value)} placeholder="How can we help?" required /></div>
           <div><label style={{ fontSize: '0.62rem', fontWeight: 700, color: '#7B3FA0', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Message</label><textarea style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' }} value={form.message} onChange={e => update('message', e.target.value)} placeholder="Describe your issue or question…" required /></div>
-          <button type="submit" className="btn-premium btn-premium-solid" style={{ alignSelf: 'flex-start', padding: '12px 28px', fontSize: '0.88rem', borderRadius: '12px' }}>
-            <Send size={15} /> Send Message
+          <button type="submit" disabled={submitting} className="btn-premium btn-premium-solid" style={{ alignSelf: 'flex-start', padding: '12px 28px', fontSize: '0.88rem', borderRadius: '12px', opacity: submitting ? 0.7 : 1 }}>
+            <Send size={15} /> {submitting ? 'Sending...' : 'Send Message'}
           </button>
         </form>
       </div>
