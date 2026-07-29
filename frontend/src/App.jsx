@@ -345,29 +345,37 @@ function AppContent() {
       // Prevent duplicate authentication calls per session
       const processedKey = `lumora_ref_processed_${user.uid}_${pending.product_id || 'general'}`;
       if (sessionStorage.getItem(processedKey)) return;
-      sessionStorage.setItem(processedKey, 'true');
 
-      import('./utils/api').then(({ backendFetch }) => {
-        backendFetch('/affiliate/referrals/authenticate', {
-          method: 'POST',
-          body: JSON.stringify({
-            session_id: pending.session_id || sessionStorage.getItem('lumora_ref_session_id'),
-            referral_code: pending.referral_code,
-            product_id: pending.product_id ? parseInt(pending.product_id, 10) : null
-          })
-        }).then(() => {
-          // Do NOT remove localStorage here — preserve pending referral until purchase completion
-          if (pending.product_id) {
-            // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
-            setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
-          }
-        }).catch(() => {
-          // Attribution failed silently — still open the product so the user isn't stuck
-          if (pending.product_id) {
-            setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
-          }
+      const authenticateSession = () => {
+        sessionStorage.setItem(processedKey, 'true');
+        import('./utils/api').then(({ backendFetch }) => {
+          backendFetch('/affiliate/referrals/authenticate', {
+            method: 'POST',
+            body: JSON.stringify({
+              session_id: pending.session_id || sessionStorage.getItem('lumora_ref_session_id'),
+              referral_code: pending.referral_code,
+              product_id: pending.product_id ? parseInt(pending.product_id, 10) : null
+            })
+          }).then(() => {
+            // Do NOT remove localStorage here — preserve pending referral until purchase completion
+            if (pending.product_id) {
+              // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
+              setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
+            }
+          }).catch(() => {
+            // Attribution failed silently — still open the product so the user isn't stuck
+            if (pending.product_id) {
+              setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
+            }
+          });
         });
-      });
+      };
+
+      if (localStorage.getItem('lumora_backend_token')) {
+        authenticateSession();
+      } else {
+        window.addEventListener('lumora_backend_ready', authenticateSession, { once: true });
+      }
     } catch (_) {}
   }, [user?.uid]);
 
