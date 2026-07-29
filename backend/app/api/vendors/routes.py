@@ -12,6 +12,7 @@ POST /vendors/{vendor_id}/orders/{order_id}/fulfill  ? mark order fulfilled
 GET  /vendors/{vendor_id}/reviews        ? reviews on vendor products
 GET  /vendors/{vendor_id}/products       ? products listed by this vendor
 """
+from typing import cast
 from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies import get_current_vendor
 from admin.validators.status_checks import verify_vendor_active
@@ -43,7 +44,7 @@ router = APIRouter(tags=["Vendors"])
 # -- Public endpoint (no auth) for CreatorProfile page ----------------------
 
 @router.get("/public/{vendor_id}/profile")
-def public_vendor_profile(vendor_id: str, db_session=None):
+def public_vendor_profile(vendor_id: str):
     """
     Public vendor profile - no authentication required.
     Used by marketplace CreatorProfile.jsx page.
@@ -68,11 +69,19 @@ def public_vendor_profile(vendor_id: str, db_session=None):
             if products else 0.0
         )
 
+        from app.models.vendor import Vendor as VendorModel
+        v = db_s.query(VendorModel).filter(VendorModel.id == vendor_id).first()
+
         return {
             "vendor_id": vendor_id,
+            "name": v.name if v else None,
+            "avatar": v.avatar if v else None,
+            "bio": v.bio if v else None,
+            "banner": v.banner if v else None,
+            "tagline": v.tagline if v else None,
             "product_count": len(products),
             "total_downloads": total_downloads,
-            "avg_rating": round(avg_rating, 1),
+            "avg_rating": round(float(cast(float, avg_rating)), 1),
             "products": [
                 {
                     "id": p.id,

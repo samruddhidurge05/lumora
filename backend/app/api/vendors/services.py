@@ -203,13 +203,30 @@ def save_vendor_profile(vendor_id: str, data: dict) -> dict:
             v = Vendor(
                 id=vendor_id,
                 name=str(data.get("storeName") or data.get("displayName") or data.get("name") or "Creator"),
+                email=data.get("email"),
+                phone=str(data["phone"]) if data.get("phone") else None,
+                store_url=str(data["storeUrl"]) if data.get("storeUrl") else None,
+                country=str(data["country"]) if data.get("country") else None,
+                github=str(data["github"]) if data.get("github") else None,
+                tagline=data.get("tagline"),
+                instagram=data.get("instagram"),
+                website=data.get("website"),
+                twitter=data.get("twitter"),
+                refund_policy=data.get("refundPolicy"),
+                support_email=data.get("supportEmail"),
+                response_time=data.get("responseTime", "24 hours"),
+                announcement=data.get("announcement"),
+                announcement_active=bool(data.get("announcementActive")),
+                vacation_mode=bool(data.get("vacationMode")),
+                vacation_message=data.get("vacationMessage"),
                 bio=str(data.get("storeBio", data.get("bio", ""))),
                 avatar=data.get("avatar"),
-                upi_id=data.get("upiId"),
-                account_holder_name=data.get("accountHolderName"),
-                bank_name=data.get("bankName"),
-                account_number=data.get("accountNumber"),
-                ifsc_code=data.get("ifscCode"),
+                banner=data.get("banner"),
+                upi_id=str(data["upiId"]) if data.get("upiId") else None,
+                account_holder_name=str(data["accountHolderName"]) if data.get("accountHolderName") else None,
+                bank_name=str(data["bankName"]) if data.get("bankName") else None,
+                account_number=str(data["accountNumber"]) if data.get("accountNumber") else None,
+                ifsc_code=str(data["ifscCode"]) if data.get("ifscCode") else None,
             )
             db.add(v)
         db.commit()
@@ -332,8 +349,17 @@ def create_withdrawal(data: dict) -> dict:
         prod_ids = [int(cast(Any, p[0])) for p in products]
         total_revenue = 0.0
         if prod_ids:
-            items = db.query(OrderItem).filter(OrderItem.product_id.in_(prod_ids)).all()
-            total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items)
+            valid_order_ids = [
+                o.id for o in db.query(Order.id).filter(
+                    Order.status.notin_(["cancelled", "refunded"])
+                ).all()
+            ]
+            if valid_order_ids:
+                items = db.query(OrderItem).filter(
+                    OrderItem.product_id.in_(prod_ids),
+                    OrderItem.order_id.in_(valid_order_ids)
+                ).all()
+                total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items)
 
         net_revenue = total_revenue * 0.85
         withdrawn_sum = sum(float(cast(Any, w.amount)) for w in db.query(Withdrawal).filter(
@@ -457,9 +483,18 @@ def get_vendor_stats(vendor_id: str) -> dict:
         total_revenue = 0.0
 
         if prod_ids:
-            items = db.query(OrderItem).filter(OrderItem.product_id.in_(prod_ids)).all()
-            total_sales   = len(items)
-            total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items)
+            valid_order_ids = [
+                o.id for o in db.query(Order.id).filter(
+                    Order.status.notin_(["cancelled", "refunded"])
+                ).all()
+            ]
+            if valid_order_ids:
+                items = db.query(OrderItem).filter(
+                    OrderItem.product_id.in_(prod_ids),
+                    OrderItem.order_id.in_(valid_order_ids)
+                ).all()
+                total_sales   = len(items)
+                total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items)
 
         active_count = sum(1 for p in products if (p.status or "published") in {"published", "active", "pending_review", "draft"})
         ratings      = [float(cast(Any, p.rating)) for p in products if p.rating]
@@ -711,9 +746,18 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
         total_revenue = 0.0
         items_all     = []
         if prod_ids:
-            items_all     = db.query(OrderItem).filter(OrderItem.product_id.in_(prod_ids)).all()
-            total_sales   = len(items_all)
-            total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items_all)
+            valid_order_ids = [
+                o.id for o in db.query(Order.id).filter(
+                    Order.status.notin_(["cancelled", "refunded"])
+                ).all()
+            ]
+            if valid_order_ids:
+                items_all     = db.query(OrderItem).filter(
+                    OrderItem.product_id.in_(prod_ids),
+                    OrderItem.order_id.in_(valid_order_ids)
+                ).all()
+                total_sales   = len(items_all)
+                total_revenue = sum(float(cast(Any, i.price_paid or 0)) for i in items_all)
 
         order_ids = list({int(cast(Any, i.order_id)) for i in items_all})
         all_orders = []
@@ -889,10 +933,8 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
 def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
                         status_filter: str = "", sort: str = "newest",
                         page: int = 1, limit: int = 20) -> dict:
-    """
-    Return paginated, searchable, filterable products for this vendor.
-    Returns: { items: [...], total: int, page: int, pages: int }
-    """
+    page = max(1, page)
+    limit = max(1, min(100, limit))
     db = _get_db()
     try:
         query = db.query(Product).filter(

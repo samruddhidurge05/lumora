@@ -862,16 +862,32 @@ class StorageService:
                     detail="Invalid image content: Magic signature mismatch. Not a valid image file."
                 )
 
-            # Auto-normalize extension to match actual image byte format
+            # Reject mismatched magic bytes vs. declared extension.
+            # .jpg and .jpeg are interchangeable; everything else must match exactly.
             format_ext_map = {
                 "JPEG": ".jpg",
-                "PNG": ".png",
-                "GIF": ".gif",
+                "PNG":  ".png",
+                "GIF":  ".gif",
                 "WEBP": ".webp",
-                "SVG": ".svg"
+                "SVG":  ".svg",
             }
             expected_ext = format_ext_map.get(detected_format, ".jpg") if detected_format is not None else ".jpg"
-            if not ext or ext not in allowed_exts or (ext in allowed_exts and ext != expected_ext and not (ext in {".jpg", ".jpeg"} and expected_ext == ".jpg")):
+            extension_matches = (
+                ext == expected_ext
+                or (ext in {".jpg", ".jpeg"} and expected_ext == ".jpg")
+                or not ext
+                or ext not in allowed_exts
+            )
+            if not extension_matches:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"File content is not compatible with the declared extension '{ext}'. "
+                        f"Detected format: {detected_format}. Expected extension: '{expected_ext}'."
+                    )
+                )
+            # Normalize extension to match actual detected format for storage naming
+            if not ext or ext not in allowed_exts:
                 base_name = os.path.splitext(filename)[0] or "image"
                 filename = f"{base_name}{expected_ext}"
                 ext = expected_ext
