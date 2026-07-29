@@ -7,55 +7,10 @@ import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
-// High-resolution Unsplash photos for digital products & websites
-const UNSPLASH_DIGITAL_PRODUCT_IMAGES = [
-  {
-    id: 1,
-    title: 'Digital Product Analytics & Web Dashboard',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 2,
-    title: 'Modern Web Design & Digital Product UI',
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 3,
-    title: 'Digital Tech Workspace & Modern Web Products',
-    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 4,
-    title: 'Digital Design System & Mobile Prototypes',
-    image: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 5,
-    title: 'Mobile App UX/UI Product Design',
-    image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1920&q=80',
-  },
-  {
-    id: 6,
-    title: 'Digital Creators & Innovative UI Studio',
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80',
-  }
-];
-
 export default function Hero() {
   const { navigateTo } = useApp();
   const { user } = useAuth();
   const heroRef = useRef(null);
-  
-  // Active background image index
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Cycle background images every 4 seconds (4000ms) with smooth opacity fade
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % UNSPLASH_DIGITAL_PRODUCT_IMAGES.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Entrance Animations
   useEffect(() => {
@@ -71,24 +26,21 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── FULL-SCREEN BACKGROUND SLIDESHOW WITH DARK VIGNETTE ── */}
+      {/* ── FULL-SCREEN CINEMATIC BACKGROUND VIDEO WITH DARK VIGNETTE ── */}
       <div style={styles.fullBgWrapper}>
-        {UNSPLASH_DIGITAL_PRODUCT_IMAGES.map((item, idx) => (
-          <div
-            key={item.id}
-            style={{
-              ...styles.fullBgImage,
-              backgroundImage: `url(${item.image})`,
-              opacity: idx === currentIndex ? 1.0 : 0,
-              transform: idx === currentIndex ? 'scale(1.08)' : 'scale(1.00)',
-              transition: 'opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1), transform 4000ms ease-out',
-            }}
-          />
-        ))}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={styles.bgVideo}
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
 
-        {/* Dark Vignette Overlay for rich rich colors */}
+        {/* Dark Vignette Overlay for rich rich colors and maximum text readability */}
         <div style={styles.fullBgOverlay} />
-        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section without turning whitish */}
+        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section */}
         <div style={styles.bottomSoftBlend} />
       </div>
 
@@ -192,13 +144,14 @@ const styles = {
     overflow: 'hidden',
     pointerEvents: 'none',
   },
-  fullBgImage: {
+  bgVideo: {
     position: 'absolute',
     inset: 0,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    willChange: 'opacity, transform',
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center',
+    filter: 'brightness(0.9) contrast(1.05)',
   },
   fullBgOverlay: {
     position: 'absolute',
