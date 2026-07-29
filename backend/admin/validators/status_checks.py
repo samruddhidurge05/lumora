@@ -28,14 +28,14 @@ def check_platform_paused():
                 PlatformSetting.key == "isPlatformPaused"
             ).first()
             if paused_setting:
-                raw = json.loads(paused_setting.value).get("value", False)
+                raw = json.loads(str(paused_setting.value)).get("value", False)
                 if raw:
                     is_paused = True
                     msg_setting = db_session.query(PlatformSetting).filter(
                         PlatformSetting.key == "pauseMessage"
                     ).first()
                     if msg_setting:
-                        pause_msg = json.loads(msg_setting.value).get("value") or "Platform is temporarily paused."
+                        pause_msg = json.loads(str(msg_setting.value)).get("value") or "Platform is temporarily paused."
         finally:
             db_session.close()
             
@@ -86,7 +86,7 @@ def verify_vendor_active(current_user: User = Depends(get_current_user_required)
             )
             status_val = None
         else:
-            status_val = get_vendor_status_from_firestore(current_user.firebase_uid)
+            status_val = get_vendor_status_from_firestore(str(current_user.firebase_uid))
         if status_val in ("suspended", "disabled", "rejected"):
             raise LumoraException(
                 status_code=status.HTTP_403_FORBIDDEN,
