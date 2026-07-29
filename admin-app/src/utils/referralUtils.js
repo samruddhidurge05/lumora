@@ -30,36 +30,34 @@ export function calculateCommission(price, mode = 'percentage', value = 0) {
 }
 
 export function getCustomerBaseUrl() {
+  // IMPORTANT: This function must ALWAYS return the public customer marketplace URL.
+  // It must NEVER return the admin portal URL, regardless of where the admin app is hosted.
+
+  // 1. Prefer explicit marketplace env var (set in Vercel environment settings)
+  const marketplaceUrl =
+    import.meta.env?.VITE_MARKETPLACE_URL ||
+    import.meta.env?.VITE_CUSTOMER_URL ||
+    import.meta.env?.VITE_FRONTEND_URL;
+  // Note: VITE_SITE_URL is intentionally excluded — it points to the admin app, not the marketplace.
+
+  if (marketplaceUrl && typeof marketplaceUrl === 'string' && marketplaceUrl.trim() !== '') {
+    return marketplaceUrl.replace(/\/+$/, '');
+  }
+
+  // 2. Fallback: detect admin dev port on localhost and redirect to customer port
   if (typeof window !== 'undefined' && window.location) {
-    const envUrl =
-      import.meta.env?.VITE_MARKETPLACE_URL ||
-      import.meta.env?.VITE_CUSTOMER_URL ||
-      import.meta.env?.VITE_FRONTEND_URL ||
-      import.meta.env?.VITE_SITE_URL;
-
-    if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
-      return envUrl.replace(/\/+$/, '');
-    }
-
     const origin = window.location.origin;
 
     if (origin.includes(':5174') || origin.includes(':5175')) {
       return 'http://localhost:5173';
     }
-
-    if (origin.includes('lumora-admin') || origin.includes('-admin') || origin.includes('admin.')) {
-      return origin.replace('-admin-nine', '').replace('-admin', '').replace('admin.', 'www.');
-    }
-
-    if (origin.includes('.vercel.app') && !origin.includes('lumora-lemon-seven')) {
-      return 'https://lumora-lemon-seven.vercel.app';
-    }
-
-    return origin.replace(/\/+$/, '');
   }
 
+  // 3. Final hardcoded fallback — the production marketplace URL.
+  // This guarantees QR codes always point to the public marketplace even if env vars are missing.
   return 'https://lumora-lemon-seven.vercel.app';
 }
+
 
 export function buildProductUrl(product, options = {}) {
   const baseUrl = getCustomerBaseUrl();
