@@ -419,47 +419,63 @@ export default function AdminUserManagement() {
         )}
 
         {/* Header */}
-        <section className="mb-8">
-          <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-serif font-black text-[#2D004D]">Team Management</h1>
-              <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider mt-0.5">
-                Admin roles · {team.length} active members
-              </p>
+        <section className="mb-6">
+          <div className="glass-surface rounded-3xl p-5 sm:p-6 border border-white/50 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#D8BFE3] to-[#B886D0] flex items-center justify-center text-[#2D004D] shadow-inner shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-serif font-black text-[#2D004D] leading-tight">Team Management</h1>
+                  <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider mt-0.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Admin Roles · {team.length} Active Members
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowInvite(true); setInviteResult(null); }}
+                className="shrink-0 w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 rounded-2xl border-none font-bold text-sm cursor-pointer text-white transition-all hover:opacity-90 active:scale-95"
+                style={{ background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', boxShadow: '0 4px 15px rgba(90,30,126,0.35)' }}
+              >
+                + Invite Member
+              </button>
             </div>
-            <button
-              onClick={() => { setShowInvite(true); setInviteResult(null); }}
-              style={{ padding: '10px 20px', borderRadius: '12px', border: 'none',
-                       background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff',
-                       fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
-              + Invite Member
-            </button>
           </div>
         </section>
 
         {/* Search & Filter Bar */}
-        <section className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="w-full md:w-80">
+        <section className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm mb-6">
+          {/* Search input */}
+          <div className="relative mb-3">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] pointer-events-none" xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input
               type="text"
               placeholder="Search members by name or email..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '9px 14px', borderRadius: '10px',
-                       border: '1px solid rgba(196,148,230,0.3)', background: 'rgba(255,255,255,0.7)',
-                       fontSize: '0.8rem', color: '#2D004D', outline: 'none' }}
+              className="w-full pl-9 pr-4 h-[40px] rounded-xl border border-[#C4B5FD]/40 bg-white/80 text-xs text-[#2D004D] placeholder:text-[#8E6AA8]/60 outline-none focus:border-[#7B3FA0] focus:ring-2 focus:ring-[#7B3FA0]/20 transition-all"
             />
           </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7B3FA0', textTransform: 'uppercase', marginRight: '4px' }}>Filter Role:</span>
+          {/* Role filter — horizontal scroll pill strip */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <span className="text-[9px] font-extrabold text-[#7B3FA0] uppercase tracking-widest whitespace-nowrap shrink-0">Filter Role:</span>
             {['ALL', ...ROLES].map(r => (
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                style={{ padding: '4px 10px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700,
-                         border: roleFilter === r ? '1px solid #7B3FA0' : '1px solid rgba(196,148,230,0.25)',
-                         background: roleFilter === r ? 'rgba(123,63,160,0.15)' : 'transparent',
-                         color: roleFilter === r ? '#5A1E7E' : '#7B3FA0', cursor: 'pointer' }}>
+                className={`shrink-0 min-h-[32px] px-3 py-1 rounded-full text-[10px] font-bold transition-all whitespace-nowrap ${
+                  roleFilter === r
+                    ? 'bg-[#7B3FA0] text-white shadow-sm'
+                    : 'bg-white/60 border border-[#C4B5FD]/40 text-[#7B3FA0] hover:bg-[#F3EAF8] hover:border-[#7B3FA0]/40'
+                }`}
+              >
                 {r.replace(/_/g, ' ')}
               </button>
             ))}

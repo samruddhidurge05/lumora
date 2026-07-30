@@ -571,7 +571,7 @@ export default function AuditLogs() {
               </div>
 
               {/* ── Mobile Card Stack (< 768px) ── */}
-              <div className="block md:hidden space-y-2.5 p-3">
+              <div className="block md:hidden space-y-2.5 p-3 sm:p-4">
                 <AnimatePresence>
                   {logs.map((log, idx) => {
                     const expanded = expandedIds.has(log.id);
@@ -581,10 +581,10 @@ export default function AuditLogs() {
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="bg-white/80 rounded-2xl border border-stone-200/50 shadow-sm overflow-hidden"
+                        className="bg-white rounded-2xl border border-[#E9DFF3]/60 shadow-sm overflow-hidden"
                       >
                         <div
-                          className="p-3 space-y-2 cursor-pointer"
+                          className="p-3.5 space-y-2.5 cursor-pointer"
                           onClick={() => toggleExpand(log.id)}
                         >
                           <div className="flex items-start justify-between gap-2">

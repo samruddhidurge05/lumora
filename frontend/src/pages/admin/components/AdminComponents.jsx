@@ -457,7 +457,7 @@ export function AdminSelect({
   };
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left min-w-[120px] ${isOpen ? 'z-50' : 'z-10'} ${className}`}>
+    <div ref={containerRef} className={`relative inline-block text-left min-w-[120px] ${isOpen ? 'z-[999]' : 'z-10'} ${className}`}>
       <button
         ref={buttonRef}
         type="button"
@@ -471,7 +471,7 @@ export function AdminSelect({
         aria-label={ariaLabel || placeholder || name || "Select option"}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDownToggle}
-        className={`w-full h-[40px] px-3.5 rounded-xl bg-white/90 backdrop-blur-xl border transition-all duration-200 flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] shadow-[0_2px_10px_rgba(90,30,126,0.06)] hover:bg-white hover:shadow-[0_4px_16px_rgba(123,63,160,0.12)] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed ${
+        className={`w-full h-[40px] px-3.5 rounded-xl bg-white border transition-all duration-200 flex items-center justify-between gap-2.5 text-xs font-bold text-[#2D004D] shadow-[0_2px_10px_rgba(90,30,126,0.06)] hover:bg-white hover:shadow-[0_4px_16px_rgba(123,63,160,0.12)] focus:outline-none focus:ring-2 focus:ring-[#7B3FA0]/30 disabled:opacity-60 disabled:cursor-not-allowed ${
           isOpen
             ? 'border-[#7B3FA0] ring-2 ring-[#7B3FA0]/25 bg-white shadow-[0_4px_20px_rgba(123,63,160,0.16)]'
             : 'border-[#C4B5FD]/50 hover:border-[#7B3FA0]/60'
@@ -494,48 +494,51 @@ export function AdminSelect({
       </button>
 
       {isOpen && (
-        <div 
-          id={listboxId}
-          role="listbox"
-          tabIndex={-1}
-          aria-label={ariaLabel || placeholder || name}
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[180px] sm:min-w-[200px] w-max max-w-[calc(100vw-32px)] sm:max-w-[320px] max-h-[280px] overflow-y-auto rounded-2xl bg-white/98 backdrop-blur-2xl border border-[#C4B5FD]/70 shadow-[0_20px_50px_rgba(45,0,77,0.25)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
-        >
-          {parsedOptions.map((opt, index) => {
-            const isSelected = String(opt.value) === String(value);
-            const isFocused = index === focusedIndex;
-            const OptionIcon = opt.icon;
-            return (
-              <button
-                key={`${opt.value}-${index}`}
-                ref={(el) => (optionRefs.current[index] = el)}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                disabled={opt.disabled}
-                onClick={() => !opt.disabled && handleSelect(opt.value)}
-                onKeyDown={(e) => handleKeyDownOption(e, index)}
-                className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 outline-none ${
-                  isSelected
-                    ? 'bg-[#7B3FA0]/12 text-[#7B3FA0] font-extrabold shadow-xs'
-                    : isFocused
-                    ? 'bg-[#7B3FA0]/08 text-[#5A1E7E] font-bold'
-                    : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/06 hover:text-[#5A1E7E]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  {OptionIcon ? (
-                    <OptionIcon size={14} className={isSelected ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />
-                  ) : (
-                    <span className={`w-1.5 h-1.5 rounded-full transition-colors ${isSelected ? 'bg-[#7B3FA0] scale-125' : 'bg-[#D8BFE3]/60'}`} />
-                  )}
-                  <span className="truncate">{opt.label}</span>
-                </div>
-                {isSelected && <Check size={14} className="text-[#7B3FA0] flex-shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
+        <>
+          <div className="fixed inset-0 z-[990] bg-black/15 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
+          <div 
+            id={listboxId}
+            role="listbox"
+            tabIndex={-1}
+            aria-label={ariaLabel || placeholder || name}
+            className="absolute right-0 sm:left-0 top-[calc(100%+6px)] z-[999] min-w-[200px] sm:min-w-[220px] w-max max-w-[calc(100vw-32px)] sm:max-w-[340px] max-h-[300px] overflow-y-auto rounded-2xl bg-white border border-[#7B3FA0]/30 shadow-[0_20px_50px_rgba(45,0,77,0.4)] p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          >
+            {parsedOptions.map((opt, index) => {
+              const isSelected = String(opt.value) === String(value);
+              const isFocused = index === focusedIndex;
+              const OptionIcon = opt.icon;
+              return (
+                <button
+                  key={`${opt.value}-${index}`}
+                  ref={(el) => (optionRefs.current[index] = el)}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  disabled={opt.disabled}
+                  onClick={() => !opt.disabled && handleSelect(opt.value)}
+                  onKeyDown={(e) => handleKeyDownOption(e, index)}
+                  className={`w-full px-3 py-2.5 rounded-xl text-left text-xs flex items-center justify-between transition-all duration-150 outline-none ${
+                    isSelected
+                      ? 'bg-[#7B3FA0]/15 text-[#7B3FA0] font-extrabold'
+                      : isFocused
+                      ? 'bg-[#7B3FA0]/10 text-[#5A1E7E] font-bold'
+                      : 'text-[#2D004D] font-semibold hover:bg-[#7B3FA0]/08 hover:text-[#5A1E7E]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    {OptionIcon ? (
+                      <OptionIcon size={14} className={isSelected ? 'text-[#7B3FA0]' : 'text-[#7B3FA0]/60'} />
+                    ) : (
+                      <span className={`w-1.5 h-1.5 rounded-full transition-colors ${isSelected ? 'bg-[#7B3FA0] scale-125' : 'bg-[#D8BFE3]/60'}`} />
+                    )}
+                    <span className="truncate">{opt.label}</span>
+                  </div>
+                  {isSelected && <Check size={14} className="text-[#7B3FA0] flex-shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

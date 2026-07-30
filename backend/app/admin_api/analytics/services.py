@@ -1,5 +1,5 @@
 from app.shared.firebase.connection import db, firebase_connected
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from app.db.session import SessionLocal
 from app.models.order import Order as OrderModel
@@ -30,7 +30,7 @@ def _parse_order_dt(order_dict: dict) -> datetime:
 
 def _get_cutoff(date_range: str) -> datetime | None:
     """Return a UTC cutoff datetime for the given range string, or None for 'all'."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if date_range == "7d":
         return now - timedelta(days=7)
     elif date_range == "30d":
@@ -39,11 +39,12 @@ def _get_cutoff(date_range: str) -> datetime | None:
         return now - timedelta(days=90)
     return None  # "all" - no filter
 
-def calculate_kpis(orders, products_count, vendors_count, reviews):
+def calculate_kpis(orders: list, products_count: int, vendors_count: int, reviews: list):
     total_revenue = paid = completed = refunded = 0
 
-    for o in orders:
-        price      = float(o.get("price", o.get("total", 0)))
+    for item in orders:
+        o = item or {}
+        price      = float(o.get("price") or o.get("total") or 0.0)
         status     = o.get("status", "")
         pay_status = o.get("paymentStatus", "")
 
@@ -58,10 +59,10 @@ def calculate_kpis(orders, products_count, vendors_count, reviews):
     total    = len(orders)
     aov      = round(total_revenue / paid, 2) if paid > 0 else 0
     refund_r = round(refunded / total * 100, 2) if total > 0 else 0
-    ratings  = [float(r.get("rating", 5)) for r in reviews]
+    ratings  = [float((r or {}).get("rating", 5)) for r in reviews]
     avg_rat  = round(sum(ratings) / len(ratings), 2) if ratings else 0
 
-    unique_cust = len({o.get("customerEmail") for o in orders if o.get("customerEmail")})
+    unique_cust = len({(o or {}).get("customerEmail") for o in orders if (o or {}).get("customerEmail")})
 
     return {
         "aov":                  aov,
@@ -78,8 +79,12 @@ def calculate_kpis(orders, products_count, vendors_count, reviews):
 
 _firestore_broken = False
 
-def get_analytics_dashboard_data(date_range: str = "all"):
+def get_analytics_dashboard_data(date_range: str = "all") -> dict:
     global _firestore_broken
+    orders: list = []
+    products: list = []
+    vendors: list = []
+    reviews: list = []
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
@@ -88,14 +93,14 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             if cutoff:
                 q = q.filter(OrderModel.created_at >= cutoff)
             sql_orders = q.all()
-            sql_products = db_s.query(ProductModel).all()
+            sql_products = db_s.query(ProductModel.id, ProductModel.title, ProductModel.status, ProductModel.category).all()
             sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
             sql_reviews = db_s.query(ReviewModel).all()
 
             # Fetch previous period orders for growth computation
             prev_sql_orders = []
             if cutoff:
-                window_days = (datetime.utcnow() - cutoff).days or 30
+                window_days = (datetime.now(timezone.utc).replace(tzinfo=None) - cutoff).days or 30
                 prev_start = cutoff - timedelta(days=window_days)
                 prev_q = db_s.query(OrderModel).filter(
                     OrderModel.created_at >= prev_start,
@@ -105,10 +110,10 @@ def get_analytics_dashboard_data(date_range: str = "all"):
 
             def _to_order_dict(o):
                 return {
-                    "price": float(o.total_amount or 0.0),
-                    "total": float(o.total_amount or 0.0),
-                    "status": o.status or "completed",
-                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                    "price": float(getattr(o, 'total_amount', None) or 0.0),
+                    "total": float(getattr(o, 'total_amount', None) or 0.0),
+                    "status": getattr(o, 'status', None) or "completed",
+                    "paymentStatus": "Paid" if (getattr(o, 'status', None) or "").lower() == "completed" else "Pending",
                 }
 
             orders = []
@@ -120,14 +125,14 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                 # Fetch first product details
                 p_name = "Product"
                 if o.items:
-                    prod = db_s.query(ProductModel).filter(ProductModel.id == o.items[0].product_id).first()
-                    p_name = prod.title if prod else "Product"
+                    prod = db_s.query(ProductModel.id, ProductModel.title).filter(ProductModel.id == o.items[0].product_id).first()
+                    p_name = getattr(prod, "title", "Product") if prod else "Product"
 
                 orders.append({
-                    "price": float(o.total_amount or 0.0),
-                    "total": float(o.total_amount or 0.0),
-                    "status": o.status or "completed",
-                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                    "price": float(getattr(o, 'total_amount', None) or 0.0),
+                    "total": float(getattr(o, 'total_amount', None) or 0.0),
+                    "status": getattr(o, 'status', None) or "completed",
+                    "paymentStatus": "Paid" if (getattr(o, 'status', None) or "").lower() == "completed" else "Pending",
                     "customerName": cust_name,
                     "customerEmail": cust_email,
                     "createdAt": o.created_at.isoformat() + "Z" if o.created_at else "",
@@ -137,7 +142,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
 
             prev_orders_dicts = [_to_order_dict(o) for o in prev_sql_orders]
 
-            products = [{"status": p.status, "category": p.category, "title": p.title} for p in sql_products]
+            products = [{"status": getattr(p, "status", "published"), "category": getattr(p, "category", "General"), "title": getattr(p, "title", "Product")} for p in sql_products]
             vendors = [{"isApproved": v.is_verified or v.is_active, "status": "active" if v.is_active else "disabled", "role": v.role} for v in sql_vendors]
             reviews = [{"rating": r.rating} for r in sql_reviews]
 
@@ -156,7 +161,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
                 conversion_rate = round((paid_orders / max(total_orders_count, 1)) * 100, 1)
                 current_aov = kpis["aov"]
                 prev_paid = sum(1 for o in prev_orders_dicts if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
-                prev_rev = sum(float(o.get("total", 0)) for o in prev_orders_dicts if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+                prev_rev = sum(float(o.get("total") or o.get("price") or 0.0) for o in prev_orders_dicts if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
                 prev_aov = round(prev_rev / prev_paid, 2) if prev_paid > 0 else 0
                 aov_growth = round((current_aov - prev_aov) / max(prev_aov, 1) * 100, 1)
             except Exception:
@@ -169,7 +174,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             prod_sales = {}
             for o in orders:
                 name = o.get("productName", "Unknown Product")
-                price = float(o.get("price", o.get("total", 0)))
+                price = float(o.get("price") or o.get("total") or 0.0)
                 if name not in prod_sales:
                     prod_sales[name] = {"revenue": 0.0, "sales": 0, "category": o.get("category", "General")}
                 prod_sales[name]["revenue"] += price
@@ -187,7 +192,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             # Build real daily timeline from actual order dates
             _sql_daily: dict = {}
             for o in orders:
-                price_o = float(o.get("price", o.get("total", 0)))
+                price_o = float(o.get("price") or o.get("total") or 0.0)
                 pay_s   = o.get("paymentStatus", "")
                 stat_o  = o.get("status", "")
                 if not (pay_s == "Paid" or stat_o == "Completed"):
@@ -206,13 +211,13 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             return {
                 "kpis": kpis,
                 "revenueTrend": {
-                    "today":    round(_sql_daily.get(datetime.utcnow().strftime("%a"), 0.0), 2),
+                    "today":    round(_sql_daily.get(datetime.now(timezone.utc).replace(tzinfo=None).strftime("%a"), 0.0), 2),
                     "sparkline": sparkline_vals,
                     "timeline": {
                         "daily":   timeline_daily,
                         "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
                                      {"label": "Wk 2", "value": round(rev * .28, 2)}],
-                        "monthly": [{"label": datetime.utcnow().strftime("%b"), "value": rev}],
+                        "monthly": [{"label": datetime.now(timezone.utc).replace(tzinfo=None).strftime("%b"), "value": rev}],
                     },
                 },
                 "productPerformance": product_performance,
@@ -253,10 +258,10 @@ def get_analytics_dashboard_data(date_range: str = "all"):
             db_s.close()
 
     try:
-        orders   = [doc.to_dict() for doc in db.collection("orders").stream()]
-        products = [doc.to_dict() for doc in db.collection("products").stream()]
-        vendors  = [doc.to_dict() for doc in db.collection("vendors").stream()]
-        reviews  = [doc.to_dict() for doc in db.collection("reviews").stream()]
+        orders   = [doc.to_dict() or {} for doc in db.collection("orders").stream()]
+        products = [doc.to_dict() or {} for doc in db.collection("products").stream()]
+        vendors  = [doc.to_dict() or {} for doc in db.collection("vendors").stream()]
+        reviews  = [doc.to_dict() or {} for doc in db.collection("reviews").stream()]
     except Exception as e:
         print(f"[analytics] Firestore error: {e}. Falling back to SQLite.")
         _firestore_broken = True
@@ -267,9 +272,10 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     if cutoff:
         filtered = []
         prev_filtered = []
-        window_days = (datetime.utcnow() - cutoff).days or 30
+        window_days = (datetime.now(timezone.utc).replace(tzinfo=None) - cutoff).days or 30
         prev_start = cutoff - timedelta(days=window_days)
-        for o in orders:
+        for item in orders:
+            o = item or {}
             try:
                 created_str = o.get("createdAt", "")
                 if created_str:
@@ -288,14 +294,17 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     products_count = len(products)
     vendors_count  = len([
         v for v in vendors
-        if v.get("isApproved") is True
-        or v.get("verified") is True
-        or v.get("status") in ("Approved", "approved", "active")
-        or v.get("role") in ("Vendor", "vendor")
-        or all(v.get(k) is None for k in ("isApproved", "verified", "status", "role"))
+        if isinstance(v, dict) and (
+            v.get("isApproved") is True
+            or v.get("verified") is True
+            or v.get("status") in ("Approved", "approved", "active")
+            or v.get("role") in ("Vendor", "vendor")
+            or all(v.get(k) is None for k in ("isApproved", "verified", "status", "role"))
+        )
     ])
 
     kpis = calculate_kpis(orders, products_count, vendors_count, reviews)
+
 
     # Compute growth metrics
     try:
@@ -308,7 +317,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
         conversion_rate = round((paid_orders / max(total_orders_count, 1)) * 100, 1)
         current_aov = kpis["aov"]
         prev_paid = sum(1 for o in prev_orders if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
-        prev_rev_sum = sum(float(o.get("total", o.get("price", 0))) for o in prev_orders if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
+        prev_rev_sum = sum(float(o.get("total") or o.get("price") or 0.0) for o in prev_orders if o.get("paymentStatus") == "Paid" or o.get("status") == "Completed")
         prev_aov = round(prev_rev_sum / prev_paid, 2) if prev_paid > 0 else 0
         aov_growth = round((current_aov - prev_aov) / max(prev_aov, 1) * 100, 1)
     except Exception:
@@ -320,7 +329,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     prod_sales = {}
     for o in orders:
         name  = o.get("productName", "Unknown Product")
-        price = float(o.get("price", o.get("total", 0)))
+        price = float(o.get("price") or o.get("total") or 0.0)
         if name not in prod_sales:
             prod_sales[name] = {"revenue": 0.0, "sales": 0, "category": o.get("category", "General")}
         prod_sales[name]["revenue"] += price
@@ -336,7 +345,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     geo = {}
     for o in orders:
         region = o.get("region", "Other")
-        price  = float(o.get("price", o.get("total", 0)))
+        price  = float(o.get("price") or o.get("total") or 0.0)
         if region not in geo:
             geo[region] = {"revenue": 0.0, "customers": set()}
         geo[region]["revenue"] += price
@@ -353,7 +362,7 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     # Build real daily timeline from actual Firestore order dates
     _fs_daily: dict = {}
     for o in orders:
-        price_o = float(o.get("price", o.get("total", 0)))
+        price_o = float(o.get("price") or o.get("total") or 0.0)
         pay_s   = o.get("paymentStatus", "")
         stat_o  = o.get("status", "")
         if not (pay_s == "Paid" or stat_o == "Completed"):
@@ -372,13 +381,13 @@ def get_analytics_dashboard_data(date_range: str = "all"):
     return {
         "kpis": kpis,
         "revenueTrend": {
-            "today":    round(_fs_daily.get(datetime.utcnow().strftime("%a"), 0.0), 2),
+            "today":    round(_fs_daily.get(datetime.now(timezone.utc).replace(tzinfo=None).strftime("%a"), 0.0), 2),
             "sparkline": sparkline_vals,
             "timeline": {
                 "daily":   timeline_daily,
                 "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
                              {"label": "Wk 2", "value": round(rev * .28, 2)}],
-                "monthly": [{"label": datetime.utcnow().strftime("%b"), "value": rev}],
+                "monthly": [{"label": datetime.now(timezone.utc).replace(tzinfo=None).strftime("%b"), "value": rev}],
             },
         },
         "productPerformance": product_performance,
@@ -416,13 +425,18 @@ def get_analytics_dashboard_data(date_range: str = "all"):
         "_meta": {"totalReviews": len(reviews)},
     }
 
-def get_full_dashboard_data():
+def get_full_dashboard_data() -> dict:
     global _firestore_broken
+    orders: list = []
+    products: list = []
+    vendors: list = []
+    reviews: list = []
+    reports: list = []
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
             sql_orders = db_s.query(OrderModel).all()
-            sql_products = db_s.query(ProductModel).all()
+            sql_products = db_s.query(ProductModel.id, ProductModel.title, ProductModel.status, ProductModel.category).all()
             sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
             
             orders = []
@@ -433,33 +447,33 @@ def get_full_dashboard_data():
                 
                 p_name = "Product"
                 if o.items:
-                    prod = db_s.query(ProductModel).filter(ProductModel.id == o.items[0].product_id).first()
-                    p_name = prod.title if prod else "Product"
+                    prod = db_s.query(ProductModel.id, ProductModel.title).filter(ProductModel.id == o.items[0].product_id).first()
+                    p_name = getattr(prod, "title", "Product") if prod else "Product"
 
                 orders.append({
                     "id": str(o.id),
-                    "price": float(o.total_amount or 0.0),
-                    "total": float(o.total_amount or 0.0),
-                    "status": o.status or "completed",
-                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                    "price": float(getattr(o, 'total_amount', None) or 0.0),
+                    "total": float(getattr(o, 'total_amount', None) or 0.0),
+                    "status": getattr(o, 'status', None) or "completed",
+                    "paymentStatus": "Paid" if (getattr(o, 'status', None) or "").lower() == "completed" else "Pending",
                     "customerName": cust_name,
                     "customerEmail": cust_email,
                     "createdAt": o.created_at.isoformat() + "Z" if o.created_at else "",
                     "productName": p_name
                 })
 
-            products = [{"status": p.status, "category": p.category, "title": p.title} for p in sql_products]
+            products = [{"status": getattr(p, "status", "published"), "category": getattr(p, "category", "General"), "title": getattr(p, "title", "Product")} for p in sql_products]
             vendors = [{"isApproved": v.is_verified or v.is_active, "status": "active" if v.is_active else "disabled", "displayName": v.name, "role": v.role} for v in sql_vendors]
 
             active_products = len([p for p in products if p.get("status") in ("active", "published", "Published", "Active")])
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
             day_ago = now - timedelta(days=1)
 
             total_revenue = orders_today = refunded = successful = 0
             unique_cust = set()
 
             for o in orders:
-                price      = float(o.get("price", o.get("total", 0)))
+                price      = float(o.get("price") or o.get("total") or 0.0)
                 status     = o.get("status", "")
                 pay_status = o.get("paymentStatus", "")
                 email      = o.get("customerEmail", "")
@@ -481,7 +495,7 @@ def get_full_dashboard_data():
 
             # Compute real KPI metrics for SQL branch of get_full_dashboard_data
             try:
-                now_sql = datetime.utcnow()
+                now_sql = datetime.now(timezone.utc).replace(tzinfo=None)
                 cutoff_30d = now_sql - timedelta(days=30)
                 prev_30d_start = cutoff_30d - timedelta(days=30)
                 curr_30d = [o for o in orders if _parse_order_dt(o) >= cutoff_30d]
@@ -491,10 +505,12 @@ def get_full_dashboard_data():
                 prev_count_30d = len(prev_30d)
                 sql_growth_velocity = round(((curr_count_30d - prev_count_30d) / max(prev_count_30d, 1)) * 100, 1)
                 sql_conversion_rate = round((successful / max(total_orders, 1)) * 100, 1)
+                sql_orders_change   = round(((curr_count_30d - prev_count_30d) / max(prev_count_30d, 1)) * 100, 1)
             except Exception:
-                sql_revenue_change = 0
+                sql_revenue_change  = 0
                 sql_growth_velocity = 0
                 sql_conversion_rate = 0
+                sql_orders_change   = 0
 
             kpis = {
                 "totalRevenue":        round(total_revenue, 2),
@@ -504,7 +520,7 @@ def get_full_dashboard_data():
                 "refundRate":          refund_rate,
                 "growthVelocity":      sql_growth_velocity,
                 "revenueChange":       sql_revenue_change,
-                "ordersChange":        round(((curr_count_30d - prev_count_30d) / max(prev_count_30d, 1)) * 100, 1),
+                "ordersChange":        sql_orders_change,
                 "activeProductsChange":0,
                 "modalData": {
                     "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
@@ -525,7 +541,7 @@ def get_full_dashboard_data():
                 ts   = o.get("createdAt", "")
                 try:
                     dt_feed = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
-                    elapsed_min = int((datetime.utcnow() - dt_feed).total_seconds() / 60)
+                    elapsed_min = int((datetime.now(timezone.utc).replace(tzinfo=None) - dt_feed).total_seconds() / 60)
                     if elapsed_min < 60:
                         time_label = f"{elapsed_min} min ago"
                     elif elapsed_min < 1440:
@@ -588,7 +604,7 @@ def get_full_dashboard_data():
             daily_rev: dict = {}
             weekly_rev: dict = {}
             monthly_rev: dict = {}
-            now_chart = datetime.utcnow()
+            now_chart = datetime.now(timezone.utc).replace(tzinfo=None)
             for o in orders:
                 price      = float(o.get("price", o.get("total", 0)))
                 pay_status = o.get("paymentStatus", "")
@@ -654,7 +670,7 @@ def get_full_dashboard_data():
                 },
                 "healthScore":  computed_health,
                 "healthStatus": health_status_label,
-                "_meta": {"fetchedAt": datetime.utcnow().isoformat() + "Z"},
+                "_meta": {"fetchedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"},
             }
         finally:
             db_s.close()
@@ -670,20 +686,20 @@ def get_full_dashboard_data():
         _firestore_broken = True
         return get_full_dashboard_data()
 
-    orders   = [{"id": d.id, **d.to_dict()} for d in orders_docs]
-    products = [d.to_dict() for d in products_docs]
-    vendors  = [d.to_dict() for d in vendors_docs]
-    reports  = [d.to_dict() for d in reports_docs]
+    orders   = [{"id": d.id, **(d.to_dict() or {})} for d in orders_docs]
+    products = [d.to_dict() or {} for d in products_docs]
+    vendors  = [d.to_dict() or {} for d in vendors_docs]
+    reports  = [d.to_dict() or {} for d in reports_docs]
 
-    active_products = len([p for p in products if p.get("status") in ("active", "published", "Published", "Active")])
-    now    = datetime.utcnow()
+    active_products = len([p for p in products if (p or {}).get("status") in ("active", "published", "Published", "Active")])
+    now    = datetime.now(timezone.utc).replace(tzinfo=None)
     day_ago= now - timedelta(days=1)
 
     total_revenue = orders_today = refunded = successful = 0
     unique_cust = set()
 
     for o in orders:
-        price      = float(o.get("price", o.get("total", 0)))
+        price      = float(o.get("price") or o.get("total") or 0.0)
         status     = o.get("status", "")
         pay_status = o.get("paymentStatus", "")
         email      = o.get("customerEmail", "")
@@ -705,7 +721,7 @@ def get_full_dashboard_data():
 
     # Compute real KPI metrics for Firestore branch of get_full_dashboard_data
     try:
-        now_fs = datetime.utcnow()
+        now_fs = datetime.now(timezone.utc).replace(tzinfo=None)
         cutoff_30d_fs = now_fs - timedelta(days=30)
         prev_30d_start_fs = cutoff_30d_fs - timedelta(days=30)
         curr_30d_fs = [o for o in orders if _parse_order_dt(o) >= cutoff_30d_fs]
@@ -715,10 +731,12 @@ def get_full_dashboard_data():
         prev_cnt_fs = len(prev_30d_fs)
         fs_growth_velocity = round(((curr_cnt_fs - prev_cnt_fs) / max(prev_cnt_fs, 1)) * 100, 1)
         fs_conversion_rate = round((successful / max(total_orders, 1)) * 100, 1)
+        fs_orders_change   = round(((curr_cnt_fs - prev_cnt_fs) / max(prev_cnt_fs, 1)) * 100, 1)
     except Exception:
-        fs_revenue_change = 0
+        fs_revenue_change  = 0
         fs_growth_velocity = 0
         fs_conversion_rate = 0
+        fs_orders_change   = 0
 
     kpis = {
         "totalRevenue":        round(total_revenue, 2),
@@ -728,7 +746,7 @@ def get_full_dashboard_data():
         "refundRate":          refund_rate,
         "growthVelocity":      fs_growth_velocity,
         "revenueChange":       fs_revenue_change,
-        "ordersChange":        round(((curr_cnt_fs - prev_cnt_fs) / max(prev_cnt_fs, 1)) * 100, 1),
+        "ordersChange":        fs_orders_change,
         "activeProductsChange":0,
         "modalData": {
             "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
@@ -742,13 +760,13 @@ def get_full_dashboard_data():
     sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
     live_feed = []
     for o in sorted_orders:
-        amt  = float(o.get("price", o.get("total", 0)))
+        amt  = float(o.get("price") or o.get("total") or 0.0)
         item = o.get("productName", "Product")
         user = o.get("customerName", "Customer")
         ts   = o.get("createdAt", "")
         try:
             dt_feed = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
-            elapsed_min = int((datetime.utcnow() - dt_feed).total_seconds() / 60)
+            elapsed_min = int((datetime.now(timezone.utc).replace(tzinfo=None) - dt_feed).total_seconds() / 60)
             if elapsed_min < 60:
                 time_label = f"{elapsed_min} min ago"
             elif elapsed_min < 1440:
@@ -768,7 +786,7 @@ def get_full_dashboard_data():
     prod_sales = {}
     for o in orders:
         name  = o.get("productName", "Unknown")
-        price = float(o.get("price", o.get("total", 0)))
+        price = float(o.get("price") or o.get("total") or 0.0)
         if name not in prod_sales:
             prod_sales[name] = {"sales": 0, "revenue": 0.0}
         if o.get("status") == "Completed" or o.get("paymentStatus") == "Paid":
@@ -802,7 +820,7 @@ def get_full_dashboard_data():
     for o in orders:
         email = o.get("customerEmail", "")
         name  = o.get("customerName", "Customer")
-        price = float(o.get("price", o.get("total", 0)))
+        price = float(o.get("price") or o.get("total") or 0.0)
         if email:
             if email not in cust_map:
                 cust_map[email] = {"name": name, "purchases": 0, "spent": 0.0}
@@ -825,7 +843,7 @@ def get_full_dashboard_data():
     fs_weekly_rev: dict = {}
     fs_monthly_rev: dict = {}
     for o in orders:
-        price      = float(o.get("price", o.get("total", 0)))
+        price      = float(o.get("price") or o.get("total") or 0.0)
         pay_status = o.get("paymentStatus", "")
         status_v   = o.get("status", "")
         if not (pay_status == "Paid" or status_v == "Completed"):
@@ -886,5 +904,5 @@ def get_full_dashboard_data():
         },
         "healthScore":  fs_computed_health,
         "healthStatus": fs_health_label,
-        "_meta": {"fetchedAt": datetime.utcnow().isoformat() + "Z"},
+        "_meta": {"fetchedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"},
     }

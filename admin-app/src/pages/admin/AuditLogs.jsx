@@ -315,7 +315,7 @@ export default function AuditLogs() {
               </div>
 
               {/* Mobile Stacked Card View (< 768px) */}
-              <div className="md:hidden flex flex-col gap-3 p-3">
+              <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4">
                 <AnimatePresence>
                   {logs.map((log, idx) => (
                     <motion.div
@@ -323,32 +323,31 @@ export default function AuditLogs() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.02 }}
-                      className="p-4 rounded-2xl bg-white/80 border border-stone-200/60 shadow-sm flex flex-col gap-2.5"
+                      className="p-4 rounded-2xl bg-white border border-[#E9DFF3]/60 shadow-sm flex flex-col gap-3"
                     >
-                      <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                        <span className="font-mono text-xs font-bold text-[#2D004D]">
+                      {/* Card header: ID + badge */}
+                      <div className="flex items-start justify-between gap-2 border-b border-[#F5EDF9]/80 pb-2.5">
+                        <span className="font-mono text-[11px] font-extrabold text-[#2D004D] shrink-0">
                           ID #{log.id}
                         </span>
-                        {actionBadge(log.action)}
-                      </div>
-
-                      <div className="flex flex-col gap-1 text-[11px]">
-                        <div className="flex justify-between">
-                          <span className="text-[#7B3FA0]">Target:</span>
-                          <span className="font-bold text-[#2D004D]">{log.target_type || '—'} ({log.target_id || '—'})</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#7B3FA0]">Admin ID:</span>
-                          <span className="font-mono text-[#7B3FA0]">{log.admin_user_id || '—'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#7B3FA0]">IP Address:</span>
-                          <span className="font-mono text-[#7B3FA0]">{log.ip_address || '—'}</span>
+                        <div className="shrink-0 max-w-[55%] text-right">
+                          {actionBadge(log.action)}
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-stone-100 flex justify-between items-center text-[10px] text-[#8E6AA8]">
-                        <span>Timestamp:</span>
+                      {/* Fields grid */}
+                      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]">
+                        <span className="text-[#8E6AA8] font-semibold">Target:</span>
+                        <span className="font-bold text-[#2D004D] text-right truncate">{log.target_type || '—'} ({log.target_id || '—'})</span>
+                        <span className="text-[#8E6AA8] font-semibold">Admin ID:</span>
+                        <span className="font-mono text-[#7B3FA0] text-right">{log.admin_user_id || '—'}</span>
+                        <span className="text-[#8E6AA8] font-semibold">IP Address:</span>
+                        <span className="font-mono text-[#7B3FA0] text-right">{log.ip_address || '—'}</span>
+                      </div>
+
+                      {/* Timestamp footer */}
+                      <div className="pt-2 border-t border-[#F5EDF9]/80 flex justify-between items-center text-[10px] text-[#8E6AA8]">
+                        <span className="font-semibold">Timestamp:</span>
                         <span className="font-bold text-[#2D004D]">{formatTimestamp(log.created_at)}</span>
                       </div>
                     </motion.div>

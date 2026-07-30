@@ -174,7 +174,7 @@ function WithdrawalRequestModal({ summary, onClose, onSuccess }) {
       <motion.div
         key="modal-overlay"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] bg-[#2D004D]/40 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 z-[60] bg-[#2D004D]/40 backdrop-blur-sm flex items-start justify-center p-3 sm:p-4 overflow-y-auto"
         onClick={onClose}
       >
         <motion.div
@@ -183,13 +183,13 @@ function WithdrawalRequestModal({ summary, onClose, onSuccess }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          className="w-full max-w-lg my-8 bg-[#FFFDF9] rounded-3xl shadow-2xl border border-[#8E6AA8]/15 overflow-hidden"
+          className="w-full max-w-lg my-4 sm:my-8 bg-[#FFFDF9] rounded-3xl shadow-2xl border border-[#8E6AA8]/15 overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-[#8E6AA8]/10 flex items-center justify-between">
+          <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-[#8E6AA8]/10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#D8BFE3]/30 flex items-center justify-center text-[#7B3FA0]">
+              <div className="w-9 h-9 rounded-xl bg-[#D8BFE3]/30 flex items-center justify-center text-[#7B3FA0] shrink-0">
                 <Landmark size={18} />
               </div>
               <div>
@@ -197,22 +197,22 @@ function WithdrawalRequestModal({ summary, onClose, onSuccess }) {
                 <h3 className="text-sm font-serif font-black text-[#2D004D] leading-tight">Withdraw Funds</h3>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-xl text-[#8E6AA8] hover:bg-[#D8BFE3]/20 hover:text-[#2D004D] transition-colors">
+            <button onClick={onClose} className="p-2 rounded-xl text-[#8E6AA8] hover:bg-[#D8BFE3]/20 hover:text-[#2D004D] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center">
               <X size={18} />
             </button>
           </div>
 
-          <div className="px-6 py-5 space-y-4">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
             {/* Balance info */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               {[
                 { label: 'Available',    val: available,       color: 'text-[#2D004D]' },
                 { label: 'Reserve',      val: reserve,         color: 'text-amber-600' },
                 { label: 'Withdrawable', val: netWithdrawable, color: 'text-emerald-600' },
               ].map(s => (
-                <div key={s.label} className="glass-surface rounded-xl p-3 border border-white/50 text-center">
-                  <p className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{s.label}</p>
-                  <p className={`text-sm font-serif font-black mt-0.5 ${s.color}`}>{formatINR(s.val)}</p>
+                <div key={s.label} className="glass-surface rounded-xl p-2.5 sm:p-3 border border-white/50 text-center min-w-0">
+                  <p className="text-[8px] sm:text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase truncate">{s.label}</p>
+                  <p className={`text-xs sm:text-sm font-serif font-black mt-0.5 ${s.color} truncate`}>{formatINR(s.val)}</p>
                 </div>
               ))}
             </div>
@@ -491,9 +491,9 @@ function OverviewTab({ summary, loading }) {
       <GlassCard title="Balance Formula" subtitle="TREASURY ACCOUNTING ENGINE">
         <div className="space-y-0">
           {rows.map((r, i) => (
-            <div key={r.label} className={`flex items-center justify-between py-3.5 ${i < rows.length - 1 ? 'border-b border-[#8E6AA8]/8' : ''}`}>
-              <div>
-                <div className="flex items-center gap-2">
+            <div key={r.label} className={`flex items-start sm:items-center justify-between gap-3 py-3.5 ${i < rows.length - 1 ? 'border-b border-[#8E6AA8]/8' : ''}`}>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-[#2D004D]">{r.label}</span>
                   {r.badge && (
                     <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold tracking-widest bg-[#D8BFE3]/40 text-[#7B3FA0] uppercase">
@@ -501,23 +501,23 @@ function OverviewTab({ summary, loading }) {
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-[#8E6AA8] mt-0.5">{r.note}</p>
+                <p className="text-[11px] text-[#8E6AA8] mt-0.5 break-words">{r.note}</p>
               </div>
-              <span className={`text-base font-mono font-bold ${r.color}`}>
+              <span className={`text-sm sm:text-base font-mono font-bold shrink-0 ${r.color}`}>
                 {formatINR(r.value)}
               </span>
             </div>
           ))}
 
           {/* Result */}
-          <div className="flex items-center justify-between pt-4 mt-1 border-t-2 border-[#7B3FA0]/20">
-            <div>
-              <span className="text-base font-serif font-black text-[#2D004D]">Available to Withdraw</span>
-              <p className="text-[11px] text-[#8E6AA8] mt-0.5">
+          <div className="flex items-start sm:items-center justify-between gap-3 pt-4 mt-1 border-t-2 border-[#7B3FA0]/20">
+            <div className="min-w-0 flex-1">
+              <span className="text-sm sm:text-base font-serif font-black text-[#2D004D]">Available to Withdraw</span>
+              <p className="text-[11px] text-[#8E6AA8] mt-0.5 break-words">
                 Maximum withdrawable: {formatINR(summary.net_withdrawable)} (after {formatINR(summary.minimum_reserve)} reserve)
               </p>
             </div>
-            <span className="text-2xl font-mono font-black text-[#7B3FA0]">{formatINR(summary.available_balance)}</span>
+            <span className="text-xl sm:text-2xl font-mono font-black text-[#7B3FA0] shrink-0">{formatINR(summary.available_balance)}</span>
           </div>
         </div>
       </GlassCard>
@@ -530,12 +530,12 @@ function OverviewTab({ summary, loading }) {
           { label: 'Net Earnings',      value: formatINR(summary.net_platform_earnings),     icon: Wallet },
           { label: 'Ledger Entries',    value: (summary.ledger_entries || 0).toLocaleString(), icon: FileText },
         ].map(s => (
-          <div key={s.label} className="glass-surface rounded-2xl p-4 border border-white/50 shadow-sm">
-            <div className="flex items-center gap-2 mb-1">
-              <s.icon size={13} className="text-[#7B3FA0]" />
-              <span className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">{s.label}</span>
+          <div key={s.label} className="glass-surface rounded-2xl p-3.5 sm:p-4 border border-white/50 shadow-sm min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <s.icon size={13} className="text-[#7B3FA0] shrink-0" />
+              <span className="text-[8px] sm:text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase truncate">{s.label}</span>
             </div>
-            <p className="text-base font-serif font-black text-[#2D004D]">{s.value}</p>
+            <p className="text-sm sm:text-base font-serif font-black text-[#2D004D] truncate">{s.value}</p>
           </div>
         ))}
       </div>
@@ -1215,18 +1215,18 @@ export default function PlatformFinance() {
           title="Finance & Treasury"
           subtitle="Platform treasury ledger, withdrawal workflow, and immutable revenue accounting"
           actions={
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 flex-wrap justify-end">
               {!loading && summary && (
                 <div className="flex flex-col text-right">
-                  <span className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Available to Withdraw</span>
-                  <span className="text-lg font-serif font-black text-[#7B3FA0] leading-tight">
+                  <span className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Available</span>
+                  <span className="text-base sm:text-lg font-serif font-black text-[#7B3FA0] leading-tight">
                     {formatINR(summary.available_balance)}
                   </span>
                 </div>
               )}
               <button
                 onClick={loadSummary}
-                className="p-2 rounded-xl border border-[#8E6AA8]/20 hover:bg-[#D8BFE3]/20 text-[#7B3FA0] transition-colors"
+                className="p-2 rounded-xl border border-[#8E6AA8]/20 hover:bg-[#D8BFE3]/20 text-[#7B3FA0] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label="Refresh"
               >
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
