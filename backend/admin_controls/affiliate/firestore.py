@@ -48,18 +48,22 @@ def get_affiliate_status_from_firestore(uid: str) -> str:
     if not firebase_connected or db is None:
         return "active"
     
-    # Check users doc
-    user_ref = db.collection("users").document(uid)
-    user_snap = user_ref.get()
-    if user_snap.exists:
-        data = user_snap.to_dict()
-        return data.get("accountStatus", "active").lower()
-        
-    # Fallback to affiliates collection
-    affiliate_ref = db.collection("affiliates").document(uid)
-    affiliate_snap = affiliate_ref.get()
-    if affiliate_snap.exists:
-        data = affiliate_snap.to_dict()
-        return data.get("status", "active").lower()
+    try:
+        # Check users doc
+        user_ref = db.collection("users").document(uid)
+        user_snap = user_ref.get()
+        if user_snap.exists:
+            data = user_snap.to_dict()
+            return data.get("accountStatus", "active").lower()
+            
+        # Fallback to affiliates collection
+        affiliate_ref = db.collection("affiliates").document(uid)
+        affiliate_snap = affiliate_ref.get()
+        if affiliate_snap.exists:
+            data = affiliate_snap.to_dict()
+            return data.get("status", "active").lower()
+    except Exception as e:
+        import logging as _log
+        _log.warning(f"[firestore-sync] Non-fatal error getting affiliate status: {e}")
         
     return "active"
