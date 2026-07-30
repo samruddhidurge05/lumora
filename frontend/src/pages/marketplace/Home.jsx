@@ -88,15 +88,15 @@ function PCard({ product, delay = 0 }) {
       onHoverEnd={() => setHov(false)}
       onClick={() => navigateTo('product-detail', product.id)}
       style={{
-        background: 'rgba(255,255,255,0.35)',
+        background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(36px) saturate(200%)',
         WebkitBackdropFilter: 'blur(36px) saturate(200%)',
-        border: `1px solid ${hov ? 'rgba(123,63,160,.32)' : 'rgba(255,255,255,.40)'}`,
-        borderTop: '1.5px solid rgba(255,255,255,.55)',
+        border: `1px solid ${hov ? 'rgba(123,63,160,.45)' : 'rgba(255,255,255,.60)'}`,
+        borderTop: '1.5px solid rgba(255,255,255,.80)',
         borderRadius: '22px', overflow: 'hidden',
         boxShadow: hov
-          ? '0 28px 64px rgba(90,30,126,.20), inset 0 1px 0 rgba(255,255,255,.75)'
-          : '0 8px 32px rgba(90,30,126,.10), inset 0 1px 0 rgba(255,255,255,.60)',
+          ? '0 28px 64px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.85)'
+          : '0 8px 32px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.70)',
         transform: hov ? 'translateY(-7px) scale(1.015)' : 'translateY(0) scale(1)',
         transition: 'all .32s cubic-bezier(.16,1,.3,1)',
         cursor: 'pointer', display: 'flex', flexDirection: 'column',
@@ -231,13 +231,13 @@ export default function Home() {
 
   /* ── Glass card style shorthand ── */
   const glass = (extra={}) => ({
-    background:'rgba(255,255,255,0.30)',
+    background:'rgba(255,255,255,0.85)',
     backdropFilter:'blur(36px) saturate(200%) brightness(1.05)',
     WebkitBackdropFilter:'blur(36px) saturate(200%) brightness(1.05)',
-    border:'1px solid rgba(255,255,255,0.40)',
-    borderTop:'1.5px solid rgba(255,255,255,0.55)',
+    border:'1px solid rgba(255,255,255,0.50)',
+    borderTop:'1.5px solid rgba(255,255,255,0.70)',
     borderRadius:'22px',
-    boxShadow:'0 8px 32px rgba(90,30,126,0.10), inset 0 1px 0 rgba(255,255,255,0.60)',
+    boxShadow:'0 10px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.80)',
     ...extra,
   });
 
@@ -250,18 +250,56 @@ export default function Home() {
   };
 
   return (
-    <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:10 }}>
+    <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:1 }}>
+      {/* ── GLOBAL FIXED CINEMATIC BACKGROUND VIDEO FOR ENTIRE LANDING PAGE ── */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+      }}>
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            objectFit: 'cover',
+            objectPosition: 'center 40%',
+            filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+          }}
+        >
+          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
+        </video>
+        {/* Dark Vignette Overlay for rich text readability across all sections */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.30) 0%, rgba(13, 5, 24, 0.45) 50%, rgba(13, 5, 24, 0.65) 100%)',
+          pointerEvents: 'none',
+        }} />
+      </div>
+
       <Navbar />
 
       {/* ═══════════ 1. HERO ═══════════ */}
       <Hero />
 
       {/* ═══════════ 2. CATEGORIES ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
+      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal lumora-cats-section-head" style={{ textAlign:'center', marginBottom:'52px' }}>
-            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Browse by Category</p>
-            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Everything You Need to Build</h2>
+            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>Browse by Category</p>
+            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>Everything You Need to Build</h2>
           </div>
           <div className="lumora-cats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'16px' }}>
             {CATS.map((cat,i)=>(
@@ -271,15 +309,15 @@ export default function Home() {
                 transition={{duration:.6,delay:i*.06,ease:[.16,1,.3,1]}}
                 whileHover={{y:-7,boxShadow:'0 22px 55px rgba(90,30,126,.15)'}}
                 onClick={()=>handleCategoryClick(cat.name)}
-                style={{ padding:'28px 20px', borderRadius:'20px', border:selectedCat===cat.name?'1.5px solid #7B3FA0':'1px solid rgba(255,255,255,0.40)', borderTop:'1.5px solid rgba(255,255,255,0.55)', background:selectedCat===cat.name?'rgba(220,198,255,0.45)':'rgba(255,255,255,0.30)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', cursor:'pointer', textAlign:'left', boxShadow:'0 8px 32px rgba(90,30,126,.08), inset 0 1px 0 rgba(255,255,255,.55)', transition:'all .3s', fontFamily:'var(--font-sans)' }}>
+                style={{ padding:'28px 20px', borderRadius:'20px', border:selectedCat===cat.name?'1.5px solid #7B3FA0':'1px solid rgba(255,255,255,0.50)', borderTop:'1.5px solid rgba(255,255,255,0.70)', background:selectedCat===cat.name?'rgba(220,198,255,0.85)':'rgba(255,255,255,0.85)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', cursor:'pointer', textAlign:'left', boxShadow:'0 8px 32px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.70)', transition:'all .3s', fontFamily:'var(--font-sans)' }}>
                 <div style={{ width:'44px', height:'44px', borderRadius:'12px', background:cat.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#5A1E7E', marginBottom:'14px' }}>{cat.icon}</div>
                 <div style={{ fontSize:'.88rem', fontWeight:700, color:'#2D004D', marginBottom:'4px' }}>{cat.name}</div>
               </motion.button>
             ))}
             <motion.button initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}} transition={{duration:.6,delay:CATS.length*.06}} whileHover={{y:-7}}
               onClick={()=>handleCategoryClick('All')}
-              style={{ padding:'28px 20px', borderRadius:'20px', border:'2px dashed rgba(123,63,160,.28)', background:'transparent', cursor:'pointer', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'8px', fontFamily:'var(--font-sans)', transition:'all .3s' }}>
-              <span style={{ fontSize:'2rem' }}>✦</span>
+              style={{ padding:'28px 20px', borderRadius:'20px', border:'2px dashed rgba(216,180,254,.60)', background:'rgba(255,255,255,0.75)', backdropFilter:'blur(24px)', cursor:'pointer', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'8px', fontFamily:'var(--font-sans)', transition:'all .3s' }}>
+              <span style={{ fontSize:'2rem', color:'#7B3FA0' }}>✦</span>
               <span style={{ fontSize:'.85rem', fontWeight:700, color:'#7B3FA0' }}>All ({uniqueProducts.length}) Products</span>
             </motion.button>
           </div>
@@ -287,12 +325,12 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 3. FEATURED PRODUCTS ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
+      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
             <div>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>Editor's Pick</p>
-              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Featured Products</h2>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>Editor's Pick</p>
+              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>Featured Products</h2>
             </div>
             <button onClick={()=>handleCategoryClick('All')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all {uniqueProducts.length} <ArrowRight size={14}/></button>
           </div>
@@ -303,9 +341,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 4. STATS STRIP ═══════════ */}
-      <section style={{ padding:'64px clamp(1.5rem,6vw,7rem)' }}>
+      <section style={{ padding:'64px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal lumora-stats-strip" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1px', background:'rgba(220,198,255,0.15)', borderRadius:'24px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.35)' }}>
+          <div className="gsap-reveal lumora-stats-strip" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1px', background:'rgba(255,255,255,0.20)', borderRadius:'24px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.45)', backdropFilter:'blur(32px)' }}>
             {[
               {icon:<Sparkles size={22}/>,v:String(uniqueProducts.length),s:'+',l:'Products'},
               {icon:<Users size={22}/>,v:'45000',s:'+',l:'Customers'},
@@ -313,7 +351,7 @@ export default function Home() {
               {icon:<Star size={22}/>,v:'4.9',s:'/5',l:'Avg Rating'},
               {icon:<Shield size={22}/>,v:'100',s:'%',l:'Secure'},
             ].map((s,i)=>(
-              <div key={i} style={{ padding:'36px 24px', background:'rgba(255,255,255,0.28)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', textAlign:'center' }}>
+              <div key={i} style={{ padding:'36px 24px', background:'rgba(255,255,255,0.85)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', textAlign:'center' }}>
                 <div style={{ width:'48px', height:'48px', borderRadius:'14px', background:'linear-gradient(135deg,rgba(220,198,255,.50),rgba(255,214,186,.40))', display:'flex', alignItems:'center', justifyContent:'center', color:'#5A1E7E', margin:'0 auto 16px' }}>{s.icon}</div>
                 <div style={{ fontFamily:'var(--font-editorial)', fontSize:'2.2rem', fontWeight:400, color:'#2D004D', lineHeight:1 }}><Counter end={s.v} suffix={s.s}/></div>
                 <div style={{ fontSize:'.72rem', color:'#8B6B5B', fontWeight:600, marginTop:'6px' }}>{s.l}</div>
@@ -324,12 +362,12 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 5. TRENDING ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
+      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
             <div>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>🔥 Hot Right Now</p>
-              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Trending This Week</h2>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>🔥 Hot Right Now</p>
+              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>Trending This Week</h2>
             </div>
           </div>
           <div className="home-product-grid lumora-home-products-grid">
@@ -339,12 +377,12 @@ export default function Home() {
       </section>
 
       {/* ── ALL DIGITAL PRODUCTS (SHOW EVERYTHING) ── */}
-      <section id="all-products-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
+      <section id="all-products-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'28px', flexWrap:'wrap', gap:'16px' }}>
             <div>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>✦ Complete Catalog ({filteredCatalog.length} Products)</p>
-              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>All Digital Products</h2>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>✦ Complete Catalog ({filteredCatalog.length} Products)</p>
+              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>All Digital Products</h2>
             </div>
           </div>
 
@@ -357,14 +395,14 @@ export default function Home() {
                 style={{
                   padding: '8px 18px',
                   borderRadius: '999px',
-                  border: selectedCat === catName ? '1.5px solid #7B3FA0' : '1px solid rgba(123,63,160,0.22)',
-                  background: selectedCat === catName ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'rgba(255,255,255,0.65)',
-                  color: selectedCat === catName ? '#FFFFFF' : '#5A1E7E',
+                  border: selectedCat === catName ? '1.5px solid #C084FC' : '1px solid rgba(255,255,255,0.40)',
+                  background: selectedCat === catName ? 'linear-gradient(135deg, #9333EA, #6B21A8)' : 'rgba(255,255,255,0.85)',
+                  color: selectedCat === catName ? '#FFFFFF' : '#2D004D',
                   fontSize: '0.82rem',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: selectedCat === catName ? '0 4px 14px rgba(123,63,160,0.35)' : 'none',
+                  backdropFilter: 'blur(16px)',
+                  boxShadow: selectedCat === catName ? '0 4px 16px rgba(147,51,234,0.50)' : '0 2px 8px rgba(0,0,0,0.10)',
                   transition: 'all 0.25s ease',
                 }}
               >
@@ -380,11 +418,11 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 6. TESTIMONIALS ═══════════ */}
-      <section className="lumora-testimonials-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(207,232,214,0.10)' }}>
+      <section className="lumora-testimonials-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'900px', margin:'0 auto' }}>
           <div className="gsap-reveal" style={{ textAlign:'center', marginBottom:'52px' }}>
-            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Creator Voices</p>
-            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Loved by Builders Worldwide</h2>
+            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>Creator Voices</p>
+            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>Loved by Builders Worldwide</h2>
           </div>
           <AnimatePresence mode="wait">
             <motion.div key={activeTestimonial}
@@ -412,18 +450,18 @@ export default function Home() {
           <div style={{ display:'flex', gap:'8px', justifyContent:'center' }}>
             {TESTIMONIALS.map((_,i)=>(
               <button key={i} onClick={()=>setActiveTestimonial(i)}
-                style={{ width:i===activeTestimonial?'22px':'8px', height:'8px', borderRadius:'4px', border:'none', background:i===activeTestimonial?'#7B3FA0':'rgba(123,63,160,.22)', cursor:'pointer', padding:0, transition:'all .3s' }}/>
+                style={{ width:i===activeTestimonial?'22px':'8px', height:'8px', borderRadius:'4px', border:'none', background:i===activeTestimonial?'#D8B4FE':'rgba(255,255,255,.40)', cursor:'pointer', padding:0, transition:'all .3s' }}/>
             ))}
           </div>
         </div>
       </section>
 
       {/* ═══════════ 7. WHY LUMORA ═══════════ */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)' }}>
+      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal" style={{ textAlign:'center', marginBottom:'52px' }}>
-            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px' }}>Why Lumora</p>
-            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Built for Creators &amp; Builders</h2>
+            <p style={{ fontSize:'.65rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'10px', textShadow:'0 0 12px rgba(192, 132, 252, 0.6)' }}>Why Lumora</p>
+            <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#FFFFFF', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>Built for Creators &amp; Builders</h2>
           </div>
           <div className="lumora-why-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'20px' }}>
             {[
@@ -436,11 +474,11 @@ export default function Home() {
             ].map((f,i)=>(
               <Reveal key={i} delay={i*.06}>
                 <div style={{ ...glass({padding:'30px'}), cursor:'default' }}
-                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-6px)';e.currentTarget.style.boxShadow='0 24px 56px rgba(90,30,126,.18), inset 0 1px 0 rgba(255,255,255,.70)';}}
-                  onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 8px 32px rgba(90,30,126,.10), inset 0 1px 0 rgba(255,255,255,.60)';}}>
+                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-6px)';e.currentTarget.style.boxShadow='0 24px 56px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.85)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 10px 40px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.80)';}}>
                   <div style={{ width:'46px', height:'46px', borderRadius:'13px', background:f.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#5A1E7E', marginBottom:'16px' }}>{f.icon}</div>
                   <h3 style={{ fontSize:'.98rem', fontWeight:700, color:'#2D004D', marginBottom:'8px' }}>{f.title}</h3>
-                  <p style={{ fontSize:'.83rem', color:'#6B4F7A', lineHeight:1.65 }}>{f.desc}</p>
+                  <p style={{ fontSize:'.83rem', color:'#5A3E6B', lineHeight:1.65 }}>{f.desc}</p>
                 </div>
               </Reveal>
             ))}
@@ -449,7 +487,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════ 8. CTA ═══════════ */}
-      <section className="lumora-cta-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem) 100px' }}>
+      <section className="lumora-cta-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem) 100px', position:'relative', zIndex:2 }}>
         <div style={{ maxWidth:'880px', margin:'0 auto' }}>
           <Reveal>
             <div className="lumora-cta-card" style={{ ...glass({padding:'clamp(48px,8vw,80px)', textAlign:'center', position:'relative', overflow:'hidden', borderRadius:'32px'}) }}>
@@ -461,7 +499,7 @@ export default function Home() {
                   Build Something<br/>
                   <span style={{ background:'linear-gradient(135deg,#7B3FA0,#C084FC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontStyle:'italic' }}>Extraordinary</span>
                 </h2>
-                <p style={{ color:'#6B4F7A', fontSize:'1rem', maxWidth:'480px', margin:'0 auto 36px', lineHeight:1.65 }}>
+                <p style={{ color:'#5A3E6B', fontSize:'1rem', maxWidth:'480px', margin:'0 auto 36px', lineHeight:1.65 }}>
                   Join 45,000+ creators and builders already using Lumora to ship faster, design better and earn more.
                 </p>
                 <div className="lumora-cta-btns" style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap' }}>
@@ -470,7 +508,7 @@ export default function Home() {
                 </div>
                 <div className="lumora-cta-trust" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', marginTop:'24px', flexWrap:'wrap' }}>
                   {['No credit card required','Instant access','Commercial license'].map((t,i)=>(
-                    <span key={i} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'.76rem', color:'#8B6B5B', fontWeight:600 }}>
+                    <span key={i} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'.76rem', color:'#5A3E6B', fontWeight:600 }}>
                       <Check size={12} style={{ color:'#16a34a' }}/> {t}
                     </span>
                   ))}
@@ -481,7 +519,9 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
+      <div style={{ position:'relative', zIndex:2 }}>
+        <Footer />
+      </div>
     </div>
   );
 }

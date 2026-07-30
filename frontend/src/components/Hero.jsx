@@ -26,23 +26,7 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} style={styles.section}>
-      {/* ── FULL-SCREEN CINEMATIC BACKGROUND VIDEO WITH DARK VIGNETTE ── */}
-      <div style={styles.fullBgWrapper}>
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={styles.bgVideo}
-        >
-          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
-        </video>
-
-        {/* Dark Vignette Overlay for rich rich colors and maximum text readability */}
-        <div style={styles.fullBgOverlay} />
-        {/* Soft, subtle bottom edge transition mask to blend smoothly into lower section */}
-        <div style={styles.bottomSoftBlend} />
-      </div>
+      {/* Centered Hero Content directly over page background video */}
 
       {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}
       <div style={styles.container}>
