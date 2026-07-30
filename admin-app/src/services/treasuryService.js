@@ -1,15 +1,14 @@
 /**
  * services/treasuryService.js
  * ----------------------------
- * Frontend API client for Platform Treasury endpoints.
- * All balance figures come exclusively from the backend — no frontend math.
+ * Frontend API client for Platform Treasury.
+ * Phase 1 (preserved) + Phase 2 (settlement workflow) calls.
+ * All balance figures come from the backend — no frontend math.
  */
 
 import { backendFetch } from '../utils/api';
-import { db } from './firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
 
-// ── REST API calls ─────────────────────────────────────────────────────────
+// ── Phase 1 — Read endpoints ──────────────────────────────────────────────────
 
 export const fetchTreasurySummary = async () => {
   const res = await backendFetch('/admin/treasury/summary');
@@ -35,44 +34,102 @@ export const fetchLedgerEntries = async (page = 1, pageSize = 50, ledgerType = n
   return res || { items: [], total: 0 };
 };
 
-// ── Firestore realtime subscription ───────────────────────────────────────────
-// Listens to the `platform_treasury` Firestore doc for instant dashboard updates
-// written by the backend after any financial event.
+// ── Phase 2 — Timeline ────────────────────────────────────────────────────────
 
-export const subscribeToTreasurySummary = (callback) => {
-  try {
-    const docRef = doc(db, 'platform_treasury', 'summary');
-    return onSnapshot(
-      docRef,
-      (snap) => {
-        if (snap.exists()) callback(snap.data());
-      },
-      (err) => {
-        console.warn('[treasuryService] Firestore treasury listener error:', err);
-      }
-    );
-  } catch (e) {
-    console.warn('[treasuryService] Failed to set up Firestore treasury listener:', e);
-    return () => {};
-  }
+export const fetchTreasuryTimeline = async (page = 1, pageSize = 40) => {
+  const params = new URLSearchParams({ page, page_size: pageSize });
+  const res = await backendFetch(`/admin/treasury/timeline?${params}`);
+  return res || { items: [], total: 0 };
 };
 
-// ── Formatters ──────────────────────────────────────────────────────────────
+// ── Phase 2 — Settlement mutations ────────────────────────────────────────────
+
+export const requestSettlement = async (payload) => {
+  const res = await backendFetch('/admin/treasury/settlement/request', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return res;
+};
+
+export const approveSettlement = async (id) => {
+  const res = await backendFetch(`/admin/treasury/settlement/${id}/approve`, {
+    method: 'POST',
+  });
+  return res;
+};
+
+export const completeSettlement = async (id, transactionReference) => {
+  const res = await backendFetch(`/admin/treasury/settlement/${id}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ transaction_reference: transactionReference }),
+  });
+  return res;
+};
+
+export const cancelSettlement = async (id, reason = '') => {
+  const res = await backendFetch(`/admin/treasury/settlement/${id}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+  return res;
+};
+
+// ── Formatters ────────────────────────────────────────────────────────────────
 
 export const formatINR = (amount) => {
-  if (amount == null || isNaN(amount)) return '₹0';
+  if (amount == null || isNaN(amount)) return '₹0.00';
   return '₹' + Number(amount).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 };
 
-export const STATUS_META = {
-  pending:    { label: 'Pending',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  approved:   { label: 'Approved',   color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
-  processing: { label: 'Processing', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
-  completed:  { label: 'Completed',  color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-  failed:     { label: 'Failed',     color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  cancelled:  { label: 'Cancelled',  color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
-  rejected:   { label: 'Rejected',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+export const fmtDate = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 };
+
+export const fmtDateShort = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+export const STATUS_META = {
+  pending:    { label: 'Pending',    bgClass: 'bg-amber-100',   textClass: 'text-amber-700' },
+  approved:   { label: 'Approved',   bgClass: 'bg-indigo-100',  textClass: 'text-indigo-700' },
+  processing: { label: 'Processing', bgClass: 'bg-blue-100',    textClass: 'text-blue-700' },
+  completed:  { label: 'Completed',  bgClass: 'bg-emerald-100', textClass: 'text-emerald-700' },
+  failed:     { label: 'Failed',     bgClass: 'bg-red-100',     textClass: 'text-red-700' },
+  cancelled:  { label: 'Cancelled',  bgClass: 'bg-stone-100',   textClass: 'text-stone-600' },
+  rejected:   { label: 'Rejected',   bgClass: 'bg-red-100',     textClass: 'text-red-700' },
+};
+
+export const LEDGER_TYPE_LABELS = {
+  revenue_earned:      'Revenue Earned',
+  refund:              'Refund',
+  commission_expense:  'Affiliate Commission',
+  affiliate_expense:   'Affiliate Payout',
+  platform_withdrawal: 'Settlement',
+  chargeback:          'Chargeback',
+  manual_adjustment:   'Manual Adjustment',
+  vendor_adjustment:   'Vendor Adjustment',
+};
+
+export const LEDGER_TYPE_COLORS = {
+  revenue_earned:      { bgClass: 'bg-emerald-100', textClass: 'text-emerald-700' },
+  refund:              { bgClass: 'bg-red-100',     textClass: 'text-red-600' },
+  commission_expense:  { bgClass: 'bg-orange-100',  textClass: 'text-orange-700' },
+  affiliate_expense:   { bgClass: 'bg-pink-100',    textClass: 'text-pink-700' },
+  platform_withdrawal: { bgClass: 'bg-blue-100',    textClass: 'text-blue-700' },
+  chargeback:          { bgClass: 'bg-red-100',     textClass: 'text-red-600' },
+  manual_adjustment:   { bgClass: 'bg-[#D8BFE3]/50',textClass: 'text-[#5A1E7E]' },
+  vendor_adjustment:   { bgClass: 'bg-amber-100',   textClass: 'text-amber-700' },
+};
+
+export const DESTINATION_TYPES = [
+  { value: 'bank_account', label: 'Bank Account (NEFT/RTGS)' },
+  { value: 'upi',          label: 'UPI Transfer' },
+  { value: 'internal',     label: 'Internal Account' },
+  { value: 'other',        label: 'Other' },
+];
