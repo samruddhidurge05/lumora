@@ -203,6 +203,13 @@ export default function Home() {
   const trending  = ordered.slice(SECTION_SIZE, SECTION_SIZE * 2);
   const latest    = ordered.slice(SECTION_SIZE * 2, SECTION_SIZE * 3);
 
+  const [selectedCat, setSelectedCat] = useState('All');
+
+  // Filter products for "All Digital Products" catalog section
+  const filteredCatalog = selectedCat === 'All'
+    ? uniqueProducts
+    : uniqueProducts.filter(p => (p.category || '').toLowerCase().trim() === selectedCat.toLowerCase().trim());
+
   useEffect(() => {
     const t = setInterval(() => setActiveTestimonial(p => (p+1) % TESTIMONIALS.length), 4500);
     return () => clearInterval(t);
@@ -234,6 +241,14 @@ export default function Home() {
     ...extra,
   });
 
+  const handleCategoryClick = (catName) => {
+    setSelectedCat(catName);
+    const el = document.getElementById('all-products-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:10 }}>
       <Navbar />
@@ -255,17 +270,17 @@ export default function Home() {
                 viewport={{once:true,margin:'-40px'}}
                 transition={{duration:.6,delay:i*.06,ease:[.16,1,.3,1]}}
                 whileHover={{y:-7,boxShadow:'0 22px 55px rgba(90,30,126,.15)'}}
-                onClick={()=>{setActiveCategory(cat.name);navigateTo('marketplace');}}
-                style={{ padding:'28px 20px', borderRadius:'20px', border:'1px solid rgba(255,255,255,0.40)', borderTop:'1.5px solid rgba(255,255,255,0.55)', background:'rgba(255,255,255,0.30)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', cursor:'pointer', textAlign:'left', boxShadow:'0 8px 32px rgba(90,30,126,.08), inset 0 1px 0 rgba(255,255,255,.55)', transition:'all .3s', fontFamily:'var(--font-sans)' }}>
+                onClick={()=>handleCategoryClick(cat.name)}
+                style={{ padding:'28px 20px', borderRadius:'20px', border:selectedCat===cat.name?'1.5px solid #7B3FA0':'1px solid rgba(255,255,255,0.40)', borderTop:'1.5px solid rgba(255,255,255,0.55)', background:selectedCat===cat.name?'rgba(220,198,255,0.45)':'rgba(255,255,255,0.30)', backdropFilter:'blur(32px) saturate(200%)', WebkitBackdropFilter:'blur(32px) saturate(200%)', cursor:'pointer', textAlign:'left', boxShadow:'0 8px 32px rgba(90,30,126,.08), inset 0 1px 0 rgba(255,255,255,.55)', transition:'all .3s', fontFamily:'var(--font-sans)' }}>
                 <div style={{ width:'44px', height:'44px', borderRadius:'12px', background:cat.color, display:'flex', alignItems:'center', justifyContent:'center', color:'#5A1E7E', marginBottom:'14px' }}>{cat.icon}</div>
                 <div style={{ fontSize:'.88rem', fontWeight:700, color:'#2D004D', marginBottom:'4px' }}>{cat.name}</div>
               </motion.button>
             ))}
             <motion.button initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}} transition={{duration:.6,delay:CATS.length*.06}} whileHover={{y:-7}}
-              onClick={()=>navigateTo('categories')}
+              onClick={()=>handleCategoryClick('All')}
               style={{ padding:'28px 20px', borderRadius:'20px', border:'2px dashed rgba(123,63,160,.28)', background:'transparent', cursor:'pointer', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'8px', fontFamily:'var(--font-sans)', transition:'all .3s' }}>
               <span style={{ fontSize:'2rem' }}>✦</span>
-              <span style={{ fontSize:'.85rem', fontWeight:700, color:'#7B3FA0' }}>All 16 Categories</span>
+              <span style={{ fontSize:'.85rem', fontWeight:700, color:'#7B3FA0' }}>All ({uniqueProducts.length}) Products</span>
             </motion.button>
           </div>
         </div>
@@ -279,7 +294,7 @@ export default function Home() {
               <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>Editor's Pick</p>
               <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Featured Products</h2>
             </div>
-            <button onClick={()=>navigateTo('marketplace')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all 103 <ArrowRight size={14}/></button>
+            <button onClick={()=>handleCategoryClick('All')} className="btn-premium" style={{ fontSize:'.82rem', gap:'6px', borderRadius:'12px' }}>View all {uniqueProducts.length} <ArrowRight size={14}/></button>
           </div>
           <div className="home-product-grid lumora-home-products-grid">
             {featured.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
@@ -292,7 +307,7 @@ export default function Home() {
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
           <div className="gsap-reveal lumora-stats-strip" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1px', background:'rgba(220,198,255,0.15)', borderRadius:'24px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.35)' }}>
             {[
-              {icon:<Sparkles size={22}/>,v:'103',s:'+',l:'Products'},
+              {icon:<Sparkles size={22}/>,v:String(uniqueProducts.length),s:'+',l:'Products'},
               {icon:<Users size={22}/>,v:'45000',s:'+',l:'Customers'},
               {icon:<Download size={22}/>,v:'500',s:'K+',l:'Downloads'},
               {icon:<Star size={22}/>,v:'4.9',s:'/5',l:'Avg Rating'},
@@ -323,17 +338,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── LATEST PRODUCTS ── */}
-      <section style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
+      {/* ── ALL DIGITAL PRODUCTS (SHOW EVERYTHING) ── */}
+      <section id="all-products-section" style={{ padding:'80px clamp(1.5rem,6vw,7rem)', background:'rgba(220,198,255,0.06)' }}>
         <div style={{ maxWidth:'1280px', margin:'0 auto' }}>
-          <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'48px', flexWrap:'wrap', gap:'16px' }}>
+          <div className="gsap-reveal lumora-section-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:'28px', flexWrap:'wrap', gap:'16px' }}>
             <div>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>✦ Fresh Off The Press</p>
-              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>Latest Products</h2>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#7B3FA0', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'8px' }}>✦ Complete Catalog ({filteredCatalog.length} Products)</p>
+              <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2rem,4vw,3rem)', fontWeight:400, color:'#2D004D' }}>All Digital Products</h2>
             </div>
           </div>
+
+          {/* Category Filter Pills */}
+          <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginBottom:'40px' }}>
+            {['All', ...CATS.map(c => c.name)].map((catName) => (
+              <button
+                key={catName}
+                onClick={() => setSelectedCat(catName)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '999px',
+                  border: selectedCat === catName ? '1.5px solid #7B3FA0' : '1px solid rgba(123,63,160,0.22)',
+                  background: selectedCat === catName ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'rgba(255,255,255,0.65)',
+                  color: selectedCat === catName ? '#FFFFFF' : '#5A1E7E',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: selectedCat === catName ? '0 4px 14px rgba(123,63,160,0.35)' : 'none',
+                  transition: 'all 0.25s ease',
+                }}
+              >
+                {catName}
+              </button>
+            ))}
+          </div>
+
           <div className="home-product-grid lumora-home-products-grid">
-            {latest.map((p,i)=><PCard key={p.id} product={p} delay={i*.07}/>)}
+            {filteredCatalog.map((p,i)=><PCard key={p.id} product={p} delay={(i % 8)*.05}/>)}
           </div>
         </div>
       </section>
