@@ -1,11 +1,26 @@
-from pydantic import BaseModel, EmailStr, Field
+import re
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional
 
 class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1)
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=8)
+
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not isinstance(v, str):
+            raise ValueError("Name must be a string.")
+        v = v.strip()
+        if not v:
+            raise ValueError("Name cannot be empty or contain only whitespace.")
+        if re.search(r'<[^>]*>', v) or '<' in v or '>' in v:
+            raise ValueError("Name cannot contain HTML or script tags.")
+        if re.search(r'[\x00-\x1f\x7f-\x9f]', v):
+            raise ValueError("Name cannot contain control characters.")
+        return v
 
 class LoginRequest(BaseModel):
     email: EmailStr
