@@ -318,11 +318,20 @@ export default function App() {
     let mounted = true;
     let unsubFirestore = null;
 
+      // PLATFORM ISOLATION: Call the admin-only endpoint which filters by
+      // vendor_id = 'lumora-creator' (or NULL/empty) and admin-role user ownership.
+      // NEVER call /products/ here — that is the public marketplace endpoint.
     const loadFromBackend = () => {
-      backendFetch('/products/?limit=1000')
-        .then(items => {
+      backendFetch('/admin/products/?limit=1000')
+
+        .then(response => {
           if (!mounted) return;
-          if (Array.isArray(items) && items.length > 0) {
+          // /admin/products/ returns { total, skip, limit, products: [] }
+          // Unwrap the products array from the paginated response envelope.
+          const items = (response && Array.isArray(response.products))
+            ? response.products
+            : (Array.isArray(response) ? response : []);
+          if (items.length > 0) {
             // Normalise backend ProductResponse → UI shape expected by this component
             const uiItems = items.map(p => ({
               id:          p.id,
@@ -375,24 +384,31 @@ export default function App() {
           }
           setProductsLoading(false);
         })
+
         .catch(err => {
           if (!mounted) return;
           console.warn('[ProductsManagement] Backend fetch failed, falling back to Firestore:', err.message);
-          // Firestore fallback
+          // Firestore fallback — PLATFORM ISOLATION MUST BE PRESERVED
+          // Only show products owned by the platform (lumora-creator sentinel, or no vendor).
           unsubFirestore = onSnapshot(collection(db, 'products'), (snapshot) => {
             if (!mounted) return;
-            const items = snapshot.docs.map(docSnap => {
-              const mapped = mapDocToProduct(docSnap);
-              // Resolve relative image URLs from Firestore docs too
-              return {
-                ...mapped,
-                thumbnail: resolveImageUrl(mapped.thumbnail),
-                preview: resolveImageUrl(mapped.preview),
-                image_urls: Array.isArray(mapped.image_urls) ? mapped.image_urls.map(resolveImageUrl) : [],
-                gallery: Array.isArray(mapped.gallery) ? mapped.gallery.map(resolveImageUrl) : [],
-                price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
-              };
-            });
+            const items = snapshot.docs
+              .map(docSnap => {
+                const mapped = mapDocToProduct(docSnap);
+                return {
+                  ...mapped,
+                  thumbnail: resolveImageUrl(mapped.thumbnail),
+                  preview: resolveImageUrl(mapped.preview),
+                  image_urls: Array.isArray(mapped.image_urls) ? mapped.image_urls.map(resolveImageUrl) : [],
+                  gallery: Array.isArray(mapped.gallery) ? mapped.gallery.map(resolveImageUrl) : [],
+                  price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
+                };
+              })
+              // Platform isolation filter — mirrors backend WHERE clause
+              .filter(p => {
+                const vid = (p.vendor_id || p.vendorId || '');
+                return !vid || vid === '' || vid === 'lumora-creator';
+              });
             setProducts(items);
             setProductsLoading(false);
           }, (fsErr) => {
@@ -403,6 +419,7 @@ export default function App() {
           });
         });
     };
+
 
     loadFromBackend();
 
