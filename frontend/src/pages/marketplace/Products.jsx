@@ -194,17 +194,17 @@ function GlassProductCard({ product, index }) {
       onClick={() => navigateTo('product-detail', product.id)}
       style={{
         background: hov
-          ? 'rgba(255, 255, 255, 0.75)'
-          : 'rgba(255, 255, 255, 0.55)',
+          ? 'rgba(255, 255, 255, 0.70)'
+          : 'rgba(255, 255, 255, 0.50)',
         backdropFilter: 'blur(40px) saturate(200%)',
         WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-        border: `1px solid ${hov ? 'rgba(196,148,230,0.55)' : 'rgba(255, 255, 255, 0.65)'}`,
-        borderTop: hov ? '1px solid rgba(255,255,255,0.95)' : '1px solid rgba(255,255,255,0.80)',
+        border: `1.5px solid ${hov ? 'rgba(192, 132, 252, 0.85)' : 'rgba(255, 255, 255, 0.55)'}`,
+        borderTop: hov ? '2px solid rgba(255,255,255,0.95)' : '1.5px solid rgba(255,255,255,0.75)',
         borderRadius: '24px', overflow: 'hidden',
         boxShadow: hov
-          ? '0 32px 80px rgba(123, 63, 160, 0.16), 0 8px 24px rgba(123,63,160,0.08), inset 0 1px 0 rgba(255,255,255,0.90)'
-          : '0 4px 24px rgba(123, 63, 160, 0.06), 0 1px 3px rgba(123,63,160,0.04), inset 0 1px 0 rgba(255,255,255,0.75)',
-        transform: hov ? 'translateY(-8px) scale(1.015)' : 'translateY(0) scale(1)',
+          ? '0 32px 72px rgba(147, 51, 234, 0.30), 0 0 30px rgba(192, 132, 252, 0.35), inset 0 1px 0 rgba(255,255,255,0.90)'
+          : '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255,255,255,0.65)',
+        transform: hov ? 'translateY(-8px) scale(1.03)' : 'translateY(0) scale(1)',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         cursor: 'pointer', display: 'flex', flexDirection: 'column',
         position: 'relative',
