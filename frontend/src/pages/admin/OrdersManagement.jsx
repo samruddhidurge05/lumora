@@ -593,8 +593,6 @@ export default function OrdersManagement() {
           ...o,
           status: newStatus,
           paymentStatus: paymentStat,
-          revenue: newStatus === "Refunded" ? 0 : getOrderPrice(o),
-          vendorEarnings: newStatus === "Refunded" ? 0 : parseFloat((getOrderPrice(o) * 0.95).toFixed(2)),
         };
       }
       return o;
@@ -619,9 +617,8 @@ export default function OrdersManagement() {
           ...o,
           status: "Refunded",
           paymentStatus: "Refunded",
-          revenue: 0,
-          platformFee: 0,
-          vendorEarnings: 0,
+          affiliateCommission: 0,
+          netPlatformRevenue: 0,
         };
       }
       return o;
@@ -663,9 +660,6 @@ export default function OrdersManagement() {
           ...o,
           status: "Completed",
           paymentStatus: "Paid",
-          revenue: getOrderPrice(o),
-          platformFee: parseFloat((getOrderPrice(o) * 0.05).toFixed(2)),
-          vendorEarnings: parseFloat((getOrderPrice(o) * 0.95).toFixed(2)),
         };
       }
       return o;
@@ -801,9 +795,8 @@ export default function OrdersManagement() {
           ...o,
           status: "Refunded",
           paymentStatus: "Refunded",
-          revenue: 0,
-          platformFee: 0,
-          vendorEarnings: 0,
+          affiliateCommission: 0,
+          netPlatformRevenue: 0,
         };
       }
       return o;
@@ -1709,22 +1702,72 @@ export default function OrdersManagement() {
                         <h4 className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Transaction Ledger</h4>
                         <div className="bg-white/60 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
 
+                          {/* Product Price */}
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-[10px] text-[#7B3FA0]">Gross Product Value</span>
-                            <span className="font-bold text-[#2D004D]">₹{getOrderPrice(selectedOrder).toFixed(2)}</span>
+                            <span className="text-[10px] text-[#7B3FA0]">Product Price</span>
+                            <span className="font-bold text-[#2D004D]">
+                              ₹{getOrderPrice(selectedOrder).toFixed(2)}
+                            </span>
                           </div>
 
+                          {/* Discount — only show when non-zero */}
+                          {Number(selectedOrder.discountAmount || 0) > 0 && (
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-[10px] text-[#7B3FA0]">Discount</span>
+                              <span className="font-bold text-amber-600">
+                                -₹{Number(selectedOrder.discountAmount).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Divider + Customer Paid */}
+                          <div className="h-px bg-stone-200/50 my-0.5" />
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-[10px] text-[#7B3FA0]">Lumora Platform Fee (5%)</span>
-                            <span className="font-bold text-[#8C4854]">-₹{(selectedOrder.platformFee ?? parseFloat((getOrderPrice(selectedOrder) * 0.05).toFixed(2))).toFixed(2)}</span>
+                            <span className="text-[10px] text-[#7B3FA0] font-semibold">Customer Paid</span>
+                            <span className="font-bold text-emerald-600">
+                              ₹{(selectedOrder.customerPaid ?? getOrderPrice(selectedOrder)).toFixed(2)}
+                            </span>
                           </div>
 
-                          <div className="h-px bg-stone-200/50 my-1" />
-
+                          {/* Affiliate Commission — always shown, ₹0 when no affiliate */}
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-[10px] text-[#7B3FA0] font-bold">Net Creator Earnings</span>
-                            <span className="font-black text-[#5A1E7E] text-sm">₹{(selectedOrder.vendorEarnings ?? parseFloat((getOrderPrice(selectedOrder) * 0.95).toFixed(2))).toFixed(2)}</span>
+                            <span className="text-[10px] text-[#7B3FA0] flex items-center gap-1.5">
+                              Affiliate Commission
+                              {Number(selectedOrder.affiliateCommission || 0) > 0 && (
+                                <span className="text-[8px] font-extrabold uppercase tracking-widest bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-full">
+                                  REFERRED
+                                </span>
+                              )}
+                            </span>
+                            <span className={`font-bold text-xs ${
+                              Number(selectedOrder.affiliateCommission || 0) > 0
+                                ? 'text-orange-500'
+                                : 'text-stone-400'
+                            }`}>
+                              {Number(selectedOrder.affiliateCommission || 0) > 0
+                                ? `-₹${Number(selectedOrder.affiliateCommission).toFixed(2)}`
+                                : '₹0.00'}
+                            </span>
                           </div>
+
+                          {/* Divider + Net Platform Revenue */}
+                          <div className="h-px bg-stone-200/50 my-0.5" />
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-[#2D004D] font-extrabold uppercase tracking-wider">
+                              Net Platform Revenue
+                            </span>
+                            <span className="font-black text-[#5A1E7E] text-sm">
+                              ₹{(selectedOrder.netPlatformRevenue ?? (
+                                (selectedOrder.customerPaid ?? getOrderPrice(selectedOrder))
+                                - Number(selectedOrder.affiliateCommission || 0)
+                              )).toFixed(2)}
+                            </span>
+                          </div>
+
+                          {/* Formula hint */}
+                          <p className="text-[8px] text-stone-400 mt-0.5 text-right tracking-wide">
+                            Customer Paid − Affiliate Commission = Net Platform Revenue
+                          </p>
 
                         </div>
                       </div>
