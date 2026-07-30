@@ -447,17 +447,64 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Affiliate Bank & KYC Vault</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
+                  {/* PAN — real data from affiliate profile */}
                   <div className="p-4 rounded-xl bg-white border border-[#F3EAF8] space-y-1">
                     <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">PAN Verification</span>
-                    <p className="font-bold text-[#2D004D]">ABCDE1234F</p>
-                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold">🟢 VERIFIED</span>
+                    {payout.pan_number ? (
+                      <>
+                        <p className="font-mono font-bold text-[#2D004D]">{payout.pan_number}</p>
+                        {payout.pan_holder_name && (
+                          <p className="text-[10px] text-stone-500">{payout.pan_holder_name}</p>
+                        )}
+                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold ${
+                          payout.kyc_status === 'verified'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : payout.kyc_status === 'pending' || payout.kyc_status === 'submitted'
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-red-50 text-red-700'
+                        }`}>
+                          {payout.kyc_status === 'verified' ? '🟢 VERIFIED'
+                            : payout.kyc_status === 'submitted' ? '🟡 UNDER REVIEW'
+                            : payout.kyc_status === 'pending' ? '🟡 NOT SUBMITTED'
+                            : '🔴 REJECTED'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold text-amber-700 text-[11px]">PAN not provided</p>
+                        <span className="inline-block px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[9px] font-bold">🟡 MISSING</span>
+                      </>
+                    )}
                   </div>
+                  {/* Bank / UPI — real data from affiliate profile */}
                   <div className="p-4 rounded-xl bg-white border border-[#F3EAF8] space-y-1">
-                    <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">Bank Account / IFSC</span>
-                    <p className="font-mono font-bold text-[#2D004D]">{payout.bank_account || payout.upi_id || 'HDFC0001234'}</p>
-                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold">🟢 VERIFIED</span>
+                    <span className="text-[10px] font-bold text-[#7B3FA0] uppercase block">
+                      {payout.method === 'bank' ? 'Bank Account' : 'UPI / Bank'}
+                    </span>
+                    <p className="font-mono font-bold text-[#2D004D]">
+                      {payout.account_number || payout.upi_id || '—'}
+                    </p>
+                    {payout.ifsc_code && (
+                      <p className="text-[10px] text-stone-500 font-mono">IFSC: {payout.ifsc_code}</p>
+                    )}
+                    {payout.bank_name && (
+                      <p className="text-[10px] text-stone-500">{payout.bank_name}</p>
+                    )}
+                    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold ${
+                      payout.is_bank_verified
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-amber-50 text-amber-700'
+                    }`}>
+                      {payout.is_bank_verified ? '🟢 VERIFIED' : '🟡 UNVERIFIED'}
+                    </span>
                   </div>
                 </div>
+                {/* Warning if details missing — payout would fail or go to wrong account */}
+                {(!payout.upi_id && !payout.account_number) && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-[11px] font-medium">
+                    ⚠️ No UPI ID or bank account on file. The affiliate must update their payment details before this payout can be processed.
+                  </div>
+                )}
               </div>
             )}
 
