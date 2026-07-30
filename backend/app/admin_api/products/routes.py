@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
-from sqlalchemy import or_
+from sqlalchemy import or_, cast, String as SqlString
 from sqlalchemy.orm import Session
 from admin.validators.admin_auth import require_admin_role
 from app.db.session import get_db
@@ -14,8 +14,28 @@ from app.services.product_service import ProductService
 
 router = APIRouter()
 
-# Platform owner sentinel — products with this vendor_id (or NULL) are Platform-owned.
-_PLATFORM_VENDOR_ID = "lumora-creator"
+# ─── Platform ownership sentinel ─────────────────────────────────────────────
+# Forensic investigation (2026-07-30) confirmed THREE vendor_id formats exist
+# in the production PostgreSQL database for Platform-owned products:
+#
+#   Format 1: vendor_id = 'lumora-creator'
+#             Products seeded by the platform setup script.
+#
+#   Format 2: vendor_id IS NULL  OR  vendor_id = ''
+#             Legacy products created before the vendor_id field was enforced.
+#             NOTE: Empty string ('') is NOT the same as NULL in SQL — both
+#             must be explicitly matched.
+#
+#   Format 3: vendor_id = str(admin_user.id)  e.g. '1', '5', '8'
+#             Products created by logged-in admin accounts. The product
+#             creation endpoint assigns vendor_id = str(current_user.id),
+#             so admin users get their numeric DB user ID stored as vendor_id.
+#             These are detected via LEFT JOIN on users WHERE role = 'admin'.
+#
+# Vendor products are products whose vendor_id refers to a user with
+# role = 'vendor' (or any unknown handle that matches no admin user).
+# ─────────────────────────────────────────────────────────────────────────────
+_PLATFORM_SENTINEL = "lumora-creator"
 
 
 @router.get("/")
@@ -30,19 +50,37 @@ def list_admin_products(
     """
     Return ALL Platform-owned products for the Admin Panel.
 
-    ISOLATION CONTRACT:
-      - vendor_id == 'lumora-creator'  →  Platform product  ✓ included
-      - vendor_id IS NULL              →  Legacy Platform product  ✓ included
-      - vendor_id == <any other value> →  Vendor product  ✗ NEVER returned here
+    ISOLATION CONTRACT — a product is Platform-owned if ANY of the following:
+      1. vendor_id == 'lumora-creator'         (named platform sentinel)
+      2. vendor_id IS NULL                     (legacy — NULL means platform)
+      3. vendor_id == ''                       (legacy — empty string means platform)
+      4. vendor_id refers to a user with       (admin created products store
+         role = 'admin' in the users table)     str(user.id) as vendor_id)
 
-    All statuses are included (published, draft, archived, pending_review) so that
-    Admin can see and manage products at every lifecycle stage.
-    Vendor products MUST use their own /api/vendors/ or /api/products/ endpoint.
+    A product is Vendor-owned (EXCLUDED) if its vendor_id refers to a user
+    with role = 'vendor', or is any non-empty string that is not a known
+    admin user ID and is not the platform sentinel.
+
+    All statuses are returned (published, draft, archived, pending_review)
+    so the Admin Panel sees the complete platform inventory at all lifecycle stages.
     """
-    query = db.query(Product).filter(
-        or_(
-            Product.vendor_id == _PLATFORM_VENDOR_ID,
-            Product.vendor_id.is_(None),
+    query = (
+        db.query(Product)
+        .outerjoin(
+            User,
+            cast(User.id, SqlString) == Product.vendor_id,
+        )
+        .filter(
+            or_(
+                # Format 1: Named platform sentinel (seeded products)
+                Product.vendor_id == _PLATFORM_SENTINEL,
+                # Format 2a: NULL vendor_id (legacy platform products)
+                Product.vendor_id.is_(None),
+                # Format 2b: Empty string vendor_id (another legacy form)
+                Product.vendor_id == "",
+                # Format 3: Products created by admin users (numeric user ID as vendor_id)
+                User.role == "admin",
+            )
         )
     )
 

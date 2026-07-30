@@ -958,7 +958,15 @@ def create_product(
 
     # -- IDEMPOTENCY: Double-click / network-retry protection ------------------
     # Guard applies to all products including free ones (price=0)
-    vendor_id = str(current_user.id)
+    # For admin users: use the platform sentinel as vendor_id so products are
+    # correctly identified as Platform-owned by the admin products endpoint.
+    # For vendor users: use their numeric user ID as vendor_id.
+    role = (current_user.role or "").lower()
+    if role == "admin":
+        vendor_id = "lumora-creator"  # Platform sentinel — ensures admin products are retrievable
+    else:
+        vendor_id = str(current_user.id)
+
     window_start = datetime.now(timezone.utc) - timedelta(seconds=10)
     recent_duplicate = db.query(Product).filter(
         Product.vendor_id == vendor_id,
@@ -969,7 +977,6 @@ def create_product(
     if recent_duplicate:
         return recent_duplicate
 
-    role = (current_user.role or "").lower()
     submitted_status = (product_in.status or "published").lower()
     if role == "admin":
         # Admin can set any valid status
