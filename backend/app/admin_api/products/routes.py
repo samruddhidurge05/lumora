@@ -64,23 +64,11 @@ def list_admin_products(
     All statuses are returned (published, draft, archived, pending_review)
     so the Admin Panel sees the complete platform inventory at all lifecycle stages.
     """
-    query = (
-        db.query(Product)
-        .outerjoin(
-            User,
-            cast(User.id, SqlString) == Product.vendor_id,
-        )
-        .filter(
-            or_(
-                # Format 1: Named platform sentinel (seeded products)
-                Product.vendor_id == _PLATFORM_SENTINEL,
-                # Format 2a: NULL vendor_id (legacy platform products)
-                Product.vendor_id.is_(None),
-                # Format 2b: Empty string vendor_id (another legacy form)
-                Product.vendor_id == "",
-                # Format 3: Products created by admin users (numeric user ID as vendor_id)
-                User.role == "admin",
-            )
+    query = db.query(Product).filter(
+        or_(
+            Product.owner_type == "PLATFORM",
+            Product.is_platform_product == True,
+            Product.vendor_id == "lumora-creator",
         )
     )
 

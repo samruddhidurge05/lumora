@@ -32,6 +32,11 @@ class Product(Base):
     last_updated = Column(String(50), default="Recently")
     license      = Column(String(50), nullable=True)  # Personal Use / Commercial Use / Extended License
     
+    # Ownership Metadata
+    owner_type           = Column(String(20), default="VENDOR", index=True)   # "PLATFORM" | "VENDOR"
+    created_by_role      = Column(String(20), default="VENDOR", index=True)   # "ADMIN" | "VENDOR"
+    is_platform_product  = Column(Boolean, default=False, index=True)
+    
     # Affiliate Settings
     affiliate_enabled        = Column(Boolean, default=False, index=True)
     commission_type          = Column(String(20), default="percentage")  # "percentage" or "fixed"

@@ -94,13 +94,27 @@ class ProductService:
         visibility: str = "public",
         status: str = "published",
         image_urls: Optional[list] = None,
+        owner_type: Optional[str] = None,
+        created_by_role: Optional[str] = None,
+        is_platform_product: Optional[bool] = None,
     ) -> Product:
+        # Determine defaults if not explicitly provided
+        if owner_type is None:
+            owner_type = "PLATFORM" if (vendor_id == "lumora-creator" or not vendor_id) else "VENDOR"
+        if created_by_role is None:
+            created_by_role = "ADMIN" if owner_type == "PLATFORM" else "VENDOR"
+        if is_platform_product is None:
+            is_platform_product = (owner_type == "PLATFORM")
+
         # We start an atomic transaction block
         moved_files = []
         try:
             # Create product shell first to get product_id
             product = Product(
                 vendor_id=vendor_id,
+                owner_type=owner_type,
+                created_by_role=created_by_role,
+                is_platform_product=is_platform_product,
                 title=title,
                 description=description,
                 category=category,

@@ -989,6 +989,9 @@ def create_product(
     product = ProductService.create_product(
         db=db,
         vendor_id=vendor_id,
+        owner_type="PLATFORM" if role == "admin" else "VENDOR",
+        created_by_role="ADMIN" if role == "admin" else "VENDOR",
+        is_platform_product=(role == "admin"),
         title=product_in.title,
         description=product_in.description or "",
         category=product_in.category or "General",

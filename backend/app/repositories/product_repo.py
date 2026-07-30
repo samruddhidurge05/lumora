@@ -16,10 +16,23 @@ class ProductRepository(BaseRepository[Product]):
             .all()
         )
 
+    def get_platform_products(self, skip: int = 0, limit: int = 100) -> List[Product]:
+        return (
+            self.db.query(Product)
+            .filter(or_(Product.owner_type == "PLATFORM", Product.is_platform_product == True))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def get_by_vendor(self, vendor_id: str) -> List[Product]:
         return (
             self.db.query(Product)
-            .filter(or_(Product.vendor_id == vendor_id, Product.seller == vendor_id))
+            .filter(
+                Product.owner_type == "VENDOR",
+                Product.is_platform_product == False,
+                or_(Product.vendor_id == vendor_id, Product.seller == vendor_id)
+            )
             .all()
         )
 

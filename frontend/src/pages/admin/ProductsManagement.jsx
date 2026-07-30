@@ -396,7 +396,11 @@ export default function App() {
                 };
               })
               // Apply isolation filter even on Firestore fallback
-              .filter(p => !p.vendor_id || p.vendor_id === 'lumora-creator');
+              .filter(p => {
+                if (p.owner_type === 'PLATFORM' || p.is_platform_product === true) return true;
+                if (p.owner_type === 'VENDOR' || p.is_platform_product === false) return false;
+                return !p.vendor_id || p.vendor_id === 'lumora-creator' || p.vendor_id === '';
+              });
             setProducts(items);
             setProductsLoading(false);
           }, (fsErr) => {

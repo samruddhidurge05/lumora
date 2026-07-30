@@ -941,6 +941,8 @@ def get_vendor_products(vendor_id: str, search: str = "", category: str = "",
     db = _get_db()
     try:
         query = db.query(Product).filter(
+            Product.owner_type == "VENDOR",
+            Product.is_platform_product == False,
             (Product.vendor_id == vendor_id) | (Product.seller == vendor_id)
         )
         # Search

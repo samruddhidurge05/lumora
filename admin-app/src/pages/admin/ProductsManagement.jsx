@@ -404,8 +404,10 @@ export default function App() {
                   price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
                 };
               })
-              // Platform isolation filter — mirrors backend WHERE clause
+              // Platform isolation filter — checks explicit ownership metadata first
               .filter(p => {
+                if (p.owner_type === 'PLATFORM' || p.is_platform_product === true) return true;
+                if (p.owner_type === 'VENDOR' || p.is_platform_product === false) return false;
                 const vid = (p.vendor_id || p.vendorId || '');
                 return !vid || vid === '' || vid === 'lumora-creator';
               });

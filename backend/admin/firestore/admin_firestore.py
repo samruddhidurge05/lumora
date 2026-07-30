@@ -81,6 +81,9 @@ def sync_product_to_firestore(product):
             "createdAt": resolved_product.created_at.isoformat() + "Z" if resolved_product.created_at else datetime.now(timezone.utc).isoformat() + "Z",
             "updatedAt": (resolved_product.updated_at.isoformat() + "Z" if resolved_product.updated_at else datetime.now(timezone.utc).isoformat() + "Z"),
             "vendor_id": str(resolved_product.vendor_id) if resolved_product.vendor_id else None,
+            "owner_type": getattr(resolved_product, "owner_type", None) or ("PLATFORM" if (resolved_product.vendor_id in ("lumora-creator", "", None) or resolved_product.id in (108,109,110,111,112,115,116,117,118,119,120,121,122)) else "VENDOR"),
+            "created_by_role": getattr(resolved_product, "created_by_role", None) or ("ADMIN" if (resolved_product.vendor_id in ("lumora-creator", "", None) or resolved_product.id in (108,109,110,111,112,115,116,117,118,119,120,121,122)) else "VENDOR"),
+            "is_platform_product": bool(getattr(resolved_product, "is_platform_product", None) if getattr(resolved_product, "is_platform_product", None) is not None else (resolved_product.vendor_id in ("lumora-creator", "", None) or resolved_product.id in (108,109,110,111,112,115,116,117,118,119,120,121,122))),
             "subcategory": resolved_product.subcategory or "",
             "discount": float(resolved_product.discount or 0.0),
             # -- Gallery arrays --------------------------------------------------

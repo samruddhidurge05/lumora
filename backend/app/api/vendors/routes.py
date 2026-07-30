@@ -75,6 +75,8 @@ def public_vendor_profile(vendor_id: str):
         check_vendor_marketplace_enabled(db_s)
         # Try to find vendor by Firebase uid stored as vendor_id
         products = db_s.query(ProductModel).filter(
+            ProductModel.owner_type == "VENDOR",
+            ProductModel.is_platform_product == False,
             (ProductModel.vendor_id == vendor_id) | (ProductModel.seller == vendor_id)
         ).all()
 
