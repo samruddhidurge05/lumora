@@ -1595,7 +1595,7 @@ export default function Analytics() {
                   </div>
 
                   {/* Forecast details cards */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-3 bg-white/80 border border-stone-200/20 rounded-xl text-center">
                       <span className="text-[7px] font-extrabold tracking-widest text-[#7B3FA0] uppercase block mb-1">
                         Next 7 Days

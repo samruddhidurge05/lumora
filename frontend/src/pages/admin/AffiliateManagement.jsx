@@ -1771,7 +1771,8 @@ export default function AffiliateManagement() {
             </div>
 
             <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-              <div className="overflow-x-auto w-full">
+              {/* Desktop Table View (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto w-full">
                 <table className="w-full min-w-[650px] text-left text-xs">
                   <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                     <tr>
@@ -1820,7 +1821,7 @@ export default function AffiliateManagement() {
                           <td className="py-3.5 px-4 text-center">
                             <button
                               onClick={() => setProfilePanelId(a.id)}
-                              className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all"
+                              className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] text-[#7B3FA0] hover:bg-[#F3EAF8] text-xs font-bold transition-all min-h-[44px] sm:min-h-0"
                             >
                               CRM Profile
                             </button>
@@ -1830,6 +1831,63 @@ export default function AffiliateManagement() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Stacked Card View (< 768px) */}
+              <div className="md:hidden flex flex-col gap-3 p-3">
+                {filteredAffiliates.map(a => {
+                  const tier = getAffiliateTier(a.revenue);
+                  const TierIcon = tier.icon;
+                  return (
+                    <div key={`m-aff-${a.id}`} className="bg-[#F8F3FB]/40 rounded-xl p-4 border border-[#F3EAF8] flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {(a.name || 'A')[0].toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#2D004D] text-sm truncate">{a.name}</p>
+                            <p className="text-[10px] text-[#7B3FA0] truncate">{a.email}</p>
+                          </div>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${a.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                          {a.status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        <span className="font-mono font-bold text-[#7B3FA0] bg-[#F8F3FB] px-2 py-0.5 rounded border border-[#F3EAF8]">
+                          {a.code}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${tier.color}`}>
+                          <TierIcon size={10} /> {tier.label}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 bg-white/80 p-2.5 rounded-xl border border-stone-100 text-center text-xs">
+                        <div>
+                          <span className="text-[8px] text-[#7B3FA0] font-bold block uppercase">Lifetime Rev</span>
+                          <span className="font-bold text-[#2D004D]">{fmt(a.revenue)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] text-[#7B3FA0] font-bold block uppercase">Comm. Earned</span>
+                          <span className="font-bold text-emerald-600">{fmt(a.commission)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] text-[#7B3FA0] font-bold block uppercase">Pending Payout</span>
+                          <span className="font-bold text-amber-600">{fmt(a.pending)}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setProfilePanelId(a.id)}
+                        className="w-full py-2.5 rounded-xl bg-[#2D004D] text-white text-xs font-bold transition-all min-h-[44px] flex items-center justify-center gap-2"
+                      >
+                        Open CRM Profile
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1955,7 +2013,8 @@ export default function AffiliateManagement() {
 
             <DataTable loading={ledgerLoading} empty={!ledgerLoading && ledger.length === 0}>
               <div className="bg-white rounded-2xl border border-[#F3EAF8] shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#F8F3FB] border-b border-[#F3EAF8] text-[#7B3FA0] font-bold uppercase text-[10px] tracking-wider">
                       <tr>
@@ -1997,6 +2056,44 @@ export default function AffiliateManagement() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Stacked Card View (< 768px) */}
+                <div className="md:hidden flex flex-col gap-3 p-3">
+                  {ledger.map(row => (
+                    <div key={`m-ledg-${row.id}`} className="bg-[#F8F3FB]/40 rounded-xl p-4 border border-[#F3EAF8] flex flex-col gap-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-xs text-[#7B3FA0]">
+                          #{row.order_id || row.id}
+                        </span>
+                        <StatusBadge status={row.commission_status || row.status} size="xs" />
+                      </div>
+
+                      <div className="flex justify-between items-start text-xs gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#2D004D] truncate">{row.customer_name || 'Customer'}</p>
+                          <p className="text-[10px] text-[#7B3FA0] truncate">{row.product_name || 'Product'}</p>
+                          <p className="text-[10px] font-medium text-[#7B3FA0] mt-0.5">Affiliate: <strong className="text-[#2D004D]">{row.affiliate_name}</strong></p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-[#2D004D]">{fmt(row.sale_amount)}</p>
+                          <p className="font-bold text-emerald-600 text-xs">{fmt(row.commission_earned)}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-stone-100/60 text-[10px]">
+                        <span className="text-[#7B3FA0]">{fmtDate(row.date)}</span>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setSelectedTraceOrderId(row.order_id || row.id)} className="px-3 py-1.5 rounded-lg bg-[#F8F3FB] hover:bg-[#F3EAF8] text-[#7B3FA0] text-xs font-bold min-h-[38px]">
+                            Trace
+                          </button>
+                          <button onClick={() => setCommActionModal(row)} className="px-3 py-1.5 rounded-lg bg-[#2D004D] text-white text-xs font-bold min-h-[38px]">
+                            Edit Status
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <Pagination page={ledgerPage} totalPages={Math.ceil(ledgerTotal / 50)} onChange={setLedgerPage} />

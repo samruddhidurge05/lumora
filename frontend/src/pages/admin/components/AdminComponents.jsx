@@ -185,7 +185,7 @@ export function FilterBar({
 }
 
 // ─── 6. TABLE CONTAINER ───────────────────────────────────────────────────
-// Standardized card wrapper for table sections with high-density padding
+// Standardized card wrapper for table sections with high-density padding and mobile card adapter
 export function TableContainer({
   headers = [],
   children,
@@ -195,18 +195,18 @@ export function TableContainer({
   emptyDesc = "There is no matching data in our database.",
   emptyAction,
   columnsCount,
-  pagination
+  pagination,
+  mobileCardRender, // Optional function (item, index) => ReactNode for mobile stacked card rendering
+  items = [],       // Optional items array used by mobileCardRender
 }) {
   const cols = columnsCount || headers.length || 1;
-
-  // When the caller passes headers/isLoading/isEmpty props, render the full
-  // managed table layout. Otherwise render a plain card wrapper.
   const isManagedTable = headers.length > 0;
 
   if (isManagedTable) {
     return (
-      <div className="flex flex-col gap-3.5">
-        <div className="w-full overflow-x-auto rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm">
+      <div className="flex flex-col gap-3.5 w-full min-w-0">
+        {/* Desktop Table View (≥768px) */}
+        <div className={`w-full ${mobileCardRender ? 'admin-desktop-table-view' : ''} overflow-x-auto rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm`}>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#8E6AA8]/5 border-b border-[#8E6AA8]/10">
@@ -248,8 +248,36 @@ export function TableContainer({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Stacked Cards View (<768px) when mobileCardRender is provided */}
+        {mobileCardRender && (
+          <div className="admin-mobile-cards-view md:hidden">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="glass-surface p-4 rounded-2xl border border-white/50 animate-pulse flex flex-col gap-2">
+                  <div className="h-4 bg-[#381347]/10 rounded w-1/2" />
+                  <div className="h-3 bg-[#381347]/5 rounded w-3/4" />
+                  <div className="h-8 bg-[#381347]/10 rounded w-full mt-2" />
+                </div>
+              ))
+            ) : isEmpty ? (
+              <EmptyState
+                title={emptyTitle}
+                description={emptyDesc}
+                action={emptyAction}
+              />
+            ) : (
+              items.map((item, index) => (
+                <React.Fragment key={item.id || item.key || index}>
+                  {mobileCardRender(item, index)}
+                </React.Fragment>
+              ))
+            )}
+          </div>
+        )}
+
         {pagination && (
-          <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3.5 py-2 mt-1 min-h-[48px]">
             {pagination}
           </div>
         )}
@@ -259,10 +287,10 @@ export function TableContainer({
 
   // Plain card wrapper — used by pages that manage their own table structure
   return (
-    <div className="w-full rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden">
+    <div className="w-full rounded-2xl sm:rounded-3xl border border-white/50 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden min-w-0">
       {children}
       {pagination && (
-        <div className="flex items-center justify-between px-3.5 py-1.5 mt-1">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3.5 py-2 mt-1 min-h-[48px]">
           {pagination}
         </div>
       )}

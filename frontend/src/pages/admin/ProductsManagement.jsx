@@ -5,6 +5,7 @@ import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContai
 import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } from 'lucide-react';
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
 import { backendFetch } from '../../utils/api';
+import { getAdminProductsApi } from '../../api/productApi';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
@@ -322,67 +323,80 @@ export default function App() {
     let mounted = true;
     let unsubFirestore = null;
 
+    const normaliseProduct = (p) => ({
+      id:          p.id,
+      name:        p.title || '',
+      title:       p.title || '',
+      creatorName: p.seller || p.vendor_id || 'Lumora Creator',
+      creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
+      category:    p.category || 'Uncategorized',
+      shortDesc:   p.short_desc || p.description || '',
+      description: p.description || '',
+      price:       parseFloat(p.price) || 0,
+      // Convert backend lowercase status → display-capitalised status
+      status:      p.status === 'published'     ? 'Published'
+                 : p.status === 'archived'       ? 'Archived'
+                 : p.status === 'pending_review' ? 'Pending Review'
+                 : 'Draft',
+      isFeatured:  Boolean(p.featured),
+      featured:    Boolean(p.featured),
+      // Resolve relative image URLs to full backend URLs.
+      thumbnail:   resolveImageUrl(p.preview || p.thumbnail),
+      preview:     resolveImageUrl(p.preview || p.thumbnail),
+      image_urls:  Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : [],
+      downloadUrl: p.file_url || null,
+      file_url:    p.file_url || null,
+      pcloud_download_link: null,
+      tags:        Array.isArray(p.tags) ? p.tags : [],
+      downloads:   p.downloads || 0,
+      revenue:     0,
+      dateAdded:   p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      // Carry Features & Specs fields so Edit form loads correctly
+      features:             Array.isArray(p.features)            ? p.features            : [],
+      whatYouGet:           Array.isArray(p.what_you_get)        ? p.what_you_get        : [],
+      systemRequirements:   Array.isArray(p.system_requirements) ? p.system_requirements : [],
+      installation_guide:   p.installation_guide || '',
+    });
+
     const loadFromBackend = () => {
-      backendFetch('/products/?limit=1000')
-        .then(items => {
+      // ─────────────────────────────────────────────────────────────────────
+      // ISOLATION FIX: Call the dedicated Admin-only endpoint.
+      // GET /api/admin/products/ returns ONLY Platform-owned products
+      // (vendor_id = 'lumora-creator' or NULL) across ALL statuses.
+      // We must NEVER call GET /api/products/ here — that is the public
+      // marketplace endpoint and would leak all Vendor products into the
+      // Admin panel while hiding Draft/Archived Platform products.
+      // ─────────────────────────────────────────────────────────────────────
+      getAdminProductsApi()
+        .then(response => {
           if (!mounted) return;
-          if (Array.isArray(items) && items.length > 0) {
-            // Normalise backend ProductResponse → UI shape expected by this component
-            const uiItems = items.map(p => ({
-              id:          p.id,
-              name:        p.title || '',
-              title:       p.title || '',
-              creatorName: p.seller || p.vendor_id || 'Creator',
-              creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
-              category:    p.category || 'Uncategorized',
-              shortDesc:   p.short_desc || p.description || '',
-              description: p.description || '',
-              price:       parseFloat(p.price) || 0,
-              // Convert backend lowercase status → display-capitalised status
-              status:      p.status === 'published' ? 'Published'
-                         : p.status === 'archived'  ? 'Archived'
-                         : p.status === 'pending_review' ? 'Pending Review'
-                         : 'Draft',
-              isFeatured:  Boolean(p.featured),
-              featured:    Boolean(p.featured),
-              // Resolve relative image URLs to full backend URLs.
-              // Use preview as primary when both exist — on some products the
-              // thumbnail path may have been lost while preview is still on disk.
-              thumbnail:   resolveImageUrl(p.preview || p.thumbnail),
-              preview:     resolveImageUrl(p.preview || p.thumbnail),
-              image_urls:  Array.isArray(p.image_urls) ? p.image_urls.map(resolveImageUrl) : [],
-              downloadUrl: p.file_url || null,
-              file_url:    p.file_url || null,
-              pcloud_download_link: null,
-              tags:        Array.isArray(p.tags) ? p.tags : [],
-              downloads:   p.downloads || 0,
-              revenue:     0,
-              dateAdded:   p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-              // ── Issue 3 fix: carry Features & Specs fields so Edit form loads correctly ──
-              features:             Array.isArray(p.features)            ? p.features            : [],
-              whatYouGet:           Array.isArray(p.what_you_get)        ? p.what_you_get        : [],
-              systemRequirements:   Array.isArray(p.system_requirements) ? p.system_requirements : [],
-              installation_guide:   p.installation_guide || '',
-            }));
-            setProducts(uiItems);
+          // New endpoint returns { total, skip, limit, products: [] }
+          const rawItems = (response && Array.isArray(response.products))
+            ? response.products
+            : (Array.isArray(response) ? response : []);
+
+          if (rawItems.length > 0) {
+            setProducts(rawItems.map(normaliseProduct));
           }
           setProductsLoading(false);
         })
         .catch(err => {
           if (!mounted) return;
-          console.warn('[ProductsManagement] Backend fetch failed, falling back to Firestore:', err.message);
-          // Firestore fallback
+          console.warn('[ProductsManagement] Admin backend fetch failed, falling back to Firestore:', err.message);
+          // Firestore fallback — filter to Platform-owned documents only
           unsubFirestore = onSnapshot(collection(db, 'products'), (snapshot) => {
             if (!mounted) return;
-            const items = snapshot.docs.map(docSnap => {
-              const mapped = mapDocToProduct(docSnap);
-              // Resolve relative image URLs from Firestore docs too
-              return {
-                ...mapped,
-                thumbnail: resolveImageUrl(mapped.thumbnail),
-                price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
-              };
-            });
+            const items = snapshot.docs
+              .map(docSnap => {
+                const mapped = mapDocToProduct(docSnap);
+                return {
+                  ...mapped,
+                  thumbnail: resolveImageUrl(mapped.thumbnail),
+                  price: typeof mapped.price === 'number' ? mapped.price : parseFloat(mapped.price) || 0,
+                };
+              })
+              // Apply isolation filter even on Firestore fallback
+              .filter(p => !p.vendor_id || p.vendor_id === 'lumora-creator');
             setProducts(items);
             setProductsLoading(false);
           }, (fsErr) => {

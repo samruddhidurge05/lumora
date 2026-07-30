@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from admin.validators.admin_auth import require_admin_role
 from app.db.session import get_db
@@ -7,11 +8,104 @@ from app.models.user import User
 from app.services.audit_log_service import log_admin_action
 from app.shared.firebase.connection import db as firestore_db, firebase_connected
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
 from app.services.product_service import ProductService
 
 router = APIRouter()
+
+# Platform owner sentinel — products with this vendor_id (or NULL) are Platform-owned.
+_PLATFORM_VENDOR_ID = "lumora-creator"
+
+
+@router.get("/")
+def list_admin_products(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(1000, ge=1, le=2000),
+    status: Optional[str] = Query(None, description="Filter by status: published, draft, archived, pending_review"),
+    category: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """
+    Return ALL Platform-owned products for the Admin Panel.
+
+    ISOLATION CONTRACT:
+      - vendor_id == 'lumora-creator'  →  Platform product  ✓ included
+      - vendor_id IS NULL              →  Legacy Platform product  ✓ included
+      - vendor_id == <any other value> →  Vendor product  ✗ NEVER returned here
+
+    All statuses are included (published, draft, archived, pending_review) so that
+    Admin can see and manage products at every lifecycle stage.
+    Vendor products MUST use their own /api/vendors/ or /api/products/ endpoint.
+    """
+    query = db.query(Product).filter(
+        or_(
+            Product.vendor_id == _PLATFORM_VENDOR_ID,
+            Product.vendor_id.is_(None),
+        )
+    )
+
+    if status:
+        query = query.filter(Product.status == status.lower())
+    if category and category != "All":
+        query = query.filter(Product.category == category)
+
+    total = query.count()
+
+    products = (
+        query
+        .order_by(Product.created_at.desc(), Product.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    # Resolve media URLs (thumbnails, previews) via the shared ProductService helper
+    try:
+        ProductService.resolve_products_media(products, db)
+    except Exception:
+        pass  # Media resolution is best-effort; never block the listing response
+
+    return {
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "products": [
+            {
+                "id":          p.id,
+                "title":       p.title,
+                "description": p.description or "",
+                "short_desc":  p.short_desc or "",
+                "category":    p.category or "General",
+                "price":       float(p.price or 0),
+                "thumbnail":   p.thumbnail,
+                "preview":     p.preview,
+                "file_url":    p.file_url,
+                "vendor_id":   p.vendor_id,
+                "seller":      p.seller,
+                "status":      p.status or "draft",
+                "featured":    bool(p.featured),
+                "trending":    bool(p.trending),
+                "badge":       p.badge,
+                "tags":        p.tags or [],
+                "highlights":  p.highlights or [],
+                "features":            p.features or [],
+                "what_you_get":        p.what_you_get or [],
+                "system_requirements": p.system_requirements or [],
+                "installation_guide":  p.installation_guide or "",
+                "affiliate_enabled":   bool(p.affiliate_enabled),
+                "commission_type":     p.commission_type or "percentage",
+                "commission_value":    float(p.commission_value or 0),
+                "downloads":   p.downloads or 0,
+                "rating":      float(p.rating or 5.0),
+                "reviews":     p.reviews or 0,
+                "created_at":  p.created_at.isoformat() if p.created_at else None,
+                "updated_at":  p.updated_at.isoformat() if getattr(p, "updated_at", None) else None,
+            }
+            for p in products
+        ],
+    }
 
 
 @router.get("/pending")
