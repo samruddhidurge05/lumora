@@ -1,16 +1,8 @@
 {
-  "venvPath": "backend",
-  "venv": ".venv",
-  "executionEnvironments": [
-    {
-      "root": "backend",
-      "extraPaths": [
-        "."
-      ]
-    }
-  ],
+  "venvPath": "c:/Users/vaiza/Videos/REHERSE/is bar ho jaye/lumora",
+  "venv": "backend/.venv",
   "extraPaths": [
-    "backend",
-    "backend/.venv/Lib/site-packages"
+    "c:/Users/vaiza/Videos/REHERSE/is bar ho jaye/lumora/backend",
+    "c:/Users/vaiza/Videos/REHERSE/is bar ho jaye/lumora/backend/.venv/Lib/site-packages"
   ]
 }

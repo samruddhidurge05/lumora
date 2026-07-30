@@ -163,14 +163,14 @@ def activate_affiliate(
                 roles = existing_data.get("roles", [existing_data.get("role", "customer")])
                 if "affiliate" not in roles:
                     roles.append("affiliate")
-                user_ref.set({"role": "affiliate", "roles": roles, "updatedAt": _dt.utcnow().isoformat() + "Z"}, merge=True)
+                user_ref.set({"role": "affiliate", "roles": roles, "updatedAt": _dt.now(timezone.utc).isoformat().replace("+00:00", "Z")}, merge=True)
             else:
                 user_ref.set({
                     "uid": uid,
                     "role": "affiliate",
                     "roles": ["affiliate"],
                     "email": current_user.email,
-                    "updatedAt": _dt.utcnow().isoformat() + "Z",
+                    "updatedAt": _dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 }, merge=True)
 
             # Create/update affiliates/{uid} doc — required by AuthContext login role check
@@ -190,7 +190,7 @@ def activate_affiliate(
                     "totalCommission": 0,
                     "pendingCommission": 0,
                     "paidCommission": 0,
-                    "createdAt": _dt.utcnow().isoformat() + "Z",
+                    "createdAt": _dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                     "fullName": current_user.name,
                     "email": current_user.email,
                 })
@@ -348,7 +348,7 @@ def _build_monthly_earnings(commissions: list, months: int = 12) -> list[Monthly
     Aggregate commissions into a rolling N-month earnings series
     ending at the current month.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     # Build a dict keyed by (year, month)
     bucket: dict[tuple, dict] = {}
     for i in range(months - 1, -1, -1):
@@ -403,7 +403,7 @@ def update_profile(
     profile = _get_affiliate_profile(current_user, db)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(profile, field, value)
-    setattr(profile, "updated_at", datetime.utcnow())
+    setattr(profile, "updated_at", datetime.now(timezone.utc))
     db.commit()
     db.refresh(profile)
     return profile
@@ -532,7 +532,7 @@ def get_conversions(
             commission_earned=round(float(cast(float, c.commission_amt or 0.0)), 2),
             commission_rate=float(cast(float, c.commission_rate or 20.0)),
             status=str(c.commission_status or c.status or "approved"),
-            created_at=cast(datetime, c.created_at or datetime.utcnow())
+            created_at=cast(datetime, c.created_at or datetime.now(timezone.utc))
         ))
 
     return results
@@ -554,7 +554,7 @@ def create_commission(data: CommissionCreate, db: Session = Depends(get_db)):
     if profile:
         current_earnings = float(getattr(profile, "total_earnings", 0.0) or 0.0)
         current_sales = int(getattr(profile, "total_sales", 0) or 0)
-        setattr(profile, "total_earnings", current_earnings + float(data.commission_amt))
+        setattr(profile, "total_earnings", current_earnings + data.commission_amt)
         setattr(profile, "total_sales", current_sales + 1)
 
     db.commit()
@@ -891,7 +891,7 @@ def track_click(
     """
     code_upper = referral_code.upper()
     client_ip = request.client.host if request.client else None
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cutoff = now - timedelta(seconds=10)
 
     # 1. Check if it's a custom referral link code
@@ -1106,7 +1106,7 @@ def create_referral_click(
 
 
     # Database deduplication
-    time_threshold = datetime.utcnow() - timedelta(seconds=10)
+    time_threshold = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=10)
     
     query = db.query(AffiliateReferral).filter(
         AffiliateReferral.referral_code == code_upper,
@@ -1143,7 +1143,7 @@ def create_referral_click(
         status="CLICKED",
         ip_address=client_ip,
         user_agent=user_agent,
-        clicked_at=datetime.utcnow()
+        clicked_at=datetime.now(timezone.utc)
     )
     db.add(referral)
 
