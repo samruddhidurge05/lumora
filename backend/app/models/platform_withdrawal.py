@@ -6,39 +6,44 @@ SQLAlchemy model for Lumora Platform Treasury Withdrawals.
 Stores immutable withdrawal records for platform owner earnings.
 Uses structured business reference format: PLT-WD-YYYYMMDD-XXXXXX
 """
+from typing import Any
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.user import Base
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class PlatformWithdrawal(Base):
     __tablename__ = "platform_withdrawals"
 
-    id                    = Column(Integer, primary_key=True, index=True)
-    withdrawal_number     = Column(String(64), unique=True, index=True, nullable=False)
-    amount                = Column(Float, nullable=False)
-    currency              = Column(String(10), default="INR", nullable=False)
-    status                = Column(String(30), default="pending", nullable=False, index=True)
+    id: Any                    = Column(Integer, primary_key=True, index=True)
+    withdrawal_number: Any     = Column(String(64), unique=True, index=True, nullable=False)
+    amount: Any                = Column(Float, nullable=False)
+    currency: Any              = Column(String(10), default="INR", nullable=False)
+    status: Any                = Column(String(30), default="pending", nullable=False, index=True)
     # Statuses: pending | approved | processing | completed | failed | cancelled | rejected
 
-    requested_by          = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    requested_at          = Column(DateTime, default=datetime.utcnow, nullable=False)
+    requested_by: Any          = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    requested_at: Any          = Column(DateTime, default=utcnow, nullable=False)
 
-    approved_by           = Column(Integer, ForeignKey("users.id"), nullable=True)
-    approved_at           = Column(DateTime, nullable=True)
+    approved_by: Any           = Column(Integer, ForeignKey("users.id"), nullable=True)
+    approved_at: Any           = Column(DateTime, nullable=True)
 
-    completed_at          = Column(DateTime, nullable=True)
-    transaction_reference = Column(String(120), nullable=True, index=True)  # Bank UTR / Gateway ID
+    completed_at: Any          = Column(DateTime, nullable=True)
+    transaction_reference: Any = Column(String(120), nullable=True, index=True)  # Bank UTR / Gateway ID
 
-    destination_type      = Column(String(50), default="bank_account", nullable=False)
-    destination_account   = Column(Text, nullable=True)  # JSON snapshot of destination details
+    destination_type: Any      = Column(String(50), default="bank_account", nullable=False)
+    destination_account: Any   = Column(Text, nullable=True)  # JSON snapshot of destination details
 
-    notes                 = Column(Text, nullable=True)
-    failure_reason        = Column(Text, nullable=True)
+    notes: Any                 = Column(Text, nullable=True)
+    failure_reason: Any        = Column(Text, nullable=True)
 
-    created_at            = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at            = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Any            = Column(DateTime, default=utcnow, nullable=False)
+    updated_at: Any            = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     requester = relationship("User", foreign_keys=[requested_by])
     approver  = relationship("User", foreign_keys=[approved_by])

@@ -32,8 +32,12 @@ Phase 2 additions:
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+
+def utcnow() -> datetime:
+    """Return current naive UTC datetime (Python 3.12+ non-deprecated replacement for datetime.utcnow())."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
@@ -56,7 +60,7 @@ PENDING_STATUSES  = ("pending", "approved", "processing")
 # ── Reference Number Generator ────────────────────────────────────────────────
 
 def generate_withdrawal_number(db: Session) -> str:
-    today  = datetime.utcnow().strftime("%Y%m%d")
+    today  = utcnow().strftime("%Y%m%d")
     prefix = f"PLT-WD-{today}-"
     count  = (
         db.query(func.count(PlatformWithdrawal.id))
@@ -105,7 +109,7 @@ def _calculate_completed_withdrawals(db: Session) -> float:
 
 
 def _calculate_today_revenue(db: Session) -> float:
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     result = (
         db.query(func.coalesce(func.sum(Order.total_amount), 0.0))
         .filter(
@@ -118,7 +122,7 @@ def _calculate_today_revenue(db: Session) -> float:
 
 
 def _calculate_current_month_withdrawn(db: Session) -> float:
-    now        = datetime.utcnow()
+    now        = utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     result = (
         db.query(func.coalesce(func.sum(PlatformWithdrawal.amount), 0.0))
@@ -192,7 +196,7 @@ def get_treasury_summary(db: Session) -> dict:
             "completed": completed_count,
         },
         "_meta": {
-            "computed_at": datetime.utcnow().isoformat() + "Z",
+            "computed_at": utcnow().isoformat() + "Z",
             "formula":     "available = revenue - affiliate_liability - pending_wd - completed_wd",
         },
     }
@@ -223,7 +227,7 @@ def write_ledger_entry(
         reference_id=str(reference_id) if reference_id else None,
         description=description,
         created_by=created_by,
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     db.add(entry)
     db.flush()
@@ -248,7 +252,7 @@ def _write_audit_log(
         target_id=target_id,
         metadata_json=json.dumps(metadata),
         ip_address=ip_address,
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     db.add(log)
     db.flush()
@@ -317,12 +321,12 @@ def create_settlement_request(
         currency            = "INR",
         status              = "pending",
         requested_by        = requested_by,
-        requested_at        = datetime.utcnow(),
+        requested_at        = utcnow(),
         destination_type    = destination_type,
         destination_account = json.dumps(destination_account),
         notes               = notes,
-        created_at          = datetime.utcnow(),
-        updated_at          = datetime.utcnow(),
+        created_at          = utcnow(),
+        updated_at          = utcnow(),
     )
     db.add(row)
     db.flush()
@@ -369,7 +373,7 @@ def approve_settlement(
     row = db.query(PlatformWithdrawal).filter(PlatformWithdrawal.id == withdrawal_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Settlement not found.")
-    if row.status != "pending":
+    if str(row.status) != "pending":
         raise HTTPException(
             status_code=400,
             detail=f"Cannot approve settlement in '{row.status}' status. Only 'pending' settlements can be approved.",
@@ -377,8 +381,8 @@ def approve_settlement(
 
     row.status      = "approved"
     row.approved_by = approved_by
-    row.approved_at = datetime.utcnow()
-    row.updated_at  = datetime.utcnow()
+    row.approved_at = utcnow()
+    row.updated_at  = utcnow()
     db.flush()
 
     _write_audit_log(
@@ -408,7 +412,7 @@ def complete_settlement(
     row = db.query(PlatformWithdrawal).filter(PlatformWithdrawal.id == withdrawal_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Settlement not found.")
-    if row.status not in ("approved", "processing"):
+    if str(row.status) not in ("approved", "processing"):
         raise HTTPException(
             status_code=400,
             detail=f"Cannot complete settlement in '{row.status}' status.",
@@ -417,9 +421,9 @@ def complete_settlement(
         raise HTTPException(status_code=400, detail="Transaction reference is required to complete a settlement.")
 
     row.status                = "completed"
-    row.completed_at          = datetime.utcnow()
+    row.completed_at          = utcnow()
     row.transaction_reference = transaction_reference.strip()
-    row.updated_at            = datetime.utcnow()
+    row.updated_at            = utcnow()
     db.flush()
 
     _write_audit_log(
@@ -453,7 +457,7 @@ def cancel_settlement(
     row = db.query(PlatformWithdrawal).filter(PlatformWithdrawal.id == withdrawal_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Settlement not found.")
-    if row.status not in ("pending", "approved"):
+    if str(row.status) not in ("pending", "approved"):
         raise HTTPException(
             status_code=400,
             detail=f"Cannot cancel settlement in '{row.status}' status.",
@@ -461,7 +465,7 @@ def cancel_settlement(
 
     row.status         = "cancelled"
     row.failure_reason = reason
-    row.updated_at     = datetime.utcnow()
+    row.updated_at     = utcnow()
     db.flush()
 
     # Reversal ledger entry — restore the balance

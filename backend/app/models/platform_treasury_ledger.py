@@ -10,10 +10,15 @@ Existing rows are NEVER modified or deleted.
 Running balance is a denormalized snapshot for fast dashboard queries.
 For audit integrity, recompute from scratch by summing all signed amounts.
 """
+from typing import Any
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.user import Base
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class PlatformTreasuryLedger(Base):
@@ -32,30 +37,30 @@ class PlatformTreasuryLedger(Base):
     """
     __tablename__ = "platform_treasury_ledgers"
 
-    id              = Column(Integer, primary_key=True, index=True)
+    id: Any              = Column(Integer, primary_key=True, index=True)
 
-    ledger_type     = Column(String(50), nullable=False, index=True)
+    ledger_type: Any     = Column(String(50), nullable=False, index=True)
     # One of: revenue_earned | refund | commission_expense | affiliate_expense
     #         vendor_adjustment | platform_withdrawal | chargeback | manual_adjustment
 
-    amount          = Column(Float, nullable=False)
+    amount: Any          = Column(Float, nullable=False)
     # Positive = credit (revenue earned), Negative = debit (expense/withdrawal)
 
-    running_balance = Column(Float, nullable=True)
+    running_balance: Any = Column(Float, nullable=True)
     # Denormalized snapshot of running platform revenue balance at time of entry.
     # Used for fast queries only; source of truth is SUM(amount) over all rows.
 
-    reference_type  = Column(String(50), nullable=True, index=True)
+    reference_type: Any  = Column(String(50), nullable=True, index=True)
     # Entity that triggered this entry: 'order' | 'withdrawal' | 'refund' | 'affiliate_payout'
 
-    reference_id    = Column(String(64), nullable=True, index=True)
+    reference_id: Any    = Column(String(64), nullable=True, index=True)
     # ID or business reference number of the triggering entity
 
-    description     = Column(Text, nullable=True)
+    description: Any     = Column(Text, nullable=True)
     # Human-readable description of the ledger entry
 
-    created_by      = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
-    created_at      = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_by: Any      = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    created_at: Any      = Column(DateTime, default=utcnow, nullable=False, index=True)
 
     creator = relationship("User", foreign_keys=[created_by])
 
