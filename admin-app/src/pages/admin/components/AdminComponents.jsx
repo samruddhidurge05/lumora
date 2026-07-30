@@ -54,10 +54,12 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     <>
       <div className="flex items-center justify-between mb-0.5 sm:mb-1 text-[#7B3FA0] min-w-0">
         <span className="text-[8px] sm:text-[9px] font-extrabold tracking-wider uppercase truncate max-w-[80%]">{title}</span>
-        {IconComponent && typeof IconComponent === 'function' ? (
-          <IconComponent size={11} className="text-[#7B3FA0] shrink-0 ml-1" />
-        ) : (
-          IconComponent
+        {IconComponent && (
+          React.isValidElement(IconComponent) ? (
+            IconComponent
+          ) : (
+            <IconComponent size={11} className="text-[#7B3FA0] shrink-0 ml-1" />
+          )
         )}
       </div>
       
