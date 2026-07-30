@@ -43,6 +43,7 @@ const AdminSupportInbox = safeLazy(() => import('./pages/admin/AdminSupportInbox
 const AdminUserManagement = safeLazy(() => import('./pages/admin/AdminUserManagement'));
 const AcceptInvite = safeLazy(() => import('./pages/admin/AcceptInvite'));
 const AdminRegister = safeLazy(() => import('./pages/admin/AdminRegister'));
+const PlatformFinance = safeLazy(() => import('./pages/admin/PlatformFinance'));
 
 // ── Error Boundary for SPA chunk loading / render errors ─────────────
 class ErrorBoundary extends React.Component {
@@ -160,6 +161,9 @@ function AppContent() {
           />
           <Route path="/admin/register"
             element={<AdminRegister />}
+          />
+          <Route path="/admin/finance"
+            element={<ProtectedRoute requiredRole="admin"><PlatformFinance /></ProtectedRoute>}
           />
 
           {/* ── Admin app fallbacks ── */}

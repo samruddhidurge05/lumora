@@ -287,6 +287,10 @@ def _run_schema_migrations() -> None:
             "CREATE TABLE IF NOT EXISTS product_download_events (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), downloaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ip_address VARCHAR(64), user_agent VARCHAR(512), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
             # affiliate_referrals table creation for PostgreSQL
             "CREATE TABLE IF NOT EXISTS affiliate_referrals (id SERIAL PRIMARY KEY, affiliate_id INTEGER NOT NULL REFERENCES affiliate_profiles(id), referral_code VARCHAR(50) NOT NULL, product_id INTEGER NOT NULL REFERENCES products(id), customer_id INTEGER REFERENCES users(id), session_id VARCHAR(100) NOT NULL UNIQUE, order_id INTEGER REFERENCES orders(id), status VARCHAR(30) NOT NULL DEFAULT 'CLICKED', ip_address VARCHAR(45), user_agent TEXT, clicked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, authenticated_at TIMESTAMP, converted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            # platform_withdrawals table — Platform Treasury Phase 1
+            "CREATE TABLE IF NOT EXISTS platform_withdrawals (id SERIAL PRIMARY KEY, withdrawal_number VARCHAR(64) UNIQUE NOT NULL, amount FLOAT NOT NULL, currency VARCHAR(10) NOT NULL DEFAULT 'INR', status VARCHAR(30) NOT NULL DEFAULT 'pending', requested_by INTEGER NOT NULL REFERENCES users(id), requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, approved_by INTEGER REFERENCES users(id), approved_at TIMESTAMP, completed_at TIMESTAMP, transaction_reference VARCHAR(120), destination_type VARCHAR(50) NOT NULL DEFAULT 'bank_account', destination_account TEXT, notes TEXT, failure_reason TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            # platform_treasury_ledgers table — Immutable double-entry ledger
+            "CREATE TABLE IF NOT EXISTS platform_treasury_ledgers (id SERIAL PRIMARY KEY, ledger_type VARCHAR(50) NOT NULL, amount FLOAT NOT NULL, running_balance FLOAT, reference_type VARCHAR(50), reference_id VARCHAR(64), description TEXT, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
         ]
 
         
@@ -499,6 +503,50 @@ def _run_schema_migrations() -> None:
                             _logger.debug("[startup] SQLite affiliate_commissions.%s added OK", col_name)
                         except Exception as _col_err:
                             _logger.debug("[startup] SQLite affiliate_commissions.%s skipped: %s", col_name, _col_err)
+
+                # platform_withdrawals — Treasury Phase 1
+                try:
+                    conn.execute(_text(
+                        "CREATE TABLE IF NOT EXISTS platform_withdrawals ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        "withdrawal_number VARCHAR(64) UNIQUE NOT NULL, "
+                        "amount FLOAT NOT NULL, "
+                        "currency VARCHAR(10) NOT NULL DEFAULT 'INR', "
+                        "status VARCHAR(30) NOT NULL DEFAULT 'pending', "
+                        "requested_by INTEGER NOT NULL REFERENCES users(id), "
+                        "requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        "approved_by INTEGER REFERENCES users(id), "
+                        "approved_at DATETIME, "
+                        "completed_at DATETIME, "
+                        "transaction_reference VARCHAR(120), "
+                        "destination_type VARCHAR(50) NOT NULL DEFAULT 'bank_account', "
+                        "destination_account TEXT, "
+                        "notes TEXT, "
+                        "failure_reason TEXT, "
+                        "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+                    ))
+                    _logger.debug("[startup] SQLite platform_withdrawals table OK")
+                except Exception as _tw_err:
+                    _logger.debug("[startup] SQLite platform_withdrawals skipped: %s", _tw_err)
+
+                # platform_treasury_ledgers — Immutable double-entry ledger
+                try:
+                    conn.execute(_text(
+                        "CREATE TABLE IF NOT EXISTS platform_treasury_ledgers ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        "ledger_type VARCHAR(50) NOT NULL, "
+                        "amount FLOAT NOT NULL, "
+                        "running_balance FLOAT, "
+                        "reference_type VARCHAR(50), "
+                        "reference_id VARCHAR(64), "
+                        "description TEXT, "
+                        "created_by INTEGER REFERENCES users(id), "
+                        "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+                    ))
+                    _logger.debug("[startup] SQLite platform_treasury_ledgers table OK")
+                except Exception as _tl_err:
+                    _logger.debug("[startup] SQLite platform_treasury_ledgers skipped: %s", _tl_err)
 
                 conn.commit()
             _logger.info("[startup] SQLite schema migrations applied OK")

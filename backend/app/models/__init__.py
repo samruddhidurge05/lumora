@@ -26,6 +26,8 @@ from app.models.refund_request import RefundRequest
 from app.models.report import SQLReport
 from app.models.product_download_event import ProductDownloadEvent
 from app.models.storage_metadata import StorageMetadata
+from app.models.platform_withdrawal import PlatformWithdrawal
+from app.models.platform_treasury_ledger import PlatformTreasuryLedger
 
 __all__ = [
     "Base",
@@ -64,4 +66,6 @@ __all__ = [
     "AdminRole",
     "AdminInvitation",
     "RefundRequest",
+    "PlatformWithdrawal",
+    "PlatformTreasuryLedger",
 ]

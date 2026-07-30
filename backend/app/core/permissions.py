@@ -13,19 +13,25 @@ from app.models.admin_role import AdminRole
 
 # -- Role ? Permission Mapping -------------------------------------------------
 ROLE_PERMISSIONS: dict[str, list[str]] = {
-    "super_admin": ["*"],  # all permissions
+    "super_admin": ["*"],  # all permissions including platform.withdraw
     "admin": [
         "read:*",
         "write:products", "write:orders", "write:reviews",
         "write:reports", "write:support", "write:vendors", "write:affiliates",
         "write:referral_links", "write:platform_settings", "write:team",
         "read:analytics", "read:audit_logs",
+        "read:treasury",     # admin = view-only treasury
     ],
     "moderator": ["read:*", "write:reviews", "write:reports", "write:support"],
     "support":   ["read:support", "write:support", "read:customers"],
-    "finance":   ["read:orders", "read:payments", "read:analytics", "read:reports"],
+    "finance":   [
+        "read:orders", "read:payments", "read:analytics", "read:reports",
+        "read:treasury",    # finance can view treasury
+        "approve:treasury", # finance can approve withdrawals (Phase 2)
+    ],
     "marketing": ["read:products", "write:products_limited", "read:analytics", "write:referral_links"],
     "analyst":   ["read:analytics", "read:reports", "read:audit_logs"],
+    # Note: analyst deliberately has NO read:treasury
 }
 
 

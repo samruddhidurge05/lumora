@@ -10,6 +10,7 @@ import {
   subscribeToReviews,
   subscribeToDashboardReports,
 } from '../../services/dashboardService.js';
+import PlatformTreasuryCards from './components/PlatformTreasuryCards';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -463,6 +464,11 @@ export default function Dashboard() {
             }
           />
         </StatsGrid>
+
+        {/* --- PLATFORM TREASURY --- */}
+        <section className="mb-6 sm:mb-8">
+          <PlatformTreasuryCards />
+        </section>
 
         {/* --- OPERATIONAL COMMAND CENTER LAYER --- */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8 md:mb-12">
