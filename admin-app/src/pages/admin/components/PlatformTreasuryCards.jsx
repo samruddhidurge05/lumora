@@ -1,16 +1,16 @@
 /**
  * PlatformTreasuryCards.jsx
  * --------------------------
- * Dashboard treasury section — 6 KPI cards + balance strip.
+ * Dashboard treasury section — 7 KPI cards + balance strip.
  * Uses the Lumora AdminComponents design system (glass-surface, purple palette).
  * All values served from backend; zero frontend math.
  *
- * Available Balance = Revenue − Affiliate Liability − Pending WD − Completed WD
+ * Available to Withdraw = Revenue − Affiliate Liability − Pending WD − Completed WD
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Wallet, TrendingUp, ArrowUpRight, Clock, CheckCircle2, RefreshCw } from 'lucide-react';
+import { DollarSign, Wallet, TrendingUp, ArrowUpRight, Clock, CheckCircle2, Shield, RefreshCw } from 'lucide-react';
 import { StatsGrid, DashboardCard } from './AdminComponents';
 import { fetchTreasurySummary, formatINR } from '../../../services/treasuryService';
 import { useAdminContext } from '../../../context/AdminContext';
@@ -22,9 +22,6 @@ export default function PlatformTreasuryCards() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-
-  const roleLevel  = adminProfile?.role_level || 'admin';
-  const canWithdraw = roleLevel === 'super_admin';
 
   const load = useCallback(async () => {
     try {
@@ -52,17 +49,17 @@ export default function PlatformTreasuryCards() {
       </svg>,
     },
     {
-      title: 'Available Balance', value: loading ? '…' : formatINR(summary?.available_balance),
+      title: 'Available to Withdraw', value: loading ? '…' : formatINR(summary?.available_balance),
       icon: Wallet, trend: loading ? '…' : `${formatINR(summary?.net_withdrawable)} net`, trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,14 L30,11 L60,8 L80,6 L100,4" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
-      title: 'Net Earnings', value: loading ? '…' : formatINR(summary?.net_platform_earnings),
-      icon: TrendingUp, trend: 'after aff.', trendLabel: '',
+      title: 'Minimum Reserve', value: loading ? '…' : formatINR(summary?.minimum_reserve || 5000),
+      icon: Shield, trend: 'REQUIRED', trendLabel: 'reserve',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-        <path d="M0,16 L25,13 L60,10 L80,7 L100,5" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M0,10 L100,10" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
@@ -73,17 +70,24 @@ export default function PlatformTreasuryCards() {
       </svg>,
     },
     {
-      title: 'Pending Settlement', value: loading ? '…' : formatINR(summary?.pending_withdrawals),
+      title: 'Pending Withdrawals', value: loading ? '…' : formatINR(summary?.pending_withdrawals),
       icon: Clock, trend: loading ? '…' : `${summary?.settlement_counts?.pending || 0} pending`, trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,10 L100,10" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
-      title: 'Completed Payouts', value: loading ? '…' : formatINR(summary?.completed_withdrawals),
+      title: 'Completed Withdrawals', value: loading ? '…' : formatINR(summary?.completed_withdrawals),
       icon: CheckCircle2, trend: loading ? '…' : `${summary?.settlement_counts?.completed || 0} done`, trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,15 L30,12 L60,9 L80,7 L100,5" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>,
+    },
+    {
+      title: 'Net Platform Earnings', value: loading ? '…' : formatINR(summary?.net_platform_earnings),
+      icon: TrendingUp, trend: 'after aff.', trendLabel: '',
+      chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
+        <path d="M0,16 L25,13 L60,10 L80,7 L100,5" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
   ];
@@ -98,7 +102,7 @@ export default function PlatformTreasuryCards() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#B886D0] animate-pulse" />
           </div>
           <p className="text-[9px] text-[#8E6AA8]">
-            Balance = Revenue − Affiliate Liability − Pending − Completed
+            Available to Withdraw = Revenue − Affiliate Liability − Pending − Completed
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -113,7 +117,7 @@ export default function PlatformTreasuryCards() {
             onClick={() => navigate('/admin/finance')}
             className="px-3 py-1.5 text-[10px] font-bold text-[#7B3FA0] border border-[#8E6AA8]/20 hover:bg-[#D8BFE3]/20 rounded-xl transition-colors"
           >
-            Finance & Treasury →
+            Finance & Withdrawals →
           </button>
         </div>
       </div>
@@ -124,13 +128,13 @@ export default function PlatformTreasuryCards() {
         </div>
       )}
 
-      {/* 6 KPI Cards */}
-      <StatsGrid columns={6}>
+      {/* 7 KPI Cards */}
+      <StatsGrid columns={4}>
         {CARDS.map(c => (
           <DashboardCard
             key={c.title}
             isLoading={loading}
-            onClick={c.title === 'Available Balance' ? () => navigate('/admin/finance?tab=settlements') : undefined}
+            onClick={c.title === 'Available to Withdraw' ? () => navigate('/admin/finance?tab=withdrawals') : undefined}
             {...c}
           />
         ))}
@@ -151,7 +155,7 @@ export default function PlatformTreasuryCards() {
           ))}
           {summary.last_withdrawal && (
             <div className="flex items-center gap-1.5 ml-auto">
-              <span className="text-[9px] text-[#8E6AA8]">Last settlement</span>
+              <span className="text-[9px] text-[#8E6AA8]">Last withdrawal</span>
               <span className="text-[10px] font-bold text-[#7B3FA0]">{formatINR(summary.last_withdrawal.amount)}</span>
               <span className="text-[9px] font-mono text-[#8E6AA8]">{summary.last_withdrawal.withdrawal_number}</span>
             </div>

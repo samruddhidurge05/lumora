@@ -1,18 +1,12 @@
 /**
- * PlatformFinance.jsx — Phase 2 Complete Redesign
- * -------------------------------------------------
+ * PlatformFinance.jsx — Phase 2 Platform Withdrawal System
+ * ---------------------------------------------------------
  * Lumora Platform Finance & Treasury page.
- * Matches the premium Lumora Admin design system exactly.
+ * Matches the premium Lumora Admin design system.
  *
- * Tabs: Overview | Ledger | Settlements | Timeline
+ * Tabs: Overview | Ledger | Withdrawals | Timeline
  *
- * Design tokens:
- *   bg-[#FFFDF9]       page background
- *   glass-surface      frosted glass cards (AdminComponents.css)
- *   text-[#2D004D]     primary text
- *   text-[#7B3FA0]     accent / labels
- *   bg-[#D8BFE3]       highlight / hover
- *   border-white/50    card borders
+ * Terms: All user-facing terminology uses "Withdrawal" / "Withdraw Funds".
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -34,10 +28,10 @@ import {
   fetchWithdrawalList,
   fetchWithdrawalDetail,
   fetchTreasuryTimeline,
-  requestSettlement,
-  approveSettlement,
-  completeSettlement,
-  cancelSettlement,
+  requestWithdrawal,
+  approveWithdrawal,
+  completeWithdrawal,
+  cancelWithdrawal,
   formatINR,
   fmtDate,
   fmtDateShort,
@@ -47,9 +41,7 @@ import {
   DESTINATION_TYPES,
 } from '../../services/treasuryService';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared micro-components
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Status & Ledger Badges ───────────────────────────────────────────────────
 
 const StatusBadge = ({ status }) => {
   const meta = STATUS_META[status] || { label: status, bgClass: 'bg-stone-100', textClass: 'text-stone-600' };
@@ -76,19 +68,6 @@ const AmountCell = ({ amount }) => {
     <span className={`font-mono text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
       {isPositive ? '+' : ''}{formatINR(amount)}
     </span>
-  );
-};
-
-// Inline SVG sparkline
-const Sparkline = ({ data = [], color = '#7B3FA0', height = 20 }) => {
-  if (!data || data.length < 2) return null;
-  const max = Math.max(...data, 1);
-  const w = 80, h = height;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(' ');
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none" className="overflow-visible">
-      <polyline points={pts} stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 };
 
@@ -133,9 +112,9 @@ const Pagination = ({ page, total, pageSize, onChange }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Settlement Request Modal
+// Withdrawal Request Modal ("Withdraw Funds")
 // ─────────────────────────────────────────────────────────────────────────────
-function SettlementRequestModal({ summary, onClose, onSuccess }) {
+function WithdrawalRequestModal({ summary, onClose, onSuccess }) {
   const [amount, setAmount]       = useState('');
   const [destType, setDestType]   = useState('bank_account');
   const [bankName, setBankName]   = useState('');
@@ -147,30 +126,32 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
 
-  const available    = summary?.available_balance     || 0;
-  const netWithdrawable = summary?.net_withdrawable   || 0;
-  const reserve      = summary?.minimum_reserve       || 5000;
-  const parsed       = parseFloat(amount) || 0;
-  const remaining    = Math.max(0, available - parsed);
-  const overLimit    = parsed > netWithdrawable;
-  const underMin     = parsed > 0 && parsed < 500;
+  const available       = summary?.available_balance || 0;
+  const netWithdrawable = summary?.net_withdrawable  || 0;
+  const reserve         = summary?.minimum_reserve   || 5000;
+  const parsed          = parseFloat(amount) || 0;
+  const remaining       = Math.max(0, available - parsed);
+  const overLimit       = parsed > netWithdrawable;
+  const underMin        = parsed > 0 && parsed < 500;
 
   const buildDestAccount = () => {
-    if (destType === 'bank_account') return { bank_name: bankName, account_number: accountNo, ifsc_code: ifsc };
-    if (destType === 'upi')          return { upi_id: upiId };
+    if (destType === 'bank_account' || destType === 'corporate_account') {
+      return { bank_name: bankName, account_number: accountNo, ifsc_code: ifsc };
+    }
+    if (destType === 'upi') return { upi_id: upiId };
     return {};
   };
 
   const handleSubmit = async () => {
     setError('');
-    if (!parsed || parsed <= 0) { setError('Enter a valid amount.'); return; }
-    if (underMin)               { setError('Minimum settlement amount is ₹500.'); return; }
-    if (overLimit)              { setError(`Amount exceeds net withdrawable balance of ${formatINR(netWithdrawable)}.`); return; }
-    if (!confirmed)             { setError('Please confirm the settlement declaration.'); return; }
+    if (!parsed || parsed <= 0) { setError('Enter a valid withdrawal amount.'); return; }
+    if (underMin)               { setError('Minimum withdrawal amount is ₹500.'); return; }
+    if (overLimit)              { setError(`Amount exceeds maximum withdrawable balance of ${formatINR(netWithdrawable)}.`); return; }
+    if (!confirmed)             { setError('Please confirm the withdrawal authorization.'); return; }
 
     setLoading(true);
     try {
-      const res = await requestSettlement({
+      const res = await requestWithdrawal({
         amount:              parsed,
         destination_type:    destType,
         destination_account: buildDestAccount(),
@@ -179,7 +160,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
       if (res?.success) {
         onSuccess(res.updated_summary);
       } else {
-        setError(res?.detail || 'Settlement request failed.');
+        setError(res?.detail || 'Withdrawal request failed.');
       }
     } catch (e) {
       setError(e?.message || 'Network error. Please try again.');
@@ -213,7 +194,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
               </div>
               <div>
                 <p className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Treasury Operation</p>
-                <h3 className="text-sm font-serif font-black text-[#2D004D] leading-tight">Request Settlement</h3>
+                <h3 className="text-sm font-serif font-black text-[#2D004D] leading-tight">Withdraw Funds</h3>
               </div>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl text-[#8E6AA8] hover:bg-[#D8BFE3]/20 hover:text-[#2D004D] transition-colors">
@@ -225,8 +206,8 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
             {/* Balance info */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Available', val: available,     color: 'text-[#2D004D]' },
-                { label: 'Reserve',   val: reserve,       color: 'text-amber-600' },
+                { label: 'Available',    val: available,       color: 'text-[#2D004D]' },
+                { label: 'Reserve',      val: reserve,         color: 'text-amber-600' },
                 { label: 'Withdrawable', val: netWithdrawable, color: 'text-emerald-600' },
               ].map(s => (
                 <div key={s.label} className="glass-surface rounded-xl p-3 border border-white/50 text-center">
@@ -239,7 +220,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
             {/* Amount */}
             <div>
               <label className="block text-[10px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1.5">
-                Settlement Amount (INR) *
+                Withdrawal Amount (INR) *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7B3FA0] font-bold text-sm">₹</span>
@@ -253,7 +234,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
               </div>
               {parsed > 0 && (
                 <div className={`mt-1.5 text-[11px] font-medium ${overLimit ? 'text-red-500' : underMin ? 'text-amber-600' : 'text-emerald-600'}`}>
-                  {overLimit ? `⚠ Exceeds net withdrawable ${formatINR(netWithdrawable)}` : underMin ? '⚠ Minimum is ₹500' : `✓ Remaining balance after: ${formatINR(remaining)}`}
+                  {overLimit ? `⚠ Exceeds maximum withdrawable ${formatINR(netWithdrawable)}` : underMin ? '⚠ Minimum withdrawal is ₹500' : `✓ Remaining balance after: ${formatINR(remaining)}`}
                 </div>
               )}
             </div>
@@ -272,7 +253,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
             </div>
 
             {/* Destination fields */}
-            {destType === 'bank_account' && (
+            {(destType === 'bank_account' || destType === 'corporate_account') && (
               <div className="space-y-2.5">
                 <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank Name"
                   className="w-full px-3.5 h-[40px] glass-input rounded-xl text-xs" />
@@ -289,7 +270,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
 
             {/* Notes */}
             <div>
-              <label className="block text-[10px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1.5">Notes</label>
+              <label className="block text-[10px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1.5">Reference Notes</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
                 placeholder="Optional reference notes..."
                 className="w-full px-3.5 py-2.5 glass-input rounded-xl text-xs resize-none" />
@@ -299,7 +280,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
             <div className="flex gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200">
               <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-[11px] text-amber-700 leading-relaxed">
-                This will create an internal settlement request requiring Finance approval. Platform Revenue is unaffected — only Available Balance is reduced.
+                This withdrawal request will be securely recorded in the platform treasury. Platform Revenue remains unchanged. Only the Available Withdrawal Balance will be updated after approval.
               </p>
             </div>
 
@@ -308,7 +289,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
               <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
                 className="mt-0.5 accent-[#7B3FA0] w-4 h-4 rounded" />
               <span className="text-[11px] text-[#7B3FA0] leading-relaxed">
-                I confirm this settlement is accurate, authorised, and that the platform maintains the minimum reserve of {formatINR(reserve)}.
+                I confirm that this withdrawal is authorised and that the platform will continue maintaining the required minimum reserve.
               </span>
             </label>
 
@@ -316,7 +297,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
             {parsed > 0 && !overLimit && !underMin && (
               <div className="glass-surface rounded-xl p-3 border border-white/50">
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-[#7B3FA0]">Balance after settlement</span>
+                  <span className="text-[#7B3FA0]">Balance after withdrawal</span>
                   <span className="font-bold text-[#2D004D]">{formatINR(remaining)}</span>
                 </div>
               </div>
@@ -342,7 +323,7 @@ function SettlementRequestModal({ summary, onClose, onSuccess }) {
               className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2D004D] hover:bg-[#7B3FA0] disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors"
             >
               {loading ? <RefreshCw size={13} className="animate-spin" /> : <Landmark size={13} />}
-              {loading ? 'Submitting…' : 'Submit Request'}
+              {loading ? 'Submitting…' : 'Submit Withdrawal'}
             </button>
           </div>
         </motion.div>
@@ -362,14 +343,14 @@ function ActionModal({ action, settlement, onClose, onSuccess }) {
 
   const CONFIGS = {
     approve: {
-      title: 'Approve Settlement',
-      desc:  `Approve settlement ${settlement?.withdrawal_number} for ${formatINR(settlement?.amount)}? This moves it to Finance Processing.`,
+      title: 'Approve Withdrawal',
+      desc:  `Approve withdrawal ${settlement?.withdrawal_number} for ${formatINR(settlement?.amount)}? This moves it to Processing.`,
       icon:  Check, iconBg: 'bg-indigo-100', iconColor: 'text-indigo-700',
-      label: 'Approve', btnVariant: 'approve',
+      label: 'Approve Withdrawal', btnVariant: 'approve',
     },
     complete: {
-      title: 'Mark as Completed',
-      desc:  `Confirm that ${formatINR(settlement?.amount)} has been transferred. Enter the bank transaction reference.`,
+      title: 'Mark Withdrawal Completed',
+      desc:  `Confirm that ${formatINR(settlement?.amount)} has been transferred to bank. Enter the transaction reference (UTR).`,
       icon:  CheckCircle2, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-700',
       label: 'Mark Completed', btnVariant: 'success',
       extra: (
@@ -378,10 +359,10 @@ function ActionModal({ action, settlement, onClose, onSuccess }) {
       ),
     },
     cancel: {
-      title: 'Cancel Settlement',
-      desc:  `Cancel settlement ${settlement?.withdrawal_number}? The amount will be restored to Available Balance.`,
+      title: 'Cancel Withdrawal',
+      desc:  `Cancel withdrawal ${settlement?.withdrawal_number}? The amount will be restored to Available Balance.`,
       icon:  Ban, iconBg: 'bg-red-100', iconColor: 'text-red-600',
-      label: 'Cancel Settlement', btnVariant: 'danger',
+      label: 'Cancel Withdrawal', btnVariant: 'danger',
       extra: (
         <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2}
           placeholder="Reason for cancellation (optional)"
@@ -397,15 +378,15 @@ function ActionModal({ action, settlement, onClose, onSuccess }) {
   const handleConfirm = async () => {
     setError('');
     if (action === 'complete' && !txRef.trim()) {
-      setError('Transaction reference is required.');
+      setError('Transaction reference (UTR) is required.');
       return;
     }
     setLoading(true);
     try {
       let res;
-      if (action === 'approve') res = await approveSettlement(settlement.id);
-      else if (action === 'complete') res = await completeSettlement(settlement.id, txRef.trim());
-      else if (action === 'cancel')   res = await cancelSettlement(settlement.id, reason);
+      if (action === 'approve') res = await approveWithdrawal(settlement.id);
+      else if (action === 'complete') res = await completeWithdrawal(settlement.id, txRef.trim());
+      else if (action === 'cancel')   res = await cancelWithdrawal(settlement.id, reason);
       if (res?.success) onSuccess(res.updated_summary);
       else setError(res?.detail || 'Operation failed.');
     } catch (e) {
@@ -461,9 +442,7 @@ function ActionModal({ action, settlement, onClose, onSuccess }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CSV Export helper
-// ─────────────────────────────────────────────────────────────────────────────
+// CSV Export
 function exportLedgerCSV(items) {
   const header = 'ID,Type,Amount,Running Balance,Reference,Description,Created By,Date';
   const rows   = items.map(r =>
@@ -476,7 +455,7 @@ function exportLedgerCSV(items) {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `lumora-ledger-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `lumora-treasury-ledger-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -502,7 +481,7 @@ function OverviewTab({ summary, loading }) {
   const rows = [
     { label: 'Platform Revenue',      value: summary.platform_revenue,      color: 'text-[#2D004D]',   note: 'Gross lifetime earnings — immutable',   badge: 'IMMUTABLE' },
     { label: '− Affiliate Liability', value: summary.affiliate_liability,    color: 'text-orange-600',  note: 'Approved commissions owed to affiliates' },
-    { label: '− Pending Settlements', value: summary.pending_withdrawals,    color: 'text-amber-600',   note: 'In-flight transfers (pending/approved)' },
+    { label: '− Pending Withdrawals', value: summary.pending_withdrawals,    color: 'text-amber-600',   note: 'In-flight transfers (pending/approved)' },
     { label: '− Completed Payouts',   value: summary.completed_withdrawals,  color: 'text-blue-600',    note: 'Fully transferred out' },
   ];
 
@@ -533,9 +512,9 @@ function OverviewTab({ summary, loading }) {
           {/* Result */}
           <div className="flex items-center justify-between pt-4 mt-1 border-t-2 border-[#7B3FA0]/20">
             <div>
-              <span className="text-base font-serif font-black text-[#2D004D]">Available Balance</span>
+              <span className="text-base font-serif font-black text-[#2D004D]">Available to Withdraw</span>
               <p className="text-[11px] text-[#8E6AA8] mt-0.5">
-                Net withdrawable: {formatINR(summary.net_withdrawable)} (after {formatINR(summary.minimum_reserve)} reserve)
+                Maximum withdrawable: {formatINR(summary.net_withdrawable)} (after {formatINR(summary.minimum_reserve)} reserve)
               </p>
             </div>
             <span className="text-2xl font-mono font-black text-[#7B3FA0]">{formatINR(summary.available_balance)}</span>
@@ -561,12 +540,12 @@ function OverviewTab({ summary, loading }) {
         ))}
       </div>
 
-      {/* Settlement counts */}
-      <GlassCard title="Settlement Status" subtitle="CURRENT PIPELINE">
+      {/* Withdrawal status counts */}
+      <GlassCard title="Withdrawal Pipeline" subtitle="CURRENT WORKFLOW STATUS">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Pending', count: summary.settlement_counts?.pending || 0, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-            { label: 'Approved', count: summary.settlement_counts?.approved || 0, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+            { label: 'Pending',   count: summary.settlement_counts?.pending   || 0, color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+            { label: 'Approved',  count: summary.settlement_counts?.approved  || 0, color: 'text-indigo-600',  bg: 'bg-indigo-50',  border: 'border-indigo-200' },
             { label: 'Completed', count: summary.settlement_counts?.completed || 0, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
           ].map(s => (
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-3 text-center`}>
@@ -577,7 +556,7 @@ function OverviewTab({ summary, loading }) {
         </div>
         {summary.last_withdrawal && (
           <div className="mt-3 pt-3 border-t border-[#8E6AA8]/10 flex justify-between items-center">
-            <span className="text-[11px] text-[#8E6AA8]">Last completed settlement</span>
+            <span className="text-[11px] text-[#8E6AA8]">Last completed withdrawal</span>
             <div className="text-right">
               <p className="text-xs font-bold text-[#2D004D]">{formatINR(summary.last_withdrawal.amount)}</p>
               <p className="text-[10px] text-[#8E6AA8] font-mono">{summary.last_withdrawal.withdrawal_number}</p>
@@ -665,7 +644,7 @@ function LedgerTab() {
         isLoading={loading}
         isEmpty={!loading && filtered.length === 0}
         emptyTitle="No ledger entries yet"
-        emptyDesc="Ledger entries appear as orders are processed and settlements are made."
+        emptyDesc="Ledger entries appear as orders are processed and withdrawals are made."
         pagination={
           <div className="flex items-center justify-between w-full py-1">
             <span className="text-[11px] text-[#7B3FA0]">{data.total.toLocaleString()} total entries</span>
@@ -693,9 +672,9 @@ function LedgerTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tab: Settlements
+// Tab: Withdrawals
 // ─────────────────────────────────────────────────────────────────────────────
-function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
+function WithdrawalsTab({ summary, roleLevel, onSummaryUpdate }) {
   const [data, setData]           = useState({ items: [], total: 0 });
   const [loading, setLoading]     = useState(true);
   const [page, setPage]           = useState(1);
@@ -721,7 +700,7 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
     try {
       const res = await fetchWithdrawalList(page, 20, statusFilter || null);
       setData(res);
-    } catch (e) { console.warn('[SettlementsTab]', e); }
+    } catch (e) { console.warn('[WithdrawalsTab]', e); }
     finally { setLoading(false); }
   }, [page, statusFilter]);
 
@@ -738,7 +717,7 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
 
   const handleActionSuccess = (updatedSummary) => {
     setActionModal(null);
-    showToast('Operation completed successfully.');
+    showToast('Withdrawal status updated successfully.');
     load();
     if (selected) openDetail(selected);
     if (updatedSummary) onSummaryUpdate(updatedSummary);
@@ -746,7 +725,7 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
 
   const handleRequestSuccess = (updatedSummary) => {
     setShowRequest(false);
-    showToast('Settlement request submitted.');
+    showToast('Withdrawal request submitted successfully.');
     load();
     if (updatedSummary) onSummaryUpdate(updatedSummary);
   };
@@ -788,14 +767,14 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
               value={statusFilter}
               onChange={e => { setStatus(e.target.value); setPage(1); }}
               options={statusOptions}
-              id="settlement-status-filter"
+              id="withdrawal-status-filter"
             />,
           ]}
           actions={
             canRequest ? (
               <ActionBtn
                 onClick={() => setShowRequest(true)}
-                label="Request Settlement"
+                label="Withdraw Funds"
                 icon={Plus}
                 variant="primary"
                 small
@@ -804,12 +783,12 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
           }
         />
 
-        {/* Phase 1/2 info banner */}
+        {/* Banner */}
         <div className="flex gap-2.5 p-3 rounded-xl bg-[#D8BFE3]/15 border border-[#8E6AA8]/15">
           <Info size={14} className="text-[#7B3FA0] shrink-0 mt-0.5" />
           <p className="text-[11px] text-[#7B3FA0] leading-relaxed">
-            <strong>Internal settlement workflow.</strong> Platform Revenue is never modified.
-            Settlements reduce Available Balance only. Every action creates an audit log and ledger entry.
+            <strong>Platform Withdrawal System.</strong> Platform Revenue is immutable and remains unchanged.
+            Withdrawals reduce Available Withdrawal Balance only. Every action creates an audit log and ledger entry.
           </p>
         </div>
 
@@ -820,10 +799,10 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
               headers={headers}
               isLoading={loading}
               isEmpty={!loading && data.items.length === 0}
-              emptyTitle="No settlements yet"
-              emptyDesc="Settlement records will appear here once a Super Admin requests one."
+              emptyTitle="No withdrawals yet"
+              emptyDesc="Withdrawal records will appear here once a Super Admin requests one."
               emptyAction={canRequest ? (
-                <ActionBtn onClick={() => setShowRequest(true)} label="Request Settlement" icon={Plus} variant="primary" />
+                <ActionBtn onClick={() => setShowRequest(true)} label="Withdraw Funds" icon={Plus} variant="primary" />
               ) : null}
               pagination={
                 <div className="flex items-center justify-between w-full py-1">
@@ -878,7 +857,7 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
                 className="glass-surface rounded-2xl border border-white/50 shadow-sm p-5 self-start sticky top-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-serif font-black text-[#2D004D]">Settlement Detail</h4>
+                  <h4 className="text-sm font-serif font-black text-[#2D004D]">Withdrawal Detail</h4>
                   <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-[#D8BFE3]/20 text-[#8E6AA8] transition-colors">
                     <X size={14} />
                   </button>
@@ -951,7 +930,7 @@ function SettlementsTab({ summary, roleLevel, onSummaryUpdate }) {
 
       {/* Modals */}
       {showRequest && (
-        <SettlementRequestModal
+        <WithdrawalRequestModal
           summary={summary}
           onClose={() => setShowRequest(false)}
           onSuccess={handleRequestSuccess}
@@ -1008,7 +987,7 @@ function TimelineTab() {
   );
 
   if (data.items.length === 0) return (
-    <EmptyState title="No timeline events" description="Financial events will appear here as orders are processed and settlements are made." />
+    <EmptyState title="No timeline events" description="Financial events will appear here as orders are processed and withdrawals are made." />
   );
 
   return (
@@ -1076,7 +1055,7 @@ function TimelineTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// KPI Cards — 6 cards using Lumora DashboardCard
+// KPI Cards — 7 cards using Lumora DashboardCard
 // ─────────────────────────────────────────────────────────────────────────────
 function TreasuryKPICards({ summary, loading }) {
   const CARDS = [
@@ -1084,30 +1063,30 @@ function TreasuryKPICards({ summary, loading }) {
       title:      'Platform Revenue',
       value:      loading ? '…' : formatINR(summary?.platform_revenue),
       icon:       DollarSign,
-      trend:      '+∞',
-      trendLabel: 'immutable',
+      trend:      'IMMUTABLE',
+      trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-        <path d="M0,18 L20,14 L40,12 L60,8 L80,6 L100,3" fill="none" stroke="#7B3FA0" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M0,18 L20,14 L40,11 L60,8 L80,5 L100,3" fill="none" stroke="#7B3FA0" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
-      title:      'Available Balance',
+      title:      'Available to Withdraw',
       value:      loading ? '…' : formatINR(summary?.available_balance),
       icon:       Wallet,
       trend:      loading ? '…' : formatINR(summary?.net_withdrawable),
       trendLabel: 'net withdrawable',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-        <path d="M0,12 L25,10 L50,8 L75,6 L100,5" fill="none" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M0,14 L25,10 L50,8 L75,6 L100,5" fill="none" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
-      title:      'Net Earnings',
-      value:      loading ? '…' : formatINR(summary?.net_platform_earnings),
-      icon:       TrendingUp,
-      trend:      loading ? '…' : `−${formatINR(summary?.affiliate_liability)} aff.`,
-      trendLabel: '',
+      title:      'Minimum Reserve',
+      value:      loading ? '…' : formatINR(summary?.minimum_reserve || 5000),
+      icon:       Shield,
+      trend:      'REQUIRED',
+      trendLabel: 'reserve',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
-        <path d="M0,16 L30,13 L60,10 L80,8 L100,5" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M0,10 L100,10" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
     {
@@ -1121,7 +1100,7 @@ function TreasuryKPICards({ summary, loading }) {
       </svg>,
     },
     {
-      title:      'Pending Settlement',
+      title:      'Pending Withdrawals',
       value:      loading ? '…' : formatINR(summary?.pending_withdrawals),
       icon:       Clock,
       trend:      loading ? '…' : `${summary?.settlement_counts?.pending || 0} pending`,
@@ -1131,7 +1110,7 @@ function TreasuryKPICards({ summary, loading }) {
       </svg>,
     },
     {
-      title:      'Completed Payouts',
+      title:      'Completed Withdrawals',
       value:      loading ? '…' : formatINR(summary?.completed_withdrawals),
       icon:       CheckCircle2,
       trend:      loading ? '…' : `${summary?.settlement_counts?.completed || 0} done`,
@@ -1140,10 +1119,20 @@ function TreasuryKPICards({ summary, loading }) {
         <path d="M0,15 L25,12 L50,10 L75,7 L100,5" fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
     },
+    {
+      title:      'Net Platform Earnings',
+      value:      loading ? '…' : formatINR(summary?.net_platform_earnings),
+      icon:       TrendingUp,
+      trend:      loading ? '…' : `−${formatINR(summary?.affiliate_liability)} aff.`,
+      trendLabel: '',
+      chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
+        <path d="M0,16 L30,13 L60,10 L80,8 L100,5" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>,
+    },
   ];
 
   return (
-    <StatsGrid columns={6}>
+    <StatsGrid columns={4}>
       {CARDS.map(c => (
         <DashboardCard key={c.title} isLoading={loading} {...c} />
       ))}
@@ -1155,10 +1144,10 @@ function TreasuryKPICards({ summary, loading }) {
 // Tab Bar
 // ─────────────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: 'overview',     label: 'Overview',     icon: BarChart3 },
-  { id: 'ledger',       label: 'Ledger',       icon: List },
-  { id: 'settlements',  label: 'Settlements',  icon: Landmark },
-  { id: 'timeline',     label: 'Timeline',     icon: Activity },
+  { id: 'overview',     label: 'Overview',    icon: BarChart3 },
+  { id: 'ledger',       label: 'Ledger',      icon: List },
+  { id: 'withdrawals',  label: 'Withdrawals', icon: Landmark },
+  { id: 'timeline',     label: 'Timeline',    icon: Activity },
 ];
 
 function TabBar({ active, onChange }) {
@@ -1209,7 +1198,6 @@ export default function PlatformFinance() {
 
   useEffect(() => {
     loadSummary();
-    // Poll every 30s for realtime-like updates (Firestore listener replaced by polling for Phase 2)
     pollRef.current = setInterval(loadSummary, 30_000);
     return () => clearInterval(pollRef.current);
   }, [loadSummary]);
@@ -1225,12 +1213,12 @@ export default function PlatformFinance() {
         {/* Page Header */}
         <PageHeader
           title="Finance & Treasury"
-          subtitle="Platform treasury ledger, settlement workflow, and immutable revenue accounting"
+          subtitle="Platform treasury ledger, withdrawal workflow, and immutable revenue accounting"
           actions={
             <div className="flex items-center gap-2.5">
               {!loading && summary && (
                 <div className="flex flex-col text-right">
-                  <span className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Available Balance</span>
+                  <span className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Available to Withdraw</span>
                   <span className="text-lg font-serif font-black text-[#7B3FA0] leading-tight">
                     {formatINR(summary.available_balance)}
                   </span>
@@ -1251,9 +1239,9 @@ export default function PlatformFinance() {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#D8BFE3]/15 border border-[#8E6AA8]/15">
           <Shield size={14} className="text-[#7B3FA0] shrink-0 mt-0.5" />
           <div>
-            <p className="text-[11px] font-bold text-[#2D004D]">Phase 2 — Settlement Workflow Active</p>
+            <p className="text-[11px] font-bold text-[#2D004D]">Platform Withdrawal System Active</p>
             <p className="text-[11px] text-[#7B3FA0]">
-              Internal settlement requests, approval workflow, ledger with CSV export, and treasury timeline are live.
+              Internal withdrawal requests, approval workflow, ledger with CSV export, and treasury timeline are live.
               Revenue is immutable. Every operation creates an audit log.
             </p>
           </div>
@@ -1279,8 +1267,8 @@ export default function PlatformFinance() {
         <div className="min-h-[300px]">
           {tab === 'overview'    && <OverviewTab summary={summary} loading={loading} />}
           {tab === 'ledger'      && <LedgerTab />}
-          {tab === 'settlements' && (
-            <SettlementsTab
+          {tab === 'withdrawals' && (
+            <WithdrawalsTab
               summary={summary}
               roleLevel={roleLevel}
               onSummaryUpdate={handleSummaryUpdate}

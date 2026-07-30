@@ -1,14 +1,13 @@
 /**
  * services/treasuryService.js
  * ----------------------------
- * Frontend API client for Platform Treasury.
- * Phase 1 (preserved) + Phase 2 (settlement workflow) calls.
+ * Frontend API client for Platform Treasury & Withdrawals.
  * All balance figures come from the backend — no frontend math.
  */
 
 import { backendFetch } from '../utils/api';
 
-// ── Phase 1 — Read endpoints ──────────────────────────────────────────────────
+// ── Read endpoints ────────────────────────────────────────────────────────────
 
 export const fetchTreasurySummary = async () => {
   const res = await backendFetch('/admin/treasury/summary');
@@ -34,7 +33,7 @@ export const fetchLedgerEntries = async (page = 1, pageSize = 50, ledgerType = n
   return res || { items: [], total: 0 };
 };
 
-// ── Phase 2 — Timeline ────────────────────────────────────────────────────────
+// ── Timeline ──────────────────────────────────────────────────────────────────
 
 export const fetchTreasuryTimeline = async (page = 1, pageSize = 40) => {
   const params = new URLSearchParams({ page, page_size: pageSize });
@@ -42,38 +41,42 @@ export const fetchTreasuryTimeline = async (page = 1, pageSize = 40) => {
   return res || { items: [], total: 0 };
 };
 
-// ── Phase 2 — Settlement mutations ────────────────────────────────────────────
+// ── Withdrawal mutations ──────────────────────────────────────────────────────
 
-export const requestSettlement = async (payload) => {
+export const requestWithdrawal = async (payload) => {
   const res = await backendFetch('/admin/treasury/settlement/request', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
   return res;
 };
+export const requestSettlement = requestWithdrawal;
 
-export const approveSettlement = async (id) => {
+export const approveWithdrawal = async (id) => {
   const res = await backendFetch(`/admin/treasury/settlement/${id}/approve`, {
     method: 'POST',
   });
   return res;
 };
+export const approveSettlement = approveWithdrawal;
 
-export const completeSettlement = async (id, transactionReference) => {
+export const completeWithdrawal = async (id, transactionReference) => {
   const res = await backendFetch(`/admin/treasury/settlement/${id}/complete`, {
     method: 'POST',
     body: JSON.stringify({ transaction_reference: transactionReference }),
   });
   return res;
 };
+export const completeSettlement = completeWithdrawal;
 
-export const cancelSettlement = async (id, reason = '') => {
+export const cancelWithdrawal = async (id, reason = '') => {
   const res = await backendFetch(`/admin/treasury/settlement/${id}/cancel`, {
     method: 'POST',
     body: JSON.stringify({ reason }),
   });
   return res;
 };
+export const cancelSettlement = cancelWithdrawal;
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -110,7 +113,7 @@ export const LEDGER_TYPE_LABELS = {
   refund:              'Refund',
   commission_expense:  'Affiliate Commission',
   affiliate_expense:   'Affiliate Payout',
-  platform_withdrawal: 'Settlement',
+  platform_withdrawal: 'Platform Withdrawal',
   chargeback:          'Chargeback',
   manual_adjustment:   'Manual Adjustment',
   vendor_adjustment:   'Vendor Adjustment',
@@ -128,8 +131,9 @@ export const LEDGER_TYPE_COLORS = {
 };
 
 export const DESTINATION_TYPES = [
-  { value: 'bank_account', label: 'Bank Account (NEFT/RTGS)' },
-  { value: 'upi',          label: 'UPI Transfer' },
-  { value: 'internal',     label: 'Internal Account' },
-  { value: 'other',        label: 'Other' },
+  { value: 'bank_account',      label: 'Bank Account (NEFT/RTGS)' },
+  { value: 'corporate_account', label: 'Corporate Account' },
+  { value: 'upi',               label: 'UPI Transfer' },
+  { value: 'internal',          label: 'Internal Transfer' },
+  { value: 'other',             label: 'Other' },
 ];
