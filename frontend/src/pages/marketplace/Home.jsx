@@ -91,14 +91,14 @@ function PCard({ product, delay = 0 }) {
         background: 'rgba(255, 255, 255, 0.48)',
         backdropFilter: 'blur(36px) saturate(200%)',
         WebkitBackdropFilter: 'blur(36px) saturate(200%)',
-        border: `1px solid ${hov ? 'rgba(192, 132, 252, 0.70)' : 'rgba(255, 255, 255, 0.45)'}`,
-        borderTop: '1.5px solid rgba(255, 255, 255, 0.75)',
-        borderRadius: '22px', overflow: 'hidden',
+        border: `1px solid ${hov ? 'rgba(196, 148, 230, 0.50)' : 'rgba(255, 255, 255, 0.45)'}`,
+        borderTop: '1px solid rgba(255, 255, 255, 0.65)',
+        borderRadius: '20px', overflow: 'hidden',
         boxShadow: hov
-          ? '0 28px 64px rgba(147, 51, 234, 0.35), inset 0 1px 0 rgba(255,255,255,0.85)'
-          : '0 12px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.65)',
-        transform: hov ? 'translateY(-7px) scale(1.015)' : 'translateY(0) scale(1)',
-        transition: 'all .32s cubic-bezier(.16,1,.3,1)',
+          ? '0 16px 40px rgba(90, 30, 126, 0.14), inset 0 1px 0 rgba(255,255,255,0.80)'
+          : '0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255,255,255,0.60)',
+        transform: hov ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all .30s cubic-bezier(.16,1,.3,1)',
         cursor: 'pointer', display: 'flex', flexDirection: 'column',
       }}
     >
