@@ -600,13 +600,8 @@ def request_payout(
     if data.amount <= 0:
         raise HTTPException(status_code=400, detail="Payout amount must be positive.")
 
-    # ? Minimum payout threshold
-    if data.amount < MIN_PAYOUT_INR:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Minimum payout amount is ?{int(MIN_PAYOUT_INR)}. "
-                   f"Requested: ?{data.amount:.0f}",
-        )
+    # ? Minimum payout threshold (Removed per business rule: no minimum)
+
 
     profile = _get_affiliate_profile(current_user, db)
 

@@ -124,6 +124,26 @@ function AffiliateDashboardInner() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Smart polling for pending payouts (real-time sync simulation)
+  useEffect(() => {
+    if (!user) return;
+    const hasPendingPayouts = payouts.some(p => p.status === 'pending');
+    if (!hasPendingPayouts) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const payRes = await backendFetch('/affiliate/payouts');
+        if (Array.isArray(payRes)) {
+          setPayouts(payRes);
+        }
+      } catch (err) {
+        // Ignore polling errors to prevent UI disruption
+      }
+    }, 15000); // 15 seconds
+
+    return () => clearInterval(interval);
+  }, [user, payouts]);
+
   const handleExit = async () => {
     try { await logout(); } catch (e) { /* ignore */ }
     navigate('/');
