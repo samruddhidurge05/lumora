@@ -33,6 +33,7 @@ const PRIMARY_NAV = [
 const MORE_NAV = [
   { name: 'Recent Purchases', icon: <ShoppingBag size={14} /> },
   { name: 'Orders',          icon: <CreditCard size={14} /> },
+  { name: 'Affiliate Program', icon: <TrendingUp size={14} /> },
   { name: 'Notifications',   icon: <Bell size={14} />, badge: true },
   { name: 'Settings',        icon: <SettingsIcon size={14} /> },
   { name: 'Recently Viewed', icon: <Eye size={14} /> },
@@ -347,6 +348,7 @@ export default function Dashboard() {
       case 'Reviews Manager':  return <ReviewsManager />;
       case 'Support Center':   return <SupportCenter />;
       case 'My Reports':       return <MyReports />;
+      case 'Affiliate Program': return <CustomerAffiliateSection navigateTo={navigateTo} />;
       default:
         return (
           <DashboardHome
@@ -826,6 +828,58 @@ function DashboardHome({
         ))}
       </div>
 
+      {/* ── Affiliate Program Feature Card ── */}
+      <div className="glass-card" style={{
+        padding: '28px 32px',
+        background: 'linear-gradient(135deg, rgba(246,240,255,0.95) 0%, rgba(235,224,255,0.70) 100%)',
+        border: '1.5px solid rgba(192, 132, 252, 0.50)',
+        borderRadius: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '20px',
+        boxShadow: '0 12px 36px rgba(123, 63, 160, 0.10), inset 0 1px 0 rgba(255,255,255,0.90)',
+      }}>
+        <div style={{ flex: 1, minWidth: '260px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(123, 63, 160, 0.15)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+            <TrendingUp size={13} /> Affiliate Program
+          </div>
+          <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.6rem', color: '#2D004D', margin: 0, fontWeight: 500 }}>
+            Earn 15%+ Commission Sharing Lumora
+          </h3>
+          <p style={{ fontSize: '0.84rem', color: '#5A3E6B', margin: '8px 0 0', lineHeight: 1.6, maxWidth: '580px' }}>
+            Share digital assets with your community and earn competitive payout rates on every sale. Access instant referral links & live click analytics.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            onClick={() => navigateTo('affiliate-dashboard')}
+            style={{
+              padding: '12px 24px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+              color: '#FFFFFF', fontSize: '0.84rem', fontWeight: 700,
+              cursor: 'pointer', boxShadow: '0 4px 18px rgba(90, 30, 126, 0.30)',
+              fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '6px',
+            }}
+          >
+            Go to Affiliate Dashboard →
+          </button>
+          <button
+            onClick={() => navigateTo('partnerships-affiliate')}
+            style={{
+              padding: '12px 20px', borderRadius: '12px',
+              border: '1.5px solid rgba(196,148,230,0.40)',
+              background: 'rgba(255,255,255,0.85)',
+              color: '#2D004D', fontSize: '0.84rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)',
+            }}
+          >
+            Learn More
+          </button>
+        </div>
+      </div>
+
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
         {/* Recent Purchases */}
@@ -1202,6 +1256,85 @@ function MyReports() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Customer Affiliate Program Tab ─────────────────────────────── */
+function CustomerAffiliateSection({ navigateTo }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1000px' }}>
+      {/* Header */}
+      <div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(123, 63, 160, 0.15)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+          <TrendingUp size={13} /> Affiliate Program Portal
+        </div>
+        <h2 style={{ fontFamily: 'var(--font-editorial)', fontSize: '2.2rem', fontWeight: 400, color: '#2D004D', margin: 0 }}>
+          Lumora Partner & Referral Earnings
+        </h2>
+        <p style={{ color: '#7B3FA0', fontSize: '0.88rem', marginTop: '6px', lineHeight: 1.6, maxWidth: '650px' }}>
+          Turn your digital influence into recurring revenue. Promote Lumora templates, UI kits, e-books, and AI tools with your unique tracking links.
+        </p>
+      </div>
+
+      {/* Main Feature Banner Card */}
+      <div className="glass-card" style={{
+        padding: '36px',
+        background: 'linear-gradient(135deg, rgba(246,240,255,0.95) 0%, rgba(230,215,255,0.70) 100%)',
+        border: '1.5px solid rgba(192, 132, 252, 0.55)',
+        borderRadius: '24px',
+        boxShadow: '0 16px 48px rgba(123, 63, 160, 0.14)',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '28px', alignItems: 'center' }}>
+          <div>
+            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#9333EA', textTransform: 'uppercase', letterSpacing: '0.1em' }}>✦ Instant Partner Benefits</span>
+            <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.8rem', color: '#2D004D', marginTop: '6px', marginBottom: '12px', fontWeight: 500 }}>
+              Up to 30% Referral Commissions
+            </h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.84rem', color: '#4A1070' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={15} style={{ color: '#22c55e' }} /> Real-time click, lead, & commission analytics
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={15} style={{ color: '#22c55e' }} /> Unique tracking links generated in 1-click
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={15} style={{ color: '#22c55e' }} /> Weekly payouts via UPI, Bank Transfer, or PayPal
+              </li>
+            </ul>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.85)', padding: '24px', borderRadius: '18px', border: '1px solid rgba(196,148,230,0.30)' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#2D004D', margin: 0 }}>Ready to Start Earning?</h4>
+            <p style={{ fontSize: '0.78rem', color: '#7B3FA0', margin: 0, lineHeight: 1.5 }}>
+              Access your full Affiliate Dashboard to create custom referral links and track payout history.
+            </p>
+            <button
+              onClick={() => navigateTo('affiliate-dashboard')}
+              style={{
+                padding: '12px 20px', borderRadius: '10px', border: 'none',
+                background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff',
+                fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(90,30,126,0.30)', fontFamily: 'var(--font-sans)',
+                marginTop: '4px', textAlign: 'center',
+              }}
+            >
+              Open Affiliate Dashboard →
+            </button>
+            <button
+              onClick={() => navigateTo('partnerships-affiliate')}
+              style={{
+                padding: '10px 20px', borderRadius: '10px',
+                border: '1px solid rgba(123,63,160,0.25)', background: 'transparent',
+                color: '#7B3FA0', fontWeight: 700, fontSize: '0.80rem',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'center',
+              }}
+            >
+              View Full Program Details
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
