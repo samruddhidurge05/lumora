@@ -672,3 +672,11 @@ def get_ledger_entries(
         })
 
     return {"total": total, "page": page, "page_size": page_size, "items": items}
+
+
+# ── Withdrawal Function Aliases ────────────────────────────────────────────────
+create_withdrawal_request = create_settlement_request
+approve_withdrawal        = approve_settlement
+complete_withdrawal       = complete_settlement
+cancel_withdrawal         = cancel_settlement
+
