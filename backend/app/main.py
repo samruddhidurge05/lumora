@@ -224,8 +224,12 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS highlights           JSON",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS license              VARCHAR(50)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS version              VARCHAR(20) DEFAULT 'v1.0.0'",
-            "ALTER TABLE products ADD COLUMN IF NOT EXISTS file_size            VARCHAR(30)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS last_updated         VARCHAR(50)",
+            # products - explicit ownership architecture columns
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS owner_type           VARCHAR(20) DEFAULT 'VENDOR'",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS created_by_role      VARCHAR(20) DEFAULT 'VENDOR'",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_platform_product  BOOLEAN DEFAULT FALSE",
+            "UPDATE products SET owner_type = 'PLATFORM', created_by_role = 'ADMIN', is_platform_product = TRUE WHERE id IN (108,109,110,111,112,115,116,117,118,119,120,121,122) OR vendor_id IN ('lumora-creator', '') OR vendor_id IS NULL",
             # admin_invitations — Phase B & B.5 email persistence & resend metadata columns
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS revoked_at   TIMESTAMP",
             "ALTER TABLE admin_invitations ADD COLUMN IF NOT EXISTS invited_name VARCHAR(150)",
