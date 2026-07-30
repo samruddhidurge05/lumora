@@ -32,7 +32,6 @@ export default function Hero() {
       <div style={styles.container}>
         {/* 1. Pill Badge */}
         <div className="hero-badge" style={styles.badge}>
-          <Sparkles size={14} color="#D8B4FE" />
           <span className="text-sans" style={styles.badgeText}>
             LUMORA — PREMIUM DIGITAL MARKETPLACE
           </span>

@@ -170,26 +170,45 @@ export default function PartnershipHub() {
                     tabIndex={0}
                     onClick={() => navigate('/partnerships/affiliate')}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/affiliate'); } }}
-                    style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
+                    style={glassCardStyle({
+                      padding: '36px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    })}
                     onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'translateY(-6px)';
-                      e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                      e.currentTarget.style.border = '1.5px solid rgba(192, 132, 252, 0.85)';
+                      e.currentTarget.style.borderTop = '2px solid rgba(255, 255, 255, 0.95)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.48)';
+                      e.currentTarget.style.boxShadow = '0 32px 72px rgba(147, 51, 234, 0.30), 0 0 30px rgba(192, 132, 252, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.90)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.40)';
+                      e.currentTarget.style.borderTop = '1.5px solid rgba(255, 255, 255, 0.55)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.30)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
                     }}
                   >
+                    {/* Top Ambient Specular Light Sheen */}
+                    <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1.5px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', pointerEvents: 'none' }} />
+
                     <div style={{
-                      width: '46px', height: '46px', borderRadius: '13px',
-                      background: 'rgba(220, 198, 255, 0.45)',
+                      width: '52px', height: '52px', borderRadius: '15px',
+                      background: 'linear-gradient(135deg, rgba(220, 198, 255, 0.70), rgba(192, 132, 252, 0.40))',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: '18px', color: '#5A1E7E',
+                      marginBottom: '20px', color: '#5A1E7E',
+                      boxShadow: '0 8px 20px rgba(123,63,160,0.18)',
                     }}>
-                      <Share2 size={22} />
+                      <Share2 size={24} />
                     </div>
 
-                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
+                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
                       Become an Affiliate
                     </h3>
 
@@ -226,26 +245,45 @@ export default function PartnershipHub() {
                     tabIndex={0}
                     onClick={() => navigate('/partnerships/vendor')}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/partnerships/vendor'); } }}
-                    style={glassCardStyle({ padding: '36px', cursor: 'pointer', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column' })}
+                    style={glassCardStyle({
+                      padding: '36px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    })}
                     onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'translateY(-6px)';
-                      e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                      e.currentTarget.style.border = '1.5px solid rgba(192, 132, 252, 0.85)';
+                      e.currentTarget.style.borderTop = '2px solid rgba(255, 255, 255, 0.95)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.48)';
+                      e.currentTarget.style.boxShadow = '0 32px 72px rgba(147, 51, 234, 0.30), 0 0 30px rgba(192, 132, 252, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.90)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.40)';
+                      e.currentTarget.style.borderTop = '1.5px solid rgba(255, 255, 255, 0.55)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.30)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
                     }}
                   >
+                    {/* Top Ambient Specular Light Sheen */}
+                    <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1.5px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', pointerEvents: 'none' }} />
+
                     <div style={{
-                      width: '46px', height: '46px', borderRadius: '13px',
-                      background: 'rgba(255, 214, 186, 0.45)',
+                      width: '52px', height: '52px', borderRadius: '15px',
+                      background: 'linear-gradient(135deg, rgba(255, 214, 186, 0.70), rgba(192, 132, 252, 0.40))',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: '18px', color: '#5A1E7E',
+                      marginBottom: '20px', color: '#5A1E7E',
+                      boxShadow: '0 8px 20px rgba(255,180,140,0.22)',
                     }}>
-                      <Store size={22} />
+                      <Store size={24} />
                     </div>
 
-                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.4rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
+                    <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.5rem', fontWeight: 400, color: '#2D004D', marginBottom: '8px' }}>
                       Become a Vendor
                     </h3>
 
@@ -298,21 +336,38 @@ export default function PartnershipHub() {
                 <Reveal key={i} delay={i * 0.06}>
                   <div
                     className="glass-card"
-                    style={glassCardStyle({ padding: '28px 22px', textAlign: 'center', height: '100%', cursor: 'default' })}
+                    style={glassCardStyle({
+                      padding: '28px 22px',
+                      textAlign: 'center',
+                      height: '100%',
+                      cursor: 'default',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    })}
                     onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'translateY(-6px)';
-                      e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.04)';
+                      e.currentTarget.style.border = '1.5px solid rgba(192, 132, 252, 0.85)';
+                      e.currentTarget.style.borderTop = '2px solid rgba(255, 255, 255, 0.95)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.48)';
+                      e.currentTarget.style.boxShadow = '0 28px 60px rgba(147, 51, 234, 0.28), 0 0 25px rgba(192, 132, 252, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.90)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.40)';
+                      e.currentTarget.style.borderTop = '1.5px solid rgba(255, 255, 255, 0.55)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.30)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
                     }}
                   >
+                    {/* Top Specular Light Sheen */}
+                    <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1.5px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', pointerEvents: 'none' }} />
+
                     <div style={{
-                      width: '46px', height: '46px', borderRadius: '13px',
+                      width: '48px', height: '48px', borderRadius: '14px',
                       background: item.color,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       margin: '0 auto 16px', color: '#5A1E7E',
+                      boxShadow: '0 6px 16px rgba(123,63,160,0.12)',
                     }}>
                       {item.icon}
                     </div>
@@ -355,11 +410,26 @@ export default function PartnershipHub() {
                   textAlign: 'center', position: 'relative', overflow: 'hidden',
                   padding: 'clamp(48px, 8vw, 80px) clamp(24px, 4vw, 48px)',
                   borderRadius: '32px',
+                  cursor: 'pointer',
+                  transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                 })}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                  e.currentTarget.style.border = '1.5px solid rgba(192, 132, 252, 0.85)';
+                  e.currentTarget.style.borderTop = '2px solid rgba(255, 255, 255, 0.95)';
+                  e.currentTarget.style.boxShadow = '0 32px 80px rgba(147, 51, 234, 0.28), 0 0 35px rgba(192, 132, 252, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.90)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.40)';
+                  e.currentTarget.style.borderTop = '1.5px solid rgba(255, 255, 255, 0.55)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
+                }}
               >
                 {/* Background orbs */}
                 <div style={{ position: 'absolute', top: '-30%', left: '-10%', width: '480px', height: '480px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,198,255,.28) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', bottom: '-30%', right: '-10%', width: '380px', height: '380px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,214,186,.22) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)', pointerEvents: 'none' }} />
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <p style={{ fontSize: '.68rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '16px' }}>

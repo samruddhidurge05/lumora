@@ -302,7 +302,6 @@ export default function Home() {
             <motion.button initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}} transition={{duration:.6,delay:CATS.length*.06}} whileHover={{y:-7}}
               onClick={()=>navigateTo('categories')}
               style={{ padding:'28px 20px', borderRadius:'20px', border:'2px dashed rgba(216,180,254,.60)', background:'rgba(255,255,255,0.45)', backdropFilter:'blur(24px)', cursor:'pointer', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'8px', fontFamily:'var(--font-sans)', transition:'all .3s' }}>
-              <span style={{ fontSize:'2rem', color:'#7B3FA0' }}>✦</span>
               <span style={{ fontSize:'.85rem', fontWeight:700, color:'#7B3FA0' }}>All 16 Categories</span>
             </motion.button>
           </div>
@@ -438,7 +437,7 @@ export default function Home() {
               <div style={{ position:'absolute', top:'-30%', left:'-10%', width:'480px', height:'480px', borderRadius:'50%', background:'radial-gradient(circle,rgba(220,198,255,.28) 0%,transparent 65%)', filter:'blur(60px)', pointerEvents:'none' }} />
               <div style={{ position:'absolute', bottom:'-30%', right:'-10%', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,214,186,.22) 0%,transparent 65%)', filter:'blur(60px)', pointerEvents:'none' }} />
               <div style={{ position:'relative', zIndex:1 }}>
-                <p style={{ fontSize:'.68rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'16px', textShadow:'0 0 12px rgba(192,132,252,0.6)' }}>✦ Join Lumora Today</p>
+                <p style={{ fontSize:'.68rem', fontWeight:800, color:'#D8B4FE', letterSpacing:'.12em', textTransform:'uppercase', marginBottom:'16px', textShadow:'0 0 12px rgba(192,132,252,0.6)' }}>Join Lumora Today</p>
                 <h2 style={{ fontFamily:'var(--font-editorial)', fontSize:'clamp(2.5rem,5vw,4rem)', fontWeight:400, color:'#FFFFFF', lineHeight:1.1, marginBottom:'18px', textShadow:'0 4px 20px rgba(0,0,0,0.85)' }}>
                   Build Something<br/>
                   <span style={{ background:'linear-gradient(135deg,#D8B4FE,#E9D5FF)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontStyle:'italic' }}>Extraordinary</span>

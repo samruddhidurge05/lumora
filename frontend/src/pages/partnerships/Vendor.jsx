@@ -164,16 +164,30 @@ export default function Vendor() {
                 <div
                   key={i}
                   className="glass-card"
-                  style={glassCardStyle({ padding: '28px 22px', textAlign: 'center', cursor: 'default' })}
+                  style={glassCardStyle({
+                    padding: '28px 22px',
+                    textAlign: 'center',
+                    cursor: 'default',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  })}
                   onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 24px 56px rgba(90, 30, 126, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.70)';
+                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.04)';
+                    e.currentTarget.style.border = '1.5px solid rgba(192, 132, 252, 0.85)';
+                    e.currentTarget.style.borderTop = '2px solid rgba(255, 255, 255, 0.95)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.48)';
+                    e.currentTarget.style.boxShadow = '0 28px 60px rgba(147, 51, 234, 0.28), 0 0 25px rgba(192, 132, 252, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.90)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.40)';
+                    e.currentTarget.style.borderTop = '1.5px solid rgba(255, 255, 255, 0.55)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.30)';
                     e.currentTarget.style.boxShadow = '0 8px 32px rgba(90, 30, 126, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.60)';
                   }}
                 >
+                  {/* Top Specular Light Sheen */}
+                  <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1.5px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)', pointerEvents: 'none' }} />
                   <div style={{
                     width: '46px', height: '46px', borderRadius: '13px',
                     background: 'rgba(220, 198, 255, 0.45)',
