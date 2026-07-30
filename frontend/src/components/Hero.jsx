@@ -35,7 +35,7 @@ export default function Hero() {
           playsInline
           style={styles.bgVideo}
         >
-          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
         </video>
 
         {/* Dark Vignette Overlay for rich rich colors and maximum text readability */}

@@ -14,8 +14,8 @@ to their AffiliateProfile, creating one automatically on first access.
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Header, status as http_status
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime, timedelta
+from typing import List, Optional, cast
+from datetime import datetime, timedelta, timezone
 import os
 import uuid
 import logging
@@ -106,9 +106,9 @@ def activate_affiliate(
                 try:
                     from app.shared.firebase.connection import db as fs_db, firebase_connected
                     if firebase_connected and fs_db is not None and current_user.firebase_uid:
-                        aff_snap = fs_db.collection("affiliates").document(current_user.firebase_uid).get()
+                        aff_snap = fs_db.collection("affiliates").document(str(current_user.firebase_uid)).get()
                         if aff_snap.exists:
-                            aff_data = aff_snap.to_dict()
+                            aff_data = aff_snap.to_dict() or {}
                             firestore_code = aff_data.get("affiliateCode") or aff_data.get("referralCode")
                 except Exception:
                     pass  # Non-blocking — fall through to auto-generate
@@ -128,7 +128,7 @@ def activate_affiliate(
 
                 ActivityLogService.log_user_activity(
                     db=db,
-                    user_id=current_user.id,
+                    user_id=int(getattr(current_user, "id")),
                     activity_type="affiliate_activation",
                     details="Affiliate access activated from existing customer account.",
                 )
@@ -154,12 +154,12 @@ def activate_affiliate(
     try:
         from app.shared.firebase.connection import db as fs_db, firebase_connected
         if firebase_connected and fs_db is not None and current_user.firebase_uid:
-            uid = current_user.firebase_uid
+            uid = str(current_user.firebase_uid)
             # Update users/{uid} — add "affiliate" to the roles array
             user_ref = fs_db.collection("users").document(uid)
             user_snap = user_ref.get()
             if user_snap.exists:
-                existing_data = user_snap.to_dict()
+                existing_data = user_snap.to_dict() or {}
                 roles = existing_data.get("roles", [existing_data.get("role", "customer")])
                 if "affiliate" not in roles:
                     roles.append("affiliate")
@@ -177,11 +177,13 @@ def activate_affiliate(
             aff_ref = fs_db.collection("affiliates").document(uid)
             aff_snap = aff_ref.get()
             if not aff_snap.exists:
+                aff_code = profile.referral_code if profile else f"AFF{current_user.id:04d}"
+                comm_rate = profile.commission_rate if profile else 20.0
                 aff_ref.set({
                     "userId": uid,
-                    "affiliateCode": profile.referral_code,
+                    "affiliateCode": aff_code,
                     "status": "active",
-                    "commissionRate": profile.commission_rate,
+                    "commissionRate": comm_rate,
                     "totalClicks": 0,
                     "totalConversions": 0,
                     "totalRevenue": 0,
@@ -253,7 +255,7 @@ def _get_affiliate_profile(user: User, db: Session) -> AffiliateProfile:
             # Activity Logging
             ActivityLogService.log_user_activity(
                 db=db,
-                user_id=user.id,
+                user_id=int(user.id),
                 activity_type="affiliate_enrollment",
                 details="Affiliate profile automatically created."
             )
@@ -290,25 +292,30 @@ def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats
     """Compute aggregated stats from profile + commission rows (ground truth)."""
     total_earnings_computed = sum(c.commission_amt for c in commissions if c.commission_amt is not None)
     total_sales_computed    = len(commissions)
-    total_earnings          = max(profile.total_earnings or 0.0, total_earnings_computed)
-    total_sales             = max(profile.total_sales or 0, total_sales_computed)
+    profile_earnings        = float(getattr(profile, "total_earnings", 0.0) or 0.0)
+    profile_sales           = int(getattr(profile, "total_sales", 0) or 0)
+    profile_clicks          = int(getattr(profile, "total_clicks", 0) or 0)
+
+    total_earnings          = max(profile_earnings, float(total_earnings_computed))
+    total_sales             = max(profile_sales, total_sales_computed)
 
     paid    = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "paid" or c.status == "paid")
     pending = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) in ("pending", "approved", "ready_for_payout") or c.status in ("pending", "approved", "ready_for_payout"))
     revenue = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
     conv    = round(
-        (total_sales / profile.total_clicks * 100), 2
-    ) if profile.total_clicks else 0.0
+        (total_sales / profile_clicks * 100), 2
+    ) if profile_clicks else 0.0
+    ref_code = str(getattr(profile, "referral_code", "") or "")
     return AffiliateStats(
         total_earnings=round(total_earnings, 2),
-        total_clicks=profile.total_clicks,
+        total_clicks=profile_clicks,
         total_sales=total_sales,
         pending_earnings=round(pending, 2),
         paid_earnings=round(paid, 2),
         revenue_generated=round(revenue, 2),
         conversion_rate=conv,
-        referral_code=profile.referral_code,
-        referral_link=f"{SITE_URL}?ref={profile.referral_code}",
+        referral_code=ref_code,
+        referral_link=f"{SITE_URL}?ref={ref_code}",
     )
 
 
@@ -396,7 +403,7 @@ def update_profile(
     profile = _get_affiliate_profile(current_user, db)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(profile, field, value)
-    profile.updated_at = datetime.utcnow()
+    setattr(profile, "updated_at", datetime.utcnow())
     db.commit()
     db.refresh(profile)
     return profile
@@ -512,20 +519,20 @@ def get_conversions(
                 masked_email = "c***@lumora.com"
 
         results.append(ConversionItemResponse(
-            id=c.id,
-            order_id=c.order_id or 0,
-            product_id=c.product_id,
-            product_name=c.product_name or f"Product #{c.product_id}",
-            customer_name=c.customer_name or "Customer",
+            id=int(cast(int, c.id)),
+            order_id=int(cast(int, c.order_id or 0)),
+            product_id=int(cast(int, c.product_id)) if c.product_id is not None else None,
+            product_name=str(c.product_name or f"Product #{c.product_id}"),
+            customer_name=str(c.customer_name or "Customer"),
             customer_email=masked_email,
-            referral_code=c.referral_code_used or profile.referral_code,
-            attribution_source=c.attribution_source or "referral_link",
-            coupon_code=c.coupon_code,
-            purchase_amount=round(c.sale_amount or 0.0, 2),
-            commission_earned=round(c.commission_amt or 0.0, 2),
-            commission_rate=c.commission_rate or 20.0,
-            status=c.commission_status or c.status or "approved",
-            created_at=c.created_at or datetime.utcnow()
+            referral_code=str(c.referral_code_used or profile.referral_code or ""),
+            attribution_source=str(c.attribution_source or "referral_link"),
+            coupon_code=str(c.coupon_code) if c.coupon_code else None,
+            purchase_amount=round(float(cast(float, c.sale_amount or 0.0)), 2),
+            commission_earned=round(float(cast(float, c.commission_amt or 0.0)), 2),
+            commission_rate=float(cast(float, c.commission_rate or 20.0)),
+            status=str(c.commission_status or c.status or "approved"),
+            created_at=cast(datetime, c.created_at or datetime.utcnow())
         ))
 
     return results
@@ -545,8 +552,10 @@ def create_commission(data: CommissionCreate, db: Session = Depends(get_db)):
         AffiliateProfile.id == data.affiliate_id
     ).first()
     if profile:
-        profile.total_earnings += data.commission_amt
-        profile.total_sales    += 1
+        current_earnings = float(getattr(profile, "total_earnings", 0.0) or 0.0)
+        current_sales = int(getattr(profile, "total_sales", 0) or 0)
+        setattr(profile, "total_earnings", current_earnings + float(data.commission_amt))
+        setattr(profile, "total_sales", current_sales + 1)
 
     db.commit()
     db.refresh(commission)
@@ -661,8 +670,8 @@ def request_payout(
     # Structured log
     from app.utils.logger import log_structured_event
     log_structured_event(
-        user_id=current_user.id,
-        role=current_user.role,
+        user_id=getattr(current_user, "id", None),
+        role=getattr(current_user, "role", None),
         action="payout_requested",
         module="affiliate",
         status="success",
@@ -691,18 +700,18 @@ def get_analytics(
         .order_by(AffiliateCommission.created_at.desc())
         .all()
     )
+    revenue_generated = sum(float(getattr(c, "sale_amount", 0) or 0) for c in commissions)
+    total_earned      = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions)
+    paid_earned       = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions if getattr(c, "status", None) == "paid")
+    pending_earned    = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions if getattr(c, "status", None) == "pending")
 
-    revenue_generated   = sum(c.sale_amount    or 0 for c in commissions)
-    total_earned        = sum(c.commission_amt or 0 for c in commissions)
-    paid_earned         = sum(c.commission_amt or 0 for c in commissions if c.status == "paid")
-    pending_earned      = sum(c.commission_amt or 0 for c in commissions if c.status == "pending")
-    conv = round(
-        (profile.total_sales / profile.total_clicks * 100), 2
-    ) if profile.total_clicks else 0.0
+    total_clicks = int(getattr(profile, "total_clicks", 0) or 0)
+    total_sales  = int(getattr(profile, "total_sales", 0) or 0)
+    conv = round((total_sales / total_clicks * 100), 2) if total_clicks > 0 else 0.0
 
     return AnalyticsResponse(
-        total_clicks=profile.total_clicks,
-        total_sales=profile.total_sales,
+        total_clicks=total_clicks,
+        total_sales=total_sales,
         conversion_rate=conv,
         revenue_generated=round(revenue_generated, 2),
         total_commission_earned=round(total_earned, 2),
@@ -740,30 +749,30 @@ def get_reports(
         .all()
     )
 
-    revenue_generated = sum(c.sale_amount    or 0 for c in commissions)
-    total_earned      = sum(c.commission_amt or 0 for c in commissions)
-    paid_earned       = sum(c.commission_amt or 0 for c in commissions if c.status in ("paid",))
-    pending_earned    = sum(c.commission_amt or 0 for c in commissions if c.status == "pending")
+    revenue_generated = sum(float(getattr(c, "sale_amount", 0) or 0) for c in commissions)
+    total_earned      = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions)
+    paid_earned       = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions if c.status in ("paid",))
+    pending_earned    = sum(float(getattr(c, "commission_amt", 0) or 0) for c in commissions if c.status == "pending")
 
     commission_items = [
         CommissionReportItem(
-            id=c.id,
-            product_name=c.product_name,
-            sale_amount=c.sale_amount,
-            commission_amt=c.commission_amt,
-            status=c.status,
-            date=c.created_at.strftime("%Y-%m-%d") if c.created_at else "-",
+            id=int(getattr(c, "id", 0) or 0),
+            product_name=str(getattr(c, "product_name", "") or "") if getattr(c, "product_name", None) else None,
+            sale_amount=float(getattr(c, "sale_amount", 0.0) or 0.0),
+            commission_amt=float(getattr(c, "commission_amt", 0.0) or 0.0),
+            status=str(getattr(c, "status", "") or ""),
+            date=c.created_at.strftime("%Y-%m-%d") if getattr(c, "created_at", None) else "-",
         )
         for c in commissions
     ]
 
     payout_items = [
         PayoutReportItem(
-            id=p.id,
-            amount=p.amount,
-            method=p.method,
-            status=p.status,
-            date=p.created_at.strftime("%Y-%m-%d") if p.created_at else "-",
+            id=int(getattr(p, "id", 0) or 0),
+            amount=float(getattr(p, "amount", 0.0) or 0.0),
+            method=str(getattr(p, "method", "") or ""),
+            status=str(getattr(p, "status", "") or ""),
+            date=p.created_at.strftime("%Y-%m-%d") if getattr(p, "created_at", None) else "-",
         )
         for p in payouts
     ]
@@ -936,8 +945,8 @@ def track_click(
                 if recent_click or recent_ent_click:
                     return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
-                custom_link.clicks_count += 1
-                aff_profile.total_clicks += 1
+                custom_link.clicks_count = int(getattr(custom_link, "clicks_count", 0) or 0) + 1  # type: ignore[assignment]
+                aff_profile.total_clicks = int(getattr(aff_profile, "total_clicks", 0) or 0) + 1  # type: ignore[assignment]
 
                 click = ReferralClick(
                     referral_link_id=custom_link.id,
@@ -997,7 +1006,7 @@ def track_click(
         if recent_click or recent_ent_click:
             return ClickTrackResponse(tracked=True, referral_code=code_upper)
 
-        profile.total_clicks += 1
+        setattr(profile, "total_clicks", int(getattr(profile, "total_clicks", 0) or 0) + 1)
 
         click = ReferralClick(
             referral_link_id=None,
@@ -1120,10 +1129,10 @@ def create_referral_click(
     if recent_click:
         logger.info("[REFERRAL] Deduplicated click for code %s", code_upper)
         return ReferralClickResponse(
-            session_id=recent_click.session_id,
+            session_id=str(getattr(recent_click, "session_id", "") or ""),
             referral_code=code_upper,
-            product_id=product.id,
-            status=recent_click.status or "CLICKED",
+            product_id=int(getattr(product, "id", 0)),
+            status=str(getattr(recent_click, "status", None) or "CLICKED"),
             is_valid=True
         )
 
@@ -1134,7 +1143,7 @@ def create_referral_click(
     referral = AffiliateReferral(
         affiliate_id=affiliate_id,
         referral_code=code_upper,
-        product_id=product.id,
+        product_id=int(getattr(product, "id", 0)),
         session_id=session_id,
         status="CLICKED",
         ip_address=client_ip,
@@ -1148,22 +1157,22 @@ def create_referral_click(
         # Also lock the custom link if applicable
         locked_link = db.query(ReferralLink).filter(ReferralLink.id == custom_link.id).with_for_update().first()
         if locked_link:
-            locked_link.clicks_count = (locked_link.clicks_count or 0) + 1
+            setattr(locked_link, "clicks_count", int(getattr(locked_link, "clicks_count", 0) or 0) + 1)
             
     if locked_profile:
-        locked_profile.total_clicks = (locked_profile.total_clicks or 0) + 1
+        setattr(locked_profile, "total_clicks", int(getattr(locked_profile, "total_clicks", 0) or 0) + 1)
 
     db.commit()
 
     logger.info(
         "[REFERRAL] Referral click saved: referral_code=%s, product_id=%s, affiliate_id=%s, session_id=%s",
-        code_upper, product.id, affiliate_id, session_id
+        code_upper, getattr(product, "id", 0), affiliate_id, session_id
     )
 
     return ReferralClickResponse(
         session_id=session_id,
         referral_code=code_upper,
-        product_id=product.id,
+        product_id=int(getattr(product, "id", 0)),
         status="CLICKED",
         is_valid=True
     )
@@ -1203,10 +1212,10 @@ def authenticate_referral(
         return {"status": "NO_PENDING_REFERRAL", "message": "No pending referral found to associate."}
 
     # Associate customer and update lifecycle state
-    referral.customer_id = current_user.id
+    setattr(referral, "customer_id", int(getattr(current_user, "id")))
     if referral.status in ("CLICKED", None):
-        referral.status = "AUTHENTICATED"
-    referral.authenticated_at = datetime.utcnow()
+        setattr(referral, "status", "AUTHENTICATED")
+    setattr(referral, "authenticated_at", datetime.now(timezone.utc))
     db.commit()
 
     logger.info(
@@ -1235,12 +1244,13 @@ def record_referral_product_view(
         return {"status": "IGNORED"}
 
     referral = db.query(AffiliateReferral).filter(AffiliateReferral.session_id == payload.session_id).first()
-    if referral and referral.status in ("CLICKED", "AUTHENTICATED"):
-        referral.status = "PRODUCT_VIEWED"
+    current_status = str(getattr(referral, "status", "")) if referral else None
+    if referral and current_status in ("CLICKED", "AUTHENTICATED"):
+        setattr(referral, "status", "PRODUCT_VIEWED")
         db.commit()
         return {"status": "PRODUCT_VIEWED", "session_id": referral.session_id}
 
-    return {"status": referral.status if referral else "NOT_FOUND"}
+    return {"status": str(getattr(referral, "status", None)) if referral else "NOT_FOUND"}
 
 
 @router.get("/referrals/admin-analytics")
@@ -1267,8 +1277,8 @@ def get_admin_referral_analytics(
     total_commission = 0.0
     commissions = db.query(AffiliateCommission).all()
     for c in commissions:
-        total_revenue += float(c.sale_amount or 0)
-        total_commission += float(c.commission_amt or 0)
+        total_revenue += float(getattr(c, "sale_amount", 0) or 0)
+        total_commission += float(getattr(c, "commission_amt", 0) or 0)
 
     ledger = []
     for r in referrals:

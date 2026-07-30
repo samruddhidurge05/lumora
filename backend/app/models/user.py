@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, Mapped
 from datetime import datetime
 
 Base = declarative_base()
@@ -8,18 +8,18 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
 
-    id            = Column(Integer, primary_key=True, index=True)
-    name          = Column(String(120), nullable=False)
-    email         = Column(String(255), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    role          = Column(String(20), default="customer")   # customer | vendor | admin
-    avatar_url    = Column(String(512), nullable=True)
-    is_active     = Column(Boolean, default=True)
-    is_verified   = Column(Boolean, default=False)
-    firebase_uid  = Column(String(128), unique=True, index=True, nullable=True)
-    created_at    = Column(DateTime, default=datetime.utcnow)
-    updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    last_login_at = Column(DateTime, nullable=True)  # set on every successful admin login (Req 9)
+    id: Mapped[int]                     = Column(Integer, primary_key=True, index=True)
+    name: Mapped[str]                   = Column(String(120), nullable=False)
+    email: Mapped[str]                  = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str]          = Column(String(255), nullable=False)
+    role: Mapped[str]                   = Column(String(20), default="customer")   # customer | vendor | admin
+    avatar_url: Mapped[str | None]      = Column(String(512), nullable=True)
+    is_active: Mapped[bool]             = Column(Boolean, default=True)
+    is_verified: Mapped[bool]           = Column(Boolean, default=False)
+    firebase_uid: Mapped[str | None]    = Column(String(128), unique=True, index=True, nullable=True)
+    created_at: Mapped[datetime]        = Column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime]        = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login_at: Mapped[datetime | None] = Column(DateTime, nullable=True)  # set on every successful admin login (Req 9)
 
     @property
     def sqlite_user_id(self) -> int:
