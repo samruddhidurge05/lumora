@@ -33,8 +33,13 @@ class PlatformWithdrawal(Base):
     approved_by: Any           = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved_at: Any           = Column(DateTime, nullable=True)
 
+    completed_by: Any          = Column(Integer, ForeignKey("users.id"), nullable=True)
     completed_at: Any          = Column(DateTime, nullable=True)
     transaction_reference: Any = Column(String(120), nullable=True, index=True)  # Bank UTR / Gateway ID
+
+    # RazorpayX Phase 3 — payout tracking fields (nullable; only populated when mode=razorpayx)
+    razorpayx_payout_id: Any       = Column(String(120), nullable=True, index=True)  # e.g. pout_ABC123
+    razorpayx_fund_account_id: Any = Column(String(120), nullable=True)              # cached fund account
 
     destination_type: Any      = Column(String(50), default="bank_account", nullable=False)
     destination_account: Any   = Column(Text, nullable=True)  # JSON snapshot of destination details
@@ -47,6 +52,7 @@ class PlatformWithdrawal(Base):
 
     requester = relationship("User", foreign_keys=[requested_by])
     approver  = relationship("User", foreign_keys=[approved_by])
+    completer = relationship("User", foreign_keys=[completed_by])
 
     __table_args__ = (
         Index("ix_platform_withdrawals_status_req", "status", "requested_at"),

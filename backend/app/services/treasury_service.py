@@ -259,14 +259,73 @@ def _write_audit_log(
     return log
 
 
+def _send_treasury_notification(
+    db: Session,
+    user_id: int,
+    title: str,
+    message: str,
+    category: str = "treasury",
+) -> None:
+    try:
+        from app.services.notification_service import NotificationService
+        NotificationService.create_notification(
+            db=db,
+            user_id=user_id,
+            title=title,
+            message=message,
+            category=category,
+        )
+    except Exception as exc:
+        _logger.warning("[treasury] Notification dispatch failed (non-blocking): %s", exc)
+
+
+def _validate_destination_account(destination_type: str, destination_account: dict) -> None:
+    if destination_type not in ("bank_account", "upi"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid destination type '{destination_type}'. Allowed types: bank_account, upi.",
+        )
+    if not destination_account or not isinstance(destination_account, dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Destination account details are required.",
+        )
+    if destination_type == "bank_account":
+        acc_num = str(destination_account.get("account_number", "")).strip()
+        ifsc = str(destination_account.get("ifsc_code", "")).strip().upper()
+        if not acc_num or not acc_num.isdigit() or not (9 <= len(acc_num) <= 18):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid bank account number. Must contain 9 to 18 numeric digits.",
+            )
+        if not ifsc or len(ifsc) != 11:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid IFSC code. Must be an 11-character alphanumeric code.",
+            )
+    elif destination_type == "upi":
+        upi_id = str(destination_account.get("upi_id", "")).strip()
+        if not upi_id or "@" not in upi_id or len(upi_id) < 5:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UPI ID format. Must contain '@' (e.g. handle@upi).",
+            )
+
+
 # ── Phase 2: Settlement Business Logic ────────────────────────────────────────
 
 def _lock_and_validate_balance(db: Session, requested_amount: float) -> float:
     """
-    Re-compute available balance inside the current transaction.
+    Re-compute available balance inside the current transaction with write locking.
     Raises HTTPException if insufficient balance.
     Returns the available balance.
     """
+    try:
+        db.query(PlatformWithdrawal).filter(
+            PlatformWithdrawal.status.in_(list(PENDING_STATUSES))
+        ).with_for_update().all()
+    except Exception:
+        pass  # Fallback for dialects without for_update support
     platform_revenue      = _calculate_platform_revenue(db)
     affiliate_liability   = _calculate_affiliate_liability(db)
     pending_withdrawals   = _calculate_pending_withdrawals(db)
@@ -310,7 +369,8 @@ def create_settlement_request(
     Phase 2 — Create a new settlement request.
     Validates balance, creates PlatformWithdrawal, writes ledger + audit.
     """
-    # Validate inside current transaction
+    # Validate destination payload & balance inside current transaction
+    _validate_destination_account(destination_type, destination_account)
     _lock_and_validate_balance(db, amount)
 
     withdrawal_number = generate_withdrawal_number(db)
@@ -331,7 +391,50 @@ def create_settlement_request(
     db.add(row)
     db.flush()
 
-    # Ledger entry — negative (debit pending against available balance)
+    # ── Initiate payout via gateway (razorpayx live mode only) ────────────────
+    # NOTE: simulated and manual modes follow the normal admin workflow:
+    #       pending → approved → completed (admin enters UTR manually).
+    # Only razorpayx mode auto-initiates the bank transfer here.
+    import os as _os
+    _payout_mode = _os.getenv("TREASURY_PAYOUT_MODE", "manual").strip().lower()
+    if _payout_mode == "razorpayx":
+        try:
+            from app.services.treasury_payout_gateway import get_treasury_gateway, PayoutRequest
+            gateway = get_treasury_gateway()
+            payout_req = PayoutRequest(
+                withdrawal_number   = withdrawal_number,
+                amount              = round(amount, 2),
+                currency            = "INR",
+                destination_type    = destination_type,
+                destination_account = destination_account,
+                notes               = notes,
+            )
+            result = gateway.initiate_payout(payout_req)
+            if result.success:
+                row.razorpayx_payout_id       = result.gateway_reference
+                row.razorpayx_fund_account_id = result.raw_response.get("fund_account_id")
+                if result.gateway_status in ("queued", "processing"):
+                    row.status = "processing"
+                row.updated_at = utcnow()
+                _logger.info(
+                    "[treasury] RazorpayX payout initiated: %s -> ref=%s status=%s",
+                    withdrawal_number, result.gateway_reference, result.gateway_status,
+                )
+            else:
+                # Gateway call failed — keep row in 'pending' for manual fallback
+                _logger.warning(
+                    "[treasury] RazorpayX gateway call failed for %s (non-blocking): %s",
+                    withdrawal_number, result.error_message,
+                )
+                row.failure_reason = f"[gateway] {result.error_message}"
+                row.updated_at     = utcnow()
+        except Exception as _gw_exc:
+            # Graceful degradation — do NOT abort the withdrawal record
+            _logger.error(
+                "[treasury] RazorpayX gateway exception for %s (non-blocking): %s",
+                withdrawal_number, _gw_exc,
+            )
+    # ── Ledger entry — negative (debit pending against available balance) ──────
     write_ledger_entry(
         db,
         ledger_type    = "platform_withdrawal",
@@ -355,6 +458,13 @@ def create_settlement_request(
             "destination_type":  destination_type,
         },
         ip_address    = ip_address,
+    )
+
+    _send_treasury_notification(
+        db,
+        requested_by,
+        "Settlement Requested",
+        f"Settlement request {withdrawal_number} for ₹{amount:,.2f} has been created.",
     )
 
     db.commit()
@@ -395,6 +505,13 @@ def approve_settlement(
         ip_address    = ip_address,
     )
 
+    _send_treasury_notification(
+        db,
+        row.requested_by,
+        "Settlement Approved",
+        f"Settlement request {row.withdrawal_number} for ₹{row.amount:,.2f} has been approved.",
+    )
+
     db.commit()
     db.refresh(row)
     return row
@@ -421,6 +538,7 @@ def complete_settlement(
         raise HTTPException(status_code=400, detail="Transaction reference is required to complete a settlement.")
 
     row.status                = "completed"
+    row.completed_by          = completed_by
     row.completed_at          = utcnow()
     row.transaction_reference = transaction_reference.strip()
     row.updated_at            = utcnow()
@@ -438,6 +556,13 @@ def complete_settlement(
             "transaction_reference": transaction_reference,
         },
         ip_address    = ip_address,
+    )
+
+    _send_treasury_notification(
+        db,
+        row.requested_by,
+        "Settlement Completed",
+        f"Settlement {row.withdrawal_number} (Ref: {transaction_reference}) for ₹{row.amount:,.2f} has been completed.",
     )
 
     db.commit()
@@ -491,6 +616,13 @@ def cancel_settlement(
             "reason":            reason,
         },
         ip_address    = ip_address,
+    )
+
+    _send_treasury_notification(
+        db,
+        row.requested_by,
+        "Settlement Cancelled",
+        f"Settlement {row.withdrawal_number} for ₹{row.amount:,.2f} has been cancelled.",
     )
 
     db.commit()

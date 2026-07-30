@@ -40,10 +40,12 @@ from app.services.treasury_service import (
 )
 from app.models.platform_withdrawal import PlatformWithdrawal
 from app.models.audit_log import AuditLog
+from app.admin_api.treasury.webhook import webhook_router
 
 _logger = logging.getLogger("lumora.treasury.routes")
 
 router = APIRouter()
+router.include_router(webhook_router, prefix="/webhook", tags=["Treasury Webhooks"])
 
 
 # ── RBAC helpers ──────────────────────────────────────────────────────────────
@@ -169,6 +171,7 @@ def get_withdrawal_detail(
     from app.models.user import User as UserModel
     req_user  = db.query(UserModel).filter(UserModel.id == row.requested_by).first()
     appr_user = db.query(UserModel).filter(UserModel.id == row.approved_by).first() if row.approved_by else None
+    comp_user = db.query(UserModel).filter(UserModel.id == row.completed_by).first() if getattr(row, "completed_by", None) else None
 
     dest = {}
     try:
@@ -209,6 +212,7 @@ def get_withdrawal_detail(
             "transaction_reference": row.transaction_reference,
             "requested_by":  {"name": req_user.name, "email": req_user.email} if req_user else None,
             "approved_by":   {"name": appr_user.name, "email": appr_user.email} if appr_user else None,
+            "completed_by":  {"name": comp_user.name, "email": comp_user.email} if comp_user else None,
             "requested_at":  row.requested_at.isoformat()  + "Z" if row.requested_at  else None,
             "approved_at":   row.approved_at.isoformat()   + "Z" if row.approved_at   else None,
             "completed_at":  row.completed_at.isoformat()  + "Z" if row.completed_at  else None,
