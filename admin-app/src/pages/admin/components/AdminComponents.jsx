@@ -49,7 +49,7 @@ export function StatsGrid({ children, columns = 4, className = "" }) {
 
 // ─── 3. DASHBOARD CARD (STATS CARD) ───────────────────────────────────────
 // High-density, compact statistics/metrics display cards for enterprise mobile UX
-export function DashboardCard({ title, value, icon: IconComponent, trend, trendLabel, onClick, chart, isLoading }) {
+export function DashboardCard({ title, value, icon: IconComponent, trend, trendLabel, onClick, chart, isLoading, footer }) {
   const cardContent = (
     <>
       <div className="flex items-center justify-between mb-0.5 sm:mb-1 text-[#7B3FA0] min-w-0">
@@ -94,6 +94,11 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
           ) : (
             chart
           )}
+        </div>
+      )}
+      {footer && !isLoading && (
+        <div className="mt-1 pt-1 border-t border-[#8E6AA8]/10">
+          {footer}
         </div>
       )}
     </>
