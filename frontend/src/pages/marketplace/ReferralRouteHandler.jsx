@@ -100,6 +100,8 @@ export default function ReferralRouteHandler() {
             openProductModal(validProdId);
           } else if (typeof navigateTo === 'function') {
             navigateTo('product-detail', validProdId);
+            // Force React Router to unmount this handler and mount the SPA root
+            navigate(`/#product/${validProdId}`, { replace: true });
           } else {
             navigate(`/#product/${validProdId}`, { replace: true });
           }

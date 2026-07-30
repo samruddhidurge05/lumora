@@ -41,11 +41,13 @@ export default function ProductRouteHandler() {
 
         // Navigate using the numeric ID so getActiveProduct() can match it
         navigateTo('product-detail', String(product.id));
+        // Force React Router to unmount this handler and mount the SPA root
+        navigate(`/#product/${product.id}`, { replace: true });
       })
       .catch(() => {
         setError(true);
       });
-  }, [productId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [productId, navigate, navigateTo, searchParams]);
 
   if (error) {
     return (
