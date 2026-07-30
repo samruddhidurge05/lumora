@@ -20,7 +20,7 @@ def sync_product_to_firestore(product):
         except Exception:
             resolved_product = product
         finally:
-            temp_db.close()
+            temp_db.close()  # always release the pool connection
 
         tags = resolved_product.tags if isinstance(resolved_product.tags, list) else []
         highlights = resolved_product.highlights if isinstance(resolved_product.highlights, list) else []

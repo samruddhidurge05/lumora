@@ -70,6 +70,7 @@ _LAST_FIRESTORE_SYNC_TIME = 0.0
 
 
 def _bg_sync_firestore():
+    """Background Firestore → SQLite product sync. Uses its own session and always closes it."""
     db = SessionLocal()
     try:
         restore_sqlite_products_from_firestore(db)
@@ -82,7 +83,7 @@ def _bg_sync_firestore():
 def trigger_firestore_sync_if_needed(background_tasks: BackgroundTasks):
     global _LAST_FIRESTORE_SYNC_TIME
     now = time.time()
-    if now - _LAST_FIRESTORE_SYNC_TIME > 30:  # 30 seconds throttle
+    if now - _LAST_FIRESTORE_SYNC_TIME > 300:  # 5-minute throttle (was 30 s — too aggressive)
         _LAST_FIRESTORE_SYNC_TIME = now
         background_tasks.add_task(_bg_sync_firestore)
 
