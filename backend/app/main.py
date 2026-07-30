@@ -322,33 +322,34 @@ def _run_schema_migrations() -> None:
         ]
 
         try:
-            # Run each DDL statement in its own isolated transaction.
-            # PostgreSQL aborts the *entire* transaction on any error, so running
-            # all statements in a single connection means one failure (e.g. column
-            # already exists in a different form) silently discards ALL subsequent
-            # migrations.  Using autocommit=True per statement avoids this.
+            # Run ALL DDL statements over a SINGLE connection using autocommit so
+            # each statement is its own atomic unit.  Opening 60+ separate
+            # engine.connect() calls (old approach) caused 12-30 s startup latency
+            # on Render because each checkout requires an SSL round-trip to the
+            # remote PostgreSQL host — timing out the health-check before the app
+            # was ready.  One connection = one SSL handshake = fast startup.
             failed_migrations = []
-            for sql in pg_migrations:
-                try:
-                    with engine.connect() as conn:
-                        conn.execute(_text("COMMIT"))   # ensure no open txn
-                        conn.execute(_text(sql))
-                        conn.execute(_text("COMMIT"))
-                except Exception as col_err:
-                    failed_migrations.append((sql.strip()[:60], str(col_err)[:80]))
-                    _logger.debug("[startup] PG migration skipped: %s | %s", sql.strip()[:60], col_err)
-
-            # Sequence syncs (SELECT setval — read-only, safe in one txn)
+            raw_conn = engine.raw_connection()
             try:
-                with engine.connect() as conn:
-                    for seq_sql in pg_sequence_syncs:
-                        try:
-                            conn.execute(_text(seq_sql))
-                        except Exception as seq_err:
-                            _logger.debug("[startup] PG sequence sync skipped: %s | %s", seq_sql[:60], seq_err)
-                    conn.commit()
-            except Exception as seq_exc:
-                _logger.debug("[startup] PG sequence sync block failed: %s", seq_exc)
+                raw_conn.autocommit = True
+                cur = raw_conn.cursor()
+                for sql in pg_migrations:
+                    try:
+                        cur.execute(sql)
+                    except Exception as col_err:
+                        failed_migrations.append((sql.strip()[:60], str(col_err)[:80]))
+                        _logger.debug("[startup] PG migration skipped: %s | %s", sql.strip()[:60], col_err)
+                # Sequence syncs
+                for seq_sql in pg_sequence_syncs:
+                    try:
+                        cur.execute(seq_sql)
+                    except Exception as seq_err:
+                        _logger.debug("[startup] PG sequence sync skipped: %s | %s", seq_sql[:60], seq_err)
+                cur.close()
+            finally:
+                raw_conn.close()
+
+            # (sequence sync try/except block removed — merged into the loop above)
 
             if failed_migrations:
                 _logger.debug("[startup] %d PG migration(s) were skipped (already exist or unsupported): %s",
