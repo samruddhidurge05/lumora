@@ -27,7 +27,6 @@ export default function ProductRouteHandler() {
     // Fetch the product from backend to resolve slug → numeric ID
     // The SPA's getActiveProduct() matches by numeric ID, not slug.
     backendFetch(`/products/${encodeURIComponent(productId)}`)
-      .then(res => res.json())
       .then(product => {
         if (!product || !product.id) {
           setError(true);
