@@ -411,13 +411,19 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     )
     # Step 5 - issue backend JWT with the active role, strictly validated against SQLite role (Source of Truth)
     db_role = user.role or "customer"
-    active_role = role or "customer"
+    requested_role = role or "customer"
     
-    if db_role == "customer":
+    if requested_role in ("affiliate", "vendor"):
+        if db_role == "customer":
+            user.role = requested_role
+            db.commit()
+            db.refresh(user)
+            db_role = requested_role
+        active_role = requested_role
+    elif requested_role == "customer":
         active_role = "customer"
-    elif db_role in ("vendor", "affiliate"):
-        if active_role not in ("vendor", "affiliate", "customer"):
-            active_role = db_role
+    else:
+        active_role = db_role
             
     token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)

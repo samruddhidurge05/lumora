@@ -108,6 +108,9 @@ export default function Login() {
       case 'auth/operation-not-allowed': return 'Google Sign-In is not enabled in Firebase Console.';
       case 'auth/account-exists-with-different-credential': return 'An account already exists with this email using a different sign-in method.';
       case 'auth/role-mismatch':
+        if (role === 'affiliate') {
+          return 'No affiliate account exists for this email yet.';
+        }
         return `This email is registered under a different account type. To use the ${role} dashboard, please register a separate ${role} account.`;
       case 'auth/account-not-found':    return 'No account found. Please register first.';
       default:                          return rawMsg || 'Authentication error. Please try again.';
@@ -134,10 +137,8 @@ export default function Login() {
       await login(normalizedEmail, password, rememberMe, role);
       
       // Extract ?ref= from redirectUrl if present and persist it before navigation.
-      // redirectUrl format: "/#product/120?ref=AFF0005" → we want to extract "AFF0005"
       if (redirectUrl && redirectUrl.includes('ref=')) {
         try {
-          // Handle hash-based URLs: /#product/120?ref=CODE
           const hashIndex = redirectUrl.indexOf('#');
           const fragment = hashIndex !== -1 ? redirectUrl.substring(hashIndex + 1) : redirectUrl;
           const [, queryPart] = fragment.split('?');
@@ -157,7 +158,6 @@ export default function Login() {
         const redirectParam = redirectUrl ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';
         navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${role}${nextParam}${redirectParam}`);
       } else {
-        // Priority: nextUrl (invite) > redirectUrl (referral product) > role dashboard
         if (nextUrl) {
           navigate(nextUrl, { replace: true });
         } else if (redirectUrl) {
@@ -247,7 +247,38 @@ export default function Login() {
           {authStatus && (
             <motion.div className={`auth-alert auth-alert-${authStatus}`} role="alert" aria-live="assertive" variants={itemVariants}>
               <span>{authStatus === 'success' ? '✦' : '⚠'}</span>
-              <p>{statusMessage}</p>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0 }}>{statusMessage}</p>
+                {authStatus === 'error' && role === 'affiliate' && (statusMessage.includes('No affiliate account') || statusMessage.includes('different account type')) && (
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/auth/register?role=affiliate${email ? `&email=${encodeURIComponent(email)}` : ''}`)}
+                      style={{
+                        padding: '8px 14px', borderRadius: '8px', border: 'none',
+                        background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                        color: '#FFFFFF', fontSize: '0.78rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                      }}
+                    >
+                      Create Affiliate Account
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/auth/login?role=customer')}
+                      style={{
+                        padding: '8px 14px', borderRadius: '8px',
+                        border: '1px solid rgba(196,148,230,0.40)',
+                        background: 'rgba(255,255,255,0.85)',
+                        color: '#2D004D', fontSize: '0.78rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                      }}
+                    >
+                      Continue as Customer
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 

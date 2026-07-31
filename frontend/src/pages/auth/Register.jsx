@@ -120,7 +120,9 @@ export default function Register() {
         : '';
       navigate(`/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${registrationRole}${nextParam}`);
     } catch (err) {
-      if (err.code === 'auth/email-already-in-use') {
+      if (err.code === 'auth/email-already-in-use-wrong-password') {
+        setErrors({ form: 'An account with this email already exists. Please enter your existing account password to register as an affiliate.' });
+      } else if (err.code === 'auth/email-already-in-use') {
         setErrors({ form: 'An account with this email already exists. Please sign in instead.' });
       } else if (err.code === 'auth/weak-password') {
         setErrors({ password: 'Password must be at least 6 characters.' });

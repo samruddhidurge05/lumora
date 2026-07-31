@@ -385,9 +385,20 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
-        const err = new Error('An account with this email already exists. Please sign in instead.');
-        err.code = 'auth/email-already-in-use';
-        throw err;
+        if (normalizedRole !== 'customer') {
+          try {
+            const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+            firebaseUser = cred.user;
+          } catch (signInErr) {
+            const err = new Error('An account with this email already exists, but the password entered was incorrect.');
+            err.code = 'auth/email-already-in-use-wrong-password';
+            throw err;
+          }
+        } else {
+          const err = new Error('An account with this email already exists. Please sign in instead.');
+          err.code = 'auth/email-already-in-use';
+          throw err;
+        }
       } else {
         throw createErr;
       }
@@ -590,9 +601,12 @@ export const AuthProvider = ({ children }) => {
         if (!hasRole) {
           await signOut(auth);
           await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'login', false, `Role mismatch: User does not have ${role} role`);
-          const err = new Error('Role mismatch');
+          const msg = normalizedTarget === 'affiliate' 
+            ? 'No affiliate account exists for this email yet.' 
+            : `This email is registered under a different account type.`;
+          const err = new Error(msg);
           err.code = 'auth/role-mismatch';
-          err.role = role;
+          err.role = normalizedTarget;
           throw err;
         }
         
