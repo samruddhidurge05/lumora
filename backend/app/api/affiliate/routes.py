@@ -299,11 +299,10 @@ def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats
     total_earnings          = max(profile_earnings, float(total_earnings_computed))
     total_sales             = max(profile_sales, total_sales_computed)
 
-    paid     = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "paid" or c.status == "paid")
-    pending  = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "pending" or c.status == "pending")
-    approved = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) in ("approved", "ready_for_payout") or c.status in ("approved", "ready_for_payout"))
-    revenue  = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
-    conv     = round(
+    paid    = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) == "paid" or c.status == "paid")
+    pending = sum(c.commission_amt for c in commissions if getattr(c, 'commission_status', c.status) in ("pending", "approved", "ready_for_payout") or c.status in ("pending", "approved", "ready_for_payout"))
+    revenue = sum(c.sale_amount for c in commissions if c.sale_amount is not None)
+    conv    = round(
         (total_sales / profile_clicks * 100), 2
     ) if profile_clicks else 0.0
     ref_code = str(getattr(profile, "referral_code", "") or "")
@@ -312,7 +311,6 @@ def _build_stats(profile: AffiliateProfile, commissions: list) -> AffiliateStats
         total_clicks=profile_clicks,
         total_sales=total_sales,
         pending_earnings=round(pending, 2),
-        approved_earnings=round(approved, 2),
         paid_earnings=round(paid, 2),
         revenue_generated=round(revenue, 2),
         conversion_rate=conv,

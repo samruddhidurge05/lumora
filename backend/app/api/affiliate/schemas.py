@@ -115,7 +115,6 @@ class AffiliateStats(BaseModel):
     total_clicks: int
     total_sales: int
     pending_earnings: float
-    approved_earnings: float = 0.0
     paid_earnings: float
     revenue_generated: float
     conversion_rate: float
