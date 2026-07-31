@@ -199,19 +199,40 @@ export default function Reviews() {
   const [loadError,      setLoadError]        = useState(null);
   const [moderating,     setModerating]       = useState(false);
 
+  // Cold-start retry ref for Render free-tier wake-up
+  const coldStartRetryRef = useRef(null);
+
   const loadBackendReviews = useCallback(async (page = 1, sentiment = "all", search = "") => {
     setLoadError(null);
     try {
       const params = new URLSearchParams({ page, page_size: PAGE_SIZE });
       if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
       if (search) params.set("search", search);
+      
+      console.log('[Reviews] Loading reviews:', `/admin/reviews/?${params.toString()}`);
+      console.log('[Reviews] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
+      console.log('[Reviews] Active role:', localStorage.getItem('lumora_active_role'));
+      
       const data = await backendFetch(`/admin/reviews/?${params.toString()}`);
+      console.log('[Reviews] Loaded reviews:', data);
+      
       setBackendReviews(data.items || []);
       setTotalReviews(data.total || 0);
       setCurrentPage(data.page || page);
     } catch (err) {
       console.error("[Reviews] Backend reviews load failed:", err);
-      setLoadError(err.message || "Failed to load reviews");
+      console.error("[Reviews] Error status:", err.status);
+      console.error("[Reviews] Error code:", err.code);
+      // If the backend is cold-starting (Render free-tier), auto-retry once after 5 seconds
+      if (err.code === 'BACKEND_OFFLINE' && !coldStartRetryRef.current) {
+        coldStartRetryRef.current = setTimeout(() => {
+          coldStartRetryRef.current = null;
+          loadBackendReviews(page, sentiment, search);
+        }, 5000);
+        setLoadError('Server is warming up, retrying in 5 seconds…');
+      } else {
+        setLoadError(err.message || "Failed to load reviews");
+      }
     }
   }, []);
 

@@ -371,7 +371,10 @@ export default function OrdersManagement() {
   // Responsive Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // --- FIRESTORE DATA LOADER ---
+  // Cold-start retry ref — prevents double-retry on strict mode double-invoke
+  const coldStartRetryRef = useRef(null);
+
+  // --- DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     const validPage = (typeof page === 'number' && !isNaN(page) && page >= 1) ? Math.floor(page) : 1;
     setLoading(true);
@@ -379,7 +382,14 @@ export default function OrdersManagement() {
     try {
       const params = new URLSearchParams({ page: validPage, page_size: ORDER_PAGE_SIZE });
       if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
+      
+      console.log('[OrdersManagement] Loading orders:', `/admin/orders/?${params}`);
+      console.log('[OrdersManagement] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
+      console.log('[OrdersManagement] Active role:', localStorage.getItem('lumora_active_role'));
+      
       const data = await backendFetch(`/admin/orders/?${params}`);
+      console.log('[OrdersManagement] Loaded orders:', data);
+      
       // Handle both paginated shape {total, items} and legacy bare array
       const items = Array.isArray(data) ? data : (data.items || []);
       setOrders(items);
@@ -388,8 +398,19 @@ export default function OrdersManagement() {
       setOrderPage(validPage);
       if (items.length > 0) setSelectedOrderId(items[0].id);
     } catch (err) {
-      console.error('Failed to load orders:', err);
-      setLoadError('Failed to load orders. Check your connection and try again.');
+      console.error('[OrdersManagement] Failed to load orders:', err);
+      console.error('[OrdersManagement] Error status:', err.status);
+      console.error('[OrdersManagement] Error code:', err.code);
+      // If the backend is cold-starting (Render free-tier), auto-retry once after 5 seconds
+      if (err.code === 'BACKEND_OFFLINE' && !coldStartRetryRef.current) {
+        coldStartRetryRef.current = setTimeout(() => {
+          coldStartRetryRef.current = null;
+          loadOrders(page, statusFilter);
+        }, 5000);
+        setLoadError('Server is warming up, retrying in 5 seconds…');
+      } else {
+        setLoadError('Failed to load orders. Check your connection and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -865,6 +886,11 @@ export default function OrdersManagement() {
         {!loading && loadError && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <p className="text-sm font-bold text-red-400">{loadError}</p>
+            {loadError.includes('Backend') && (
+              <p className="text-xs text-[#7B3FA0] text-center max-w-sm">
+                The backend server may be starting up. Please wait a moment and retry.
+              </p>
+            )}
             <button onClick={() => loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null)} className="px-5 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold">Retry</button>
           </div>
         )}

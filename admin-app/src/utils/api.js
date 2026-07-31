@@ -113,7 +113,21 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
       errorText = await res.text();
       detail = JSON.parse(errorText);
     } catch (_) {
-      // Not JSON or empty
+      // Not JSON or empty — check if we got HTML (Render cold-start, reverse proxy error, or wrong route)
+      const isHtml = errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html');
+      if (isHtml) {
+        const isProduction = typeof window !== 'undefined' &&
+          window.location.hostname !== 'localhost' &&
+          window.location.hostname !== '127.0.0.1';
+        const error = new Error(
+          isProduction
+            ? 'The server is warming up. Please wait a moment and try again.'
+            : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+        );
+        error.status = res.status;
+        error.code = 'BACKEND_OFFLINE';
+        throw error;
+      }
     }
 
     const code = detail?.code || null;
@@ -137,6 +151,34 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
 
   if (res.status === 204) {
     return null;
+  }
+
+  // Guard against the Vite dev server SPA fallback returning index.html as 200
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+      const isProduction = typeof window !== 'undefined' &&
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1';
+      const error = new Error(
+        isProduction
+          ? 'The server is warming up. Please wait a moment and try again.'
+          : 'Backend server returned an HTML page. Make sure the backend is running and the route exists.'
+      );
+      error.status = res.status;
+      error.code = 'BACKEND_OFFLINE';
+      throw error;
+    }
+    // Try parsing anyway in case Content-Type header is wrong
+    try {
+      return JSON.parse(text);
+    } catch (_) {
+      const error = new Error(`Unexpected non-JSON response from server (status ${res.status})`);
+      error.status = res.status;
+      error.code = 'INVALID_RESPONSE';
+      throw error;
+    }
   }
 
   return res.json();
