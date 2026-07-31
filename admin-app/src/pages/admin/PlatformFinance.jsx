@@ -193,7 +193,7 @@ function WithdrawalRequestModal({ summary, onClose, onSuccess }) {
                 <Landmark size={18} />
               </div>
               <div>
-                <p className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Treasury Operation</p>
+                <p className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Withdrawal Request</p>
                 <h3 className="text-sm font-serif font-black text-[#2D004D] leading-tight">Withdraw Funds</h3>
               </div>
             </div>
@@ -541,7 +541,7 @@ function OverviewTab({ summary, loading }) {
       </div>
 
       {/* Withdrawal status counts */}
-      <GlassCard title="Withdrawal Pipeline" subtitle="CURRENT WORKFLOW STATUS">
+      <GlassCard title="Withdrawal Status" subtitle="STATUS BREAKDOWN">
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Pending',   count: summary.settlement_counts?.pending   || 0, color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
@@ -1063,7 +1063,7 @@ function TreasuryKPICards({ summary, loading }) {
       title:      'Platform Revenue',
       value:      loading ? '…' : formatINR(summary?.platform_revenue),
       icon:       DollarSign,
-      trend:      'IMMUTABLE',
+      trend:      'TOTAL',
       trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,18 L20,14 L40,11 L60,8 L80,5 L100,3" fill="none" stroke="#7B3FA0" strokeWidth="1.5" strokeLinecap="round"/>
@@ -1090,7 +1090,7 @@ function TreasuryKPICards({ summary, loading }) {
       </svg>,
     },
     {
-      title:      'Affiliate Liability',
+      title:      'Affiliate Owed',
       value:      loading ? '…' : formatINR(summary?.affiliate_liability),
       icon:       ArrowUpRight,
       trend:      'owed',
@@ -1212,8 +1212,8 @@ export default function PlatformFinance() {
 
         {/* Page Header */}
         <PageHeader
-          title="Finance & Treasury"
-          subtitle="Platform treasury ledger, withdrawal workflow, and immutable revenue accounting"
+          title="Finances"
+          subtitle="Track platform balances, view transaction history, and manage withdrawals."
           actions={
             <div className="flex items-center gap-2.5 flex-wrap justify-end">
               {!loading && summary && (

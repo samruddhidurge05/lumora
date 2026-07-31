@@ -43,7 +43,7 @@ export default function PlatformTreasuryCards() {
   const CARDS = [
     {
       title: 'Platform Revenue', value: loading ? '…' : formatINR(summary?.platform_revenue),
-      icon: DollarSign, trend: 'IMMUTABLE', trendLabel: '',
+      icon: DollarSign, trend: 'TOTAL', trendLabel: '',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,18 L20,14 L40,11 L60,8 L80,5 L100,3" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>,
@@ -63,7 +63,7 @@ export default function PlatformTreasuryCards() {
       </svg>,
     },
     {
-      title: 'Affiliate Liability', value: loading ? '…' : formatINR(summary?.affiliate_liability),
+      title: 'Affiliate Owed', value: loading ? '…' : formatINR(summary?.affiliate_liability),
       icon: ArrowUpRight, trend: 'owed', trendLabel: 'to affiliates',
       chart: <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
         <path d="M0,8 L40,10 L70,11 L100,10" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round"/>
@@ -98,7 +98,7 @@ export default function PlatformTreasuryCards() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Platform Treasury</span>
+            <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Financial Overview</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#B886D0] animate-pulse" />
           </div>
           <p className="text-[9px] text-[#8E6AA8]">

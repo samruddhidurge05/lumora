@@ -914,8 +914,8 @@ export default function OrdersManagement() {
 
             {/* --- PAGE HEADER --- */}
             <PageHeader
-              title="Order Command Board"
-              subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
+              title="Orders"
+              subtitle="View customer orders, verify payments, track order status, and process refunds."
             />
 
             {/* --- VIEW MODE TOGGLE --- */}
@@ -927,7 +927,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Transactions Ledger
+                All Orders
               </button>
               <button
                 onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
@@ -936,7 +936,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Refund Tickets Queue
+                Refund Requests
                 {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
                   <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
                     {refundTickets.filter(t => t.status === "PENDING").length}
@@ -971,7 +971,7 @@ export default function OrdersManagement() {
 
               {/* CARD 2: ACTIVE VOLUME */}
               <DashboardCard
-                title="Active Volume"
+                title="Total Orders"
                 value={statistics.totalOrders}
                 icon={<Icon name="Activity" size={14} />}
                 trend={`${statistics.pendingOrders} pending`}
@@ -992,7 +992,7 @@ export default function OrdersManagement() {
 
               {/* CARD 3: FULFILLMENT */}
               <DashboardCard
-                title="Fulfillment"
+                title="Completion Rate"
                 value={`${statistics.successRate}%`}
                 icon={<Icon name="CheckCircle" size={14} />}
                 trend={`₹${statistics.refundedAmount} refunded`}
@@ -1013,7 +1013,7 @@ export default function OrdersManagement() {
 
               {/* CARD 4: RISK ALERTS */}
               <DashboardCard
-                title="Risk Alerts"
+                title="Risk Flags"
                 value={statistics.highRiskCount}
                 icon={
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${statistics.highRiskCount > 0 ? 'bg-[#D8BFE3]/40 text-[#FF8597] animate-pulse' : 'text-[#7B3FA0]'}`}>
@@ -1047,7 +1047,7 @@ export default function OrdersManagement() {
                       options={[
                         { value: 'newest', label: 'Newest Logged' },
                         { value: 'value-desc', label: 'Highest Revenue' },
-                        { value: 'risk-desc', label: 'Highest Risk Index' }
+                        { value: 'risk-desc', label: 'Highest Risk' }
                       ]}
                     />,
                     <AdminSelect
@@ -1109,7 +1109,7 @@ export default function OrdersManagement() {
                         className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
                       >
                         <Icon name="RefreshCw" size={9} />
-                        Reset Parameters
+                        Reset Filters
                       </button>
                     )
                   }
@@ -1131,7 +1131,7 @@ export default function OrdersManagement() {
                                 <tr className="bg-stone-100/40 border-b border-stone-200/50">
                                   <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>
