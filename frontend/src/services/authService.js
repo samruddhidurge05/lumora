@@ -17,12 +17,11 @@
  *   - Removes backend JWT and uid from localStorage on logout
  */
 
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+import { getBackendOrigin } from '../utils/api.js';
 
 const BACKEND_URL = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
+    return `${getBackendOrigin()}/api`;
   }
   return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 })();

@@ -15,15 +15,30 @@
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
 
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
+/**
+ * On production (Vercel), use a RELATIVE /api path so all requests flow through
+ * the Vercel proxy rewrite (vercel.json) → backend, keeping them same-origin
+ * and completely eliminating CORS preflight issues.
+ *
+ * On localhost, use absolute http://localhost:8000/api (Vite proxy handles it).
+ */
 const BACKEND_URL = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
+    // Vercel proxy: /api/:path* → https://lumora-backend-8mf6.onrender.com/api/:path*
+    return '/api';
   }
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  return 'http://localhost:8000/api';
 })();
+
+/** Backend origin for media/download URLs on production */
+export const getBackendOrigin = () => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return PROD_BACKEND_ORIGIN;
+  }
+  return 'http://localhost:8000';
+};
 
 let globalErrorListener = null;
 
