@@ -185,6 +185,37 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
 };
 
 /**
+ * backendFetchWithRetry
+ * ─────────────────────
+ * Wraps backendFetch with automatic retry for BACKEND_OFFLINE (Render cold-start).
+ * Retries every 8 seconds for up to 90 seconds, then gives up.
+ *
+ * @param {string} endpoint
+ * @param {RequestInit} options
+ * @param {(secondsLeft: number) => void} [onWarmup]  called on each retry with countdown
+ * @returns {Promise<any>}
+ */
+export const backendFetchWithRetry = async (endpoint, options = {}, onWarmup = null) => {
+  const MAX_WAIT_MS = 90_000;
+  const RETRY_INTERVAL_MS = 8_000;
+  const start = Date.now();
+
+  while (true) {
+    try {
+      return await backendFetch(endpoint, options);
+    } catch (err) {
+      const elapsed = Date.now() - start;
+      if (err.code !== 'BACKEND_OFFLINE' || elapsed >= MAX_WAIT_MS) {
+        throw err;
+      }
+      const secondsLeft = Math.ceil((MAX_WAIT_MS - elapsed) / 1000);
+      if (onWarmup) onWarmup(secondsLeft);
+      await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_MS));
+    }
+  }
+};
+
+/**
  * Check whether the FastAPI backend server is reachable.
  * Returns true if online, false if offline.
  */
