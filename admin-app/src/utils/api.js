@@ -14,6 +14,7 @@
 
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
+import { adminRefreshToken } from '../services/adminAuthService.js';
 
 export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
@@ -69,23 +70,43 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BACKEND_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res;
+  try {
+    res = await fetch(`${BACKEND_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr) {
+    // Network failure (e.g. Render server cold-starting / un-routable connection)
+    const isProduction = typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1';
+    const error = new Error(
+      isProduction
+        ? 'The server is warming up. Please wait a moment and try again.'
+        : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+    );
+    error.status = 503;
+    error.code = 'BACKEND_OFFLINE';
+    throw error;
+  }
 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {
     const firebaseUser = auth.currentUser;
     const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
 
-    // Admin sessions use a separate JWT flow — never attempt syncWithBackend
-    // for admin tokens. Only remove the stale JWT — NEVER call clearBackendToken()
-    // which would also wipe lumora_active_role. Preserving lumora_active_role is
-    // critical: onAuthStateChanged reads it to detect admin sessions. If it is
-    // wiped, the admin branch is skipped, userRole becomes 'customer', and
-    // ProtectedRoute redirects to /admin/login even though auth would succeed.
     if (activeRole === 'admin') {
+      if (firebaseUser) {
+        try {
+          const synced = await adminRefreshToken(firebaseUser);
+          if (synced?.access_token) {
+            return backendFetch(endpoint, options, true);
+          }
+        } catch (refreshErr) {
+          console.warn('[api.js] Admin silent token refresh failed:', refreshErr.message);
+        }
+      }
       localStorage.removeItem('lumora_backend_token');
       const error = new Error('Admin session expired. Please log in again.');
       error.status = 401;
@@ -109,6 +130,22 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     throw error;
   }
   // ──────────────────────────────────────────────────────────────────────────
+
+  // Cold start gateway responses (502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout)
+  if (res.status === 502 || res.status === 503 || res.status === 504) {
+    const isProduction = typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1';
+    const error = new Error(
+      isProduction
+        ? 'The server is warming up. Please wait a moment and try again.'
+        : 'Backend server returned gateway warmup status. Retrying...'
+    );
+    error.status = res.status;
+    error.code = 'BACKEND_OFFLINE';
+    throw error;
+  }
+
 
   if (!res.ok) {
     let detail = null;
