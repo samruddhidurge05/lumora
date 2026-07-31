@@ -23,7 +23,7 @@
   --color-mocha      : #7B3FA0;
   --color-latte      : #C7A55A;
   --color-lavender   : #D8BFE3;
-  --color-warm-white : #FFFDF9;
+  --color-warm-white : #ffffff;
   --color-rose       : #E8B4C8;
   --color-peach      : #F0C4A0;
   --color-mint-glow  : #A8E6CF;
@@ -50,7 +50,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background: #FAF6F0;
+  background: #ffffff;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;

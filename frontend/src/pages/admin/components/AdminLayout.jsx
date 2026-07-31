@@ -26,7 +26,7 @@ export default function AdminLayout({ activePage, children }) {
   }, [isMobileOpen]);
 
   return (
-    <div className="min-h-screen relative font-sans text-[#2D004D] bg-[#FFFDF9] overflow-x-hidden selection:bg-[#D8BFE3] selection:text-[#2D004D]">
+    <div className="min-h-screen relative font-sans text-[#2D004D] bg-[#ffffff] overflow-x-hidden selection:bg-[#D8BFE3] selection:text-[#2D004D]">
       
       {/* Mobile Top Header (< 1024px) */}
       <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-xl border-b border-[#8E6AA8]/15 shadow-sm min-h-[56px]">
@@ -54,7 +54,7 @@ export default function AdminLayout({ activePage, children }) {
             onClick={() => setIsMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative z-10 w-[290px] max-w-[85vw] h-full bg-[#FFFDF9] shadow-2xl flex flex-col p-4 overflow-y-auto animate-in slide-in-from-left duration-250">
+          <div className="relative z-10 w-[290px] max-w-[85vw] h-full bg-[#ffffff] shadow-2xl flex flex-col p-4 overflow-y-auto animate-in slide-in-from-left duration-250">
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#8E6AA8]/10">
               <div className="flex items-center gap-2">
                 <span className="text-[#7B3FA0] text-sm">✧</span>

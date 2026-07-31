@@ -537,7 +537,7 @@ export default function CustomersManagement() {
           <div style={{
             width: '100%',
             maxWidth: '520px',
-            background: 'radial-gradient(circle at 50% 0%, #FFFDF9 0%, #FAF5FD 100%)',
+            background: '#ffffff',
             height: '100vh',
             boxShadow: '-10px 0 40px rgba(45,0,77,0.15)',
             borderLeft: '1px solid rgba(142, 106, 168, 0.15)',
