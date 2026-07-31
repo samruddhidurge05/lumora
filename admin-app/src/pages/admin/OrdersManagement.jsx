@@ -434,8 +434,8 @@ export default function OrdersManagement() {
   }, []);
 
   useEffect(() => {
-    // Don't fetch until AuthContext has finished restoring the admin session (JWT)
-    if (authLoading) return;
+    // Don't fetch until AuthContext has finished restoring the admin session (JWT) or token is ready
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) return;
     if (viewMode === 'orders') {
       loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
     } else {

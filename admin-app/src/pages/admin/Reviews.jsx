@@ -282,7 +282,7 @@ export default function Reviews() {
 
   // Load backend paginated reviews — wait for auth session to be ready first
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) return;
     setCurrentPage(1);
     loadBackendReviews(1, sentimentFilter, searchQuery);
   }, [authLoading, sentimentFilter, searchQuery, loadBackendReviews]);
