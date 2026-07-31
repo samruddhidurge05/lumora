@@ -20,7 +20,6 @@ _logger = logging.getLogger("lumora.admin.reports")
 router = APIRouter()
 
 @router.get("/")
-@router.get("")
 def get_reports(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
