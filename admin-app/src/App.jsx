@@ -176,16 +176,17 @@ function AppContent() {
 }
 
 function AdminBoundary({ children }) {
-  const { userRole, loading } = useAuth();
-  const isAdmin = userRole === 'admin';
+  const { userRole } = useAuth();
 
-  if (loading || !isAdmin) {
-    return <>{children}</>;
-  }
-
+  // Always mount AdminContextProvider to prevent hook tree changes between renders.
+  // AdminContextProvider handles the case where no admin token exists gracefully
+  // (it silently fails on /admin/me and returns safe defaults via useAdminContext).
+  // Conditional mounting was causing: React hook tree instability, premature
+  // /admin/me calls that raced against JWT storage, and context teardown on
+  // every role change — all of which triggered unexpected redirect to /admin/login.
   return (
     <AdminContextProvider>
-      <AdminNotificationBanner />
+      {userRole === 'admin' && <AdminNotificationBanner />}
       {children}
     </AdminContextProvider>
   );

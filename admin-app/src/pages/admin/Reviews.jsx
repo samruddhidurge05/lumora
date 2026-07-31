@@ -870,11 +870,17 @@ export default function Reviews() {
 
                   </div>
 
-                  {/* Error state */}
+                  {/* Error state — shown while retrying or after final failure */}
                   {loadError && (
                     <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: '12px', color: '#dc2626', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                       <span>⚠ {loadError}</span>
-                      <button onClick={() => loadBackendReviews(currentPage, sentimentFilter, searchQuery)} style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}>
+                      <button
+                        onClick={() => {
+                          setLoadError(null); // Clear immediately for instant feedback
+                          loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+                        }}
+                        style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+                      >
                         Retry
                       </button>
                     </div>
@@ -1008,8 +1014,19 @@ export default function Reviews() {
                           </motion.div>
                         ))
                       ) : (
-                        <div className="py-20 text-center glass-surface rounded-2xl border border-[#F3EAF8]">
-                          <p className="text-xs text-[#7B3FA0]">{loadError ? "Error loading reviews." : "No reviews match selected coordinates."}</p>
+                        <div className="py-20 text-center glass-surface rounded-2xl border border-[#F3EAF8] flex flex-col items-center gap-3">
+                          <p className="text-xs text-[#7B3FA0]">{loadError ? 'Error loading reviews.' : 'No reviews match selected coordinates.'}</p>
+                          {loadError && (
+                            <button
+                              onClick={() => {
+                                setLoadError(null);
+                                loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+                              }}
+                              style={{ background: 'rgba(123,63,160,0.1)', border: '1px solid rgba(123,63,160,0.2)', borderRadius: '8px', padding: '6px 16px', fontSize: '0.75rem', color: '#7B3FA0', cursor: 'pointer', fontWeight: 600 }}
+                            >
+                              Retry
+                            </button>
+                          )}
                         </div>
                       )}
                     </AnimatePresence>

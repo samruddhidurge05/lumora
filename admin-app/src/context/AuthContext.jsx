@@ -195,6 +195,13 @@ export const AuthProvider = ({ children }) => {
     if (!user) return;
 
     const poll = async () => {
+      // ── CRITICAL: Admin sessions use a backend JWT from /admin/auth/login,
+      // NOT the customer /auth/me endpoint. Calling /auth/me for an admin
+      // returns customer-facing role data (role: 'user') which gets normalized
+      // to 'customer' and silently overwrites userRole, causing ProtectedRoute
+      // to redirect to /admin/login. Always skip the poll for admin sessions.
+      if (userRoleRef.current === 'admin') return;
+
       // Skip poll if no backend token exists — avoids 401 spam on login page
       if (!localStorage.getItem('lumora_backend_token')) return;
       try {
