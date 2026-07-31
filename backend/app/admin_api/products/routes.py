@@ -38,6 +38,7 @@ router = APIRouter()
 _PLATFORM_SENTINEL = "lumora-creator"
 
 
+@router.get("")
 @router.get("/")
 def list_admin_products(
     skip: int = Query(0, ge=0),
