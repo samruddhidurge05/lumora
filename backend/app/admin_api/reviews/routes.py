@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 router = APIRouter()
 
 @router.get("/")
+@router.get("")
 def get_reviews_list(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -39,12 +40,13 @@ def post_moderate(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="review_moderated",
             target_type="review",
-            target_id=str(review_id),
+            target_id=review_id,
             metadata={"moderation_action": action},
         )
     except Exception:
