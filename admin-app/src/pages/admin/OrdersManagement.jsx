@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
-import { backendFetch } from '../../utils/api';
-import { useAuth } from '../../context/AuthContext';
+import { backendFetch, backendFetchWithRetry } from '../../utils/api';
 import {
   fetchAllOrders,
   updateOrderStatus,
@@ -13,7 +12,7 @@ import {
 import {
   getDownloadErrorMessage,
 } from '../../services/downloadService.js';
-import { loadingMessages, emptyStates, getFriendlyError } from '../../shared/communication';
+import { useAuth } from '../../context/AuthContext';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -393,7 +392,13 @@ export default function OrdersManagement() {
       console.log('[OrdersManagement] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
       console.log('[OrdersManagement] Active role:', localStorage.getItem('lumora_active_role'));
       
-      const data = await backendFetch(`/admin/orders/?${params}`);
+      const data = await backendFetchWithRetry(
+        `/admin/orders/?${params}`,
+        {},
+        (secondsLeft) => {
+          setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
+        }
+      );
       console.log('[OrdersManagement] Loaded orders:', data);
       
       // Handle both paginated shape {total, items} and legacy bare array
@@ -403,20 +408,10 @@ export default function OrdersManagement() {
       setOrderTotalPages(Array.isArray(data) ? 1 : Math.max(1, Math.ceil((data.total || items.length) / ORDER_PAGE_SIZE)));
       setOrderPage(validPage);
       if (items.length > 0) setSelectedOrderId(items[0].id);
+      setLoadError('');
     } catch (err) {
       console.error('[OrdersManagement] Failed to load orders:', err);
-      console.error('[OrdersManagement] Error status:', err.status);
-      console.error('[OrdersManagement] Error code:', err.code);
-      // If the backend is cold-starting (Render free-tier), auto-retry once after 5 seconds
-      if (err.code === 'BACKEND_OFFLINE' && !coldStartRetryRef.current) {
-        coldStartRetryRef.current = setTimeout(() => {
-          coldStartRetryRef.current = null;
-          loadOrders(page, statusFilter);
-        }, 5000);
-        setLoadError('Server is warming up, retrying in 5 seconds…');
-      } else {
-        setLoadError('Failed to load orders. Check your connection and try again.');
-      }
+      setLoadError(err.message || 'Failed to load orders. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
