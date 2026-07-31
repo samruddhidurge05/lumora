@@ -1445,7 +1445,7 @@ export default function AffiliateManagement() {
 
   const loadAffiliates = useCallback(async () => {
     try {
-      const d = await backendFetch('/admin/affiliates/');
+      const d = await backendFetch('/admin/affiliates');
       setAffiliates(Array.isArray(d) ? d : []);
     } catch(e) {
       setAffiliates([]);

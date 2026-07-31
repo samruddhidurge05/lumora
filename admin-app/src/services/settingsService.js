@@ -58,7 +58,7 @@ export const initPlatformSettings = async () => {
 
 export const updatePlatformSetting = async (key, val) => {
   try {
-    await backendFetch('/admin/settings/', { method: 'PUT', body: JSON.stringify({ [key]: val }) });
+    await backendFetch('/admin/settings', { method: 'PUT', body: JSON.stringify({ [key]: val }) });
   } catch (error) {
     console.error('[settingsService] Error updating setting via backend:', error);
     throw error;

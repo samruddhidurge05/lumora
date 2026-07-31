@@ -184,7 +184,7 @@ export default function Settings() {
     sysSound.playTap();
     try {
       // Use backend PUT /api/admin/settings/ — auth token injected by backendFetch
-      await backendFetch('/admin/settings/', {
+      await backendFetch('/admin/settings', {
         method: 'PUT',
         body: JSON.stringify({ [key]: newValue }),
       });

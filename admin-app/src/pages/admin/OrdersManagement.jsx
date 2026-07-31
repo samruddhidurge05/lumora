@@ -389,12 +389,12 @@ export default function OrdersManagement() {
       const params = new URLSearchParams({ page: validPage, page_size: ORDER_PAGE_SIZE });
       if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
       
-      console.log('[OrdersManagement] Calling backendFetchWithRetry for:', `/admin/orders/?${params}`);
+      console.log('[OrdersManagement] Calling backendFetchWithRetry for:', `/admin/orders?${params}`);
       console.log('[OrdersManagement] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
       console.log('[OrdersManagement] Active role:', localStorage.getItem('lumora_active_role'));
       
       const data = await backendFetchWithRetry(
-        `/admin/orders/?${params}`,
+        `/admin/orders?${params}`,
         {},
         (secondsLeft) => {
           console.log('[OrdersManagement] Warmup callback fired, secondsLeft:', secondsLeft);
@@ -425,7 +425,7 @@ export default function OrdersManagement() {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await backendFetch('/admin/refunds/');
+      const data = await backendFetch('/admin/refunds');
       const items = Array.isArray(data) ? data : [];
       setRefundTickets(items);
       if (items.length > 0) setSelectedTicketId(items[0].id);

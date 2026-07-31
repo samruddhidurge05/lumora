@@ -214,12 +214,12 @@ export default function Reviews() {
       if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
       if (search) params.set("search", search);
 
-      console.log('[Reviews] Calling backendFetchWithRetry for:', `/admin/reviews/?${params.toString()}`);
+      console.log('[Reviews] Calling backendFetchWithRetry for:', `/admin/reviews?${params.toString()}`);
       console.log('[Reviews] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
       console.log('[Reviews] Active role:', localStorage.getItem('lumora_active_role'));
 
       const data = await backendFetchWithRetry(
-        `/admin/reviews/?${params.toString()}`,
+        `/admin/reviews?${params.toString()}`,
         {},
         (secondsLeft) => {
           console.log('[Reviews] Warmup callback fired, secondsLeft:', secondsLeft);
