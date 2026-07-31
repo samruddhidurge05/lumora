@@ -18,6 +18,7 @@ from app.models.affiliate import (
     AffiliateProfile, AffiliateCommission, ReferralAttribution,
     ReferralLink, ReferralClick, AffiliatePayout, AffiliateReferral
 )
+from sqlalchemy import func
 
 
 def _get_db():
@@ -803,13 +804,20 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
 
         review_count = 0
         affiliate_sales = 0
+        total_commission = 0.0
         top_products = []
         if prod_ids:
             review_count = db.query(Review).filter(Review.product_id.in_(prod_ids)).count()
             affiliate_sales = db.query(AffiliateCommission).filter(AffiliateCommission.product_id.in_(prod_ids)).count()
             
+            # Vendor pays for affiliate commissions out of their 85% cut
+            total_commission = db.query(func.coalesce(func.sum(AffiliateCommission.commission_amt), 0.0)).filter(
+                AffiliateCommission.product_id.in_(prod_ids),
+                AffiliateCommission.commission_status.in_(["pending", "approved", "ready_for_payout", "paid"])
+            ).scalar() or 0.0
+            affiliate_sales = db.query(AffiliateCommission).filter(AffiliateCommission.product_id.in_(prod_ids)).count()
+            
             # Aggregate order items per product for top products
-            from sqlalchemy import func
             sales_per_product = db.query(
                 OrderItem.product_id,
                 func.count(OrderItem.id).label("sales"),
@@ -829,7 +837,7 @@ def get_vendor_dashboard(vendor_id: str) -> dict:
             top_products.sort(key=lambda x: x["revenue"], reverse=True)
             top_products = top_products[:5]
 
-        net_revenue = total_revenue * 0.85
+        net_revenue = (total_revenue * 0.85) - float(total_commission)
         available_balance = max(0.0, net_revenue - withdrawn_sum)
 
         # -- Reviews -----------------------------------------------------------

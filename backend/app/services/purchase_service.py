@@ -1,5 +1,5 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import List, Dict, Any, Optional, cast
+from datetime import datetime, timezone
 import logging
 import uuid
 from sqlalchemy.orm import Session
@@ -63,6 +63,8 @@ class PurchaseService:
             # Track vendor notifications to process later
             vendors_to_notify = []
             commission_assigned_for_order = False
+            
+            platform_fee_total = 0.0
 
             # 5. Create OrderItems & permissions
             for item in items_payload:
@@ -79,7 +81,7 @@ class PurchaseService:
                     )
                 
                 # Check soft-deleted status
-                if prod.status == "archived":
+                if cast(str, prod.status) == "archived":
                     raise HTTPException(
                         status_code=400,
                         detail=f"Product '{prod.title}' is archived and no longer available for purchase."
@@ -99,19 +101,25 @@ class PurchaseService:
                 # via the /download-file endpoint to track real usage, not just purchases
 
                 # Update vendor sales count dynamically
-                if prod.vendor_id:
+                if cast(Any, prod.vendor_id):
                     from app.models.vendor import Vendor
                     vendor = db.query(Vendor).filter(Vendor.id == prod.vendor_id).first()
                     if vendor:
                         try:
-                            current_sales = int(vendor.sales or "0")
+                            current_sales = int(cast(str, vendor.sales) or "0")
                         except ValueError:
                             current_sales = 0
-                        vendor.sales = str(current_sales + 1)
+                        vendor.sales = cast(Any, str(current_sales + 1))
                         db.add(vendor)
+                        
+                # Calculate platform fee
+                if getattr(prod, 'owner_type', 'VENDOR') == 'PLATFORM':
+                    platform_fee_total += price_paid
+                else:
+                    platform_fee_total += price_paid * 0.15
 
                 # Log notification details for vendor
-                if prod.vendor_id:
+                if cast(Any, prod.vendor_id):
                     vendors_to_notify.append({
                         "vendor_id": prod.vendor_id,
                         "product_name": prod.title,
@@ -154,7 +162,7 @@ class PurchaseService:
                         ).order_by(AffiliateReferral.updated_at.desc()).first()
 
                         if pending_ref:
-                            target_aff_code = pending_ref.referral_code
+                            target_aff_code = cast(str, pending_ref.referral_code)
                             attr_source = "referral_link"
 
                     # Tier 3: Check PostgreSQL AffiliateReferral by (customer_id) — any recent referral for this buyer
@@ -165,7 +173,7 @@ class PurchaseService:
                         ).order_by(AffiliateReferral.updated_at.desc()).first()
 
                         if pending_ref:
-                            target_aff_code = pending_ref.referral_code
+                            target_aff_code = cast(str, pending_ref.referral_code)
                             attr_source = "referral_link"
 
                     # Tier 4: Fallback to affiliate_code passed from checkout/payment payload
@@ -209,14 +217,14 @@ class PurchaseService:
                         if aff:
                             ref_link_id = ref_link_obj.id if ref_link_obj else None
                             # Tag Order with referral metadata
-                            order.affiliate_id = aff.id
-                            order.referral_link_id = ref_link_id
-                            order.referral_code_used = clean_code
-                            order.attribution_source = attr_source
-                            order.coupon_code_used = coupon_code_used
+                            order.affiliate_id = cast(Any, aff.id)
+                            order.referral_link_id = cast(Any, ref_link_id)
+                            order.referral_code_used = cast(Any, clean_code)
+                            order.attribution_source = cast(Any, attr_source)
+                            order.coupon_code_used = cast(Any, coupon_code_used)
 
                             # Verify customer is not the affiliate itself (prevent self-referral)
-                            if aff.user_id != user_id:
+                            if cast(int, aff.user_id) != user_id:
                                 # Idempotency Guard: prevent duplicate commission if payment verification is retried
                                 existing_comm = db.query(AffiliateCommission).filter(
                                     AffiliateCommission.order_id == order.id,
@@ -225,15 +233,15 @@ class PurchaseService:
 
                                 if not existing_comm:
                                     # Calculate commission with 2-decimal money quantization
-                                    comm_type = prod.commission_type or "percentage"
+                                    comm_type = cast(str, prod.commission_type) or "percentage"
                                     if comm_type == "fixed":
-                                        comm_rate = float(prod.commission_value) if (prod.commission_value and prod.commission_value > 0) else 0.0
+                                        comm_rate = cast(float, prod.commission_value) if (cast(float, prod.commission_value) and cast(float, prod.commission_value) > 0) else 0.0
                                         commission_amt = quantize_money(min(comm_rate, price_paid))
                                     else: # percentage
-                                        comm_rate = float(prod.commission_value) if (prod.commission_value and prod.commission_value > 0) else float(aff.commission_rate or 20.0)
+                                        comm_rate = cast(float, prod.commission_value) if (cast(float, prod.commission_value) and cast(float, prod.commission_value) > 0) else (cast(float, aff.commission_rate) or 20.0)
                                         commission_amt = quantize_money((price_paid * comm_rate) / 100.0)
                                     
-                                    now_time = datetime.utcnow()
+                                    now_time = datetime.now(timezone.utc)
                                     
                                     # 6c. Insert immutable ReferralAttribution record
                                     attribution = ReferralAttribution(
@@ -306,13 +314,13 @@ class PurchaseService:
 
                                     if matching_set:
                                         for r_row in matching_set:
-                                            r_row.status = "PURCHASED"
-                                            r_row.order_id = order.id
-                                            r_row.converted_at = now_time
-                                            r_row.customer_id = user_id
-                                            r_row.attribution_source = attr_source
+                                            r_row.status = cast(Any, "PURCHASED")
+                                            r_row.order_id = cast(Any, order.id)
+                                            r_row.converted_at = cast(Any, now_time)
+                                            r_row.customer_id = cast(Any, user_id)
+                                            r_row.attribution_source = cast(Any, attr_source)
                                             if coupon_code_used:
-                                                r_row.coupon_code = coupon_code_used
+                                                r_row.coupon_code = cast(Any, coupon_code_used)
                                     else:
                                         # Create persistent AffiliateReferral row so conversion ledger is complete
                                         new_ref = AffiliateReferral(
@@ -332,15 +340,15 @@ class PurchaseService:
                                         db.add(new_ref)
 
                                     # Update affiliate stats with quantized money accumulation
-                                    aff.total_earnings = quantize_money((aff.total_earnings or 0.0) + commission_amt)
-                                    aff.pending_earnings = quantize_money((aff.pending_earnings or 0.0) + commission_amt)
-                                    aff.total_sales = (aff.total_sales or 0) + 1
-                                    aff.last_active_at = now_time
+                                    aff.total_earnings = cast(Any, quantize_money((cast(float, aff.total_earnings) or 0.0) + commission_amt))
+                                    aff.pending_earnings = cast(Any, quantize_money((cast(float, aff.pending_earnings) or 0.0) + commission_amt))
+                                    aff.total_sales = cast(Any, (cast(int, aff.total_sales) or 0) + 1)
+                                    aff.last_active_at = cast(Any, now_time)
 
                                     # Send Affiliate Notifications
                                     NotificationService.create_notification(
                                         db=db,
-                                        user_id=aff.user_id,
+                                        user_id=cast(int, aff.user_id),
                                         title="Commission Earned! 🎉",
                                         message=f"You earned a commission of ₹{commission_amt:.2f} (referred purchase of '{prod.title}').",
                                         category="commission"
@@ -349,7 +357,7 @@ class PurchaseService:
                                     # Log Affiliate Activity
                                     ActivityLogService.log_user_activity(
                                         db=db,
-                                        user_id=aff.user_id,
+                                        user_id=cast(int, aff.user_id),
                                         activity_type="commission_earned",
                                         details=f"Earned ₹{commission_amt:.2f} commission from order ORD-{order.id} for product '{prod.title}'."
                                     )
@@ -378,6 +386,22 @@ class PurchaseService:
                                 logging.getLogger(__name__).error("[PurchaseService] Non-fatal admin referral error: %s", _admin_ref_exc)
 
             # 7. Generate User notifications
+            
+            # 7.5 Record Platform Revenue in Ledger
+            if platform_fee_total > 0:
+                try:
+                    from app.services.treasury_service import write_ledger_entry
+                    write_ledger_entry(
+                        db,
+                        ledger_type="revenue_earned",
+                        amount=platform_fee_total,
+                        reference_type="order",
+                        reference_id=str(order.id),
+                        description=f"Platform fee for order ORD-{order.id}"
+                    )
+                except Exception as _ledger_exc:
+                    import logging
+                    logging.getLogger(__name__).error("[PurchaseService] Failed to record ledger entry: %s", _ledger_exc)
 
             # Customer Notification
             NotificationService.create_notification(
