@@ -363,9 +363,9 @@ export default function AffiliateEarnings({
       }}>
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
-          { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },
-          { label: 'Approved',          value: countByStatus.approved, color: '#4338CA' },
-          { label: 'Pending',           value: countByStatus.pending,  color: '#B45309' },
+          { label: 'Paid',              value: formatINR(paidEarnings),     color: '#15803D' },
+          { label: 'Approved',          value: formatINR(approvedEarnings), color: '#4338CA' },
+          { label: 'Pending',           value: formatINR(pendingEarnings),  color: '#B45309' },
         ].map((item, i) => (
           <div key={i} style={{ minWidth: 0 }}>
             <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{item.label}</span>
