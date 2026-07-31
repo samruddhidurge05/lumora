@@ -283,4 +283,5 @@ export default function VerifyEmail() {
         </motion.div>
       </div>
     </AuthBackground>
-  
+  );
+}
