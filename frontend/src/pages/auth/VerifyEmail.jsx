@@ -8,6 +8,8 @@ import { applyActionCode, checkActionCode, signOut } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { clearBackendToken } from '../../services/authService';
+import { Mail, CheckCircle2, AlertCircle, RefreshCw, ArrowRight, ShieldCheck } from 'lucide-react';
+import './auth.css';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 40, scale: 0.97 },
@@ -86,12 +88,13 @@ export default function VerifyEmail() {
     try {
       const activeRole = localStorage.getItem('lumora_active_role');
       const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
-      const role = activeRole || (snap.exists() ? snap.data().role : 'customer');
-      if (role === 'affiliate') navigate('/affiliate/dashboard');
-      else if (role === 'vendor') navigate('/vendor/dashboard');
+      const userRole = activeRole || (snap.exists() ? snap.data().role : 'customer');
+      if (userRole === 'affiliate' || role === 'affiliate') navigate('/affiliate/dashboard');
+      else if (userRole === 'vendor' || role === 'vendor') navigate('/vendor/dashboard');
       else navigate('/customer/dashboard');
     } catch (e) {
-      navigate('/customer/dashboard');
+      if (role === 'affiliate') navigate('/affiliate/dashboard');
+      else navigate('/customer/dashboard');
     }
   };
 
@@ -105,7 +108,7 @@ export default function VerifyEmail() {
         await applyActionCode(auth, oobCode);
         await reloadUser();
         setStatus('success');
-        setMessage('Email verified successfully.');
+        setMessage('Email verified successfully! Redirecting to dashboard...');
         setTimeout(() => navigateToDashboard(auth.currentUser || user), 1500);
       } catch (err) {
         if (err.code === 'auth/invalid-action-code') {
@@ -133,11 +136,11 @@ export default function VerifyEmail() {
       const currentUser = auth.currentUser || user;
       if (currentUser?.emailVerified) {
         setStatus('success');
-        setMessage('Email verified successfully.');
+        setMessage('Email verified successfully! Redirecting...');
         await navigateToDashboard(currentUser);
       } else {
         setStatus('error');
-        setMessage('Email has not been verified yet.');
+        setMessage('Email has not been verified yet. Please check your inbox or spam folder.');
       }
     } catch (err) {
       setStatus('error');
@@ -153,15 +156,17 @@ export default function VerifyEmail() {
     try {
       await resendVerification();
       setStatus('success');
-      setMessage('Verification email resent.');
+      setMessage('Verification email sent! Check your inbox.');
       setCooldown(60);
     } catch (err) {
       setStatus('error');
-      setMessage('Failed to resend verification email.');
+      setMessage('Failed to resend verification email. Please try again in a few moments.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <AuthBackground>
@@ -173,7 +178,8 @@ export default function VerifyEmail() {
           variants={cardVariants}
         >
           <div className="auth-card-border" />
-          
+
+          {/* Brand Logo Header */}
           <motion.div className="card-brand" variants={itemVariants}>
             <div className="card-gem">
               <svg viewBox="0 0 18 18" fill="none">
@@ -184,15 +190,44 @@ export default function VerifyEmail() {
             <span className="card-name">Lumora</span>
           </motion.div>
 
-          <motion.h2 className="card-heading" variants={itemVariants}>Verify Email</motion.h2>
+          {/* Role badge */}
+          <motion.div style={{ marginBottom: '12px', position: 'relative', zIndex: 2 }} variants={itemVariants}>
+            <span className="role-badge">{roleLabel} Account Verification</span>
+          </motion.div>
+
+          <motion.h2 className="card-heading" variants={itemVariants}>Verify Your Email</motion.h2>
           <motion.p className="card-subheading" variants={itemVariants}>
-            Verification email sent to: {email}
+            We've sent a verification link to confirm your account identity.
           </motion.p>
+
+          {/* Email Target Chip */}
+          {email && (
+            <motion.div 
+              variants={itemVariants}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                background: 'rgba(123, 63, 160, 0.10)',
+                border: '1px solid rgba(196, 148, 230, 0.35)',
+                margin: '12px 0 20px 0',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              <Mail size={16} color="#7B3FA0" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: '#2D004D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {email}
+              </span>
+            </motion.div>
+          )}
 
           {status && (
             <motion.div className={`auth-alert auth-alert-${status}`} role="alert" aria-live="assertive" variants={itemVariants}>
               <span>{status === 'success' ? '✦' : '⚠'}</span>
-              <p>{message}</p>
+              <p style={{ margin: 0 }}>{message}</p>
             </motion.div>
           )}
 
@@ -203,26 +238,49 @@ export default function VerifyEmail() {
             variants={itemVariants}
             whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
+            style={{ marginTop: '8px' }}
           >
-            {isLoading ? 'Checking...' : "I've Verified My Email"}
+            {isLoading ? 'Checking Verification...' : "I've Verified My Email"}
           </motion.button>
 
-          <motion.div className="signup-prompt" style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', alignItems: 'center' }} variants={itemVariants}>
+          <motion.div 
+            className="signup-prompt" 
+            style={{ marginTop: '1.4rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }} 
+            variants={itemVariants}
+          >
             {cooldown > 0 ? (
-              <span style={{ color: '#7B3FA0', fontWeight: '500' }}>
-                Resend in {cooldown}s
+              <span style={{ color: '#7B3FA0', fontWeight: 600, fontSize: '0.84rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <RefreshCw size={13} className="spin-slow" /> Resend link available in {cooldown}s
               </span>
             ) : (
-              <a href="#" onClick={(e) => { e.preventDefault(); handleResend(); }} style={{ fontSize: '0.9rem' }}>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isLoading}
+                style={{
+                  background: 'none', border: 'none', color: '#7B3FA0',
+                  fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer',
+                  textDecoration: 'underline', fontFamily: 'var(--font-sans)'
+                }}
+              >
                 Resend verification email
-              </a>
+              </button>
             )}
-            <a href="#" onClick={(e) => { e.preventDefault(); handleChangeEmail(); }} style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-              Change email / Register again
-            </a>
+
+            <button
+              type="button"
+              onClick={handleChangeEmail}
+              disabled={isLoading}
+              style={{
+                background: 'none', border: 'none', color: 'rgba(45, 0, 77, 0.65)',
+                fontSize: '0.80rem', fontWeight: 500, cursor: 'pointer',
+                fontFamily: 'var(--font-sans)', marginTop: '4px'
+              }}
+            >
+              Wrong email address? Register again
+            </button>
           </motion.div>
         </motion.div>
       </div>
     </AuthBackground>
-  );
-}
+  
