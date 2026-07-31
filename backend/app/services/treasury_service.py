@@ -73,8 +73,20 @@ def generate_withdrawal_number(db: Session) -> str:
 # ── Revenue Calculation ───────────────────────────────────────────────────────
 
 def _calculate_platform_revenue(db: Session) -> float:
+    from app.models.order import OrderItem
+    from app.models.product import Product
+    from sqlalchemy import case
+    
+    revenue_expr = case(
+        (Product.owner_type == 'PLATFORM', OrderItem.price_paid),
+        else_=OrderItem.price_paid * 0.15
+    )
+    
     result = (
-        db.query(func.coalesce(func.sum(Order.total_amount), 0.0))
+        db.query(func.coalesce(func.sum(revenue_expr), 0.0))
+        .select_from(Order)
+        .join(OrderItem, Order.id == OrderItem.order_id)
+        .join(Product, OrderItem.product_id == Product.id)
         .filter(Order.status.in_(["completed", "paid", "Completed", "Paid"]))
         .scalar()
     )
@@ -82,9 +94,16 @@ def _calculate_platform_revenue(db: Session) -> float:
 
 
 def _calculate_affiliate_liability(db: Session) -> float:
+    from app.models.affiliate import AffiliateCommission
+    from app.models.product import Product
+    
     result = (
         db.query(func.coalesce(func.sum(AffiliateCommission.commission_amt), 0.0))
-        .filter(AffiliateCommission.commission_status.in_(["approved", "ready_for_payout"]))
+        .join(Product, AffiliateCommission.product_id == Product.id)
+        .filter(
+            AffiliateCommission.commission_status.in_(["approved", "ready_for_payout"]),
+            Product.owner_type == 'PLATFORM'
+        )
         .scalar()
     )
     return round(float(result or 0.0), 2)
@@ -109,9 +128,22 @@ def _calculate_completed_withdrawals(db: Session) -> float:
 
 
 def _calculate_today_revenue(db: Session) -> float:
+    from app.models.order import OrderItem
+    from app.models.product import Product
+    from sqlalchemy import case
+    
     today_start = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    revenue_expr = case(
+        (Product.owner_type == 'PLATFORM', OrderItem.price_paid),
+        else_=OrderItem.price_paid * 0.15
+    )
+    
     result = (
-        db.query(func.coalesce(func.sum(Order.total_amount), 0.0))
+        db.query(func.coalesce(func.sum(revenue_expr), 0.0))
+        .select_from(Order)
+        .join(OrderItem, Order.id == OrderItem.order_id)
+        .join(Product, OrderItem.product_id == Product.id)
         .filter(
             Order.status.in_(["completed", "paid", "Completed", "Paid"]),
             Order.created_at >= today_start,

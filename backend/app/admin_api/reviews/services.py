@@ -31,8 +31,13 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
             except Exception:
                 total = len(list(query_ref.stream()))
 
-            # Order by createdAt or date descending and offset/limit
-            paginated_query = query_ref.order_by("createdAt", direction="DESCENDING").offset((page - 1) * page_size).limit(page_size)
+            # Order by rating first if inequality filter is applied to satisfy Firestore constraints
+            if sentiment in ("positive", "negative"):
+                paginated_query = query_ref.order_by("rating").order_by("createdAt", direction="DESCENDING")
+            else:
+                paginated_query = query_ref.order_by("createdAt", direction="DESCENDING")
+                
+            paginated_query = paginated_query.offset((page - 1) * page_size).limit(page_size)
             docs = list(paginated_query.stream())
             items = []
             for doc in docs:
@@ -347,7 +352,7 @@ def get_reviews_dashboard_data():
 def moderate_review(review_id: str, action: str):
     db_s = SessionLocal()
     try:
-        if str(review_id).isdigit():
+        if review_id.isdigit():
             review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
             if review:
                 if action == "delete":

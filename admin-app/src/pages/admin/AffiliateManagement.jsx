@@ -16,6 +16,7 @@ import { AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTri
 import ProductQrCode from '../../components/product/ProductQrCode';
 import { buildAffiliateReferralLink } from '../../utils/referralUtils';
 import { backendFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 // Sandbox Payment Testing Module
 import SandboxPaymentButton from '../../components/payout/SandboxPaymentButton';
@@ -1480,8 +1481,13 @@ export default function AffiliateManagement() {
     }
   }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
 
+  // Wait for AuthContext to finish restoring the admin JWT before fetching data.
+  const { loading: authLoading } = useAuth();
+
   // Realtime Active Tab Sync Ticker (15s interval)
   useEffect(() => {
+    // Don't fetch until auth session is ready (JWT stored in localStorage)
+    if (authLoading) return;
     const refreshActiveTabData = () => {
       if (activeTab === 'overview') { loadKpis(); loadPayouts(); loadAffiliates(); loadProducts(); }
       else if (activeTab === 'payouts') loadPayouts();
@@ -1492,11 +1498,11 @@ export default function AffiliateManagement() {
     refreshActiveTabData();
     const timer = setInterval(refreshActiveTabData, 15000);
     return () => clearInterval(timer);
-  }, [activeTab, loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger]);
+  }, [authLoading, activeTab, loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger]);
 
   // Reload when page/filter parameters update
-  useEffect(() => { if (activeTab === 'payouts') loadPayouts(); }, [payoutsPage, payoutStatusFilter, utrSearch, loadPayouts]);
-  useEffect(() => { if (activeTab === 'ledger') loadLedger(); }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter, loadLedger]);
+  useEffect(() => { if (!authLoading && activeTab === 'payouts') loadPayouts(); }, [authLoading, payoutsPage, payoutStatusFilter, utrSearch, loadPayouts]);
+  useEffect(() => { if (!authLoading && activeTab === 'ledger') loadLedger(); }, [authLoading, ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter, loadLedger]);
 
   // Handlers for RazorpayX Payouts
   const handleApprovePayout = (payoutId) => {

@@ -5,6 +5,7 @@ import { backendFetch } from '../../utils/api';
 import { db } from '../../firebase';
 import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { useAdminContext } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 const ROLES = ['super_admin', 'admin', 'moderator', 'support', 'finance', 'marketing', 'analyst'];
 const ROLE_PERMISSIONS_DESC = {

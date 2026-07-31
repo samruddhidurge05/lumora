@@ -1,11 +1,12 @@
 import logging
+from typing import Optional
 from datetime import datetime
 from app.models.product import Product
 from app.shared.firebase.connection import db as firestore_db, firebase_connected
 
 logger = logging.getLogger(__name__)
 
-def get_product_by_id(db_session, product_id: int) -> Product:
+def get_product_by_id(db_session, product_id: int) -> Optional[Product]:
     # First query local SQLite
     product = db_session.query(Product).filter(Product.id == product_id).first()
     if product:
@@ -24,7 +25,7 @@ def get_product_by_id(db_session, product_id: int) -> Product:
             logger.warning(f"[db_sync] Product {product_id} not found in Firestore either.")
             return None
 
-        data = doc.to_dict()
+        data = doc.to_dict() or {}
         logger.info(f"[db_sync] Product {product_id} found in Firestore. Restoring to SQLite...")
 
         # Map Firestore data back to SQLAlchemy model

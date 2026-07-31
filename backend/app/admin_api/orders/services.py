@@ -55,20 +55,23 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 cust_email = ""
 
             items_data = []
-            if hasattr(o, "items") and o.items:
-                for item in o.items:
-                    prod_title = "Product"
-                    try:
-                        if item.product and hasattr(item.product, "title") and item.product.title:
-                            prod_title = item.product.title
-                    except Exception:
+            try:
+                if hasattr(o, "items") and o.items:
+                    for item in o.items:
                         prod_title = "Product"
+                        try:
+                            if item.product and hasattr(item.product, "title") and item.product.title:
+                                prod_title = item.product.title
+                        except Exception:
+                            prod_title = "Product"
 
-                    items_data.append({
-                        "productId": str(getattr(item, "product_id", "") or ""),
-                        "productName": prod_title,
-                        "price": float(getattr(item, "price_paid", 0.0) or 0.0),
-                    })
+                        items_data.append({
+                            "productId": str(getattr(item, "product_id", "") or ""),
+                            "productName": prod_title,
+                            "price": float(getattr(item, "price_paid", 0.0) or 0.0),
+                        })
+            except Exception as e:
+                print(f"[get_orders_list] Error loading items for order {o.id}: {e}")
 
             customer_paid = float(o.total_amount or 0.0)
             affiliate_commission = _get_order_commission_amt(db_s, o.id)
@@ -108,7 +111,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
 
 _firestore_broken = False
 
-def get_order_by_id(order_id: str):
+def get_order_by_id(order_id: str) -> dict:
     global _firestore_broken
     clean_id = order_id.replace("ORD-", "")
     if not clean_id.isdigit():
@@ -193,7 +196,7 @@ def modify_order_status(order_id: str, status: str):
                             try:
                                 db.collection("affiliateConversions").document(f"COMM-{c.id}").update({
                                     "status": "approved",
-                                    "updatedAt": datetime.utcnow().isoformat() + "Z"
+                                    "updatedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"
                                 })
                             except Exception:
                                 pass
@@ -214,7 +217,7 @@ def modify_order_status(order_id: str, status: str):
                             try:
                                 db.collection("affiliateConversions").document(f"COMM-{c.id}").update({
                                     "status": "cancelled",
-                                    "updatedAt": datetime.utcnow().isoformat() + "Z"
+                                    "updatedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"
                                 })
                             except Exception:
                                 pass
@@ -226,7 +229,7 @@ def modify_order_status(order_id: str, status: str):
         ref = db.collection("orders").document(clean_id)
         ref.update({
             "status": status,
-            "updatedAt": datetime.utcnow().isoformat() + "Z",
+            "updatedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
         })
     return {"success": True, "id": order_id, "status": status}
 

@@ -1474,19 +1474,36 @@ export default function AffiliateManagement() {
     }
   }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter]);
 
+  const activeTabRef = useRef(activeTab);
+  const loadersRef = useRef({ loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger });
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+    loadersRef.current = { loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger };
+  }, [activeTab, loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger]);
+
+  // Initial load on tab change
+  useEffect(() => {
+    const tab = activeTabRef.current;
+    if (tab === 'overview') { loadersRef.current.loadKpis(); loadersRef.current.loadPayouts(); loadersRef.current.loadAffiliates(); loadersRef.current.loadProducts(); }
+    else if (tab === 'payouts') loadersRef.current.loadPayouts();
+    else if (tab === 'promoters') loadersRef.current.loadAffiliates();
+    else if (tab === 'products') loadersRef.current.loadProducts();
+    else if (tab === 'ledger') loadersRef.current.loadLedger();
+  }, [activeTab]);
+
   // Realtime Active Tab Sync Ticker (15s interval)
   useEffect(() => {
-    const refreshActiveTabData = () => {
-      if (activeTab === 'overview') { loadKpis(); loadPayouts(); loadAffiliates(); loadProducts(); }
-      else if (activeTab === 'payouts') loadPayouts();
-      else if (activeTab === 'promoters') loadAffiliates();
-      else if (activeTab === 'products') loadProducts();
-      else if (activeTab === 'ledger') loadLedger();
-    };
-    refreshActiveTabData();
-    const timer = setInterval(refreshActiveTabData, 15000);
+    const timer = setInterval(() => {
+      const tab = activeTabRef.current;
+      if (tab === 'overview') { loadersRef.current.loadKpis(); loadersRef.current.loadPayouts(); loadersRef.current.loadAffiliates(); loadersRef.current.loadProducts(); }
+      else if (tab === 'payouts') loadersRef.current.loadPayouts();
+      else if (tab === 'promoters') loadersRef.current.loadAffiliates();
+      else if (tab === 'products') loadersRef.current.loadProducts();
+      else if (tab === 'ledger') loadersRef.current.loadLedger();
+    }, 15000);
     return () => clearInterval(timer);
-  }, [activeTab, loadKpis, loadPayouts, loadAffiliates, loadProducts, loadLedger]);
+  }, []);
 
   // Reload when page/filter parameters update
   useEffect(() => { if (activeTab === 'payouts') loadPayouts(); }, [payoutsPage, payoutStatusFilter, utrSearch, loadPayouts]);
