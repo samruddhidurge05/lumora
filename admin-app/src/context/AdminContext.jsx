@@ -68,17 +68,25 @@ export function AdminContextProvider({ children }) {
     // Wait for the backend JWT to be available before calling /admin/me.
     // On page refresh, AdminContextProvider mounts before onAuthStateChanged
     // fires and adminLogin() stores the JWT. Calling /admin/me too early returns
-    // 401 → clearBackendToken() wipes the admin token → ProtectedRoute redirects
-    // to /admin/login even though authentication was about to succeed.
+    // 401 which (even with the conservative token-only clear in api.js) generates
+    // noisy errors and potentially corrupts context state.
     //
     // Strategy:
-    //   1. If the token already exists (e.g. hot navigation, not refresh), fire immediately.
-    //   2. Otherwise, listen for 'lumora_backend_ready' dispatched by adminAuthService.adminLogin().
-    //   3. Safety timeout of 15s to avoid eternal wait on unexpected failure.
+    //   1. If the token already exists (hot navigation, session already restored),
+    //      fire immediately.
+    //   2. Otherwise, listen for 'lumora_backend_ready' — dispatched by
+    //      adminAuthService.adminLogin() and authService.syncWithBackend() after
+    //      the JWT is stored. No safety timeout: the event is ALWAYS dispatched
+    //      when auth succeeds. If the component unmounts (navigation), cleanup
+    //      removes the listener and cancels any pending fetch.
     let cancelled = false;
 
     const fetchAdminMe = () => {
       if (cancelled) return;
+      // Double-check the token is actually present before making the request.
+      // This guards against the event being dispatched before localStorage write.
+      const tok = localStorage.getItem('lumora_backend_token');
+      if (!tok) return;
       backendFetch('/admin/me')
         .then(data => {
           if (!cancelled) {
@@ -98,20 +106,12 @@ export function AdminContextProvider({ children }) {
       // Token already in storage — fire immediately (hot navigation)
       fetchAdminMe();
     } else {
-      // Wait for the token to be stored by adminLogin()
+      // Wait for the token to be stored by adminLogin() or syncWithBackend()
       const onReady = () => fetchAdminMe();
       window.addEventListener('lumora_backend_ready', onReady, { once: true });
-
-      // Safety timeout: if we never get the event, try anyway after 15s
-      const safetyTimer = setTimeout(() => {
-        window.removeEventListener('lumora_backend_ready', onReady);
-        fetchAdminMe();
-      }, 15000);
-
       return () => {
         cancelled = true;
         window.removeEventListener('lumora_backend_ready', onReady);
-        clearTimeout(safetyTimer);
       };
     }
 

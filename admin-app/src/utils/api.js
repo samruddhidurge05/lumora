@@ -80,9 +80,13 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
 
     // Admin sessions use a separate JWT flow — never attempt syncWithBackend
-    // for admin tokens. Clear the token and let AuthContext redirect to /admin/login.
+    // for admin tokens. Only remove the stale JWT — NEVER call clearBackendToken()
+    // which would also wipe lumora_active_role. Preserving lumora_active_role is
+    // critical: onAuthStateChanged reads it to detect admin sessions. If it is
+    // wiped, the admin branch is skipped, userRole becomes 'customer', and
+    // ProtectedRoute redirects to /admin/login even though auth would succeed.
     if (activeRole === 'admin') {
-      clearBackendToken();
+      localStorage.removeItem('lumora_backend_token');
       const error = new Error('Admin session expired. Please log in again.');
       error.status = 401;
       throw error;
