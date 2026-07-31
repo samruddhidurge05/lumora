@@ -201,19 +201,20 @@ export default function Reviews() {
   const [moderating,     setModerating]       = useState(false);
 
   // Cold-start retry — handled automatically by backendFetchWithRetry
-  const coldStartRetryRef = useRef(null); // kept for safety, no longer used manually
+  const coldStartRetryRef = useRef(null); 
 
   // Wait for AuthContext to finish restoring the admin JWT before fetching data.
   const { loading: authLoading } = useAuth();
 
   const loadBackendReviews = useCallback(async (page = 1, sentiment = "all", search = "") => {
+    console.log('[Reviews] 🚀 loadBackendReviews ENTERED (page:', page, 'sentiment:', sentiment, 'search:', search, ')');
     setLoadError(null);
     try {
       const params = new URLSearchParams({ page, page_size: PAGE_SIZE });
       if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
       if (search) params.set("search", search);
 
-      console.log('[Reviews] Loading reviews:', `/admin/reviews/?${params.toString()}`);
+      console.log('[Reviews] Calling backendFetchWithRetry for:', `/admin/reviews/?${params.toString()}`);
       console.log('[Reviews] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
       console.log('[Reviews] Active role:', localStorage.getItem('lumora_active_role'));
 
@@ -221,17 +222,18 @@ export default function Reviews() {
         `/admin/reviews/?${params.toString()}`,
         {},
         (secondsLeft) => {
+          console.log('[Reviews] Warmup callback fired, secondsLeft:', secondsLeft);
           setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
         }
       );
-      console.log('[Reviews] Loaded reviews:', data);
+      console.log('[Reviews] ✅ Loaded reviews successfully:', data);
 
       setBackendReviews(data.items || []);
       setTotalReviews(data.total || 0);
       setCurrentPage(data.page || page);
       setLoadError(null);
     } catch (err) {
-      console.error("[Reviews] Backend reviews load failed:", err);
+      console.error("[Reviews] ❌ Backend reviews load failed:", err.message, err);
       setLoadError(err.message || "Failed to load reviews");
     }
   }, []);
@@ -248,14 +250,13 @@ export default function Reviews() {
       triggerNotification(
         action === "delete" ? "Review deleted" :
         action === "flag"   ? "Review flagged" : "Review unflagged",
-        "success"
+        "info"
       );
-      // Refresh the current page
-      await loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+      loadBackendReviews(currentPage, sentimentFilter, searchQuery);
       setSelectedReview(null);
     } catch (err) {
-      console.error("[Reviews] Moderate failed:", err);
-      triggerNotification(`Moderation failed: ${err.message || "Unknown error"}`, "error");
+      console.error("Moderation failed:", err);
+      triggerNotification("Moderation action failed", "warning");
     } finally {
       setModerating(false);
     }
@@ -282,7 +283,12 @@ export default function Reviews() {
 
   // Load backend paginated reviews — wait for auth session to be ready first
   useEffect(() => {
-    if (authLoading && !localStorage.getItem('lumora_backend_token')) return;
+    console.log('[Reviews] ⚡ useEffect FIRED — authLoading:', authLoading, 'token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'NULL');
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) {
+      console.log('[Reviews] 🛑 useEffect GUARD TRIGGERED: waiting for auth session');
+      return;
+    }
+    console.log('[Reviews] Triggering loadBackendReviews() from useEffect');
     setCurrentPage(1);
     loadBackendReviews(1, sentimentFilter, searchQuery);
   }, [authLoading, sentimentFilter, searchQuery, loadBackendReviews]);

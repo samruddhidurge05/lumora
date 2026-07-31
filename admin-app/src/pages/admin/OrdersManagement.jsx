@@ -382,13 +382,14 @@ export default function OrdersManagement() {
   // --- DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     const validPage = (typeof page === 'number' && !isNaN(page) && page >= 1) ? Math.floor(page) : 1;
+    console.log('[OrdersManagement] 🚀 loadOrders() ENTERED (page:', validPage, 'statusFilter:', statusFilter, ')');
     setLoading(true);
     setLoadError('');
     try {
       const params = new URLSearchParams({ page: validPage, page_size: ORDER_PAGE_SIZE });
       if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
       
-      console.log('[OrdersManagement] Loading orders:', `/admin/orders/?${params}`);
+      console.log('[OrdersManagement] Calling backendFetchWithRetry for:', `/admin/orders/?${params}`);
       console.log('[OrdersManagement] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
       console.log('[OrdersManagement] Active role:', localStorage.getItem('lumora_active_role'));
       
@@ -396,10 +397,11 @@ export default function OrdersManagement() {
         `/admin/orders/?${params}`,
         {},
         (secondsLeft) => {
+          console.log('[OrdersManagement] Warmup callback fired, secondsLeft:', secondsLeft);
           setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
         }
       );
-      console.log('[OrdersManagement] Loaded orders:', data);
+      console.log('[OrdersManagement] ✅ Loaded orders successfully:', data);
       
       // Handle both paginated shape {total, items} and legacy bare array
       const items = Array.isArray(data) ? data : (data.items || []);
@@ -410,14 +412,16 @@ export default function OrdersManagement() {
       if (items.length > 0) setSelectedOrderId(items[0].id);
       setLoadError('');
     } catch (err) {
-      console.error('[OrdersManagement] Failed to load orders:', err);
+      console.error('[OrdersManagement] ❌ Failed to load orders:', err.message, err);
       setLoadError(err.message || 'Failed to load orders. Check your connection and try again.');
     } finally {
+      console.log('[OrdersManagement] 🏁 finally block reached — calling setLoading(false)');
       setLoading(false);
     }
   }, [ORDER_PAGE_SIZE]);
 
   const loadRefundTickets = useCallback(async () => {
+    console.log('[OrdersManagement] 🚀 loadRefundTickets() ENTERED');
     setLoading(true);
     setLoadError('');
     try {
@@ -429,16 +433,23 @@ export default function OrdersManagement() {
       console.error('Failed to load refund tickets:', err);
       setLoadError('Failed to load refund tickets.');
     } finally {
+      console.log('[OrdersManagement] 🏁 loadRefundTickets finally block reached — calling setLoading(false)');
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    console.log('[OrdersManagement] ⚡ useEffect FIRED — authLoading:', authLoading, 'token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'NULL', 'viewMode:', viewMode);
     // Don't fetch until AuthContext has finished restoring the admin session (JWT) or token is ready
-    if (authLoading && !localStorage.getItem('lumora_backend_token')) return;
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) {
+      console.log('[OrdersManagement] 🛑 useEffect GUARD TRIGGERED: waiting for auth session');
+      return;
+    }
     if (viewMode === 'orders') {
+      console.log('[OrdersManagement] Triggering loadOrders() from useEffect');
       loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
     } else {
+      console.log('[OrdersManagement] Triggering loadRefundTickets() from useEffect');
       loadRefundTickets();
     }
   }, [authLoading, viewMode, selectedStatus, loadOrders, loadRefundTickets]);

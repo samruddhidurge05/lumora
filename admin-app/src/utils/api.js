@@ -240,16 +240,26 @@ export const backendFetchWithRetry = async (endpoint, options = {}, onWarmup = n
   const MAX_WAIT_MS = 90_000;
   const RETRY_INTERVAL_MS = 8_000;
   const start = Date.now();
+  let attempt = 0;
+
+  console.log(`[api.js] backendFetchWithRetry ENTERED for: ${endpoint}`);
 
   while (true) {
+    attempt++;
+    console.log(`[api.js] backendFetchWithRetry attempt #${attempt} starting for: ${endpoint}`);
     try {
-      return await backendFetch(endpoint, options);
+      const result = await backendFetch(endpoint, options);
+      console.log(`[api.js] backendFetchWithRetry SUCCESS on attempt #${attempt} for: ${endpoint}`);
+      return result;
     } catch (err) {
+      console.warn(`[api.js] backendFetchWithRetry caught error on attempt #${attempt} for: ${endpoint}:`, err.message, 'code:', err.code, 'status:', err.status);
       const elapsed = Date.now() - start;
       if (err.code !== 'BACKEND_OFFLINE' || elapsed >= MAX_WAIT_MS) {
+        console.error(`[api.js] backendFetchWithRetry GIVING UP / THROWING for: ${endpoint}`);
         throw err;
       }
       const secondsLeft = Math.ceil((MAX_WAIT_MS - elapsed) / 1000);
+      console.log(`[api.js] backendFetchWithRetry RETRYING in ${RETRY_INTERVAL_MS}ms (secondsLeft: ${secondsLeft})`);
       if (onWarmup) onWarmup(secondsLeft);
       await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_MS));
     }
