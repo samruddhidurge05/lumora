@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, Home } from 'lucide-react';
+import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, Home, TrendingUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -106,7 +106,7 @@ export default function Navbar() {
     { label: 'Explore',     icon: <Compass size={14} color="#7B3FA0" />,       href: '#products' },
     { label: 'Categories',  icon: <Sparkles size={14} color="#7B3FA0" />,      href: '#categories' },
     { label: 'Showcase',    icon: <Home size={14} color="#7B3FA0" />,          href: '#home' },
-    ...(!user ? [{ label: 'Partnership', icon: <Users size={14} color="#7B3FA0" />, href: '/partnerships', badge: 'New' }] : []),
+    { label: 'Affiliate',   icon: <TrendingUp size={14} color="#7B3FA0" />,    href: '/partnerships' },
     ...(user  ? [{ label: 'Dashboard',   icon: <LayoutDashboard size={14} color="#7B3FA0" />, href: '#dashboard' }] : []),
   ];
 

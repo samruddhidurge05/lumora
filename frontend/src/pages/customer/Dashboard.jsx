@@ -28,6 +28,7 @@ const PRIMARY_NAV = [
   { name: 'Downloads',      label: 'Downloads',   icon: <Download size={14} /> },
   { name: 'Purchases',      label: 'Purchases',   icon: <ShoppingBag size={14} /> },
   { name: 'Wishlist',       label: 'Wishlist',    icon: <Heart size={14} /> },
+  { name: 'Affiliate Program', label: 'Affiliate', icon: <TrendingUp size={14} /> },
 ];
 
 const MORE_NAV = [
@@ -539,6 +540,37 @@ export default function Dashboard() {
 
           {/* Right Action Group: AI search + user info + exit */}
           <div className="cust-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            {/* Affiliate Program Button */}
+            <button
+              onClick={() => handleNavClick('Affiliate Program')}
+              className="cust-affiliate-nav-btn"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 14px', borderRadius: '20px',
+                border: '1px solid rgba(196,148,230,0.35)',
+                background: dashboardTab === 'Affiliate Program' ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'rgba(123,63,160,0.08)',
+                color: dashboardTab === 'Affiliate Program' ? '#FFFFFF' : '#7B3FA0',
+                fontSize: '0.78rem', fontWeight: 700,
+                cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-sans)',
+                transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                if (dashboardTab !== 'Affiliate Program') {
+                  e.currentTarget.style.background = 'rgba(123,63,160,0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(196,148,230,0.55)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (dashboardTab !== 'Affiliate Program') {
+                  e.currentTarget.style.background = 'rgba(123,63,160,0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(196,148,230,0.35)';
+                }
+              }}
+            >
+              <TrendingUp size={13} />
+              <span>Affiliate Program</span>
+            </button>
             {/* Cart Icon Option */}
             <button
               onClick={() => navigateTo('cart')}
@@ -828,57 +860,7 @@ function DashboardHome({
         ))}
       </div>
 
-      {/* ── Affiliate Program Feature Card ── */}
-      <div className="glass-card" style={{
-        padding: '28px 32px',
-        background: 'linear-gradient(135deg, rgba(246,240,255,0.95) 0%, rgba(235,224,255,0.70) 100%)',
-        border: '1.5px solid rgba(192, 132, 252, 0.50)',
-        borderRadius: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        boxShadow: '0 12px 36px rgba(123, 63, 160, 0.10), inset 0 1px 0 rgba(255,255,255,0.90)',
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(123, 63, 160, 0.15)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
-            <TrendingUp size={13} /> Affiliate Program
-          </div>
-          <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.6rem', color: '#2D004D', margin: 0, fontWeight: 500 }}>
-            Earn 15%+ Commission Sharing Lumora
-          </h3>
-          <p style={{ fontSize: '0.84rem', color: '#5A3E6B', margin: '8px 0 0', lineHeight: 1.6, maxWidth: '580px' }}>
-            Share digital assets with your community and earn competitive payout rates on every sale. Access instant referral links & live click analytics.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            onClick={() => navigateTo('partnerships-affiliate')}
-            style={{
-              padding: '12px 24px', borderRadius: '12px', border: 'none',
-              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-              color: '#FFFFFF', fontSize: '0.84rem', fontWeight: 700,
-              cursor: 'pointer', boxShadow: '0 4px 18px rgba(90, 30, 126, 0.30)',
-              fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '6px',
-            }}
-          >
-            Go to Affiliate Dashboard →
-          </button>
-          <button
-            onClick={() => navigateTo('partnerships-affiliate')}
-            style={{
-              padding: '12px 20px', borderRadius: '12px',
-              border: '1.5px solid rgba(196,148,230,0.40)',
-              background: 'rgba(255,255,255,0.85)',
-              color: '#2D004D', fontSize: '0.84rem', fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            }}
-          >
-            Learn More
-          </button>
-        </div>
-      </div>
+
 
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
