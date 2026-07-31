@@ -119,7 +119,7 @@ export default function CustomersManagement() {
 
     const customerQuery = query(
       collection(db, 'users'), 
-      where('role', 'in', ['customer', 'Customer'])
+      where('role', 'in', ['customer', 'Customer', 'user', 'User', ''])
     );
 
     let usersFetched = false; // guard: REST fallback fires only once per mount
@@ -598,7 +598,7 @@ export default function CustomersManagement() {
           }} onClick={e => e.stopPropagation()}>
             
             {/* Header */}
-            <div style={{ display: 'flex', justifyBetween: 'space-between', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <span style={{ fontSize: '9px', fontWeight: 800, color: '#7B3FA0', letterSpacing: '1px', textTransform: 'uppercase' }}>CUSTOMER DETAILS</span>
                 <h3 style={{ fontSize: '1.6rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: '#2D004D', marginTop: '4px' }}>
