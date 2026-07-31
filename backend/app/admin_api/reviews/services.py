@@ -1,3 +1,4 @@
+from typing import Any
 from app.shared.firebase.connection import db, firebase_connected
 from fastapi import HTTPException
 from app.db.session import SessionLocal
@@ -24,16 +25,18 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
                 query_ref = query_ref.where("rating", "<", 3)
 
             try:
-                total = query_ref.count().get()[0][0].value
+                count_query: Any = query_ref.count()
+                count_res: Any = count_query.get()
+                total = count_res[0][0].value
             except Exception:
                 total = len(list(query_ref.stream()))
 
             # Order by createdAt or date descending and offset/limit
-            paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+            paginated_query = query_ref.order_by("createdAt", direction="DESCENDING").offset((page - 1) * page_size).limit(page_size)
             docs = list(paginated_query.stream())
             items = []
             for doc in docs:
-                r = doc.to_dict()
+                r = doc.to_dict() or {}
                 rating = int(r.get("rating", 5))
                 if rating > 3:
                     sent = "positive"
@@ -275,7 +278,7 @@ def get_reviews_dashboard_data():
     positive_count = neutral_count = negative_count = 0
 
     for doc in docs:
-        r = doc.to_dict()
+        r = doc.to_dict() or {}
         rating = int(r.get("rating", 5))
         ratings.append(rating)
 
@@ -344,11 +347,14 @@ def get_reviews_dashboard_data():
 def moderate_review(review_id: str, action: str):
     db_s = SessionLocal()
     try:
-        review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
-        if review:
-            if action == "delete":
-                db_s.delete(review)
-            db_s.commit()
+        if str(review_id).isdigit():
+            review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
+            if review:
+                if action == "delete":
+                    db_s.delete(review)
+                db_s.commit()
+    except Exception as e:
+        print(f"[reviews] SQLite moderate query warning: {e}")
     finally:
         db_s.close()
 

@@ -30,7 +30,7 @@ def _get_order_commission_amt(db_s, order_id: int) -> float:
         return 0.0
 
 
-def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
+def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = None):
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
@@ -46,23 +46,45 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
         orders = q.offset((page - 1) * page_size).limit(page_size).all()
         result = []
         for o in orders:
-            customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
-            cust_name = customer.name if customer else "Customer"
-            cust_email = customer.email if customer else ""
+            try:
+                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
+                cust_name = getattr(customer, "name", None) or "Customer"
+                cust_email = getattr(customer, "email", None) or ""
+            except Exception:
+                cust_name = "Customer"
+                cust_email = ""
+
             items_data = []
-            for item in o.items:
-                items_data.append({
-                    "productId": str(item.product_id),
-                    "productName": item.product.title if item.product else "Product",
-                    "price": float(item.price_paid or 0.0),
-                })
+            if hasattr(o, "items") and o.items:
+                for item in o.items:
+                    prod_title = "Product"
+                    try:
+                        if item.product and hasattr(item.product, "title") and item.product.title:
+                            prod_title = item.product.title
+                    except Exception:
+                        prod_title = "Product"
+
+                    items_data.append({
+                        "productId": str(getattr(item, "product_id", "") or ""),
+                        "productName": prod_title,
+                        "price": float(getattr(item, "price_paid", 0.0) or 0.0),
+                    })
+
             customer_paid = float(o.total_amount or 0.0)
             affiliate_commission = _get_order_commission_amt(db_s, o.id)
             net_platform_revenue = round(customer_paid - affiliate_commission, 2)
+
+            created_at_str = ""
+            if o.created_at:
+                try:
+                    created_at_str = o.created_at.isoformat() + "Z"
+                except Exception:
+                    created_at_str = str(o.created_at)
+
             result.append({
                 "id": str(o.id),
                 "orderId": f"ORD-{o.id}",
-                "customerId": str(o.user_id),
+                "customerId": str(o.user_id) if o.user_id else "",
                 "customerName": cust_name,
                 "customerEmail": cust_email,
                 "items": items_data,
@@ -71,10 +93,10 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
                 "status": o.status or "completed",
                 "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
                 "paymentMethod": o.payment_method or "upi",
-                "createdAt": o.created_at.isoformat() + "Z" if o.created_at else "",
+                "createdAt": created_at_str,
                 "affiliateId": str(o.affiliate_id) if o.affiliate_id else None,
-                "referralCodeUsed": o.referral_code_used or None,
-                "referralLinkId": str(o.referral_link_id) if o.referral_link_id else None,
+                "referralCodeUsed": getattr(o, "referral_code_used", None),
+                "referralLinkId": str(o.referral_link_id) if getattr(o, "referral_link_id", None) else None,
                 # Financial breakdown fields — used by Transaction Ledger in admin UI
                 "customerPaid": customer_paid,
                 "affiliateCommission": affiliate_commission,
@@ -132,7 +154,8 @@ def get_order_by_id(order_id: str):
         doc_snap = db.collection("orders").document(clean_id).get()
         if not doc_snap.exists:
             raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
-        return {"id": doc_snap.id, **doc_snap.to_dict()}
+        order_data = doc_snap.to_dict() or {}
+        return {"id": doc_snap.id, **order_data}
     except Exception as e:
         print(f"[orders] Firestore order get failed: {e}. Falling back to SQLite.")
         _firestore_broken = True
