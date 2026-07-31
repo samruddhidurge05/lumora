@@ -639,87 +639,81 @@ app = FastAPI(
 
 @app.on_event("startup")
 def restore_products():
-    try:
-        from scripts.migrate_affiliate_attribution import run_migration
-        run_migration()
-    except Exception as mig_err:
-        print(f"[startup] Migration hook notice: {mig_err}")
+    import threading
 
-    from app.db.database import SessionLocal
-    from app.models.product import Product as ProductModel
-    from admin.firestore.admin_firestore import (
-        restore_sqlite_products_from_firestore,
-        sync_product_to_firestore,
-    )
-    from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
+    def _async_startup_sync():
+        try:
+            from scripts.migrate_affiliate_attribution import run_migration
+            run_migration()
+        except Exception as mig_err:
+            _logger.info(f"[startup] Migration hook notice: {mig_err}")
 
-    # Quick Fast Storage Probe
-    try:
-        from app.services.storage_service import storage_service
-        _logger.info("[startup] Fast Storage Health Probe: Backblaze B2 Status = %s (Available: %s)", storage_service.b2_provider.b2_status, storage_service.b2_provider.is_available())
-    except Exception as st_err:
-        _logger.warning("[startup] Storage health probe notice: %s", st_err)
+        from app.db.database import SessionLocal
+        from app.models.product import Product as ProductModel
+        from admin.firestore.admin_firestore import (
+            restore_sqlite_products_from_firestore,
+            sync_product_to_firestore,
+        )
+        from app.shared.firebase.connection import db as _fs_db, firebase_connected as _fs_ok
 
-    db = SessionLocal()
-    try:
-        # ── Seed guard: only seed if the database is completely empty ──────────
-        # On Render (PostgreSQL) the database is never empty after the first deploy.
-        # Running seed on a populated database would INSERT placeholder file_urls
-        # (e.g. /products/product-{id}.zip) for any product ID that doesn't exist
-        # in PostgreSQL yet, which permanently corrupts the file reference.
-        #
-        # We deliberately count ALL statuses (published + draft + archived) so
-        # a product soft-deleted via "archive" doesn't re-trigger seeding.
-        existing_count = db.query(ProductModel).count()
-        if existing_count == 0:
-            try:
-                from scripts.seed_products import seed as seed_db_products
-                _logger.info("[startup] Empty database detected — running one-time seed from products.json...")
-                seed_db_products()
-                _logger.info("[startup] One-time seed completed.")
-            except Exception as _seed_err:
-                _logger.error("[startup] Failed to seed empty database: %s", _seed_err)
-        else:
-            _logger.info(
-                "[startup] Database has %d existing product(s) — skipping seed to protect real data.",
-                existing_count,
-            )
+        # Quick Fast Storage Probe
+        try:
+            from app.services.storage_service import storage_service
+            _logger.info("[startup] Fast Storage Health Probe: Backblaze B2 Status = %s (Available: %s)", storage_service.b2_provider.b2_status, storage_service.b2_provider.is_available())
+        except Exception as st_err:
+            _logger.warning("[startup] Storage health probe notice: %s", st_err)
 
-        # ── Restore: INSERT any Firestore products completely absent from PG ───
-        # NOTE: As of 2026-07, this function is safety-hardened to NEVER overwrite
-        # existing PostgreSQL records. It only inserts products missing from PG.
-        _logger.info("[startup] Checking for products in Firestore missing from PostgreSQL...")
-        restore_sqlite_products_from_firestore(db)
+        db = SessionLocal()
+        try:
+            existing_count = db.query(ProductModel).count()
+            if existing_count == 0:
+                try:
+                    from scripts.seed_products import seed as seed_db_products
+                    _logger.info("[startup] Empty database detected — running one-time seed from products.json...")
+                    seed_db_products()
+                    _logger.info("[startup] One-time seed completed.")
+                except Exception as _seed_err:
+                    _logger.error("[startup] Failed to seed empty database: %s", _seed_err)
+            else:
+                _logger.info(
+                    "[startup] Database has %d existing product(s) — skipping seed to protect real data.",
+                    existing_count,
+                )
 
-        # ── Forward-sync: push any PG products missing from Firestore ──────────
-        # This catches products created while Firebase was temporarily offline.
-        if _fs_ok and _fs_db is not None:
-            try:
-                existing_ids = {doc.id for doc in _fs_db.collection("products").stream()}
-                all_active = db.query(ProductModel).filter(
-                    ProductModel.status.in_(["published", "draft"])
-                ).all()
-                missing = [p for p in all_active if str(p.id) not in existing_ids]
-                if missing:
-                    _logger.info(
-                        "[startup] Found %d product(s) in PostgreSQL not yet in Firestore — syncing now: %s",
-                        len(missing), [p.id for p in missing],
-                    )
-                    for p in missing:
-                        try:
-                            sync_product_to_firestore(p)
-                        except Exception as _sync_err:
-                            _logger.error("[startup] Failed to sync product %s: %s", p.id, _sync_err)
-                    _logger.info("[startup] Missing-product forward-sync complete.")
-                else:
-                    _logger.info("[startup] All PostgreSQL products are already in Firestore.")
-            except Exception as _fwd_err:
-                _logger.warning("[startup] Forward-sync check failed (non-fatal): %s", _fwd_err)
+            _logger.info("[startup] Checking for products in Firestore missing from PostgreSQL...")
+            restore_sqlite_products_from_firestore(db)
 
-    except Exception as e:
-        _logger.error("[startup] Error running startup products recovery: %s", e)
-    finally:
-        db.close()
+            if _fs_ok and _fs_db is not None:
+                try:
+                    existing_ids = {doc.id for doc in _fs_db.collection("products").stream()}
+                    all_active = db.query(ProductModel).filter(
+                        ProductModel.status.in_(["published", "draft"])
+                    ).all()
+                    missing = [p for p in all_active if str(p.id) not in existing_ids]
+                    if missing:
+                        _logger.info(
+                            "[startup] Found %d product(s) in PostgreSQL not yet in Firestore — syncing now: %s",
+                            len(missing), [p.id for p in missing],
+                        )
+                        for p in missing:
+                            try:
+                                sync_product_to_firestore(p)
+                            except Exception as _sync_err:
+                                _logger.error("[startup] Failed to sync product %s: %s", p.id, _sync_err)
+                        _logger.info("[startup] Missing-product forward-sync complete.")
+                    else:
+                        _logger.info("[startup] All PostgreSQL products are already in Firestore.")
+                except Exception as _fwd_err:
+                    _logger.warning("[startup] Forward-sync check failed (non-fatal): %s", _fwd_err)
+
+        except Exception as e:
+            _logger.error("[startup] Error running startup products recovery: %s", e)
+        finally:
+            db.close()
+
+    # Launch in daemon thread so Uvicorn binds port 10000 instantly for Render health checks
+    threading.Thread(target=_async_startup_sync, daemon=True, name="LumoraStartupSyncThread").start()
+
 
 
 # -- Rate Limiting -------------------------------------------------------------
