@@ -158,6 +158,10 @@ export const calculatePaymentOverview = (orders) => {
 };
 
 export const calculateVendorPayouts = (orders, vendors) => {
+  // Vendor payout figures are informational only on this page.
+  // We display gross sales attributed to each vendor from actual order data.
+  // We do NOT apply hardcoded commission splits (10/70/20 were wrong fabricated numbers).
+  // Actual net amounts are managed via the Withdrawal system (vendors/withdrawals table).
   const ordersList = orders || [];
   const vendorsList = vendors || [];
 
@@ -178,18 +182,20 @@ export const calculateVendorPayouts = (orders, vendors) => {
   });
 
   const payouts = vendorsList.map(v => {
-    const stats = vendorStats[v.uid || v.id] || { totalSales: 0 };
+    const stats = vendorStats[v.uid || v.id] || { totalSales: 0, count: 0 };
     const totalSales = stats.totalSales;
-    const commission = totalSales * 0.1; // 10% platform commission
-    const paidPayout = totalSales * 0.7; // 70% paid out
-    const pendingPayout = totalSales * 0.2; // 20% pending
+    // Note: commission rate and payout split are NOT calculated here.
+    // Only actual completed withdrawals from the withdrawals table represent
+    // real payout figures. This table shows gross attributed sales only.
     return {
       vendorId: v.uid || v.id,
       vendorName: v.fullName || v.name || 'Vendor',
       totalSales,
-      commission,
-      paidPayout,
-      pendingPayout
+      // commission and paidPayout are intentionally not calculated —
+      // use the Finance & Treasury page for actual payout data.
+      commission: null,
+      paidPayout: null,
+      pendingPayout: null,
     };
   });
 

@@ -418,6 +418,9 @@ def _run_schema_migrations() -> None:
                     ("version",                "VARCHAR(20) DEFAULT 'v1.0.0'"),
                     ("file_size",              "VARCHAR(30)"),
                     ("last_updated",           "VARCHAR(50)"),
+                    ("owner_type",             "VARCHAR(20) DEFAULT 'PLATFORM'"),
+                    ("created_by_role",        "VARCHAR(20) DEFAULT 'ADMIN'"),
+                    ("is_platform_product",    "BOOLEAN DEFAULT 1"),
                 ]
                 for col_name, col_def in prod_additions:
                     if col_name not in prod_cols:

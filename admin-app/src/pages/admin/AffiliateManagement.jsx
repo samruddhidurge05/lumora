@@ -194,22 +194,48 @@ function CalculatorIcon(props) {
 // ── 7-SECTION ENTERPRISE PAYOUT REVIEW DRAWER ────────────────────────────────
 function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRetry, onSimulateSandbox, loading }) {
   const [internalNote, setInternalNote] = useState(payout?.notes || '');
-  const [tierBonus, setTierBonus]       = useState(0);
-  const [taxDeduction, setTaxDeduction] = useState(0);
   const [showOrders, setShowOrders]     = useState(true);
   const [activeTab, setActiveTab]       = useState('audit'); // 'audit' | 'timeline' | 'kyc' | 'reconciliation'
+
+  // Real data from backend endpoints
+  const [supportingOrders, setSupportingOrders] = useState(null);  // null = loading
+  const [ordersLoading, setOrdersLoading]       = useState(false);
+  const [auditTimeline, setAuditTimeline]       = useState(null);   // null = loading
+  const [timelineLoading, setTimelineLoading]   = useState(false);
+
+  // Fetch real supporting orders when section opens
+  useEffect(() => {
+    if (!payout?.id) return;
+    setOrdersLoading(true);
+    backendFetch(`/admin/affiliates/payouts/${payout.id}/supporting-orders`)
+      .then(d => setSupportingOrders(d))
+      .catch(() => setSupportingOrders({ orders: [], orders_count: 0 }))
+      .finally(() => setOrdersLoading(false));
+  }, [payout?.id]);
+
+  // Fetch real audit timeline when timeline tab opens
+  useEffect(() => {
+    if (!payout?.id || activeTab !== 'timeline') return;
+    setTimelineLoading(true);
+    backendFetch(`/admin/affiliates/payouts/${payout.id}/audit-timeline`)
+      .then(d => setAuditTimeline(d))
+      .catch(() => setAuditTimeline({ events: [] }))
+      .finally(() => setTimelineLoading(false));
+  }, [payout?.id, activeTab]);
 
   if (!payout) return null;
 
   const grossAmount = Number(payout.amount || 0);
-  const bonusVal    = Number(tierBonus || 0);
-  const taxVal      = Number(taxDeduction || 0);
-  const netPayable  = Math.max(0, grossAmount + bonusVal - taxVal);
+  // netPayable = payout.amount from database; no UI-only adjustments that
+  // could create a discrepancy between the displayed receipt and actual transfer.
+  const netPayable  = grossAmount;
   const risk        = getRiskAssessment({}, payout);
   const tier        = getAffiliateTier(payout.pending_balance * 8);
   const TierIcon    = tier.icon;
   const isSandbox   = IS_SANDBOX_ENABLED || payout.is_sandbox;
-  const utrNumber   = payout.razorpay_payout_id ? `UTR-RZP-${payout.id}9923` : (payout.utr || '—');
+  // Real UTR: use payout.utr (set by backend after bank settlement) or
+  // payout.razorpay_payout_id (provider reference). Never fabricate a UTR.
+  const utrNumber   = payout.utr || payout.razorpay_payout_id || '—';
   const radarStatus = getPayoutRadarStatus(payout);
 
   const handleCopyId = () => {
@@ -337,69 +363,74 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                   </div>
                 </div>
 
-                {/* SECTION 2: INCLUDED ORDERS EVIDENCE */}
+                {/* SECTION 2: INCLUDED ORDERS EVIDENCE — from database via /supporting-orders */}
                 <div className="bg-white border border-[#F3EAF8] rounded-2xl overflow-hidden shadow-xs">
                   <button onClick={() => setShowOrders(!showOrders)}
                     className="w-full p-4 flex items-center justify-between bg-[#F8F3FB]/60 border-b border-[#F3EAF8] text-xs font-bold text-[#2D004D]">
                     <span className="flex items-center gap-2 text-[#7B3FA0] uppercase tracking-wider text-[11px]">
-                      <Receipt size={14} /> 2. Included Orders Evidence ({payout.orders_count || 12} Orders Attributed)
+                      <Receipt size={14} /> 2. Supporting Orders Evidence ({supportingOrders?.orders_count ?? '…'} Orders)
                     </span>
                     <ChevronDown size={16} className={`transition-transform ${showOrders ? 'rotate-180' : ''}`} />
                   </button>
                   {showOrders && (
                     <div className="p-4 space-y-2 text-xs">
-                      <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-blue-800 text-[11px] flex items-center justify-between">
-                        <span>Supporting order transactions frozen at request time</span>
-                        <span className="font-bold font-mono">100% Immutable</span>
-                      </div>
-                      <div className="divide-y divide-stone-100">
-                        {[1, 2, 3].map((idx) => (
-                          <div key={idx} className="py-2 flex items-center justify-between text-[11px]">
-                            <div>
-                              <span className="font-mono font-bold text-[#7B3FA0]">#ORD-980{idx}</span>
-                              <span className="text-stone-500 ml-2 font-medium">Digital Product Bundle</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="font-bold text-emerald-600">₹{Number(grossAmount / 3).toFixed(2)}</span>
-                              <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">Cleared</span>
-                            </div>
+                      {ordersLoading ? (
+                        <div className="flex items-center justify-center py-6 text-[#7B3FA0]">
+                          <RefreshCw size={14} className="animate-spin mr-2" /><span className="text-[11px]">Loading orders…</span>
+                        </div>
+                      ) : !supportingOrders || supportingOrders.orders?.length === 0 ? (
+                        <div className="p-3 text-center text-[11px] text-[#7B3FA0]">
+                          No supporting orders found for this payout.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-blue-800 text-[11px] flex items-center justify-between">
+                            <span>Approved commissions from affiliate_commissions table</span>
+                            <span className="font-bold font-mono">Live DB Data</span>
                           </div>
-                        ))}
-                      </div>
+                          <div className="divide-y divide-stone-100">
+                            {supportingOrders.orders.map((ord) => (
+                              <div key={ord.commission_id} className="py-2 flex items-center justify-between text-[11px]">
+                                <div>
+                                  <span className="font-mono font-bold text-[#7B3FA0]">{ord.order_id_display}</span>
+                                  <span className="text-stone-500 ml-2 font-medium">{ord.product_name}</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="font-bold text-emerald-600">₹{Number(ord.commission_amount).toFixed(2)}</span>
+                                  <span className={`ml-2 text-[9px] px-1.5 py-0.5 rounded font-bold ${ord.commission_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>
+                                    {ord.commission_status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="pt-2 border-t border-stone-100 flex justify-between text-[11px] font-bold">
+                            <span className="text-stone-600">Total Commission:</span>
+                            <span className="text-[#2D004D]">₹{Number(supportingOrders.total_commission_in_supporting_orders).toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* SECTION 5: FINANCIAL CALCULATOR & ADJUSTMENTS */}
+                {/* SECTION 5: PAYMENT SUMMARY — amount is from database, no UI adjustments */}
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F8F3FB] to-white border border-[#F3EAF8] space-y-4">
                   <h3 className="text-xs font-extrabold text-[#7B3FA0] uppercase tracking-wider flex items-center gap-1.5">
-                    <CalculatorIcon size={14} /> 5. Payment Summary & Adjustments
+                    <CalculatorIcon size={14} /> 5. Payment Summary
                   </h3>
                   <div className="space-y-2.5 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="text-stone-600">Base Earned Commission:</span>
+                      <span className="text-stone-600">Approved Commission Balance:</span>
                       <span className="font-mono font-bold text-[#2D004D] text-sm">{fmt(grossAmount)}</span>
                     </div>
-                    <div className="flex justify-between items-center gap-3">
-                      <span className="text-stone-600 flex items-center gap-1"><Plus size={12} className="text-emerald-600" /> Tier Bonus Adjustment:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-stone-500">₹</span>
-                        <input type="number" value={tierBonus} onChange={e => setTierBonus(Number(e.target.value))}
-                          className="w-24 px-2 py-1 bg-white border border-stone-200 rounded-lg text-right font-mono font-bold text-xs" />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center gap-3">
-                      <span className="text-stone-600 flex items-center gap-1"><Minus size={12} className="text-rose-600" /> Tax / TDS Deduction:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-stone-500">₹</span>
-                        <input type="number" value={taxDeduction} onChange={e => setTaxDeduction(Number(e.target.value))}
-                          className="w-24 px-2 py-1 bg-white border border-stone-200 rounded-lg text-right font-mono font-bold text-xs" />
-                      </div>
-                    </div>
                     <div className="pt-3 border-t border-[#F3EAF8] flex justify-between items-center">
-                      <span className="font-bold text-[#2D004D] text-sm">Net Payable Total:</span>
+                      <span className="font-bold text-[#2D004D] text-sm">Transfer Amount:</span>
                       <span className="text-xl font-serif font-bold text-[#2D004D]">{fmt(netPayable)}</span>
                     </div>
+                    <p className="text-[10px] text-stone-400">
+                      Source: affiliate_payouts.amount (database). No adjustments applied.
+                    </p>
                   </div>
                 </div>
 
@@ -421,25 +452,30 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
 
             {activeTab === 'timeline' && (
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Immutable Audit Timeline</h3>
-                <div className="border-l-2 border-[#7B3FA0]/30 pl-4 space-y-4">
-                  {[
-                    { title: 'Withdrawal Requested', desc: 'Affiliate requested withdrawal of ' + fmt(grossAmount), time: fmtDateTime(payout.created_at), actor: 'Affiliate Portal' },
-                    { title: 'Bank Account & KYC Verified', desc: 'IFSC & PAN verification passed successfully', time: fmtDateTime(payout.created_at), actor: 'Compliance System' },
-                    { title: 'Finance Review Initiated', desc: `Assigned risk score ${risk.score}/100 (${risk.label})`, time: fmtDateTime(payout.created_at), actor: 'Admin Console' },
-                    { title: 'Dispatched to Gateway', desc: 'RazorpayX payout request dispatched', time: fmtDateTime(payout.created_at), actor: 'RazorpayX Provider' },
-                  ].map((ev, i) => (
-                    <div key={i} className="relative pl-2 space-y-1">
-                      <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-[#7B3FA0] border-2 border-white" />
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#2D004D] text-xs">{ev.title}</span>
-                        <span className="text-[9px] font-mono text-stone-500">{ev.time}</span>
+                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Audit Timeline</h3>
+                {timelineLoading ? (
+                  <div className="flex items-center justify-center py-8 text-[#7B3FA0]">
+                    <RefreshCw size={16} className="animate-spin mr-2" /><span className="text-xs">Loading timeline…</span>
+                  </div>
+                ) : !auditTimeline || auditTimeline.events?.length === 0 ? (
+                  <div className="py-8 text-center text-[11px] text-[#7B3FA0]">
+                    No audit events recorded yet.
+                  </div>
+                ) : (
+                  <div className="border-l-2 border-[#7B3FA0]/30 pl-4 space-y-4">
+                    {auditTimeline.events.map((ev, i) => (
+                      <div key={i} className="relative pl-2 space-y-1">
+                        <div className={`absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2 border-white ${ev.status === 'rejected' ? 'bg-rose-500' : ev.status === 'failed' ? 'bg-rose-600' : 'bg-[#7B3FA0]'}`} />
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[#2D004D] text-xs">{ev.title}</span>
+                          <span className="text-[9px] font-mono text-stone-500">{fmtDateTime(ev.time)}</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600">{ev.desc}</p>
+                        <span className="inline-block px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 text-[9px] font-mono">{ev.actor}</span>
                       </div>
-                      <p className="text-[11px] text-stone-600">{ev.desc}</p>
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 text-[9px] font-mono">{ev.actor}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -513,17 +549,27 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
                 <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Financial Reconciliation Ledger</h3>
                 <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-3 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-stone-600">Expected Amount:</span>
+                    <span className="text-stone-600">Transfer Amount:</span>
                     <span className="font-bold text-[#2D004D]">{fmt(netPayable)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-600">Bank Settlement Status:</span>
-                    <span className="font-bold text-emerald-600">Settled (0.00 Variance)</span>
+                    <span className={`font-bold ${payout.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {payout.status === 'completed' ? 'Completed' : payout.status === 'processing' ? 'Processing' : payout.status === 'failed' ? 'Failed' : 'Pending'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-600">UTR Reference Number:</span>
+                    {/* Real UTR from payout.utr (set after bank settlement) or provider ref.
+                        Never fabricate. Show '—' if not yet available. */}
                     <span className="font-mono font-bold text-[#7B3FA0]">{utrNumber}</span>
                   </div>
+                  {payout.razorpay_payout_id && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">Provider Payout ID:</span>
+                      <span className="font-mono font-bold text-[#7B3FA0]">{payout.razorpay_payout_id}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1109,8 +1155,9 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
   const netAmt = Number(verificationData?.net_payable || grossAmt);
 
   const handleDownloadReceipt = () => {
+    // Real amounts and references only. UTR may be pending bank confirmation.
     const csvContent = `Transaction Reference,Razorpay Payout ID,UTR,Beneficiary,Legal Name,Amount,Status,Settlement Time\n` +
-      `"lumora_payout_${payout.id}","${executionResult?.provider_ref || 'pout_pending'}","${executionResult?.utr || 'UTR-RZP-9923'}","${beneficiaryName}","${legalName}",${netAmt},"${executionResult?.status || 'completed'}","${new Date().toISOString()}"`;
+      `"lumora_payout_${payout.id}","${executionResult?.provider_ref || '—'}","${executionResult?.utr || 'Pending bank confirmation'}","${beneficiaryName}","${legalName}",${netAmt},"${executionResult?.status || 'processing'}","${new Date().toISOString()}"`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1266,11 +1313,15 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
             <div className="bg-[#F8F3FB] border border-[#F3EAF8] p-4 rounded-xl space-y-2 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-stone-500">Razorpay Payout ID:</span>
-                <span className="font-bold text-[#7B3FA0]">{executionResult?.provider_ref || 'pout_Nxxxx'}</span>
+                <span className="font-bold text-[#7B3FA0]">{executionResult?.provider_ref || '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-500">Settlement UTR:</span>
-                <span className="font-bold text-emerald-700">{executionResult?.utr || `UTR-RZP-${payout.id}9923`}</span>
+                {/* Real UTR from bank settlement. Available after webhook confirms.
+                    Never display fabricated UTR strings. */}
+                <span className={`font-bold ${executionResult?.utr ? 'text-emerald-700' : 'text-stone-400'}`}>
+                  {executionResult?.utr || 'Pending bank confirmation'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-500">Gateway Mode:</span>
@@ -1278,7 +1329,9 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-500">Settlement Status:</span>
-                <span className="font-bold text-emerald-600">Processing / Webhook Active</span>
+                <span className="font-bold text-emerald-600">
+                  {executionResult?.status === 'completed' ? 'Completed' : 'Processing / Webhook Pending'}
+                </span>
               </div>
             </div>
 
@@ -1621,16 +1674,28 @@ export default function AffiliateManagement() {
               </div>
             )}
 
-            {/* Executive KPIs Grid */}
+            {/* Executive KPIs Grid — all values from /admin/affiliates/kpis backend endpoint.
+                Fields today_commission and today_revenue now exist in backend response.
+                No fallback monetary values. If API returns null, display '—'. */}
             <div className="grid grid-cols-2 max-[320px]:grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              <KpiCard label="Pending Liability"   value={fmt(kpis?.commission_pending ?? 104.49)} sub="Total Unpaid Balance" icon={Clock} accent />
-              <KpiCard label="Pending Requests"    value={fmtN(payoutsTotal || kpis?.pending_withdrawals || 4)} sub="Awaiting Admin Audit" icon={Wallet} />
-              <KpiCard label="Today's Commission"  value={fmt(kpis?.today_commission ?? 18.50)} sub="Earned Today" icon={Zap} />
-              <KpiCard label="Today's Revenue"     value={fmt(kpis?.today_revenue ?? 249.00)} sub="Attributed Sales Today" icon={DollarSign} />
-              <KpiCard label="Conversion Rate"     value={`${kpis?.conversion_rate ?? 14.77}%`} sub="Click to Sale Rate" icon={TrendingUp} />
-              <KpiCard label="Revenue Generated"   value={fmt(kpis?.revenue_generated ?? 2911.99)} sub="Lifetime Sales" icon={BarChart3} />
-              <KpiCard label="Commission Paid"     value={fmt(kpis?.commission_paid ?? 72.75)} sub="Settled via RazorpayX" icon={Check} />
-              <KpiCard label="Avg Approval Time"   value="1.2 Days" sub="Payout Turnaround" icon={ShieldCheck} />
+              {/* commission_pending: SUM(affiliate_commissions.commission_amt)
+                  WHERE commission_status IN ('pending','approved','ready_for_payout') */}
+              <KpiCard label="Pending Liability"   value={kpisLoading ? '…' : kpis ? fmt(kpis.commission_pending) : '—'} sub="Total Unpaid Balance" icon={Clock} accent />
+              {/* pending_withdrawals: COUNT(affiliate_payouts) WHERE status IN ('pending','processing') */}
+              <KpiCard label="Pending Requests"    value={kpisLoading ? '…' : fmtN(payoutsTotal || kpis?.pending_withdrawals || 0)} sub="Awaiting Admin Audit" icon={Wallet} />
+              {/* today_commission: SUM(affiliate_commissions.commission_amt) WHERE created_at >= today 00:00 UTC */}
+              <KpiCard label="Today's Commission"  value={kpisLoading ? '…' : kpis ? fmt(kpis.today_commission) : '—'} sub="Earned Today" icon={Zap} />
+              {/* today_revenue: SUM(affiliate_commissions.sale_amount) WHERE created_at >= today 00:00 UTC */}
+              <KpiCard label="Today's Revenue"     value={kpisLoading ? '…' : kpis ? fmt(kpis.today_revenue) : '—'} sub="Attributed Sales Today" icon={DollarSign} />
+              {/* conversion_rate: total_sales / total_clicks * 100 */}
+              <KpiCard label="Conversion Rate"     value={kpisLoading ? '…' : kpis ? `${kpis.conversion_rate}%` : '—'} sub="Click to Sale Rate" icon={TrendingUp} />
+              {/* revenue_generated: max(SUM(commissions.sale_amount), SUM(orders.total_amount WHERE affiliate_id IS NOT NULL)) */}
+              <KpiCard label="Revenue Generated"   value={kpisLoading ? '…' : kpis ? fmt(kpis.revenue_generated) : '—'} sub="Lifetime Sales" icon={BarChart3} />
+              {/* commission_paid: SUM(affiliate_commissions.commission_amt) WHERE commission_status = 'paid' */}
+              <KpiCard label="Commission Paid"     value={kpisLoading ? '…' : kpis ? fmt(kpis.commission_paid) : '—'} sub="Settled via RazorpayX" icon={Check} />
+              {/* avg_approval_time: AVG(completed_at - created_at) from affiliate_payouts WHERE status = 'completed'.
+                  Backend returns human-readable string e.g. "1.4 days" or "N/A" if insufficient data. */}
+              <KpiCard label="Avg Approval Time"   value={kpisLoading ? '…' : kpis?.avg_approval_time || 'N/A'} sub="Payout Turnaround" icon={ShieldCheck} />
             </div>
 
             {/* Middle Grid: Action Queue + Performance Summary */}
@@ -1670,7 +1735,7 @@ export default function AffiliateManagement() {
                 )}
               </div>
 
-              {/* Conversion Funnel Widget */}
+              {/* Conversion Funnel Widget — all values from /admin/affiliates/kpis */}
               <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
                   <TrendingUp size={15} /> Conversion Funnel
@@ -1678,19 +1743,23 @@ export default function AffiliateManagement() {
                 <div className="space-y-3 text-xs">
                   <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
                     <span className="text-[#7B3FA0]">Total Clicks:</span>
-                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.total_clicks ?? 1448)}</span>
+                    {/* Source: affiliate_profiles.total_clicks + referral_links.clicks_count */}
+                    <span className="font-bold text-[#2D004D]">{kpisLoading ? '…' : kpis ? fmtN(kpis.total_clicks) : '—'}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
                     <span className="text-[#7B3FA0]">Unique Visitors:</span>
-                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.unique_clicks ?? 1120)}</span>
+                    {/* Source: affiliate_profiles.unique_clicks */}
+                    <span className="font-bold text-[#2D004D]">{kpisLoading ? '…' : kpis ? fmtN(kpis.unique_clicks) : '—'}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">
                     <span className="text-[#7B3FA0]">Attributed Sales:</span>
-                    <span className="font-bold text-[#2D004D]">{fmtN(kpis?.total_sales ?? 165)}</span>
+                    {/* Source: COUNT(affiliate_commissions) */}
+                    <span className="font-bold text-[#2D004D]">{kpisLoading ? '…' : kpis ? fmtN(kpis.total_sales ?? kpis.total_conversions) : '—'}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-gradient-to-br from-[#7B3FA0] to-[#2D004D] text-white flex justify-between">
                     <span className="text-white/70 font-medium">Conversion Rate:</span>
-                    <span className="font-bold text-white font-mono">{kpis?.conversion_rate ?? 14.77}%</span>
+                    {/* Source: total_sales / total_clicks * 100 */}
+                    <span className="font-bold text-white font-mono">{kpisLoading ? '…' : kpis ? `${kpis.conversion_rate}%` : '—'}</span>
                   </div>
                 </div>
               </div>
@@ -1707,15 +1776,11 @@ export default function AffiliateManagement() {
               <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-1">
                 <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Fraud Radar Engine</span>
                 <div className="text-lg font-bold text-[#2D004D] flex items-center gap-1.5">
-                  <ShieldCheck size={16} className="text-emerald-600" /> 0 Flagged Accounts
+                  <ShieldCheck size={16} className="text-emerald-600" /> {kpis?.suspended_affiliates ?? 0} Flagged Accounts
                 </div>
               </div>
-              <div className="p-5 rounded-2xl bg-white border border-[#F3EAF8] shadow-xs space-y-1">
-                <span className="text-[10px] font-bold text-[#7B3FA0] uppercase">Webhook Sync Rate</span>
-                <div className="text-lg font-bold text-[#2D004D] flex items-center gap-1.5">
-                  <CheckCircle2 size={16} className="text-emerald-600" /> 99.98% Delivery Rate
-                </div>
-              </div>
+              {/* Webhook Sync Rate removed — no webhook delivery log table exists in DB.
+                  "99.98%" was a hardcoded fabricated metric and has been removed. */}
             </div>
           </div>
         )}
@@ -2163,21 +2228,39 @@ export default function AffiliateManagement() {
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
                   <PieChart size={16} /> Partner Tier Distribution
                 </h3>
+                {/* Tier counts computed from affiliate_commissions.sale_amount by backend /kpis endpoint.
+                    Thresholds: Platinum ≥₹2,00,000 | Gold ≥₹50,000 | Silver ≥₹10,000 | Bronze <₹10,000 */}
                 <div className="space-y-3 text-xs">
-                  {[
-                    { tier: 'Platinum Partner (₹2L+)', count: '1 Promoter', pct: '20%' },
-                    { tier: 'Gold Partner (₹50k+)',     count: '2 Promoters', pct: '40%' },
-                    { tier: 'Silver Partner (₹10k+)',   count: '1 Promoter', pct: '20%' },
-                    { tier: 'Bronze Partner',           count: '1 Promoter', pct: '20%' },
-                  ].map(row => (
-                    <div key={row.tier} className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex items-center justify-between">
-                      <span className="font-bold text-[#2D004D]">{row.tier}</span>
-                      <div className="flex items-center gap-3 font-mono font-bold text-[#7B3FA0]">
-                        <span>{row.count}</span>
-                        <span className="px-2 py-0.5 rounded bg-white border border-[#F3EAF8] text-[10px]">{row.pct}</span>
-                      </div>
-                    </div>
-                  ))}
+                  {kpisLoading ? (
+                    <div className="py-4 text-center text-[#7B3FA0] text-xs">Loading tier data…</div>
+                  ) : kpis?.tier_distribution ? (
+                    (() => {
+                      const td = kpis.tier_distribution;
+                      const total = td.total_with_revenue || 0;
+                      const rows = [
+                        { tier: 'Platinum Partner (₹2L+)', count: td.platinum, thresholdLabel: '≥₹2,00,000 revenue' },
+                        { tier: 'Gold Partner (₹50k+)',     count: td.gold,     thresholdLabel: '≥₹50,000 revenue' },
+                        { tier: 'Silver Partner (₹10k+)',   count: td.silver,   thresholdLabel: '≥₹10,000 revenue' },
+                        { tier: 'Bronze Partner',           count: td.bronze,   thresholdLabel: '<₹10,000 revenue' },
+                      ];
+                      return rows.map(row => (
+                        <div key={row.tier} className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-[#2D004D]">{row.tier}</span>
+                            <span className="text-[9px] text-[#7B3FA0] block">{row.thresholdLabel}</span>
+                          </div>
+                          <div className="flex items-center gap-3 font-mono font-bold text-[#7B3FA0]">
+                            <span>{row.count} {row.count === 1 ? 'Promoter' : 'Promoters'}</span>
+                            <span className="px-2 py-0.5 rounded bg-white border border-[#F3EAF8] text-[10px]">
+                              {total > 0 ? `${Math.round((row.count / total) * 100)}%` : '—'}
+                            </span>
+                          </div>
+                        </div>
+                      ));
+                    })()
+                  ) : (
+                    <div className="py-4 text-center text-[#7B3FA0] text-xs">No affiliate revenue data available.</div>
+                  )}
                 </div>
               </div>
 
@@ -2198,6 +2281,8 @@ export default function AffiliateManagement() {
                     <span className="text-[#7B3FA0]">Attribution Security:</span>
                     <span className="font-mono font-bold text-[#7B3FA0]">Session Hash SHA256 Verification</span>
                   </div>
+                  {/* Webhook sync rate removed — no webhook delivery log table exists.
+                      Displaying "99.98%" was a hardcoded fabricated metric. */}
                 </div>
               </div>
             </div>

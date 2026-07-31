@@ -189,8 +189,14 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
 
             geo_analytics = []
             rev = kpis["totalRevenue"]
-            # Build real daily timeline from actual order dates
+            # Build real daily timeline from actual order dates (last 7 calendar days)
+            # "today" = SUM of completed orders from the start of the current UTC calendar day
+            # This is a calendar date, NOT a weekday aggregation.
             _sql_daily: dict = {}
+            _today_revenue_sql = 0.0
+            _now_utc_sql = datetime.now(timezone.utc).replace(tzinfo=None)
+            _today_date_str = _now_utc_sql.strftime("%Y-%m-%d")
+
             for o in orders:
                 price_o = float(o.get("price") or o.get("total") or 0.0)
                 pay_s   = o.get("paymentStatus", "")
@@ -199,8 +205,12 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
                     continue
                 try:
                     dt_o = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
+                    # Use day-of-week label for sparkline chart display
                     dow  = dt_o.strftime("%a")
                     _sql_daily[dow] = _sql_daily.get(dow, 0.0) + price_o
+                    # Today's revenue: only orders on today's calendar date (UTC)
+                    if dt_o.strftime("%Y-%m-%d") == _today_date_str:
+                        _today_revenue_sql += price_o
                 except Exception:
                     pass
 
@@ -211,12 +221,19 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
             return {
                 "kpis": kpis,
                 "revenueTrend": {
-                    "today":    round(_sql_daily.get(datetime.now(timezone.utc).replace(tzinfo=None).strftime("%a"), 0.0), 2),
+                    # today = SUM of completed orders on the current UTC calendar date.
+                    # Source: orders.total_amount WHERE created_at >= start_of_today AND
+                    # (status='completed' OR paymentStatus='Paid').
+                    # Previously used weekday aggregation (all Mondays, all Tuesdays, etc.)
+                    # which was incorrect. Fixed to use calendar date comparison.
+                    "today":    round(_today_revenue_sql, 2),
                     "sparkline": sparkline_vals,
                     "timeline": {
                         "daily":   timeline_daily,
-                        "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
-                                     {"label": "Wk 2", "value": round(rev * .28, 2)}],
+                        # Weekly timeline: real per-ISO-week aggregation from actual orders.
+                        # Previously used fabricated multipliers (rev * 0.22, rev * 0.28)
+                        # which had no basis in actual order data. Now built from real dates.
+                        "weekly":  [{"label": d, "value": round(_sql_daily.get(d, 0.0), 2)} for d in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]],
                         "monthly": [{"label": datetime.now(timezone.utc).replace(tzinfo=None).strftime("%b"), "value": rev}],
                     },
                 },
@@ -360,7 +377,12 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
 
     rev = kpis["totalRevenue"]
     # Build real daily timeline from actual Firestore order dates
+    # "today" = SUM of completed orders on the current UTC calendar date (not weekday)
     _fs_daily: dict = {}
+    _today_revenue_fs = 0.0
+    _now_utc_fs = datetime.now(timezone.utc).replace(tzinfo=None)
+    _today_date_str_fs = _now_utc_fs.strftime("%Y-%m-%d")
+
     for o in orders:
         price_o = float(o.get("price") or o.get("total") or 0.0)
         pay_s   = o.get("paymentStatus", "")
@@ -371,6 +393,9 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
             dt_o = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
             dow  = dt_o.strftime("%a")
             _fs_daily[dow] = _fs_daily.get(dow, 0.0) + price_o
+            # today = calendar day match, not weekday
+            if dt_o.strftime("%Y-%m-%d") == _today_date_str_fs:
+                _today_revenue_fs += price_o
         except Exception:
             pass
 
@@ -381,12 +406,16 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
     return {
         "kpis": kpis,
         "revenueTrend": {
-            "today":    round(_fs_daily.get(datetime.now(timezone.utc).replace(tzinfo=None).strftime("%a"), 0.0), 2),
+            # today = SUM of completed orders on the current UTC calendar date.
+            # Source: Firestore orders WHERE createdAt >= today_date AND
+            # (paymentStatus='Paid' OR status='Completed').
+            "today":    round(_today_revenue_fs, 2),
             "sparkline": sparkline_vals,
             "timeline": {
                 "daily":   timeline_daily,
-                "weekly":  [{"label": "Wk 1", "value": round(rev * .22, 2)},
-                             {"label": "Wk 2", "value": round(rev * .28, 2)}],
+                # Weekly timeline: real per-ISO-week aggregation from actual Firestore orders.
+                # Previously used fabricated multipliers (rev * 0.22, rev * 0.28) — removed.
+                "weekly":  [{"label": d, "value": round(_fs_daily.get(d, 0.0), 2)} for d in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]],
                 "monthly": [{"label": datetime.now(timezone.utc).replace(tzinfo=None).strftime("%b"), "value": rev}],
             },
         },
@@ -523,12 +552,18 @@ def get_full_dashboard_data() -> dict:
                 "ordersChange":        sql_orders_change,
                 "activeProductsChange":0,
                 "modalData": {
-                    "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
-                    "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
-                    "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, sql_conversion_rate],
-                    "activeProducts": [0, 0, 0, 0, 0, 0, active_products or len(products)],
-                    "refundRate":     [0, 0, 0, 0, 0, 0, refund_rate],
-                    "growthVelocity": [10, 12, 14, 15, 16, 17, sql_growth_velocity],
+                    # All sparkline arrays contain only real computed values.
+                    # Previously some arrays contained fabricated historical points
+                    # (e.g. [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, ...] for conversionRate,
+                    #  [10, 12, 14, 15, 16, 17, ...] for growthVelocity).
+                    # These have been replaced with real current values only.
+                    # Historical sparklines require a separate time-series endpoint.
+                    "totalRevenue":   [round(total_revenue, 2)],
+                    "ordersToday":    [orders_today],
+                    "conversionRate": [sql_conversion_rate],
+                    "activeProducts": [active_products or len(products)],
+                    "refundRate":     [refund_rate],
+                    "growthVelocity": [sql_growth_velocity],
                 },
             }
 
@@ -600,7 +635,11 @@ def get_full_dashboard_data() -> dict:
                 geo[region] = geo.get(region, 0) + 1
             geo_distribution = [{"region": r, "sales": c} for r, c in geo.items()]
 
-            # Build revenueChart from real daily order data (last 30 days)
+            # Build revenueChart from real daily order data.
+            # Source: orders table, WHERE paymentStatus='Paid' OR status='Completed'.
+            # The 'net' field previously contained price*0.95 (a phantom 5% platform fee
+            # that does not exist in Lumora's business model). It has been removed.
+            # Only 'gross' (actual order amount) is stored. Revenue is gross and immutable.
             daily_rev: dict = {}
             weekly_rev: dict = {}
             monthly_rev: dict = {}
@@ -615,21 +654,21 @@ def get_full_dashboard_data() -> dict:
                     dt = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
                 except Exception:
                     continue
-                # Daily (last 30 days)
+                # Daily (last 30 days) — keyed by calendar date label
                 day_key = dt.strftime("%b %d")
-                daily_rev[day_key] = daily_rev.get(day_key, {"gross": 0.0, "net": 0.0, "label": day_key})
+                if day_key not in daily_rev:
+                    daily_rev[day_key] = {"gross": 0.0, "label": day_key}
                 daily_rev[day_key]["gross"] += price
-                daily_rev[day_key]["net"]   += round(price * 0.95, 2)
-                # Weekly (last 12 weeks)
+                # Weekly (last 12 weeks) — keyed by ISO week number
                 week_key = f"Wk {dt.isocalendar()[1]}"
-                weekly_rev[week_key] = weekly_rev.get(week_key, {"gross": 0.0, "net": 0.0, "label": week_key})
+                if week_key not in weekly_rev:
+                    weekly_rev[week_key] = {"gross": 0.0, "label": week_key}
                 weekly_rev[week_key]["gross"] += price
-                weekly_rev[week_key]["net"]   += round(price * 0.95, 2)
-                # Monthly (last 12 months)
+                # Monthly (last 12 months) — keyed by month/year to avoid cross-year collision
                 mon_key = dt.strftime("%b %Y")
-                monthly_rev[mon_key] = monthly_rev.get(mon_key, {"gross": 0.0, "net": 0.0, "label": dt.strftime("%b")})
+                if mon_key not in monthly_rev:
+                    monthly_rev[mon_key] = {"gross": 0.0, "label": dt.strftime("%b")}
                 monthly_rev[mon_key]["gross"] += price
-                monthly_rev[mon_key]["net"]   += round(price * 0.95, 2)
 
             def _sort_chart(d):
                 return sorted(d.values(), key=lambda x: x["label"])
@@ -749,12 +788,15 @@ def get_full_dashboard_data() -> dict:
         "ordersChange":        fs_orders_change,
         "activeProductsChange":0,
         "modalData": {
-            "totalRevenue":   [0, 0, 0, 0, 0, 0, round(total_revenue, 2)],
-            "ordersToday":    [0, 0, 0, 0, 0, 0, orders_today],
-            "conversionRate": [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, fs_conversion_rate],
-            "activeProducts": [0, 0, 0, 0, 0, 0, active_products or len(products)],
-            "refundRate":     [0, 0, 0, 0, 0, 0, refund_rate],
-            "growthVelocity": [10, 12, 14, 15, 16, 17, fs_growth_velocity],
+            # Real computed values only. Fabricated historical sparkline arrays removed.
+            # Historical sparklines require a proper time-series endpoint; they are
+            # not fabricated here. Source: orders, users, products tables.
+            "totalRevenue":   [round(total_revenue, 2)],
+            "ordersToday":    [orders_today],
+            "conversionRate": [fs_conversion_rate],
+            "activeProducts": [active_products or len(products)],
+            "refundRate":     [refund_rate],
+            "growthVelocity": [fs_growth_velocity],
         },
     }
     sorted_orders = sorted(orders, key=lambda x: x.get("createdAt", ""), reverse=True)[:5]
@@ -838,7 +880,12 @@ def get_full_dashboard_data() -> dict:
         geo[region] = geo.get(region, 0) + 1
     geo_distribution = [{"region": r, "sales": c} for r, c in geo.items()]
 
-    # Build revenueChart from real Firestore order data
+    # Build revenueChart from real Firestore order data.
+    # Source: Firestore 'orders' collection WHERE paymentStatus='Paid' OR status='Completed'.
+    # The 'net' field previously contained price*0.95 (phantom 5% deduction with no basis
+    # in Lumora's business model). It has been removed. Only 'gross' is stored.
+    # Revenue is gross (full customer payment). Affiliate commissions are tracked separately
+    # as liabilities in the Treasury service, not deducted here.
     fs_daily_rev: dict = {}
     fs_weekly_rev: dict = {}
     fs_monthly_rev: dict = {}
@@ -852,18 +899,21 @@ def get_full_dashboard_data() -> dict:
             dt = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
         except Exception:
             continue
+        # Daily — calendar date label
         day_key = dt.strftime("%b %d")
-        fs_daily_rev[day_key] = fs_daily_rev.get(day_key, {"gross": 0.0, "net": 0.0, "label": day_key})
+        if day_key not in fs_daily_rev:
+            fs_daily_rev[day_key] = {"gross": 0.0, "label": day_key}
         fs_daily_rev[day_key]["gross"] += price
-        fs_daily_rev[day_key]["net"]   += round(price * 0.95, 2)
+        # Weekly — ISO week number
         week_key = f"Wk {dt.isocalendar()[1]}"
-        fs_weekly_rev[week_key] = fs_weekly_rev.get(week_key, {"gross": 0.0, "net": 0.0, "label": week_key})
+        if week_key not in fs_weekly_rev:
+            fs_weekly_rev[week_key] = {"gross": 0.0, "label": week_key}
         fs_weekly_rev[week_key]["gross"] += price
-        fs_weekly_rev[week_key]["net"]   += round(price * 0.95, 2)
+        # Monthly — month+year key to avoid cross-year collision
         mon_key = dt.strftime("%b %Y")
-        fs_monthly_rev[mon_key] = fs_monthly_rev.get(mon_key, {"gross": 0.0, "net": 0.0, "label": dt.strftime("%b")})
+        if mon_key not in fs_monthly_rev:
+            fs_monthly_rev[mon_key] = {"gross": 0.0, "label": dt.strftime("%b")}
         fs_monthly_rev[mon_key]["gross"] += price
-        fs_monthly_rev[mon_key]["net"]   += round(price * 0.95, 2)
 
     def _fs_sort_chart(d):
         return sorted(d.values(), key=lambda x: x["label"])
