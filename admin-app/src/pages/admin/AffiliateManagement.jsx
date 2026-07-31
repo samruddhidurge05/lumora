@@ -269,7 +269,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-mono font-bold tracking-widest uppercase">
-                  WITHDRAWAL AUDIT CONSOLE
+                  PAYOUT DETAILS
                 </span>
                 <BankVerificationBadge radarStatus={radarStatus} isVerified={true} kycStatus="verified" />
                 {isSandbox && (
@@ -547,7 +547,7 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
 
             {activeTab === 'reconciliation' && (
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Financial Reconciliation Ledger</h3>
+                <h3 className="text-xs font-bold text-[#7B3FA0] uppercase tracking-wider">Commission Breakdown</h3>
                 <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] space-y-3 text-xs">
                   <div className="flex justify-between">
                     <span className="text-stone-600">Transfer Amount:</span>
@@ -1631,7 +1631,7 @@ export default function AffiliateManagement() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[9px] font-black tracking-widest uppercase">
-                  ENTERPRISE CONSOLE
+                  AFFILIATE PROGRAM
                 </span>
                 {IS_SANDBOX_ENABLED && (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-mono font-bold uppercase flex items-center gap-1">
@@ -1642,9 +1642,9 @@ export default function AffiliateManagement() {
                   <ShieldCheck size={12} /> Verified Attribution Engine
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-bold leading-tight break-words">Affiliate Operations Console</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-bold leading-tight break-words">Affiliates & Referrals</h1>
               <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl leading-relaxed">
-                Restored executive dashboard, promoters CRM, products matrix, sales ledger, and RazorpayX payouts.
+                Manage affiliate partners, track referral sales, configure commission rates, and process payouts.
               </p>
             </div>
             <button onClick={handleExportCSV}
