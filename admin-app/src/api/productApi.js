@@ -1,7 +1,7 @@
 import { backendFetch } from '../utils/api';
 
 // Public read-only endpoints — no auth required
-export const getProductsApi = () => backendFetch('/products/');
+export const getProductsApi = () => backendFetch('/products');
 export const getProductApi = (id) => backendFetch(`/products/${id}`);
 
 // Admin CRUD endpoints — require admin JWT (attached automatically by backendFetch)

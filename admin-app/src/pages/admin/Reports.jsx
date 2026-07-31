@@ -246,7 +246,7 @@ export default function Reports() {
     try {
       const params = new URLSearchParams({ page, page_size: REPORT_PAGE_SIZE });
       if (status) params.append('status', status);
-      const data = await backendFetch(`/admin/reports/?${params}`);
+      const data = await backendFetch(`/admin/reports?${params}`);
       setReportListItems(data.items || []);
       setReportTotal(data.total || 0);
       setReportTotalPages(Math.max(1, Math.ceil((data.total || 0) / REPORT_PAGE_SIZE)));
