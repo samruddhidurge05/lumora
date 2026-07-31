@@ -854,7 +854,7 @@ function DashboardHome({
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
-            onClick={() => navigateTo('affiliate-dashboard')}
+            onClick={() => navigateTo('partnerships-affiliate')}
             style={{
               padding: '12px 24px', borderRadius: '12px', border: 'none',
               background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
