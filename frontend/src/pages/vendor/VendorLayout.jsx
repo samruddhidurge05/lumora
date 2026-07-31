@@ -128,8 +128,11 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
         />
 
         {/* Sidebar — static on desktop, drawer on mobile */}
-        <aside className={`vendor-sidebar${sidebarOpen ? ' open' : ''}`}>
-          <Sidebar activePage={activePage} />
+        <aside className={`vendor-sidebar${sidebarOpen ? ' open' : ''}`}
+          style={{ background: 'rgba(255,255,255,0.62)', backdropFilter: 'blur(40px) saturate(200%)', WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          onClick={e => { if (sidebarOpen && e.target === e.currentTarget) setSidebarOpen(false); }}
+        >
+          <Sidebar activePage={activePage} onNavClick={() => setSidebarOpen(false)} />
         </aside>
 
         {/* Main content */}

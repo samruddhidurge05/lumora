@@ -21,19 +21,15 @@ const NAV_ITEMS = [
   { id: 'profile',        label: 'Profile',         icon: <User size={16} />,            path: '/vendor/profile'         },
 ];
 
-export default function Sidebar({ activePage: activeProp }) {
+export default function Sidebar({ activePage: activeProp, onNavClick }) {
   const navigate  = useNavigate();
   const { pathname } = useLocation();
   const activePage = activeProp || pathname.replace('/vendor/', '') || 'dashboard';
 
   return (
-    <aside className="vendor-sidebar" style={{
-      width: '240px',
-      flexShrink: 0,
+    <div style={{
+      width: '100%',
       minHeight: '100%',
-      background: 'rgba(255,255,255,0.62)',
-      backdropFilter: 'blur(40px) saturate(200%)',
-      WebkitBackdropFilter: 'blur(40px) saturate(200%)',
       padding: '20px 14px',
       display: 'flex',
       flexDirection: 'column',
@@ -52,7 +48,7 @@ export default function Sidebar({ activePage: activeProp }) {
       {NAV_ITEMS.map(item => {
         const isActive = activePage === item.id;
         return (
-          <button key={item.id} onClick={() => navigate(item.path)}
+          <button key={item.id} onClick={() => { navigate(item.path); onNavClick && onNavClick(); }}
             className={`vendor-sidebar-btn ${isActive ? 'active-btn' : ''}`}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px',
@@ -104,6 +100,6 @@ export default function Sidebar({ activePage: activeProp }) {
           Real-time data from the backend
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
