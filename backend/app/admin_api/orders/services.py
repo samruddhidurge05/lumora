@@ -6,6 +6,30 @@ from app.db.session import SessionLocal
 from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
 
+
+def _get_order_commission_amt(db_s, order_id: int) -> float:
+    """
+    Return the total affiliate commission amount for an order from the
+    affiliate_commissions table.  Returns 0.0 when no commission exists.
+    This is the ONLY source of commission truth — no calculation performed here.
+    """
+    try:
+        from sqlalchemy import func
+        from app.models.affiliate import AffiliateCommission
+        result = (
+            db_s.query(func.coalesce(func.sum(AffiliateCommission.commission_amt), 0.0))
+            .filter(
+                AffiliateCommission.order_id == order_id,
+                # Exclude reversed/rejected commissions — those are no longer owed
+                AffiliateCommission.commission_status.notin_(["reversed", "rejected", "cancelled"]),
+            )
+            .scalar()
+        )
+        return round(float(result or 0.0), 2)
+    except Exception:
+        return 0.0
+
+
 def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
     page = max(1, page)
     page_size = max(1, min(200, page_size))
@@ -32,6 +56,9 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
                     "productName": item.product.title if item.product else "Product",
                     "price": float(item.price_paid or 0.0),
                 })
+            customer_paid = float(o.total_amount or 0.0)
+            affiliate_commission = _get_order_commission_amt(db_s, o.id)
+            net_platform_revenue = round(customer_paid - affiliate_commission, 2)
             result.append({
                 "id": str(o.id),
                 "orderId": f"ORD-{o.id}",
@@ -39,8 +66,8 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
                 "customerName": cust_name,
                 "customerEmail": cust_email,
                 "items": items_data,
-                "totalUSD": float(o.total_amount or 0.0),
-                "price": float(o.total_amount or 0.0),
+                "totalUSD": customer_paid,
+                "price": customer_paid,
                 "status": o.status or "completed",
                 "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
                 "paymentMethod": o.payment_method or "upi",
@@ -48,6 +75,10 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str = None):
                 "affiliateId": str(o.affiliate_id) if o.affiliate_id else None,
                 "referralCodeUsed": o.referral_code_used or None,
                 "referralLinkId": str(o.referral_link_id) if o.referral_link_id else None,
+                # Financial breakdown fields — used by Transaction Ledger in admin UI
+                "customerPaid": customer_paid,
+                "affiliateCommission": affiliate_commission,
+                "netPlatformRevenue": net_platform_revenue,
             })
         return {"total": total, "page": page, "page_size": page_size, "items": result}
     finally:

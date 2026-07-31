@@ -136,20 +136,8 @@ export function AffiliateProvider({ children }) {
           });
         }
 
-        // 3.2. Listen to payout requests (withdrawals)
-        if (!unsubPayouts) {
-          const payoutQuery = query(
-            collection(db, 'affiliatePayoutRequests'),
-            where('affiliateId', '==', affId),
-            orderBy('requestedAt', 'desc')
-          );
-          unsubPayouts = onSnapshot(payoutQuery, (payoutSnap) => {
-            const payoutList = payoutSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setPayouts(payoutList);
-          }, (err) => {
-            console.warn('[AffiliateContext] Payouts listener failed:', err.message);
-          });
-        }
+        // 3.2. Removed unused payout requests Firestore listener (handled via PostgreSQL)
+
 
         // 3.3. Listen to activity logs
         if (!unsubActivity) {

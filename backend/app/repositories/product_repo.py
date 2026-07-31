@@ -17,9 +17,21 @@ class ProductRepository(BaseRepository[Product]):
         )
 
     def get_platform_products(self, skip: int = 0, limit: int = 100) -> List[Product]:
+        from app.models.user import User
+        admin_user_ids = [str(u.id) for u in self.db.query(User.id).filter(User.role == "admin").all()]
+        platform_filters = [
+            Product.owner_type == "PLATFORM",
+            Product.is_platform_product == True,
+            Product.vendor_id == "lumora-creator",
+            Product.vendor_id.is_(None),
+            Product.vendor_id == "",
+        ]
+        if admin_user_ids:
+            platform_filters.append(Product.vendor_id.in_(admin_user_ids))
+
         return (
             self.db.query(Product)
-            .filter(or_(Product.owner_type == "PLATFORM", Product.is_platform_product == True))
+            .filter(or_(*platform_filters))
             .offset(skip)
             .limit(limit)
             .all()

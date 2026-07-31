@@ -571,8 +571,11 @@ export default function Payments() {
                   <div className="px-6 py-4 border-b border-[#F3EAF8]/60 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[#2D004D] tracking-wide flex items-center gap-2">
                       <User size={15} />
-                      Vendor Payout Summary
+                      Vendor Gross Sales Summary
                     </h2>
+                    <p className="text-[10px] text-[#7B3FA0] mt-0.5">
+                      Actual payout splits are managed in Finance &amp; Treasury
+                    </p>
                   </div>
 
                   <div className="overflow-x-auto w-full">
@@ -580,7 +583,7 @@ export default function Payments() {
                       <table className="w-full min-w-[460px] border-collapse text-left">
                         <thead>
                           <tr className="bg-stone-100/40 border-b border-stone-200/50">
-                            {['Vendor', 'Sales', 'Comm. (5%)', 'Paid', 'Pending'].map(h => (
+                            {['Vendor', 'Gross Sales', 'Actions'].map(h => (
                               <th key={h} className="py-3.5 px-4 text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">
                                 {h}
                               </th>
@@ -596,14 +599,8 @@ export default function Payments() {
                               <td className="py-3 px-4 font-black text-xs text-[#2D004D]">
                                 ₹{v.totalSales.toLocaleString()}
                               </td>
-                              <td className="py-3 px-4 text-xs text-[#7B3FA0]">
-                                ₹{v.commission.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-xs text-[#5A1E7E] font-medium">
-                                ₹{v.paidPayout.toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-xs font-bold text-[#9B2C5E]">
-                                ₹{v.pendingPayout.toLocaleString()}
+                              <td className="py-3 px-4 text-[10px] text-[#7B3FA0]">
+                                See Finance &amp; Treasury
                               </td>
                             </tr>
                           ))}

@@ -125,6 +125,13 @@ def get_payments_overview():
     }
 
 def get_vendor_payouts():
+    """
+    Returns vendor gross sales data from actual order records.
+    Commission percentages and payout splits are NOT calculated here because
+    they are not stored in platform settings and were previously hardcoded
+    (0.05/0.95 splits). Actual payout amounts come from the withdrawals table.
+    This function returns gross sales only for display purposes.
+    """
     telemetry = get_payments_telemetry()
     orders    = telemetry["orders"]
     vendors   = telemetry["vendors"]
@@ -135,16 +142,21 @@ def get_vendor_payouts():
         paid_orders    = [o for o in orders if o["vendorId"] == vid and o["paymentStatus"] == "Paid"]
         pending_orders = [o for o in orders if o["vendorId"] == vid and o["status"] in ("Pending", "Processing")]
 
-        total_sales   = sum(float(o["price"]) for o in paid_orders) or float(v["totalEarnings"])
-        pending_payout= sum(float(o["price"]) for o in pending_orders)
+        # Gross sales attributed to this vendor from actual order records.
+        # Source: orders.total_amount WHERE paymentStatus = 'Paid' AND vendorId = vid
+        gross_sales    = sum(float(o["price"]) for o in paid_orders) or float(v["totalEarnings"])
+        pending_amount = sum(float(o["price"]) for o in pending_orders)
 
         payouts.append({
             "vendorId":       vid,
             "vendorName":     v["name"],
-            "totalSales":     round(total_sales, 2),
-            "commission":     round(total_sales * 0.05, 2),
-            "paidPayout":     round(total_sales * 0.95, 2),
-            "pendingPayout":  round(pending_payout, 2),
+            # Gross sales from order records — NOT a net platform amount
+            "totalSales":     round(gross_sales, 2),
+            # commission and paidPayout are null — actual withdrawal amounts
+            # are managed in the withdrawals table, not calculated here.
+            "commission":     None,
+            "paidPayout":     None,
+            "pendingPayout":  round(pending_amount, 2),
             "lastPayoutDate": datetime.utcnow().strftime("%Y-%m-%d"),
         })
 

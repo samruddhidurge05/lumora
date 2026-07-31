@@ -179,7 +179,7 @@ export default function AuditLogs() {
       <main className="admin-page-container px-4 md:px-8 pt-6 pb-24 relative z-10">
 
         {/* ── Page header ── */}
-        <section className="mb-8">
+        <section className="mb-8 relative z-30">
           <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#D8BFE3] to-[#B886D0] flex items-center justify-center text-[#2D004D] shadow-inner">

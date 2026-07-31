@@ -64,13 +64,20 @@ def list_admin_products(
     All statuses are returned (published, draft, archived, pending_review)
     so the Admin Panel sees the complete platform inventory at all lifecycle stages.
     """
-    query = db.query(Product).filter(
-        or_(
-            Product.owner_type == "PLATFORM",
-            Product.is_platform_product == True,
-            Product.vendor_id == "lumora-creator",
-        )
-    )
+    # Identify admin user IDs to include products created by admins as Platform products
+    admin_user_ids = [str(u.id) for u in db.query(User.id).filter(User.role == "admin").all()]
+
+    platform_filters = [
+        Product.owner_type == "PLATFORM",
+        Product.is_platform_product == True,
+        Product.vendor_id == "lumora-creator",
+        Product.vendor_id.is_(None),
+        Product.vendor_id == "",
+    ]
+    if admin_user_ids:
+        platform_filters.append(Product.vendor_id.in_(admin_user_ids))
+
+    query = db.query(Product).filter(or_(*platform_filters))
 
     if status:
         query = query.filter(Product.status == status.lower())
@@ -203,9 +210,10 @@ def approve_product(
 
     # Audit log
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="product_approved",
             target_type="product",
             target_id=str(product_id),
@@ -235,9 +243,10 @@ def reject_product(
 
     # Audit log
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="product_rejected",
             target_type="product",
             target_id=str(product_id),

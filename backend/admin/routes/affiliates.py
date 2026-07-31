@@ -294,6 +294,76 @@ def get_affiliate_kpis(
         AffiliatePayout.status == "completed"
     ).scalar() or 0.0
 
+    # ── Today's Commission — sum of commission_amt created since start of today ──
+    # Source: affiliate_commissions.commission_amt WHERE created_at >= today 00:00 UTC
+    today_commission = db.query(func.coalesce(func.sum(AffiliateCommission.commission_amt), 0.0)).filter(
+        AffiliateCommission.created_at >= start_of_today
+    ).scalar() or 0.0
+
+    # ── Today's Revenue (affiliate-attributed) — sale_amount created since today ──
+    # Source: affiliate_commissions.sale_amount WHERE created_at >= today 00:00 UTC
+    # Represents the gross sale value of affiliate-referred purchases today.
+    today_revenue = db.query(func.coalesce(func.sum(AffiliateCommission.sale_amount), 0.0)).filter(
+        AffiliateCommission.created_at >= start_of_today
+    ).scalar() or 0.0
+
+    # ── Average Approval Time — real calculation from payout timestamps ─────────
+    # Source: affiliate_payouts WHERE completed payouts have both created_at and completed_at
+    # Formula: AVG(completed_at - created_at) in hours, then converted to days
+    avg_approval_time_display = "N/A"
+    try:
+        completed_payouts_with_times = db.query(
+            AffiliatePayout.created_at,
+            AffiliatePayout.completed_at
+        ).filter(
+            AffiliatePayout.status == "completed",
+            AffiliatePayout.completed_at.isnot(None),
+            AffiliatePayout.created_at.isnot(None)
+        ).all()
+
+        if completed_payouts_with_times:
+            total_seconds = sum(
+                (p.completed_at - p.created_at).total_seconds()
+                for p in completed_payouts_with_times
+                if p.completed_at > p.created_at
+            )
+            count = len([p for p in completed_payouts_with_times if p.completed_at > p.created_at])
+            if count > 0:
+                avg_seconds = total_seconds / count
+                avg_hours = avg_seconds / 3600
+                if avg_hours < 24:
+                    avg_approval_time_display = f"{round(avg_hours, 1)} hrs"
+                else:
+                    avg_days = avg_hours / 24
+                    avg_approval_time_display = f"{round(avg_days, 1)} days"
+    except Exception as _avg_exc:
+        logger.warning("[get_affiliate_kpis] avg_approval_time calc failed: %s", _avg_exc)
+
+    # ── Tier Distribution — computed from real affiliate revenue data ─────────
+    # Source: affiliate_commissions.sale_amount grouped by affiliate_id
+    # Thresholds: Platinum >=200000, Gold >=50000, Silver >=10000, Bronze <10000
+    tier_counts = {"platinum": 0, "gold": 0, "silver": 0, "bronze": 0}
+    try:
+        affiliate_revenue_rows = db.query(
+            AffiliateCommission.affiliate_id,
+            func.sum(AffiliateCommission.sale_amount).label("total_revenue")
+        ).group_by(AffiliateCommission.affiliate_id).all()
+
+        for row in affiliate_revenue_rows:
+            rev = float(row.total_revenue or 0.0)
+            if rev >= 200000:
+                tier_counts["platinum"] += 1
+            elif rev >= 50000:
+                tier_counts["gold"] += 1
+            elif rev >= 10000:
+                tier_counts["silver"] += 1
+            else:
+                tier_counts["bronze"] += 1
+    except Exception as _tier_exc:
+        logger.warning("[get_affiliate_kpis] tier_counts calc failed: %s", _tier_exc)
+
+    total_with_revenue = sum(tier_counts.values())
+
     return {
         "total_affiliates": total_affiliates,
         "approved_affiliates": approved_affiliates,
@@ -302,6 +372,7 @@ def get_affiliate_kpis(
         "total_clicks": total_clicks,
         "unique_clicks": unique_clicks,
         "total_conversions": total_sales,
+        "total_sales": total_sales,
         "conversion_rate": conversion_rate,
         "revenue_generated": round(revenue_generated, 2),
         "commission_pending": round(commission_pending, 2),
@@ -314,6 +385,26 @@ def get_affiliate_kpis(
         "todays_affiliate_payout": round(todays_affiliate_payout, 2),
         "monthly_affiliate_payout": round(monthly_affiliate_payout, 2),
         "lifetime_affiliate_expense": round(lifetime_affiliate_expense, 2),
+        # ── Fields added to eliminate frontend fallback values ─────────────────
+        # today_commission: SUM(affiliate_commissions.commission_amt) WHERE created_at >= today
+        "today_commission": round(today_commission, 2),
+        # today_revenue: SUM(affiliate_commissions.sale_amount) WHERE created_at >= today
+        # Represents affiliate-attributed gross sales today, NOT all platform revenue
+        "today_revenue": round(today_revenue, 2),
+        # avg_approval_time: computed from completed payout timestamps; "N/A" if no data
+        "avg_approval_time": avg_approval_time_display,
+        # pending_withdrawals: count of pending payout requests
+        "pending_withdrawals": db.query(AffiliatePayout).filter(
+            AffiliatePayout.status.in_(["pending", "processing"])
+        ).count(),
+        # tier_distribution: real counts computed from affiliate_commissions.sale_amount
+        "tier_distribution": {
+            "platinum": tier_counts["platinum"],
+            "gold": tier_counts["gold"],
+            "silver": tier_counts["silver"],
+            "bronze": tier_counts["bronze"],
+            "total_with_revenue": total_with_revenue,
+        },
     }
 
 
@@ -760,14 +851,19 @@ def get_payout_queue(
             "upi_id": profile.upi_id or "",
             "bank_name": profile.bank_name or "",
             "account_number": getattr(profile, 'account_number', '') or "",
+            # Real IFSC and PAN from the affiliate's profile — not hardcoded
+            "ifsc_code": getattr(profile, 'ifsc_code', '') or "",
+            "pan_number": getattr(profile, 'pan_number', '') or "",
+            "pan_holder_name": getattr(profile, 'pan_holder_name', '') or "",
             "status": payout.status,
             "notes": payout.notes or "",
             "ready_commission_count": ready_commissions,
             "pending_balance": round(profile.pending_earnings or 0.0, 2),
             "utr": getattr(payout, 'utr', None),
             "is_sandbox": getattr(payout, 'payout_mode', '') == 'mock',
-            "kyc_status": getattr(profile, 'kyc_status', 'verified'),
-            "is_bank_verified": getattr(profile, 'is_bank_verified', True),
+            "kyc_status": getattr(profile, 'kyc_status', 'pending') or "pending",
+            "is_bank_verified": getattr(profile, 'is_bank_verified', False),
+            "razorpay_payout_id": getattr(payout, 'razorpay_payout_id', None),
             "created_at": payout.created_at.isoformat() + "Z" if payout.created_at else None,
             "updated_at": payout.updated_at.isoformat() + "Z" if payout.updated_at else None,
         })
@@ -937,7 +1033,163 @@ def patch_payout_status(
         payout_id, final_status, result.provider_ref, payout_mode,
     )
 
-@router.post("/payouts/{payout_id}/verify")
+@router.get("/payouts/{payout_id}/supporting-orders")
+def get_payout_supporting_orders(
+    payout_id: int,
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """
+    Returns the actual orders and commissions supporting a payout request.
+
+    Source: affiliate_commissions WHERE affiliate_id = payout.affiliate_id
+            AND commission_status IN ('approved', 'ready_for_payout', 'paid')
+    These are the real database rows that justify the payout amount.
+    """
+    payout = db.query(AffiliatePayout).filter(AffiliatePayout.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout not found")
+
+    # Fetch commissions that are in payable/paid state for this affiliate
+    # Ordered by created_at so the admin sees the chronological attribution chain
+    commissions = db.query(AffiliateCommission).filter(
+        AffiliateCommission.affiliate_id == payout.affiliate_id,
+        AffiliateCommission.commission_status.in_(["approved", "ready_for_payout", "paid"])
+    ).order_by(AffiliateCommission.created_at.desc()).all()
+
+    # Look up order details for each commission
+    orders_evidence = []
+    total_commission_amount = 0.0
+    for comm in commissions:
+        order = db.query(Order).filter(Order.id == comm.order_id).first() if comm.order_id else None
+        order_status = order.status if order else "completed"
+        order_id_display = f"ORD-{comm.order_id}" if comm.order_id else "—"
+        orders_evidence.append({
+            "commission_id": comm.id,
+            "order_id": comm.order_id,
+            "order_id_display": order_id_display,
+            "product_name": comm.product_name or "—",
+            "sale_amount": round(comm.sale_amount or 0.0, 2),
+            "commission_amount": round(comm.commission_amt or 0.0, 2),
+            "commission_status": comm.commission_status or comm.status or "approved",
+            "order_status": order_status,
+            "created_at": comm.created_at.isoformat() + "Z" if comm.created_at else None,
+            "approved_at": comm.approved_at.isoformat() + "Z" if comm.approved_at else None,
+        })
+        total_commission_amount += (comm.commission_amt or 0.0)
+
+    return {
+        "payout_id": payout_id,
+        "payout_amount": round(payout.amount, 2),
+        "total_commission_in_supporting_orders": round(total_commission_amount, 2),
+        "orders_count": len(orders_evidence),
+        "orders": orders_evidence,
+    }
+
+
+@router.get("/payouts/{payout_id}/audit-timeline")
+def get_payout_audit_timeline(
+    payout_id: int,
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """
+    Returns the real audit timeline for a payout from database records only.
+
+    Source: audit_logs WHERE target_type = 'affiliate_payout' AND target_id = payout_id
+            plus lifecycle timestamps from affiliate_payouts (created_at, processed_at, completed_at)
+
+    Only events that actually occurred are returned.
+    No fabricated events are ever generated.
+    """
+    payout = db.query(AffiliatePayout).filter(AffiliatePayout.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout not found")
+
+    timeline = []
+
+    # Event 1: Withdrawal was requested — ALWAYS has created_at
+    if payout.created_at:
+        timeline.append({
+            "title": "Withdrawal Requested",
+            "desc": f"Affiliate requested withdrawal of ₹{payout.amount:,.2f} via {(payout.method or 'UPI').upper()}",
+            "time": payout.created_at.isoformat() + "Z",
+            "actor": "Affiliate Portal",
+            "status": "completed",
+        })
+
+    # Event 2: Admin review events — from audit_logs table
+    audit_logs = db.query(AuditLog, User).outerjoin(
+        User, AuditLog.admin_user_id == User.id
+    ).filter(
+        AuditLog.target_type == "affiliate_payout",
+        AuditLog.target_id == str(payout_id)
+    ).order_by(AuditLog.created_at.asc()).all()
+
+    for log, actor_user in audit_logs:
+        action = log.action or ""
+        actor_name = (actor_user.name if actor_user else None) or "Admin"
+        ts = log.created_at.isoformat() + "Z" if log.created_at else None
+        if not ts:
+            continue
+
+        if "reject" in action:
+            timeline.append({
+                "title": "Withdrawal Rejected",
+                "desc": f"Rejected by {actor_name}",
+                "time": ts,
+                "actor": actor_name,
+                "status": "rejected",
+            })
+        elif "payout_executed" in action or "payout_completed" in action:
+            timeline.append({
+                "title": "Payment Dispatched",
+                "desc": f"Payment initiated by {actor_name} via {(payout.payout_mode or 'gateway').upper()}",
+                "time": ts,
+                "actor": actor_name,
+                "status": "completed",
+            })
+        elif "payout_failed" in action:
+            timeline.append({
+                "title": "Payment Failed",
+                "desc": f"Transfer failed — {payout.failure_reason or 'unknown error'}",
+                "time": ts,
+                "actor": "System",
+                "status": "failed",
+            })
+
+    # Event 3: Processing started — only if processed_at is set
+    if payout.processed_at and payout.processed_at != payout.created_at:
+        timeline.append({
+            "title": "Transfer Processing",
+            "desc": f"Dispatched to {(payout.payout_mode or 'gateway').upper()} for settlement",
+            "time": payout.processed_at.isoformat() + "Z",
+            "actor": "Payment Gateway",
+            "status": "completed",
+        })
+
+    # Event 4: Completion — only if completed_at is set (real bank settlement)
+    if payout.completed_at:
+        utr = getattr(payout, 'utr', None)
+        timeline.append({
+            "title": "Bank Settlement Confirmed",
+            "desc": f"Transfer completed. UTR: {utr}" if utr else "Transfer completed",
+            "time": payout.completed_at.isoformat() + "Z",
+            "actor": "RazorpayX / Bank",
+            "status": "completed",
+        })
+
+    # Sort all events chronologically
+    timeline.sort(key=lambda x: x.get("time") or "")
+
+    return {
+        "payout_id": payout_id,
+        "current_status": payout.status,
+        "events": timeline,
+    }
+
+
+
 def verify_payout_request(
     payout_id: int,
     db: Session = Depends(get_db),
@@ -1105,7 +1357,8 @@ def execute_real_payout(
             "payout_id": payout.id,
             "status": payout.status,
             "provider_ref": payout.razorpay_payout_id,
-            "utr": getattr(payout, "utr", f"UTR-RZP-{payout.id}9923"),
+            # Return real UTR if available; None if not yet confirmed by bank
+            "utr": getattr(payout, "utr", None),
             "settlement_time": payout.processed_at.isoformat() + "Z" if payout.processed_at else datetime.utcnow().isoformat() + "Z"
         }
 
@@ -1163,9 +1416,11 @@ def execute_real_payout(
         payout.razorpay_fund_account_id = result.fund_account_id
         profile.razorpay_fund_account_id = result.fund_account_id
 
-    # Generated UTR reference for settlement tracking
-    utr_val = f"UTR-RZP-{payout.id}9923"
-    payout.utr = utr_val
+    # UTR is set by the RazorpayX webhook once the bank confirms settlement.
+    # For mock provider, the provider_ref itself serves as the tracking reference.
+    # We do NOT fabricate UTR strings like "UTR-RZP-{id}9923".
+    # payout.utr is left as None here and populated by webhook/completion_handler
+    # when the actual bank UTR becomes available.
     db.commit()
 
     # If mock provider returned "completed" synchronously, complete inline
@@ -1189,7 +1444,7 @@ def execute_real_payout(
         action="payout_executed",
         target_type="affiliate_payout",
         target_id=str(payout.id),
-        metadata_json=f'{{"amount": {payout.amount}, "payout_ref": "{result.provider_ref}", "utr": "{utr_val}", "status": "{final_status}"}}'
+        metadata_json=f'{{"amount": {payout.amount}, "payout_ref": "{result.provider_ref}", "status": "{final_status}"}}'
     )
     db.add(audit)
     db.commit()
@@ -1199,7 +1454,9 @@ def execute_real_payout(
         "payout_id": payout.id,
         "status": final_status,
         "provider_ref": result.provider_ref,
-        "utr": utr_val,
+        # utr is None until the bank confirms settlement via webhook.
+        # The real UTR will be set on payout.utr by complete_payout() when the webhook fires.
+        "utr": payout.utr or None,
         "settlement_time": datetime.utcnow().isoformat() + "Z",
         "payout_mode": payout_mode,
         "amount": payout.amount,

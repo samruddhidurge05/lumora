@@ -137,6 +137,27 @@ def complete_payout(
             )
             profile.updated_at = now
 
+            # Sync individual commissions to "paid" so the dashboard recalculations match exactly
+            from sqlalchemy import or_ as _or
+            from app.models.affiliate import AffiliateCommission
+            
+            approved_commissions = db.query(AffiliateCommission).filter(
+                AffiliateCommission.affiliate_id == profile.id,
+                _or(
+                    AffiliateCommission.commission_status == "approved",
+                    AffiliateCommission.status == "approved",
+                )
+            ).order_by(AffiliateCommission.created_at.asc()).all()
+
+            amount_to_clear = amount
+            for comm in approved_commissions:
+                if amount_to_clear <= 0:
+                    break
+                # Only clear up to the requested amount (payouts are usually the exact approved balance)
+                comm.commission_status = "paid"
+                comm.status = "paid"
+                amount_to_clear -= (comm.commission_amt or 0.0)
+
             logger.info(
                 "[complete_payout] Wallet updated for AffiliateProfile #%d: "
                 "+paid_earnings=%.2f, pending_earnings=%.2f (source=%s)",

@@ -11,6 +11,7 @@ import {
   subscribeToDashboardReports,
 } from '../../services/dashboardService.js';
 import PlatformTreasuryCards from './components/PlatformTreasuryCards';
+import { fetchTreasurySummary, formatINR } from '../../services/treasuryService';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -154,6 +155,27 @@ export default function Dashboard() {
   const [audioMuted, setAudioMuted] = useState(true);
   const [pulseGlow, setPulseGlow]   = useState(false);
 
+  // ─── NET PLATFORM EARNINGS (from Treasury — affiliate commission already deducted) ──
+  const [netPlatformEarnings, setNetPlatformEarnings] = useState(null);
+
+
+  // ─── NET PLATFORM EARNINGS — fetched from Treasury (affiliate commission already deducted) ──
+  useEffect(() => {
+    let mounted = true;
+    const loadTreasury = async () => {
+      try {
+        const summary = await fetchTreasurySummary();
+        if (mounted && summary) {
+          setNetPlatformEarnings(summary.net_platform_earnings ?? null);
+        }
+      } catch (_) {
+        // Non-blocking — treasury data is supplementary on the Dashboard
+      }
+    };
+    loadTreasury();
+    const iv = setInterval(loadTreasury, 60_000);
+    return () => { mounted = false; clearInterval(iv); };
+  }, []);
 
   // Sync mute state
   useEffect(() => {
@@ -388,8 +410,9 @@ export default function Dashboard() {
 
         {/* --- LAYER 2: CORE METRICS GRID --- */}
         <StatsGrid columns={6}>
+          {/* ── REVENUE CARD — Dual display: Gross on top, Net sub-label below ── */}
           <DashboardCard
-            title="Revenue"
+            title="Gross Revenue"
             value={isLoading ? "..." : `${currencySymbol}${formatValue(metrics.totalRevenue)}`}
             icon={<Icon name="DollarSign" size={12} />}
             trend={isLoading ? undefined : `${metrics.revenueChange >= 0 ? '+' : ''}${metrics.revenueChange}%`}
@@ -399,6 +422,22 @@ export default function Dashboard() {
               <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
                 <path d="M0,15 L20,12 L40,16 L60,8 L80,10 L100,5" fill="none" stroke="#D8BFE3" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
+            }
+            footer={
+              <div className="mt-1 flex items-center justify-between gap-1">
+                <span className="text-[8px] font-extrabold uppercase tracking-widest text-[#8E6AA8]">Net Platform</span>
+                <span className={`text-[10px] font-black ${
+                  netPlatformEarnings === null
+                    ? 'text-stone-400'
+                    : netPlatformEarnings < metrics.totalRevenue
+                    ? 'text-orange-600'
+                    : 'text-emerald-600'
+                }`}>
+                  {netPlatformEarnings === null
+                    ? '—'
+                    : `${currencySymbol}${formatValue(netPlatformEarnings)}`}
+                </span>
+              </div>
             }
           />
           <DashboardCard

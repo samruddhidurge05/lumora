@@ -631,14 +631,15 @@ const SAMPLE_USERS = ['Alex M.', 'Priya S.', 'Jordan K.', 'Sam T.', 'Chris R.', 
 
 // Backend origin for resolving relative /uploads/... image paths
 // from product thumbnail/preview fields stored as local server paths.
+const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+
 const _BACKEND_ORIGIN = (() => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
+  }
   const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
   if (base.startsWith('/')) {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN;
-    if (origin && origin !== 'http://localhost:8000') {
-      return origin;
-    }
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+    return import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8000';
   }
   return base.replace(/\/api\/?$/, '');
 })();
