@@ -15,17 +15,28 @@
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
 
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+
+export const getBackendOrigin = () => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const raw = import.meta.env.VITE_BACKEND_ORIGIN;
+    if (raw && typeof raw === 'string' && raw.startsWith('http') && raw.includes('.onrender.com') && !raw.endsWith('lumora-backend-onrender.com')) {
+      return raw.replace(/\/$/, '');
+    }
+    return PROD_BACKEND_ORIGIN;
+  }
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  if (base.startsWith('/')) {
+    return 'http://localhost:8000';
+  }
+  return base.replace(/\/api\/?$/, '');
+};
 
 /** Production-aware backend API base URL. Import this instead of computing VITE_API_BASE_URL inline. */
 export const BACKEND_URL = (() => {
-  // On production (non-localhost), always point directly at the Render backend.
-  // VITE_BACKEND_ORIGIN overrides the hardcoded fallback if set on the Vercel project.
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
+    return `${getBackendOrigin()}/api`;
   }
-  // Dev: use VITE_API_BASE_URL (defaults to http://localhost:8000/api)
   return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 })();
 

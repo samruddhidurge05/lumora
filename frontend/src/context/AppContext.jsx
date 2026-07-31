@@ -1727,6 +1727,15 @@ export function AppContextProvider({ children }) {
       // AffiliateDashboard.jsx listens for this custom event to switch tabs.
       window.dispatchEvent(new CustomEvent('affiliate-tab-change', { detail: sub }));
       setCurrentView('affiliate');
+    } else if (view === 'partnerships' || view === 'partnership') {
+      navigate('/partnerships');
+      setCurrentView('partnerships');
+    } else if (view === 'partnerships-affiliate') {
+      navigate('/partnerships/affiliate');
+      setCurrentView('partnerships-affiliate');
+    } else if (view === 'partnerships-vendor') {
+      navigate('/partnerships/vendor');
+      setCurrentView('partnerships-vendor');
     } else {
       navigate(`/#${view}`);
       setCurrentView(view);

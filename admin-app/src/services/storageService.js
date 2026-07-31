@@ -14,25 +14,24 @@
  * call sites remain unchanged.
  */
 
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
+import { PROD_BACKEND_ORIGIN } from '../utils/api.js';
 
+// On Vercel production, use relative /api so all API traffic flows through the
+// Vercel proxy rewrite (vercel.json). This eliminates cross-origin requests
+// and CORS preflight failures entirely.
 const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
+    return '/api';
   }
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  return 'http://localhost:8000/api';
 })();
 
+// For media/download URL construction we still need the absolute origin.
 const BACKEND_ORIGIN = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
+    return PROD_BACKEND_ORIGIN;
   }
-  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  if (base.startsWith('/')) {
-    return import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-  }
-  return base.replace(/\/api\/?$/, '');
+  return 'http://localhost:8000';
 })();
 
 /**

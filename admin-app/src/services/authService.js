@@ -17,14 +17,13 @@
  *   - Removes backend JWT and uid from localStorage on logout
  */
 
-const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
-
+// On Vercel production, use relative /api so traffic flows through the Vercel proxy rewrite.
+// On localhost, use Vite dev server proxy at http://localhost:8000/api.
 const BACKEND_URL = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const origin = import.meta.env.VITE_BACKEND_ORIGIN || PROD_BACKEND_ORIGIN;
-    return `${origin.replace(/\/$/, '')}/api`;
+    return '/api';
   }
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  return 'http://localhost:8000/api';
 })();
 
 /**

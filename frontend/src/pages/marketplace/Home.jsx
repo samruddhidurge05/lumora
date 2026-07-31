@@ -263,6 +263,7 @@ export default function Home() {
             filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
           }}
         >
+          <source src="/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" type="video/mp4" />
           <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
         </video>
         {/* Dark Vignette Overlay for rich text readability across all sections */}
