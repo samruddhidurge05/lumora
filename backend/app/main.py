@@ -21,7 +21,8 @@ if _env_file.exists():
 
 import sys
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -331,7 +332,15 @@ def _run_schema_migrations() -> None:
             failed_migrations = []
             raw_conn = engine.raw_connection()
             try:
-                raw_conn.autocommit = True
+                # Access the underlying DBAPI connection (dbapi_connection/driver_connection/connection) since 
+                # SQLAlchemy 2.0 PoolProxiedConnection uses __slots__ and does not expose setting autocommit directly.
+                dbapi_conn = getattr(raw_conn, "dbapi_connection", getattr(raw_conn, "driver_connection", getattr(raw_conn, "connection", None)))
+                target_conn = dbapi_conn if dbapi_conn is not None else raw_conn
+                try:
+                    if hasattr(target_conn, "autocommit"):
+                        setattr(target_conn, "autocommit", True)
+                except (AttributeError, TypeError):
+                    pass
                 cur = raw_conn.cursor()
                 for sql in pg_migrations:
                     try:
@@ -629,6 +638,11 @@ if not _debug_raw or _debug_raw == "False":
     except Exception:
         pass
 _is_debug = _debug_raw.lower() in ("true", "1")
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    restore_products()
+    yield
+
 app = FastAPI(
     title="Lumora Digital Marketplace API",
     description="Backend API for Lumora digital assets marketplace.",
@@ -636,9 +650,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     redirect_slashes=False,
+    lifespan=lifespan,
 )
 
-@app.on_event("startup")
 def restore_products():
     import threading
 
@@ -1004,7 +1018,7 @@ def health_check():
     """
     report = {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "services": {},
     }
     overall_ok = True
@@ -1058,7 +1072,7 @@ def readiness_probe():
         import sqlalchemy
         with _engine.connect() as conn:
             conn.execute(sqlalchemy.text("SELECT 1"))
-        return {"status": "ready", "timestamp": datetime.utcnow().isoformat() + "Z"}
+        return {"status": "ready", "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
     except Exception as err:
         _logger.error("[readiness] Database not reachable: %s", err)
         return JSONResponse(
@@ -1073,7 +1087,7 @@ def liveness_probe():
     Kubernetes liveness probe - indicates the process is alive.
     Always returns 200 as long as the Python process is running.
     """
-    return {"status": "alive", "timestamp": datetime.utcnow().isoformat() + "Z"}
+    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
 
 
 # -- Platform Status (existing public endpoint) --------------------------------
