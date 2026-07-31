@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { getReviewAnalytics } from '../../services/reviewAnalyticsService.js';
 import { backendFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 const PAGE_SIZE = 50;
 
@@ -202,6 +203,9 @@ export default function Reviews() {
   // Cold-start retry ref for Render free-tier wake-up
   const coldStartRetryRef = useRef(null);
 
+  // Wait for AuthContext to finish restoring the admin JWT before fetching data.
+  const { loading: authLoading } = useAuth();
+
   const loadBackendReviews = useCallback(async (page = 1, sentiment = "all", search = "") => {
     setLoadError(null);
     try {
@@ -280,11 +284,12 @@ export default function Reviews() {
     loadFirestoreReviews();
   }, [loadFirestoreReviews]);
 
-  // Load backend paginated reviews; reset to page 1 when filters change
+  // Load backend paginated reviews — wait for auth session to be ready first
   useEffect(() => {
+    if (authLoading) return;
     setCurrentPage(1);
     loadBackendReviews(1, sentimentFilter, searchQuery);
-  }, [sentimentFilter, searchQuery, loadBackendReviews]);
+  }, [authLoading, sentimentFilter, searchQuery, loadBackendReviews]);
   
   useEffect(() => {
     sysSound.muted = audioMuted;

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import {
   fetchAllOrders,
   updateOrderStatus,
@@ -374,6 +375,11 @@ export default function OrdersManagement() {
   // Cold-start retry ref — prevents double-retry on strict mode double-invoke
   const coldStartRetryRef = useRef(null);
 
+  // Wait for AuthContext to finish resolving the admin session before fetching data.
+  // This prevents the race condition where loadOrders fires before adminLogin()
+  // stores the JWT on page-refresh, causing a 401 that wipes the token.
+  const { loading: authLoading } = useAuth();
+
   // --- DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     const validPage = (typeof page === 'number' && !isNaN(page) && page >= 1) ? Math.floor(page) : 1;
@@ -433,12 +439,14 @@ export default function OrdersManagement() {
   }, []);
 
   useEffect(() => {
+    // Don't fetch until AuthContext has finished restoring the admin session (JWT)
+    if (authLoading) return;
     if (viewMode === 'orders') {
       loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
     } else {
       loadRefundTickets();
     }
-  }, [viewMode, selectedStatus, loadOrders, loadRefundTickets]);
+  }, [authLoading, viewMode, selectedStatus, loadOrders, loadRefundTickets]);
 
   // Procedural audio synchronization
   useEffect(() => {
