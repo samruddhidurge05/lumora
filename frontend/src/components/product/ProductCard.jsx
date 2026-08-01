@@ -22,10 +22,19 @@ export default function ProductCard({ product }) {
     }
   };
 
+  const productUrl = `/#product/${product.id}`;
+
   return (
-    <div
+    <a
+      href={productUrl}
       className="glass-card hover-lift"
-      onClick={() => navigateTo('product-detail', product.id)}
+      onClick={(e) => {
+        // Allow ctrl+click or middle-click or right-click to use browser native behavior
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+          e.preventDefault();
+          navigateTo('product-detail', product.id);
+        }
+      }}
       style={{
         padding: 0,
         overflow: 'hidden',
@@ -41,6 +50,8 @@ export default function ProductCard({ product }) {
         transform: isHovered ? 'translateY(-6px) scale(1.02)' : 'translateY(0) scale(1)',
         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         position: 'relative',
+        textDecoration: 'none',
+        color: 'inherit',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -229,7 +240,7 @@ export default function ProductCard({ product }) {
           </button>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 

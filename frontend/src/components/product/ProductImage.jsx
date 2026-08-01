@@ -74,7 +74,6 @@ export default function ProductImage({ product, isHovered = false, style, classN
 
   return (
     <div
-      onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
       style={{
         position: 'relative',

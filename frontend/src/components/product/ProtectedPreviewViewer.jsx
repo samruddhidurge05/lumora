@@ -124,7 +124,6 @@ export default function ProtectedPreviewViewer({
     <div
       ref={containerRef}
       className={`lumora-protected-preview-wrapper ${className}`}
-      onContextMenu={(e) => { e.preventDefault(); triggerProtection('Right-Click Context Menu Prevented'); }}
       onDragStart={(e) => e.preventDefault()}
       onCopy={(e) => { e.preventDefault(); triggerProtection('Copy Action Prevented'); }}
       style={{
