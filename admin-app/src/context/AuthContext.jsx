@@ -302,26 +302,20 @@ export const AuthProvider = ({ children }) => {
             if (loginInProgress) {
               console.log('[AuthContext] AdminLogin.jsx is handling this login — skipping concurrent adminLogin() call');
               // Wait for AdminLogin.jsx to finish and store the token.
-              // Poll localStorage for up to 10 seconds in 100 ms intervals.
               const token = await new Promise((resolve) => {
                 let elapsed = 0;
                 const interval = setInterval(() => {
                   const t = localStorage.getItem('lumora_backend_token');
+                  const inProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
                   elapsed += 100;
-                  if (t || elapsed >= 10000) {
+                  if (t || !inProgress || elapsed >= 15000) {
                     clearInterval(interval);
                     resolve(t);
                   }
                 }, 100);
               });
               if (!token) {
-                console.error('[AuthContext] Timed out waiting for AdminLogin.jsx to store token');
-                // AdminLogin.jsx failed — clear backend token and sign out Firebase
-                // so background services do not attempt 401 API requests
-                clearBackendToken();
-                try { await signOut(auth); } catch (_) {}
-                setUser(null);
-                setUserRole(null);
+                console.log('[AuthContext] AdminLogin.jsx finished without storing token (handled by AdminLogin UI)');
                 setLoading(false);
                 return;
               }

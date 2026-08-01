@@ -23,7 +23,7 @@ import os
 import uuid
 import threading
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Any, cast
+from typing import Optional, Any, cast, Dict
 
 # Ensure backend root directory is in sys.path for IDE and runtime resolution
 _backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -147,7 +147,7 @@ def _send_email_async(to_email, invited_name, role_level, accept_url, expires_at
                         now_utc = datetime.now(timezone.utc)
                         inv.last_email_sent_at = cast(Any, now_utc)
                         if ok:
-                            if err_msg and "[MOCK_MODE]" in str(err_msg):
+                            if err_msg and "[MOCK_MODE]" in err_msg:
                                 inv.email_status = cast(Any, "email_mocked")
                                 inv.email_error_log = cast(Any, err_msg)
                             else:
@@ -346,8 +346,8 @@ def invite_admin(
 
     try:
         from app.services.email_service import record_email_event
-        record_email_event(invitation.id, "CREATED", clean_email)
-        record_email_event(invitation.id, "QUEUED", clean_email)
+        record_email_event(cast(Any, invitation.id), "CREATED", clean_email)
+        record_email_event(cast(Any, invitation.id), "QUEUED", clean_email)
     except Exception:
         pass
 
@@ -443,7 +443,7 @@ def resend_invitation(
 
     try:
         from app.services.email_service import record_email_event
-        record_email_event(invitation.id, "QUEUED", invitation.email)
+        record_email_event(cast(Any, invitation.id), "QUEUED", invitation.email)
     except Exception:
         pass
 
@@ -796,7 +796,7 @@ def accept_invite(
 
     try:
         from app.services.email_service import record_email_event
-        record_email_event(invitation.id, "ACCEPTED", current_user.email)
+        record_email_event(cast(Any, invitation.id), "ACCEPTED", cast(str, current_user.email))
     except Exception:
         pass
 

@@ -97,7 +97,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
 
     if (activeRole === 'admin') {
-      if (firebaseUser) {
+      const loginInProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+      if (firebaseUser && !loginInProgress) {
         try {
           const synced = await adminRefreshToken(firebaseUser);
           if (synced?.access_token) {

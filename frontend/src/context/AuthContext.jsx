@@ -279,19 +279,44 @@ export const AuthProvider = ({ children }) => {
         if (localHint === 'admin') {
           // If we already have a valid backend token, skip re-calling adminLogin.
           // AdminLogin.jsx calls adminLogin() directly in the popup handler —
-          // that call sets lumora_backend_token before onAuthStateChanged runs.
+          // that call sets lumora_backend_token before onAuthStateChanged finishes.
           const existingToken = localStorage.getItem('lumora_backend_token');
           if (!existingToken) {
-            // No token yet — this is a page-reload admin session restore.
-            // Re-exchange the Firebase token for a fresh backend JWT.
-            try {
-              await adminLogin(firebaseUser);
-            } catch (adminErr) {
-              console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
-              clearBackendToken();
-              await signOut(auth);
-              window.location.replace('/admin/login');
-              return;
+            // Check if AdminLogin.jsx is actively handling this login attempt
+            const loginInProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+            if (loginInProgress) {
+              // AdminLogin.jsx is handling this sign-in — do NOT call adminLogin() concurrently.
+              // Wait non-blockingly for lumora_backend_token to be stored by AdminLogin.jsx.
+              const token = await new Promise((resolve) => {
+                let elapsed = 0;
+                const interval = setInterval(() => {
+                  const t = localStorage.getItem('lumora_backend_token');
+                  const inProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+                  elapsed += 100;
+                  if (t || !inProgress || elapsed >= 15000) {
+                    clearInterval(interval);
+                    resolve(t);
+                  }
+                }, 100);
+              });
+              if (!token) {
+                // AdminLogin.jsx failed or user cancelled — skip forcing signOut here;
+                // AdminLogin.jsx catch block handles error state display.
+                setLoading(false);
+                return;
+              }
+            } else {
+              // No token yet & no active login in progress — page-reload admin session restore.
+              // Re-exchange the Firebase token for a fresh backend JWT.
+              try {
+                await adminLogin(firebaseUser);
+              } catch (adminErr) {
+                console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+                clearBackendToken();
+                await signOut(auth);
+                window.location.replace('/admin/login');
+                return;
+              }
             }
           }
           // Token is present (either just set by popup handler or restored from storage).
