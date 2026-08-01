@@ -39,6 +39,17 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Close dropdown on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Close mobile menu when navigating
   const closeMobile = () => setMobileOpen(false);
 
@@ -112,11 +123,10 @@ export default function Navbar() {
     }
   };
 
-  const navItems = [
+  const baseNavItems = [
     { label: 'Explore',     icon: <Compass size={14} color="#7B3FA0" />,       href: '#products' },
     { label: 'Categories',  icon: <Sparkles size={14} color="#7B3FA0" />,      href: '#categories' },
     { label: 'Showcase',    icon: <Home size={14} color="#7B3FA0" />,          href: '#home' },
-    ...(user  ? [{ label: 'Dashboard',   icon: <LayoutDashboard size={14} color="#7B3FA0" />, href: '#dashboard' }] : []),
   ];
 
   return (
@@ -128,8 +138,9 @@ export default function Navbar() {
         left: '50%',
         transform: 'translateX(-50%)',
         width: scrolled ? 'min(1200px, 92%)' : 'min(1340px, 94%)',
-        zIndex: 9999,
+        zIndex: 999999,
         transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        overflow: 'visible',
       }}
     >
       <div 
@@ -141,12 +152,14 @@ export default function Navbar() {
           padding: scrolled ? '6px 18px' : '8px 24px',
           borderRadius: '100px',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          background: 'rgba(255, 255, 255, 0.92)',
+          background: 'rgba(255, 255, 255, 0.94)',
           backdropFilter: 'blur(30px) saturate(200%)',
           WebkitBackdropFilter: 'blur(30px) saturate(200%)',
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 1)',
           border: '1.5px solid rgba(255, 255, 255, 0.95)',
           position: 'relative',
+          overflow: 'visible',
+          zIndex: 999999,
         }}
       >
         {/* Brand Logo */}
@@ -166,216 +179,258 @@ export default function Navbar() {
         {/* Desktop Navigation Links */}
         <nav
           className="nav-menu"
-          style={{ display: 'flex', alignItems: 'center', gap: '24px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '24px', overflow: 'visible', position: 'relative', zIndex: 999999 }}
         >
-          {navItems.map((item, index) => {
-            const isLastBeforeDashboard = item.label === 'Showcase';
-            return (
-              <React.Fragment key={index}>
-                <a
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item)}
+          {baseNavItems.map((item, index) => (
+            <a
+              key={index}
+              href={item.href}
+              onClick={(e) => handleNavClick(e, item)}
+              style={{
+                fontSize: '0.82rem', fontWeight: 700,
+                color: '#2D004D', textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: '5px',
+                position: 'relative', padding: '4px 0',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#7B3FA0';
+                const dot = e.currentTarget.querySelector('.dot');
+                if (dot) dot.style.transform = 'translateX(-50%) scale(1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#2D004D';
+                const dot = e.currentTarget.querySelector('.dot');
+                if (dot) dot.style.transform = 'translateX(-50%) scale(0)';
+              }}
+            >
+              {item.icon}
+              {item.label}
+              <span
+                className="dot"
+                style={{
+                  position: 'absolute', bottom: -3, left: '50%',
+                  transform: 'translateX(-50%) scale(0)',
+                  width: '4px', height: '4px', borderRadius: '50%',
+                  backgroundColor: '#7B3FA0',
+                  transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
+                  transformOrigin: 'center center',
+                }}
+              />
+            </a>
+          ))}
+
+          {/* Partnership Dropdown */}
+          <div
+            ref={dropdownRef}
+            style={{ position: 'relative', overflow: 'visible', zIndex: 999999 }}
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(o => !o);
+              }}
+              aria-expanded={dropdownOpen}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: dropdownOpen ? '#7B3FA0' : '#2D004D',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 0',
+                cursor: 'pointer',
+                transition: 'color 0.2s ease',
+                fontFamily: 'inherit',
+              }}
+            >
+              <Users size={14} color="#7B3FA0" />
+              Partnership
+              <ChevronDown
+                size={12}
+                style={{
+                  transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  opacity: 0.85
+                }}
+              />
+            </button>
+
+            {/* Partnership Dropdown Panel */}
+            {dropdownOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  minWidth: '250px',
+                  paddingTop: '8px',
+                  zIndex: 9999999,
+                  animation: 'lumoraNavDropdownFadeIn 0.20s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                }}
+              >
+                <div
                   style={{
-                    fontSize: '0.82rem', fontWeight: 700,
-                    color: '#2D004D', textDecoration: 'none',
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    position: 'relative', padding: '4px 0',
-                    transition: 'color 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#7B3FA0';
-                    const dot = e.currentTarget.querySelector('.dot');
-                    if (dot) dot.style.transform = 'translateX(-50%) scale(1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#2D004D';
-                    const dot = e.currentTarget.querySelector('.dot');
-                    if (dot) dot.style.transform = 'translateX(-50%) scale(0)';
+                    background: 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(30px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                    borderRadius: '18px',
+                    padding: '8px',
+                    boxShadow: '0 20px 60px rgba(45, 0, 77, 0.25), 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.95)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
                   }}
                 >
-                  {item.icon}
-                  {item.label}
-                  <span
-                    className="dot"
+                  {/* Affiliate Link -> New Tab */}
+                  <a
+                    href="/partnership/affiliate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setDropdownOpen(false)}
                     style={{
-                      position: 'absolute', bottom: -3, left: '50%',
-                      transform: 'translateX(-50%) scale(0)',
-                      width: '4px', height: '4px', borderRadius: '50%',
-                      backgroundColor: '#7B3FA0',
-                      transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
-                      transformOrigin: 'center center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      textDecoration: 'none',
+                      color: '#2D004D',
+                      transition: 'all 0.2s ease',
+                      background: 'transparent',
                     }}
-                  />
-                </a>
-
-                {/* Partnership Dropdown */}
-                {isLastBeforeDashboard && (
-                  <div
-                    ref={dropdownRef}
-                    style={{ position: 'relative' }}
-                    onMouseEnter={() => setDropdownOpen(true)}
-                    onMouseLeave={() => setDropdownOpen(false)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
+                      e.currentTarget.style.transform = 'translateX(3px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.transform = 'translateX(0)';
+                    }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen(o => !o)}
-                      aria-expanded={dropdownOpen}
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '10px',
+                      background: 'rgba(123, 63, 160, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#7B3FA0',
+                      flexShrink: 0
+                    }}>
+                      <TrendingUp size={16} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#2D004D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        Affiliate <ExternalLink size={11} style={{ opacity: 0.6 }} />
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: '#665C70', marginTop: '1px' }}>
+                        Earn commissions on sales
+                      </span>
+                    </div>
+                  </a>
+
+                  {/* Vendor Link -> New Tab */}
+                  {vendor_enabled !== false && (
+                    <a
+                      href="/partnership/vendor"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setDropdownOpen(false)}
                       style={{
-                        background: 'transparent',
-                        border: 'none',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        color: dropdownOpen ? '#7B3FA0' : '#2D004D',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '5px',
-                        padding: '4px 0',
-                        cursor: 'pointer',
-                        transition: 'color 0.2s ease',
-                        fontFamily: 'inherit',
+                        gap: '12px',
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        color: '#2D004D',
+                        transition: 'all 0.2s ease',
+                        background: 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
+                        e.currentTarget.style.transform = 'translateX(3px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.transform = 'translateX(0)';
                       }}
                     >
-                      <Users size={14} color="#7B3FA0" />
-                      Partnership
-                      <ChevronDown
-                        size={12}
-                        style={{
-                          transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                          opacity: 0.85
-                        }}
-                      />
-                    </button>
-
-                    {/* Partnership Dropdown Panel */}
-                    {dropdownOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 'calc(100% + 12px)',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          minWidth: '240px',
-                          background: 'rgba(255, 255, 255, 0.96)',
-                          backdropFilter: 'blur(30px) saturate(200%)',
-                          WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-                          borderRadius: '18px',
-                          padding: '8px',
-                          boxShadow: '0 18px 45px rgba(90, 30, 126, 0.22), inset 0 1px 0 rgba(255, 255, 255, 1)',
-                          border: '1.5px solid rgba(255, 255, 255, 0.95)',
-                          zIndex: 10000,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px',
-                          animation: 'lumoraNavDropdownFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        }}
-                      >
-                        {/* Affiliate Link -> New Tab */}
-                        <a
-                          href="/partnership/affiliate"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setDropdownOpen(false)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '10px 14px',
-                            borderRadius: '12px',
-                            textDecoration: 'none',
-                            color: '#2D004D',
-                            transition: 'all 0.2s ease',
-                            background: 'transparent',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
-                            e.currentTarget.style.transform = 'translateX(3px)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.transform = 'translateX(0)';
-                          }}
-                        >
-                          <div style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '10px',
-                            background: 'rgba(123, 63, 160, 0.12)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#7B3FA0',
-                            flexShrink: 0
-                          }}>
-                            <TrendingUp size={16} />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#2D004D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              Affiliate Portal <ExternalLink size={11} style={{ opacity: 0.6 }} />
-                            </span>
-                            <span style={{ fontSize: '0.68rem', color: '#665C70', marginTop: '1px' }}>
-                              Earn commissions on sales
-                            </span>
-                          </div>
-                        </a>
-
-                        {/* Vendor Link -> New Tab (Condition: vendor_enabled !== false) */}
-                        {vendor_enabled !== false && (
-                          <a
-                            href="/partnership/vendor"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setDropdownOpen(false)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              padding: '10px 14px',
-                              borderRadius: '12px',
-                              textDecoration: 'none',
-                              color: '#2D004D',
-                              transition: 'all 0.2s ease',
-                              background: 'transparent',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
-                              e.currentTarget.style.transform = 'translateX(3px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'transparent';
-                              e.currentTarget.style.transform = 'translateX(0)';
-                            }}
-                          >
-                            <div style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '10px',
-                              background: 'rgba(123, 63, 160, 0.12)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#7B3FA0',
-                              flexShrink: 0
-                            }}>
-                              <Store size={16} />
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#2D004D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                Vendor Portal <ExternalLink size={11} style={{ opacity: 0.6 }} />
-                              </span>
-                              <span style={{ fontSize: '0.68rem', color: '#665C70', marginTop: '1px' }}>
-                                Sell templates & digital products
-                              </span>
-                            </div>
-                          </a>
-                        )}
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '10px',
+                        background: 'rgba(123, 63, 160, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#7B3FA0',
+                        flexShrink: 0
+                      }}>
+                        <Store size={16} />
                       </div>
-                    )}
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#2D004D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          Vendor <ExternalLink size={11} style={{ opacity: 0.6 }} />
+                        </span>
+                        <span style={{ fontSize: '0.68rem', color: '#665C70', marginTop: '1px' }}>
+                          Sell templates & digital products
+                        </span>
+                      </div>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {user && (
+            <a
+              href="#dashboard"
+              onClick={(e) => handleNavClick(e, { href: '#dashboard' })}
+              style={{
+                fontSize: '0.82rem', fontWeight: 700,
+                color: '#2D004D', textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: '5px',
+                position: 'relative', padding: '4px 0',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#7B3FA0';
+                const dot = e.currentTarget.querySelector('.dot');
+                if (dot) dot.style.transform = 'translateX(-50%) scale(1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#2D004D';
+                const dot = e.currentTarget.querySelector('.dot');
+                if (dot) dot.style.transform = 'translateX(-50%) scale(0)';
+              }}
+            >
+              <LayoutDashboard size={14} color="#7B3FA0" />
+              Dashboard
+              <span
+                className="dot"
+                style={{
+                  position: 'absolute', bottom: -3, left: '50%',
+                  transform: 'translateX(-50%) scale(0)',
+                  width: '4px', height: '4px', borderRadius: '50%',
+                  backgroundColor: '#7B3FA0',
+                  transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
+                  transformOrigin: 'center center',
+                }}
+              />
+            </a>
+          )}
         </nav>
 
         {/* Action Button */}
