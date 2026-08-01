@@ -24,11 +24,31 @@ def sync_review_to_firestore(review) -> None:
         from app.shared.firebase.connection import db, firebase_connected
         if not firebase_connected or db is None:
             return
+
+        reviewer_name = None
+        try:
+            if hasattr(review, "user") and review.user:
+                reviewer_name = review.user.name or review.user.email
+            elif review.user_id:
+                from app.db.session import SessionLocal
+                from app.models.user import User as UserModel
+                db_s = SessionLocal()
+                u = db_s.query(UserModel).filter(UserModel.id == review.user_id).first()
+                if u:
+                    reviewer_name = u.name or u.email
+                db_s.close()
+        except Exception:
+            pass
+
+        customer_display = reviewer_name or f"User #{review.user_id}"
+
         doc_ref = db.collection("reviews").document(str(review.id))
         doc_ref.set({
             "id": review.id,
             "user_id": review.user_id,
             "product_id": review.product_id,
+            "customer": customer_display,
+            "reviewer_name": customer_display,
             "rating": float(review.rating),
             "comment": review.comment or "",
             "reply": review.reply or "",
@@ -147,13 +167,13 @@ def create_review(
     # Recalculate product rating
     reviews = db.query(Review).filter(Review.product_id == review_in.product_id).all()
     all_ratings = [r.rating for r in reviews] + [review_in.rating]
-    prod.rating = round(sum(all_ratings) / len(all_ratings), 1)
-    prod.reviews = len(all_ratings)
+    prod.rating = round(sum(all_ratings) / len(all_ratings), 1)  # type: ignore
+    prod.reviews = len(all_ratings)  # type: ignore
     db.add(prod)
 
     # Recalculate vendor rating
     if prod.vendor_id:
-        update_vendor_rating(db, prod.vendor_id)
+        update_vendor_rating(db, str(prod.vendor_id))
 
     # Notify vendor
     if prod.vendor_id:
@@ -173,7 +193,7 @@ def create_review(
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
-        user_id=current_user.id,
+        user_id=int(current_user.id),  # type: ignore
         activity_type="review_create",
         details=f"Submitted {review.rating}? review for product '{prod.title}' (ID {prod.id})."
     )
@@ -228,23 +248,23 @@ def delete_review(
         reviews = db.query(Review).filter(Review.product_id == prod_id).all()
         if reviews:
             all_ratings = [r.rating for r in reviews]
-            prod.rating = round(sum(all_ratings) / len(all_ratings), 1)
-            prod.reviews = len(all_ratings)
+            prod.rating = round(sum(all_ratings) / len(all_ratings), 1)  # type: ignore
+            prod.reviews = len(all_ratings)  # type: ignore
         else:
-            prod.rating = 5.0
-            prod.reviews = 0
+            prod.rating = 5.0  # type: ignore
+            prod.reviews = 0  # type: ignore
         db.add(prod)
 
         # Recalculate vendor rating
         if prod.vendor_id:
-            update_vendor_rating(db, prod.vendor_id)
+            update_vendor_rating(db, str(prod.vendor_id))
         db.commit()
 
     # Log activity
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
-        user_id=current_user.id,
+        user_id=int(current_user.id),  # type: ignore
         activity_type="review_delete",
         details=f"Deleted review for product ID {prod_id}."
     )
@@ -284,20 +304,20 @@ def update_review(
         reviews = db.query(Review).filter(Review.product_id == review.product_id).all()
         if reviews:
             all_ratings = [r.rating for r in reviews]
-            prod.rating = round(sum(all_ratings) / len(all_ratings), 1)
-            prod.reviews = len(all_ratings)
+            prod.rating = round(sum(all_ratings) / len(all_ratings), 1)  # type: ignore
+            prod.reviews = len(all_ratings)  # type: ignore
             db.add(prod)
 
             # Recalculate vendor rating
             if prod.vendor_id:
-                update_vendor_rating(db, prod.vendor_id)
+                update_vendor_rating(db, str(prod.vendor_id))
             db.commit()
 
     # Log activity
     from app.services.activity_log_service import ActivityLogService
     ActivityLogService.log_user_activity(
         db=db,
-        user_id=current_user.id,
+        user_id=int(current_user.id),  # type: ignore
         activity_type="review_update",
         details=f"Updated review for product ID {review.product_id}."
     )

@@ -916,11 +916,11 @@ export default function Reviews() {
                             <div className="hidden sm:flex justify-between items-start gap-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD]/60 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner shrink-0">
-                                  {rev.customer.slice(0, 2)}
+                                  {(rev.customer || 'Anonymous').slice(0, 2)}
                                 </div>
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-serif font-black text-[#2D004D]">{rev.customer}</span>
+                                    <span className="text-xs font-serif font-black text-[#2D004D]">{rev.customer || 'Anonymous'}</span>
                                     {rev.verified && (
                                       <span className="w-3.5 h-3.5 rounded-full bg-[#B886D0]/30 text-emerald-600 flex items-center justify-center" title="Verified Customer">
                                         <Icon name="CheckCircle" size={10} />
@@ -942,10 +942,10 @@ export default function Reviews() {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD] flex items-center justify-center text-xs font-bold text-[#7B3FA0] shrink-0">
-                                    {rev.customer.slice(0, 2).toUpperCase()}
+                                    {(rev.customer || 'Anonymous').slice(0, 2).toUpperCase()}
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-[#2D004D]">{rev.customer}</span>
+                                    <span className="text-xs font-bold text-[#2D004D]">{rev.customer || 'Anonymous'}</span>
                                     <span className="text-[10px] text-[#7B3FA0] truncate max-w-[180px]">{rev.product}</span>
                                   </div>
                                 </div>
