@@ -29,7 +29,6 @@ const PRIMARY_NAV = [
   { name: 'Downloads',      label: 'Downloads',   icon: <Download size={14} /> },
   { name: 'Purchases',      label: 'Purchases',   icon: <ShoppingBag size={14} /> },
   { name: 'Wishlist',       label: 'Wishlist',    icon: <Heart size={14} /> },
-  { name: 'Affiliate Program', label: 'Affiliate', icon: <TrendingUp size={14} /> },
 ];
 
 const MORE_NAV = [
