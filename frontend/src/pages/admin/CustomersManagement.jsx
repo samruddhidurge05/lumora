@@ -294,8 +294,8 @@ export default function CustomersManagement() {
 
         {/* ── Page Header ── */}
         <PageHeader
-          title="Customer Registry"
-          subtitle="View platform customers, trace order histories, verify spending metrics, and monitor account access logs."
+          title="Customers"
+          subtitle="View registered customers, monitor activity, and check order histories."
         />
 
         {/* ── Statistics Summary Grid ── */}

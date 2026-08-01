@@ -418,10 +418,10 @@ export default function Reviews() {
                 <Icon name="Shield" size={20} />
               </div>
               <div>
-                <h1 className="text-xl font-serif font-black text-[#2D004D]">Trust & Reputation Intelligence</h1>
+                <h1 className="text-xl font-serif font-black text-[#2D004D]">Reviews & Ratings</h1>
                 <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Ecosystem Ledger Score &bull; CERTIFIED SECURE
+                  Customer Feedback Overview
                 </p>
               </div>
             </div>

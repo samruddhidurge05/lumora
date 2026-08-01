@@ -1096,8 +1096,8 @@ export default function App() {
         {/* --- HEADER & METRICS --- */}
         <section className="mb-14">
           <PageHeader
-            title="Product Command Studio"
-            subtitle="Welcome to Lumora's elite product command studio. Monitor continuous sales volume, adjust distribution pricing, deploy visual previews, and publish creator nodes effortlessly."
+            title="Products"
+            subtitle="Manage marketplace products, set prices, upload files, and publish creator listings."
             actions={
               <div className="flex items-center gap-3 flex-wrap">
                 <button 

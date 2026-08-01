@@ -352,14 +352,14 @@ export default function CampaignManager() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#F3EAF8] pb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">ENTERPRISE SYSTEM</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-[#7B3FA0]/10 text-[#7B3FA0] text-[10px] font-black tracking-widest uppercase">ADMIN PANEL</span>
               <span className="text-xs text-[#7B3FA0] font-medium">Product Affiliate Management</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-serif text-[#2D004D] font-bold">
-              Campaign Manager
+              Referral Campaigns
             </h1>
             <p className="text-xs text-[#7B3FA0] mt-1 max-w-2xl">
-              Real-time directory of products with Affiliate Program enabled (`affiliate_enabled = true`). Powered 100% by PostgreSQL production database.
+              Manage affiliate referral links, track sales performance, and view product commissions.
             </p>
           </div>
           {affiliateProducts.length > 0 && (

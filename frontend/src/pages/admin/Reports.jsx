@@ -526,10 +526,10 @@ export default function Reports() {
                 L
               </div>
               <div>
-                <h1 className="text-xl font-serif font-black text-[#2D004D]">Business Intelligence Report</h1>
+                <h1 className="text-xl font-serif font-black text-[#2D004D]">Reports</h1>
                 <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Report Intelligence &bull; {analytics?.total ?? 0} Total Reports
+                  Platform Reports &bull; {analytics?.total ?? 0} Total Reports
                 </p>
               </div>
             </div>

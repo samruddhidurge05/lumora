@@ -166,8 +166,8 @@ export default function Payments() {
 
         {/* Hero Header */}
         <PageHeader
-          title="Financial Control Center"
-          subtitle={telemetry.loading ? 'Synchronizing metrics...' : `Real-time updates active. Last sync: ${lastRefreshed.toLocaleTimeString()}`}
+          title="Payments & Finance"
+          subtitle={telemetry.loading ? 'Updating payment data...' : `Real-time updates active. Last sync: ${lastRefreshed.toLocaleTimeString()}`}
           actions={
             !telemetry.loading && (
               <button 
@@ -178,7 +178,7 @@ export default function Payments() {
                 className="btn-admin-secondary flex items-center gap-2"
               >
                 <RefreshCw size={13} className="animate-spin" style={{ animationDuration: '4s' }} />
-                Refresh Telemetry
+                Refresh Data
               </button>
             )
           }
@@ -188,7 +188,7 @@ export default function Payments() {
         {telemetry.loading && (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <div className="w-10 h-10 rounded-full border-2 border-[#D8BFE3] border-t-[#7B3FA0] animate-spin" />
-            <p className="text-xs font-bold text-[#7B3FA0] uppercase tracking-widest">Loading ledger assets...</p>
+            <p className="text-xs font-bold text-[#7B3FA0] uppercase tracking-widest">Loading payment data...</p>
           </div>
         )}
 

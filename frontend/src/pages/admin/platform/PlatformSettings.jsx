@@ -125,16 +125,16 @@ export default function PlatformSettings() {
                 <Shield size={20} className={isSyncing ? "animate-spin" : ""} />
               </div>
               <div>
-                <h1 className="text-xl font-serif font-black text-[#2D004D]">Platform Pause Settings</h1>
+                <h1 className="text-xl font-serif font-black text-[#2D004D]">Platform Maintenance Settings</h1>
                 <p className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Ecosystem Platform Lockdown Console &bull; Realtime
+                  Platform Status Control &bull; Realtime
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-              <span className="text-[9px] font-mono text-[#7B3FA0]">Telemetry: Sync Active</span>
+              <span className="text-[9px] font-mono text-[#7B3FA0]">Status: Active</span>
               <div className="h-4 w-px bg-stone-200" />
               <span className="text-[9px] font-mono text-[#7B3FA0]">Last Sync: {lastSaved}</span>
             </div>
