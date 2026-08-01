@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 export default function Navbar() {
-  const { navigateTo, currentView, cart, platformStatus } = useApp();
+  const { navigateTo, currentView, cart, platformStatus, setDashboardTab } = useApp();
   const isPlatformPaused = platformStatus?.isPlatformPaused;
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +42,7 @@ export default function Navbar() {
   };
 
   const handleDashboardClick = async () => {
+    setDashboardTab('Dashboard');
     if (!user) { navigate('/auth/login?role=customer'); closeMobile(); return; }
     try {
       const activeRole = localStorage.getItem('lumora_active_role');
@@ -50,8 +51,12 @@ export default function Navbar() {
       if (role === 'admin') navigate('/admin/dashboard');
       else if (role === 'affiliate') navigate('/affiliate/dashboard');
       else if (role === 'vendor') navigate('/vendor/dashboard');
-      else navigate('/customer/dashboard');
+      else {
+        setDashboardTab('Dashboard');
+        navigate('/customer/dashboard');
+      }
     } catch {
+      setDashboardTab('Dashboard');
       navigate('/customer/dashboard');
     }
     closeMobile();

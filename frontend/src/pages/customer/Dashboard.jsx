@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Download, ShoppingBag, Heart, CreditCard, Bell,
   Settings as SettingsIcon, Search, Sparkles, LogOut, Star,
@@ -139,6 +140,7 @@ function DashboardProductCard({ p, wishlist, toggleWishlist, navigateTo, addToCa
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const location = useLocation();
   const {
     dashboardTab, setDashboardTab,
     accentTheme, setAccentTheme,
@@ -148,6 +150,24 @@ export default function Dashboard() {
     formatPrice, addToCart, buyNow, toggleWishlist, wishlist,
     products, cart, ownedProducts,
   } = useApp();
+
+  // Reset active tab to Overview ('Dashboard') on mount when entering from outside,
+  // unless an explicit target tab was passed in route state / query params / URL path.
+  useEffect(() => {
+    const stateTab = location?.state?.tab;
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryTab = searchParams.get('tab');
+    const path = window.location.pathname;
+
+    let targetTab = stateTab || queryTab;
+    if (!targetTab) {
+      if (path === '/orders') targetTab = 'Orders';
+      else if (path === '/downloads') targetTab = 'Downloads';
+      else if (path === '/account') targetTab = 'Settings';
+    }
+
+    setDashboardTab(targetTab || 'Dashboard');
+  }, []);
 
   const [globalSearch, setGlobalSearch] = useState('');
   const [aiResponse, setAiResponse]     = useState('');
