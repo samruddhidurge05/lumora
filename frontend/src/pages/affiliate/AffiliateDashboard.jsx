@@ -11,6 +11,7 @@ import { backendFetch } from '../../utils/api';
 import AffiliateDashboardHome from './Dashboard';
 import AffiliateProducts       from './Products';
 import AffiliateEarnings       from './Earnings';
+import AffiliateAnalytics      from './Analytics';
 import AffiliateProfile        from './Profile';
 import SupportCenter           from '../customer/SupportCenter';
 
@@ -19,7 +20,8 @@ import SupportCenter           from '../customer/SupportCenter';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={17} /> },
   { id: 'products',  label: 'Products',   icon: <ShoppingBag size={17} />     },
-  { id: 'earnings',  label: 'Earnings',   icon: <BarChart2 size={17} />       },
+  { id: 'analytics', label: 'Analytics',  icon: <BarChart2 size={17} />       },
+  { id: 'earnings',  label: 'Earnings',   icon: <DollarSign size={17} />      },
   { id: 'profile',   label: 'Profile',    icon: <User size={17} />            },
   { id: 'support',   label: 'Support',    icon: <HelpCircle size={17} />      },
 ];
@@ -38,7 +40,7 @@ function AffiliateDashboardInner() {
     const hash = window.location.hash;
     const parts = hash.split('/');
     const sub = parts[1];
-    const valid = ['dashboard','products','earnings','profile', 'support'];
+    const valid = ['dashboard','products','analytics','earnings','profile', 'support'];
     return valid.includes(sub) ? sub : 'dashboard';
   });
   const [scrolled, setScrolled]   = useState(false);
@@ -105,7 +107,7 @@ function AffiliateDashboardInner() {
   useEffect(() => {
     const handleTabChange = (e) => {
       const tab = e.detail;
-      const valid = ['dashboard', 'products', 'earnings', 'profile', 'support'];
+      const valid = ['dashboard', 'products', 'analytics', 'earnings', 'profile', 'support'];
       if (valid.includes(tab)) {
         setActiveTab(tab);
       }
@@ -171,17 +173,19 @@ function AffiliateDashboardInner() {
       refresh: loadAffiliateData,
     };
     switch (activeTab) {
-      case 'products': return <AffiliateProducts {...commonProps} />;
-      case 'earnings': return <AffiliateEarnings {...commonProps} />;
-      case 'profile':  return <AffiliateProfile {...commonProps} />;
-      case 'support':  return <SupportCenter />;
-      default:         return <AffiliateDashboardHome {...commonProps} />;
+      case 'products':  return <AffiliateProducts {...commonProps} />;
+      case 'analytics': return <AffiliateAnalytics {...commonProps} />;
+      case 'earnings':  return <AffiliateEarnings {...commonProps} />;
+      case 'profile':   return <AffiliateProfile {...commonProps} />;
+      case 'support':   return <SupportCenter />;
+      default:          return <AffiliateDashboardHome {...commonProps} />;
     }
   };
 
   const PAGE_TITLES = {
     dashboard: 'Overview',
     products:  'Products & Links',
+    analytics: 'Analytics',
     earnings:  'Earnings',
     profile:   'Profile',
     support:   'Support Center',
