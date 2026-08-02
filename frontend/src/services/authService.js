@@ -17,7 +17,8 @@
  *   - Removes backend JWT and uid from localStorage on logout
  */
 
-import { getBackendOrigin, getRouteRoleHint } from '../utils/api.js';
+import { getBackendOrigin } from '../utils/api.js';
+import { getRouteRoleHint } from '../utils/roleUtils.js';
 
 const BACKEND_URL = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {

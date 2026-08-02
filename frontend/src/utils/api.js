@@ -14,6 +14,9 @@
 
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
+import { getRouteRoleHint } from './roleUtils.js';
+
+export { getRouteRoleHint };
 
 export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
@@ -95,28 +98,6 @@ export function buildBackendUrl(endpoint = '') {
  * @param {RequestInit} options  fetch options (method, body, headers, …)
  * @param {boolean} _isRetry  internal flag to prevent infinite retry loop
  */
-export const getRouteRoleHint = () => {
-  if (typeof window === 'undefined') return 'customer';
-  const path = window.location.pathname.toLowerCase();
-  if (path.startsWith('/affiliate')) return 'affiliate';
-  if (path.startsWith('/vendor')) return 'vendor';
-  if (path.startsWith('/admin')) return 'admin';
-  if (path.startsWith('/customer')) return 'customer';
-
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const roleParam = params.get('role');
-    if (roleParam && ['customer', 'affiliate', 'vendor', 'admin', 'user'].includes(roleParam.toLowerCase())) {
-      return roleParam.toLowerCase() === 'user' ? 'customer' : roleParam.toLowerCase();
-    }
-  } catch (_) {}
-
-  const activeRole = localStorage.getItem('lumora_active_role');
-  if (activeRole && ['customer', 'affiliate', 'vendor', 'admin'].includes(activeRole)) {
-    return activeRole;
-  }
-  return 'customer';
-};
 
 export const getRoleToken = (targetRole) => {
   const normRole = targetRole ? (targetRole === 'user' ? 'customer' : targetRole) : getRouteRoleHint();

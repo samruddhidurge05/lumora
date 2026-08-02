@@ -3,7 +3,8 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { auth, db } from '../services/firebase';
 import { syncWithBackend, clearBackendToken } from '../services/authService';
 import { adminLogin, adminRefreshToken } from '../services/adminAuthService';
-import { backendFetch, registerGlobalErrorListener, getRouteRoleHint } from '../utils/api';
+import { backendFetch, registerGlobalErrorListener } from '../utils/api';
+import { getRouteRoleHint } from '../utils/roleUtils';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
