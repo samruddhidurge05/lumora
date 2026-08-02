@@ -146,10 +146,7 @@ export default function AffiliateProfile({
           instagram:      draft.instagram     || null,
           linkedin:       draft.linkedin      || null,
           preferred_categories: draft.preferredCategories || [],
-          promotion_methods: draft.promotionMethods || [],
-          primary_audience: draft.primaryAudience || null,
-          audience_size:  draft.audienceSize  || null,
-          preferred_language: draft.preferredLanguage || null,
+          promotion_methods:    draft.promotionMethods    || [],
           preferred_currency: draft.preferredCurrency || null,
           timezone:       draft.timezone      || null,
           email_notifications: draft.emailNotifications,
@@ -656,23 +653,6 @@ export default function AffiliateProfile({
         </div>
       </div>
 
-      {/* ── AUDIENCE INFORMATION (New) ─────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Users size={15} />
-          </div>
-          <div>
-            <span className="caption-premium" style={{ color: '#7B3FA0' }}>Demographics</span>
-            <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Audience Information</h3>
-          </div>
-        </div>
-        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
-          {selectField('Primary Audience', 'primaryAudience', ['Designers', 'Developers', 'Students', 'Businesses', 'Content Creators', 'Agencies', 'Entrepreneurs'])}
-          {selectField('Audience Size', 'audienceSize', ['Under 1K', '1K – 10K', '10K – 50K', '50K – 100K', '100K+'])}
-          {selectField('Preferred Language', 'preferredLanguage', ['English', 'Spanish', 'French', 'Hindi', 'German', 'Other'])}
-        </div>
-      </div>
 
       {/* ── PREFERENCES (New) ─────────────────────────────────────────── */}
       <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
