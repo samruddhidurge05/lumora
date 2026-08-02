@@ -1263,6 +1263,7 @@ function MyReports() {
 
 /* ─── Customer Affiliate Program Tab ─────────────────────────────── */
 function CustomerAffiliateSection({ navigateTo }) {
+  const { user, userRole } = useAuth();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1000px' }}>
       {/* Header */}
