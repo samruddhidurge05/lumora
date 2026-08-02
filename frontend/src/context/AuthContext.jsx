@@ -1,7 +1,7 @@
 /* src/context/AuthContext.jsx */
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { auth, db } from '../services/firebase';
-import { syncWithBackend, clearBackendToken } from '../services/authService';
+import { syncWithBackend, clearBackendToken, clearRoleSession } from '../services/authService';
 import { adminLogin, adminRefreshToken } from '../services/adminAuthService';
 import { backendFetch, registerGlobalErrorListener } from '../utils/api';
 import { getRouteRoleHint } from '../utils/roleUtils';
@@ -719,7 +719,7 @@ export const AuthProvider = ({ children }) => {
 
 
   /** Role-specific logout — clears ONLY the specified role's session */
-  const logoutRole = async (targetRole = null) => {
+  async function logoutRole(targetRole = null) {
     const roleToLogout = targetRole || userRole || getRouteRoleHint() || 'customer';
     const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
 
@@ -746,10 +746,10 @@ export const AuthProvider = ({ children }) => {
     if (normRole === 'affiliate') target = '/partnership/affiliate';
     else if (normRole === 'vendor') target = '/auth/login?role=vendor';
     else if (normRole === 'admin') target = '/admin/login';
-    else target = '/auth/login?role=customer';
+    else target = '/';
 
     window.location.href = target;
-  };
+  }
 
   /** Full Logout — production teardown of all sessions */
   async function logout() {
