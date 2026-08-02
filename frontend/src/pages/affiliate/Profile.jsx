@@ -94,14 +94,16 @@ export default function AffiliateProfile({
   const calculateCompletion = () => {
     const required = [
       'fullName', 'phone', 
-      'instagram', 'preferredCategories'
+      'displayName', 'country', 'youtube', 'instagram', 'linkedin',
+      'preferredCategories', 'promotionMethods',
+      'preferredCurrency', 'timezone'
     ];
     let completed = 0;
     const missing = [];
     required.forEach(field => {
-      if (field === 'preferredCategories') {
+      if (field === 'preferredCategories' || field === 'promotionMethods') {
         if (draft[field] && draft[field].length > 0) completed++;
-        else missing.push('Preferred Categories');
+        else missing.push(field === 'preferredCategories' ? 'Preferred Categories' : 'Promotion Methods');
       } else {
         if (draft[field] && String(draft[field]).trim() !== '') completed++;
         else missing.push(field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1').trim());
