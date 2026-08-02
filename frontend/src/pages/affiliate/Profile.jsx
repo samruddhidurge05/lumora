@@ -556,7 +556,6 @@ export default function AffiliateProfile({
       <div className="premium-flat-card aff-status-strip-grid" style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', padding: '18px 24px' }}>
         {[
           { label: 'Status',          value: isActive ? 'Active' : 'Inactive', color: isActive ? '#15803D' : '#DC2626', icon: <Activity size={14} /> },
-          { label: 'Commission Rate', value: `${commissionRate}%`,             color: '#7B3FA0',                         icon: <TrendingUp size={14} /> },
           { label: 'Total Earnings',  value: formatINR(totalEarnings),         color: '#7B3FA0',                         icon: <DollarSign size={14} /> },
           { label: 'Total Clicks',    value: totalClicks.toLocaleString(),      color: 'var(--text-primary)',             icon: <MousePointerClick size={14} /> },
           { label: 'Total Sales',     value: totalSales.toLocaleString(),       color: 'var(--text-primary)',             icon: <ShoppingBag size={14} /> },
