@@ -138,7 +138,7 @@ function DashboardProductCard({ p, wishlist, toggleWishlist, navigateTo, addToCa
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const location = useLocation();
   const {
     dashboardTab, setDashboardTab,
@@ -1311,7 +1311,17 @@ function CustomerAffiliateSection({ navigateTo }) {
               Access your full Affiliate Dashboard to create custom referral links and track payout history.
             </p>
             <button
-              onClick={() => navigateTo('affiliate-dashboard')}
+              onClick={() => {
+                const activeRole = localStorage.getItem('lumora_active_role');
+                const isAffiliate = userRole === 'affiliate' || userRole === 'vendor' || activeRole === 'affiliate' || activeRole === 'vendor';
+                if (!user) {
+                  window.open('/auth/register?role=affiliate', '_blank');
+                } else if (isAffiliate) {
+                  window.open('/affiliate/dashboard', '_blank');
+                } else {
+                  window.open('/affiliate/activate', '_blank');
+                }
+              }}
               style={{
                 padding: '12px 20px', borderRadius: '10px', border: 'none',
                 background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff',
@@ -1323,7 +1333,7 @@ function CustomerAffiliateSection({ navigateTo }) {
               Open Affiliate Dashboard →
             </button>
             <button
-              onClick={() => navigateTo('partnerships-affiliate')}
+              onClick={() => window.open('/partnership/affiliate', '_blank')}
               style={{
                 padding: '10px 20px', borderRadius: '10px',
                 border: '1px solid rgba(123,63,160,0.25)', background: 'transparent',

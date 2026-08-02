@@ -22,14 +22,14 @@ export default function Affiliate() {
 
   const handleCTA = () => {
     if (isAlreadyAffiliate) {
-      // Already an affiliate — go straight to dashboard
-      navigate('/affiliate/dashboard');
+      // Already an affiliate — open affiliate dashboard in new tab
+      window.open('/affiliate/dashboard', '_blank');
     } else if (isLoggedInCustomer) {
-      // Existing customer — use activation flow (no new Firebase account needed)
-      navigate('/affiliate/activate');
+      // Existing customer — open activation flow in new tab
+      window.open('/affiliate/activate', '_blank');
     } else {
-      // Not logged in — standard registration
-      navigate('/auth/register?role=affiliate');
+      // Not logged in — open registration/login in new tab
+      window.open('/auth/register?role=affiliate', '_blank');
     }
   };
 
