@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, ShoppingCart } from 'lucide-react';
+import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { useAffiliateCart } from '../../context/AffiliateCartContext';
 import AffiliateProductDetail from './ProductDetail';
+import AffiliateWishlistDrawer from '../../components/affiliate/AffiliateWishlistDrawer';
 import { buildAffiliateReferralLink, calculateCommission } from '../../utils/referralUtils';
 import { PRODUCT_CATEGORIES as CATEGORIES } from '../../config/constants';
 
@@ -26,16 +26,15 @@ const COMMISSION_RATES = {
 };
 
 export default function AffiliateProducts({ profile, stats, commissions }) {
-  const { products, formatPrice } = useApp();
-  const { addToAffCart, isProductInAffCart } = useAffiliateCart();
+  const { products, formatPrice, wishlist, toggleWishlist } = useApp();
   const [activeCategory, setActiveCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('commission');
   const [copiedId, setCopiedId] = useState(null);
-  const [addedId, setAddedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showCount, setShowCount] = useState(24);
+  const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false);
 
   const REFERRAL_CODE = profile?.referral_code || 'AFF0001';
 
@@ -80,13 +79,6 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     setCopiedId(prod.id || prod);
     setToast('Referral link copied to clipboard!');
     setTimeout(() => { setCopiedId(null); setToast(null); }, 2400);
-  };
-
-  const handleAddToCart = (product) => {
-    addToAffCart(product);
-    setAddedId(product.id);
-    setToast('Added to your affiliate cart!');
-    setTimeout(() => { setAddedId(null); setToast(null); }, 2000);
   };
 
   const formatCommission = (product) => {
@@ -142,16 +134,54 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="glass-surface" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '30px', width: 'min(280px, 100%)', border: '1px solid rgba(123,63,160,0.22)', boxSizing: 'border-box' }}>
-          <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-          <input
-            type="text"
-            placeholder="Search products…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.8rem', color: 'var(--text-primary)', width: '100%' }}
-          />
+        {/* Search & Wishlist */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', minWidth: '280px', flex: '1 1 auto', maxWidth: '400px' }}>
+          {/* Search */}
+          <div className="glass-surface" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '30px', width: '100%', border: '1px solid rgba(123,63,160,0.22)', boxSizing: 'border-box' }}>
+            <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Search products…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.8rem', color: 'var(--text-primary)', width: '100%' }}
+            />
+          </div>
+
+          {/* Wishlist */}
+          <button
+            onClick={() => setIsWishlistDrawerOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              borderRadius: '20px',
+              border: '1px solid rgba(123,63,160,0.25)',
+              background: 'rgba(123,63,160,0.08)',
+              color: '#7B3FA0',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+              transition: 'all 0.2s',
+              boxShadow: '0 2px 8px rgba(123,63,160,0.08)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.15)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.08)'; }}
+          >
+            <Heart size={14} fill={wishlist.length > 0 ? '#7B3FA0' : 'none'} />
+            <span>Wishlist</span>
+            {wishlist.length > 0 && (
+              <span style={{
+                background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                color: '#fff', fontSize: '0.6rem', fontWeight: 800,
+                minWidth: '16px', height: '16px', borderRadius: '50%',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                padding: '0 3px',
+              }}>{wishlist.length}</span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -201,6 +231,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
             const rateStr = formatCommission(product);
             const earning = calcEarning(product);
             const isCopied = copiedId === product.id;
+            const isWished = wishlist.some(w => String(w.id) === String(product.id));
 
             return (
               <div
@@ -302,24 +333,24 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                       <Eye size={12} /> Details
                     </button>
 
-                    {/* Add to Affiliate Cart */}
+                    {/* Toggle Wishlist */}
                     <button
-                      onClick={() => handleAddToCart(product)}
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
                       style={{
                         flex: '0 0 auto',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                         padding: '9px 10px', fontSize: '0.72rem', fontWeight: 700,
                         borderRadius: '10px',
-                        border: addedId === product.id ? '1.5px solid rgba(34,197,94,0.50)' : '1.5px solid rgba(123,63,160,0.22)',
-                        background: addedId === product.id ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.80)',
-                        color: addedId === product.id ? '#16a34a' : '#7B3FA0',
+                        border: isWished ? '1.5px solid rgba(239,68,68,0.50)' : '1.5px solid rgba(123,63,160,0.22)',
+                        background: isWished ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.80)',
+                        color: isWished ? '#ef4444' : '#7B3FA0',
                         cursor: 'pointer', outline: 'none',
                         fontFamily: 'var(--font-sans)',
                         transition: 'all 0.22s',
                       }}
-                      title="Add to cart"
+                      title={isWished ? "Remove from wishlist" : "Add to wishlist"}
                     >
-                      {addedId === product.id ? <Check size={12} /> : <ShoppingCart size={12} />}
+                      <Heart size={12} fill={isWished ? '#ef4444' : 'none'} />
                     </button>
 
                     {/* Copy Affiliate Link */}
@@ -368,11 +399,20 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
         )}
         </>
       ) : (
-        <div className="glass-card" style={{ padding: '56px', textAlign: 'center', border: '1px dashed rgba(123,63,160,0.30)' }}>
-          <div style={{ fontSize: '1.4rem', color: 'var(--color-espresso)', marginBottom: '8px' }}>No Products Found</div>
-          <p style={{ color: 'var(--color-mocha)', fontSize: '0.82rem' }}>Try a different category or search term.</p>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.4)', borderRadius: '24px', border: '1px dashed rgba(196,181,253,0.4)' }}>
+          <div style={{ display: 'inline-flex', width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(196,181,253,0.3)', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <Search size={24} color="#7B3FA0" />
+          </div>
+          <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', marginBottom: '8px', fontWeight: 600 }}>No products found</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Try adjusting your filters or search term.</p>
         </div>
       )}
+
+      {/* Drawer */}
+      <AffiliateWishlistDrawer
+        isOpen={isWishlistDrawerOpen}
+        setIsOpen={setIsWishlistDrawerOpen}
+      />
 
       <style>{`
         @keyframes toastIn {

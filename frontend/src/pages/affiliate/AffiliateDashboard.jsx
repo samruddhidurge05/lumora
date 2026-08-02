@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, DollarSign, User,
   LogOut, Link2, BarChart2, ShoppingBag, ChevronRight,
-  Menu, X, RefreshCw, AlertCircle, HelpCircle, ArrowLeft
+  Menu, X, RefreshCw, AlertCircle, HelpCircle, ArrowLeft, Heart
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -13,8 +13,8 @@ import AffiliateProducts       from './Products';
 import AffiliateEarnings       from './Earnings';
 import AffiliateProfile        from './Profile';
 import SupportCenter           from '../customer/SupportCenter';
-import { AffiliateCartProvider, useAffiliateCart } from '../../context/AffiliateCartContext';
-import AffiliateCartDrawer from '../../components/affiliate/AffiliateCartDrawer';
+
+
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={17} /> },
@@ -26,15 +26,12 @@ const NAV_ITEMS = [
 
 export default function AffiliateDashboard() {
   return (
-    <AffiliateCartProvider>
-      <AffiliateDashboardInner />
-    </AffiliateCartProvider>
+    <AffiliateDashboardInner />
   );
 }
 
 function AffiliateDashboardInner() {
-  const { navigateTo } = useApp();
-  const { affCart, affCartCount, setIsAffCartOpen } = useAffiliateCart();
+  const { wishlist } = useApp();
   const { user, loading, logout, isAccountDisabled, isPlatformPaused } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
@@ -203,7 +200,7 @@ function AffiliateDashboardInner() {
       overflowX: 'hidden',
     }}>
       {/* ── Affiliate Cart Drawer ── */}
-      <AffiliateCartDrawer />
+
 
       {/* ── SIDEBAR (desktop) ─────────────────────────────────────────── */}
       <aside style={{
@@ -395,40 +392,6 @@ function AffiliateDashboardInner() {
 
           {/* Right: breadcrumb + quick actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-            {/* Affiliate Cart Button */}
-            <button
-              onClick={() => setIsAffCartOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                borderRadius: '20px',
-                border: '1px solid rgba(196,181,253,0.35)',
-                background: affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)',
-                color: '#7B3FA0',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-sans)',
-                transition: 'all 0.2s',
-                position: 'relative',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)'; }}
-            >
-              <ShoppingBag size={12} />
-              <span>Cart</span>
-              {affCartCount > 0 && (
-                <span style={{
-                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                  color: '#fff', fontSize: '0.6rem', fontWeight: 800,
-                  minWidth: '16px', height: '16px', borderRadius: '50%',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '0 3px',
-                }}>{affCartCount}</span>
-              )}
-            </button>
 
           </div>
         </header>
