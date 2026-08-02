@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, Home, TrendingUp, ChevronDown, Store, ExternalLink } from 'lucide-react';
+import { Sparkles, Compass, Users, LayoutDashboard, ArrowUpRight, Home, TrendingUp, ChevronDown, Store, ExternalLink, User, Heart, Download, CreditCard, Settings as SettingsIcon, LogOut, Package } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
@@ -16,8 +16,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const mobileRef = useRef(null);
   const dropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -25,7 +27,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu & dropdown on outside click
+  // Close mobile menu & dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
       if (mobileRef.current && !mobileRef.current.contains(e.target)) {
@@ -34,16 +36,20 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close dropdown on Escape key
+  // Close dropdowns on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setDropdownOpen(false);
+        setUserMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -60,6 +66,7 @@ export default function Navbar() {
   };
 
   const handleDashboardClick = async () => {
+    setUserMenuOpen(false);
     setDashboardTab('Dashboard');
     if (!user) { navigate('/auth/login?role=customer'); closeMobile(); return; }
     try {
@@ -79,6 +86,89 @@ export default function Navbar() {
     }
     closeMobile();
   };
+
+  const handleProfileNav = async () => {
+    setUserMenuOpen(false);
+    closeMobile();
+    if (!user) return;
+    try {
+      const activeRole = localStorage.getItem('lumora_active_role');
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const role = activeRole || (snap.exists() ? snap.data().role : 'customer');
+      if (role === 'vendor') navigate('/vendor/profile');
+      else if (role === 'affiliate') navigate('/affiliate/dashboard');
+      else if (role === 'admin') navigate('/admin/settings');
+      else {
+        setDashboardTab('Settings');
+        navigate('/customer/dashboard');
+      }
+    } catch {
+      setDashboardTab('Settings');
+      navigate('/customer/dashboard');
+    }
+  };
+
+  const handleOrdersNav = async () => {
+    setUserMenuOpen(false);
+    closeMobile();
+    if (!user) return;
+    try {
+      const activeRole = localStorage.getItem('lumora_active_role');
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const role = activeRole || (snap.exists() ? snap.data().role : 'customer');
+      if (role === 'vendor') navigate('/vendor/orders');
+      else if (role === 'admin') navigate('/admin/orders');
+      else {
+        setDashboardTab('Orders');
+        navigate('/customer/dashboard');
+      }
+    } catch {
+      setDashboardTab('Orders');
+      navigate('/customer/dashboard');
+    }
+  };
+
+  const handleWishlistNav = () => {
+    setUserMenuOpen(false);
+    closeMobile();
+    navigateTo('wishlist');
+  };
+
+  const handleDownloadsNav = () => {
+    setUserMenuOpen(false);
+    closeMobile();
+    navigateTo('downloads');
+  };
+
+  const handleSettingsNav = async () => {
+    setUserMenuOpen(false);
+    closeMobile();
+    if (!user) return;
+    try {
+      const activeRole = localStorage.getItem('lumora_active_role');
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const role = activeRole || (snap.exists() ? snap.data().role : 'customer');
+      if (role === 'admin') navigate('/admin/settings');
+      else if (role === 'vendor') navigate('/vendor/store-settings');
+      else {
+        setDashboardTab('Settings');
+        navigate('/customer/dashboard');
+      }
+    } catch {
+      setDashboardTab('Settings');
+      navigate('/customer/dashboard');
+    }
+  };
+
+  const handleLogoutNav = async () => {
+    setUserMenuOpen(false);
+    await handleLogout();
+  };
+
+  const displayName = user?.displayName || user?.name || '';
+  const displayEmail = user?.email || '';
+  const displayLabel = displayName || (displayEmail ? (displayEmail.length > 15 ? displayEmail.slice(0, 12) + '...' : displayEmail) : 'Account');
+  const initial = (displayName || displayEmail || 'U')[0].toUpperCase();
 
   const handleMouseMove = (e) => {
     const btn = e.currentTarget;
@@ -433,50 +523,269 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* Action Button */}
+        {/* Action Area */}
         <div className="lumora-navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {user ? (
-            <>
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); handleLogout(); }}
-                className="text-sans lumora-navbar-signin"
-                style={{
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  color: '#2D004D',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.3s',
-                  cursor: 'pointer'
+            /* Authenticated User Profile Pill & Dropdown */
+            <div
+              ref={profileDropdownRef}
+              style={{ position: 'relative', overflow: 'visible', zIndex: 999999 }}
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserMenuOpen(o => !o);
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#7B3FA0'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#2D004D'}
-              >
-                Sign Out
-              </a>
-              
-              <a 
-                href="#"
-                onClick={(e) => { e.preventDefault(); handleDashboardClick(); }}
-                className="btn-premium btn-shine-sweep lumora-navbar-cta"
+                aria-expanded={userMenuOpen}
+                aria-label="User menu"
+                className="lumora-profile-pill"
                 style={{
-                  padding: scrolled ? '6px 16px' : '8px 20px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                  color: '#ffffff',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 16px rgba(90, 30, 126, 0.25)',
-                  willChange: 'transform',
-                  cursor: 'pointer'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '4px 12px 4px 5px',
+                  borderRadius: '100px',
+                  background: userMenuOpen ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: userMenuOpen ? '1.5px solid rgba(123, 63, 160, 0.50)' : '1.5px solid rgba(123, 63, 160, 0.25)',
+                  boxShadow: userMenuOpen ? '0 6px 20px rgba(90, 30, 126, 0.15)' : '0 4px 16px rgba(45, 0, 77, 0.08)',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  fontFamily: 'inherit',
+                  outline: 'none',
                 }}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.98)';
+                  e.currentTarget.style.borderColor = 'rgba(123, 63, 160, 0.45)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(90, 30, 126, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!userMenuOpen) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
+                    e.currentTarget.style.borderColor = 'rgba(123, 63, 160, 0.25)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(45, 0, 77, 0.08)';
+                  }
+                }}
               >
-                Enter Lumora <ArrowUpRight size={13} style={{ opacity: 0.8 }} />
-              </a>
-            </>
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={displayName || 'User'}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '1.5px solid rgba(123, 63, 160, 0.4)',
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      flexShrink: 0,
+                      boxShadow: '0 2px 8px rgba(90, 30, 126, 0.3)',
+                    }}
+                  >
+                    {initial}
+                  </div>
+                )}
+
+                <span
+                  style={{
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    color: '#2D004D',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '130px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {displayLabel}
+                </span>
+
+                <ChevronDown
+                  size={12}
+                  style={{
+                    color: '#7B3FA0',
+                    transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    opacity: 0.85,
+                  }}
+                />
+              </button>
+
+              {/* User Menu Dropdown Panel */}
+              {userMenuOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    minWidth: '240px',
+                    zIndex: 9999999,
+                    animation: 'lumoraNavDropdownFadeIn 0.20s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                  }}
+                >
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.98)',
+                      backdropFilter: 'blur(30px) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                      borderRadius: '20px',
+                      padding: '12px',
+                      boxShadow: '0 20px 60px rgba(45, 0, 77, 0.22), 0 4px 16px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 1)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.95)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                    }}
+                  >
+                    {/* User Profile Header */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 10px 12px 10px',
+                        borderBottom: '1px solid rgba(123, 63, 160, 0.12)',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      {user?.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt={displayName || 'User'}
+                          style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(123, 63, 160, 0.4)', flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.95rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {initial}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#2D004D', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                          {displayName || 'Lumora Member'}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#665C70', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                          {displayEmail}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    {[
+                      { label: 'Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: handleDashboardClick },
+                      { label: 'Profile',   icon: <User size={15} color="#7B3FA0" />,           onClick: handleProfileNav },
+                      { label: 'Orders',    icon: <CreditCard size={15} color="#7B3FA0" />,     onClick: handleOrdersNav },
+                      { label: 'Wishlist',  icon: <Heart size={15} color="#7B3FA0" />,          onClick: handleWishlistNav },
+                      { label: 'Downloads', icon: <Download size={15} color="#7B3FA0" />,       onClick: handleDownloadsNav },
+                      { label: 'Settings',  icon: <SettingsIcon size={15} color="#7B3FA0" />,   onClick: handleSettingsNav },
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={item.onClick}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '9px 12px',
+                          borderRadius: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#2D004D',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          width: '100%',
+                          transition: 'all 0.18s ease',
+                          fontFamily: 'inherit',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
+                          e.currentTarget.style.transform = 'translateX(2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+
+                    {/* Logout Option */}
+                    <div style={{ borderTop: '1px solid rgba(123, 63, 160, 0.12)', marginTop: '4px', paddingTop: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={handleLogoutNav}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '9px 12px',
+                          borderRadius: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#E11D48',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          width: '100%',
+                          transition: 'all 0.18s ease',
+                          fontFamily: 'inherit',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(225, 29, 72, 0.08)';
+                          e.currentTarget.style.transform = 'translateX(2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                      >
+                        <LogOut size={15} color="#E11D48" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
+            /* Unauthenticated Enter Lumora CTA Button */
             <>
               <a
                 href="#"
@@ -498,7 +807,7 @@ export default function Navbar() {
               
               <a 
                 href="#"
-                onClick={(e) => { e.preventDefault(); navigateTo('register', 'customer'); }}
+                onClick={(e) => { e.preventDefault(); navigateTo('login', 'customer'); }}
                 className="btn-premium btn-shine-sweep lumora-navbar-cta"
                 style={{
                   padding: scrolled ? '6px 16px' : '8px 20px',
@@ -514,7 +823,7 @@ export default function Navbar() {
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
-                Get Started <ArrowUpRight size={13} style={{ opacity: 0.8 }} />
+                Enter Lumora <ArrowUpRight size={13} style={{ opacity: 0.8 }} />
               </a>
             </>
           )}
@@ -635,22 +944,56 @@ export default function Navbar() {
           </div>
 
           {user ? (
-            <button
-              onClick={handleLogout}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '12px',
-                background: 'rgba(225, 29, 72, 0.10)',
-                color: '#E11D48',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-              }}
-            >
-              Sign Out
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid rgba(123, 63, 160, 0.15)', paddingTop: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '12px', background: 'rgba(123, 63, 160, 0.06)' }}>
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt={displayName || 'User'} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
+                    {initial}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#2D004D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {displayName || 'Lumora Member'}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#665C70', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {displayEmail}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button onClick={handleDashboardClick} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><LayoutDashboard size={14} color="#7B3FA0" /> Dashboard</button>
+                <button onClick={handleProfileNav} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><User size={14} color="#7B3FA0" /> Profile</button>
+                <button onClick={handleOrdersNav} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><CreditCard size={14} color="#7B3FA0" /> Orders</button>
+                <button onClick={handleWishlistNav} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><Heart size={14} color="#7B3FA0" /> Wishlist</button>
+                <button onClick={handleDownloadsNav} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><Download size={14} color="#7B3FA0" /> Downloads</button>
+                <button onClick={handleSettingsNav} style={{ padding: '8px 10px', borderRadius: '10px', background: 'rgba(123, 63, 160, 0.06)', border: 'none', color: '#2D004D', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><SettingsIcon size={14} color="#7B3FA0" /> Settings</button>
+              </div>
+
+              <button
+                onClick={handleLogoutNav}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '12px',
+                  background: 'rgba(225, 29, 72, 0.10)',
+                  color: '#E11D48',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '4px',
+                }}
+              >
+                <LogOut size={15} /> Logout
+              </button>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button
@@ -670,7 +1013,7 @@ export default function Navbar() {
                 Sign In
               </button>
               <button
-                onClick={() => { closeMobile(); navigateTo('register', 'customer'); }}
+                onClick={() => { closeMobile(); navigateTo('login', 'customer'); }}
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -681,9 +1024,13 @@ export default function Navbar() {
                   fontWeight: 700,
                   fontSize: '0.9rem',
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
                 }}
               >
-                Get Started
+                Enter Lumora <ArrowUpRight size={14} />
               </button>
             </div>
           )}
