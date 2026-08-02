@@ -128,7 +128,8 @@ export default function AffiliateEarnings({
   /* ── Monthly chart ──────────────────────────────────────────────────── */
   const monthlyEarnings = useMemo(() => buildMonthlyChart(activeCommissions), [activeCommissions]);
   const monthLabels     = useMemo(() => buildMonthLabels(), []);
-  const chartMax        = Math.max(...monthlyEarnings, 1);
+  const rawChartMax     = Math.max(...monthlyEarnings, 0);
+  const chartMax        = Math.max(200, rawChartMax);
   const chartTotal      = monthlyEarnings.reduce((a, b) => a + b, 0);
   const currentMonthIdx = 11; // always the last bar = current month
 
@@ -411,12 +412,31 @@ export default function AffiliateEarnings({
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(3px, 1.2vw, 8px)', height: '160px', minWidth: '280px', width: '100%' }}>
               {monthlyEarnings.map((val, i) => {
                 const pct       = (val / chartMax) * 100;
-                const isHighest = val === chartMax && val > 0;
+                const isHighest = val === rawChartMax && val > 0;
                 const isCurrent = i === currentMonthIdx;
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end', minWidth: '18px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end', minWidth: '18px', position: 'relative', cursor: 'pointer' }} className="group">
+                    {/* Hover Tooltip */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{
+                      position: 'absolute',
+                      bottom: `calc(${Math.max(pct, val > 0 ? 4 : 0)}% + 10px)`,
+                      background: '#fff',
+                      border: '1px solid rgba(196,181,253,0.4)',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      boxShadow: '0 4px 12px rgba(90,30,126,0.1)',
+                      pointerEvents: 'none',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      minWidth: '60px'
+                    }}>
+                      <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)' }}>{monthLabels[i]}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(val)}</span>
+                    </div>
+
                     <div
-                      title={`${monthLabels[i]}: ${formatINR(val)}`}
                       style={{
                         width: '100%',
                         height: `${Math.max(pct, val > 0 ? 4 : 0)}%`,
@@ -431,7 +451,6 @@ export default function AffiliateEarnings({
                           ? '1px solid rgba(123,63,160,0.30)'
                           : '1px solid rgba(196,181,253,0.20)',
                         transition: 'all 0.3s',
-                        cursor: 'default',
                       }}
                     />
                     <span style={{ fontSize: 'clamp(0.50rem, 1.5vw, 0.58rem)', fontWeight: 600, color: (isHighest || isCurrent) ? '#7B3FA0' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
