@@ -145,7 +145,7 @@ function AffiliateDashboardInner() {
   }, [user, payouts]);
 
   const handleBackToWebsite = () => {
-    navigate('/');
+    navigate('/partnership/affiliate');
   };
 
   const handleAffiliateLogout = async () => {
@@ -309,7 +309,7 @@ function AffiliateDashboardInner() {
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
             <ArrowLeft size={16} />
-            Back to Website
+            Affiliate Landing Page
           </button>
 
           <button
