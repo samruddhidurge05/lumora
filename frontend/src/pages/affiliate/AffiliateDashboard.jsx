@@ -231,7 +231,7 @@ function AffiliateDashboardInner() {
           borderBottom: '1px solid rgba(196,181,253,0.16)',
         }}>
           <button
-            onClick={handleExit}
+            onClick={handleBackToWebsite}
             style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}
           >
             <span style={{
@@ -481,7 +481,7 @@ function AffiliateDashboardInner() {
                 Please contact support for assistance.
               </p>
               <button 
-                onClick={handleExit}
+                onClick={handleAffiliateLogout}
                 style={{
                   background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
                   border: 'none',
