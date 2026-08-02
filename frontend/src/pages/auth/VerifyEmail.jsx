@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { applyActionCode, checkActionCode, signOut } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { clearBackendToken } from '../../services/authService';
 import { Mail, CheckCircle2, AlertCircle, RefreshCw, ArrowRight, ShieldCheck } from 'lucide-react';
 import './auth.css';
@@ -46,6 +46,7 @@ export default function VerifyEmail() {
   const location = useLocation();
   const { user, reloadUser, resendVerification, logout } = useAuth();
   const role = new URLSearchParams(location.search).get('role') || 'customer';
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   // Parse oobCode from query params (Firebase verification link)
   const query = new URLSearchParams(location.search);
@@ -83,6 +84,65 @@ export default function VerifyEmail() {
     }
   };
 
+  const markRoleVerifiedInFirestore = async (uid, targetRole) => {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        [`roleVerifications.${targetRole}`]: true,
+        emailVerified: true,
+        updatedAt: serverTimestamp(),
+      });
+      if (targetRole === 'affiliate') {
+        const affRef = doc(db, 'affiliates', uid);
+        await updateDoc(affRef, {
+          emailVerified: true,
+          status: 'active',
+          verificationStatus: 'verified',
+          updatedAt: serverTimestamp(),
+        });
+      } else if (targetRole === 'vendor') {
+        const venRef = doc(db, 'vendors', uid);
+        await updateDoc(venRef, {
+          emailVerified: true,
+          status: 'active',
+          verificationStatus: 'verified',
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        const custRef = doc(db, 'customers', uid);
+        await updateDoc(custRef, {
+          emailVerified: true,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to mark role verified in Firestore:', e);
+    }
+  };
+
+  const isRoleVerifiedInFirestore = async (uid, targetRole) => {
+    try {
+      if (targetRole === 'affiliate') {
+        const affSnap = await getDoc(doc(db, 'affiliates', uid));
+        if (affSnap.exists() && affSnap.data().emailVerified === true) return true;
+      } else if (targetRole === 'vendor') {
+        const venSnap = await getDoc(doc(db, 'vendors', uid));
+        if (venSnap.exists() && venSnap.data().emailVerified === true) return true;
+      } else if (targetRole === 'customer') {
+        const custSnap = await getDoc(doc(db, 'customers', uid));
+        if (custSnap.exists() && custSnap.data().emailVerified === true) return true;
+      }
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.roleVerifications && data.roleVerifications[targetRole] === true) return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const navigateToDashboard = async (firebaseUser) => {
     if (!firebaseUser) { navigate('/'); return; }
     try {
@@ -106,6 +166,10 @@ export default function VerifyEmail() {
       try {
         await checkActionCode(auth, oobCode);
         await applyActionCode(auth, oobCode);
+        const currentUser = auth.currentUser || user;
+        if (currentUser?.uid) {
+          await markRoleVerifiedInFirestore(currentUser.uid, role);
+        }
         await reloadUser();
         setStatus('success');
         setMessage('Email verified successfully! Redirecting to dashboard...');
@@ -134,13 +198,23 @@ export default function VerifyEmail() {
     try {
       await reloadUser();
       const currentUser = auth.currentUser || user;
-      if (currentUser?.emailVerified) {
+      if (!currentUser) {
+        setStatus('error');
+        setMessage('No active user session. Please register or sign in again.');
+        return;
+      }
+
+      // Check if role is marked verified in Firestore (or if oobCode link was applied)
+      const verified = await isRoleVerifiedInFirestore(currentUser.uid, role);
+
+      if (verified) {
+        await markRoleVerifiedInFirestore(currentUser.uid, role);
         setStatus('success');
         setMessage('Email verified successfully! Redirecting...');
         await navigateToDashboard(currentUser);
       } else {
         setStatus('error');
-        setMessage('Email has not been verified yet. Please check your inbox or spam folder.');
+        setMessage(`Email has not been verified yet for your ${roleLabel} account. Please check your inbox or spam folder and click the verification link.`);
       }
     } catch (err) {
       setStatus('error');
@@ -154,9 +228,9 @@ export default function VerifyEmail() {
     if (cooldown > 0) return;
     setIsLoading(true);
     try {
-      await resendVerification();
+      await resendVerification(role);
       setStatus('success');
-      setMessage('Verification email sent! Check your inbox.');
+      setMessage(`Verification email sent to ${email || 'your inbox'}! Check your inbox or spam folder.`);
       setCooldown(60);
     } catch (err) {
       setStatus('error');
@@ -165,8 +239,6 @@ export default function VerifyEmail() {
       setIsLoading(false);
     }
   };
-
-  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <AuthBackground>

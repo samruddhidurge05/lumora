@@ -397,21 +397,12 @@ export const AuthProvider = ({ children }) => {
   const register = async (fullName, email, password, role = 'user') => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role === 'user' ? 'customer' : role;
-    let firebaseUser;
-    
+    let isNewAccount = false;
     try {
       const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       firebaseUser = cred.user;
+      isNewAccount = true;
       await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
-      try {
-        const actionCodeSettings = {
-          url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${normalizedRole}`,
-          handleCodeInApp: true,
-        };
-        await sendEmailVerification(firebaseUser, actionCodeSettings);
-      } catch (verifyError) {
-        console.error("Verification email failed:", verifyError);
-      }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
         // Email already exists in Firebase Auth.
@@ -460,13 +451,29 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
+    // ALWAYS send real verification email for every role registration (new or role addition)
+    try {
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${normalizedRole}`,
+        handleCodeInApp: true,
+      };
+      await sendEmailVerification(firebaseUser, actionCodeSettings);
+    } catch (verifyError) {
+      console.warn("Verification email send notice:", verifyError?.message);
+    }
+
     const userRef = doc(db, 'users', firebaseUser.uid);
     const userSnap = await getDoc(userRef);
     let currentRoles = [];
+    let currentRoleVerifications = {};
     if (userSnap.exists()) {
-      currentRoles = userSnap.data().roles || [userSnap.data().role || 'customer'];
+      const data = userSnap.data();
+      currentRoles = data.roles || [data.role || 'customer'];
+      currentRoleVerifications = data.roleVerifications || {};
     }
     const updatedRoles = Array.from(new Set([...currentRoles, normalizedRole]));
+    // Mark role verification as pending for this newly registered role session
+    currentRoleVerifications[normalizedRole] = false;
 
     const userData = {
       uid: firebaseUser.uid,
@@ -475,6 +482,7 @@ export const AuthProvider = ({ children }) => {
       photoURL: firebaseUser.photoURL || null,
       provider: 'password',
       emailVerified: firebaseUser.emailVerified,
+      roleVerifications: currentRoleVerifications,
       updatedAt: serverTimestamp(),
       accountStatus: 'active',
       role: normalizedRole,
@@ -499,6 +507,8 @@ export const AuthProvider = ({ children }) => {
       fullName: fullName || firebaseUser.displayName || '',
       email: firebaseUser.email,
       role: normalizedRole,
+      emailVerified: false,
+      verificationStatus: 'pending',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -508,6 +518,8 @@ export const AuthProvider = ({ children }) => {
       const venDocSnap = await getDoc(venDocRef);
       if (!venDocSnap.exists()) {
         await setDoc(venDocRef, specificData);
+      } else {
+        await updateDoc(venDocRef, { emailVerified: false, verificationStatus: 'pending', updatedAt: serverTimestamp() });
       }
     } else if (normalizedRole === 'affiliate') {
       // Auto create or reuse affiliate doc
@@ -518,7 +530,8 @@ export const AuthProvider = ({ children }) => {
         await setDoc(affDocRef, {
           userId: firebaseUser.uid,
           affiliateCode: code,
-          status: 'active',
+          status: 'pending_verification',
+          emailVerified: false,
           commissionRate: 30,
           totalClicks: 0,
           totalConversions: 0,
@@ -530,12 +543,16 @@ export const AuthProvider = ({ children }) => {
           fullName: fullName || firebaseUser.displayName || '',
           email: firebaseUser.email,
         });
+      } else {
+        await updateDoc(affDocRef, { emailVerified: false, status: 'pending_verification' });
       }
     } else {
       const custDocRef = doc(db, 'customers', firebaseUser.uid);
       const custDocSnap = await getDoc(custDocRef);
       if (!custDocSnap.exists()) {
         await setDoc(custDocRef, specificData);
+      } else {
+        await updateDoc(custDocRef, { emailVerified: false, updatedAt: serverTimestamp() });
       }
     }
 
