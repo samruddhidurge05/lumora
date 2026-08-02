@@ -33,7 +33,7 @@ export default function AffiliateProfile({
   const [draft, setDraft]       = useState({ 
     upiId: '', bankName: '', accountNumber: '', ifscCode: '', fullName: '', phone: '',
     // Phase 1 New Fields
-    displayName: '', shortBio: '', country: '',
+    displayName: '', country: '',
     youtube: '', instagram: '', linkedin: '',
     preferredCategories: [], promotionMethods: [],
     preferredCurrency: 'USD', timezone: 'UTC', emailNotifications: true,
@@ -74,7 +74,6 @@ export default function AffiliateProfile({
       phone:         user?.phoneNumber || '',
       // Phase 1 New Fields
       displayName: parentProfile?.display_name || '', 
-      shortBio: parentProfile?.short_bio || '', 
       country: parentProfile?.country || '',
       youtube: parentProfile?.youtube || '', 
       instagram: parentProfile?.instagram || '', 
@@ -95,7 +94,7 @@ export default function AffiliateProfile({
   const calculateCompletion = () => {
     const required = [
       'fullName', 'phone', 
-      'shortBio', 'instagram', 'preferredCategories'
+      'instagram', 'preferredCategories'
     ];
     let completed = 0;
     const missing = [];
@@ -142,7 +141,6 @@ export default function AffiliateProfile({
           account_number: draft.accountNumber || null,
           ifsc_code:      draft.ifscCode      || null,
           display_name:   draft.displayName   || null,
-          short_bio:      draft.shortBio      || null,
           country:        draft.country       || null,
           youtube:        draft.youtube       || null,
           instagram:      draft.instagram     || null,
@@ -189,7 +187,6 @@ export default function AffiliateProfile({
       fullName:      user?.displayName || user?.email?.split('@')[0] || '',
       phone:         user?.phoneNumber || '',
       displayName: parentProfile?.display_name || '', 
-      shortBio: parentProfile?.short_bio || '', 
       country: parentProfile?.country || '',
       youtube: parentProfile?.youtube || '', 
       instagram: parentProfile?.instagram || '', 
@@ -623,7 +620,7 @@ export default function AffiliateProfile({
         </div>
         <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {personalField('Display Name', 'displayName', 'Public name')}
-          {textAreaField('Short Bio', 'shortBio', 'I create UI/UX tutorials and review developer tools.', 300)}
+
           {selectField('Country', 'country', [
             'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
             'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
@@ -806,53 +803,7 @@ export default function AffiliateProfile({
         </div>
       </div>
 
-      {/* ── RECENT PAYOUTS ────────────────────────────────────────────────── */}
-      {payouts && payouts.length > 0 && (
-        <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <DollarSign size={15} />
-            </div>
-            <div>
-              <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
-              <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Recent Payouts</h3>
-            </div>
-          </div>
 
-          {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px' }}>
-            {['Date', 'Amount', 'Method', 'Status'].map(h => (
-              <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-            ))}
-          </div>
-
-          {payouts.slice(0, 5).map((p, idx) => {
-            const STATUS = {
-              pending:   { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.28)',  color: '#B45309', label: 'Pending'   },
-              completed: { bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.28)',   color: '#15803D', label: 'Completed' },
-              rejected:  { bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.28)',   color: '#DC2626', label: 'Rejected'  },
-            };
-            const st = STATUS[p.status] || STATUS.pending;
-            return (
-              <div
-                key={p.id || idx}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.created_at)}</span>
-                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method || 'UPI'}</span>
-                <div>
-                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>
-                    {st.label}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* ── AFFILIATE SESSION LOGOUT ────────────────────────────────────────── */}
       <div className="premium-flat-card" style={{ padding: '24px 32px', marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #EF4444' }}>
