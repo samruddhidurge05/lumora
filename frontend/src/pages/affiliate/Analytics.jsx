@@ -101,6 +101,7 @@ function buildTopProducts(periodCommissions) {
 
 export default function AffiliateAnalytics({ commissions }) {
   const [timeFilter, setTimeFilter] = useState('12-months');
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, value: 0, label: '' });
 
   const { labels, data: chartData, periodCommissions } = useMemo(
     () => buildAggregatedData(commissions, timeFilter),
@@ -201,7 +202,12 @@ export default function AffiliateAnalytics({ commissions }) {
           </div>
         ) : (
           <div style={{ position: 'relative', height: '240px', width: '100%' }}>
-            <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ width: '100%', height: '180px', overflow: 'visible' }} preserveAspectRatio="none">
+            <svg 
+              viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
+              style={{ width: '100%', height: '180px', overflow: 'visible' }} 
+              preserveAspectRatio="none"
+              onMouseLeave={() => setTooltip({ visible: false, x: 0, y: 0, value: 0, label: '' })}
+            >
               <defs>
                 <linearGradient id="lineGradient" x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stopColor="#7B3FA0" stopOpacity="0.25" />
@@ -233,11 +239,55 @@ export default function AffiliateAnalytics({ commissions }) {
                 if (val === 0 && chartMax > 0) return null; // Only show dots for actual data if there's data
                 const x = chartData.length > 1 ? (i / (chartData.length - 1)) * svgWidth : svgWidth / 2;
                 const y = chartMax > 0 ? svgHeight - ((val / chartMax) * (svgHeight - 20)) - 10 : svgHeight - 10;
+                
                 return (
-                  <circle key={i} cx={x} cy={y} r="4" fill="#fff" stroke="#7B3FA0" strokeWidth="2" />
+                  <g 
+                    key={i} 
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const parentRect = e.currentTarget.closest('svg').getBoundingClientRect();
+                      setTooltip({
+                        visible: true,
+                        x: rect.left - parentRect.left + (rect.width / 2),
+                        y: rect.top - parentRect.top,
+                        value: val,
+                        label: labels[i]
+                      });
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* Invisible larger circle for easier hovering */}
+                    <circle cx={x} cy={y} r="16" fill="transparent" />
+                    <circle cx={x} cy={y} r="5" fill="#fff" stroke="#7B3FA0" strokeWidth="2.5" style={{ transition: 'all 0.2s ease' }} />
+                  </g>
                 );
               })}
             </svg>
+
+            {/* SVG Tooltip Overlay */}
+            {tooltip.visible && (
+              <div style={{
+                position: 'absolute',
+                left: tooltip.x,
+                top: tooltip.y - 45,
+                transform: 'translateX(-50%)',
+                background: '#fff',
+                border: '1px solid rgba(196,181,253,0.4)',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                boxShadow: '0 4px 12px rgba(90,30,126,0.1)',
+                pointerEvents: 'none',
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px',
+                minWidth: '80px'
+              }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>{tooltip.label}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(tooltip.value)}</span>
+              </div>
+            )}
 
             {/* X-Axis Labels */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
@@ -264,14 +314,37 @@ export default function AffiliateAnalytics({ commissions }) {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No data</span>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', position: 'relative' }}>
               {chartData.map((val, i) => {
                 const pct = (val / chartMax) * 100;
                 const isHighest = val === chartMax && val > 0;
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
+                  <div 
+                    key={i} 
+                    style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end', position: 'relative', cursor: 'pointer' }}
+                    className="group"
+                  >
+                    {/* Hover Tooltip */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{
+                      position: 'absolute',
+                      bottom: `calc(${Math.max(pct, val > 0 ? 4 : 0)}% + 10px)`,
+                      background: '#fff',
+                      border: '1px solid rgba(196,181,253,0.4)',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      boxShadow: '0 4px 12px rgba(90,30,126,0.1)',
+                      pointerEvents: 'none',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      minWidth: '60px'
+                    }}>
+                      <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)' }}>{labels[i]}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(val)}</span>
+                    </div>
+
                     <div
-                      title={`${labels[i]}: ${formatINR(val)}`}
                       style={{
                         width: '100%',
                         maxWidth: '28px',
