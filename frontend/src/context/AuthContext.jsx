@@ -752,7 +752,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /** Full Logout — production teardown of all sessions */
-  const logout = async () => {
+  async function logout() {
     const wasAdmin = userRole === 'admin';
     if (auth.currentUser) {
       try {
