@@ -722,69 +722,67 @@ export const AuthProvider = ({ children }) => {
     const roleToLogout = targetRole || userRole || 'customer';
     const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
 
-    // Clear role-specific token & session
+    if (auth.currentUser) {
+      try {
+        await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, `logout_${normRole}`, true);
+      } catch (_) {}
+    }
+
+    // Clear role-specific token & session storage
     clearRoleSession(normRole);
 
-    // Check if other role sessions are active
+    // Check if other role sessions are active in localStorage
     const roles = ['customer', 'affiliate', 'vendor', 'admin'];
-    const otherRoles = roles.filter(r => r !== normRole);
-    const hasOtherSession = otherRoles.some(r => !!localStorage.getItem(`lumora_token_${r}`));
+    const remainingRoles = roles.filter(r => r !== normRole && !!localStorage.getItem(`lumora_token_${r}`));
 
-    if (!hasOtherSession) {
-      // If no other role session remains, perform full Firebase sign-out
-      try {
-        if (auth.currentUser) {
-          await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, `logout_${normRole}`, true);
-          await signOut(auth);
-        }
-      } catch (_) {}
+    if (remainingRoles.length === 0) {
+      // No remaining role sessions — sign out of Firebase completely
+      try { await signOut(auth); } catch (_) {}
       clearBackendToken();
       clearSessionSafely();
       setUser(null);
       setUserRole(null);
+    } else {
+      // Other role sessions remain for their respective portals.
+      const nextRole = remainingRoles[0];
+      localStorage.setItem('lumora_active_role', nextRole);
+      const nextToken = localStorage.getItem(`lumora_token_${nextRole}`);
+      if (nextToken) localStorage.setItem('lumora_backend_token', nextToken);
+      setUserRole(nextRole);
     }
 
-    // Redirect to the appropriate portal/login for the logged out role
     let target = '/';
     if (normRole === 'affiliate') target = '/auth/login?role=affiliate';
     else if (normRole === 'vendor') target = '/auth/login?role=vendor';
     else if (normRole === 'admin') target = '/admin/login';
-    else target = '/auth/login?role=customer';
+    else target = '/';
 
-    window.location.replace(target);
+    window.location.href = target;
   };
 
-  /** Logout — production-level full session teardown */
-  async function logout() {    const wasAdmin = userRole === 'admin';
-
-    // 1. Log the event BEFORE signing out (token still valid)
+  /** Full Logout — production teardown of all sessions */
+  const logout = async () => {
+    const wasAdmin = userRole === 'admin';
     if (auth.currentUser) {
       try {
         await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, 'logout', true);
       } catch (_) {}
     }
 
-    // 2. Clear React state immediately
     setIsAccountDisabled(false);
     setIsPlatformPaused(false);
     setUser(null);
     setUserRole(null);
 
-    // 3. Clear ALL auth-related storage in one call
-    //    clearBackendToken() now removes: backend_token, backend_uid, active_role, user
+    const roles = ['customer', 'affiliate', 'vendor', 'admin'];
+    roles.forEach(r => clearRoleSession(r));
     clearBackendToken();
-
-    // 4. Clear sessionStorage (catches any session-scoped auth state)
     clearSessionSafely();
 
-    // 5. Sign out of Firebase
     try { await signOut(auth); } catch (_) {}
 
-    // 6. Redirect using replace() — removes the current page from browser history
-    //    so pressing Back does NOT re-open the protected dashboard.
-    //    All roles are redirected (not just admin).
     const target = wasAdmin ? '/admin/login' : '/';
-    window.location.replace(target);
+    window.location.href = target;
   };
 
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */

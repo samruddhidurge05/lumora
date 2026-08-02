@@ -59,14 +59,28 @@ export default function Navbar() {
   // Close mobile menu when navigating
   const closeMobile = () => setMobileOpen(false);
 
-  const handleLogout = async () => {
-    if (typeof logoutRole === 'function') {
-      await logoutRole('customer');
-    } else {
-      await logout();
-    }
-    navigate('/');
+  const handleLogout = async (roleOverride = null) => {
+    setUserMenuOpen(false);
     closeMobile();
+    const path = window.location.pathname.toLowerCase();
+    let currentRole = roleOverride || 'customer';
+    if (path.startsWith('/affiliate')) currentRole = 'affiliate';
+    else if (path.startsWith('/vendor')) currentRole = 'vendor';
+    else if (path.startsWith('/admin')) currentRole = 'admin';
+
+    if (typeof logoutRole === 'function') {
+      await logoutRole(currentRole);
+    } else if (typeof logout === 'function') {
+      await logout();
+    } else {
+      localStorage.clear();
+      window.location.href = '/';
+    }
+  };
+
+  const handleLogoutNav = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    await handleLogout();
   };
 
   const handleDashboardClick = async () => {
@@ -162,11 +176,6 @@ export default function Navbar() {
       setDashboardTab('Settings');
       navigate('/customer/dashboard');
     }
-  };
-
-  const handleLogoutNav = async () => {
-    setUserMenuOpen(false);
-    await handleLogout();
   };
 
   const displayName = user?.displayName || user?.name || '';
