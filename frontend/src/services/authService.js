@@ -17,7 +17,7 @@
  *   - Removes backend JWT and uid from localStorage on logout
  */
 
-import { getBackendOrigin } from '../utils/api.js';
+import { getBackendOrigin, getRouteRoleHint } from '../utils/api.js';
 
 const BACKEND_URL = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
@@ -65,24 +65,31 @@ export const syncWithBackend = async (firebaseUser, role = 'customer', forceRefr
 
       if (data.access_token) {
         const normRole = role === 'user' ? 'customer' : role;
-        // Independent role storage
+        const sessionPayload = JSON.stringify({
+          role: normRole,
+          user: data.user,
+          uid: firebaseUser.uid,
+          token: data.access_token,
+          updatedAt: Date.now()
+        });
+
+        // Independent role-scoped storage
         localStorage.setItem(`lumora_token_${normRole}`, data.access_token);
         if (data.user?.id != null) {
           localStorage.setItem(`lumora_uid_${normRole}`, String(data.user.id));
         }
-        localStorage.setItem(`lumora_session_${normRole}`, JSON.stringify({
-          role: normRole,
-          user: data.user,
-          uid: firebaseUser.uid,
-          updatedAt: Date.now()
-        }));
+        localStorage.setItem(`lumora_session_${normRole}`, sessionPayload);
+        localStorage.setItem(`lumora_${normRole}_session`, sessionPayload);
 
-        // Backwards compatibility fallback
-        localStorage.setItem('lumora_backend_token', data.access_token);
-        if (data.user?.id != null) {
-          localStorage.setItem('lumora_backend_uid', String(data.user.id));
+        // Only update active pointers if current window route matches normRole or active role is unset
+        const currentRouteRole = getRouteRoleHint();
+        if (currentRouteRole === normRole || !localStorage.getItem('lumora_active_role')) {
+          localStorage.setItem('lumora_backend_token', data.access_token);
+          if (data.user?.id != null) {
+            localStorage.setItem('lumora_backend_uid', String(data.user.id));
+          }
+          localStorage.setItem('lumora_active_role', normRole);
         }
-        localStorage.setItem('lumora_active_role', normRole);
 
         // Signal hooks that are waiting for the backend session to be ready
         window.dispatchEvent(new Event('lumora_backend_ready'));
@@ -109,6 +116,7 @@ export const clearRoleSession = (role) => {
   localStorage.removeItem(`lumora_token_${normRole}`);
   localStorage.removeItem(`lumora_uid_${normRole}`);
   localStorage.removeItem(`lumora_session_${normRole}`);
+  localStorage.removeItem(`lumora_${normRole}_session`);
 
   const currentActive = localStorage.getItem('lumora_active_role');
   if (currentActive === normRole) {

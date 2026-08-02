@@ -84,34 +84,28 @@ export default function ProtectedRoute({
     return children;
   }
 
-  // ── Standard route guard ──────────────────────────────────────────────────
-
-  // Still resolving auth state — show spinner
+  // Standard route guard
   if (loading) {
     return <PageLoader />;
   }
 
-  // Not authenticated
-  if (!user) {
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
+  const allowedRoles = requiredRole ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole]) : ['customer'];
+  const hasRoleSession = allowedRoles.some(r => {
+    const norm = r === 'user' ? 'customer' : r;
+    return !!localStorage.getItem(`lumora_token_${norm}`) || !!localStorage.getItem(`lumora_${norm}_session`) || !!localStorage.getItem(`lumora_session_${norm}`);
+  });
 
-  // Enforce email verification
-  if (!user.emailVerified) {
-    return <Navigate to={`/auth/verify-email?email=${encodeURIComponent(user.email)}&role=${userRole || 'customer'}`} replace />;
+  // Not authenticated for role
+  if (!user && !hasRoleSession) {
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   // Role guard — allow access if user state or role-scoped session token matches requiredRole
   if (requiredRole) {
-    const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    const hasRoleInState = userRole && allowed.includes(userRole);
-    const hasRoleToken = allowed.some(r => {
-      const norm = r === 'user' ? 'customer' : r;
-      return !!localStorage.getItem(`lumora_token_${norm}`);
-    });
+    const hasRoleInState = userRole && allowedRoles.includes(userRole);
 
-    if (!hasRoleInState && !hasRoleToken) {
-      const targetRole = allowed[0] || 'customer';
+    if (!hasRoleInState && !hasRoleSession) {
+      const targetRole = allowedRoles[0] || 'customer';
       const redirectUrl = targetRole === 'admin' ? '/admin/login' : `/auth/login?role=${targetRole}`;
       return <Navigate to={redirectUrl} replace />;
     }

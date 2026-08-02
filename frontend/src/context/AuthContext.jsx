@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { auth, db } from '../services/firebase';
 import { syncWithBackend, clearBackendToken } from '../services/authService';
 import { adminLogin, adminRefreshToken } from '../services/adminAuthService';
-import { backendFetch, registerGlobalErrorListener } from '../utils/api';
+import { backendFetch, registerGlobalErrorListener, getRouteRoleHint } from '../utils/api';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -270,11 +270,8 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // ── Admin branch: check for existing admin token ─────────────────────
-        // Admin uses a separate JWT flow (Firebase ID token, not firebase-sync).
-        // We detect this by the 'admin' hint in localStorage which is set
-        // BEFORE signInWithPopup is called in AdminLogin.jsx to win the race.
-        const localHint = localStorage.getItem('lumora_active_role') || 'customer';
+        // Route-isolated role hint (inspects URL prefix first)
+        const localHint = getRouteRoleHint();
 
         if (localHint === 'admin') {
           // If we already have a valid backend token, skip re-calling adminLogin.

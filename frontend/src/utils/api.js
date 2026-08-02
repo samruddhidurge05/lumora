@@ -95,31 +95,34 @@ export function buildBackendUrl(endpoint = '') {
  * @param {RequestInit} options  fetch options (method, body, headers, …)
  * @param {boolean} _isRetry  internal flag to prevent infinite retry loop
  */
+export const getRouteRoleHint = () => {
+  if (typeof window === 'undefined') return 'customer';
+  const path = window.location.pathname.toLowerCase();
+  if (path.startsWith('/affiliate')) return 'affiliate';
+  if (path.startsWith('/vendor')) return 'vendor';
+  if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/customer')) return 'customer';
+
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get('role');
+    if (roleParam && ['customer', 'affiliate', 'vendor', 'admin', 'user'].includes(roleParam.toLowerCase())) {
+      return roleParam.toLowerCase() === 'user' ? 'customer' : roleParam.toLowerCase();
+    }
+  } catch (_) {}
+
+  const activeRole = localStorage.getItem('lumora_active_role');
+  if (activeRole && ['customer', 'affiliate', 'vendor', 'admin'].includes(activeRole)) {
+    return activeRole;
+  }
+  return 'customer';
+};
+
 export const getRoleToken = (targetRole) => {
-  if (targetRole) {
-    const normRole = targetRole === 'user' ? 'customer' : targetRole;
-    const token = localStorage.getItem(`lumora_token_${normRole}`);
-    if (token) return token;
-  }
-  if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path.startsWith('/affiliate')) {
-      const t = localStorage.getItem('lumora_token_affiliate');
-      if (t) return t;
-    }
-    if (path.startsWith('/vendor')) {
-      const t = localStorage.getItem('lumora_token_vendor');
-      if (t) return t;
-    }
-    if (path.startsWith('/admin')) {
-      const t = localStorage.getItem('lumora_token_admin');
-      if (t) return t;
-    }
-    if (path.startsWith('/customer')) {
-      const t = localStorage.getItem('lumora_token_customer');
-      if (t) return t;
-    }
-  }
+  const normRole = targetRole ? (targetRole === 'user' ? 'customer' : targetRole) : getRouteRoleHint();
+  const token = localStorage.getItem(`lumora_token_${normRole}`);
+  if (token) return token;
+
   const activeRole = localStorage.getItem('lumora_active_role');
   if (activeRole) {
     const t = localStorage.getItem(`lumora_token_${activeRole}`);
