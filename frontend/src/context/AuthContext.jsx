@@ -397,6 +397,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (fullName, email, password, role = 'user') => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role === 'user' ? 'customer' : role;
+    let firebaseUser;
     let isNewAccount = false;
     try {
       const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
