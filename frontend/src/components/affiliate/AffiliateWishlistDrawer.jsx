@@ -150,15 +150,33 @@ export default function AffiliateWishlistDrawer({ isOpen, setIsOpen, onSelectPro
                         {item.title}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{item.category}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
                         <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(item.price)}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleWishlist(item);
-                          }}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,0.7)', padding: '2px', display: 'flex', alignItems: 'center' }}
-                        ><Trash2 size={13} /></button>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onSelectProduct) onSelectProduct(item);
+                            }}
+                            style={{
+                              background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(123,63,160,0.22)',
+                              color: '#7B3FA0', fontSize: '0.65rem', fontWeight: 700,
+                              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer'
+                            }}
+                          >
+                            Details
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleWishlist(item);
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,0.7)', padding: '2px', display: 'flex', alignItems: 'center' }}
+                            title="Remove from wishlist"
+                          ><Trash2 size={13} /></button>
+                        </div>
                       </div>
                     </div>
                   </div>
