@@ -123,9 +123,9 @@ export default function AffiliateAnalytics({ commissions }) {
   const rawEarningsMax = Math.max(...earningsData);
   const earningsMax = Math.max(200, rawEarningsMax); 
 
-  // For sales, if they haven't made 5 sales yet, scale relative to 5.
+  // For sales, if they haven't made 20 sales yet, scale relative to 20.
   const rawSalesMax = Math.max(...salesData);
-  const salesMax = Math.max(5, rawSalesMax);
+  const salesMax = Math.max(20, rawSalesMax);
 
   // SVG Line Chart calculations (Earnings)
   const svgWidth = 800;
