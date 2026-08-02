@@ -7,43 +7,16 @@
   position: relative;
   min-height: 100vh;
   overflow: auto;
-  background-color: #ffffff;
-  background-image: 
-    radial-gradient(at 15% 15%, rgba(225, 210, 252, 0.45) 0px, transparent 55%),
-    radial-gradient(at 85% 15%, rgba(240, 225, 255, 0.35) 0px, transparent 50%),
-    radial-gradient(at 50% 85%, rgba(230, 212, 250, 0.40) 0px, transparent 60%),
-    radial-gradient(at 85% 85%, rgba(218, 195, 245, 0.30) 0px, transparent 50%);
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
   background-attachment: fixed;
 }
 
-/* Ambient glass reflection blobs */
+/* Ambient glass reflection blobs - hidden for pure white background */
 .auth-bg-wrapper::before,
 .auth-bg-wrapper::after {
-  content: '';
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(90px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.55;
-}
-
-.auth-bg-wrapper::before {
-  width: 500px;
-  height: 500px;
-  top: -100px;
-  left: -100px;
-  background: radial-gradient(circle, rgba(216, 191, 227, 0.6) 0%, rgba(184, 134, 208, 0.2) 70%, transparent 100%);
-  animation: authBlobFloat 18s ease-in-out infinite alternate;
-}
-
-.auth-bg-wrapper::after {
-  width: 600px;
-  height: 600px;
-  bottom: -120px;
-  right: -120px;
-  background: radial-gradient(circle, rgba(237, 224, 252, 0.7) 0%, rgba(184, 134, 208, 0.25) 70%, transparent 100%);
-  animation: authBlobFloat 22s ease-in-out infinite alternate-reverse;
+  display: none !important;
 }
 
 @keyframes authBlobFloat {
