@@ -129,7 +129,7 @@ export default function AffiliateEarnings({
   const monthlyEarnings = useMemo(() => buildMonthlyChart(activeCommissions), [activeCommissions]);
   const monthLabels     = useMemo(() => buildMonthLabels(), []);
   const rawChartMax     = Math.max(...monthlyEarnings, 0);
-  const chartMax        = Math.max(200, rawChartMax);
+  const chartMax        = Math.max(1000, rawChartMax);
   const chartTotal      = monthlyEarnings.reduce((a, b) => a + b, 0);
   const currentMonthIdx = 11; // always the last bar = current month
 
