@@ -2,10 +2,10 @@
  * roleUtils.js
  * ────────────
  * Utility helpers for resolving active route role namespaces.
- * Pure helper with ZERO external imports to prevent circular dependency issues.
+ * Uses hoisted function declarations and has ZERO external imports.
  */
 
-export const getRouteRoleHint = () => {
+export function getRouteRoleHint() {
   if (typeof window === 'undefined') return 'customer';
   const path = window.location.pathname.toLowerCase();
   if (path.startsWith('/affiliate')) return 'affiliate';
@@ -26,4 +26,4 @@ export const getRouteRoleHint = () => {
     return activeRole;
   }
   return 'customer';
-};
+}
