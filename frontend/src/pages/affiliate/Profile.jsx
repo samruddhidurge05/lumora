@@ -70,7 +70,7 @@ export default function AffiliateProfile({
       bankName:      parentProfile?.bank_name       || '',
       accountNumber: parentProfile?.account_number  || '',
       ifscCode:      parentProfile?.ifsc_code       || '',
-      fullName:      user?.displayName || '',
+      fullName:      user?.displayName || user?.email?.split('@')[0] || '',
       phone:         user?.phoneNumber || '',
       // Phase 1 New Fields
       displayName: parentProfile?.display_name || '', 
