@@ -204,10 +204,11 @@ export default function VerifyEmail() {
         return;
       }
 
-      // Check if role is marked verified in Firestore (or if oobCode link was applied)
-      const verified = await isRoleVerifiedInFirestore(currentUser.uid, role);
+      // Check Firebase Auth emailVerified status OR Firestore role verification status
+      const firestoreVerified = await isRoleVerifiedInFirestore(currentUser.uid, role);
+      const isVerified = !!currentUser.emailVerified || firestoreVerified;
 
-      if (verified) {
+      if (isVerified) {
         await markRoleVerifiedInFirestore(currentUser.uid, role);
         setStatus('success');
         setMessage('Email verified successfully! Redirecting...');
