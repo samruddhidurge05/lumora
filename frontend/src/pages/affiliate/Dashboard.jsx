@@ -143,18 +143,6 @@ export default function AffiliateDashboardHome({
     };
   }, [commissions, stats]);
 
-  /* ── Monthly earnings chart (built from live commissions) ────────────── */
-  const monthlyEarnings = useMemo(() => {
-    if (commissions && commissions.length > 0) {
-      return buildMonthlyEarnings(commissions);
-    }
-    return new Array(12).fill(0);
-  }, [commissions]);
-
-  const monthLabels = useMemo(() => buildMonthLabels(), []);
-  const chartMax = Math.max(...monthlyEarnings, 1); // avoid divide-by-zero
-  const chartTotal = monthlyEarnings.reduce((a, b) => a + b, 0);
-
   /* ── Top performing products (from commissions) ──────────────────────── */
   const displayTopProducts = useMemo(() => {
     if (commissions && commissions.length > 0) {
