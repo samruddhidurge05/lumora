@@ -36,7 +36,7 @@ export default function AffiliateProfile({
     displayName: '', country: '',
     youtube: '', instagram: '', linkedin: '',
     preferredCategories: [], promotionMethods: [],
-    preferredCurrency: 'USD', timezone: 'UTC', emailNotifications: true,
+    preferredCurrency: '', timezone: '', emailNotifications: true,
     panNumber: '', panHolderName: ''
   });
   const [editing, setEditing]   = useState(false);
@@ -70,7 +70,7 @@ export default function AffiliateProfile({
       bankName:      parentProfile?.bank_name       || '',
       accountNumber: parentProfile?.account_number  || '',
       ifscCode:      parentProfile?.ifsc_code       || '',
-      fullName:      user?.displayName || user?.email?.split('@')[0] || '',
+      fullName:      user?.displayName || '',
       phone:         user?.phoneNumber || '',
       // Phase 1 New Fields
       displayName: parentProfile?.display_name || '', 
@@ -80,11 +80,8 @@ export default function AffiliateProfile({
       linkedin: parentProfile?.linkedin || '',
       preferredCategories: parentProfile?.preferred_categories || [], 
       promotionMethods: parentProfile?.promotion_methods || [],
-      primaryAudience: parentProfile?.primary_audience || '', 
-      audienceSize: parentProfile?.audience_size || '', 
-      preferredLanguage: parentProfile?.preferred_language || '',
-      preferredCurrency: parentProfile?.preferred_currency || 'USD', 
-      timezone: parentProfile?.timezone || 'UTC', 
+      preferredCurrency: parentProfile?.preferred_currency || '', 
+      timezone: parentProfile?.timezone || '', 
       emailNotifications: parentProfile?.email_notifications ?? true,
       panNumber: parentProfile?.pan_number || '',
       panHolderName: parentProfile?.pan_holder_name || ''
