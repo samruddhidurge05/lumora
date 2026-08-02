@@ -404,26 +404,19 @@ export const AuthProvider = ({ children }) => {
       firebaseUser = cred.user;
       await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
       try {
-        await sendEmailVerification(firebaseUser);
+        const actionCodeSettings = {
+          url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${normalizedRole}`,
+          handleCodeInApp: true,
+        };
+        await sendEmailVerification(firebaseUser, actionCodeSettings);
       } catch (verifyError) {
         console.error("Verification email failed:", verifyError);
       }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
-        if (normalizedRole !== 'customer') {
-          try {
-            const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-            firebaseUser = cred.user;
-          } catch (signInErr) {
-            const err = new Error('An account with this email already exists, but the password entered was incorrect.');
-            err.code = 'auth/email-already-in-use-wrong-password';
-            throw err;
-          }
-        } else {
-          const err = new Error('An account with this email already exists. Please sign in instead.');
-          err.code = 'auth/email-already-in-use';
-          throw err;
-        }
+        const err = new Error('An account with this email already exists. Please sign in instead.');
+        err.code = 'auth/email-already-in-use';
+        throw err;
       } else {
         throw createErr;
       }
@@ -895,9 +888,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   /** Resend verification email */
-  const resendVerification = async () => {
+  const resendVerification = async (role = 'customer') => {
     if (auth.currentUser) {
-      await sendEmailVerification(auth.currentUser);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(auth.currentUser.email)}&role=${role}`,
+        handleCodeInApp: true,
+      };
+      await sendEmailVerification(auth.currentUser, actionCodeSettings);
     }
   };
 
@@ -905,7 +902,7 @@ export const AuthProvider = ({ children }) => {
   const reloadUser = async () => {
     if (!auth.currentUser) return;
     await reload(auth.currentUser);
-    setUser(auth.currentUser);
+    setUser({ ...auth.currentUser });
     // If email now verified, sync to Firestore
     if (auth.currentUser.emailVerified) {
       try {
