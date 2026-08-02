@@ -137,12 +137,20 @@ export default function AffiliateEarnings({
   const isMobile = useIsMobile(768);
 
   /* ── Filtered commission list ────────────────────────────────────────── */
-  const filtered = activeCommissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
+  const filtered = activeCommissions.filter(c => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'unpaid') return c.status !== 'paid';
+    return c.status === statusFilter;
+  });
 
   /* ── Count by status for filter badges ───────────────────────────────── */
   const countByStatus = useMemo(() => {
-    const m = { all: activeCommissions.length, pending: 0, approved: 0, paid: 0 };
-    activeCommissions.forEach(c => { if (m[c.status] !== undefined) m[c.status]++; });
+    const m = { all: activeCommissions.length, unpaid: 0, approved: 0, paid: 0 };
+    activeCommissions.forEach(c => { 
+      if (c.status !== 'paid') m.unpaid++;
+      if (c.status === 'approved') m.approved++;
+      if (c.status === 'paid') m.paid++;
+    });
     return m;
   }, [activeCommissions]);
 
@@ -479,7 +487,7 @@ export default function AffiliateEarnings({
 
           {/* Filter tabs */}
           <div className="aff-filter-tabs" style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            {['all','pending','approved','paid'].map(s => (
+            {['all','unpaid','approved','paid'].map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
