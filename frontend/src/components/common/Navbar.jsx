@@ -216,7 +216,6 @@ export default function Navbar() {
   const baseNavItems = [
     { label: 'Explore',     icon: <Compass size={14} color="#7B3FA0" />,       href: '#products' },
     { label: 'Categories',  icon: <Sparkles size={14} color="#7B3FA0" />,      href: '#categories' },
-    { label: 'Showcase',    icon: <Home size={14} color="#7B3FA0" />,          href: '#home' },
   ];
 
   return (
