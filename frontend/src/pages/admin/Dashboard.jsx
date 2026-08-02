@@ -342,7 +342,7 @@ export default function Dashboard() {
             actions={
               <div className="flex items-center gap-4 sm:gap-6 pt-2 md:pt-0">
                 <div className="flex flex-col text-right">
-                  <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Pulse Health</span>
+                  <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Platform Health</span>
                   <span className="text-xs font-bold text-[#B886D0] bg-[#B886D0]/10 px-2 py-0.5 rounded mt-1 border border-[#B886D0]/20">{healthStatus || (isLoading ? '...' : 'Healthy')}</span>
                 </div>
                 <div className="flex flex-col text-right border-l border-stone-200/50 pl-4">
@@ -589,7 +589,7 @@ export default function Dashboard() {
 
             {/* Bottom operational status */}
             <div className="text-[9px] text-[#7B3FA0] flex justify-between border-t border-stone-200/50 pt-3">
-              <span>{isScanning ? `Auditing Ledger (${scanProgress}%)` : "Synaptic logs fully certified"}</span>
+              <span>{isScanning ? `Auditing Ledger (${scanProgress}%)` : "System logs verified"}</span>
               <span className="font-bold text-[#B886D0] bg-[#B886D0]/10 px-1.5 py-0.5 rounded">SECURED</span>
             </div>
           </GlassCard>

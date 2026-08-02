@@ -632,7 +632,7 @@ export default function Reports() {
                   title="Total Orders"
                   value={<CountUp value={reportData.summary.totalOrders} />}
                   icon={<Icon name="Activity" size={13} />}
-                  trend="Awaiting action"
+                  trend="Pending"
                   trendLabel=""
                   chart={
                     <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
@@ -646,7 +646,7 @@ export default function Reports() {
                   title="Critical"
                   value={<CountUp value={analytics?.criticalCount ?? 0} />}
                   icon={<Icon name="Users" size={13} />}
-                  trend="High severity"
+                  trend="High Priority"
                   trendLabel=""
                   chart={
                     <svg viewBox="0 0 100 20" className="w-full h-full overflow-visible">
@@ -685,7 +685,7 @@ export default function Reports() {
 
                 {/* Metric 6: Resolution Rate */}
                 <DashboardCard
-                  title="Resolution Rate"
+                  title="Resolved Issues"
                   value={<CountUp value={reportData.summary.conversionRate} suffix="%" decimalPlaces={1} />}
                   icon={<Icon name="Zap" size={13} />}
                   trend="Resolved / Total"
@@ -707,7 +707,7 @@ export default function Reports() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Financial Curve Matrix</h4>
-                      <h2 className="text-base font-serif font-black text-[#2D004D]">Revenue Trend Analysis</h2>
+                      <h2 className="text-base font-serif font-black text-[#2D004D]">Revenue Growth</h2>
                     </div>
                     <span className="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded uppercase tracking-wider">
                       Live Streamed
@@ -810,15 +810,15 @@ export default function Reports() {
                 <div className="lg:col-span-3 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col justify-between gap-5 relative overflow-hidden">
                   
                   <div>
-                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1">Operational Intelligence</h4>
-                    <h3 className="text-base font-serif font-black text-[#2D004D] mb-4">Synaptic AI Diagnosis</h3>
+                    <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-1">Business Overview</h4>
+                    <h3 className="text-base font-serif font-black text-[#2D004D] mb-4">Platform Health</h3>
 
                     <div className="flex flex-col gap-3.5">
                       
                       {/* Growth Meter */}
                       <div className="bg-white/50 border border-[#F3EAF8] p-4 rounded-2xl flex flex-col gap-1 shadow-sm">
                         <div className="flex justify-between items-center text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">
-                          <span>Resolution Rate</span>
+                          <span>Resolved Issues</span>
                           <span className={`font-black ${reportData.summary.conversionRate > 0 ? 'text-emerald-500' : 'text-[#C4A4D8]'}`}>
                             {reportData.summary.conversionRate > 0 ? `${reportData.summary.conversionRate}% resolved` : 'No data yet'}
                           </span>
@@ -853,7 +853,7 @@ export default function Reports() {
                           </span>
                         </div>
                         <div>
-                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">Resolution Rate</h5>
+                          <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">Resolved Issues</h5>
                           <p className="text-[8px] text-[#7B3FA0] leading-relaxed mt-0.5">
                             {reportData.summary.totalRevenue > 0
                               ? `${reportData.summary.netRevenue} of ${reportData.summary.totalRevenue} reports resolved.`
@@ -894,7 +894,7 @@ export default function Reports() {
                 <div className="glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6">
                   <div>
                     <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Product Share Matrix</h4>
-                    <h3 className="text-base font-serif font-black text-[#2D004D]">Creator Catalog Breakdown</h3>
+                    <h3 className="text-base font-serif font-black text-[#2D004D]">Product Sales</h3>
                   </div>
 
                   <div className="flex flex-col gap-4">

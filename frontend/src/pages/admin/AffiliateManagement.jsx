@@ -2285,7 +2285,7 @@ export default function AffiliateManagement() {
 
               <div className="bg-white rounded-2xl border border-[#F3EAF8] p-6 space-y-4 shadow-xs">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#7B3FA0] flex items-center gap-2">
-                  <Activity size={16} /> Operational System Telemetry
+                  <Activity size={16} /> System Activity
                 </h3>
                 <div className="space-y-3 text-xs">
                   <div className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] flex justify-between">

@@ -662,7 +662,7 @@ export default function Analytics() {
                 data !== null ? 'bg-[#2D004D] text-[#F8F3FB]' : 'text-[#7B3FA0] hover:text-[#2D004D]'
               }`}
             >
-              Telemetry Active
+              Live Data Active
             </button>
             <button
               onClick={() => handleToggleState('empty')}
@@ -706,7 +706,7 @@ export default function Analytics() {
 
               <span className="text-[10px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-3 flex items-center gap-1.5">
                 <Sparkles size={12} />
-                LUMORA TELEMETRY STREAM
+                LIVE ACTIVITY FEED
               </span>
               <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#2D004D] max-w-md leading-tight">
                 Your growth intelligence engine is collecting signals...
@@ -954,7 +954,7 @@ export default function Analytics() {
                       title: 'Dispute & Refund Auditing',
                       value: `${data.revenueAnalytics.refundRate}%`,
                       change: `${data.revenueAnalytics.refundChange}%`,
-                      desc: 'Operational dispute return rate calculated via licensing discrepancies, client returns, or automated system audits.',
+                      desc: 'Refund and return rate calculated via licensing discrepancies, client returns, or system audits.',
                       details: [
                         { label: 'Revoked Assets', value: '4 licenses' },
                         { label: 'Average Resolution Time', value: '4.2 hrs' },
@@ -1717,7 +1717,7 @@ export default function Analytics() {
                 <div className="lg:col-span-4 glass-surface rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col gap-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[8px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Real-Time telemetry</span>
+                      <span className="text-[8px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Real-Time Data</span>
                       <h3 className="text-lg font-serif font-black text-[#2D004D] mt-0.5">Live Activity Stream</h3>
                     </div>
                     {/* Live signal blinker */}
@@ -1771,7 +1771,7 @@ export default function Analytics() {
                   <div className="text-left">
                     <h5 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">SYSTEM SYNC</h5>
                     <p className="text-[11px] text-[#2D004D] font-medium mt-0.5">
-                      {isRefreshing ? 'Re-establishing secure telemetry sync...' : 'Secure node sync established. API telemetry clean.'}
+                      {isRefreshing ? 'Re-establishing real-time sync...' : 'Real-time data sync active.'}
                     </p>
                   </div>
                 </div>
