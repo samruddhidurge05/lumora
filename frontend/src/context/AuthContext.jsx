@@ -719,7 +719,7 @@ export const AuthProvider = ({ children }) => {
 
   /** Role-specific logout — clears ONLY the specified role's session */
   const logoutRole = async (targetRole = null) => {
-    const roleToLogout = targetRole || userRole || 'customer';
+    const roleToLogout = targetRole || userRole || getRouteRoleHint() || 'customer';
     const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
 
     if (auth.currentUser) {
@@ -728,34 +728,24 @@ export const AuthProvider = ({ children }) => {
       } catch (_) {}
     }
 
-    // Clear role-specific token & session storage
+    // 1. Clear role-specific token & session storage
     clearRoleSession(normRole);
 
-    // Check if other role sessions are active in localStorage
-    const roles = ['customer', 'affiliate', 'vendor', 'admin'];
-    const remainingRoles = roles.filter(r => r !== normRole && !!localStorage.getItem(`lumora_token_${r}`));
+    // 2. Clear active React state and shared tokens for this window
+    clearBackendToken();
+    clearSessionSafely();
+    setUser(null);
+    setUserRole(null);
 
-    if (remainingRoles.length === 0) {
-      // No remaining role sessions — sign out of Firebase completely
-      try { await signOut(auth); } catch (_) {}
-      clearBackendToken();
-      clearSessionSafely();
-      setUser(null);
-      setUserRole(null);
-    } else {
-      // Other role sessions remain for their respective portals.
-      const nextRole = remainingRoles[0];
-      localStorage.setItem('lumora_active_role', nextRole);
-      const nextToken = localStorage.getItem(`lumora_token_${nextRole}`);
-      if (nextToken) localStorage.setItem('lumora_backend_token', nextToken);
-      setUserRole(nextRole);
-    }
+    // 3. Sign out of Firebase so auth.currentUser is cleared
+    try { await signOut(auth); } catch (_) {}
 
+    // 4. Redirect to proper portal landing/login page
     let target = '/';
-    if (normRole === 'affiliate') target = '/auth/login?role=affiliate';
+    if (normRole === 'affiliate') target = '/partnership/affiliate';
     else if (normRole === 'vendor') target = '/auth/login?role=vendor';
     else if (normRole === 'admin') target = '/admin/login';
-    else target = '/';
+    else target = '/auth/login?role=customer';
 
     window.location.href = target;
   };
