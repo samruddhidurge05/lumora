@@ -119,13 +119,13 @@ export default function AffiliateAnalytics({ commissions }) {
   const totalSales = periodCommissions.length;
   
   // To avoid small amounts looking like huge spikes, we set a reasonable minimum max value.
-  // For earnings, if they haven't earned 5000 yet, scale relative to 5000.
+  // For earnings, if they haven't earned 200 yet, scale relative to 200.
   const rawEarningsMax = Math.max(...earningsData);
-  const earningsMax = Math.max(5000, rawEarningsMax); 
+  const earningsMax = Math.max(200, rawEarningsMax); 
 
-  // For sales, if they haven't made 10 sales yet, scale relative to 10.
+  // For sales, if they haven't made 5 sales yet, scale relative to 5.
   const rawSalesMax = Math.max(...salesData);
-  const salesMax = Math.max(10, rawSalesMax);
+  const salesMax = Math.max(5, rawSalesMax);
 
   // SVG Line Chart calculations (Earnings)
   const svgWidth = 800;
