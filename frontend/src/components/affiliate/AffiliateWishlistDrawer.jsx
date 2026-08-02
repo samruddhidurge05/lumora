@@ -10,7 +10,7 @@ const formatINR = (v) =>
     maximumFractionDigits: 0,
   }).format(Math.round(v));
 
-export default function AffiliateWishlistDrawer({ isOpen, setIsOpen }) {
+export default function AffiliateWishlistDrawer({ isOpen, setIsOpen, onSelectProduct }) {
   const { wishlist, toggleWishlist } = useApp();
 
   return (
@@ -116,13 +116,30 @@ export default function AffiliateWishlistDrawer({ isOpen, setIsOpen }) {
                 </div>
               ) : (
                 wishlist.map(item => (
-                  <div key={item.id} style={{
-                    display: 'flex', gap: '14px', alignItems: 'flex-start',
-                    padding: '14px', borderRadius: '14px',
-                    background: 'rgba(255,255,255,0.85)',
-                    border: '1px solid rgba(196,181,253,0.20)',
-                    boxShadow: '0 2px 12px rgba(90,30,126,0.04)',
-                  }}>
+                  <div key={item.id}
+                    onClick={() => onSelectProduct && onSelectProduct(item)}
+                    style={{
+                      display: 'flex', gap: '14px', alignItems: 'flex-start',
+                      padding: '14px', borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.85)',
+                      border: '1px solid rgba(196,181,253,0.20)',
+                      boxShadow: '0 2px 12px rgba(90,30,126,0.04)',
+                      cursor: onSelectProduct ? 'pointer' : 'default',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (onSelectProduct) {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(90,30,126,0.08)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (onSelectProduct) {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 2px 12px rgba(90,30,126,0.04)';
+                      }
+                    }}
+                  >
                     <img
                       src={item.preview || item.thumbnail}
                       alt={item.title}
@@ -136,7 +153,10 @@ export default function AffiliateWishlistDrawer({ isOpen, setIsOpen }) {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(item.price)}</span>
                         <button
-                          onClick={() => toggleWishlist(item)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleWishlist(item);
+                          }}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(239,68,68,0.7)', padding: '2px', display: 'flex', alignItems: 'center' }}
                         ><Trash2 size={13} /></button>
                       </div>

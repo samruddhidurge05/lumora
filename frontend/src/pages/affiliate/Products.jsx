@@ -412,6 +412,10 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       <AffiliateWishlistDrawer
         isOpen={isWishlistDrawerOpen}
         setIsOpen={setIsWishlistDrawerOpen}
+        onSelectProduct={(product) => {
+          setIsWishlistDrawerOpen(false);
+          setSelectedProduct(product);
+        }}
       />
 
       <style>{`
