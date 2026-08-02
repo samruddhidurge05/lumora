@@ -350,10 +350,18 @@ export default function Affiliate() {
                 }}>
                   Join Lumora's affiliate network and start earning commissions by recommending products people love.
                 </p>
-                <button
+                <a
+                  href={
+                    isAlreadyAffiliate
+                      ? '/affiliate/dashboard'
+                      : isLoggedInCustomer
+                        ? '/affiliate/activate'
+                        : '/auth/register?role=affiliate'
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-premium btn-premium-solid"
-                  style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={handleCTA}
+                  style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
                 >
                   {isAlreadyAffiliate
                     ? 'Go to Affiliate Dashboard'
@@ -361,7 +369,7 @@ export default function Affiliate() {
                       ? 'Activate Affiliate Access →'
                       : 'Become an Affiliate'}
                   {!isAlreadyAffiliate && !isLoggedInCustomer && <ArrowRight size={16} />}
-                </button>
+                </a>
                 {isLoggedInCustomer && (
                   <p style={{ marginTop: '14px', fontSize: '.82rem', color: '#8B7A9E' }}>
                     Uses your existing account · No new email or password required

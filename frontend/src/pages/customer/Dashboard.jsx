@@ -1310,39 +1310,43 @@ function CustomerAffiliateSection({ navigateTo }) {
             <p style={{ fontSize: '0.78rem', color: '#7B3FA0', margin: 0, lineHeight: 1.5 }}>
               Access your full Affiliate Dashboard to create custom referral links and track payout history.
             </p>
-            <button
-              onClick={() => {
-                const activeRole = localStorage.getItem('lumora_active_role');
-                const isAffiliate = userRole === 'affiliate' || userRole === 'vendor' || activeRole === 'affiliate' || activeRole === 'vendor';
-                if (!user) {
-                  window.open('/auth/register?role=affiliate', '_blank');
-                } else if (isAffiliate) {
-                  window.open('/affiliate/dashboard', '_blank');
-                } else {
-                  window.open('/affiliate/activate', '_blank');
-                }
-              }}
+            <a
+              href={
+                !user
+                  ? '/auth/register?role=affiliate'
+                  : (userRole === 'affiliate' || userRole === 'vendor' || localStorage.getItem('lumora_active_role') === 'affiliate' || localStorage.getItem('lumora_active_role') === 'vendor')
+                    ? '/affiliate/dashboard'
+                    : '/affiliate/activate'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
+                display: 'block',
                 padding: '12px 20px', borderRadius: '10px', border: 'none',
                 background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff',
                 fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(90,30,126,0.30)', fontFamily: 'var(--font-sans)',
-                marginTop: '4px', textAlign: 'center',
+                marginTop: '4px', textAlign: 'center', textDecoration: 'none',
+                boxSizing: 'border-box', width: '100%',
               }}
             >
               Open Affiliate Dashboard →
-            </button>
-            <button
-              onClick={() => window.open('/partnership/affiliate', '_blank')}
+            </a>
+            <a
+              href="/partnership/affiliate"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
+                display: 'block',
                 padding: '10px 20px', borderRadius: '10px',
                 border: '1px solid rgba(123,63,160,0.25)', background: 'transparent',
                 color: '#7B3FA0', fontWeight: 700, fontSize: '0.80rem',
                 cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'center',
+                textDecoration: 'none', boxSizing: 'border-box', width: '100%',
               }}
             >
               View Full Program Details
-            </button>
+            </a>
           </div>
         </div>
       </div>
