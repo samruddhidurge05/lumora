@@ -458,7 +458,19 @@ export const AuthProvider = ({ children }) => {
         url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${normalizedRole}`,
         handleCodeInApp: true,
       };
-      await sendEmailVerification(firebaseUser, actionCodeSettings);
+      try {
+        await backendFetch('/auth/send-verification-email', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: normalizedEmail,
+            role: normalizedRole,
+            name: fullName || firebaseUser.displayName || '',
+            url: actionCodeSettings.url,
+          })
+        });
+      } catch (backendEmailErr) {
+        await sendEmailVerification(firebaseUser, actionCodeSettings);
+      }
     } catch (verifyError) {
       console.warn("Verification email send notice:", verifyError?.message);
     }
@@ -989,11 +1001,24 @@ export const AuthProvider = ({ children }) => {
   /** Resend verification email */
   const resendVerification = async (role = 'customer') => {
     if (auth.currentUser) {
+      const normRole = role === 'user' ? 'customer' : role;
       const actionCodeSettings = {
-        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(auth.currentUser.email)}&role=${role}`,
+        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(auth.currentUser.email)}&role=${normRole}`,
         handleCodeInApp: true,
       };
-      await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      try {
+        await backendFetch('/auth/send-verification-email', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: auth.currentUser.email,
+            role: normRole,
+            name: auth.currentUser.displayName || '',
+            url: actionCodeSettings.url,
+          })
+        });
+      } catch (_) {
+        await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      }
     }
   };
 

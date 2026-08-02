@@ -457,6 +457,44 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
         )
     return MsgResponse(message="Cryptographic reset link dispatched to your email registry.")
 
+class SendVerificationEmailRequest(BaseModel):
+    email: EmailStr
+    role: Optional[str] = "customer"
+    name: Optional[str] = None
+    url: Optional[str] = None
+
+@router.post("/send-verification-email", response_model=MsgResponse)
+@limiter.limit("20/minute")
+def send_custom_verification_email(request: Request, body: SendVerificationEmailRequest):
+    email = body.email.strip().lower()
+    role = body.role or "customer"
+    name = body.name or email.split("@")[0]
+
+    verification_url = body.url or f"http://localhost:5173/auth/verify-email?email={email}&role={role}"
+    try:
+        from firebase_admin import auth as fb_admin_auth
+        action_code_settings = fb_admin_auth.ActionCodeSettings(
+            url=body.url or f"http://localhost:5173/auth/verify-email?email={email}&role={role}",
+            handle_code_in_app=True,
+        )
+        link = fb_admin_auth.generate_email_verification_link(email, action_code_settings)
+        if link:
+            verification_url = link
+    except Exception as exc:
+        pass
+
+    from app.services.email_service import send_verification_email, EmailDispatcher
+
+    EmailDispatcher.dispatch(
+        send_verification_email,
+        to_email=email,
+        user_name=name,
+        role=role,
+        verification_url=verification_url
+    )
+
+    return MsgResponse(message="Branded verification email dispatched.")
+
 # -- /verify-email -------------------------------------------------------------
 @router.post("/verify-email", response_model=MsgResponse)
 @limiter.limit("10/minute")
