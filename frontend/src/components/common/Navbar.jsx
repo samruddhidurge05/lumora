@@ -863,7 +863,7 @@ export default function Navbar() {
             zIndex: 10000,
           }}
         >
-          {navItems.map((item, index) => (
+          {baseNavItems.map((item, index) => (
             <a
               key={index}
               href={item.href}
