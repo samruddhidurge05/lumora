@@ -704,49 +704,84 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    {/* Menu Items */}
-                    {[
-                      { label: 'Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: handleDashboardClick },
-                      { label: 'Profile',   icon: <User size={15} color="#7B3FA0" />,           onClick: handleProfileNav },
-                      { label: 'Orders',    icon: <CreditCard size={15} color="#7B3FA0" />,     onClick: handleOrdersNav },
-                      { label: 'Wishlist',  icon: <Heart size={15} color="#7B3FA0" />,          onClick: handleWishlistNav },
-                      { label: 'Downloads', icon: <Download size={15} color="#7B3FA0" />,       onClick: handleDownloadsNav },
-                      { label: 'Settings',  icon: <SettingsIcon size={15} color="#7B3FA0" />,   onClick: handleSettingsNav },
-                    ].map((item, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={item.onClick}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '9px 12px',
-                          borderRadius: '12px',
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#2D004D',
-                          fontSize: '0.82rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          width: '100%',
-                          transition: 'all 0.18s ease',
-                          fontFamily: 'inherit',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
-                          e.currentTarget.style.transform = 'translateX(2px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.transform = 'translateX(0)';
-                        }}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
+                    {/* Menu Items scoped by active role */}
+                    {(() => {
+                      const activeRole = (() => {
+                        if (window.location.pathname.startsWith('/affiliate')) return 'affiliate';
+                        if (window.location.pathname.startsWith('/vendor')) return 'vendor';
+                        if (window.location.pathname.startsWith('/admin')) return 'admin';
+                        const savedRole = localStorage.getItem('lumora_active_role');
+                        if (savedRole && ['customer', 'affiliate', 'vendor', 'admin'].includes(savedRole)) return savedRole;
+                        if (localStorage.getItem('lumora_token_affiliate') && !localStorage.getItem('lumora_token_customer')) return 'affiliate';
+                        if (localStorage.getItem('lumora_token_vendor') && !localStorage.getItem('lumora_token_customer')) return 'vendor';
+                        if (localStorage.getItem('lumora_token_admin') && !localStorage.getItem('lumora_token_customer')) return 'admin';
+                        return 'customer';
+                      })();
+
+                      let items = [];
+                      if (activeRole === 'affiliate') {
+                        items = [
+                          { label: 'Affiliate Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/affiliate/dashboard'); } },
+                          { label: 'Profile & Settings', icon: <User size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/affiliate/dashboard'); } },
+                        ];
+                      } else if (activeRole === 'vendor') {
+                        items = [
+                          { label: 'Vendor Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/vendor/dashboard'); } },
+                          { label: 'Store Settings', icon: <SettingsIcon size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/vendor/store-settings'); } },
+                        ];
+                      } else if (activeRole === 'admin') {
+                        items = [
+                          { label: 'Admin Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/admin/dashboard'); } },
+                          { label: 'Platform Settings', icon: <SettingsIcon size={15} color="#7B3FA0" />, onClick: () => { setUserMenuOpen(false); navigate('/admin/settings'); } },
+                        ];
+                      } else {
+                        // Customer Role (Default)
+                        items = [
+                          { label: 'Dashboard', icon: <LayoutDashboard size={15} color="#7B3FA0" />, onClick: handleDashboardClick },
+                          { label: 'Profile',   icon: <User size={15} color="#7B3FA0" />,           onClick: handleProfileNav },
+                          { label: 'Orders',    icon: <CreditCard size={15} color="#7B3FA0" />,     onClick: handleOrdersNav },
+                          { label: 'Wishlist',  icon: <Heart size={15} color="#7B3FA0" />,          onClick: handleWishlistNav },
+                          { label: 'Downloads', icon: <Download size={15} color="#7B3FA0" />,       onClick: handleDownloadsNav },
+                          { label: 'Settings',  icon: <SettingsIcon size={15} color="#7B3FA0" />,   onClick: handleSettingsNav },
+                        ];
+                      }
+
+                      return items.map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={item.onClick}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '9px 12px',
+                            borderRadius: '12px',
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#2D004D',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            width: '100%',
+                            transition: 'all 0.18s ease',
+                            fontFamily: 'inherit',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(123, 63, 160, 0.08)';
+                            e.currentTarget.style.transform = 'translateX(2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.transform = 'translateX(0)';
+                          }}
+                        >
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </button>
+                      ));
+                    })()}
 
                     {/* Logout Option */}
                     <div style={{ borderTop: '1px solid rgba(123, 63, 160, 0.12)', marginTop: '4px', paddingTop: '4px' }}>
