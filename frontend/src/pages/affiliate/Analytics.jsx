@@ -13,7 +13,8 @@ function buildAggregatedData(commissions, filterType) {
   const today = startOfDay(now);
   
   let labels = [];
-  let data = [];
+  let earningsData = [];
+  let salesData = [];
   let startDate = new Date();
   let endDate = new Date();
 
@@ -27,7 +28,8 @@ function buildAggregatedData(commissions, filterType) {
       return d;
     });
     
-    data = new Array(7).fill(0);
+    earningsData = new Array(7).fill(0);
+    salesData = new Array(7).fill(0);
     startDate = labels[0];
     endDate = new Date(labels[6]);
     endDate.setHours(23, 59, 59, 999);
@@ -40,7 +42,8 @@ function buildAggregatedData(commissions, filterType) {
         const diffTime = Math.abs(startOfDay(d) - startDate);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays >= 0 && diffDays < 7) {
-          data[diffDays] += (c.commission_amt || 0);
+          earningsData[diffDays] += (c.commission_amt || 0);
+          salesData[diffDays] += 1;
         }
       }
     });
@@ -57,7 +60,8 @@ function buildAggregatedData(commissions, filterType) {
       return d.toLocaleString('default', { month: 'short' });
     });
 
-    data = new Array(monthsCount).fill(0);
+    earningsData = new Array(monthsCount).fill(0);
+    salesData = new Array(monthsCount).fill(0);
     
     // Set start date to the first day of the first month
     startDate = new Date(now.getFullYear(), now.getMonth() - (monthsCount - 1), 1);
@@ -69,7 +73,8 @@ function buildAggregatedData(commissions, filterType) {
       if (d >= startDate && d <= endDate) {
         const mDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
         if (mDiff >= 0 && mDiff < monthsCount) {
-          data[monthsCount - 1 - mDiff] += (c.commission_amt || 0);
+          earningsData[monthsCount - 1 - mDiff] += (c.commission_amt || 0);
+          salesData[monthsCount - 1 - mDiff] += 1;
         }
       }
     });
@@ -82,7 +87,7 @@ function buildAggregatedData(commissions, filterType) {
     return d >= startDate && d <= endDate;
   });
 
-  return { labels, data, periodCommissions };
+  return { labels, earningsData, salesData, periodCommissions };
 }
 
 // Top Products Aggregation
@@ -101,30 +106,38 @@ function buildTopProducts(periodCommissions) {
 
 export default function AffiliateAnalytics({ commissions }) {
   const [timeFilter, setTimeFilter] = useState('12-months');
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, value: 0, label: '' });
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, value: 0, label: '', format: 'currency' });
 
-  const { labels, data: chartData, periodCommissions } = useMemo(
+  const { labels, earningsData, salesData, periodCommissions } = useMemo(
     () => buildAggregatedData(commissions, timeFilter),
     [commissions, timeFilter]
   );
 
   const topProducts = useMemo(() => buildTopProducts(periodCommissions), [periodCommissions]);
 
-  const chartTotal = useMemo(() => chartData.reduce((a, b) => a + b, 0), [chartData]);
-  const chartMax = useMemo(() => Math.max(0, ...chartData), [chartData]);
+  const totalEarnings = useMemo(() => earningsData.reduce((a, b) => a + b, 0), [earningsData]);
   const totalSales = periodCommissions.length;
+  
+  // To avoid small amounts looking like huge spikes, we set a reasonable minimum max value.
+  // For earnings, if they haven't earned 5000 yet, scale relative to 5000.
+  const rawEarningsMax = Math.max(...earningsData);
+  const earningsMax = Math.max(5000, rawEarningsMax); 
 
-  // SVG Line Chart calculations
+  // For sales, if they haven't made 10 sales yet, scale relative to 10.
+  const rawSalesMax = Math.max(...salesData);
+  const salesMax = Math.max(10, rawSalesMax);
+
+  // SVG Line Chart calculations (Earnings)
   const svgWidth = 800;
   const svgHeight = 180;
   
-  const points = chartData.map((val, i) => {
-    const x = chartData.length > 1 ? (i / (chartData.length - 1)) * svgWidth : svgWidth / 2;
-    const y = chartMax > 0 ? svgHeight - ((val / chartMax) * (svgHeight - 20)) - 10 : svgHeight - 10;
+  const points = earningsData.map((val, i) => {
+    const x = earningsData.length > 1 ? (i / (earningsData.length - 1)) * svgWidth : svgWidth / 2;
+    const y = earningsMax > 0 ? svgHeight - ((val / earningsMax) * (svgHeight - 20)) - 10 : svgHeight - 10;
     return `${x},${y}`;
   }).join(' ');
 
-  const polygonPoints = chartData.length > 1 
+  const polygonPoints = earningsData.length > 1 
     ? `0,${svgHeight} ${points} ${svgWidth},${svgHeight}` 
     : `${svgWidth/2},${svgHeight} ${points} ${svgWidth/2},${svgHeight}`;
 
@@ -168,7 +181,7 @@ export default function AffiliateAnalytics({ commissions }) {
           </div>
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Earnings ({filterLabels[timeFilter]})</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#3b0764', marginTop: '2px' }}>{formatINR(chartTotal)}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#3b0764', marginTop: '2px' }}>{formatINR(totalEarnings)}</div>
           </div>
         </div>
         
@@ -195,7 +208,7 @@ export default function AffiliateAnalytics({ commissions }) {
           </div>
         </div>
 
-        {chartTotal === 0 ? (
+        {totalEarnings === 0 ? (
           <div style={{ height: '220px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '16px' }}>
             <TrendingUp size={32} style={{ color: 'rgba(196,181,253,0.70)' }} />
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>No earnings recorded during this period.</span>
@@ -206,7 +219,7 @@ export default function AffiliateAnalytics({ commissions }) {
               viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
               style={{ width: '100%', height: '180px', overflow: 'visible' }} 
               preserveAspectRatio="none"
-              onMouseLeave={() => setTooltip({ visible: false, x: 0, y: 0, value: 0, label: '' })}
+              onMouseLeave={() => setTooltip({ visible: false, x: 0, y: 0, value: 0, label: '', format: 'currency' })}
             >
               <defs>
                 <linearGradient id="lineGradient" x1="0" x2="0" y1="0" y2="1">
@@ -235,10 +248,10 @@ export default function AffiliateAnalytics({ commissions }) {
               />
               
               {/* Data points */}
-              {chartData.map((val, i) => {
-                if (val === 0 && chartMax > 0) return null; // Only show dots for actual data if there's data
-                const x = chartData.length > 1 ? (i / (chartData.length - 1)) * svgWidth : svgWidth / 2;
-                const y = chartMax > 0 ? svgHeight - ((val / chartMax) * (svgHeight - 20)) - 10 : svgHeight - 10;
+              {earningsData.map((val, i) => {
+                if (val === 0 && rawEarningsMax > 0) return null; // Only show dots for actual data if there's data
+                const x = earningsData.length > 1 ? (i / (earningsData.length - 1)) * svgWidth : svgWidth / 2;
+                const y = earningsMax > 0 ? svgHeight - ((val / earningsMax) * (svgHeight - 20)) - 10 : svgHeight - 10;
                 
                 return (
                   <g 
@@ -251,7 +264,8 @@ export default function AffiliateAnalytics({ commissions }) {
                         x: rect.left - parentRect.left + (rect.width / 2),
                         y: rect.top - parentRect.top,
                         value: val,
-                        label: labels[i]
+                        label: labels[i],
+                        format: 'currency'
                       });
                     }}
                     style={{ cursor: 'pointer' }}
@@ -285,7 +299,9 @@ export default function AffiliateAnalytics({ commissions }) {
                 minWidth: '80px'
               }}>
                 <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>{tooltip.label}</span>
-                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(tooltip.value)}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#3b0764' }}>
+                  {tooltip.format === 'currency' ? formatINR(tooltip.value) : `${tooltip.value} Sales`}
+                </span>
               </div>
             )}
 
@@ -305,19 +321,19 @@ export default function AffiliateAnalytics({ commissions }) {
         <div className="premium-flat-card" style={{ padding: '28px' }}>
           <div style={{ marginBottom: '24px' }}>
             <span className="caption-premium" style={{ color: '#7B3FA0' }}>Comparison</span>
-            <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)' }}>Period Breakdown</h3>
+            <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)' }}>Sales Breakdown</h3>
           </div>
 
-          {chartTotal === 0 ? (
+          {totalSales === 0 ? (
             <div style={{ height: '180px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px dashed rgba(196,181,253,0.35)', borderRadius: '12px' }}>
               <BarChart2 size={24} style={{ color: 'rgba(196,181,253,0.70)' }} />
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No data</span>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px', position: 'relative' }}>
-              {chartData.map((val, i) => {
-                const pct = (val / chartMax) * 100;
-                const isHighest = val === chartMax && val > 0;
+              {salesData.map((val, i) => {
+                const pct = (val / salesMax) * 100;
+                const isHighest = val === rawSalesMax && val > 0;
                 return (
                   <div 
                     key={i} 
@@ -341,7 +357,7 @@ export default function AffiliateAnalytics({ commissions }) {
                       minWidth: '60px'
                     }}>
                       <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)' }}>{labels[i]}</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(val)}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b0764' }}>{val} Sales</span>
                     </div>
 
                     <div
