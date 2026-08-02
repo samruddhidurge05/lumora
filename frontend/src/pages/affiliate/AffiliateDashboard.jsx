@@ -144,9 +144,20 @@ function AffiliateDashboardInner() {
     return () => clearInterval(interval);
   }, [user, payouts]);
 
-  const handleExit = async () => {
-    try { await logout(); } catch (e) { /* ignore */ }
+  const handleBackToWebsite = () => {
     navigate('/');
+  };
+
+  const handleAffiliateLogout = async () => {
+    try {
+      if (typeof logoutRole === 'function') {
+        await logoutRole('affiliate');
+      } else {
+        await logout();
+      }
+    } catch (e) {
+      navigate('/auth/login?role=affiliate');
+    }
   };
 
   // Don't render until auth resolved
@@ -281,13 +292,13 @@ function AffiliateDashboardInner() {
           })}
         </nav>
 
-        {/* Bottom: Exit */}
-        <div style={{ padding: '16px 14px 28px', borderTop: '1px solid rgba(196,181,253,0.16)' }}>
+        {/* Bottom: Back to Website & Logout */}
+        <div style={{ padding: '16px 14px 28px', borderTop: '1px solid rgba(196,181,253,0.16)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button
-            onClick={handleExit}
+            onClick={handleBackToWebsite}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '11px 14px', borderRadius: '12px',
+              padding: '10px 14px', borderRadius: '12px',
               border: 'none', outline: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-sans)', fontSize: '0.84rem', fontWeight: 600,
               color: 'var(--text-muted)', background: 'transparent',
@@ -297,8 +308,26 @@ function AffiliateDashboardInner() {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(45,0,96,0.03)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
+            <ArrowLeft size={16} />
+            Back to Website
+          </button>
+
+          <button
+            onClick={handleAffiliateLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '10px 14px', borderRadius: '12px',
+              border: '1px solid rgba(239,68,68,0.20)', outline: 'none', cursor: 'pointer',
+              fontFamily: 'var(--font-sans)', fontSize: '0.84rem', fontWeight: 600,
+              color: '#DC2626', background: 'rgba(239,68,68,0.04)',
+              width: '100%', textAlign: 'left',
+              transition: 'all 0.22s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.04)'; }}
+          >
             <LogOut size={16} />
-            Exit Dashboard
+            Logout Affiliate
           </button>
         </div>
       </aside>

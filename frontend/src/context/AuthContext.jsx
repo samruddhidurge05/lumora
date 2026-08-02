@@ -708,6 +708,43 @@ export const AuthProvider = ({ children }) => {
 
 
 
+  /** Role-specific logout — clears ONLY the specified role's session */
+  const logoutRole = async (targetRole = null) => {
+    const roleToLogout = targetRole || userRole || 'customer';
+    const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
+
+    // Clear role-specific token & session
+    clearRoleSession(normRole);
+
+    // Check if other role sessions are active
+    const roles = ['customer', 'affiliate', 'vendor', 'admin'];
+    const otherRoles = roles.filter(r => r !== normRole);
+    const hasOtherSession = otherRoles.some(r => !!localStorage.getItem(`lumora_token_${r}`));
+
+    if (!hasOtherSession) {
+      // If no other role session remains, perform full Firebase sign-out
+      try {
+        if (auth.currentUser) {
+          await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, `logout_${normRole}`, true);
+          await signOut(auth);
+        }
+      } catch (_) {}
+      clearBackendToken();
+      clearSessionSafely();
+      setUser(null);
+      setUserRole(null);
+    }
+
+    // Redirect to the appropriate portal/login for the logged out role
+    let target = '/';
+    if (normRole === 'affiliate') target = '/auth/login?role=affiliate';
+    else if (normRole === 'vendor') target = '/auth/login?role=vendor';
+    else if (normRole === 'admin') target = '/admin/login';
+    else target = '/auth/login?role=customer';
+
+    window.location.replace(target);
+  };
+
   /** Logout — production-level full session teardown */
   async function logout() {    const wasAdmin = userRole === 'admin';
 
@@ -1023,6 +1060,7 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
+    logoutRole,
     googleSignIn,
     githubSignIn,
     sendPasswordReset,

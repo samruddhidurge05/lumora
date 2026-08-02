@@ -101,23 +101,19 @@ export default function ProtectedRoute({
     return <Navigate to={`/auth/verify-email?email=${encodeURIComponent(user.email)}&role=${userRole || 'customer'}`} replace />;
   }
 
-  // Role guard — only enforce once userRole is fully resolved from the backend.
+  // Role guard — allow access if user state or role-scoped session token matches requiredRole
   if (requiredRole) {
-    if (!userRole) {
-      // Role not yet known — wait rather than redirect
-      return <PageLoader />;
-    }
-
-    // Normalise requiredRole to an array for uniform comparison
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const hasRoleInState = userRole && allowed.includes(userRole);
+    const hasRoleToken = allowed.some(r => {
+      const norm = r === 'user' ? 'customer' : r;
+      return !!localStorage.getItem(`lumora_token_${norm}`);
+    });
 
-    if (!allowed.includes(userRole)) {
-      const correctPath =
-        userRole === 'affiliate' ? '/affiliate/dashboard'
-        : userRole === 'vendor'  ? '/vendor/dashboard'
-        : userRole === 'admin'   ? '/admin/dashboard'
-        : '/customer/dashboard';
-      return <Navigate to={correctPath} replace />;
+    if (!hasRoleInState && !hasRoleToken) {
+      const targetRole = allowed[0] || 'customer';
+      const redirectUrl = targetRole === 'admin' ? '/admin/login' : `/auth/login?role=${targetRole}`;
+      return <Navigate to={redirectUrl} replace />;
     }
   }
 

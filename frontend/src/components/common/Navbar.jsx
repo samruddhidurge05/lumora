@@ -10,7 +10,7 @@ import { db } from '../../services/firebase';
 export default function Navbar() {
   const { navigateTo, currentView, cart, platformStatus, setDashboardTab } = useApp();
   const isPlatformPaused = platformStatus?.isPlatformPaused;
-  const { user, logout } = useAuth();
+  const { user, logout, logoutRole } = useAuth();
   const { vendor_enabled } = useFeatureFlags();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -60,7 +60,11 @@ export default function Navbar() {
   const closeMobile = () => setMobileOpen(false);
 
   const handleLogout = async () => {
-    await logout();
+    if (typeof logoutRole === 'function') {
+      await logoutRole('customer');
+    } else {
+      await logout();
+    }
     navigate('/');
     closeMobile();
   };

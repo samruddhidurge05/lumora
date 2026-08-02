@@ -95,8 +95,41 @@ export function buildBackendUrl(endpoint = '') {
  * @param {RequestInit} options  fetch options (method, body, headers, …)
  * @param {boolean} _isRetry  internal flag to prevent infinite retry loop
  */
+export const getRoleToken = (targetRole) => {
+  if (targetRole) {
+    const normRole = targetRole === 'user' ? 'customer' : targetRole;
+    const token = localStorage.getItem(`lumora_token_${normRole}`);
+    if (token) return token;
+  }
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/affiliate')) {
+      const t = localStorage.getItem('lumora_token_affiliate');
+      if (t) return t;
+    }
+    if (path.startsWith('/vendor')) {
+      const t = localStorage.getItem('lumora_token_vendor');
+      if (t) return t;
+    }
+    if (path.startsWith('/admin')) {
+      const t = localStorage.getItem('lumora_token_admin');
+      if (t) return t;
+    }
+    if (path.startsWith('/customer')) {
+      const t = localStorage.getItem('lumora_token_customer');
+      if (t) return t;
+    }
+  }
+  const activeRole = localStorage.getItem('lumora_active_role');
+  if (activeRole) {
+    const t = localStorage.getItem(`lumora_token_${activeRole}`);
+    if (t) return t;
+  }
+  return localStorage.getItem('lumora_backend_token');
+};
+
 export const backendFetch = async (endpoint, options = {}, _isRetry = false) => {
-  const token = localStorage.getItem('lumora_backend_token');
+  const token = getRoleToken();
 
   const headers = {
     ...options.headers,

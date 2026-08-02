@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Copy, Check, Edit3, Save, User, CreditCard, Link2,
   Shield, AlertCircle, RefreshCw, Activity, TrendingUp,
-  DollarSign, MousePointerClick, ShoppingBag, Calendar,
+  DollarSign, MousePointerClick, ShoppingBag, Calendar, LogOut,
   X, Globe, Target, Users, Settings, MessageCircle, Monitor, Youtube, Instagram, Twitter, Linkedin, Github, Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -27,7 +27,7 @@ export default function AffiliateProfile({
   error: parentError,
   refresh,
 }) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logoutRole, logout } = useAuth();
 
   /* ── Payment & New Profile draft state ───────────────────── */
   const [draft, setDraft]       = useState({ 
@@ -854,6 +854,39 @@ export default function AffiliateProfile({
           })}
         </div>
       )}
+
+      {/* ── AFFILIATE SESSION LOGOUT ────────────────────────────────────────── */}
+      <div className="premium-flat-card" style={{ padding: '24px 32px', marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #EF4444' }}>
+        <div>
+          <span className="caption-premium" style={{ color: '#EF4444' }}>Session Management</span>
+          <h3 className="text-editorial" style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 2px' }}>Affiliate Session Logout</h3>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+            Sign out of your Affiliate account session. Your Customer and other role sessions will remain active and untouched.
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              if (typeof logoutRole === 'function') {
+                await logoutRole('affiliate');
+              } else {
+                await logout();
+              }
+            } catch (_) {}
+          }}
+          style={{
+            padding: '11px 20px', borderRadius: '12px',
+            background: 'rgba(239,68,68,0.08)', color: '#DC2626',
+            border: '1px solid rgba(239,68,68,0.25)', fontWeight: 700,
+            fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.16)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+        >
+          <LogOut size={16} /> Logout Affiliate Account
+        </button>
+      </div>
 
       <style>{`
         @media (max-width: 640px) { .aff-span-full { grid-column: span 1 !important; } }
