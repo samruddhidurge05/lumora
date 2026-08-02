@@ -18,14 +18,7 @@
  *   - Returns the result
  */
 
-import { getBackendOrigin } from '../utils/api.js';
-
-const BACKEND_URL = (() => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return `${getBackendOrigin()}/api`;
-  }
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-})();
+import { BACKEND_URL } from '../utils/urlUtils.js';
 
 /**
  * Exchange a Firebase ID Token for a Lumora admin backend JWT.
