@@ -414,9 +414,47 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
-        const err = new Error('An account with this email already exists. Please sign in instead.');
-        err.code = 'auth/email-already-in-use';
-        throw err;
+        // Email already exists in Firebase Auth.
+        // Attempt sign-in with password to verify ownership before attaching the new role.
+        try {
+          const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+          firebaseUser = cred.user;
+        } catch (signInErr) {
+          const err = new Error(`An account with this email already exists. Please enter your existing account password to add the ${normalizedRole} role.`);
+          err.code = 'auth/email-already-in-use-wrong-password';
+          throw err;
+        }
+
+        // Check if user ALREADY has the target role
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        const userSnap = await getDoc(userRef);
+        const existingRoles = userSnap.exists() ? (userSnap.data().roles || [userSnap.data().role || 'customer']) : [];
+
+        let alreadyHasRole = existingRoles.includes(normalizedRole);
+        if (!alreadyHasRole) {
+          if (normalizedRole === 'affiliate') {
+            const affSnap = await getDoc(doc(db, 'affiliates', firebaseUser.uid));
+            if (affSnap.exists()) alreadyHasRole = true;
+          } else if (normalizedRole === 'vendor') {
+            const venSnap = await getDoc(doc(db, 'vendors', firebaseUser.uid));
+            if (venSnap.exists()) alreadyHasRole = true;
+          } else if (normalizedRole === 'customer') {
+            const custSnap = await getDoc(doc(db, 'customers', firebaseUser.uid));
+            if (custSnap.exists()) alreadyHasRole = true;
+          }
+        }
+
+        if (alreadyHasRole) {
+          // User ALREADY has this specific role — block duplicate registration within the SAME role
+          try { await signOut(auth); } catch (_) {}
+          clearBackendToken();
+          const msg = normalizedRole === 'customer'
+            ? 'An account with this email already exists. Please sign in instead.'
+            : `You already have an ${normalizedRole} account. Please sign in.`;
+          const err = new Error(msg);
+          err.code = 'auth/role-already-exists';
+          throw err;
+        }
       } else {
         throw createErr;
       }
@@ -432,7 +470,7 @@ export const AuthProvider = ({ children }) => {
 
     const userData = {
       uid: firebaseUser.uid,
-      fullName,
+      fullName: fullName || firebaseUser.displayName || '',
       email: firebaseUser.email,
       photoURL: firebaseUser.photoURL || null,
       provider: 'password',
@@ -458,7 +496,7 @@ export const AuthProvider = ({ children }) => {
     // Write specific profile to its distinct database collection
     const specificData = {
       uid: firebaseUser.uid,
-      fullName,
+      fullName: fullName || firebaseUser.displayName || '',
       email: firebaseUser.email,
       role: normalizedRole,
       createdAt: serverTimestamp(),
@@ -466,14 +504,16 @@ export const AuthProvider = ({ children }) => {
     };
 
     if (normalizedRole === 'vendor') {
-      await setDoc(doc(db, 'vendors', firebaseUser.uid), specificData);
+      const venDocRef = doc(db, 'vendors', firebaseUser.uid);
+      const venDocSnap = await getDoc(venDocRef);
+      if (!venDocSnap.exists()) {
+        await setDoc(venDocRef, specificData);
+      }
     } else if (normalizedRole === 'affiliate') {
       // Auto create or reuse affiliate doc
       const affDocRef = doc(db, 'affiliates', firebaseUser.uid);
       const affDocSnap = await getDoc(affDocRef);
       if (!affDocSnap.exists()) {
-     // Generate a unique code without reading the entire affiliates collection
-        // (collection-level getDocs is denied by Firestore rules for non-admins)
         const code = 'AFF' + Date.now().toString(36).toUpperCase().slice(-6);
         await setDoc(affDocRef, {
           userId: firebaseUser.uid,
@@ -487,12 +527,16 @@ export const AuthProvider = ({ children }) => {
           pendingCommission: 0,
           paidCommission: 0,
           createdAt: new Date().toISOString(),
-          fullName,
+          fullName: fullName || firebaseUser.displayName || '',
           email: firebaseUser.email,
         });
       }
     } else {
-      await setDoc(doc(db, 'customers', firebaseUser.uid), specificData);
+      const custDocRef = doc(db, 'customers', firebaseUser.uid);
+      const custDocSnap = await getDoc(custDocRef);
+      if (!custDocSnap.exists()) {
+        await setDoc(custDocRef, specificData);
+      }
     }
 
     await syncWithBackend(firebaseUser, normalizedRole);
