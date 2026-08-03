@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Optional, List
 
 
@@ -9,6 +10,7 @@ class VendorProfileSchema(BaseModel):
     storeName:   Optional[str] = ""
     storeBio:    Optional[str] = ""
     storeUrl:    Optional[str] = ""
+    # website/github/twitter kept for backward-compat (StoreSettings still uses them)
     website:     Optional[str] = ""
     country:     Optional[str] = ""
     github:      Optional[str] = ""
@@ -20,6 +22,123 @@ class VendorProfileSchema(BaseModel):
     bankName:          Optional[str] = None
     accountNumber:     Optional[str] = None
     ifscCode:          Optional[str] = None
+
+    @field_validator("displayName")
+    @classmethod
+    def validate_display_name(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 3:
+            raise ValueError("Display name must be at least 3 characters.")
+        if len(v) > 50:
+            raise ValueError("Display name must be at most 50 characters.")
+        if not re.match(r"^[\w\s.\-']+$", v, re.UNICODE):
+            raise ValueError("Display name contains invalid characters.")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        v = v.strip()
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", v):
+            raise ValueError("Enter a valid email address.")
+        return v
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return v
+        cleaned = v.strip()
+        if not re.match(r"^\d{10}$", cleaned):
+            raise ValueError("Phone number must be exactly 10 digits.")
+        return cleaned
+
+    @field_validator("storeName")
+    @classmethod
+    def validate_store_name(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return v
+        v = v.strip()
+        if len(v) < 3:
+            raise ValueError("Store name must be at least 3 characters.")
+        if len(v) > 50:
+            raise ValueError("Store name must be at most 50 characters.")
+        if not re.match(r"^[\w\s\-_]+$", v):
+            raise ValueError("Store name: letters, numbers, spaces, hyphens and underscores only.")
+        return v
+
+    @field_validator("storeUrl")
+    @classmethod
+    def validate_store_url(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return v
+        v = v.strip()
+        if not re.match(r"^https?://[^\s/$.?#].[^\s]*$", v):
+            raise ValueError("Store URL must be a valid URL (e.g. https://mystore.com).")
+        return v
+
+    @field_validator("storeBio")
+    @classmethod
+    def validate_store_bio(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return v
+        if len(v.strip()) == 0 and len(v) > 0:
+            raise ValueError("Bio cannot be only whitespace.")
+        if len(v) > 500:
+            raise ValueError("Bio must be at most 500 characters.")
+        return v
+
+    @field_validator("upiId")
+    @classmethod
+    def validate_upi(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        v = v.strip()
+        if not re.match(r"^[\w.\-]{2,}@[\w]{2,}$", v):
+            raise ValueError("UPI ID must be in format name@bank (e.g. john@ybl).")
+        return v
+
+    @field_validator("accountHolderName")
+    @classmethod
+    def validate_holder_name(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        v = v.strip()
+        if not re.match(r"^[a-zA-Z\s]+$", v):
+            raise ValueError("Account holder name: letters and spaces only.")
+        return v
+
+    @field_validator("bankName")
+    @classmethod
+    def validate_bank_name(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        v = v.strip()
+        if re.match(r"^\d+$", v):
+            raise ValueError("Bank name cannot be numbers only.")
+        if not re.match(r"^[a-zA-Z\s&().,\-]+$", v):
+            raise ValueError("Bank name contains invalid characters.")
+        return v
+
+    @field_validator("accountNumber")
+    @classmethod
+    def validate_account_number(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        v = v.strip()
+        if not re.match(r"^\d{9,18}$", v):
+            raise ValueError("Account number must be 9–18 digits.")
+        return v
+
+    @field_validator("ifscCode")
+    @classmethod
+    def validate_ifsc(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        v = v.strip().upper()
+        if not re.match(r"^[A-Z]{4}0[A-Z0-9]{6}$", v):
+            raise ValueError("IFSC must be in format ABCD0123456 (e.g. SBIN0001234).")
+        return v
 
 
 class StoreSettingsSchema(BaseModel):

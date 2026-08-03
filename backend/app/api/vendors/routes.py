@@ -14,6 +14,8 @@ GET  /vendors/{vendor_id}/products       ? products listed by this vendor
 """
 from typing import cast
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from app.dependencies import get_current_vendor
 from admin.validators.status_checks import verify_vendor_active
 from .services import (
@@ -147,7 +149,10 @@ def vendor_profile(vendor_id: str, vendor: dict = Depends(get_current_vendor), _
 def update_vendor_profile(vendor_id: str, body: VendorProfileSchema, vendor: dict = Depends(get_current_vendor), _active = Depends(verify_vendor_active)):
     if vendor.get("uid") != vendor_id:
         raise HTTPException(status_code=403, detail="Not authorized to modify this vendor profile")
-    return save_vendor_profile(vendor_id, body.model_dump())
+    try:
+        return save_vendor_profile(vendor_id, body.model_dump())
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @router.put("/{vendor_id}/store-settings")
