@@ -1348,7 +1348,7 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
 export default function AffiliateManagement() {
   // RESTORED SIMPLIFIED 6-TAB STRUCTURE (NO DUPLICATES)
   const TABS = [
-    { id: 'overview',   label: 'Executive Overview',     icon: BarChart3 },
+    { id: 'overview',   label: 'Overview',               icon: BarChart3 },
     { id: 'payouts',    label: 'Payout Requests',        icon: Wallet },
     { id: 'promoters',  label: 'Promoters',              icon: Users },
     { id: 'products',   label: 'Products & Commission',  icon: ShoppingBag },
@@ -1887,8 +1887,8 @@ export default function AffiliateManagement() {
                       <th className="py-3.5 px-4">Promoter</th>
                       <th className="py-3.5 px-4">Code & Tier</th>
                       <th className="py-3.5 px-4 text-right">Lifetime Revenue</th>
-                      <th className="py-3.5 px-4 text-right">Lifetime Comm.</th>
-                      <th className="py-3.5 px-4 text-right">Pending</th>
+                      <th className="py-3.5 px-4 text-right">Total Commission</th>
+                      <th className="py-3.5 px-4 text-right">Pending Payout</th>
                       <th className="py-3.5 px-4 text-center">Status</th>
                       <th className="py-3.5 px-4 text-center">Actions</th>
                     </tr>

@@ -9,7 +9,7 @@ export function PageHeader({ title, subtitle, actions }) {
       <div className="flex-1 min-w-0 max-w-full">
         <div className="flex items-center gap-3 mb-1 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
-            MARKETPLACE ADMINISTRATION
+            ADMIN PORTAL
           </span>
         </div>
         <h1 className="text-lg sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1 break-words">
@@ -543,3 +543,30 @@ export function AdminSelect({
     </div>
   );
 }
+
+// ─── 10. STATUS BADGE ──────────────────────────────────────────────────────
+// Standardized Enterprise Status Pill with color mapping & high contrast
+export function StatusBadge({ status, label, type }) {
+  const normalized = (status || label || '').toString().toLowerCase();
+  
+  let badgeClass = "admin-badge-neutral";
+  if (type === 'success' || ['active', 'completed', 'approved', 'converted', 'paid', 'success', 'published'].includes(normalized)) {
+    badgeClass = "admin-badge-success";
+  } else if (type === 'warning' || ['pending', 'processing', 'under_review', 'requested', 'draft'].includes(normalized)) {
+    badgeClass = "admin-badge-warning";
+  } else if (type === 'danger' || ['failed', 'rejected', 'cancelled', 'banned', 'disabled', 'refunded', 'critical', 'high priority', 'high_priority'].includes(normalized)) {
+    badgeClass = "admin-badge-danger";
+  } else if (type === 'info' || ['info', 'viewed', 'clicked', 'authenticated'].includes(normalized)) {
+    badgeClass = "admin-badge-info";
+  }
+
+  const displayText = label || (normalized.charAt(0).toUpperCase() + normalized.slice(1).replace(/_/g, ' '));
+
+  return (
+    <span className={`admin-badge ${badgeClass}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-75 shrink-0" />
+      <span>{displayText}</span>
+    </span>
+  );
+}
+

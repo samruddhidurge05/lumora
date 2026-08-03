@@ -643,7 +643,7 @@ export default function Reports() {
 
                 {/* Metric 3: Critical Reports */}
                 <DashboardCard
-                  title="Critical"
+                  title="High Priority Reports"
                   value={<CountUp value={analytics?.criticalCount ?? 0} />}
                   icon={<Icon name="Users" size={13} />}
                   trend="High Priority"
@@ -864,7 +864,7 @@ export default function Reports() {
 
                       {/* Risk Alert Indicator */}
                       <div className="flex items-center justify-between border-t border-[#F5E9DD]/40 pt-4">
-                        <span className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">Critical Reports</span>
+                        <span className="text-[9px] font-bold text-[#7B3FA0] uppercase tracking-wider">High Priority Reports</span>
                         <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
                           (analytics?.criticalCount ?? 0) > 0
                             ? 'text-red-600 bg-red-100 border border-red-200'
