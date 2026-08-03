@@ -148,7 +148,7 @@ export default function CustomerWishlist() {
           <Heart size={44} style={{ color: 'rgba(123,63,160,0.25)', margin: '0 auto 12px' }} />
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No saved items yet</h3>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>Save your favorite templates, tools, and UI kits to access them anytime.</p>
-          <button onClick={() => navigateTo('marketplace')} style={{ marginTop: '20px', padding: '10px 24px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)' }}>Browse Marketplace</button>
+          <button onClick={() => navigateTo('marketplace')} style={{ marginTop: '20px', padding: '10px 24px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)' }}>Explore Products</button>
         </div>
       ) : (
         /* Wishlist Items Grid */

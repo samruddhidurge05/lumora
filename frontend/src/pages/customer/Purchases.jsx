@@ -231,7 +231,7 @@ export default function CustomerPurchases() {
       {loading ? (
         <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#7B3FA0', fontSize: '0.88rem', fontWeight: 600 }}>
           <Clock size={16} style={{ animation: 'spin 2s linear infinite' }} />
-          <span>Fetching backend purchase history...</span>
+          <span>Loading your purchases...</span>
         </div>
       ) : orders.length === 0 ? (
         /* Empty State */
@@ -245,12 +245,12 @@ export default function CustomerPurchases() {
         }}>
           <ShoppingBag size={44} style={{ color: 'rgba(123,63,160,0.30)', margin: '0 auto 16px' }} />
           <h3 style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.1rem' }}>No purchase history found</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '6px', maxWidth: '400px', margin: '6px auto 0' }}>You haven't completed any digital asset transactions yet. Explore our curated library of premium templates and modules.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '6px', maxWidth: '400px', margin: '6px auto 0' }}>You haven't bought any products yet. Explore our library of premium templates and tools.</p>
           <button 
             onClick={() => navigateTo('marketplace')} 
             style={{ marginTop: '24px', padding: '10px 24px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)' }}
           >
-            Browse Marketplace
+            Explore Products
           </button>
         </div>
       ) : filteredOrders.length === 0 ? (

@@ -29,7 +29,7 @@ export default function CustomerOrders() {
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Could not load customer orders from backend.');
+      setError("Couldn't load your orders. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function CustomerOrders() {
         <div>
           <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '0.08em' }}>PURCHASE HISTORY</span>
           <h2 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, marginTop: '2px', color: 'var(--text-primary)' }}>My Orders</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Managing {orders.length} verified customer transactions</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{orders.length} orders total</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function CustomerOrders() {
       {loading ? (
         <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#7B3FA0', fontSize: '0.88rem', fontWeight: 600 }}>
           <Clock size={16} style={{ animation: 'spin 2s linear infinite' }} />
-          <span>Loading customer orders from backend...</span>
+          <span>Loading your orders...</span>
         </div>
       ) : orders.length === 0 ? (
         /* Empty state */
@@ -92,7 +92,7 @@ export default function CustomerOrders() {
           <ShoppingBag size={44} style={{ color: 'rgba(123,63,160,0.25)', margin: '0 auto 12px' }} />
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No orders found</h3>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>You haven't placed any orders yet. Explore our digital marketplace catalog.</p>
-          <button onClick={() => navigateTo('marketplace')} style={{ marginTop: '20px', padding: '10px 24px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)' }}>Browse Marketplace</button>
+          <button onClick={() => navigateTo('marketplace')} style={{ marginTop: '20px', padding: '10px 24px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)' }}>Explore Products</button>
         </div>
       ) : (
         /* Orders List */
