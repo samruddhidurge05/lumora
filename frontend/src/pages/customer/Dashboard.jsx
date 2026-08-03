@@ -809,6 +809,9 @@ function DashboardHome({
     { label: 'Orders',          value: String(stats?.ordersCount ?? 4),     icon: <CreditCard size={15}/>, trend: 'Completed' },
   ];
 
+  const [expandPurchases, setExpandPurchases] = React.useState(false);
+  const [expandAlerts, setExpandAlerts] = React.useState(false);
+
   const visibleProducts = filtered.slice(0, showCount);
   const hasMore = filtered.length > showCount;
 
@@ -885,42 +888,58 @@ function DashboardHome({
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
         {/* Recent Purchases */}
-        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShoppingBag size={15} style={{ color: '#7B3FA0' }} /> Recent Purchases
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+              <ShoppingBag size={14} style={{ color: '#7B3FA0' }} /> Recent Purchases
             </h4>
-            <button onClick={() => navigateTo('purchases')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>View All</button>
+            <button
+              onClick={() => setExpandPurchases(prev => !prev)}
+              style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+            >
+              {expandPurchases ? 'Show Less ▲' : 'View All ▼'}
+            </button>
           </div>
           {recentOrders && recentOrders.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {recentOrders.slice(0, 2).map((ord, idx) => (
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: '8px',
+              maxHeight: expandPurchases ? '220px' : 'none',
+              overflowY: expandPurchases ? 'auto' : 'visible',
+              paddingRight: expandPurchases ? '4px' : '0px',
+              transition: 'all 0.3s ease'
+            }}>
+              {(expandPurchases ? recentOrders : recentOrders.slice(0, 1)).map((ord, idx) => (
                 <div key={ord.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '0.80rem', fontWeight: 700, color: 'var(--text-primary)' }}>Order #{ord.id}</div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}>Order #{ord.id}</div>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount != null ? ord.total_amount : 0)}</div>
-                    <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.10)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{ord.status || 'Completed'}</span>
+                    <div style={{ fontSize: '0.80rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount != null ? ord.total_amount : 0)}</div>
+                    <span style={{ fontSize: '0.56rem', fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.10)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{ord.status || 'Completed'}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+            <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
               No recent order history recorded yet.
             </div>
           )}
         </div>
 
         {/* Recent Activity */}
-        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={15} style={{ color: '#7B3FA0' }} /> Recent Activity & Alerts
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+              <Clock size={14} style={{ color: '#7B3FA0' }} /> Recent Activity & Alerts
             </h4>
-            <button onClick={() => navigateTo('notifications')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>View Alerts</button>
+            <button
+              onClick={() => setExpandAlerts(prev => !prev)}
+              style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+            >
+              {expandAlerts ? 'Show Less ▲' : 'View Alerts ▼'}
+            </button>
           </div>
           {activities && activities.length > 0 ? (() => {
             // Internal system events — never shown to users
@@ -956,40 +975,52 @@ function DashboardHome({
             const visible = activities.filter(a => !HIDDEN_TYPES.has(a.activity_type || a.event));
             if (visible.length === 0) {
               return (
-                <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+                <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
                   No recent activity logged.
                 </div>
               );
             }
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {visible.slice(0, 2).map((act, idx) => (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: '8px',
+                maxHeight: expandAlerts ? '220px' : 'none',
+                overflowY: expandAlerts ? 'auto' : 'visible',
+                paddingRight: expandAlerts ? '4px' : '0px',
+                transition: 'all 0.3s ease'
+              }}>
+                {(expandAlerts ? visible : visible.slice(0, 1)).map((act, idx) => (
                   <div key={act.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <CheckCircle size={14} style={{ color: '#7B3FA0', flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {TYPE_LABEL[act.activity_type || act.event] || 'Account Activity'}
                       </div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
+                      <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
                     </div>
                   </div>
                 ))}
               </div>
             );
           })() : notifsSummary && notifsSummary.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {notifsSummary.slice(0, 2).map((n, idx) => (
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: '8px',
+              maxHeight: expandAlerts ? '220px' : 'none',
+              overflowY: expandAlerts ? 'auto' : 'visible',
+              paddingRight: expandAlerts ? '4px' : '0px',
+              transition: 'all 0.3s ease'
+            }}>
+              {(expandAlerts ? notifsSummary : notifsSummary.slice(0, 1)).map((n, idx) => (
                 <div key={n.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Bell size={14} style={{ color: '#7B3FA0', flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>{n.title || n.message}</div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Notification</div>
+                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>Notification</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+            <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
               No recent activity logged.
             </div>
           )}
