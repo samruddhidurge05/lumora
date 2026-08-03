@@ -77,8 +77,14 @@ export const syncWithBackend = async (firebaseUser, role = 'customer', forceRefr
         try { sessionStorage.setItem('lumora_tab_role', normRole); } catch (_) {}
 
         // Only update active pointers if current window route matches normRole or active role is unset
+        // ALSO update if the active_role already IS this role (session refresh for same role)
         const currentRouteRole = getRouteRoleHint();
-        if (currentRouteRole === normRole || !localStorage.getItem('lumora_active_role')) {
+        const currentActiveRole = localStorage.getItem('lumora_active_role');
+        if (
+          currentRouteRole === normRole ||
+          !currentActiveRole ||
+          currentActiveRole === normRole
+        ) {
           localStorage.setItem('lumora_backend_token', data.access_token);
           if (data.user?.id != null) {
             localStorage.setItem('lumora_backend_uid', String(data.user.id));
@@ -172,15 +178,19 @@ export const clearBackendToken = () => {
     'lumora_token_customer',
     'lumora_uid_customer',
     'lumora_session_customer',
+    'lumora_customer_session',
     'lumora_token_affiliate',
     'lumora_uid_affiliate',
     'lumora_session_affiliate',
+    'lumora_affiliate_session',
     'lumora_token_vendor',
     'lumora_uid_vendor',
     'lumora_session_vendor',
+    'lumora_vendor_session',
     'lumora_token_admin',
     'lumora_uid_admin',
     'lumora_session_admin',
+    'lumora_admin_session',
     'lumora_cart',
     'lumora_wishlist',
     'lumora_owned',

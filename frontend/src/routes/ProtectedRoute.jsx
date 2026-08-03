@@ -87,7 +87,12 @@ export default function ProtectedRoute({
   const allowedRoles = requiredRole ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole]) : ['customer'];
   const hasRoleSession = allowedRoles.some(r => {
     const norm = r === 'user' ? 'customer' : r;
-    return !!localStorage.getItem(`lumora_token_${norm}`) || !!localStorage.getItem(`lumora_${norm}_session`) || !!localStorage.getItem(`lumora_session_${norm}`);
+    // Only accept a session token if there is also a valid Firebase currentUser.
+    // A stale localStorage token without an active Firebase session must not bypass login.
+    if (!auth.currentUser) return false;
+    return !!localStorage.getItem(`lumora_token_${norm}`)
+        || !!localStorage.getItem(`lumora_${norm}_session`)
+        || !!localStorage.getItem(`lumora_session_${norm}`);
   });
 
   // Not authenticated for role
