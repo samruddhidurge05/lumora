@@ -94,8 +94,46 @@ class VendorProfileSchema(BaseModel):
         if not v or not v.strip():
             return None
         v = v.strip()
-        if not re.match(r"^[\w.\-]{2,}@[\w]{2,}$", v):
-            raise ValueError("UPI ID must be in format name@bank (e.g. john@ybl).")
+
+        # No spaces allowed
+        if " " in v:
+            raise ValueError("UPI ID must not contain spaces.")
+
+        # Exactly one @
+        parts = v.split("@")
+        if len(parts) != 2:
+            raise ValueError("UPI ID must contain exactly one '@' (e.g. rahul@ybl).")
+
+        local, handle = parts
+
+        # Local part: 2-50 chars, alphanumeric . _ -
+        if not local or not re.match(r"^[\w.\-]{2,50}$", local):
+            raise ValueError("UPI ID local part is invalid. Only letters, numbers, dot, hyphen, underscore allowed.")
+
+        # Handle: lowercase letters/digits only
+        if not handle or not re.match(r"^[a-z][a-z0-9]{1,19}$", handle):
+            raise ValueError("UPI handle must be lowercase letters/digits (e.g. ybl, okaxis, paytm).")
+
+        # Whitelist of known PSP handles
+        VALID_HANDLES = {
+            "ybl", "ibl", "oksbi", "okhdfcbank", "okaxis", "okicici",
+            "paytm", "apl", "axl", "upi", "ptyes", "pthdfc", "ptsbi",
+            "icici", "hdfcbank", "sbi", "axisbank", "kotak", "indus",
+            "rbl", "federal", "bob", "boi", "pnb", "citi", "hsbc",
+            "allahabad", "canara", "uco", "vijaya", "dena", "syndicate",
+            "obc", "oriental", "united", "corporation", "central", "indian",
+            "mahb", "idbi", "idfc", "idfcbank", "idfcfirst", "equitas",
+            "aubank", "ujjivan", "esaf", "utib", "jsb", "scb", "dlb",
+            "naviaxis", "fbl", "timecosmos", "kaypay", "tapicici",
+            "rajgovt", "barodampay", "abfspay", "axisgo", "sliceaxis",
+            "jupiteraxis", "niyoicici", "fifederal", "waaxis", "goaxb",
+            "juspay", "tpaxis", "amazonpay", "qubemoney",
+        }
+        if handle.lower() not in VALID_HANDLES:
+            raise ValueError(
+                f"'{handle}' is not a recognized UPI PSP handle. "
+                "Use handles like ybl, okaxis, okhdfcbank, paytm, oksbi, etc."
+            )
         return v
 
     @field_validator("accountHolderName")

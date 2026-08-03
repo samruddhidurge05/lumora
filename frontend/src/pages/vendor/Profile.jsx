@@ -14,7 +14,40 @@ function useIsMobile(bp = 768) {
   return m;
 }
 
-/* ── Validation helpers ──────────────────────────────────────────────────── */
+/* ── UPI validation ──────────────────────────────────────────────────────── */
+// Known PSP handles approved by NPCI
+const UPI_HANDLES = new Set([
+  'ybl','ibl','oksbi','okhdfcbank','okaxis','okicici',
+  'paytm','apl','axl','upi','ptyes','pthdfc','ptsbi',
+  'icici','hdfcbank','sbi','axisbank','kotak','indus',
+  'rbl','federal','bob','boi','pnb','citi','hsbc',
+  'allahabad','canara','uco','vijaya','dena','syndicate',
+  'obc','oriental','united','corporation','central','indian',
+  'mahb','idbi','idfc','idfcbank','idfcfirst','equitas',
+  'aubank','ujjivan','esaf','utib','jsb','scb','dlb',
+  'naviaxis','fbl','timecosmos','kaypay','tapicici',
+  'rajgovt','barodampay','abfspay','axisgo','sliceaxis',
+  'jupiteraxis','niyoicici','fifederal','waaxis','goaxb',
+  'juspay','tpaxis','amazonpay','qubemoney','mahagrambank',
+]);
+
+function isValidUpi(v) {
+  if (!v || !v.trim()) return true; // optional field
+  const s = v.trim();
+  // No spaces
+  if (/\s/.test(s)) return false;
+  // Exactly one @
+  const parts = s.split('@');
+  if (parts.length !== 2) return false;
+  const [local, handle] = parts;
+  // Local part: 2-50 chars, alphanumeric . _ -
+  if (!local || !/^[\w.\-]{2,50}$/.test(local)) return false;
+  // Handle: 2-20 lowercase letters/digits
+  if (!handle || !/^[a-z][a-z0-9]{1,19}$/.test(handle)) return false;
+  // Handle must be a known PSP
+  if (!UPI_HANDLES.has(handle.toLowerCase())) return false;
+  return true;
+}
 const RULES = {
   displayName: (v) => {
     if (!v || !v.trim()) return 'Display name is required.';
@@ -55,7 +88,7 @@ const RULES = {
   },
   upiId: (v) => {
     if (!v || !v.trim()) return ''; // optional
-    if (!/^[\w.\-]{2,}@[\w]{2,}$/.test(v.trim())) return 'Enter a valid UPI ID (e.g. name@bank).';
+    if (!isValidUpi(v)) return 'Enter a valid UPI ID (e.g. rahul@ybl, john.doe@okaxis).';
     return '';
   },
   accountHolderName: (v, data) => {
@@ -264,7 +297,7 @@ export default function Profile() {
     'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
   ];
 
-  const hasUpi  = !!(formData.upiId && formData.upiId.trim() && /^[\w.\-]{2,}@[\w]{2,}$/.test(formData.upiId.trim()));
+  const hasUpi  = isValidUpi(formData.upiId);
   const hasBank = !!(
     formData.accountHolderName?.trim() &&
     formData.bankName?.trim() &&
