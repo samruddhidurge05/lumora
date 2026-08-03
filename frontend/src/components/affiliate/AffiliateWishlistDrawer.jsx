@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, X, Trash2, ArrowRight } from 'lucide-react';
+import { Heart, X, Trash2, ArrowRight, BarChart2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 const formatINR = (v) =>
@@ -153,19 +153,34 @@ export default function AffiliateWishlistDrawer({ isOpen, setIsOpen, onSelectPro
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
                         <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#7B3FA0' }}>{formatINR(item.price)}</span>
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (onSelectProduct) onSelectProduct(item);
+                              if (onSelectProduct) onSelectProduct(item, 'overview');
                             }}
                             style={{
                               background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(123,63,160,0.22)',
                               color: '#7B3FA0', fontSize: '0.65rem', fontWeight: 700,
-                              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer'
+                              padding: '4px 8px', borderRadius: '6px', cursor: 'pointer'
                             }}
                           >
                             Details
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onSelectProduct) onSelectProduct(item, 'analytics');
+                            }}
+                            style={{
+                              background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(123,63,160,0.22)',
+                              color: '#7B3FA0', fontSize: '0.65rem', fontWeight: 700,
+                              padding: '4px 8px', borderRadius: '6px', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: '3px'
+                            }}
+                          >
+                            <BarChart2 size={10} /> Analytics
                           </button>
 
                           <button

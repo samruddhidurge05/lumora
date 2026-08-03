@@ -831,34 +831,37 @@ function DashboardHome({
 
       {/* Hero welcome */}
       <div className="glass-card dash-welcome-card" style={{
-        padding: '18px 24px',
-        background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
+        padding: '26px 32px',
+        background: 'linear-gradient(135deg, rgba(246,244,255,0.95) 0%, rgba(237,233,254,0.75) 100%)',
+        border: '1.5px solid rgba(123,63,160,0.35)',
+        boxShadow: '0 8px 30px rgba(123,63,160,0.12)',
+        borderRadius: '24px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: '16px', position: 'relative', overflow: 'hidden',
+        flexWrap: 'wrap', gap: '20px', position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '240px', height: '240px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.30) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
-          <span className="caption-premium" style={{ color: '#7B3FA0', fontSize: '0.70rem' }}>✦ Customer Portal</span>
-          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.1 }}>
+          <span className="caption-premium" style={{ color: '#7B3FA0', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.06em' }}>✦ CUSTOMER PORTAL</span>
+          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.15 }}>
             Welcome back, {profile?.name || username}.
           </h2>
-          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.80rem', marginTop: '4px', lineHeight: 1.4, maxWidth: '420px' }}>
+          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.86rem', marginTop: '6px', lineHeight: 1.5, maxWidth: '520px' }}>
             Explore {filtered.length} premium digital products — browse, wishlist, and add to cart.
           </p>
           {/* Quick Actions */}
-          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-            <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 3px 12px rgba(123,63,160,0.30)', fontFamily: 'var(--font-sans)' }}>
-              <TrendingUp size={13} /> Browse Marketplace
+          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
+            <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(123,63,160,0.32)', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}>
+              <TrendingUp size={14} /> Browse Marketplace
             </button>
-            <button onClick={() => navigateTo('downloads')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <Download size={13} /> My Downloads
+            <button onClick={() => navigateTo('downloads')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(123,63,160,0.35)', background: 'rgba(255,255,255,0.85)', color: '#7B3FA0', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}>
+              <Download size={14} /> My Downloads
             </button>
-            <button onClick={() => navigateTo('orders')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <CreditCard size={13} /> View Orders
+            <button onClick={() => navigateTo('orders')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(123,63,160,0.35)', background: 'rgba(255,255,255,0.85)', color: '#7B3FA0', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}>
+              <CreditCard size={14} /> View Orders
             </button>
           </div>
         </div>
-        <div className="dash-welcome-avatar" style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(123,63,160,0.25)', fontSize: '1.4rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
+        <div className="dash-welcome-avatar" style={{ width: '68px', height: '68px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', border: '2px solid rgba(123,63,160,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(123,63,160,0.30)', fontSize: '1.75rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
           {(profile?.name || username)[0]?.toUpperCase()}
         </div>
       </div>

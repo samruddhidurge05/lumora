@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, Heart } from 'lucide-react';
+import { Search, Copy, Check, Star, SlidersHorizontal, Link2, Tag, Eye, Heart, BarChart2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import AffiliateProductDetail from './ProductDetail';
 import AffiliateWishlistDrawer from '../../components/affiliate/AffiliateWishlistDrawer';
@@ -33,20 +33,51 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   const [copiedId, setCopiedId] = useState(null);
   const [toast, setToast] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [initialTab, setInitialTab] = useState('overview');
   const [showCount, setShowCount] = useState(24);
   const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false);
 
-  const REFERRAL_CODE = profile?.referral_code || 'AFF0001';
+  // Sync selectedProduct with history state so browser Back button closes detail view
+  React.useEffect(() => {
+    if (selectedProduct) {
+      const detailHash = `#affiliate/products/${selectedProduct.id}`;
+      if (window.location.hash !== detailHash) {
+        window.history.pushState({ productDetailId: selectedProduct.id }, '', `${window.location.pathname}${detailHash}`);
+      }
+    }
+  }, [selectedProduct]);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash;
+      if (!hash.includes('/products/')) {
+        setSelectedProduct(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
 
   // If a product is selected, show its detail page
   if (selectedProduct) {
     return (
       <AffiliateProductDetail
         product={selectedProduct}
-        onBack={() => setSelectedProduct(null)}
+        onBack={() => {
+          setSelectedProduct(null);
+          if (window.location.hash.includes('/products/')) {
+            window.history.back();
+          }
+        }}
         profile={profile}
         stats={stats}
         commissions={commissions}
+        initialTab={initialTab}
       />
     );
   }
@@ -314,7 +345,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                   <div className="aff-product-card-actions" style={{ display: 'flex', gap: '6px', marginTop: 'auto', flexWrap: 'wrap' }}>
                     {/* View Details */}
                     <button
-                      onClick={() => setSelectedProduct(product)}
+                      onClick={() => { setSelectedProduct(product); setInitialTab('overview'); }}
                       style={{
                         flex: '1 1 auto',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
@@ -331,6 +362,27 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
                     >
                       <Eye size={12} /> Details
+                    </button>
+
+                    {/* Direct Analytics */}
+                    <button
+                      onClick={() => { setSelectedProduct(product); setInitialTab('analytics'); }}
+                      style={{
+                        flex: '1 1 auto',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        padding: '9px 8px', fontSize: '0.72rem', fontWeight: 700,
+                        borderRadius: '10px',
+                        border: '1.5px solid rgba(123,63,160,0.22)',
+                        background: 'rgba(255,255,255,0.80)',
+                        color: '#7B3FA0',
+                        cursor: 'pointer', outline: 'none',
+                        fontFamily: 'var(--font-sans)',
+                        transition: 'all 0.22s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
+                    >
+                      <BarChart2 size={12} /> Analytics
                     </button>
 
                     {/* Toggle Wishlist */}
