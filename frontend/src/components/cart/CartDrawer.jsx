@@ -298,7 +298,7 @@ export default function CartDrawer() {
                       transition: '0.2s',
                     }}
                   >
-                    Browse Marketplace
+                    Explore Products
                   </button>
                 </div>
               ) : (

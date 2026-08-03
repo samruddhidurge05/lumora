@@ -854,7 +854,7 @@ function DashboardHome({
           {/* Quick Actions */}
           <div className="dash-welcome-actions" style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
             <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(123,63,160,0.32)', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}>
-              <TrendingUp size={14} /> Browse Marketplace
+              <TrendingUp size={14} /> Explore Products
             </button>
             <button onClick={() => navigateTo('downloads')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(123,63,160,0.35)', background: 'rgba(255,255,255,0.85)', color: '#7B3FA0', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.2s' }}>
               <Download size={14} /> My Downloads

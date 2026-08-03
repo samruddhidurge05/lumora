@@ -752,12 +752,12 @@ export default function CustomerDownloads() {
           }}>
             <Package size={48} style={{ color: 'rgba(78,59,49,0.18)', margin: '0 auto 16px', display: 'block' }} />
             <h3 style={{ color: 'var(--color-espresso)', fontWeight: 700, fontSize: '1.1rem', marginBottom: '8px' }}>Your vault is empty</h3>
-            <p style={{ color: 'var(--color-mocha)', fontSize: '0.82rem', maxWidth: '360px', margin: '0 auto 20px', lineHeight: 1.5 }}>Purchase premium digital assets from the marketplace to access them here anytime.</p>
+            <p style={{ color: 'var(--color-mocha)', fontSize: '0.82rem', maxWidth: '360px', margin: '0 auto 20px', lineHeight: 1.5 }}>Buy products from the store to access your downloads here anytime.</p>
             <button
               onClick={() => navigateTo('marketplace')}
               style={{ padding: '10px 28px', borderRadius: 12, background: 'var(--color-espresso)', color: '#FFFDF9', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', fontFamily: 'var(--font-sans)' }}
             >
-              Browse Marketplace
+              Explore Products
             </button>
           </div>
         ) : filtered.length === 0 ? (
