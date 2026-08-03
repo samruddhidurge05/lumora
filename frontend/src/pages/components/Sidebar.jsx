@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, PlusCircle, BarChart2,
-  DollarSign, CreditCard, Star, Link2, ShieldCheck, Settings, User,
+  DollarSign, CreditCard, Star, Link2, Settings, User,
   ChevronRight
 } from 'lucide-react';
 
@@ -16,7 +16,6 @@ const NAV_ITEMS = [
   { id: 'withdrawals',    label: 'Withdrawals',     icon: <CreditCard size={16} />,      path: '/vendor/withdrawals'     },
   { id: 'reviews',        label: 'Reviews',         icon: <Star size={16} />,            path: '/vendor/reviews'         },
   { id: 'affiliate',      label: 'Affiliate',       icon: <Link2 size={16} />,           path: '/vendor/affiliate'       },
-  { id: 'verification',   label: 'Verification',    icon: <ShieldCheck size={16} />,     path: '/vendor/verification'    },
   { id: 'store-settings', label: 'Store Settings',  icon: <Settings size={16} />,        path: '/vendor/store-settings'  },
   { id: 'profile',        label: 'Profile',         icon: <User size={16} />,            path: '/vendor/profile'         },
 ];
