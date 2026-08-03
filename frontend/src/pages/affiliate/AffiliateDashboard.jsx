@@ -98,10 +98,36 @@ function AffiliateDashboardInner() {
     }
   }, [user, loading, navigate]);
 
-  // Update hash when tab changes
+  // Update hash when activeTab changes (pushState so browser Back button works)
   useEffect(() => {
-    window.location.hash = `#affiliate/${activeTab}`;
+    const targetHash = `#affiliate/${activeTab}`;
+    if (window.location.hash !== targetHash) {
+      window.history.pushState({ tab: activeTab }, '', `${window.location.pathname}${targetHash}`);
+    }
   }, [activeTab]);
+
+  // Sync activeTab when browser Back/Forward (popstate & hashchange) buttons are clicked
+  useEffect(() => {
+    const syncTabFromUrl = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#affiliate/')) {
+        const sub = hash.replace('#affiliate/', '').split('/')[0];
+        const valid = ['dashboard', 'products', 'analytics', 'earnings', 'profile', 'support'];
+        if (valid.includes(sub)) {
+          setActiveTab(sub);
+        }
+      } else if (!hash || hash === '#affiliate') {
+        setActiveTab('dashboard');
+      }
+    };
+
+    window.addEventListener('popstate', syncTabFromUrl);
+    window.addEventListener('hashchange', syncTabFromUrl);
+    return () => {
+      window.removeEventListener('popstate', syncTabFromUrl);
+      window.removeEventListener('hashchange', syncTabFromUrl);
+    };
+  }, []);
 
   // Listen for tab-change events dispatched by Dashboard home buttons (via navigateTo)
   useEffect(() => {
@@ -371,7 +397,13 @@ function AffiliateDashboardInner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
             {activeTab !== 'dashboard' && (
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    setActiveTab('dashboard');
+                  }
+                }}
                 style={{
                   width: '38px', height: '38px', borderRadius: '10px',
                   background: 'rgba(123,63,160,0.06)', border: '1px solid rgba(196,181,253,0.25)',

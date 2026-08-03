@@ -34,8 +34,6 @@ export default function ProtectedRoute({
 
   // ── Back-button prevention & session validation ────────────────────────────
   useEffect(() => {
-    window.history.replaceState(null, '', window.location.href);
-
     const targetRole = Array.isArray(requiredRole) ? requiredRole[0] : (requiredRole || 'customer');
     const normRole = targetRole === 'user' ? 'customer' : targetRole;
     const token = localStorage.getItem(`lumora_token_${normRole}`) || localStorage.getItem('lumora_backend_token');

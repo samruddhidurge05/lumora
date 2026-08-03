@@ -37,14 +37,43 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
   const [showCount, setShowCount] = useState(24);
   const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false);
 
-  const REFERRAL_CODE = profile?.referral_code || 'AFF0001';
+  // Sync selectedProduct with history state so browser Back button closes detail view
+  React.useEffect(() => {
+    if (selectedProduct) {
+      const detailHash = `#affiliate/products/${selectedProduct.id}`;
+      if (window.location.hash !== detailHash) {
+        window.history.pushState({ productDetailId: selectedProduct.id }, '', `${window.location.pathname}${detailHash}`);
+      }
+    }
+  }, [selectedProduct]);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash;
+      if (!hash.includes('/products/')) {
+        setSelectedProduct(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
 
   // If a product is selected, show its detail page
   if (selectedProduct) {
     return (
       <AffiliateProductDetail
         product={selectedProduct}
-        onBack={() => setSelectedProduct(null)}
+        onBack={() => {
+          setSelectedProduct(null);
+          if (window.location.hash.includes('/products/')) {
+            window.history.back();
+          }
+        }}
         profile={profile}
         stats={stats}
         commissions={commissions}
