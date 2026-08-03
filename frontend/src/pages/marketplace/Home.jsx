@@ -237,6 +237,7 @@ export default function Home() {
   return (
     <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:1 }}>
       {/* ── GLOBAL FIXED CINEMATIC BACKGROUND VIDEO FOR ENTIRE LANDING PAGE ── */}
+      {/* Fixed Fullscreen Background Video Container */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -247,7 +248,43 @@ export default function Home() {
         overflow: 'hidden',
         pointerEvents: 'none',
       }}>
+        {/* Responsive video visibility rules */}
+        <style>{`
+          @media (max-width: 768px) {
+            .hero-bg-video-desktop { display: none !important; }
+            .hero-bg-video-mobile { display: block !important; }
+          }
+          @media (min-width: 769px) {
+            .hero-bg-video-desktop { display: block !important; }
+            .hero-bg-video-mobile { display: none !important; }
+          }
+        `}</style>
+
+        {/* Laptop / Desktop Background Video */}
         <video
+          className="hero-bg-video-desktop"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            objectFit: 'cover',
+            objectPosition: 'center 40%',
+            filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+          }}
+        >
+          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
+
+        {/* Responsive Mobile Background Video (Cutter edited version) */}
+        <video
+          className="hero-bg-video-mobile"
           autoPlay
           loop
           muted
@@ -264,7 +301,7 @@ export default function Home() {
           }}
         >
           <source src="/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" type="video/mp4" />
-          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
+          <source src="/videos/give_me_this_same_video_making (online-video-cutter.com).mp4" type="video/mp4" />
         </video>
         {/* Dark Vignette Overlay for rich text readability across all sections */}
         <div style={{
