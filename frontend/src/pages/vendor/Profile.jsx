@@ -264,7 +264,7 @@ export default function Profile() {
     'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
   ];
 
-  const hasUpi  = !!(formData.upiId && formData.upiId.trim());
+  const hasUpi  = !!(formData.upiId && formData.upiId.trim() && /^[\w.\-]{2,}@[\w]{2,}$/.test(formData.upiId.trim()));
   const hasBank = !!(
     formData.accountHolderName?.trim() &&
     formData.bankName?.trim() &&
