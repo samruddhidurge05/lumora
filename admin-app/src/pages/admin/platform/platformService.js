@@ -45,7 +45,7 @@ export async function disablePlatform(message) {
 
 export async function getPlatformStatus() {
   try {
-    return await backendFetch('/admin/settings/');
+    return await backendFetch('/admin/settings');
   } catch (error) {
     console.error('[platformService] Error fetching platform settings via REST:', error);
     throw error;

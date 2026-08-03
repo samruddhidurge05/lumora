@@ -24,7 +24,7 @@ export const getUserOrders = async (userId) => {
     return orders;
   } catch (error) {
     console.error('[orderService] Error fetching orders:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -47,7 +47,7 @@ export const getOrders = async () => {
     return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {
     console.error('[orderService] Error fetching orders:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -58,7 +58,7 @@ export const fetchAllOrders = async () => {
     return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {
     console.error('[orderService] Error fetching all orders:', error);
-    return [];
+    throw error;
   }
 };
 

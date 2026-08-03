@@ -7,15 +7,22 @@
   position: relative;
   min-height: 100vh;
   overflow: auto;
-  background: linear-gradient(
-    145deg,
-    #d8cbf5 0%,
-    #c9b8f0 25%,
-    #d0c0f2 50%,
-    #ddd0f8 75%,
-    #cfc0f0 100%
-  );
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
   background-attachment: fixed;
+}
+
+/* Ambient glass reflection blobs - hidden for pure white background */
+.auth-bg-wrapper::before,
+.auth-bg-wrapper::after {
+  display: none !important;
+}
+
+@keyframes authBlobFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.08); }
+  100% { transform: translate(-20px, 50px) scale(0.95); }
 }
 
 /* ── Content ── */

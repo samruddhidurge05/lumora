@@ -20,6 +20,7 @@ _logger = logging.getLogger("lumora.admin.reports")
 router = APIRouter()
 
 @router.get("/")
+@router.get("")
 def get_reports(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -51,24 +52,24 @@ def resolve_report_endpoint(
 
     # -- Audit log ------------------------------------------------------------
     try:
+        user_id_val = int(getattr(admin_user, "id", 0)) if getattr(admin_user, "id", None) else None
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=user_id_val,
             action="report_resolved",
             target_type="report",
-            target_id=str(report_id),
+            target_id=report_id,
         )
     except Exception:
         pass  # Non-blocking
 
     # -- Customer notification -------------------------------------------------
-    # Fetch the report doc from Firestore to get user_id and product title
     try:
         from app.shared.firebase.connection import db as fdb, firebase_connected
         if firebase_connected and fdb is not None:
             doc = fdb.collection("reports").document(report_id).get()
             if doc.exists:
-                data = doc.to_dict()
+                data = doc.to_dict() or {}
                 customer_id_str = data.get("user_id")
                 product_title   = data.get("productTitle") or data.get("productName") or data.get("product_id") or "your product"
                 if customer_id_str:
@@ -104,12 +105,13 @@ def reject_report_endpoint(
 
     # -- Audit log ------------------------------------------------------------
     try:
+        user_id_val = int(getattr(admin_user, "id", 0)) if getattr(admin_user, "id", None) else None
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=user_id_val,
             action="report_rejected",
             target_type="report",
-            target_id=str(report_id),
+            target_id=report_id,
         )
     except Exception:
         pass  # Non-blocking
@@ -120,7 +122,7 @@ def reject_report_endpoint(
         if firebase_connected and fdb is not None:
             doc = fdb.collection("reports").document(report_id).get()
             if doc.exists:
-                data = doc.to_dict()
+                data = doc.to_dict() or {}
                 customer_id_str = data.get("user_id")
                 product_title   = data.get("productTitle") or data.get("productName") or data.get("product_id") or "your product"
                 if customer_id_str:
@@ -154,12 +156,13 @@ def assign_report_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     try:
+        user_id_val = int(getattr(admin_user, "id", 0)) if getattr(admin_user, "id", None) else None
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=user_id_val,
             action="report_assigned",
             target_type="report",
-            target_id=str(report_id),
+            target_id=report_id,
             metadata={"assignee": assignee},
         )
     except Exception:

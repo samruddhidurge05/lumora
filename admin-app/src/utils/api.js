@@ -14,6 +14,7 @@
 
 import { auth } from '../firebase.js';
 import { syncWithBackend, clearBackendToken } from '../services/authService.js';
+import { adminRefreshToken } from '../services/adminAuthService.js';
 
 export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
 
@@ -69,20 +70,45 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BACKEND_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res;
+  try {
+    res = await fetch(`${BACKEND_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr) {
+    // Network failure (e.g. Render server cold-starting / un-routable connection)
+    const isProduction = typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1';
+    const error = new Error(
+      isProduction
+        ? 'The server is warming up. Please wait a moment and try again.'
+        : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+    );
+    error.status = 503;
+    error.code = 'BACKEND_OFFLINE';
+    throw error;
+  }
 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {
     const firebaseUser = auth.currentUser;
     const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
 
-    // Admin sessions use a separate JWT flow — never attempt syncWithBackend
-    // for admin tokens. Clear the token and let AuthContext redirect to /admin/login.
     if (activeRole === 'admin') {
-      clearBackendToken();
+      const loginInProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+      if (firebaseUser && !loginInProgress) {
+        try {
+          const synced = await adminRefreshToken(firebaseUser);
+          if (synced?.access_token) {
+            return backendFetch(endpoint, options, true);
+          }
+        } catch (refreshErr) {
+          console.warn('[api.js] Admin silent token refresh failed:', refreshErr.message);
+        }
+      }
+      localStorage.removeItem('lumora_backend_token');
       const error = new Error('Admin session expired. Please log in again.');
       error.status = 401;
       throw error;
@@ -106,6 +132,22 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
   }
   // ──────────────────────────────────────────────────────────────────────────
 
+  // Cold start gateway responses (502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout)
+  if (res.status === 502 || res.status === 503 || res.status === 504) {
+    const isProduction = typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1';
+    const error = new Error(
+      isProduction
+        ? 'The server is warming up. Please wait a moment and try again.'
+        : 'Backend server returned gateway warmup status. Retrying...'
+    );
+    error.status = res.status;
+    error.code = 'BACKEND_OFFLINE';
+    throw error;
+  }
+
+
   if (!res.ok) {
     let detail = null;
     let errorText = '';
@@ -113,7 +155,21 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
       errorText = await res.text();
       detail = JSON.parse(errorText);
     } catch (_) {
-      // Not JSON or empty
+      // Not JSON or empty — check if we got HTML (Render cold-start, reverse proxy error, or wrong route)
+      const isHtml = errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html');
+      if (isHtml) {
+        const isProduction = typeof window !== 'undefined' &&
+          window.location.hostname !== 'localhost' &&
+          window.location.hostname !== '127.0.0.1';
+        const error = new Error(
+          isProduction
+            ? 'The server is warming up. Please wait a moment and try again.'
+            : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+        );
+        error.status = res.status;
+        error.code = 'BACKEND_OFFLINE';
+        throw error;
+      }
     }
 
     const code = detail?.code || null;
@@ -139,7 +195,76 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     return null;
   }
 
+  // Guard against the Vite dev server SPA fallback returning index.html as 200
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+      const isProduction = typeof window !== 'undefined' &&
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1';
+      const error = new Error(
+        isProduction
+          ? 'The server is warming up. Please wait a moment and try again.'
+          : 'Backend server returned an HTML page. Make sure the backend is running and the route exists.'
+      );
+      error.status = res.status;
+      error.code = 'BACKEND_OFFLINE';
+      throw error;
+    }
+    // Try parsing anyway in case Content-Type header is wrong
+    try {
+      return JSON.parse(text);
+    } catch (_) {
+      const error = new Error(`Unexpected non-JSON response from server (status ${res.status})`);
+      error.status = res.status;
+      error.code = 'INVALID_RESPONSE';
+      throw error;
+    }
+  }
+
   return res.json();
+};
+
+/**
+ * backendFetchWithRetry
+ * ─────────────────────
+ * Wraps backendFetch with automatic retry for BACKEND_OFFLINE (Render cold-start).
+ * Retries every 8 seconds for up to 90 seconds, then gives up.
+ *
+ * @param {string} endpoint
+ * @param {RequestInit} options
+ * @param {(secondsLeft: number) => void} [onWarmup]  called on each retry with countdown
+ * @returns {Promise<any>}
+ */
+export const backendFetchWithRetry = async (endpoint, options = {}, onWarmup = null) => {
+  const MAX_WAIT_MS = 90_000;
+  const RETRY_INTERVAL_MS = 8_000;
+  const start = Date.now();
+  let attempt = 0;
+
+  console.log(`[api.js] backendFetchWithRetry ENTERED for: ${endpoint}`);
+
+  while (true) {
+    attempt++;
+    console.log(`[api.js] backendFetchWithRetry attempt #${attempt} starting for: ${endpoint}`);
+    try {
+      const result = await backendFetch(endpoint, options);
+      console.log(`[api.js] backendFetchWithRetry SUCCESS on attempt #${attempt} for: ${endpoint}`);
+      return result;
+    } catch (err) {
+      console.warn(`[api.js] backendFetchWithRetry caught error on attempt #${attempt} for: ${endpoint}:`, err.message, 'code:', err.code, 'status:', err.status);
+      const elapsed = Date.now() - start;
+      if (err.code !== 'BACKEND_OFFLINE' || elapsed >= MAX_WAIT_MS) {
+        console.error(`[api.js] backendFetchWithRetry GIVING UP / THROWING for: ${endpoint}`);
+        throw err;
+      }
+      const secondsLeft = Math.ceil((MAX_WAIT_MS - elapsed) / 1000);
+      console.log(`[api.js] backendFetchWithRetry RETRYING in ${RETRY_INTERVAL_MS}ms (secondsLeft: ${secondsLeft})`);
+      if (onWarmup) onWarmup(secondsLeft);
+      await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_MS));
+    }
+  }
 };
 
 /**

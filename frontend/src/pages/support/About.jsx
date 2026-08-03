@@ -517,7 +517,7 @@ const About = ({ role }) => {
         /* ── Root ── */
         .ab-root {
           min-height: 100vh;
-          background: linear-gradient(135deg, #FFFDF9 0%, #FAF7F2 30%, #FFF5EB 60%, #F5E9DD 100%);
+          background: #ffffff;
           color: #381347;
           font-family: 'Outfit', 'Inter', system-ui, sans-serif;
           position: relative;

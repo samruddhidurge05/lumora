@@ -41,9 +41,14 @@ export default function ProtectedRoute({
     // Replace current history entry — prevents stale dashboard from appearing via Back
     window.history.replaceState(null, '', window.location.href);
 
-    // Validate backend session is alive — only when a token exists
+    // Validate backend session is alive — only for non-admin routes.
+    // Admin sessions are validated per-request by require_admin_role on the
+    // backend. Calling /auth/me for admin sessions is unnecessary and generates
+    // noise — the admin JWT works with the same secret but /auth/me is a customer
+    // endpoint. Skip entirely for admin routes to avoid unintended side-effects.
     const token = localStorage.getItem('lumora_backend_token');
-    if (token) {
+    const activeRole = localStorage.getItem('lumora_active_role');
+    if (token && requiredRole !== 'admin' && activeRole !== 'admin') {
       // Quick async validation — if backend says 401, force logout
       import('../utils/api').then(({ backendFetch }) => {
         backendFetch('/auth/me').catch((err) => {

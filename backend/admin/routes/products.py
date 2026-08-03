@@ -26,6 +26,9 @@ class FeaturedPatch(BaseModel):
     featured: bool
 
 
+from sqlalchemy import or_
+from app.models.user import User
+
 @router.get("/")
 def get_products(
     background_tasks: BackgroundTasks,
@@ -37,7 +40,18 @@ def get_products(
     admin_user = Depends(require_admin_role)
 ):
     trigger_firestore_sync_if_needed(background_tasks)
-    q = db.query(Product)
+    admin_user_ids = [str(u.id) for u in db.query(User.id).filter(User.role == "admin").all()]
+    platform_filters = [
+        Product.owner_type == "PLATFORM",
+        Product.is_platform_product == True,
+        Product.vendor_id == "lumora-creator",
+        Product.vendor_id.is_(None),
+        Product.vendor_id == "",
+    ]
+    if admin_user_ids:
+        platform_filters.append(Product.vendor_id.in_(admin_user_ids))
+
+    q = db.query(Product).filter(or_(*platform_filters))
     if status:
         q = q.filter(Product.status.ilike(status))
     if category:
@@ -45,17 +59,17 @@ def get_products(
     total = q.count()
     items = q.offset((page - 1) * page_size).limit(page_size).all()
     ProductService.resolve_products_media(items, db)
-    return {"total": total, "page": page, "page_size": page_size, "items": items}
+    return {"total": total, "page": page, "page_size": page_size, "items": items, "products": items}
 
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(product_in: ProductCreate, db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):
     # Prevent duplicate product submissions (e.g. double-click, network retries)
-    from datetime import datetime, timedelta
+    from datetime import datetime, timezone, timedelta
     recent_product = db.query(Product).filter(
         Product.title == product_in.title,
         Product.vendor_id == str(admin_user.id),
-        Product.created_at >= datetime.utcnow() - timedelta(seconds=5)
+        Product.created_at >= datetime.now(timezone.utc) - timedelta(seconds=5)
     ).first()
     if recent_product:
         logger.warning("[product-create] Duplicate product creation rejected for title: %s", product_in.title)

@@ -11,24 +11,23 @@ export default function Affiliate() {
   const { user, userRole } = useAuth();
   const [backHover, setBackHover] = useState(false);
 
-  // Derived state: what kind of user is viewing this page?
+  // Derived state: check if user has active affiliate session token or affiliate role
+  const hasAffiliateToken = typeof window !== 'undefined' && !!localStorage.getItem('lumora_token_affiliate');
   const isLoggedInCustomer = !!user && userRole === 'customer';
-  const isAlreadyAffiliate = !!user && (userRole === 'affiliate' || userRole === 'vendor');
+  const isAlreadyAffiliate = hasAffiliateToken || (!!user && (userRole === 'affiliate' || userRole === 'vendor'));
 
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = 'Affiliate Program — Lumora';
   }, []);
 
-  const handleCTA = () => {
+  const handleCTA = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (isAlreadyAffiliate) {
-      // Already an affiliate — go straight to dashboard
       navigate('/affiliate/dashboard');
     } else if (isLoggedInCustomer) {
-      // Existing customer — use activation flow (no new Firebase account needed)
       navigate('/affiliate/activate');
     } else {
-      // Not logged in — standard registration
       navigate('/auth/register?role=affiliate');
     }
   };
@@ -161,10 +160,34 @@ export default function Affiliate() {
               ✔ Trusted by creators worldwide
             </p>
 
+            {/* Primary Hero CTA Button */}
+            <div style={{ marginTop: '28px' }}>
+              <button
+                onClick={handleCTA}
+                className="btn-premium btn-premium-solid"
+                style={{
+                  height: '52px', padding: '0 36px', fontSize: '1rem',
+                  borderRadius: '16px', gap: '10px', fontWeight: 700,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', border: 'none',
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff',
+                  boxShadow: '0 8px 24px rgba(123, 63, 160, 0.35)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              >
+                {isAlreadyAffiliate
+                  ? 'Go to Affiliate Dashboard'
+                  : isLoggedInCustomer
+                    ? 'Activate Affiliate Access →'
+                    : 'Join Affiliate Program'}
+                <ArrowRight size={18} />
+              </button>
+            </div>
+
             {/* Contextual banner for logged-in customers */}
             {isLoggedInCustomer && (
               <div style={{
-                marginTop: '28px',
+                marginTop: '20px',
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                 padding: '12px 20px', borderRadius: '14px',
                 background: 'rgba(123, 63, 160, 0.10)',
@@ -177,14 +200,14 @@ export default function Affiliate() {
             )}
             {isAlreadyAffiliate && (
               <div style={{
-                marginTop: '28px',
+                marginTop: '20px',
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                 padding: '12px 20px', borderRadius: '14px',
                 background: 'rgba(34, 197, 94, 0.10)',
                 border: '1px solid rgba(34, 197, 94, 0.25)',
                 color: '#15803d', fontSize: '.88rem', fontWeight: 600,
               }}>
-                ✓ You already have Affiliate access.
+                ✓ Active Affiliate Session Detected
               </div>
             )}
           </div>
@@ -351,16 +374,16 @@ export default function Affiliate() {
                   Join Lumora's affiliate network and start earning commissions by recommending products people love.
                 </p>
                 <button
-                  className="btn-premium btn-premium-solid"
-                  style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={handleCTA}
+                  className="btn-premium btn-premium-solid"
+                  style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}
                 >
                   {isAlreadyAffiliate
                     ? 'Go to Affiliate Dashboard'
                     : isLoggedInCustomer
                       ? 'Activate Affiliate Access →'
                       : 'Become an Affiliate'}
-                  {!isAlreadyAffiliate && !isLoggedInCustomer && <ArrowRight size={16} />}
+                  <ArrowRight size={16} />
                 </button>
                 {isLoggedInCustomer && (
                   <p style={{ marginTop: '14px', fontSize: '.82rem', color: '#8B7A9E' }}>

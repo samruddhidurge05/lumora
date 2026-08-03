@@ -411,13 +411,19 @@ def firebase_sync(request: Request, body: FirebaseSyncRequest, db: Session = Dep
     )
     # Step 5 - issue backend JWT with the active role, strictly validated against SQLite role (Source of Truth)
     db_role = user.role or "customer"
-    active_role = role or "customer"
+    requested_role = role or "customer"
     
-    if db_role == "customer":
+    if requested_role in ("affiliate", "vendor"):
+        if db_role == "customer":
+            user.role = requested_role
+            db.commit()
+            db.refresh(user)
+            db_role = requested_role
+        active_role = requested_role
+    elif requested_role == "customer":
         active_role = "customer"
-    elif db_role in ("vendor", "affiliate"):
-        if active_role not in ("vendor", "affiliate", "customer"):
-            active_role = db_role
+    else:
+        active_role = db_role
             
     token_data = {"sub": str(user.id), "active_role": active_role}
     access_token = create_access_token(token_data)
@@ -450,6 +456,44 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return MsgResponse(message="Cryptographic reset link dispatched to your email registry.")
+
+class SendVerificationEmailRequest(BaseModel):
+    email: EmailStr
+    role: Optional[str] = "customer"
+    name: Optional[str] = None
+    url: Optional[str] = None
+
+@router.post("/send-verification-email", response_model=MsgResponse)
+@limiter.limit("20/minute")
+def send_custom_verification_email(request: Request, body: SendVerificationEmailRequest):
+    email = body.email.strip().lower()
+    role = body.role or "customer"
+    name = body.name or email.split("@")[0]
+
+    verification_url = body.url or f"http://localhost:5173/auth/verify-email?email={email}&role={role}"
+    try:
+        from firebase_admin import auth as fb_admin_auth
+        action_code_settings = fb_admin_auth.ActionCodeSettings(
+            url=body.url or f"http://localhost:5173/auth/verify-email?email={email}&role={role}",
+            handle_code_in_app=True,
+        )
+        link = fb_admin_auth.generate_email_verification_link(email, action_code_settings)
+        if link:
+            verification_url = link
+    except Exception as exc:
+        pass
+
+    from app.services.email_service import send_verification_email, EmailDispatcher
+
+    EmailDispatcher.dispatch(
+        send_verification_email,
+        to_email=email,
+        user_name=name,
+        role=role,
+        verification_url=verification_url
+    )
+
+    return MsgResponse(message="Branded verification email dispatched.")
 
 # -- /verify-email -------------------------------------------------------------
 @router.post("/verify-email", response_model=MsgResponse)

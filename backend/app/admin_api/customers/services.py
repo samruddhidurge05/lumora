@@ -1,11 +1,12 @@
+from typing import Any
 from app.shared.firebase.connection import db, firebase_connected
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.db.session import SessionLocal
 from app.models.user import User as UserModel
 
 def _map_user(doc):
-    data = doc.to_dict()
+    data = doc.to_dict() or {}
     display = (
         data.get("displayName")
         or data.get("fullName")
@@ -20,7 +21,7 @@ def _map_user(doc):
         "displayName": display,
         "email":       data.get("email", ""),
         "role":        normalized_role,
-        "createdAt":   data.get("createdAt") or datetime.utcnow().isoformat() + "Z",
+        "createdAt":   data.get("createdAt") or datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
         "status":      data.get("accountStatus") or data.get("status", "active"),
     }
 
@@ -31,13 +32,13 @@ def _map_user_sqlite(user):
         "displayName": user.name or "User",
         "email":       user.email,
         "role":        "customer" if (user.role or "").lower() in ("user", "customer", "") else (user.role or "customer").lower(),
-        "createdAt":   user.created_at.isoformat() + "Z" if user.created_at else datetime.utcnow().isoformat() + "Z",
+        "createdAt":   user.created_at.isoformat() + "Z" if user.created_at else datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
         "status":      "active" if user.is_active else "disabled",
     }
 
 _firestore_broken = False
 
-def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
+def get_customers_list(page: int = 1, page_size: int = 50, search: str | None = None) -> dict:
     global _firestore_broken
     page = max(1, page)
     page_size = max(1, min(200, page_size))
@@ -72,7 +73,7 @@ def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
         if search:
             docs = list(query_ref.stream())
             all_items = [_map_user(d) for d in docs
-                         if (d.to_dict().get("role") or "customer").lower() in ("customer", "user", "")]
+                         if ((d.to_dict() or {}).get("role") or "customer").lower() in ("customer", "user", "")]
             term = search.lower()
             all_items = [c for c in all_items
                          if term in c["displayName"].lower() or term in c["email"].lower()]
@@ -81,14 +82,16 @@ def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
             items = all_items[(page - 1) * page_size: page * page_size]
         else:
             try:
-                total = query_ref.count().get()[0][0].value
+                count_query: Any = query_ref.count()
+                count_res: Any = count_query.get()
+                total = count_res[0][0].value
             except Exception:
                 total = len(list(query_ref.stream()))
 
-            paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+            paginated_query = query_ref.order_by("createdAt", direction="DESCENDING").offset((page - 1) * page_size).limit(page_size)
             docs = list(paginated_query.stream())
             items = [_map_user(d) for d in docs
-                     if (d.to_dict().get("role") or "customer").lower() in ("customer", "user", "")]
+                     if ((d.to_dict() or {}).get("role") or "customer").lower() in ("customer", "user", "")]
     except Exception as e:
         print(f"[customers] Firestore query failed: {e}. Falling back to SQLite.")
         _firestore_broken = True
@@ -96,7 +99,7 @@ def get_customers_list(page: int = 1, page_size: int = 50, search: str = None):
 
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
-def get_customer_by_id(customer_id: str):
+def get_customer_by_id(customer_id: str) -> dict:
     global _firestore_broken
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
@@ -118,7 +121,7 @@ def get_customer_by_id(customer_id: str):
         _firestore_broken = True
         return get_customer_by_id(customer_id)
 
-def modify_customer(customer_id: str, data: dict):
+def modify_customer(customer_id: str, data: dict) -> dict:
     db_s = SessionLocal()
     try:
         user = db_s.query(UserModel).filter(UserModel.id == int(customer_id)).first()
@@ -134,6 +137,6 @@ def modify_customer(customer_id: str, data: dict):
     if firebase_connected and db is not None:
         db.collection("users").document(customer_id).update({
             **data,
-            "updatedAt": datetime.utcnow().isoformat() + "Z",
+            "updatedAt": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
         })
     return {"id": customer_id, **data}

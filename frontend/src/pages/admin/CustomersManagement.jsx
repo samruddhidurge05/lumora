@@ -294,8 +294,8 @@ export default function CustomersManagement() {
 
         {/* ── Page Header ── */}
         <PageHeader
-          title="Customer Registry"
-          subtitle="View platform customers, trace order histories, verify spending metrics, and monitor account access logs."
+          title="Customers"
+          subtitle="View registered customers, monitor activity, and check order histories."
         />
 
         {/* ── Statistics Summary Grid ── */}
@@ -537,7 +537,7 @@ export default function CustomersManagement() {
           <div style={{
             width: '100%',
             maxWidth: '520px',
-            background: 'radial-gradient(circle at 50% 0%, #FFFDF9 0%, #FAF5FD 100%)',
+            background: '#ffffff',
             height: '100vh',
             boxShadow: '-10px 0 40px rgba(45,0,77,0.15)',
             borderLeft: '1px solid rgba(142, 106, 168, 0.15)',
@@ -654,7 +654,7 @@ export default function CustomersManagement() {
 
             {/* Vendor Breakdown Section */}
             <div style={{ background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(142,106,168,0.1)', borderRadius: '20px', padding: '20px' }}>
-              <h4 style={{ fontSize: '10px', fontWeight: 800, color: '#8E6AA8', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '12px' }}>Vendor Breakdown</h4>
+              <h4 style={{ fontSize: '10px', fontWeight: 800, color: '#8E6AA8', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '12px' }}>Vendor Performance</h4>
               {selectedCustomer.recentPurchases.length > 0 ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {selectedCustomer.recentPurchases

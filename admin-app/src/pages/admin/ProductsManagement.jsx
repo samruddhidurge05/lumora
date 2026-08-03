@@ -322,7 +322,7 @@ export default function App() {
       // vendor_id = 'lumora-creator' (or NULL/empty) and admin-role user ownership.
       // NEVER call /products/ here — that is the public marketplace endpoint.
     const loadFromBackend = () => {
-      backendFetch('/admin/products/?limit=1000')
+      backendFetch('/admin/products?limit=1000')
 
         .then(response => {
           if (!mounted) return;

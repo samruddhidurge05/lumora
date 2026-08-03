@@ -874,8 +874,8 @@ export default function OrdersManagement() {
 
             {/* --- PAGE HEADER --- */}
             <PageHeader
-              title="Order Command Board"
-              subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
+              title="Orders & Transactions"
+              subtitle="View and manage customer orders, track payments, and handle refund requests."
             />
 
             {/* --- VIEW MODE TOGGLE --- */}
@@ -887,7 +887,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Transactions Ledger
+                All Orders
               </button>
               <button
                 onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
@@ -896,7 +896,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Refund Tickets Queue
+                Refund Requests
                 {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
                   <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
                     {refundTickets.filter(t => t.status === "PENDING").length}

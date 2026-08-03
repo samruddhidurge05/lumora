@@ -4,17 +4,29 @@ import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import { ArrowLeft, ArrowRight, Globe, Shield, CreditCard, Palette, Check } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Vendor() {
   const navigate = useNavigate();
+  const { user, userRole } = useAuth();
   const [backHover, setBackHover] = useState(false);
+
+  const hasVendorToken = typeof window !== 'undefined' && (!!localStorage.getItem('lumora_token_vendor') || !!localStorage.getItem('lumora_vendor_session'));
+  const isAlreadyVendor = hasVendorToken || (!!user && (userRole === 'vendor' || userRole === 'admin'));
 
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = 'Vendor Program — Lumora';
   }, []);
 
-  const handleCTA = () => navigate('/auth/register?role=vendor');
+  const handleCTA = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (isAlreadyVendor) {
+      navigate('/vendor/dashboard');
+    } else {
+      navigate('/auth/login?role=vendor');
+    }
+  };
 
   /* ── Why Join data ── */
   const whyItems = [
@@ -143,6 +155,26 @@ export default function Vendor() {
             }}>
               ✔ Trusted by creators worldwide
             </p>
+
+            {/* Primary Hero CTA Button */}
+            <div style={{ marginTop: '28px' }}>
+              <button
+                onClick={handleCTA}
+                className="btn-premium btn-premium-solid"
+                style={{
+                  height: '52px', padding: '0 36px', fontSize: '1rem',
+                  borderRadius: '16px', gap: '10px', fontWeight: 700,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', border: 'none',
+                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff',
+                  boxShadow: '0 8px 24px rgba(123, 63, 160, 0.35)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              >
+                {isAlreadyVendor ? 'Go to Vendor Dashboard' : 'Become a Vendor'}
+                <ArrowRight size={18} />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -311,7 +343,7 @@ export default function Vendor() {
                   style={{ height: '48px', padding: '0 36px', fontSize: '.95rem', borderRadius: '14px', gap: '8px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={handleCTA}
                 >
-                  Become a Vendor <ArrowRight size={16} />
+                  {isAlreadyVendor ? 'Go to Vendor Dashboard' : 'Become a Vendor'} <ArrowRight size={16} />
                 </button>
               </div>
             </div>

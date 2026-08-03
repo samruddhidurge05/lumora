@@ -460,3 +460,98 @@ If you did not expect this invitation, you can safely ignore this email.
         correlation_id=correlation_id,
         invitation_id=invitation_id,
     )
+
+
+def send_verification_email(
+    to_email: str,
+    user_name: Optional[str] = None,
+    role: str = "customer",
+    verification_url: str = "",
+) -> Tuple[bool, Optional[str], int]:
+    """
+    Send a production-grade branded HTML email verification link.
+    """
+    display_name = user_name or to_email.split("@")[0]
+    role_label = (role or "customer").replace("_", " ").title()
+
+    subject = f"Verify your Lumora {role_label} Account"
+
+    text_body = f"""Hello {display_name},
+
+Thank you for registering your {role_label} account with Lumora.
+Please follow the link below to verify your email address and activate your account:
+
+{verification_url}
+
+If you did not request this email, you can safely ignore it.
+
+Thanks,
+The Lumora Team
+https://lumora.design
+"""
+
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email — Lumora</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #F8F5FB; margin: 0; padding: 40px 16px;">
+  <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 44px 36px; box-shadow: 0 10px 40px rgba(75, 20, 110, 0.08); border: 1px solid rgba(196, 181, 253, 0.30);">
+    
+    <!-- Lumora Logo Header -->
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
+      <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #7B3FA0, #5A1E7E); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 900; font-size: 1.2rem; box-shadow: 0 4px 14px rgba(90, 30, 126, 0.35);">L</div>
+      <div>
+        <div style="font-size: 1.3rem; font-weight: 700; color: #2D004D; letter-spacing: -0.02em;">Lumora</div>
+        <div style="font-size: 0.65rem; font-weight: 800; color: #7B3FA0; text-transform: uppercase; letter-spacing: 0.08em;">{role_label} Account Verification</div>
+      </div>
+    </div>
+
+    <!-- Main Heading -->
+    <h1 style="color: #2D004D; font-size: 1.6rem; font-weight: 700; margin: 0 0 12px; letter-spacing: -0.02em;">
+      Verify Your Email Address
+    </h1>
+
+    <p style="color: #4A3B58; font-size: 0.95rem; line-height: 1.6; margin: 0 0 28px;">
+      Hello <strong>{display_name}</strong>,<br>
+      Thank you for registering your <strong>{role_label}</strong> account with Lumora. Please click the button below to verify your email address and unlock full dashboard access.
+    </p>
+
+    <!-- Verification Button -->
+    <div style="text-align: center; margin: 36px 0;">
+      <a href="{verification_url}" style="display: inline-block; padding: 15px 38px; border-radius: 14px; background: linear-gradient(135deg, #7B3FA0, #5A1E7E); color: #ffffff; font-weight: 700; font-size: 1rem; text-decoration: none; box-shadow: 0 6px 20px rgba(90, 30, 126, 0.30);">
+        Verify Email Address
+      </a>
+    </div>
+
+    <!-- Link Backup Box -->
+    <p style="color: #7B6B8A; font-size: 0.8rem; margin: 28px 0 8px;">
+      If the button above does not work, copy and paste this link into your browser:
+    </p>
+    <div style="background: rgba(123, 63, 160, 0.04); border: 1px solid rgba(196, 181, 253, 0.40); border-radius: 10px; padding: 12px 16px; font-family: monospace; font-size: 0.76rem; word-break: break-all; color: #4A1E6E; margin-bottom: 28px; line-height: 1.4;">
+      {verification_url}
+    </div>
+
+    <!-- Security Note & Sign-Off -->
+    <div style="border-top: 1px solid rgba(196, 181, 253, 0.20); padding-top: 24px; margin-top: 24px;">
+      <p style="color: #9A89AB; font-size: 0.78rem; line-height: 1.5; margin: 0 0 16px;">
+        If you did not create a Lumora account, you can safely ignore this email.
+      </p>
+      <p style="color: #2D004D; font-size: 0.88rem; font-weight: 700; margin: 0;">
+        Warm regards,<br>
+        <span style="color: #7B3FA0;">The Lumora Team</span>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>"""
+
+    return _send_raw_with_retry(
+        to_email=to_email,
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
+    )

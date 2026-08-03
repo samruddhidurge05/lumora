@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { getReviewAnalytics } from '../../services/reviewAnalyticsService.js';
-import { backendFetch } from '../../utils/api';
+import { backendFetch, backendFetchWithRetry } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 const PAGE_SIZE = 50;
 
@@ -199,18 +200,40 @@ export default function Reviews() {
   const [loadError,      setLoadError]        = useState(null);
   const [moderating,     setModerating]       = useState(false);
 
+  // Cold-start retry — handled automatically by backendFetchWithRetry
+  const coldStartRetryRef = useRef(null); 
+
+  // Wait for AuthContext to finish restoring the admin JWT before fetching data.
+  const { loading: authLoading } = useAuth();
+
   const loadBackendReviews = useCallback(async (page = 1, sentiment = "all", search = "") => {
+    console.log('[Reviews] 🚀 loadBackendReviews ENTERED (page:', page, 'sentiment:', sentiment, 'search:', search, ')');
     setLoadError(null);
     try {
       const params = new URLSearchParams({ page, page_size: PAGE_SIZE });
       if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
       if (search) params.set("search", search);
-      const data = await backendFetch(`/admin/reviews/?${params.toString()}`);
+
+      console.log('[Reviews] Calling backendFetchWithRetry for:', `/admin/reviews?${params.toString()}`);
+      console.log('[Reviews] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
+      console.log('[Reviews] Active role:', localStorage.getItem('lumora_active_role'));
+
+      const data = await backendFetchWithRetry(
+        `/admin/reviews?${params.toString()}`,
+        {},
+        (secondsLeft) => {
+          console.log('[Reviews] Warmup callback fired, secondsLeft:', secondsLeft);
+          setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
+        }
+      );
+      console.log('[Reviews] ✅ Loaded reviews successfully:', data);
+
       setBackendReviews(data.items || []);
       setTotalReviews(data.total || 0);
       setCurrentPage(data.page || page);
+      setLoadError(null);
     } catch (err) {
-      console.error("[Reviews] Backend reviews load failed:", err);
+      console.error("[Reviews] ❌ Backend reviews load failed:", err.message, err);
       setLoadError(err.message || "Failed to load reviews");
     }
   }, []);
@@ -227,14 +250,13 @@ export default function Reviews() {
       triggerNotification(
         action === "delete" ? "Review deleted" :
         action === "flag"   ? "Review flagged" : "Review unflagged",
-        "success"
+        "info"
       );
-      // Refresh the current page
-      await loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+      loadBackendReviews(currentPage, sentimentFilter, searchQuery);
       setSelectedReview(null);
     } catch (err) {
-      console.error("[Reviews] Moderate failed:", err);
-      triggerNotification(`Moderation failed: ${err.message || "Unknown error"}`, "error");
+      console.error("Moderation failed:", err);
+      triggerNotification("Moderation action failed", "warning");
     } finally {
       setModerating(false);
     }
@@ -259,11 +281,17 @@ export default function Reviews() {
     loadFirestoreReviews();
   }, [loadFirestoreReviews]);
 
-  // Load backend paginated reviews; reset to page 1 when filters change
+  // Load backend paginated reviews — wait for auth session to be ready first
   useEffect(() => {
+    console.log('[Reviews] ⚡ useEffect FIRED — authLoading:', authLoading, 'token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'NULL');
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) {
+      console.log('[Reviews] 🛑 useEffect GUARD TRIGGERED: waiting for auth session');
+      return;
+    }
+    console.log('[Reviews] Triggering loadBackendReviews() from useEffect');
     setCurrentPage(1);
     loadBackendReviews(1, sentimentFilter, searchQuery);
-  }, [sentimentFilter, searchQuery, loadBackendReviews]);
+  }, [authLoading, sentimentFilter, searchQuery, loadBackendReviews]);
   
   useEffect(() => {
     sysSound.muted = audioMuted;
@@ -848,11 +876,17 @@ export default function Reviews() {
 
                   </div>
 
-                  {/* Error state */}
+                  {/* Error state — shown while retrying or after final failure */}
                   {loadError && (
                     <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: '12px', color: '#dc2626', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                       <span>⚠ {loadError}</span>
-                      <button onClick={() => loadBackendReviews(currentPage, sentimentFilter, searchQuery)} style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}>
+                      <button
+                        onClick={() => {
+                          setLoadError(null); // Clear immediately for instant feedback
+                          loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+                        }}
+                        style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.75rem', color: '#dc2626', cursor: 'pointer', fontWeight: 600 }}
+                      >
                         Retry
                       </button>
                     </div>
@@ -882,11 +916,11 @@ export default function Reviews() {
                             <div className="hidden sm:flex justify-between items-start gap-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD]/60 flex items-center justify-center text-[10px] font-black uppercase text-[#7B3FA0] shadow-inner shrink-0">
-                                  {rev.customer.slice(0, 2)}
+                                  {(rev.customer || 'Anonymous').slice(0, 2)}
                                 </div>
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-serif font-black text-[#2D004D]">{rev.customer}</span>
+                                    <span className="text-xs font-serif font-black text-[#2D004D]">{rev.customer || 'Anonymous'}</span>
                                     {rev.verified && (
                                       <span className="w-3.5 h-3.5 rounded-full bg-[#B886D0]/30 text-emerald-600 flex items-center justify-center" title="Verified Customer">
                                         <Icon name="CheckCircle" size={10} />
@@ -908,10 +942,10 @@ export default function Reviews() {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-8 h-8 rounded-full bg-white border border-[#F5E9DD] flex items-center justify-center text-xs font-bold text-[#7B3FA0] shrink-0">
-                                    {rev.customer.slice(0, 2).toUpperCase()}
+                                    {(rev.customer || 'Anonymous').slice(0, 2).toUpperCase()}
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-[#2D004D]">{rev.customer}</span>
+                                    <span className="text-xs font-bold text-[#2D004D]">{rev.customer || 'Anonymous'}</span>
                                     <span className="text-[10px] text-[#7B3FA0] truncate max-w-[180px]">{rev.product}</span>
                                   </div>
                                 </div>
@@ -986,8 +1020,19 @@ export default function Reviews() {
                           </motion.div>
                         ))
                       ) : (
-                        <div className="py-20 text-center glass-surface rounded-2xl border border-[#F3EAF8]">
-                          <p className="text-xs text-[#7B3FA0]">{loadError ? "Error loading reviews." : "No reviews match selected coordinates."}</p>
+                        <div className="py-20 text-center glass-surface rounded-2xl border border-[#F3EAF8] flex flex-col items-center gap-3">
+                          <p className="text-xs text-[#7B3FA0]">{loadError ? 'Error loading reviews.' : 'No reviews match selected coordinates.'}</p>
+                          {loadError && (
+                            <button
+                              onClick={() => {
+                                setLoadError(null);
+                                loadBackendReviews(currentPage, sentimentFilter, searchQuery);
+                              }}
+                              style={{ background: 'rgba(123,63,160,0.1)', border: '1px solid rgba(123,63,160,0.2)', borderRadius: '8px', padding: '6px 16px', fontSize: '0.75rem', color: '#7B3FA0', cursor: 'pointer', fontWeight: 600 }}
+                            >
+                              Retry
+                            </button>
+                          )}
                         </div>
                       )}
                     </AnimatePresence>

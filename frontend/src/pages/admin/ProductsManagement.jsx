@@ -1096,8 +1096,8 @@ export default function App() {
         {/* --- HEADER & METRICS --- */}
         <section className="mb-14">
           <PageHeader
-            title="Product Command Studio"
-            subtitle="Welcome to Lumora's elite product command studio. Monitor continuous sales volume, adjust distribution pricing, deploy visual previews, and publish creator nodes effortlessly."
+            title="Products"
+            subtitle="Manage marketplace products, set prices, upload files, and publish creator listings."
             actions={
               <div className="flex items-center gap-3 flex-wrap">
                 <button 
@@ -1193,12 +1193,12 @@ export default function App() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <span className="text-[9px] tracking-widest uppercase font-black text-[#7B3FA0] block mb-1">
-                  TEMPORAL SALES VELOCITY
+                  REVENUE GROWTH RATE
                 </span>
                 <h3 className="text-base font-serif text-[#2D004D]">Marketplace Revenue Runrate</h3>
               </div>
               <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                LIVE TELEMETRY
+                LIVE ACTIVITY
               </span>
             </div>
             
@@ -3436,7 +3436,7 @@ function ProductPreviewModal({ product, onClose }) {
 
             {activeTab === 'analytics' && (
               <div className="space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0]">REALTIME CATALOG TELEMETRY</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0]">LIVE PRODUCT OVERVIEW</p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="p-4 rounded-xl bg-white border border-[#F5E9DD]">
                     <span className="text-[9px] text-[#7B3FA0] font-bold block mb-1">CUMULATIVE DOWNLOADS</span>

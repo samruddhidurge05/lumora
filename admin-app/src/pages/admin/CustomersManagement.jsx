@@ -119,7 +119,7 @@ export default function CustomersManagement() {
 
     const customerQuery = query(
       collection(db, 'users'), 
-      where('role', 'in', ['customer', 'Customer'])
+      where('role', 'in', ['customer', 'Customer', 'user', 'User', ''])
     );
 
     let usersFetched = false; // guard: REST fallback fires only once per mount
@@ -136,7 +136,7 @@ export default function CustomersManagement() {
         usersFetched = true;
         console.error('[CustomersManagement] Error loading users, falling back to REST:', err);
         try {
-          const res = await backendFetch('/admin/customers/');
+          const res = await backendFetch('/admin/customers');
           setUsers(Array.isArray(res) ? res : (res?.items ?? []));
         } catch (fetchErr) {
           setError('Failed to fetch customer records.');
@@ -166,7 +166,7 @@ export default function CustomersManagement() {
         ordersFetched = true;
         console.error('[CustomersManagement] Error loading orders, falling back to REST:', err);
         try {
-          const res = await backendFetch('/admin/orders/');
+          const res = await backendFetch('/admin/orders');
           setOrders(Array.isArray(res) ? res : (res?.items ?? []));
         } catch (fetchErr) {
           console.error(fetchErr);
@@ -598,7 +598,7 @@ export default function CustomersManagement() {
           }} onClick={e => e.stopPropagation()}>
             
             {/* Header */}
-            <div style={{ display: 'flex', justifyBetween: 'space-between', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <span style={{ fontSize: '9px', fontWeight: 800, color: '#7B3FA0', letterSpacing: '1px', textTransform: 'uppercase' }}>CUSTOMER DETAILS</span>
                 <h3 style={{ fontSize: '1.6rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: '#2D004D', marginTop: '4px' }}>
@@ -633,7 +633,7 @@ export default function CustomersManagement() {
                   <StatusBadge status={selectedCustomer.status || 'active'} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Customer UID</span>
+                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Customer ID</span>
                   <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#7B3FA0' }}>{selectedCustomer.uid}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -648,11 +648,11 @@ export default function CustomersManagement() {
               <h4 style={{ fontSize: '10px', fontWeight: 800, color: '#8E6AA8', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '14px' }}>Purchase Summary</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Total Placed Orders</span>
+                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Total Orders</span>
                   <strong style={{ color: '#2D004D', fontSize: '13px' }}>{selectedCustomer.totalOrders}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Lifetime Expenditures</span>
+                  <span style={{ color: 'rgba(45,0,77,0.6)' }}>Total Spent</span>
                   <strong style={{ color: '#9B2C5E', fontSize: '13px' }}>₹{selectedCustomer.totalSpent.toLocaleString()}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -770,7 +770,7 @@ export default function CustomersManagement() {
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(142,106,168,0.1)', paddingTop: '20px' }}>
               <h4 style={{ fontSize: '10px', fontWeight: 800, color: '#8E6AA8', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Icon name="Lock" size={11} />
-                Administrative Actions (Coming Soon)
+                Account Actions (Coming Soon)
               </h4>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {['Disable Customer', 'Reset Password', 'Delete Account'].map(act => (

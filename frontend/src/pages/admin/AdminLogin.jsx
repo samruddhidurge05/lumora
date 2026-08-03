@@ -215,11 +215,13 @@ export default function AdminLogin() {
       } else {
         // Enforce full admin checks
         localStorage.setItem('lumora_active_role', 'admin');
+        sessionStorage.setItem('lumora_admin_login_in_progress', '1');
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         const result   = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
         await adminLogin(firebaseUser);
+        sessionStorage.removeItem('lumora_admin_login_in_progress');
 
         const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
         if (pendingInviteToken) {
@@ -230,6 +232,7 @@ export default function AdminLogin() {
         navigate(redirectTarget, { replace: true });
       }
     } catch (err) {
+      sessionStorage.removeItem('lumora_admin_login_in_progress');
       if (auth.currentUser) {
         try {
           await signOut(auth);
@@ -265,9 +268,11 @@ export default function AdminLogin() {
       } else {
         // Enforce full admin checks
         localStorage.setItem('lumora_active_role', 'admin');
+        sessionStorage.setItem('lumora_admin_login_in_progress', '1');
         const result = await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
         const firebaseUser = result.user;
         await adminLogin(firebaseUser);
+        sessionStorage.removeItem('lumora_admin_login_in_progress');
 
         const pendingInviteToken = sessionStorage.getItem('lumora_pending_invite_token');
         if (pendingInviteToken) {
@@ -278,6 +283,7 @@ export default function AdminLogin() {
         navigate(redirectTarget, { replace: true });
       }
     } catch (err) {
+      sessionStorage.removeItem('lumora_admin_login_in_progress');
       if (auth.currentUser) {
         try {
           await signOut(auth);

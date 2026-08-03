@@ -321,12 +321,12 @@ export default function Dashboard() {
 
   // Metric metadata mapping for Modal expansion views — uses real sparkline data
   const metricModalDetails = {
-    totalRevenue:   { title: "Revenue Deep Scan",        desc: "Aggregated gross sales across all paid orders this period.", data: metricModalData.totalRevenue   || [] },
-    ordersToday:    { title: "Order Pipeline Activity",  desc: "Total transaction counts per month over the last 5 months.", data: metricModalData.ordersToday    || [] },
-    conversionRate: { title: "Visitor Conversion Matrix",desc: "Percentage of orders that were paid vs total orders placed.", data: metricModalData.conversionRate || [] },
-    activeProducts: { title: "Active Ledger Assets",     desc: "Count of published products available for purchase.", data: metricModalData.activeProducts || [] },
-    refundRate:     { title: "Refund Audit Ledger",      desc: "Refund rate per month — refunded orders / total orders.", data: metricModalData.refundRate     || [] },
-    growthVelocity: { title: "System Growth Velocity",   desc: "Month-over-month revenue growth percentage trend.", data: metricModalData.growthVelocity  || [] },
+    totalRevenue:   { title: "Revenue Details",          desc: "Gross sales across all paid orders this period.", data: metricModalData.totalRevenue   || [] },
+    ordersToday:    { title: "Order Activity",           desc: "Total transaction counts over recent periods.", data: metricModalData.ordersToday    || [] },
+    conversionRate: { title: "Conversion Details",        desc: "Percentage of orders completed vs placed.", data: metricModalData.conversionRate || [] },
+    activeProducts: { title: "Active Products",          desc: "Count of published products available for purchase.", data: metricModalData.activeProducts || [] },
+    refundRate:     { title: "Refund Rate",              desc: "Refund rate percentage over total orders.", data: metricModalData.refundRate     || [] },
+    growthVelocity: { title: "Revenue Growth",           desc: "Month-over-month revenue growth percentage trend.", data: metricModalData.growthVelocity  || [] },
   };
 
   return (
@@ -342,7 +342,7 @@ export default function Dashboard() {
             actions={
               <div className="flex items-center gap-4 sm:gap-6 pt-2 md:pt-0">
                 <div className="flex flex-col text-right">
-                  <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Pulse Health</span>
+                  <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Platform Health</span>
                   <span className="text-xs font-bold text-[#B886D0] bg-[#B886D0]/10 px-2 py-0.5 rounded mt-1 border border-[#B886D0]/20">{healthStatus || (isLoading ? '...' : 'Healthy')}</span>
                 </div>
                 <div className="flex flex-col text-right border-l border-stone-200/50 pl-4">
@@ -450,7 +450,7 @@ export default function Dashboard() {
             }
           />
           <DashboardCard
-            title="Velocity"
+            title="Revenue Growth"
             value={isLoading ? "..." : `${metrics.growthVelocity}%`}
             icon={<Icon name="Zap" size={12} />}
             trend={isLoading ? undefined : `${metrics.growthVelocity >= 0 ? '+' : ''}${metrics.growthVelocity}%`}
@@ -468,7 +468,7 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
           
           {/* 1. Live Activity Stream (Event Log) - 4 cols */}
-          <GlassCard title="Live Activity Log" subtitle="SYSTEM TELEMETRY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
+          <GlassCard title="Live Activity Log" subtitle="REAL-TIME ACTIVITY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
             {/* Vertical scrolling event containers */}
             <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin">
               {isLoading ? (
@@ -525,10 +525,10 @@ export default function Dashboard() {
             </div>
           </GlassCard>
 
-          {/* 2. Risk & Fraud Intelligence (4 cols) */}
+          {/* 2. Risk & Security Audit (4 cols) */}
           <GlassCard 
-            title="Risk & Fraud Audit" 
-            subtitle="SECURITY LEDGER" 
+            title="Security Audit" 
+            subtitle="SECURITY LOGS" 
             className="lg:col-span-4 h-[380px] flex flex-col justify-between relative overflow-hidden"
             headerActions={
               <button 
@@ -589,17 +589,17 @@ export default function Dashboard() {
 
             {/* Bottom operational status */}
             <div className="text-[9px] text-[#7B3FA0] flex justify-between border-t border-stone-200/50 pt-3">
-              <span>{isScanning ? `Auditing Ledger (${scanProgress}%)` : "Synaptic logs fully certified"}</span>
+              <span>{isScanning ? `Auditing Ledger (${scanProgress}%)` : "System logs verified"}</span>
               <span className="font-bold text-[#B886D0] bg-[#B886D0]/10 px-1.5 py-0.5 rounded">SECURED</span>
             </div>
           </GlassCard>
 
           {/* 3. Quick Actions & Platform Health Deck (4 cols) */}
-          <GlassCard title="Operational Control & Health" subtitle="SYSTEM DIRECTIVES & SUBSYSTEM STATUS" className="lg:col-span-4 h-[380px] flex flex-col justify-between">
+          <GlassCard title="Quick Actions & Health" subtitle="ACTIONS & PLATFORM STATUS" className="lg:col-span-4 h-[380px] flex flex-col justify-between">
             
             {/* Quick Actions Deck */}
             <div className="flex flex-col gap-2.5">
-              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Quick Directives</span>
+              <span className="text-[8px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Quick Actions</span>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => { sysSound.playTap(); navigate('/admin/products'); }}

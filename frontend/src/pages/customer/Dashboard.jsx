@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Download, ShoppingBag, Heart, CreditCard, Bell,
   Settings as SettingsIcon, Search, Sparkles, LogOut, Star,
@@ -137,7 +138,8 @@ function DashboardProductCard({ p, wishlist, toggleWishlist, navigateTo, addToCa
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const location = useLocation();
   const {
     dashboardTab, setDashboardTab,
     accentTheme, setAccentTheme,
@@ -147,6 +149,24 @@ export default function Dashboard() {
     formatPrice, addToCart, buyNow, toggleWishlist, wishlist,
     products, cart, ownedProducts,
   } = useApp();
+
+  // Reset active tab to Overview ('Dashboard') on mount when entering from outside,
+  // unless an explicit target tab was passed in route state / query params / URL path.
+  useEffect(() => {
+    const stateTab = location?.state?.tab;
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryTab = searchParams.get('tab');
+    const path = window.location.pathname;
+
+    let targetTab = stateTab || queryTab;
+    if (!targetTab) {
+      if (path === '/orders') targetTab = 'Orders';
+      else if (path === '/downloads') targetTab = 'Downloads';
+      else if (path === '/account') targetTab = 'Settings';
+    }
+
+    setDashboardTab(targetTab || 'Dashboard');
+  }, []);
 
   const [globalSearch, setGlobalSearch] = useState('');
   const [aiResponse, setAiResponse]     = useState('');
@@ -539,6 +559,37 @@ export default function Dashboard() {
 
           {/* Right Action Group: AI search + user info + exit */}
           <div className="cust-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            {/* Affiliate Program Button */}
+            <button
+              onClick={() => handleNavClick('Affiliate Program')}
+              className="cust-affiliate-nav-btn"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 14px', borderRadius: '20px',
+                border: '1px solid rgba(196,148,230,0.35)',
+                background: dashboardTab === 'Affiliate Program' ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'rgba(123,63,160,0.08)',
+                color: dashboardTab === 'Affiliate Program' ? '#FFFFFF' : '#7B3FA0',
+                fontSize: '0.78rem', fontWeight: 700,
+                cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-sans)',
+                transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                if (dashboardTab !== 'Affiliate Program') {
+                  e.currentTarget.style.background = 'rgba(123,63,160,0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(196,148,230,0.55)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (dashboardTab !== 'Affiliate Program') {
+                  e.currentTarget.style.background = 'rgba(123,63,160,0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(196,148,230,0.35)';
+                }
+              }}
+            >
+              <TrendingUp size={13} />
+              <span>Affiliate Program</span>
+            </button>
             {/* Cart Icon Option */}
             <button
               onClick={() => navigateTo('cart')}
@@ -828,57 +879,7 @@ function DashboardHome({
         ))}
       </div>
 
-      {/* ── Affiliate Program Feature Card ── */}
-      <div className="glass-card" style={{
-        padding: '28px 32px',
-        background: 'linear-gradient(135deg, rgba(246,240,255,0.95) 0%, rgba(235,224,255,0.70) 100%)',
-        border: '1.5px solid rgba(192, 132, 252, 0.50)',
-        borderRadius: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '20px',
-        boxShadow: '0 12px 36px rgba(123, 63, 160, 0.10), inset 0 1px 0 rgba(255,255,255,0.90)',
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(123, 63, 160, 0.15)', color: '#7B3FA0', fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
-            <TrendingUp size={13} /> Affiliate Program
-          </div>
-          <h3 style={{ fontFamily: 'var(--font-editorial)', fontSize: '1.6rem', color: '#2D004D', margin: 0, fontWeight: 500 }}>
-            Earn 15%+ Commission Sharing Lumora
-          </h3>
-          <p style={{ fontSize: '0.84rem', color: '#5A3E6B', margin: '8px 0 0', lineHeight: 1.6, maxWidth: '580px' }}>
-            Share digital assets with your community and earn competitive payout rates on every sale. Access instant referral links & live click analytics.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            onClick={() => navigateTo('partnerships-affiliate')}
-            style={{
-              padding: '12px 24px', borderRadius: '12px', border: 'none',
-              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-              color: '#FFFFFF', fontSize: '0.84rem', fontWeight: 700,
-              cursor: 'pointer', boxShadow: '0 4px 18px rgba(90, 30, 126, 0.30)',
-              fontFamily: 'var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '6px',
-            }}
-          >
-            Go to Affiliate Dashboard →
-          </button>
-          <button
-            onClick={() => navigateTo('partnerships-affiliate')}
-            style={{
-              padding: '12px 20px', borderRadius: '12px',
-              border: '1.5px solid rgba(196,148,230,0.40)',
-              background: 'rgba(255,255,255,0.85)',
-              color: '#2D004D', fontSize: '0.84rem', fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            }}
-          >
-            Learn More
-          </button>
-        </div>
-      </div>
+
 
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
@@ -1262,6 +1263,7 @@ function MyReports() {
 
 /* ─── Customer Affiliate Program Tab ─────────────────────────────── */
 function CustomerAffiliateSection({ navigateTo }) {
+  const { user, userRole } = useAuth();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1000px' }}>
       {/* Header */}
@@ -1309,29 +1311,43 @@ function CustomerAffiliateSection({ navigateTo }) {
             <p style={{ fontSize: '0.78rem', color: '#7B3FA0', margin: 0, lineHeight: 1.5 }}>
               Access your full Affiliate Dashboard to create custom referral links and track payout history.
             </p>
-            <button
-              onClick={() => navigateTo('affiliate-dashboard')}
+            <a
+              href={
+                !user
+                  ? '/auth/register?role=affiliate'
+                  : (userRole === 'affiliate' || userRole === 'vendor' || localStorage.getItem('lumora_active_role') === 'affiliate' || localStorage.getItem('lumora_active_role') === 'vendor')
+                    ? '/affiliate/dashboard'
+                    : '/affiliate/activate'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
+                display: 'block',
                 padding: '12px 20px', borderRadius: '10px', border: 'none',
                 background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff',
                 fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(90,30,126,0.30)', fontFamily: 'var(--font-sans)',
-                marginTop: '4px', textAlign: 'center',
+                marginTop: '4px', textAlign: 'center', textDecoration: 'none',
+                boxSizing: 'border-box', width: '100%',
               }}
             >
               Open Affiliate Dashboard →
-            </button>
-            <button
-              onClick={() => navigateTo('partnerships-affiliate')}
+            </a>
+            <a
+              href="/partnership/affiliate"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
+                display: 'block',
                 padding: '10px 20px', borderRadius: '10px',
                 border: '1px solid rgba(123,63,160,0.25)', background: 'transparent',
                 color: '#7B3FA0', fontWeight: 700, fontSize: '0.80rem',
                 cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'center',
+                textDecoration: 'none', boxSizing: 'border-box', width: '100%',
               }}
             >
               View Full Program Details
-            </button>
+            </a>
           </div>
         </div>
       </div>

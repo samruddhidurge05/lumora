@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Copy, Check, Edit3, Save, User, CreditCard, Link2,
   Shield, AlertCircle, RefreshCw, Activity, TrendingUp,
-  DollarSign, MousePointerClick, ShoppingBag, Calendar,
+  DollarSign, MousePointerClick, ShoppingBag, Calendar, LogOut,
   X, Globe, Target, Users, Settings, MessageCircle, Monitor, Youtube, Instagram, Twitter, Linkedin, Github, Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -27,16 +27,16 @@ export default function AffiliateProfile({
   error: parentError,
   refresh,
 }) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logoutRole, logout } = useAuth();
 
   /* ── Payment & New Profile draft state ───────────────────── */
   const [draft, setDraft]       = useState({ 
     upiId: '', bankName: '', accountNumber: '', ifscCode: '', fullName: '', phone: '',
     // Phase 1 New Fields
-    displayName: '', shortBio: '', country: '',
+    displayName: '', country: '',
     youtube: '', instagram: '', linkedin: '',
     preferredCategories: [], promotionMethods: [],
-    preferredCurrency: 'USD', timezone: 'UTC', emailNotifications: true,
+    preferredCurrency: '', timezone: '', emailNotifications: true,
     panNumber: '', panHolderName: ''
   });
   const [editing, setEditing]   = useState(false);
@@ -74,18 +74,14 @@ export default function AffiliateProfile({
       phone:         user?.phoneNumber || '',
       // Phase 1 New Fields
       displayName: parentProfile?.display_name || '', 
-      shortBio: parentProfile?.short_bio || '', 
       country: parentProfile?.country || '',
       youtube: parentProfile?.youtube || '', 
       instagram: parentProfile?.instagram || '', 
       linkedin: parentProfile?.linkedin || '',
       preferredCategories: parentProfile?.preferred_categories || [], 
       promotionMethods: parentProfile?.promotion_methods || [],
-      primaryAudience: parentProfile?.primary_audience || '', 
-      audienceSize: parentProfile?.audience_size || '', 
-      preferredLanguage: parentProfile?.preferred_language || '',
-      preferredCurrency: parentProfile?.preferred_currency || 'USD', 
-      timezone: parentProfile?.timezone || 'UTC', 
+      preferredCurrency: parentProfile?.preferred_currency || '', 
+      timezone: parentProfile?.timezone || '', 
       emailNotifications: parentProfile?.email_notifications ?? true,
       panNumber: parentProfile?.pan_number || '',
       panHolderName: parentProfile?.pan_holder_name || ''
@@ -95,14 +91,16 @@ export default function AffiliateProfile({
   const calculateCompletion = () => {
     const required = [
       'fullName', 'phone', 
-      'shortBio', 'instagram', 'preferredCategories'
+      'displayName', 'country', 'youtube', 'instagram', 'linkedin',
+      'preferredCategories', 'promotionMethods',
+      'preferredCurrency', 'timezone'
     ];
     let completed = 0;
     const missing = [];
     required.forEach(field => {
-      if (field === 'preferredCategories') {
+      if (field === 'preferredCategories' || field === 'promotionMethods') {
         if (draft[field] && draft[field].length > 0) completed++;
-        else missing.push('Preferred Categories');
+        else missing.push(field === 'preferredCategories' ? 'Preferred Categories' : 'Promotion Methods');
       } else {
         if (draft[field] && String(draft[field]).trim() !== '') completed++;
         else missing.push(field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1').trim());
@@ -142,16 +140,12 @@ export default function AffiliateProfile({
           account_number: draft.accountNumber || null,
           ifsc_code:      draft.ifscCode      || null,
           display_name:   draft.displayName   || null,
-          short_bio:      draft.shortBio      || null,
           country:        draft.country       || null,
           youtube:        draft.youtube       || null,
           instagram:      draft.instagram     || null,
           linkedin:       draft.linkedin      || null,
           preferred_categories: draft.preferredCategories || [],
-          promotion_methods: draft.promotionMethods || [],
-          primary_audience: draft.primaryAudience || null,
-          audience_size:  draft.audienceSize  || null,
-          preferred_language: draft.preferredLanguage || null,
+          promotion_methods:    draft.promotionMethods    || [],
           preferred_currency: draft.preferredCurrency || null,
           timezone:       draft.timezone      || null,
           email_notifications: draft.emailNotifications,
@@ -189,7 +183,6 @@ export default function AffiliateProfile({
       fullName:      user?.displayName || user?.email?.split('@')[0] || '',
       phone:         user?.phoneNumber || '',
       displayName: parentProfile?.display_name || '', 
-      shortBio: parentProfile?.short_bio || '', 
       country: parentProfile?.country || '',
       youtube: parentProfile?.youtube || '', 
       instagram: parentProfile?.instagram || '', 
@@ -556,7 +549,6 @@ export default function AffiliateProfile({
       <div className="premium-flat-card aff-status-strip-grid" style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', padding: '18px 24px' }}>
         {[
           { label: 'Status',          value: isActive ? 'Active' : 'Inactive', color: isActive ? '#15803D' : '#DC2626', icon: <Activity size={14} /> },
-          { label: 'Commission Rate', value: `${commissionRate}%`,             color: '#7B3FA0',                         icon: <TrendingUp size={14} /> },
           { label: 'Total Earnings',  value: formatINR(totalEarnings),         color: '#7B3FA0',                         icon: <DollarSign size={14} /> },
           { label: 'Total Clicks',    value: totalClicks.toLocaleString(),      color: 'var(--text-primary)',             icon: <MousePointerClick size={14} /> },
           { label: 'Total Sales',     value: totalSales.toLocaleString(),       color: 'var(--text-primary)',             icon: <ShoppingBag size={14} /> },
@@ -624,7 +616,7 @@ export default function AffiliateProfile({
         </div>
         <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
           {personalField('Display Name', 'displayName', 'Public name')}
-          {textAreaField('Short Bio', 'shortBio', 'I create UI/UX tutorials and review developer tools.', 300)}
+
           {selectField('Country', 'country', [
             'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
             'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
@@ -660,23 +652,6 @@ export default function AffiliateProfile({
         </div>
       </div>
 
-      {/* ── AUDIENCE INFORMATION (New) ─────────────────────────────────────────── */}
-      <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Users size={15} />
-          </div>
-          <div>
-            <span className="caption-premium" style={{ color: '#7B3FA0' }}>Demographics</span>
-            <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Audience Information</h3>
-          </div>
-        </div>
-        <div className="aff-profile-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '20px' }}>
-          {selectField('Primary Audience', 'primaryAudience', ['Designers', 'Developers', 'Students', 'Businesses', 'Content Creators', 'Agencies', 'Entrepreneurs'])}
-          {selectField('Audience Size', 'audienceSize', ['Under 1K', '1K – 10K', '10K – 50K', '50K – 100K', '100K+'])}
-          {selectField('Preferred Language', 'preferredLanguage', ['English', 'Spanish', 'French', 'Hindi', 'German', 'Other'])}
-        </div>
-      </div>
 
       {/* ── PREFERENCES (New) ─────────────────────────────────────────── */}
       <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
@@ -807,53 +782,40 @@ export default function AffiliateProfile({
         </div>
       </div>
 
-      {/* ── RECENT PAYOUTS ────────────────────────────────────────────────── */}
-      {payouts && payouts.length > 0 && (
-        <div className="premium-flat-card" style={{ padding: '28px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,181,253,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <DollarSign size={15} />
-            </div>
-            <div>
-              <span className="caption-premium" style={{ color: '#7B3FA0' }}>Payout History</span>
-              <h3 className="text-editorial" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>Recent Payouts</h3>
-            </div>
-          </div>
 
-          {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(45,0,96,0.02)', marginBottom: '4px' }}>
-            {['Date', 'Amount', 'Method', 'Status'].map(h => (
-              <span key={h} style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-            ))}
-          </div>
 
-          {payouts.slice(0, 5).map((p, idx) => {
-            const STATUS = {
-              pending:   { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.28)',  color: '#B45309', label: 'Pending'   },
-              completed: { bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.28)',   color: '#15803D', label: 'Completed' },
-              rejected:  { bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.28)',   color: '#DC2626', label: 'Rejected'  },
-            };
-            const st = STATUS[p.status] || STATUS.pending;
-            return (
-              <div
-                key={p.id || idx}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '13px 16px', borderRadius: '10px', borderTop: idx > 0 ? '1px solid rgba(45,0,96,0.04)' : 'none', transition: 'background 0.2s', alignItems: 'center' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.02)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-light)' }}>{formatDate(p.created_at)}</span>
-                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{formatINR(p.amount)}</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{p.method || 'UPI'}</span>
-                <div>
-                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 700, background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>
-                    {st.label}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+      {/* ── AFFILIATE SESSION LOGOUT ────────────────────────────────────────── */}
+      <div className="premium-flat-card" style={{ padding: '24px 32px', marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #EF4444' }}>
+        <div>
+          <span className="caption-premium" style={{ color: '#EF4444' }}>Session Management</span>
+          <h3 className="text-editorial" style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 2px' }}>Affiliate Session Logout</h3>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+            Sign out of your Affiliate account session. Your Customer and other role sessions will remain active and untouched.
+          </p>
         </div>
-      )}
+        <button
+          onClick={async () => {
+            try {
+              if (typeof logoutRole === 'function') {
+                await logoutRole('affiliate');
+              } else {
+                await logout();
+              }
+            } catch (_) {}
+          }}
+          style={{
+            padding: '11px 20px', borderRadius: '12px',
+            background: 'rgba(239,68,68,0.08)', color: '#DC2626',
+            border: '1px solid rgba(239,68,68,0.25)', fontWeight: 700,
+            fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.16)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+        >
+          <LogOut size={16} /> Logout Affiliate Account
+        </button>
+      </div>
 
       <style>{`
         @media (max-width: 640px) { .aff-span-full { grid-column: span 1 !important; } }

@@ -541,8 +541,8 @@ export default function Settings() {
                     {/* Realtime update simulations toggle */}
                     <div className="flex justify-between items-center">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#2D004D]">Real-time Telemetry Updates</span>
-                        <span className="text-[9px] text-[#7B3FA0]">Simulates active websocket updates on metrics cards.</span>
+                        <span className="text-xs font-bold text-[#2D004D]">Real-Time Data Sync</span>
+                        <span className="text-[9px] text-[#7B3FA0]">Enables live updates on metrics cards.</span>
                       </div>
                       <button
                         onClick={() => updateSetting("realtimeUpdates", !settings.realtimeUpdates)}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, DollarSign, User,
   LogOut, Link2, BarChart2, ShoppingBag, ChevronRight,
-  Menu, X, RefreshCw, AlertCircle, HelpCircle, ArrowLeft
+  Menu, X, RefreshCw, AlertCircle, HelpCircle, ArrowLeft, Heart
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,37 +11,36 @@ import { backendFetch } from '../../utils/api';
 import AffiliateDashboardHome from './Dashboard';
 import AffiliateProducts       from './Products';
 import AffiliateEarnings       from './Earnings';
+import AffiliateAnalytics      from './Analytics';
 import AffiliateProfile        from './Profile';
 import SupportCenter           from '../customer/SupportCenter';
-import { AffiliateCartProvider, useAffiliateCart } from '../../context/AffiliateCartContext';
-import AffiliateCartDrawer from '../../components/affiliate/AffiliateCartDrawer';
+
+
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={17} /> },
   { id: 'products',  label: 'Products',   icon: <ShoppingBag size={17} />     },
-  { id: 'earnings',  label: 'Earnings',   icon: <BarChart2 size={17} />       },
+  { id: 'analytics', label: 'Analytics',  icon: <BarChart2 size={17} />       },
+  { id: 'earnings',  label: 'Earnings',   icon: <DollarSign size={17} />      },
   { id: 'profile',   label: 'Profile',    icon: <User size={17} />            },
   { id: 'support',   label: 'Support',    icon: <HelpCircle size={17} />      },
 ];
 
 export default function AffiliateDashboard() {
   return (
-    <AffiliateCartProvider>
-      <AffiliateDashboardInner />
-    </AffiliateCartProvider>
+    <AffiliateDashboardInner />
   );
 }
 
 function AffiliateDashboardInner() {
-  const { navigateTo } = useApp();
-  const { affCart, affCartCount, setIsAffCartOpen } = useAffiliateCart();
+  const { wishlist } = useApp();
   const { user, loading, logout, isAccountDisabled, isPlatformPaused } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash;
     const parts = hash.split('/');
     const sub = parts[1];
-    const valid = ['dashboard','products','earnings','profile', 'support'];
+    const valid = ['dashboard','products','analytics','earnings','profile', 'support'];
     return valid.includes(sub) ? sub : 'dashboard';
   });
   const [scrolled, setScrolled]   = useState(false);
@@ -108,7 +107,7 @@ function AffiliateDashboardInner() {
   useEffect(() => {
     const handleTabChange = (e) => {
       const tab = e.detail;
-      const valid = ['dashboard', 'products', 'earnings', 'profile', 'support'];
+      const valid = ['dashboard', 'products', 'analytics', 'earnings', 'profile', 'support'];
       if (valid.includes(tab)) {
         setActiveTab(tab);
       }
@@ -144,9 +143,20 @@ function AffiliateDashboardInner() {
     return () => clearInterval(interval);
   }, [user, payouts]);
 
-  const handleExit = async () => {
-    try { await logout(); } catch (e) { /* ignore */ }
-    navigate('/');
+  const handleBackToWebsite = () => {
+    navigate('/partnership/affiliate');
+  };
+
+  const handleAffiliateLogout = async () => {
+    try {
+      if (typeof logoutRole === 'function') {
+        await logoutRole('affiliate');
+      } else {
+        await logout();
+      }
+    } catch (e) {
+      navigate('/auth/login?role=affiliate');
+    }
   };
 
   // Don't render until auth resolved
@@ -163,17 +173,19 @@ function AffiliateDashboardInner() {
       refresh: loadAffiliateData,
     };
     switch (activeTab) {
-      case 'products': return <AffiliateProducts {...commonProps} />;
-      case 'earnings': return <AffiliateEarnings {...commonProps} />;
-      case 'profile':  return <AffiliateProfile {...commonProps} />;
-      case 'support':  return <SupportCenter />;
-      default:         return <AffiliateDashboardHome {...commonProps} />;
+      case 'products':  return <AffiliateProducts {...commonProps} />;
+      case 'analytics': return <AffiliateAnalytics {...commonProps} />;
+      case 'earnings':  return <AffiliateEarnings {...commonProps} />;
+      case 'profile':   return <AffiliateProfile {...commonProps} />;
+      case 'support':   return <SupportCenter />;
+      default:          return <AffiliateDashboardHome {...commonProps} />;
     }
   };
 
   const PAGE_TITLES = {
     dashboard: 'Overview',
     products:  'Products & Links',
+    analytics: 'Analytics',
     earnings:  'Earnings',
     profile:   'Profile',
     support:   'Support Center',
@@ -192,7 +204,7 @@ function AffiliateDashboardInner() {
       overflowX: 'hidden',
     }}>
       {/* ── Affiliate Cart Drawer ── */}
-      <AffiliateCartDrawer />
+
 
       {/* ── SIDEBAR (desktop) ─────────────────────────────────────────── */}
       <aside style={{
@@ -220,7 +232,7 @@ function AffiliateDashboardInner() {
           borderBottom: '1px solid rgba(196,181,253,0.16)',
         }}>
           <button
-            onClick={handleExit}
+            onClick={handleBackToWebsite}
             style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}
           >
             <span style={{
@@ -281,13 +293,13 @@ function AffiliateDashboardInner() {
           })}
         </nav>
 
-        {/* Bottom: Exit */}
-        <div style={{ padding: '16px 14px 28px', borderTop: '1px solid rgba(196,181,253,0.16)' }}>
+        {/* Bottom: Back to Website & Logout */}
+        <div style={{ padding: '16px 14px 28px', borderTop: '1px solid rgba(196,181,253,0.16)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button
-            onClick={handleExit}
+            onClick={handleBackToWebsite}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '11px 14px', borderRadius: '12px',
+              padding: '10px 14px', borderRadius: '12px',
               border: 'none', outline: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-sans)', fontSize: '0.84rem', fontWeight: 600,
               color: 'var(--text-muted)', background: 'transparent',
@@ -297,8 +309,26 @@ function AffiliateDashboardInner() {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(45,0,96,0.03)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
+            <ArrowLeft size={16} />
+            Affiliate Landing Page
+          </button>
+
+          <button
+            onClick={handleAffiliateLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '10px 14px', borderRadius: '12px',
+              border: '1px solid rgba(239,68,68,0.20)', outline: 'none', cursor: 'pointer',
+              fontFamily: 'var(--font-sans)', fontSize: '0.84rem', fontWeight: 600,
+              color: '#DC2626', background: 'rgba(239,68,68,0.04)',
+              width: '100%', textAlign: 'left',
+              transition: 'all 0.22s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.04)'; }}
+          >
             <LogOut size={16} />
-            Exit Dashboard
+            Logout Affiliate
           </button>
         </div>
       </aside>
@@ -366,40 +396,6 @@ function AffiliateDashboardInner() {
 
           {/* Right: breadcrumb + quick actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-            {/* Affiliate Cart Button */}
-            <button
-              onClick={() => setIsAffCartOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                borderRadius: '20px',
-                border: '1px solid rgba(196,181,253,0.35)',
-                background: affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)',
-                color: '#7B3FA0',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-sans)',
-                transition: 'all 0.2s',
-                position: 'relative',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = affCartCount > 0 ? 'linear-gradient(135deg, rgba(123,63,160,0.10), rgba(90,30,126,0.05))' : 'rgba(255,255,255,0.80)'; }}
-            >
-              <ShoppingBag size={12} />
-              <span>Cart</span>
-              {affCartCount > 0 && (
-                <span style={{
-                  background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
-                  color: '#fff', fontSize: '0.6rem', fontWeight: 800,
-                  minWidth: '16px', height: '16px', borderRadius: '50%',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '0 3px',
-                }}>{affCartCount}</span>
-              )}
-            </button>
 
           </div>
         </header>
@@ -452,7 +448,7 @@ function AffiliateDashboardInner() {
                 Please contact support for assistance.
               </p>
               <button 
-                onClick={handleExit}
+                onClick={handleAffiliateLogout}
                 style={{
                   background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)',
                   border: 'none',

@@ -84,40 +84,30 @@ export default function ProtectedRoute({
     return children;
   }
 
-  // ── Standard route guard ──────────────────────────────────────────────────
-
-  // Still resolving auth state — show spinner
+  // Standard route guard
   if (loading) {
     return <PageLoader />;
   }
 
-  // Not authenticated
-  if (!user) {
+  const allowedRoles = requiredRole ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole]) : ['customer'];
+  const hasRoleSession = allowedRoles.some(r => {
+    const norm = r === 'user' ? 'customer' : r;
+    return !!localStorage.getItem(`lumora_token_${norm}`) || !!localStorage.getItem(`lumora_${norm}_session`) || !!localStorage.getItem(`lumora_session_${norm}`);
+  });
+
+  // Not authenticated for role
+  if (!user && !hasRoleSession) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Enforce email verification
-  if (!user.emailVerified) {
-    return <Navigate to={`/auth/verify-email?email=${encodeURIComponent(user.email)}&role=${userRole || 'customer'}`} replace />;
-  }
-
-  // Role guard — only enforce once userRole is fully resolved from the backend.
+  // Role guard — allow access if user state or role-scoped session token matches requiredRole
   if (requiredRole) {
-    if (!userRole) {
-      // Role not yet known — wait rather than redirect
-      return <PageLoader />;
-    }
+    const hasRoleInState = userRole && allowedRoles.includes(userRole);
 
-    // Normalise requiredRole to an array for uniform comparison
-    const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-
-    if (!allowed.includes(userRole)) {
-      const correctPath =
-        userRole === 'affiliate' ? '/affiliate/dashboard'
-        : userRole === 'vendor'  ? '/vendor/dashboard'
-        : userRole === 'admin'   ? '/admin/dashboard'
-        : '/customer/dashboard';
-      return <Navigate to={correctPath} replace />;
+    if (!hasRoleInState && !hasRoleSession) {
+      const targetRole = allowedRoles[0] || 'customer';
+      const redirectUrl = targetRole === 'admin' ? '/admin/login' : `/auth/login?role=${targetRole}`;
+      return <Navigate to={redirectUrl} replace />;
     }
   }
 

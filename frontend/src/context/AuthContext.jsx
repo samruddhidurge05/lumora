@@ -1,9 +1,10 @@
 /* src/context/AuthContext.jsx */
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { auth, db } from '../services/firebase';
-import { syncWithBackend, clearBackendToken } from '../services/authService';
+import { syncWithBackend, clearBackendToken, clearRoleSession } from '../services/authService';
 import { adminLogin, adminRefreshToken } from '../services/adminAuthService';
 import { backendFetch, registerGlobalErrorListener } from '../utils/api';
+import { getRouteRoleHint } from '../utils/roleUtils';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -270,28 +271,50 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // ── Admin branch: check for existing admin token ─────────────────────
-        // Admin uses a separate JWT flow (Firebase ID token, not firebase-sync).
-        // We detect this by the 'admin' hint in localStorage which is set
-        // BEFORE signInWithPopup is called in AdminLogin.jsx to win the race.
-        const localHint = localStorage.getItem('lumora_active_role') || 'customer';
+        // Route-isolated role hint (inspects URL prefix first)
+        const localHint = getRouteRoleHint();
 
         if (localHint === 'admin') {
           // If we already have a valid backend token, skip re-calling adminLogin.
           // AdminLogin.jsx calls adminLogin() directly in the popup handler —
-          // that call sets lumora_backend_token before onAuthStateChanged runs.
+          // that call sets lumora_backend_token before onAuthStateChanged finishes.
           const existingToken = localStorage.getItem('lumora_backend_token');
           if (!existingToken) {
-            // No token yet — this is a page-reload admin session restore.
-            // Re-exchange the Firebase token for a fresh backend JWT.
-            try {
-              await adminLogin(firebaseUser);
-            } catch (adminErr) {
-              console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
-              clearBackendToken();
-              await signOut(auth);
-              window.location.replace('/admin/login');
-              return;
+            // Check if AdminLogin.jsx is actively handling this login attempt
+            const loginInProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+            if (loginInProgress) {
+              // AdminLogin.jsx is handling this sign-in — do NOT call adminLogin() concurrently.
+              // Wait non-blockingly for lumora_backend_token to be stored by AdminLogin.jsx.
+              const token = await new Promise((resolve) => {
+                let elapsed = 0;
+                const interval = setInterval(() => {
+                  const t = localStorage.getItem('lumora_backend_token');
+                  const inProgress = sessionStorage.getItem('lumora_admin_login_in_progress');
+                  elapsed += 100;
+                  if (t || !inProgress || elapsed >= 15000) {
+                    clearInterval(interval);
+                    resolve(t);
+                  }
+                }, 100);
+              });
+              if (!token) {
+                // AdminLogin.jsx failed or user cancelled — skip forcing signOut here;
+                // AdminLogin.jsx catch block handles error state display.
+                setLoading(false);
+                return;
+              }
+            } else {
+              // No token yet & no active login in progress — page-reload admin session restore.
+              // Re-exchange the Firebase token for a fresh backend JWT.
+              try {
+                await adminLogin(firebaseUser);
+              } catch (adminErr) {
+                console.warn('[AuthContext] Admin session restore failed:', adminErr.message);
+                clearBackendToken();
+                await signOut(auth);
+                window.location.replace('/admin/login');
+                return;
+              }
             }
           }
           // Token is present (either just set by popup handler or restored from storage).
@@ -373,41 +396,104 @@ export const AuthProvider = ({ children }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role === 'user' ? 'customer' : role;
     let firebaseUser;
-    
+    let isNewAccount = false;
     try {
       const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       firebaseUser = cred.user;
+      isNewAccount = true;
       await firebaseUpdateProfile(firebaseUser, { displayName: fullName });
-      try {
-        await sendEmailVerification(firebaseUser);
-      } catch (verifyError) {
-        console.error("Verification email failed:", verifyError);
-      }
     } catch (createErr) {
       if (createErr.code === 'auth/email-already-in-use') {
-        const err = new Error('An account with this email already exists. Please sign in instead.');
-        err.code = 'auth/email-already-in-use';
-        throw err;
+        // Email already exists in Firebase Auth.
+        // Attempt sign-in with password to verify ownership before attaching the new role.
+        try {
+          const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+          firebaseUser = cred.user;
+        } catch (signInErr) {
+          const err = new Error(`An account with this email already exists. Please enter your existing account password to add the ${normalizedRole} role.`);
+          err.code = 'auth/email-already-in-use-wrong-password';
+          throw err;
+        }
+
+        // Check if user ALREADY has the target role
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        const userSnap = await getDoc(userRef);
+        const existingRoles = userSnap.exists() ? (userSnap.data().roles || [userSnap.data().role || 'customer']) : [];
+
+        let alreadyHasRole = existingRoles.includes(normalizedRole);
+        if (!alreadyHasRole) {
+          if (normalizedRole === 'affiliate') {
+            const affSnap = await getDoc(doc(db, 'affiliates', firebaseUser.uid));
+            if (affSnap.exists()) alreadyHasRole = true;
+          } else if (normalizedRole === 'vendor') {
+            const venSnap = await getDoc(doc(db, 'vendors', firebaseUser.uid));
+            if (venSnap.exists()) alreadyHasRole = true;
+          } else if (normalizedRole === 'customer') {
+            const custSnap = await getDoc(doc(db, 'customers', firebaseUser.uid));
+            if (custSnap.exists()) alreadyHasRole = true;
+          }
+        }
+
+        if (alreadyHasRole) {
+          // User ALREADY has this specific role — block duplicate registration within the SAME role
+          try { await signOut(auth); } catch (_) {}
+          clearBackendToken();
+          const msg = normalizedRole === 'customer'
+            ? 'An account with this email already exists. Please sign in instead.'
+            : `You already have an ${normalizedRole} account. Please sign in.`;
+          const err = new Error(msg);
+          err.code = 'auth/role-already-exists';
+          throw err;
+        }
       } else {
         throw createErr;
       }
     }
 
+    // ALWAYS send real verification email for every role registration (new or role addition)
+    try {
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&role=${normalizedRole}`,
+        handleCodeInApp: true,
+      };
+      try {
+        await backendFetch('/auth/send-verification-email', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: normalizedEmail,
+            role: normalizedRole,
+            name: fullName || firebaseUser.displayName || '',
+            url: actionCodeSettings.url,
+          })
+        });
+      } catch (backendEmailErr) {
+        await sendEmailVerification(firebaseUser, actionCodeSettings);
+      }
+    } catch (verifyError) {
+      console.warn("Verification email send notice:", verifyError?.message);
+    }
+
     const userRef = doc(db, 'users', firebaseUser.uid);
     const userSnap = await getDoc(userRef);
     let currentRoles = [];
+    let currentRoleVerifications = {};
     if (userSnap.exists()) {
-      currentRoles = userSnap.data().roles || [userSnap.data().role || 'customer'];
+      const data = userSnap.data();
+      currentRoles = data.roles || [data.role || 'customer'];
+      currentRoleVerifications = data.roleVerifications || {};
     }
     const updatedRoles = Array.from(new Set([...currentRoles, normalizedRole]));
+    // Mark role verification as pending for this newly registered role session
+    currentRoleVerifications[normalizedRole] = false;
 
     const userData = {
       uid: firebaseUser.uid,
-      fullName,
+      fullName: fullName || firebaseUser.displayName || '',
       email: firebaseUser.email,
       photoURL: firebaseUser.photoURL || null,
       provider: 'password',
       emailVerified: firebaseUser.emailVerified,
+      roleVerifications: currentRoleVerifications,
       updatedAt: serverTimestamp(),
       accountStatus: 'active',
       role: normalizedRole,
@@ -429,27 +515,34 @@ export const AuthProvider = ({ children }) => {
     // Write specific profile to its distinct database collection
     const specificData = {
       uid: firebaseUser.uid,
-      fullName,
+      fullName: fullName || firebaseUser.displayName || '',
       email: firebaseUser.email,
       role: normalizedRole,
+      emailVerified: false,
+      verificationStatus: 'pending',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
 
     if (normalizedRole === 'vendor') {
-      await setDoc(doc(db, 'vendors', firebaseUser.uid), specificData);
+      const venDocRef = doc(db, 'vendors', firebaseUser.uid);
+      const venDocSnap = await getDoc(venDocRef);
+      if (!venDocSnap.exists()) {
+        await setDoc(venDocRef, specificData);
+      } else {
+        await updateDoc(venDocRef, { emailVerified: false, verificationStatus: 'pending', updatedAt: serverTimestamp() });
+      }
     } else if (normalizedRole === 'affiliate') {
       // Auto create or reuse affiliate doc
       const affDocRef = doc(db, 'affiliates', firebaseUser.uid);
       const affDocSnap = await getDoc(affDocRef);
       if (!affDocSnap.exists()) {
-     // Generate a unique code without reading the entire affiliates collection
-        // (collection-level getDocs is denied by Firestore rules for non-admins)
         const code = 'AFF' + Date.now().toString(36).toUpperCase().slice(-6);
         await setDoc(affDocRef, {
           userId: firebaseUser.uid,
           affiliateCode: code,
-          status: 'active',
+          status: 'pending_verification',
+          emailVerified: false,
           commissionRate: 30,
           totalClicks: 0,
           totalConversions: 0,
@@ -458,12 +551,20 @@ export const AuthProvider = ({ children }) => {
           pendingCommission: 0,
           paidCommission: 0,
           createdAt: new Date().toISOString(),
-          fullName,
+          fullName: fullName || firebaseUser.displayName || '',
           email: firebaseUser.email,
         });
+      } else {
+        await updateDoc(affDocRef, { emailVerified: false, status: 'pending_verification' });
       }
     } else {
-      await setDoc(doc(db, 'customers', firebaseUser.uid), specificData);
+      const custDocRef = doc(db, 'customers', firebaseUser.uid);
+      const custDocSnap = await getDoc(custDocRef);
+      if (!custDocSnap.exists()) {
+        await setDoc(custDocRef, specificData);
+      } else {
+        await updateDoc(custDocRef, { emailVerified: false, updatedAt: serverTimestamp() });
+      }
     }
 
     await syncWithBackend(firebaseUser, normalizedRole);
@@ -590,9 +691,12 @@ export const AuthProvider = ({ children }) => {
         if (!hasRole) {
           await signOut(auth);
           await logAuthEvent(firebaseUser.uid, firebaseUser.email, 'login', false, `Role mismatch: User does not have ${role} role`);
-          const err = new Error('Role mismatch');
+          const msg = normalizedTarget === 'affiliate' 
+            ? 'No affiliate account exists for this email yet.' 
+            : `This email is registered under a different account type.`;
+          const err = new Error(msg);
           err.code = 'auth/role-mismatch';
-          err.role = role;
+          err.role = normalizedTarget;
           throw err;
         }
         
@@ -614,37 +718,62 @@ export const AuthProvider = ({ children }) => {
 
 
 
-  /** Logout — production-level full session teardown */
-  async function logout() {    const wasAdmin = userRole === 'admin';
+  /** Role-specific logout — clears ONLY the specified role's session */
+  async function logoutRole(targetRole = null) {
+    const roleToLogout = targetRole || userRole || getRouteRoleHint() || 'customer';
+    const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
 
-    // 1. Log the event BEFORE signing out (token still valid)
+    if (auth.currentUser) {
+      try {
+        await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, `logout_${normRole}`, true);
+      } catch (_) {}
+    }
+
+    // 1. Clear role-specific token & session storage
+    clearRoleSession(normRole);
+
+    // 2. Clear active React state and shared tokens for this window
+    clearBackendToken();
+    clearSessionSafely();
+    setUser(null);
+    setUserRole(null);
+
+    // 3. Sign out of Firebase so auth.currentUser is cleared
+    try { await signOut(auth); } catch (_) {}
+
+    // 4. Redirect to proper portal landing/login page
+    let target = '/';
+    if (normRole === 'affiliate') target = '/partnership/affiliate';
+    else if (normRole === 'vendor') target = '/auth/login?role=vendor';
+    else if (normRole === 'admin') target = '/admin/login';
+    else target = '/';
+
+    window.location.href = target;
+  }
+
+  /** Full Logout — production teardown of all sessions */
+  async function logout() {
+    const wasAdmin = userRole === 'admin';
     if (auth.currentUser) {
       try {
         await logAuthEvent(auth.currentUser.uid, auth.currentUser.email, 'logout', true);
       } catch (_) {}
     }
 
-    // 2. Clear React state immediately
     setIsAccountDisabled(false);
     setIsPlatformPaused(false);
     setUser(null);
     setUserRole(null);
 
-    // 3. Clear ALL auth-related storage in one call
-    //    clearBackendToken() now removes: backend_token, backend_uid, active_role, user
+    const roles = ['customer', 'affiliate', 'vendor', 'admin'];
+    roles.forEach(r => clearRoleSession(r));
     clearBackendToken();
-
-    // 4. Clear sessionStorage (catches any session-scoped auth state)
     clearSessionSafely();
 
-    // 5. Sign out of Firebase
     try { await signOut(auth); } catch (_) {}
 
-    // 6. Redirect using replace() — removes the current page from browser history
-    //    so pressing Back does NOT re-open the protected dashboard.
-    //    All roles are redirected (not just admin).
     const target = wasAdmin ? '/admin/login' : '/';
-    window.location.replace(target);
+    window.location.href = target;
   };
 
   /** Google sign‑in — LOGIN ONLY. Will reject if no Firestore account exists. */
@@ -856,9 +985,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   /** Resend verification email */
-  const resendVerification = async () => {
+  const resendVerification = async (role = 'customer') => {
     if (auth.currentUser) {
-      await sendEmailVerification(auth.currentUser);
+      const normRole = role === 'user' ? 'customer' : role;
+      const actionCodeSettings = {
+        url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(auth.currentUser.email)}&role=${normRole}`,
+        handleCodeInApp: true,
+      };
+      try {
+        await backendFetch('/auth/send-verification-email', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: auth.currentUser.email,
+            role: normRole,
+            name: auth.currentUser.displayName || '',
+            url: actionCodeSettings.url,
+          })
+        });
+      } catch (_) {
+        await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      }
     }
   };
 
@@ -866,7 +1012,7 @@ export const AuthProvider = ({ children }) => {
   const reloadUser = async () => {
     if (!auth.currentUser) return;
     await reload(auth.currentUser);
-    setUser(auth.currentUser);
+    setUser({ ...auth.currentUser });
     // If email now verified, sync to Firestore
     if (auth.currentUser.emailVerified) {
       try {
@@ -925,6 +1071,7 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
+    logoutRole,
     googleSignIn,
     githubSignIn,
     sendPasswordReset,

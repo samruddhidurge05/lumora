@@ -8,7 +8,7 @@ export default function RefundPolicy() {
   const { navigateTo } = useApp();
 
   return (
-    <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh', background: '#FAF5FF' }}>
+    <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh', background: '#ffffff' }}>
       <Navbar />
 
       {/* Hero Header */}
@@ -16,7 +16,7 @@ export default function RefundPolicy() {
         style={{
           paddingTop: '130px',
           paddingBottom: '50px',
-          background: 'linear-gradient(180deg, rgba(123,63,160,0.08) 0%, rgba(250,245,255,1) 100%)',
+          background: 'linear-gradient(180deg, rgba(123,63,160,0.05) 0%, rgba(255,255,255,1) 100%)',
           textAlign: 'center',
           paddingLeft: '20px',
           paddingRight: '20px',

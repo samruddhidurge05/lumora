@@ -10,7 +10,7 @@ from admin.routes.orders import router as orders_router
 from admin.routes.vendors import router as vendors_router
 from admin.routes.affiliates import router as affiliates_router
 from admin.routes.settings import router as settings_router
-from admin.routes.products import router as products_router
+from app.admin_api.products.routes import router as products_router
 from app.admin_api.refunds.routes import router as admin_refunds_router
 from app.admin_api.treasury.routes import router as treasury_router
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
-import { backendFetch } from '../../utils/api';
+import { backendFetch, backendFetchWithRetry } from '../../utils/api';
 import {
   fetchAllOrders,
   updateOrderStatus,
@@ -12,7 +12,7 @@ import {
 import {
   getDownloadErrorMessage,
 } from '../../services/downloadService.js';
-import { loadingMessages, emptyStates, getFriendlyError } from '../../shared/communication';
+import { useAuth } from '../../context/AuthContext';
 
 // --- ROBUST SELF-CONTAINED LUXURY UI VECTOR SYSTEM ---
 const Icon = ({ name, size = 16, className = "" }) => {
@@ -371,15 +371,38 @@ export default function OrdersManagement() {
   // Responsive Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // --- FIRESTORE DATA LOADER ---
+  // Cold-start retry ref — prevents double-retry on strict mode double-invoke
+  const coldStartRetryRef = useRef(null);
+
+  // Wait for AuthContext to finish resolving the admin session before fetching data.
+  // This prevents the race condition where loadOrders fires before adminLogin()
+  // stores the JWT on page-refresh, causing a 401 that wipes the token.
+  const { loading: authLoading } = useAuth();
+
+  // --- DATA LOADER ---
   const loadOrders = useCallback(async (page = 1, statusFilter = null) => {
     const validPage = (typeof page === 'number' && !isNaN(page) && page >= 1) ? Math.floor(page) : 1;
+    console.log('[OrdersManagement] 🚀 loadOrders() ENTERED (page:', validPage, 'statusFilter:', statusFilter, ')');
     setLoading(true);
     setLoadError('');
     try {
       const params = new URLSearchParams({ page: validPage, page_size: ORDER_PAGE_SIZE });
       if (statusFilter && statusFilter !== 'All') params.append('status', statusFilter);
-      const data = await backendFetch(`/admin/orders/?${params}`);
+      
+      console.log('[OrdersManagement] Calling backendFetchWithRetry for:', `/admin/orders?${params}`);
+      console.log('[OrdersManagement] Backend token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'MISSING');
+      console.log('[OrdersManagement] Active role:', localStorage.getItem('lumora_active_role'));
+      
+      const data = await backendFetchWithRetry(
+        `/admin/orders?${params}`,
+        {},
+        (secondsLeft) => {
+          console.log('[OrdersManagement] Warmup callback fired, secondsLeft:', secondsLeft);
+          setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
+        }
+      );
+      console.log('[OrdersManagement] ✅ Loaded orders successfully:', data);
+      
       // Handle both paginated shape {total, items} and legacy bare array
       const items = Array.isArray(data) ? data : (data.items || []);
       setOrders(items);
@@ -387,19 +410,22 @@ export default function OrdersManagement() {
       setOrderTotalPages(Array.isArray(data) ? 1 : Math.max(1, Math.ceil((data.total || items.length) / ORDER_PAGE_SIZE)));
       setOrderPage(validPage);
       if (items.length > 0) setSelectedOrderId(items[0].id);
+      setLoadError('');
     } catch (err) {
-      console.error('Failed to load orders:', err);
-      setLoadError('Failed to load orders. Check your connection and try again.');
+      console.error('[OrdersManagement] ❌ Failed to load orders:', err.message, err);
+      setLoadError(err.message || 'Failed to load orders. Check your connection and try again.');
     } finally {
+      console.log('[OrdersManagement] 🏁 finally block reached — calling setLoading(false)');
       setLoading(false);
     }
   }, [ORDER_PAGE_SIZE]);
 
   const loadRefundTickets = useCallback(async () => {
+    console.log('[OrdersManagement] 🚀 loadRefundTickets() ENTERED');
     setLoading(true);
     setLoadError('');
     try {
-      const data = await backendFetch('/admin/refunds/');
+      const data = await backendFetch('/admin/refunds');
       const items = Array.isArray(data) ? data : [];
       setRefundTickets(items);
       if (items.length > 0) setSelectedTicketId(items[0].id);
@@ -407,17 +433,26 @@ export default function OrdersManagement() {
       console.error('Failed to load refund tickets:', err);
       setLoadError('Failed to load refund tickets.');
     } finally {
+      console.log('[OrdersManagement] 🏁 loadRefundTickets finally block reached — calling setLoading(false)');
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    console.log('[OrdersManagement] ⚡ useEffect FIRED — authLoading:', authLoading, 'token:', localStorage.getItem('lumora_backend_token') ? 'EXISTS' : 'NULL', 'viewMode:', viewMode);
+    // Don't fetch until AuthContext has finished restoring the admin session (JWT) or token is ready
+    if (authLoading && !localStorage.getItem('lumora_backend_token')) {
+      console.log('[OrdersManagement] 🛑 useEffect GUARD TRIGGERED: waiting for auth session');
+      return;
+    }
     if (viewMode === 'orders') {
+      console.log('[OrdersManagement] Triggering loadOrders() from useEffect');
       loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null);
     } else {
+      console.log('[OrdersManagement] Triggering loadRefundTickets() from useEffect');
       loadRefundTickets();
     }
-  }, [viewMode, selectedStatus, loadOrders, loadRefundTickets]);
+  }, [authLoading, viewMode, selectedStatus, loadOrders, loadRefundTickets]);
 
   // Procedural audio synchronization
   useEffect(() => {
@@ -865,6 +900,11 @@ export default function OrdersManagement() {
         {!loading && loadError && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <p className="text-sm font-bold text-red-400">{loadError}</p>
+            {loadError.includes('Backend') && (
+              <p className="text-xs text-[#7B3FA0] text-center max-w-sm">
+                The backend server may be starting up. Please wait a moment and retry.
+              </p>
+            )}
             <button onClick={() => loadOrders(1, selectedStatus !== 'All' ? selectedStatus : null)} className="px-5 py-2 rounded-xl bg-[#2D004D] text-white text-xs font-bold">Retry</button>
           </div>
         )}
@@ -874,8 +914,8 @@ export default function OrdersManagement() {
 
             {/* --- PAGE HEADER --- */}
             <PageHeader
-              title="Order Command Board"
-              subtitle="Audit platform transactions, verify customer checkouts, flag operational risk anomalies, and issue refunds."
+              title="Orders"
+              subtitle="View customer orders, verify payments, track order status, and process refunds."
             />
 
             {/* --- VIEW MODE TOGGLE --- */}
@@ -887,7 +927,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Transactions Ledger
+                All Orders
               </button>
               <button
                 onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
@@ -896,7 +936,7 @@ export default function OrdersManagement() {
                     : "hover:bg-white/60 text-[#7B3FA0]"
                   }`}
               >
-                Refund Tickets Queue
+                Refund Requests
                 {refundTickets.filter(t => t.status === "PENDING").length > 0 && (
                   <span className="bg-red-500 text-white text-[8px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
                     {refundTickets.filter(t => t.status === "PENDING").length}
@@ -931,7 +971,7 @@ export default function OrdersManagement() {
 
               {/* CARD 2: ACTIVE VOLUME */}
               <DashboardCard
-                title="Active Volume"
+                title="Total Orders"
                 value={statistics.totalOrders}
                 icon={<Icon name="Activity" size={14} />}
                 trend={`${statistics.pendingOrders} pending`}
@@ -952,7 +992,7 @@ export default function OrdersManagement() {
 
               {/* CARD 3: FULFILLMENT */}
               <DashboardCard
-                title="Fulfillment"
+                title="Completion Rate"
                 value={`${statistics.successRate}%`}
                 icon={<Icon name="CheckCircle" size={14} />}
                 trend={`₹${statistics.refundedAmount} refunded`}
@@ -973,7 +1013,7 @@ export default function OrdersManagement() {
 
               {/* CARD 4: RISK ALERTS */}
               <DashboardCard
-                title="Risk Alerts"
+                title="Risk Flags"
                 value={statistics.highRiskCount}
                 icon={
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${statistics.highRiskCount > 0 ? 'bg-[#D8BFE3]/40 text-[#FF8597] animate-pulse' : 'text-[#7B3FA0]'}`}>
@@ -1007,7 +1047,7 @@ export default function OrdersManagement() {
                       options={[
                         { value: 'newest', label: 'Newest Logged' },
                         { value: 'value-desc', label: 'Highest Revenue' },
-                        { value: 'risk-desc', label: 'Highest Risk Index' }
+                        { value: 'risk-desc', label: 'Highest Risk' }
                       ]}
                     />,
                     <AdminSelect
@@ -1069,7 +1109,7 @@ export default function OrdersManagement() {
                         className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
                       >
                         <Icon name="RefreshCw" size={9} />
-                        Reset Parameters
+                        Reset Filters
                       </button>
                     )
                   }
@@ -1091,7 +1131,7 @@ export default function OrdersManagement() {
                                 <tr className="bg-stone-100/40 border-b border-stone-200/50">
                                   <th className="py-4 px-5 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Ticket</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Customer</th>
-                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product Snapshot</th>
+                                  <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Product</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-right">Amount</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Status</th>
                                   <th className="py-4 px-4 text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase text-center">Downloaded</th>

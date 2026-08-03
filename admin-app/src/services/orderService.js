@@ -42,7 +42,7 @@ export const updateOrderStatus = async (orderId, status) => {
 
 export const getOrders = async () => {
   try {
-    const data = await backendFetch('/admin/orders/');
+    const data = await backendFetch('/admin/orders');
     // Normalize: handle both legacy bare array and M6 paginated wrapper {total, page, page_size, items:[]}
     return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {
@@ -53,7 +53,7 @@ export const getOrders = async () => {
 
 export const fetchAllOrders = async () => {
   try {
-    const data = await backendFetch('/admin/orders/');
+    const data = await backendFetch('/admin/orders');
     // Normalize: handle both legacy bare array and M6 paginated wrapper {total, page, page_size, items:[]}
     return Array.isArray(data) ? data : (data?.items ?? []);
   } catch (error) {

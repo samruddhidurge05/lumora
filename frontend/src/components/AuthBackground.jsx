@@ -20,27 +20,29 @@ export default function AuthBackground({ children }) {
           gap: '7px',
           padding: '8px 16px',
           borderRadius: '30px',
-          background: 'rgba(255,255,255,0.14)',
+          background: 'rgba(255,255,255,0.75)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255,255,255,0.28)',
-          color: 'rgba(255,255,255,0.90)',
+          border: '1px solid rgba(184,134,208,0.30)',
+          color: '#4A1570',
           fontSize: '0.78rem',
           fontWeight: 600,
           fontFamily: 'var(--font-sans)',
           cursor: 'pointer',
           outline: 'none',
-          transition: 'background 0.2s, border-color 0.2s, transform 0.15s',
-          boxShadow: '0 2px 12px rgba(45,0,77,0.18)',
+          transition: 'background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s',
+          boxShadow: '0 4px 16px rgba(45,0,77,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.22)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.45)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+          e.currentTarget.style.borderColor = 'rgba(184,134,208,0.55)';
+          e.currentTarget.style.color = '#2D004D';
           e.currentTarget.style.transform = 'translateY(-1px)';
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.28)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.75)';
+          e.currentTarget.style.borderColor = 'rgba(184,134,208,0.30)';
+          e.currentTarget.style.color = '#4A1570';
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AdminLayout from './components/AdminLayout';
 import { AdminSelect } from './components/AdminComponents';
 import { backendFetch } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import { MessageSquare, RefreshCw, Send, ChevronRight, Headset, Sparkles, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 // ── Feature Flag: Set to true to activate Version 2.0 Support Messaging Engine ──
@@ -90,6 +91,7 @@ export default function AdminSupportInbox() {
 
   const [tickets, setTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
+  const { loading: authLoading } = useAuth();
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -112,7 +114,10 @@ export default function AdminSupportInbox() {
     }
   }, [statusFilter]);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => {
+    if (authLoading) return;
+    fetchTickets();
+  }, [authLoading, fetchTickets]);
 
   // ── Fetch messages for selected ticket ───────────────────────────
   const fetchMessages = useCallback(async (ticketId) => {

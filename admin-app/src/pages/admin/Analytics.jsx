@@ -448,8 +448,8 @@ export default function Analytics() {
       console.error('CSV export error', e);
     }
     setNotification({
-      title: 'Report Compiled',
-      message: 'Lumora Growth Intelligence CSV downloaded.',
+      title: 'Report Downloaded',
+      message: 'Lumora Analytics CSV exported successfully.',
       type: 'report',
     });
     setTimeout(() => setNotification(null), 5000);
@@ -662,7 +662,7 @@ export default function Analytics() {
                 data !== null ? 'bg-[#2D004D] text-[#F8F3FB]' : 'text-[#7B3FA0] hover:text-[#2D004D]'
               }`}
             >
-              Telemetry Active
+              Live Data
             </button>
             <button
               onClick={() => handleToggleState('empty')}
@@ -706,20 +706,20 @@ export default function Analytics() {
 
               <span className="text-[10px] font-extrabold tracking-widest text-[#8E6AA8] uppercase mb-3 flex items-center gap-1.5">
                 <Sparkles size={12} />
-                LUMORA TELEMETRY STREAM
+                LUMORA ANALYTICS
               </span>
               <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#2D004D] max-w-md leading-tight">
-                Your growth intelligence engine is collecting signals...
+                Analytics data is being compiled...
               </h2>
               <p className="text-[13px] text-[#7B3FA0] max-w-sm mt-3 leading-relaxed">
-                Connect backend modules or flip to the normal state above to preview real-time charts, predictive forecasting models, and customer segments.
+                Connect backend modules or switch states above to preview real-time charts, predictive forecasting models, and customer segments.
               </p>
 
               <button
                 onClick={() => handleToggleState('active')}
                 className="mt-8 px-6 py-3 rounded-full bg-[#2D004D] text-[#F8F3FB] text-xs font-extrabold tracking-widest uppercase hover:bg-[#7B3FA0] transition-colors shadow-lg shadow-[#2D004D]/10 flex items-center gap-2 group"
               >
-                Simulate Signal Feeds
+                Load Live Data
                 <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </motion.div>
@@ -737,8 +737,8 @@ export default function Analytics() {
               {/* --- SECTION 1: HERO HEADER & CONTROLS --- */}
               <section className="relative">
                 <PageHeader
-                  title="Growth Intelligence"
-                  subtitle="Understand performance, predict growth, and optimize revenue streams using advanced creator economy heuristics."
+                  title="Analytics Overview"
+                  subtitle="Track platform performance, analyze revenue trends, and forecast future growth."
                   actions={
                     <div className="flex items-center gap-6 pt-2 md:pt-0">
                       <div className="flex flex-col text-right">

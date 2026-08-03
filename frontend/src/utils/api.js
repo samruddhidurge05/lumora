@@ -10,38 +10,20 @@
  *
  * checkBackendOnline()
  *   - Quick health check for the FastAPI server
+ *
+ * NOTE: authService is intentionally NOT statically imported here.
+ * Static import of authService creates a circular dependency:
+ *   api.js → authService.js → (indirectly) → api.js
+ * This causes a TDZ (Temporal Dead Zone) crash in production minified builds.
+ * Instead, authService functions are loaded via inline dynamic import() inside
+ * backendFetch() only when a 401 occurs — which is an async code path anyway.
  */
 
 import { auth } from '../firebase.js';
-import { syncWithBackend, clearBackendToken } from '../services/authService.js';
+import { getRouteRoleHint } from './roleUtils.js';
+import { PROD_BACKEND_ORIGIN, getBackendOrigin, BACKEND_URL, BACKEND_ORIGIN } from './urlUtils.js';
 
-export const PROD_BACKEND_ORIGIN = 'https://lumora-backend-8mf6.onrender.com';
-
-export const getBackendOrigin = () => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const raw = import.meta.env.VITE_BACKEND_ORIGIN;
-    if (raw && typeof raw === 'string' && raw.startsWith('http') && raw.includes('.onrender.com') && !raw.endsWith('lumora-backend-onrender.com')) {
-      return raw.replace(/\/$/, '');
-    }
-    return PROD_BACKEND_ORIGIN;
-  }
-  const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-  if (base.startsWith('/')) {
-    return 'http://localhost:8000';
-  }
-  return base.replace(/\/api\/?$/, '');
-};
-
-/** Production-aware backend API base URL. Import this instead of computing VITE_API_BASE_URL inline. */
-export const BACKEND_URL = (() => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return `${getBackendOrigin()}/api`;
-  }
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-})();
-
-/** Backend origin (no /api suffix) — use for constructing media/download URLs */
-export const BACKEND_ORIGIN = BACKEND_URL.replace(/\/api\/?$/, '');
+export { getRouteRoleHint, PROD_BACKEND_ORIGIN, getBackendOrigin, BACKEND_URL, BACKEND_ORIGIN };
 
 
 let globalErrorListener = null;
@@ -95,8 +77,22 @@ export function buildBackendUrl(endpoint = '') {
  * @param {RequestInit} options  fetch options (method, body, headers, …)
  * @param {boolean} _isRetry  internal flag to prevent infinite retry loop
  */
+
+export const getRoleToken = (targetRole) => {
+  const normRole = targetRole ? (targetRole === 'user' ? 'customer' : targetRole) : getRouteRoleHint();
+  const token = localStorage.getItem(`lumora_token_${normRole}`);
+  if (token) return token;
+
+  const activeRole = localStorage.getItem('lumora_active_role');
+  if (activeRole) {
+    const t = localStorage.getItem(`lumora_token_${activeRole}`);
+    if (t) return t;
+  }
+  return localStorage.getItem('lumora_backend_token');
+};
+
 export const backendFetch = async (endpoint, options = {}, _isRetry = false) => {
-  const token = localStorage.getItem('lumora_backend_token');
+  const token = getRoleToken();
 
   const headers = {
     ...options.headers,
@@ -143,6 +139,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     // Admin sessions use a separate JWT flow — never attempt syncWithBackend
     // for admin tokens. Clear the token and let AuthContext redirect to /admin/login.
     if (activeRole === 'admin') {
+      // Dynamic import to avoid circular dependency
+      const { clearBackendToken } = await import('../services/authService.js');
       clearBackendToken();
       const error = new Error('Admin session expired. Please log in again.');
       error.status = 401;
@@ -150,6 +148,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     }
 
     if (firebaseUser) {
+      // Dynamic import to avoid circular dependency
+      const { syncWithBackend } = await import('../services/authService.js');
       // Refresh Firebase ID token and re-sync with backend
       const synced = await syncWithBackend(firebaseUser, activeRole, true);
 
@@ -160,6 +160,7 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     }
 
     // Could not refresh — clear stale token
+    const { clearBackendToken } = await import('../services/authService.js');
     clearBackendToken();
     const error = new Error('Session expired. Please log in again.');
     error.status = 401;

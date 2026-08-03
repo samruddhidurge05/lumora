@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/")
+@router.get("")
 def get_orders(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -85,12 +86,13 @@ def put_status(
 
     # 4. Write audit log with old + new status (non-blocking)
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="order_status_change",
             target_type="order",
-            target_id=str(order_id),
+            target_id=order_id,
             metadata={"old_status": old_status, "new_status": status},
         )
     except Exception:
@@ -109,12 +111,13 @@ def post_refund(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="order_refund",
             target_type="order",
-            target_id=str(order_id),
+            target_id=order_id,
         )
     except Exception:
         pass  # Non-blocking
@@ -131,12 +134,13 @@ def post_dispute(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     try:
+        admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
         log_admin_action(
             db=db,
-            admin_user_id=admin_user.id,
+            admin_user_id=admin_id,
             action="order_dispute",
             target_type="order",
-            target_id=str(order_id),
+            target_id=order_id,
         )
     except Exception:
         pass  # Non-blocking
@@ -153,7 +157,7 @@ def get_order_download_info(
     Admin endpoint: returns a signed download URL for the first product in an order.
     Used by OrdersManagement.jsx to give admins access to order files.
     """
-    from app.models.order import Order as OrderModel, OrderItem
+    from app.models.order import Order as OrderModel
     from app.models.product import Product as ProductModel
     from app.api.products_router import generate_download_token
 

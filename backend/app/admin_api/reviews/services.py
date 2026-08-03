@@ -1,3 +1,4 @@
+from typing import Any
 from app.shared.firebase.connection import db, firebase_connected
 from fastapi import HTTPException
 from app.db.session import SessionLocal
@@ -5,6 +6,81 @@ from app.models.review import Review as ReviewModel
 from app.models.user import User as UserModel
 from app.models.product import Product as ProductModel
 from sqlalchemy import or_, func
+
+
+LEGACY_USER_MAP = {
+    80: {"name": "Samruddhi Durge", "email": "whymehack05@gmail.com"},
+    6:  {"name": "alok", "email": "customer123@gmail.com"},
+}
+
+def _resolve_customer_name(r_data: Any, db_s: Any = None) -> str:
+    is_dict = isinstance(r_data, dict)
+    if is_dict:
+        for key in ['customer', 'customer_name', 'reviewer_name', 'displayName', 'fullName', 'user_name', 'author', 'name', 'buyer_name']:
+            val = r_data.get(key)
+            if val and isinstance(val, str) and val.strip() and val.strip().lower() != 'anonymous':
+                return val.strip()
+    else:
+        if getattr(r_data, 'user', None):
+            u_name = r_data.user.name or r_data.user.email
+            if u_name and u_name.strip() and u_name.strip().lower() != 'anonymous':
+                return u_name.strip()
+
+    user_id = r_data.get('user_id') or r_data.get('customer_id') or r_data.get('uid') if is_dict else getattr(r_data, 'user_id', None)
+
+    # 1. SQL lookup
+    if user_id is not None:
+        try:
+            should_close = False
+            local_db = db_s
+            if not local_db:
+                local_db = SessionLocal()
+                should_close = True
+
+            uid_num = int(user_id) if str(user_id).isdigit() else None
+            if uid_num:
+                u = local_db.query(UserModel).filter(UserModel.id == uid_num).first()
+                if u and (u.name or u.email):
+                    res_name = u.name or u.email
+                    if should_close: local_db.close()
+                    return res_name
+            u = local_db.query(UserModel).filter(UserModel.firebase_uid == str(user_id)).first()
+            if u and (u.name or u.email):
+                res_name = u.name or u.email
+                if should_close: local_db.close()
+                return res_name
+            if should_close: local_db.close()
+        except Exception:
+            pass
+
+    # 2. Firestore lookup
+    if firebase_connected and db is not None and user_id is not None:
+        try:
+            u_doc = db.collection("users").document(str(user_id)).get()
+            if u_doc.exists:
+                ud = u_doc.to_dict() or {}
+                fn = ud.get("fullName") or ud.get("displayName") or ud.get("name") or ud.get("email")
+                if fn:
+                    return fn
+            q = list(db.collection("users").where("uid", "==", str(user_id)).limit(1).stream())
+            if q:
+                ud = q[0].to_dict() or {}
+                fn = ud.get("fullName") or ud.get("displayName") or ud.get("name") or ud.get("email")
+                if fn:
+                    return fn
+        except Exception:
+            pass
+
+    # 3. Legacy ID fallback
+    if user_id is not None:
+        try:
+            uid_num = int(user_id) if str(user_id).isdigit() else None
+            if uid_num and uid_num in LEGACY_USER_MAP:
+                return LEGACY_USER_MAP[uid_num]["name"]
+        except Exception:
+            pass
+
+    return "Anonymous"
 
 
 def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, search: str | None):
@@ -24,16 +100,23 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
                 query_ref = query_ref.where("rating", "<", 3)
 
             try:
-                total = query_ref.count().get()[0][0].value
+                count_query: Any = query_ref.count()
+                count_res: Any = count_query.get()
+                total = count_res[0][0].value
             except Exception:
                 total = len(list(query_ref.stream()))
 
-            # Order by createdAt or date descending and offset/limit
-            paginated_query = query_ref.order_by("createdAt", direction=firestore.Query.DESCENDING).offset((page - 1) * page_size).limit(page_size)
+            # Order by rating first if inequality filter is applied to satisfy Firestore constraints
+            if sentiment in ("positive", "negative"):
+                paginated_query = query_ref.order_by("rating").order_by("createdAt", direction="DESCENDING")
+            else:
+                paginated_query = query_ref.order_by("createdAt", direction="DESCENDING")
+                
+            paginated_query = paginated_query.offset((page - 1) * page_size).limit(page_size)
             docs = list(paginated_query.stream())
             items = []
             for doc in docs:
-                r = doc.to_dict()
+                r = doc.to_dict() or {}
                 rating = int(r.get("rating", 5))
                 if rating > 3:
                     sent = "positive"
@@ -44,7 +127,7 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
 
                 items.append({
                     "id":        doc.id,
-                    "customer":  r.get("customer", "Anonymous"),
+                    "customer":  _resolve_customer_name(r),
                     "comment":   r.get("comment", ""),
                     "product":   r.get("product", "General Product"),
                     "sentiment": sent,
@@ -106,7 +189,7 @@ def get_paginated_reviews(page: int, page_size: int, sentiment: str | None, sear
 
             items.append({
                 "id":        str(r.id),
-                "customer":  r.user.name if r.user else "Anonymous",
+                "customer":  _resolve_customer_name(r, db_s),
                 "comment":   r.comment or "",
                 "product":   r.product.title if r.product else "Product",
                 "sentiment": sent,
@@ -208,7 +291,7 @@ def get_reviews_dashboard_data():
                     positive_count += 1
 
                 p_title = r.product.title if r.product else "Product"
-                u_name = r.user.name if r.user else "Anonymous"
+                u_name = _resolve_customer_name(r, db_s)
 
                 latest_reviews.append({
                     "id":       str(r.id),
@@ -275,7 +358,7 @@ def get_reviews_dashboard_data():
     positive_count = neutral_count = negative_count = 0
 
     for doc in docs:
-        r = doc.to_dict()
+        r = doc.to_dict() or {}
         rating = int(r.get("rating", 5))
         ratings.append(rating)
 
@@ -291,7 +374,7 @@ def get_reviews_dashboard_data():
 
         latest_reviews.append({
             "id":       doc.id,
-            "customer": r.get("customer", "Anonymous"),
+            "customer": _resolve_customer_name(r),
             "comment":  r.get("comment", ""),
             "product":  r.get("product", "General Product"),
             "sentiment":sentiment,
@@ -344,11 +427,14 @@ def get_reviews_dashboard_data():
 def moderate_review(review_id: str, action: str):
     db_s = SessionLocal()
     try:
-        review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
-        if review:
-            if action == "delete":
-                db_s.delete(review)
-            db_s.commit()
+        if review_id.isdigit():
+            review = db_s.query(ReviewModel).filter(ReviewModel.id == int(review_id)).first()
+            if review:
+                if action == "delete":
+                    db_s.delete(review)
+                db_s.commit()
+    except Exception as e:
+        print(f"[reviews] SQLite moderate query warning: {e}")
     finally:
         db_s.close()
 

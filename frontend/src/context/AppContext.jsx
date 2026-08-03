@@ -1679,7 +1679,7 @@ export function AppContextProvider({ children }) {
       navigate('/auth/verify-email');
       setCurrentView('verify-email');
     } else if (view === 'dashboard') {
-      if (payload) setDashboardTab(payload);
+      setDashboardTab(payload || 'Dashboard');
       getDashboardPath().then(path => navigate(path));
       setCurrentView('dashboard');
     } else if (view === 'orders') {

@@ -317,8 +317,8 @@ export default function Vendors() {
 
         {/* ── Page header ── */}
         <PageHeader
-          title="Merchant Control Board"
-          subtitle="Approve applications, manage permissions, and control access levels for both vendors and affiliates."
+          title="Vendors & Affiliates"
+          subtitle="Review vendor and affiliate accounts, manage seller status, and track referrals."
           actions={
             <button
               onClick={async () => {

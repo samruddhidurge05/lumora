@@ -128,7 +128,8 @@ export default function AffiliateEarnings({
   /* ── Monthly chart ──────────────────────────────────────────────────── */
   const monthlyEarnings = useMemo(() => buildMonthlyChart(activeCommissions), [activeCommissions]);
   const monthLabels     = useMemo(() => buildMonthLabels(), []);
-  const chartMax        = Math.max(...monthlyEarnings, 1);
+  const rawChartMax     = Math.max(...monthlyEarnings, 0);
+  const chartMax        = Math.max(1000, rawChartMax);
   const chartTotal      = monthlyEarnings.reduce((a, b) => a + b, 0);
   const currentMonthIdx = 11; // always the last bar = current month
 
@@ -136,12 +137,20 @@ export default function AffiliateEarnings({
   const isMobile = useIsMobile(768);
 
   /* ── Filtered commission list ────────────────────────────────────────── */
-  const filtered = activeCommissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
+  const filtered = activeCommissions.filter(c => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'unpaid') return c.status !== 'paid';
+    return c.status === statusFilter;
+  });
 
   /* ── Count by status for filter badges ───────────────────────────────── */
   const countByStatus = useMemo(() => {
-    const m = { all: activeCommissions.length, pending: 0, approved: 0, paid: 0 };
-    activeCommissions.forEach(c => { if (m[c.status] !== undefined) m[c.status]++; });
+    const m = { all: activeCommissions.length, unpaid: 0, approved: 0, paid: 0 };
+    activeCommissions.forEach(c => { 
+      if (c.status !== 'paid') m.unpaid++;
+      if (c.status === 'approved') m.approved++;
+      if (c.status === 'paid') m.paid++;
+    });
     return m;
   }, [activeCommissions]);
 
@@ -363,9 +372,9 @@ export default function AffiliateEarnings({
       }}>
         {[
           { label: 'Total Commissions', value: activeCommissions.length },
-          { label: 'Paid',              value: countByStatus.paid,     color: '#15803D' },
-          { label: 'Approved',          value: countByStatus.approved, color: '#4338CA' },
-          { label: 'Pending',           value: countByStatus.pending,  color: '#B45309' },
+          { label: 'Paid',              value: formatINR(paidEarnings),     color: '#15803D' },
+          { label: 'Approved',          value: formatINR(approvedEarnings), color: '#4338CA' },
+          { label: 'Pending',           value: formatINR(pendingEarnings),  color: '#B45309' },
         ].map((item, i) => (
           <div key={i} style={{ minWidth: 0 }}>
             <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>{item.label}</span>
@@ -411,12 +420,31 @@ export default function AffiliateEarnings({
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(3px, 1.2vw, 8px)', height: '160px', minWidth: '280px', width: '100%' }}>
               {monthlyEarnings.map((val, i) => {
                 const pct       = (val / chartMax) * 100;
-                const isHighest = val === chartMax && val > 0;
+                const isHighest = val === rawChartMax && val > 0;
                 const isCurrent = i === currentMonthIdx;
                 return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end', minWidth: '18px' }}>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end', minWidth: '18px', position: 'relative', cursor: 'pointer' }} className="group">
+                    {/* Hover Tooltip */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{
+                      position: 'absolute',
+                      bottom: `calc(${Math.max(pct, val > 0 ? 4 : 0)}% + 10px)`,
+                      background: '#fff',
+                      border: '1px solid rgba(196,181,253,0.4)',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      boxShadow: '0 4px 12px rgba(90,30,126,0.1)',
+                      pointerEvents: 'none',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      minWidth: '60px'
+                    }}>
+                      <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)' }}>{monthLabels[i]}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b0764' }}>{formatINR(val)}</span>
+                    </div>
+
                     <div
-                      title={`${monthLabels[i]}: ${formatINR(val)}`}
                       style={{
                         width: '100%',
                         height: `${Math.max(pct, val > 0 ? 4 : 0)}%`,
@@ -431,7 +459,6 @@ export default function AffiliateEarnings({
                           ? '1px solid rgba(123,63,160,0.30)'
                           : '1px solid rgba(196,181,253,0.20)',
                         transition: 'all 0.3s',
-                        cursor: 'default',
                       }}
                     />
                     <span style={{ fontSize: 'clamp(0.50rem, 1.5vw, 0.58rem)', fontWeight: 600, color: (isHighest || isCurrent) ? '#7B3FA0' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
@@ -460,7 +487,7 @@ export default function AffiliateEarnings({
 
           {/* Filter tabs */}
           <div className="aff-filter-tabs" style={{ display: 'flex', gap: '6px', background: 'rgba(45,0,96,0.02)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(45,0,96,0.06)', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            {['all','pending','approved','paid'].map(s => (
+            {['all','unpaid','approved','paid'].map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
