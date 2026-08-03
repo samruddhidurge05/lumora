@@ -269,7 +269,7 @@ function AppContent() {
   
   const location = useLocation();
 
-  // Synchronize and persist active authentication role across navigation
+  // Synchronize tab-scoped authentication role across navigation
   useEffect(() => {
     try {
       const urlParams = new URLSearchParams(location.search);
@@ -284,15 +284,13 @@ function AppContent() {
         targetRole = 'vendor';
       } else if (location.pathname.startsWith('/admin')) {
         targetRole = 'admin';
+      } else if (location.pathname.startsWith('/customer')) {
+        targetRole = 'customer';
       }
 
       if (targetRole) {
-        if (sessionStorage.getItem('lumora_last_auth_role') !== targetRole) {
-          sessionStorage.setItem('lumora_last_auth_role', targetRole);
-        }
-        if (localStorage.getItem('lumora_active_role') !== targetRole) {
-          localStorage.setItem('lumora_active_role', targetRole);
-        }
+        sessionStorage.setItem('lumora_tab_role', targetRole);
+        sessionStorage.setItem('lumora_last_auth_role', targetRole);
       }
     } catch (_) {}
   }, [location.search, location.pathname]);

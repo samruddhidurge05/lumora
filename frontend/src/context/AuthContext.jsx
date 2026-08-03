@@ -373,13 +373,12 @@ export const AuthProvider = ({ children }) => {
         // User synced successfully
 
       } else {
-        // ── No Firebase user — clear ALL session state ────────────────────────
-        // BUG FIX: clearBackendToken() now also removes lumora_active_role and
-        // lumora_user, preventing stale role from persisting to the next login.
+        // ── No Firebase user — clear session for current route role only ─────────
+        const currentRouteRole = getRouteRoleHint();
+        clearRoleSession(currentRouteRole);
         setUser(null);
         setUserRole(null);
         setIsAccountDisabled(false);
-        clearBackendToken(); // clears: backend_token, backend_uid, active_role, user
         clearSessionSafely();
       }
 
@@ -720,7 +719,7 @@ export const AuthProvider = ({ children }) => {
 
   /** Role-specific logout — clears ONLY the specified role's session */
   async function logoutRole(targetRole = null) {
-    const roleToLogout = targetRole || userRole || getRouteRoleHint() || 'customer';
+    const roleToLogout = targetRole || getRouteRoleHint() || userRole || 'customer';
     const normRole = roleToLogout === 'user' ? 'customer' : roleToLogout;
 
     if (auth.currentUser) {
@@ -729,24 +728,27 @@ export const AuthProvider = ({ children }) => {
       } catch (_) {}
     }
 
-    // 1. Clear role-specific token & session storage
+    // 1. Clear ONLY role-specific token & session storage
     clearRoleSession(normRole);
 
-    // 2. Clear active React state and shared tokens for this window
-    clearBackendToken();
+    // 2. Clear local React state for this window
     clearSessionSafely();
     setUser(null);
     setUserRole(null);
 
-    // 3. Sign out of Firebase so auth.currentUser is cleared
-    try { await signOut(auth); } catch (_) {}
+    // 3. Only sign out of Firebase if no other active role tokens exist
+    const otherRoles = ['customer', 'affiliate', 'vendor', 'admin'].filter(r => r !== normRole);
+    const hasOtherRoleSession = otherRoles.some(r => !!localStorage.getItem(`lumora_token_${r}`));
+    if (!hasOtherRoleSession) {
+      try { await signOut(auth); } catch (_) {}
+    }
 
     // 4. Redirect to proper portal landing/login page
     let target = '/';
     if (normRole === 'affiliate') target = '/partnership/affiliate';
     else if (normRole === 'vendor') target = '/auth/login?role=vendor';
     else if (normRole === 'admin') target = '/admin/login';
-    else target = '/';
+    else target = '/auth/login?role=customer';
 
     window.location.href = target;
   }

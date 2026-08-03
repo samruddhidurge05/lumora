@@ -813,52 +813,52 @@ function DashboardHome({
   const hasMore = filtered.length > showCount;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
       {/* Loading state indicator */}
       {loading && (
-        <div style={{ padding: '12px 20px', background: 'rgba(123,63,160,0.08)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#7B3FA0', fontSize: '0.82rem', fontWeight: 600 }}>
-          <Clock size={16} style={{ animation: 'spin 2s linear infinite' }} /> Syncing live dashboard stats with backend server...
+        <div style={{ padding: '8px 16px', background: 'rgba(123,63,160,0.08)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#7B3FA0', fontSize: '0.78rem', fontWeight: 600 }}>
+          <Clock size={14} style={{ animation: 'spin 2s linear infinite' }} /> Syncing live dashboard stats with backend server...
         </div>
       )}
 
       {/* API error banner */}
       {apiError && !loading && (
-        <div style={{ padding: '12px 20px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#DC2626', fontSize: '0.82rem', fontWeight: 600 }}>
-          <AlertCircle size={16} /> {apiError}
+        <div style={{ padding: '8px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#DC2626', fontSize: '0.78rem', fontWeight: 600 }}>
+          <AlertCircle size={14} /> {apiError}
         </div>
       )}
 
       {/* Hero welcome */}
       <div className="glass-card dash-welcome-card" style={{
-        padding: '40px 44px',
+        padding: '18px 24px',
         background: 'linear-gradient(135deg, rgba(246,244,255,0.92) 0%, rgba(237,233,254,0.60) 100%)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: '24px', position: 'relative', overflow: 'hidden',
+        flexWrap: 'wrap', gap: '16px', position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '-60px', right: '60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,148,230,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
-          <span className="caption-premium" style={{ color: '#7B3FA0' }}>✦ Customer Portal</span>
-          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '2.4rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '6px', lineHeight: 1.05 }}>
+          <span className="caption-premium" style={{ color: '#7B3FA0', fontSize: '0.70rem' }}>✦ Customer Portal</span>
+          <h2 className="text-editorial dash-welcome-title" style={{ fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1.1 }}>
             Welcome back, {profile?.name || username}.
           </h2>
-          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '10px', lineHeight: 1.6, maxWidth: '420px' }}>
+          <p className="dash-welcome-desc" style={{ color: 'var(--text-muted)', fontSize: '0.80rem', marginTop: '4px', lineHeight: 1.4, maxWidth: '420px' }}>
             Explore {filtered.length} premium digital products — browse, wishlist, and add to cart.
           </p>
           {/* Quick Actions */}
-          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-            <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)', fontFamily: 'var(--font-sans)' }}>
-              <TrendingUp size={14} /> Browse Marketplace
+          <div className="dash-welcome-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+            <button onClick={() => navigateTo('marketplace')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', cursor: 'pointer', boxShadow: '0 3px 12px rgba(123,63,160,0.30)', fontFamily: 'var(--font-sans)' }}>
+              <TrendingUp size={13} /> Browse Marketplace
             </button>
-            <button onClick={() => navigateTo('downloads')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <Download size={14} /> My Downloads
+            <button onClick={() => navigateTo('downloads')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+              <Download size={13} /> My Downloads
             </button>
-            <button onClick={() => navigateTo('orders')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 22px', fontSize: '0.84rem', fontWeight: 700, borderRadius: '12px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-              <CreditCard size={14} /> View Orders
+            <button onClick={() => navigateTo('orders')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 16px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '10px', border: '1.5px solid rgba(196,148,230,0.40)', background: 'rgba(255,255,255,0.80)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+              <CreditCard size={13} /> View Orders
             </button>
           </div>
         </div>
-        <div className="dash-welcome-avatar" style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 32px rgba(123,63,160,0.30)', fontSize: '2.5rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
+        <div className="dash-welcome-avatar" style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(123,63,160,0.25)', fontSize: '1.4rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
           {(profile?.name || username)[0]?.toUpperCase()}
         </div>
       </div>
@@ -866,60 +866,58 @@ function DashboardHome({
       {/* Stats row */}
       <div className="dash-stat-grid">
         {QUICK_STATS.map((s, i) => (
-          <div key={i} className="premium-flat-card" style={{ padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div key={i} className="premium-flat-card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-              <div style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '5px', lineHeight: 1 }}>{s.value}</div>
-              <span style={{ fontSize: '0.68rem', color: '#7B3FA0', fontWeight: 600, marginTop: '4px', display: 'block' }}>{s.trend}</span>
+              <span style={{ fontSize: '0.58rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
+              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1 }}>{s.value}</div>
+              <span style={{ fontSize: '0.64rem', color: '#7B3FA0', fontWeight: 600, marginTop: '2px', display: 'block' }}>{s.trend}</span>
             </div>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,148,230,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(123,63,160,0.07)', border: '1px solid rgba(196,148,230,0.25)', color: '#7B3FA0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {s.icon}
             </div>
           </div>
         ))}
       </div>
 
-
-
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
         {/* Recent Purchases */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShoppingBag size={16} style={{ color: '#7B3FA0' }} /> Recent Purchases
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ShoppingBag size={15} style={{ color: '#7B3FA0' }} /> Recent Purchases
             </h4>
-            <button onClick={() => navigateTo('purchases')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>View All</button>
+            <button onClick={() => navigateTo('purchases')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>View All</button>
           </div>
           {recentOrders && recentOrders.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {recentOrders.slice(0, 3).map((ord, idx) => (
-                <div key={ord.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {recentOrders.slice(0, 2).map((ord, idx) => (
+                <div key={ord.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>Order #{ord.id}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
+                    <div style={{ fontSize: '0.80rem', fontWeight: 700, color: 'var(--text-primary)' }}>Order #{ord.id}</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount != null ? ord.total_amount : 0)}</div>
-                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.10)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{ord.status || 'Completed'}</span>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#7B3FA0' }}>{formatPrice(ord.total_amount != null ? ord.total_amount : 0)}</div>
+                    <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.10)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{ord.status || 'Completed'}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.40)', borderRadius: '12px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
               No recent order history recorded yet.
             </div>
           )}
         </div>
 
         {/* Recent Activity */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={16} style={{ color: '#7B3FA0' }} /> Recent Activity & Alerts
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={15} style={{ color: '#7B3FA0' }} /> Recent Activity & Alerts
             </h4>
-            <button onClick={() => navigateTo('notifications')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>View Alerts</button>
+            <button onClick={() => navigateTo('notifications')} style={{ background: 'none', border: 'none', color: '#7B3FA0', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>View Alerts</button>
           </div>
           {activities && activities.length > 0 ? (() => {
             // Internal system events — never shown to users
@@ -955,40 +953,40 @@ function DashboardHome({
             const visible = activities.filter(a => !HIDDEN_TYPES.has(a.activity_type || a.event));
             if (visible.length === 0) {
               return (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.40)', borderRadius: '12px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+                <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
                   No recent activity logged.
                 </div>
               );
             }
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {visible.slice(0, 3).map((act, idx) => (
-                  <div key={act.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <CheckCircle size={15} style={{ color: '#7B3FA0', flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {visible.slice(0, 2).map((act, idx) => (
+                  <div key={act.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircle size={14} style={{ color: '#7B3FA0', flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {TYPE_LABEL[act.activity_type || act.event] || 'Account Activity'}
                       </div>
-                      <div style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{act.details || act.created_at || 'Just now'}</div>
                     </div>
                   </div>
                 ))}
               </div>
             );
           })() : notifsSummary && notifsSummary.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {notifsSummary.slice(0, 3).map((n, idx) => (
-                <div key={n.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Bell size={15} style={{ color: '#7B3FA0', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {notifsSummary.slice(0, 2).map((n, idx) => (
+                <div key={n.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Bell size={14} style={{ color: '#7B3FA0', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>{n.title || n.message}</div>
-                    <div style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>Notification</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>{n.title || n.message}</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Notification</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.40)', borderRadius: '12px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
               No recent activity logged.
             </div>
           )}

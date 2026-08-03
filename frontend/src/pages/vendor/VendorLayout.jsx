@@ -6,7 +6,7 @@ import { Menu, X } from 'lucide-react';
 import '../styles/vendor.css';
 
 export default function VendorLayout({ activePage, title, subtitle, actions, children }) {
-  const { user, logout, isAccountDisabled, isPlatformPaused } = useAuth();
+  const { user, logout, logoutRole, isAccountDisabled, isPlatformPaused } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -21,8 +21,12 @@ export default function VendorLayout({ activePage, title, subtitle, actions, chi
 
   const handleLogout = async (e) => {
     e.preventDefault();
-    try { await logout(); } catch (_) {}
-    navigate('/');
+    if (typeof logoutRole === 'function') {
+      await logoutRole('vendor');
+    } else {
+      try { await logout(); } catch (_) {}
+      navigate('/');
+    }
   };
 
   const handleProfileClick = (e) => {
