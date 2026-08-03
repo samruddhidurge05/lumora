@@ -32,11 +32,17 @@ const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
 const formatINR = (v) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
 
-export default function AffiliateProductDetail({ product, onBack, profile, stats, commissions }) {
+export default function AffiliateProductDetail({ product, onBack, profile, stats, commissions, initialTab = 'overview' }) {
   const { formatPrice } = useApp();
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedShort, setCopiedShort] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(initialTab || 'overview');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const [customLinks, setCustomLinks] = useState([]);
   const [customName, setCustomName] = useState('');
