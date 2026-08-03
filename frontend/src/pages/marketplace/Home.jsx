@@ -173,6 +173,81 @@ const TESTIMONIALS = [
   { name:'James Liu',    role:'Creative Director',     text:'The design assets are used in our Fortune 500 projects. Worth every rupee.', avatar:'J' },
 ];
 
+/* ── RESPONSIVE BACKGROUND VIDEO COMPONENT ── */
+function ResponsiveBackgroundVideo() {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768;
+    }
+    return false;
+  });
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {});
+    }
+  }, [isMobile]);
+
+  const mobileSrc = "/videos/give_me_this_same_video_making (online-video-cutter.com).mp4";
+  const desktopSrc = "/videos/Photorealistic_degree_rot (1).mp4";
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      zIndex: 0,
+      overflow: 'hidden',
+      pointerEvents: 'none',
+    }}>
+      <video
+        ref={videoRef}
+        key={isMobile ? 'mobile-bg-active' : 'desktop-bg-active'}
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'cover',
+          objectPosition: 'center 40%',
+          filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+        }}
+      >
+        <source src={isMobile ? mobileSrc : desktopSrc} type="video/mp4" />
+        <source src={isMobile ? "/videos/mobile-bg.mp4" : "/videos/desktop-bg.mp4"} type="video/mp4" />
+        <source src="/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" type="video/mp4" />
+      </video>
+
+      {/* Dark Vignette Overlay for rich text readability across all sections */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.30) 0%, rgba(13, 5, 24, 0.45) 50%, rgba(13, 5, 24, 0.65) 100%)',
+        pointerEvents: 'none',
+      }} />
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════
    MAIN LANDING PAGE COMPONENT
 ══════════════════════════════════════════════ */
@@ -195,9 +270,6 @@ export default function Home() {
   const ordered = uniqueProducts;
 
   // ── Partition into non-overlapping sections of 8 ──
-  // Featured always shows the pinned pCloud products (up to first 8).
-  // Trending shows pinned products 9–12 + first others.
-  // Latest shows the rest.
   const SECTION_SIZE = 8;
   const featured = ordered.slice(0, SECTION_SIZE);
   const trending  = ordered.slice(SECTION_SIZE, SECTION_SIZE * 2);
@@ -237,80 +309,7 @@ export default function Home() {
   return (
     <div className="lumora-landing-root" style={{ minHeight:'100vh', position:'relative', zIndex:1 }}>
       {/* ── GLOBAL FIXED CINEMATIC BACKGROUND VIDEO FOR ENTIRE LANDING PAGE ── */}
-      {/* Fixed Fullscreen Background Video Container */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 0,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-      }}>
-        {/* Responsive video visibility rules */}
-        <style>{`
-          @media (max-width: 768px) {
-            .hero-bg-video-desktop { display: none !important; }
-            .hero-bg-video-mobile { display: block !important; }
-          }
-          @media (min-width: 769px) {
-            .hero-bg-video-desktop { display: block !important; }
-            .hero-bg-video-mobile { display: none !important; }
-          }
-        `}</style>
-
-        {/* Laptop / Desktop Background Video */}
-        <video
-          className="hero-bg-video-desktop"
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            objectFit: 'cover',
-            objectPosition: 'center 40%',
-            filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
-          }}
-        >
-          <source src="/videos/Photorealistic_degree_rot (1).mp4" type="video/mp4" />
-          <source src="/videos/hero-bg.mp4" type="video/mp4" />
-        </video>
-
-        {/* Responsive Mobile Background Video (Cutter edited version) */}
-        <video
-          className="hero-bg-video-mobile"
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            objectFit: 'cover',
-            objectPosition: 'center 40%',
-            filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
-          }}
-        >
-          <source src="/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" type="video/mp4" />
-          <source src="/videos/give_me_this_same_video_making (online-video-cutter.com).mp4" type="video/mp4" />
-        </video>
-        {/* Dark Vignette Overlay for rich text readability across all sections */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(180deg, rgba(13, 5, 24, 0.30) 0%, rgba(13, 5, 24, 0.45) 50%, rgba(13, 5, 24, 0.65) 100%)',
-          pointerEvents: 'none',
-        }} />
-      </div>
+      <ResponsiveBackgroundVideo />
 
       <Navbar />
 
