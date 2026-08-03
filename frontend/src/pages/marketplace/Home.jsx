@@ -200,8 +200,8 @@ function ResponsiveBackgroundVideo() {
     }
   }, [isMobile]);
 
-  const mobileSrc = "/videos/mobile-bg.mp4";
-  const desktopSrc = "/videos/desktop-bg.mp4";
+  const mobileSrc = "/videos/give_me_this_same_video_making (online-video-cutter.com).mp4";
+  const desktopSrc = "/videos/Photorealistic_degree_rot (1).mp4";
 
   return (
     <div style={{
@@ -233,7 +233,8 @@ function ResponsiveBackgroundVideo() {
         }}
       >
         <source src={isMobile ? mobileSrc : desktopSrc} type="video/mp4" />
-        <source src={isMobile ? "/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" : "/videos/Photorealistic_degree_rot (1).mp4"} type="video/mp4" />
+        <source src={isMobile ? "/videos/mobile-bg.mp4" : "/videos/desktop-bg.mp4"} type="video/mp4" />
+        <source src="/videos/Photorealistic_degree_rot (1) (online-video-cutter.com).mp4" type="video/mp4" />
       </video>
 
       {/* Dark Vignette Overlay for rich text readability across all sections */}
