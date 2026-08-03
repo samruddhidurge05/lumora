@@ -3,19 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useDashboard, useOrders, useWithdrawals } from '../../hooks/useVendorData';
+import { useVendorChartData } from '../../hooks/useVendorChartData';
+import VendorChartControls from '../../components/vendor/VendorChartControls';
+import VendorBarChart from '../../components/vendor/VendorBarChart';
 import { 
-  Package, 
-  Clock, 
-  ArrowDownLeft, 
-  ArrowUpRight, 
-  DollarSign, 
-  Wallet, 
-  Percent, 
-  Award,
-  RefreshCw,
-  AlertCircle,
-  FileText,
-  CheckCircle2
+  Package, Clock, DollarSign, Wallet, Percent, Award,
+  RefreshCw, AlertCircle, FileText, CheckCircle2
 } from 'lucide-react';
 
 function useIsMobile(bp = 768) {
@@ -50,6 +43,8 @@ function MiniBar({ data, height = 60 }) {
 export default function Earnings() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
+  const [period, setPeriod] = useState('12m');
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const isMobile = useIsMobile();
   
   const { data: dashboardData, loading: dashLoading, error: dashError, refresh: refreshDash } = useDashboard();
@@ -128,15 +123,12 @@ export default function Earnings() {
   const transactions = allTxns;
   const filtered = transactions.filter(t => tab === 'all' || t.type === tab);
 
-  // Chart aggregation
-  const monthlyChartData = dashboardData?.monthlyChart || [];
-  const chartGross = monthlyChartData.length > 0
-    ? monthlyChartData.map(item => item.value || 0)
-    : [0,0,0,0,0,0,0,0,0,0,0,0];
-  const chartNet = chartGross.map(v => Math.round(v * (1 - FEE_PCT)));
-  const displayMonths = monthlyChartData.length > 0
-    ? monthlyChartData.map(item => item.label)
-    : MONTHS;
+  // Chart aggregation — use shared hook for consistent filtering
+  const { series: chartSeries } = useVendorChartData(liveOrders, period, selectedMonth);
+  // Keep old displayMonths/chartGross/chartNet for the Revenue Comparison bars
+  const displayMonths = chartSeries.map(s => s.label);
+  const chartGross    = chartSeries.map(s => s.revenue);
+  const chartNet      = chartSeries.map(s => s.net);
 
   const formatRevenue = (val) => {
     if (val >= 100000) {
@@ -213,13 +205,19 @@ export default function Earnings() {
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20, marginBottom: 24 }}>
         <div className="v-card v-card-pad">
-          <div className="v-section-header">
+          <div className="v-section-header" style={{ marginBottom: 16 }}>
             <div>
               <div className="v-section-title">Revenue Comparison</div>
               <div className="v-section-sub">Gross vs Net earnings</div>
             </div>
+            <VendorChartControls
+              period={period} onPeriod={p => { setPeriod(p); setSelectedMonth(null); }}
+              month={selectedMonth} onMonth={setSelectedMonth}
+              isMobile={isMobile}
+            />
           </div>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
             {[['#B886D0','Gross'],['#7B3FA0','Net']].map(([c,l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 2, background: c }} />
@@ -227,16 +225,17 @@ export default function Earnings() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 120 }}>
-            {displayMonths.map((m, i) => {
+          {/* Grouped bars — Gross + Net side by side */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: chartSeries.length > 8 ? 2 : 4, height: 120 }}>
+            {chartSeries.map((s, i) => {
               const maxV = Math.max(...chartGross, 1);
               return (
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                  <div style={{ width: '100%', display: 'flex', gap: 2, alignItems: 'flex-end', height: 100 }}>
-                    <div style={{ flex: 1, borderRadius: '3px 3px 0 0', background: 'rgba(184,134,208,0.55)', height: `${(chartGross[i]/maxV)*100}%`, minHeight: 3 }} />
-                    <div style={{ flex: 1, borderRadius: '3px 3px 0 0', background: '#7B3FA0', height: `${(chartNet[i]/maxV)*100}%`, minHeight: 3 }} />
+                  <div style={{ width: '100%', display: 'flex', gap: 2, alignItems: 'flex-end', height: 100 }} title={`${s.fullLabel || s.label}\nGross: ₹${Math.round(s.revenue).toLocaleString()}\nNet: ₹${Math.round(s.net).toLocaleString()}`}>
+                    <div style={{ flex: 1, borderRadius: '3px 3px 0 0', background: 'rgba(184,134,208,0.55)', height: `${(s.revenue/maxV)*100}%`, minHeight: s.revenue > 0 ? 4 : 2, transition: 'height 0.35s' }} />
+                    <div style={{ flex: 1, borderRadius: '3px 3px 0 0', background: '#7B3FA0', height: `${(s.net/maxV)*100}%`, minHeight: s.net > 0 ? 4 : 2, transition: 'height 0.35s' }} />
                   </div>
-                  <span style={{ fontSize: 8, color: 'var(--v-text3)' }}>{m}</span>
+                  <span style={{ fontSize: chartSeries.length > 8 ? 7 : 8, color: 'var(--v-text3)', whiteSpace: 'nowrap' }}>{s.label}</span>
                 </div>
               );
             })}
@@ -261,7 +260,7 @@ export default function Earnings() {
           <div className="v-divider" style={{ margin: 0 }} />
           <div>
             <div style={{ fontSize: 12, color: 'var(--v-text3)', marginBottom: 10 }}>Monthly Trend</div>
-            <MiniBar data={chartNet} height={60} />
+            <MiniBar data={chartNet.length ? chartNet : [0]} height={60} />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
               <span style={{ fontSize: 10, color: 'var(--v-text3)' }}>{displayMonths[0] || 'Jan'}</span>
               <span style={{ fontSize: 10, color: 'var(--v-text3)' }}>{displayMonths[displayMonths.length - 1] || 'Dec'}</span>

@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import {
   DollarSign, Package, ShoppingBag, Star,
   PlusCircle, BarChart2, CreditCard, ClipboardList,
-  Award, Zap, Shield, TrendingUp, Check,
+  Award, Shield, TrendingUp,
   RefreshCw, AlertCircle, Clock, CheckCircle,
   Eye, MessageSquare, ArrowRight,
 } from 'lucide-react';
 import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useDashboard } from '../../hooks/useVendorData';
+import { useVendorChartData } from '../../hooks/useVendorChartData';
+import VendorChartControls from '../../components/vendor/VendorChartControls';
+import VendorBarChart from '../../components/vendor/VendorBarChart';
 
 function useIsMobile(bp = 768) {
   const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
@@ -80,6 +83,7 @@ function Skeleton({ w = '100%', h = '16px', r = '6px', style = {} }) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState('12m');
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const { data, stats, loading, error, refresh } = useDashboard();
 
   /* Derived values from real API data ──────────────────────────────────── */
@@ -99,13 +103,45 @@ export default function Dashboard() {
 
   /* Revenue chart data ──────────────────────────────────────────────────── */
   const MONTHS_12 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const { MONTH_NAMES: MN } = { MONTH_NAMES: ['January','February','March','April','May','June','July','August','September','October','November','December'] };
+
   const chartData = monthlyChart.length
     ? monthlyChart
     : MONTHS_12.map(m => ({ label: m, value: 0 }));
 
-  const filtered30 = chartData.slice(-6);
-  const displayChart = period === '30d' ? filtered30 : chartData;
-  const chartMax = Math.max(...displayChart.map(d => d.value), 1);
+  // Build filtered dashboard chart series based on period + selectedMonth
+  const dashboardChartSeries = (() => {
+    const now = new Date();
+    let raw = chartData; // [{label, value}]
+
+    // For 6m: last 6 items; this_month/30d: use full set with filter
+    if (period === '6m') raw = chartData.slice(-6);
+    else if (period === 'this_month') raw = chartData.slice(-1);
+    else if (period === 'this_year') {
+      // current month index (0-11), show Jan through current
+      raw = chartData.slice(0, now.getMonth() + 1);
+    }
+
+    const result = raw.map((d, i) => {
+      const monthIdx = i; // for 12m chart this is relative
+      // If a specific month is selected, zero-out non-matching entries
+      // (we match by label abbreviation)
+      const monthShortNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const labelMonth = monthShortNames.findIndex(m => m === d.label);
+      const matchesFilter = selectedMonth === null || labelMonth === selectedMonth;
+      const rev = matchesFilter ? (d.value || 0) : 0;
+      return {
+        label: d.label,
+        fullLabel: MN[labelMonth] !== undefined ? MN[labelMonth] : d.label,
+        revenue: rev,
+        net: Math.round(rev * 0.85),
+        orders: null,
+        growth: null,
+      };
+    });
+    return result;
+  })();
+
   const sparkVal = totalRevenue > 0
     ? totalRevenue >= 100000
       ? `₹${(totalRevenue / 100000).toFixed(2)}L`
@@ -159,20 +195,24 @@ export default function Dashboard() {
       {/* ── Revenue chart + Level ────────────────────────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap:'20px', marginBottom:'24px' }}>
 
-        {/* Revenue sparkline */}
+        {/* Revenue chart with new controls */}
         <div className="v-card v-card-pad v-fade-in v-delay-1">
-          <div className="v-section-header">
+          <div className="v-section-header" style={{ flexWrap: 'wrap', gap: 10 }}>
             <div>
               <div className="v-section-title">Revenue Overview</div>
-              <select className="v-select" style={{ marginTop:'6px', padding:'5px 28px 5px 10px', fontSize:'12px', height:'30px' }}
-                value={period} onChange={e => setPeriod(e.target.value)}>
-                <option value="12m">Last 12 Months</option>
-                <option value="30d">Last 6 Months</option>
-              </select>
             </div>
-            <div className="v-kpi-row">
-              <span className="v-kpi-value">{loading ? '…' : sparkVal}</span>
-              <span className="v-kpi-delta up">Total</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div className="v-kpi-row" style={{ marginTop: 0 }}>
+                <span className="v-kpi-value" style={{ fontSize: '1.3rem' }}>{loading ? '…' : sparkVal}</span>
+                <span className="v-kpi-delta up">Total</span>
+              </div>
+              <VendorChartControls
+                period={period}
+                onPeriod={p => { setPeriod(p); setSelectedMonth(null); }}
+                month={selectedMonth}
+                onMonth={setSelectedMonth}
+                isMobile={isMobile}
+              />
             </div>
           </div>
 
@@ -183,22 +223,12 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <>
-              <div className="v-sparkline" style={{ height:'88px', gap:'5px' }}>
-                {displayChart.map((d, i) => (
-                  <div key={i}
-                    className={`v-spark-bar${i === displayChart.length - 1 ? ' active' : ''}`}
-                    style={{ height:`${Math.max(4, (d.value / chartMax) * 100)}%` }}
-                    title={`${d.label}: ₹${Math.round(d.value).toLocaleString('en-IN')}`}
-                  />
-                ))}
-              </div>
-              <div style={{ display:'flex', justifyContent:'space-between', marginTop:'8px' }}>
-                {displayChart.map((d, i) => i % 2 === 0 && (
-                  <span key={d.label} style={{ fontSize:'10px', color:'var(--v-text3)' }}>{d.label}</span>
-                ))}
-              </div>
-            </>
+            <VendorBarChart
+              series={dashboardChartSeries}
+              height={88}
+              showOrders={false}
+              isMobile={isMobile}
+            />
           )}
         </div>
 
