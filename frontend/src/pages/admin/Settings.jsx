@@ -284,7 +284,7 @@ export default function Settings() {
       downloadAnchor.click();
       document.body.removeChild(downloadAnchor);
       sysSound.playSuccess();
-      triggerNotification("System configuration downloaded.");
+      triggerNotification("System settings downloaded.");
     }, 1000);
   };
 
@@ -318,7 +318,7 @@ export default function Settings() {
         {/* --- 1. SYSTEM HEADER --- */}
         <PageHeader
           title="System Preferences"
-          subtitle="Global Lumora Configuration Engine • Sync Active"
+          subtitle="Global Lumora Platform Settings"
           actions={
             <div className="flex items-center gap-3">
               <span className="text-[9px] font-mono text-[#7B3FA0]">Last updated: {lastSaved}</span>

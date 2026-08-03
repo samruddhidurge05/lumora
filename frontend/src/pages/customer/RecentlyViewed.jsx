@@ -43,7 +43,7 @@ export default function RecentlyViewed() {
       }
     } catch (err) {
       console.warn('[RecentlyViewed] Error loading history:', err);
-      setError('Could not sync browsing history with backend server.');
+      setError('Could not load browsing history.');
       setItems(getLocalRecentlyViewed());
     } finally {
       setLoading(false);

@@ -821,7 +821,7 @@ function DashboardHome({
       {/* Loading state indicator */}
       {loading && (
         <div style={{ padding: '8px 16px', background: 'rgba(123,63,160,0.08)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#7B3FA0', fontSize: '0.78rem', fontWeight: 600 }}>
-          <Clock size={14} style={{ animation: 'spin 2s linear infinite' }} /> Syncing live dashboard stats with backend server...
+          <Clock size={14} style={{ animation: 'spin 2s linear infinite' }} /> Updating your dashboard...
         </div>
       )}
 

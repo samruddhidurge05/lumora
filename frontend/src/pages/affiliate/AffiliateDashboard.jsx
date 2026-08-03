@@ -72,7 +72,7 @@ function AffiliateDashboardInner() {
       setPayouts(Array.isArray(payRes) ? payRes : []);
     } catch (err) {
       console.error('Error fetching affiliate data:', err);
-      setApiError(err.message || 'Failed to load affiliate portal records.');
+      setApiError(err.message || "Couldn't load affiliate data. Please refresh.");
     } finally {
       setApiLoading(false);
     }

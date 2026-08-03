@@ -29,7 +29,7 @@ export default function CustomerOrders() {
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Could not load customer orders from backend.');
+      setError("Couldn't load your orders. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function CustomerOrders() {
         <div>
           <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7B3FA0', letterSpacing: '0.08em' }}>PURCHASE HISTORY</span>
           <h2 className="text-editorial" style={{ fontSize: '1.8rem', fontWeight: 400, marginTop: '2px', color: 'var(--text-primary)' }}>My Orders</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Managing {orders.length} verified customer transactions</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{orders.length} orders total</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function CustomerOrders() {
       {loading ? (
         <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#7B3FA0', fontSize: '0.88rem', fontWeight: 600 }}>
           <Clock size={16} style={{ animation: 'spin 2s linear infinite' }} />
-          <span>Loading customer orders from backend...</span>
+          <span>Loading your orders...</span>
         </div>
       ) : orders.length === 0 ? (
         /* Empty state */

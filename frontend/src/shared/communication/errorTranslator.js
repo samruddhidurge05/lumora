@@ -13,9 +13,9 @@
 export const getFriendlyError = (error) => {
   if (!error) {
     return {
-      title: "Unable to complete request",
-      message: "We couldn't process this action right now.",
-      recovery: "Please try again. If the issue continues, contact your workspace administrator.",
+      title: "Something went wrong",
+      message: "We couldn't process this request right now.",
+      recovery: "Please try again. If the issue continues, contact support.",
       statusText: "Action Interrupted",
     };
   }
@@ -35,9 +35,9 @@ export const getFriendlyError = (error) => {
     rawMessage.toLowerCase().includes('wrong password')
   ) {
     return {
-      title: "Incorrect credentials",
-      message: "The email or password entered does not match our records.",
-      recovery: "Please double-check your credentials and try again.",
+      title: "Incorrect email or password",
+      message: "The details entered do not match our records.",
+      recovery: "Please check your email and password and try again.",
       statusText: "Sign-in Failed",
     };
   }
@@ -50,9 +50,9 @@ export const getFriendlyError = (error) => {
     rawMessage.toLowerCase().includes('no account found')
   ) {
     return {
-      title: "Administrator access required",
-      message: "You don't have permission to perform this action in this workspace.",
-      recovery: "Please sign in with an authorized administrator account or contact your team owner.",
+      title: "Admin access required",
+      message: "You don't have permission to perform this action.",
+      recovery: "Please sign in with an authorized account or contact support.",
       statusText: "Access Restricted",
     };
   }
@@ -65,8 +65,8 @@ export const getFriendlyError = (error) => {
   ) {
     return {
       title: "Session expired",
-      message: "Your secure session has expired.",
-      recovery: "Please sign in again to continue managing your workspace.",
+      message: "Your session has expired.",
+      recovery: "Please sign in again to continue.",
       statusText: "Authentication Required",
     };
   }
@@ -78,7 +78,7 @@ export const getFriendlyError = (error) => {
   ) {
     return {
       title: "Sign-in cancelled",
-      message: "The authentication window was closed before sign-in completed.",
+      message: "The sign-in window was closed before completing.",
       recovery: "Click 'Sign in with Google' to try again.",
       statusText: "Cancelled",
     };
@@ -91,7 +91,7 @@ export const getFriendlyError = (error) => {
     return {
       title: "Pop-up window blocked",
       message: "Your browser blocked the sign-in pop-up window.",
-      recovery: "Please allow pop-ups for this domain and try signing in again.",
+      recovery: "Please allow pop-ups for this site and try signing in again.",
       statusText: "Pop-up Blocked",
     };
   }
@@ -104,9 +104,9 @@ export const getFriendlyError = (error) => {
     rawMessage.toLowerCase().includes('networkerror')
   ) {
     return {
-      title: "Service temporarily unreachable",
-      message: "We couldn't reach the platform services right now.",
-      recovery: "Check your internet connection. We'll attempt to reconnect automatically.",
+      title: "Connection issue",
+      message: "We couldn't reach the servers right now.",
+      recovery: "Check your internet connection and try again.",
       statusText: "Connection Unstable",
     };
   }
@@ -120,8 +120,8 @@ export const getFriendlyError = (error) => {
   ) {
     return {
       title: "Service temporarily unavailable",
-      message: "Something unexpected happened while processing your request.",
-      recovery: "Please wait a moment and try again. Our systems will recover automatically.",
+      message: "Something went wrong on our end.",
+      recovery: "Please wait a moment and try again.",
       statusText: "System Busy",
     };
   }
@@ -133,18 +133,18 @@ export const getFriendlyError = (error) => {
     rawMessage.toLowerCase().includes('b2')
   ) {
     return {
-      title: "File operation delayed",
-      message: "We couldn't complete the file transfer at this moment.",
-      recovery: "Please verify file size and format, then try uploading again.",
+      title: "Upload issue",
+      message: "We couldn't complete the file upload right now.",
+      recovery: "Please check your file size and format, then try again.",
       statusText: "Transfer Delayed",
     };
   }
 
-  // ── 5. Default Clean SaaS Error Fallback ──────────────────────────────────
+  // ── 5. Default Clean Error Fallback ──────────────────────────────────
   return {
-    title: "Unable to complete request",
-    message: "We couldn't complete this request right now.",
-    recovery: "Please try again. If the issue continues, contact your workspace administrator.",
+    title: "Something went wrong",
+    message: "We couldn't process this request right now.",
+    recovery: "Please try again. If the issue continues, contact support.",
     statusText: "Action Interrupted",
   };
 };

@@ -113,7 +113,7 @@ export default function Login() {
         }
         return `This email is registered under a different account type. To use the ${role} dashboard, please register a separate ${role} account.`;
       case 'auth/account-not-found':    return 'No account found. Please register first.';
-      default:                          return rawMsg || 'Authentication error. Please try again.';
+      default:                          return rawMsg || 'Sign-in error. Please try again.';
     }
   };
 

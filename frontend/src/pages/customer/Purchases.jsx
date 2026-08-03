@@ -231,7 +231,7 @@ export default function CustomerPurchases() {
       {loading ? (
         <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#7B3FA0', fontSize: '0.88rem', fontWeight: 600 }}>
           <Clock size={16} style={{ animation: 'spin 2s linear infinite' }} />
-          <span>Fetching backend purchase history...</span>
+          <span>Loading your purchases...</span>
         </div>
       ) : orders.length === 0 ? (
         /* Empty State */
