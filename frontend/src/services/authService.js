@@ -74,6 +74,7 @@ export const syncWithBackend = async (firebaseUser, role = 'customer', forceRefr
         }
         localStorage.setItem(`lumora_session_${normRole}`, sessionPayload);
         localStorage.setItem(`lumora_${normRole}_session`, sessionPayload);
+        try { sessionStorage.setItem('lumora_tab_role', normRole); } catch (_) {}
 
         // Only update active pointers if current window route matches normRole or active role is unset
         const currentRouteRole = getRouteRoleHint();
@@ -111,6 +112,11 @@ export const clearRoleSession = (role) => {
   localStorage.removeItem(`lumora_uid_${normRole}`);
   localStorage.removeItem(`lumora_session_${normRole}`);
   localStorage.removeItem(`lumora_${normRole}_session`);
+  try {
+    if (sessionStorage.getItem('lumora_tab_role') === normRole) {
+      sessionStorage.removeItem('lumora_tab_role');
+    }
+  } catch (_) {}
 
   const currentActive = localStorage.getItem('lumora_active_role');
   if (currentActive === normRole) {

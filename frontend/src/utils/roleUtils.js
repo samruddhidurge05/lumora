@@ -17,13 +17,18 @@ export function getRouteRoleHint() {
     const params = new URLSearchParams(window.location.search);
     const roleParam = params.get('role');
     if (roleParam && ['customer', 'affiliate', 'vendor', 'admin', 'user'].includes(roleParam.toLowerCase())) {
-      return roleParam.toLowerCase() === 'user' ? 'customer' : roleParam.toLowerCase();
+      const norm = roleParam.toLowerCase() === 'user' ? 'customer' : roleParam.toLowerCase();
+      try { sessionStorage.setItem('lumora_tab_role', norm); } catch (_) {}
+      return norm;
     }
   } catch (_) {}
 
-  const activeRole = localStorage.getItem('lumora_active_role');
-  if (activeRole && ['customer', 'affiliate', 'vendor', 'admin'].includes(activeRole)) {
-    return activeRole;
-  }
+  try {
+    const tabRole = sessionStorage.getItem('lumora_tab_role');
+    if (tabRole && ['customer', 'affiliate', 'vendor', 'admin'].includes(tabRole)) {
+      return tabRole;
+    }
+  } catch (_) {}
+
   return 'customer';
 }

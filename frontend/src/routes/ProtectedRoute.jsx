@@ -29,43 +29,38 @@ export default function ProtectedRoute({
   redirectTo = '/auth/login-selection',
   requiredRole = null,
 }) {
-  const { user, loading, userRole, logout } = useAuth();
+  const { user, loading, userRole, logoutRole } = useAuth();
   const location = useLocation();
 
   // ── Back-button prevention & session validation ────────────────────────────
-  // On every mount of a protected page:
-  //   1. Replace the current history entry (so Back goes to the page BEFORE this one)
-  //   2. Validate the backend JWT is still alive (redirect to login if 401)
-  //   3. Listen for popstate (Back button) and redirect if no longer authenticated
   useEffect(() => {
-    // Replace current history entry — prevents stale dashboard from appearing via Back
     window.history.replaceState(null, '', window.location.href);
 
-    // Validate backend session is alive — only when a token exists
-    const token = localStorage.getItem('lumora_backend_token');
+    const targetRole = Array.isArray(requiredRole) ? requiredRole[0] : (requiredRole || 'customer');
+    const normRole = targetRole === 'user' ? 'customer' : targetRole;
+    const token = localStorage.getItem(`lumora_token_${normRole}`) || localStorage.getItem('lumora_backend_token');
+
     if (token) {
-      // Quick async validation — if backend says 401, force logout
       import('../utils/api').then(({ backendFetch }) => {
         backendFetch('/auth/me').catch((err) => {
-          // Only force logout on a confirmed 401 — not on network errors
           if (err?.status === 401) {
-            if (typeof logout === 'function') {
-              logout();
+            if (typeof logoutRole === 'function') {
+              logoutRole(normRole);
             }
           }
         });
       });
     }
 
-    // Popstate handler: if user hits Back after logout, redirect to login
     const handlePopState = () => {
-      if (!auth.currentUser) {
-        window.location.replace('/auth/login-selection');
+      const hasSession = !!localStorage.getItem(`lumora_token_${normRole}`) || !!localStorage.getItem(`lumora_session_${normRole}`);
+      if (!auth.currentUser && !hasSession) {
+        window.location.replace(`/auth/login?role=${normRole}`);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [location.pathname, logout]);
+  }, [location.pathname, logoutRole, requiredRole]);
 
   // ── Admin route guard ─────────────────────────────────────────────────────
   if (requiredRole === 'admin') {

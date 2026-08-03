@@ -80,19 +80,23 @@ export function buildBackendUrl(endpoint = '') {
 
 export const getRoleToken = (targetRole) => {
   const normRole = targetRole ? (targetRole === 'user' ? 'customer' : targetRole) : getRouteRoleHint();
-  const token = localStorage.getItem(`lumora_token_${normRole}`);
-  if (token) return token;
+  const roleToken = localStorage.getItem(`lumora_token_${normRole}`);
+  if (roleToken) return roleToken;
 
-  const activeRole = localStorage.getItem('lumora_active_role');
-  if (activeRole) {
-    const t = localStorage.getItem(`lumora_token_${activeRole}`);
-    if (t) return t;
-  }
-  return localStorage.getItem('lumora_backend_token');
+  try {
+    const tabRole = sessionStorage.getItem('lumora_tab_role');
+    if (tabRole && tabRole !== normRole) {
+      const tabToken = localStorage.getItem(`lumora_token_${tabRole}`);
+      if (tabToken) return tabToken;
+    }
+  } catch (_) {}
+
+  return localStorage.getItem(`lumora_token_customer`) || localStorage.getItem('lumora_backend_token');
 };
 
 export const backendFetch = async (endpoint, options = {}, _isRetry = false) => {
-  const token = getRoleToken();
+  const routeRole = getRouteRoleHint();
+  const token = getRoleToken(routeRole);
 
   const headers = {
     ...options.headers,
@@ -134,34 +138,27 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
   // ── 401 handling: attempt one silent token refresh ────────────────────────
   if (res.status === 401 && !_isRetry) {
     const firebaseUser = auth.currentUser;
-    const activeRole = localStorage.getItem('lumora_active_role') || 'customer';
 
-    // Admin sessions use a separate JWT flow — never attempt syncWithBackend
-    // for admin tokens. Clear the token and let AuthContext redirect to /admin/login.
-    if (activeRole === 'admin') {
-      // Dynamic import to avoid circular dependency
-      const { clearBackendToken } = await import('../services/authService.js');
-      clearBackendToken();
+    if (routeRole === 'admin') {
+      const { clearRoleSession } = await import('../services/authService.js');
+      clearRoleSession('admin');
       const error = new Error('Admin session expired. Please log in again.');
       error.status = 401;
       throw error;
     }
 
     if (firebaseUser) {
-      // Dynamic import to avoid circular dependency
       const { syncWithBackend } = await import('../services/authService.js');
-      // Refresh Firebase ID token and re-sync with backend
-      const synced = await syncWithBackend(firebaseUser, activeRole, true);
+      const synced = await syncWithBackend(firebaseUser, routeRole, true);
 
       if (synced?.access_token) {
-        // Retry the original request with the new token
         return backendFetch(endpoint, options, true);
       }
     }
 
-    // Could not refresh — clear stale token
-    const { clearBackendToken } = await import('../services/authService.js');
-    clearBackendToken();
+    // Could not refresh — clear only this role's session
+    const { clearRoleSession } = await import('../services/authService.js');
+    clearRoleSession(routeRole);
     const error = new Error('Session expired. Please log in again.');
     error.status = 401;
     throw error;
