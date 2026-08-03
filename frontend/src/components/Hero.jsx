@@ -25,7 +25,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section ref={heroRef} style={styles.section}>
+    <section ref={heroRef} className="lumora-hero-section" style={styles.section}>
       {/* Centered Hero Content directly over page background video */}
 
       {/* ── CENTERED HERO CONTENT DIRECTLY ON BACKGROUND ── */}

@@ -223,9 +223,9 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 768px) {
-  /* Hero section padding — compact so nothing is buried under navbar */
+  /* Hero section padding — generous top padding so nothing is buried under floating navbar */
   .lumora-hero-section {
-    padding: 5.5rem var(--mob-pad) 2.5rem !important;
+    padding: 8rem var(--mob-pad) 3rem !important;
     min-height: auto !important;
     align-items: flex-start !important;
   }
@@ -293,7 +293,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 480px) {
-  .lumora-hero-section { padding: 5rem var(--mob-pad) 2rem !important; }
+  .lumora-hero-section { padding: 7.5rem var(--mob-pad) 2.5rem !important; }
   .home-hero-title { font-size: clamp(1.65rem, 7.5vw, 2.2rem) !important; }
   /* On very small phones stack buttons but keep them compact */
   .home-hero-ctas {
@@ -308,7 +308,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 
 @media (max-width: 360px) {
   .home-hero-title { font-size: 1.55rem !important; }
-  .lumora-hero-section { padding: 4.5rem var(--mob-pad) 1.8rem !important; }
+  .lumora-hero-section { padding: 7.2rem var(--mob-pad) 2rem !important; }
 }
 
 
@@ -1860,8 +1860,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   }
   /* Hero section keeps its own padding (handled in Section 2 above) */
   .lumora-landing-root .lumora-hero-section {
-    padding-top: 5.5rem !important;
-    padding-bottom: 2.5rem !important;
+    padding-top: 8rem !important;
+    padding-bottom: 3rem !important;
   }
 }
 @media (max-width: 480px) {
@@ -1870,8 +1870,8 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     padding-bottom: 36px !important;
   }
   .lumora-landing-root .lumora-hero-section {
-    padding-top: 5rem !important;
-    padding-bottom: 2rem !important;
+    padding-top: 7.5rem !important;
+    padding-bottom: 2.5rem !important;
   }
 }
 
