@@ -3,7 +3,7 @@ import csv
 import io
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -46,6 +46,7 @@ class PayoutStatusPatch(BaseModel):
 
 # ── Existing Endpoints (UNCHANGED) ─────────────────────────────────────────────
 
+@router.get("")
 @router.get("/")
 def list_affiliates(admin_user=Depends(require_admin_role), db: Session = Depends(get_db)):
     """List all affiliates with performance metrics, merging SQL and Firestore data."""
@@ -119,9 +120,13 @@ def list_affiliates(admin_user=Depends(require_admin_role), db: Session = Depend
                 snap = fdb.collection("users").where("role", "==", r_val).stream()
                 for doc in snap:
                     data = doc.to_dict()
+                    if not data:
+                        continue
                     uid = doc.id
                     # Check if already present by firebase_uid or id
                     if not any(item["uid"] == uid for item in result_map.values()):
+                        c_date = data.get("createdAt")
+                        created_str = c_date.isoformat() if hasattr(c_date, "isoformat") else str(c_date or "")
                         result_map[uid] = {
                             "uid": uid,
                             "id": uid,
@@ -132,8 +137,8 @@ def list_affiliates(admin_user=Depends(require_admin_role), db: Session = Depend
                             "code": data.get("affiliateCode") or data.get("code") or "",
                             "affiliateCode": data.get("affiliateCode") or data.get("code") or "",
                             "status": data.get("accountStatus") or data.get("status") or "active",
-                            "createdAt": data.get("createdAt") or "",
-                            "joined": data.get("createdAt") or "",
+                            "createdAt": created_str,
+                            "joined": created_str,
                             "clicks": data.get("totalClicks") or 0,
                             "totalClicks": data.get("totalClicks") or 0,
                             "sales": data.get("totalConversions") or 0,
@@ -145,6 +150,41 @@ def list_affiliates(admin_user=Depends(require_admin_role), db: Session = Depend
                         }
         except Exception as exc:
             logger.error("[list_affiliates] Firestore stream failed: %s", exc)
+
+        try:
+            aff_snap = fdb.collection("affiliates").stream()
+            for doc in aff_snap:
+                data = doc.to_dict()
+                if not data:
+                    continue
+                uid = doc.id
+                userId = data.get("userId") or uid
+                if not any(item["uid"] == uid or item["uid"] == userId or item["id"] == uid or item["id"] == userId for item in result_map.values()):
+                    c_date = data.get("createdAt")
+                    created_str = c_date.isoformat() if hasattr(c_date, "isoformat") else str(c_date or "")
+                    result_map[uid] = {
+                        "uid": uid,
+                        "id": uid,
+                        "name": data.get("fullName") or data.get("displayName") or data.get("name") or "Affiliate",
+                        "displayName": data.get("fullName") or data.get("displayName") or data.get("name") or "Affiliate",
+                        "email": data.get("email") or "",
+                        "role": "affiliate",
+                        "code": data.get("affiliateCode") or data.get("code") or "",
+                        "affiliateCode": data.get("affiliateCode") or data.get("code") or "",
+                        "status": data.get("accountStatus") or data.get("status") or "active",
+                        "createdAt": created_str,
+                        "joined": created_str,
+                        "clicks": data.get("totalClicks") or 0,
+                        "totalClicks": data.get("totalClicks") or 0,
+                        "sales": data.get("totalConversions") or 0,
+                        "totalConversions": data.get("totalConversions") or 0,
+                        "revenue": float(data.get("totalRevenue") or 0.0),
+                        "commission": float(data.get("totalCommission") or 0.0),
+                        "totalCommission": float(data.get("totalCommission") or 0.0),
+                        "pending": float(data.get("pendingCommission") or 0.0),
+                    }
+        except Exception as exc:
+            logger.error("[list_affiliates] Firestore affiliates collection stream failed: %s", exc)
 
     return list(result_map.values())
 
@@ -272,7 +312,7 @@ def get_affiliate_kpis(
     avg_epc = round((total_comm_earned / total_clicks), 2) if total_clicks > 0 else 0.0
 
     # ── Payout Financial Expense Metrics ──────────────────────────────────────
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     start_of_today = datetime(now.year, now.month, now.day)
     start_of_month = datetime(now.year, now.month, 1)
 
@@ -434,7 +474,6 @@ def get_commissions_ledger(
 
     # Auto-recover missing commission records for attributed orders
     try:
-        from admin.routes.affiliates import regenerate_commission_for_order
         attr_orders = db.query(Order).filter(
             or_(Order.affiliate_id.isnot(None), Order.referral_code_used.isnot(None)),
             Order.status.in_(["paid", "completed"])
@@ -572,7 +611,7 @@ def export_commissions_csv(
         ])
 
     output.seek(0)
-    filename = f"lumora_affiliate_commissions_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    filename = f"lumora_affiliate_commissions_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
     return StreamingResponse(
         io.BytesIO(output.getvalue().encode("utf-8")),
         media_type="text/csv",
@@ -601,19 +640,19 @@ def patch_commission_status(
     comm.status = payload.commission_status  # keep legacy field in sync
     if payload.admin_notes:
         comm.admin_notes = payload.admin_notes
-    comm.updated_at = datetime.utcnow()
+    comm.updated_at = datetime.now(timezone.utc)
 
     if payload.commission_status == "approved" and not comm.approved_at:
-        comm.approved_at = datetime.utcnow()
+        comm.approved_at = datetime.now(timezone.utc)
     if payload.commission_status == "paid" and not comm.paid_at:
-        comm.paid_at = datetime.utcnow()
+        comm.paid_at = datetime.now(timezone.utc)
         # Update affiliate paid_earnings
         profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == comm.affiliate_id).first()
         if profile:
             profile.paid_earnings = (profile.paid_earnings or 0.0) + comm.commission_amt
             profile.pending_earnings = max(0.0, (profile.pending_earnings or 0.0) - comm.commission_amt)
     if payload.commission_status == "reversed":
-        comm.reversed_at = datetime.utcnow()
+        comm.reversed_at = datetime.now(timezone.utc)
         comm.purchase_status = "refunded"
         profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == comm.affiliate_id).first()
         if profile:
@@ -916,7 +955,7 @@ def patch_payout_status(
     if payload.status == "rejected":
         payout.status     = "rejected"
         payout.notes      = payload.notes or payout.notes
-        payout.updated_at = datetime.utcnow()
+        payout.updated_at = datetime.now(timezone.utc)
         payout.payout_mode = payout_mode
 
         audit = AuditLog(
@@ -948,9 +987,9 @@ def patch_payout_status(
     # Mark as processing BEFORE calling provider (prevents duplicate dispatch)
     payout.status       = "processing"
     payout.payout_mode  = payout_mode
-    payout.processed_at = datetime.utcnow()
+    payout.processed_at = datetime.now(timezone.utc)
     payout.notes        = payload.notes or payout.notes
-    payout.updated_at   = datetime.utcnow()
+    payout.updated_at   = datetime.now(timezone.utc)
     db.commit()
 
     logger.info(
@@ -986,7 +1025,7 @@ def patch_payout_status(
         # Persist failure immediately
         payout.status         = "failed"
         payout.failure_reason = str(exc)
-        payout.updated_at     = datetime.utcnow()
+        payout.updated_at     = datetime.now(timezone.utc)
         db.commit()
 
         raise HTTPException(
@@ -998,7 +1037,7 @@ def patch_payout_status(
         # Provider returned failure result (not exception)
         payout.status         = "failed"
         payout.failure_reason = result.failure_reason or "Provider declined"
-        payout.updated_at     = datetime.utcnow()
+        payout.updated_at     = datetime.now(timezone.utc)
         db.commit()
         raise HTTPException(
             status_code=502,
@@ -1359,7 +1398,7 @@ def execute_real_payout(
             "provider_ref": payout.razorpay_payout_id,
             # Return real UTR if available; None if not yet confirmed by bank
             "utr": getattr(payout, "utr", None),
-            "settlement_time": payout.processed_at.isoformat() + "Z" if payout.processed_at else datetime.utcnow().isoformat() + "Z"
+            "settlement_time": payout.processed_at.isoformat() + "Z" if payout.processed_at else datetime.now(timezone.utc).isoformat() + "Z"
         }
 
     if payout.status == "rejected":
@@ -1376,7 +1415,7 @@ def execute_real_payout(
     payout_mode = os.getenv("AFFILIATE_PAYOUT_MODE", "mock").lower()
     payout.status = "processing"
     payout.payout_mode = payout_mode
-    payout.processed_at = datetime.utcnow()
+    payout.processed_at = datetime.now(timezone.utc)
     db.commit()
 
     # 3. Execute money transfer via Provider
@@ -1399,14 +1438,14 @@ def execute_real_payout(
     except Exception as exc:
         payout.status = "failed"
         payout.failure_reason = str(exc)
-        payout.updated_at = datetime.utcnow()
+        payout.updated_at = datetime.now(timezone.utc)
         db.commit()
         raise HTTPException(status_code=500, detail=f"RazorpayX gateway error: {exc}")
 
     if not result.success:
         payout.status = "failed"
         payout.failure_reason = result.failure_reason or "Gateway declined"
-        payout.updated_at = datetime.utcnow()
+        payout.updated_at = datetime.now(timezone.utc)
         db.commit()
         raise HTTPException(status_code=502, detail=f"RazorpayX declined transfer: {result.failure_reason}")
 
@@ -1457,7 +1496,7 @@ def execute_real_payout(
         # utr is None until the bank confirms settlement via webhook.
         # The real UTR will be set on payout.utr by complete_payout() when the webhook fires.
         "utr": payout.utr or None,
-        "settlement_time": datetime.utcnow().isoformat() + "Z",
+        "settlement_time": datetime.now(timezone.utc).isoformat() + "Z",
         "payout_mode": payout_mode,
         "amount": payout.amount,
         "beneficiary": affiliate_name,
@@ -1580,7 +1619,7 @@ def get_order_attribution_trace(
     Payout status, and a detailed Event Timeline stream.
     """
     try:
-        clean_id_str = re.sub(r'[^\d]', '', str(order_id))
+        clean_id_str = re.sub(r'[^\d]', '', order_id)
         if not clean_id_str:
             return {
                 "order_id": order_id,
@@ -1791,7 +1830,7 @@ def get_customer_attributions(
                         affiliate_id=aff_id,
                         affiliate_code=aff_code or f"AFF{aff_id:04d}",
                         status="converted",
-                        created_at=o.created_at or datetime.utcnow()
+                        created_at=o.created_at or datetime.now(timezone.utc)
                     )
                     db.add(new_attr)
                     db.commit()
@@ -1880,7 +1919,7 @@ def export_customer_attributions_csv(
         ])
 
     output.seek(0)
-    filename = f"lumora_customer_attributions_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    filename = f"lumora_customer_attributions_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
     return StreamingResponse(
         io.BytesIO(output.getvalue().encode("utf-8")),
         media_type="text/csv",
@@ -1931,7 +1970,7 @@ def regenerate_commission_for_order(
     If an order has an affiliate code attached but missing commission,
     allows admin to safely regenerate commission.
     """
-    clean_id_str = re.sub(r'[^\d]', '', str(order_id))
+    clean_id_str = re.sub(r'[^\d]', '', order_id)
     if not clean_id_str:
         return {
             "success": False,
@@ -2056,7 +2095,7 @@ def regenerate_commission_for_order(
     new_comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == numeric_order_id).first()
     if new_comm:
         admin_id_val = admin_user.id if admin_user else 1
-        new_comm.admin_notes = f"Regenerated by Admin #{admin_id_val} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
+        new_comm.admin_notes = f"Regenerated by Admin #{admin_id_val} on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}"
         db.commit()
 
     return {
@@ -2152,6 +2191,17 @@ def get_affiliate_products(
         # Merge active promoters from links and commissions
         active_affiliates = len(l_data["affiliate_ids"].union(c_data["affiliate_ids"]))
         
+        # Safely resolve thumbnail with list type checks
+        thumb = getattr(p, "thumbnail", None)
+        if not thumb:
+            img_urls = getattr(p, "image_urls", None)
+            if isinstance(img_urls, (list, tuple)) and len(img_urls) > 0:
+                thumb = img_urls[0]
+            else:
+                prev_imgs = getattr(p, "preview_images", None)
+                if isinstance(prev_imgs, (list, tuple)) and len(prev_imgs) > 0:
+                    thumb = prev_imgs[0]
+
         items.append({
             "id": p.id,
             "product_id": p.id,
@@ -2171,11 +2221,11 @@ def get_affiliate_products(
             "clicks": l_data["total_clicks"],
             "conversions": c_data["conversions"],
             "sales": c_data["conversions"],
-            "revenue_generated": round(float(c_data["revenue"]), 2),
-            "revenue": round(float(c_data["revenue"]), 2),
-            "commission_paid": round(float(c_data["paid"]), 2),
-            "commission_pending": round(float(c_data["pending"]), 2),
-            "thumbnail": getattr(p, "thumbnail", None) or (getattr(p, "image_urls", None)[0] if getattr(p, "image_urls", None) else None),
+            "revenue_generated": round(c_data["revenue"], 2),
+            "revenue": round(c_data["revenue"], 2),
+            "commission_paid": round(c_data["paid"], 2),
+            "commission_pending": round(c_data["pending"], 2),
+            "thumbnail": thumb,
         })
 
     return items

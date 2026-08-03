@@ -61,6 +61,8 @@ def list_vendors(admin_user = Depends(require_admin_role)):
             snap = fdb.collection("users").where("role", "==", r_val).stream()
             for doc in snap:
                 data = doc.to_dict()
+                if not data:
+                    continue
                 users.append({"uid": doc.id, **data})
         seen = set()
         unique_users = []
