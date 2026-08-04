@@ -2169,20 +2169,17 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     fileName:     product?.fileName     || product?.zipName || (product?.file_url ? product.file_url.split('/').pop() : null),
     file_url:     product?.file_url     || product?.downloadUrl || null,
 
-    // ── pCloud / External URL Delivery (temporary, ~2-3 weeks) ──────────────
     pcloudImageUrls:    Array.isArray(product?.image_urls)
       ? product.image_urls
       : Array.isArray(product?.imageUrls)
         ? product.imageUrls
         : [],
 
-    // ── Section 5: Features & Specs ──────────────────────────────────────────
     keyFeatures:         Array.isArray(product?.features)            ? product.features            : [],
     whatsIncluded:       Array.isArray(product?.whatYouGet)          ? product.whatYouGet          : [],
     systemRequirements:  Array.isArray(product?.systemRequirements)  ? product.systemRequirements  : [],
     installationGuide:   product?.installationGuide                  || product?.installation_guide || '',
 
-    // ── Section 3: Affiliate Program ─────────────────────────────────────────
     affiliate_enabled:        Boolean(product?.affiliate_enabled || false),
     commission_mode:          product?.commission_mode || product?.commission_type || 'percentage',
     commission_value:         product?.commission_value != null ? product.commission_value : '',
@@ -2193,11 +2190,6 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
   const [thumbPreview, setThumbPreview] = useState(form.thumbnail);
   const [demoVideoPreview, setDemoVideoPreview] = useState(form.videoUrl);
-
-  // ── Section 5: Features & Specs — scoped input state for DynamicListEditor instances ──
-  const [keyFeaturesInput,        setKeyFeaturesInput]        = useState('');
-  const [whatsIncludedInput,       setWhatsIncludedInput]      = useState('');
-  const [systemRequirementsInput,  setSystemRequirementsInput] = useState('');
 
   const [isDragging, setIsDragging] = useState({
     thumbnail: false,
@@ -2210,9 +2202,6 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     product?.gallery || product?.previewImages || product?.image_urls || []
   );
 
-  // ── pCloud Image URLs — dynamic list input ───────────────────────────────
-  const [pcloudImageInput, setPcloudImageInput] = useState('');
-
   const [uploadProgress, setUploadProgress] = useState({
     thumbnail: null,
     gallery: null,
@@ -2220,13 +2209,11 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     zip: null
   });
 
-  // Tracks whether a real Firebase Storage upload is in progress for each slot
   const [uploadingFile, setUploadingFile] = useState({
     thumbnail: false,
     zip: false,
   });
 
-  // Error state for failed Storage uploads
   const [uploadError, setUploadError] = useState({
     thumbnail: null,
     zip: null,
@@ -2235,6 +2222,28 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
   const [packagingStatus, setPackagingStatus] = useState(null);
   const [pendingVideoConfirm, setPendingVideoConfirm] = useState(null);
+
+  const formatUserFriendlyError = (rawErr) => {
+    if (!rawErr) return null;
+    const str = String(rawErr).toLowerCase();
+    if (str.includes('too large') || str.includes('exceeds')) return 'This file is too large.';
+    if (str.includes('unsupported') || str.includes('invalid file type')) return "This file type isn't supported.";
+    if (str.includes('network') || str.includes('failed to fetch')) return "Couldn't upload. Check your connection.";
+    if (str.includes('storage') || str.includes('quota')) return 'Storage is temporarily unavailable.';
+    if (str.includes('405') || str.includes('500') || str.includes('server') || str.includes('upload failed')) return 'Upload failed. Please try again.';
+    return 'Something went wrong while uploading.';
+  };
+
+  const getFileBadgeLabel = (fileName, packaging) => {
+    if (packaging?.isFolder) return 'Folder Uploaded';
+    if (packaging?.isPackaged) return 'Prepared Automatically';
+    const ext = (fileName || '').split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'PDF';
+    if (['mp4', 'webm', 'mov', 'avi'].includes(ext)) return 'Video';
+    if (['zip', 'rar', '7z'].includes(ext)) return 'ZIP';
+    if (['psd', 'fig', 'ai', 'sketch', 'docx', 'doc', 'epub'].includes(ext)) return 'Template';
+    return 'Ready';
+  };
 
   const handleProductAssetSelection = async (fileOrFiles, skipVideoConfirm = false) => {
     const tempId = product?.id ? String(product.id) : `tmp_${Date.now()}`;
@@ -2915,30 +2924,30 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 </div>
               </div>
 
-              {/* Dropzone 4: Enterprise Hybrid Product Deliverable */}
+              {/* Dropzone 4: Product File */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block">
-                    Product Asset Deliverable
+                  <label className="text-xs font-bold tracking-wide text-[#2D004D] uppercase block">
+                    Product File
                   </label>
-                  <span className="text-[9px] font-extrabold text-[#7B3FA0] bg-[#7B3FA0]/10 px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
-                    ⚡ Enterprise Hybrid Upload Engine
+                  <span className="text-[10px] font-extrabold text-[#7B3FA0] bg-[#7B3FA0]/10 px-2.5 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                    ⚡ Smart Upload
                   </span>
                 </div>
-                <p className="text-[9px] text-[#7B3FA0] mb-2 font-medium">
-                  Supported Formats: ZIP, Folder, Multiple Files, PDF, MP4, PSD, FIG, DOCX, EPUB, Templates, Assets
+                <p className="text-[10px] text-[#7B3FA0] mb-2 font-medium">
+                  Upload your product. You can upload: ZIP • Folder • PDF • Video • Template • Multiple Files
                 </p>
                 
                 <div 
-                  className={`relative rounded-2xl border border-dashed transition-all flex flex-col items-center justify-center p-4 ${
+                  className={`relative rounded-2xl border border-dashed transition-all flex flex-col items-center justify-center p-4 sm:p-5 ${
                     isDragging.zip 
                       ? 'border-[#7B3FA0] bg-[#7B3FA0]/10 scale-[1.01]' 
                       : uploadError.zip
                         ? 'border-red-300 bg-red-50/40'
                         : form.storagePath
                           ? 'border-emerald-300 bg-emerald-50/40'
-                          : 'border-[#F5E9DD] hover:border-[#7B3FA0]/60 bg-white/40'
-                  } ${uploadingFile.zip ? 'min-h-[5.5rem]' : 'min-h-[5rem]'}`}
+                          : 'border-[#F3EAF8] hover:border-[#7B3FA0]/60 bg-white/40'
+                  } ${uploadingFile.zip ? 'min-h-[6rem]' : 'min-h-[5.5rem]'}`}
                   onDragOver={(e) => handleDrag(e, 'zip', true)}
                   onDragLeave={(e) => handleDrag(e, 'zip', false)}
                   onDrop={(e) => {
@@ -2950,7 +2959,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                     }
                   }}
                 >
-                  {/* Invisible file input for file/zip/asset selection */}
+                  {/* Hidden file input for file/zip/asset selection */}
                   <input 
                     type="file" 
                     id="zip-file"
@@ -2966,12 +2975,12 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   />
 
                   {uploadProgress.packaging !== undefined && uploadProgress.packaging !== null && uploadProgress.packaging < 100 ? (
-                    /* Stage 1: Browser-Side Packaging Progress */
-                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
+                    /* Stage 1: Packaging Progress */
+                    <div className="flex flex-col items-center w-full px-4 sm:px-6 gap-2 z-20">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[#7B3FA0] animate-ping" />
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
-                          Stage 1/2: Packaging into ZIP Archive ({uploadProgress.packaging}%)
+                        <span className="text-xs font-bold text-[#7B3FA0]">
+                          Preparing file... ({uploadProgress.packaging}%)
                         </span>
                       </div>
                       <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
@@ -2980,15 +2989,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           style={{ width: `${uploadProgress.packaging}%` }}
                         />
                       </div>
-                      <span className="text-[9px] text-[#7B3FA0] font-bold">
-                        Preserving directory paths & building browser zip...
+                      <span className="text-[10px] text-[#7B3FA0] font-medium">
+                        Preserving directory paths & building archive...
                       </span>
                     </div>
                   ) : uploadProgress.zip !== null && uploadProgress.zip !== undefined ? (
                     /* Stage 2: Storage Upload Progress */
-                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
-                        Stage 2/2: Uploading Deliverable ({uploadProgress.zip}%)
+                    <div className="flex flex-col items-center w-full px-4 sm:px-6 gap-2 z-20">
+                      <span className="text-xs font-bold text-[#7B3FA0]">
+                        Uploading... ({uploadProgress.zip}%)
                       </span>
                       <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
                         <div 
@@ -2996,15 +3005,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           style={{ width: `${uploadProgress.zip}%` }}
                         />
                       </div>
-                      <span className="text-[9px] text-[#7B3FA0] font-medium truncate max-w-[300px]">
-                        {form.fileName || form.zipName || 'Transferring to Storage...'}
+                      <span className="text-[10px] text-[#7B3FA0] font-medium truncate max-w-[280px]">
+                        {form.fileName || form.zipName || 'Transferring file...'}
                       </span>
                     </div>
                   ) : pendingVideoConfirm ? (
                     /* Large Video Confirmation Modal Banner */
                     <div className="flex flex-col items-center gap-2 z-20 p-2 text-center">
-                      <span className="text-[10px] font-bold text-amber-700">
-                        ⚠ Large video assets detected ({formatBytes(validateUploadSelection(pendingVideoConfirm).totalSize)}). Package as ZIP archive or upload directly?
+                      <span className="text-xs font-bold text-amber-700">
+                        ⚠ Large video files detected ({formatBytes(validateUploadSelection(pendingVideoConfirm).totalSize)}). Package as ZIP or upload directly?
                       </span>
                       <div className="flex items-center gap-2">
                         <button
@@ -3014,80 +3023,81 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                             setPendingVideoConfirm(null);
                             handleProductAssetSelection(files, true);
                           }}
-                          className="px-3 py-1 bg-[#7B3FA0] text-white text-[9px] font-bold rounded-lg uppercase shadow-sm hover:bg-[#2D004D]"
+                          className="px-3 py-1.5 bg-[#7B3FA0] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#2D004D]"
                         >
                           Package as ZIP
                         </button>
                         <button
                           type="button"
                           onClick={() => setPendingVideoConfirm(null)}
-                          className="px-3 py-1 bg-stone-200 text-stone-700 text-[9px] font-bold rounded-lg uppercase hover:bg-stone-300"
+                          className="px-3 py-1.5 bg-stone-200 text-stone-700 text-xs font-bold rounded-xl hover:bg-stone-300"
                         >
                           Cancel
                         </button>
                       </div>
                     </div>
                   ) : uploadError.zip ? (
-                    /* Error State */
-                    <div className="flex items-center justify-between w-full z-20 px-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-red-500 text-sm font-bold">✕</span>
-                        <span className="text-[10px] font-bold text-red-600 block truncate max-w-[260px]">
-                          {uploadError.zip}
+                    /* Error State — Creator Friendly */
+                    <div className="flex flex-col sm:flex-row items-center justify-between w-full z-20 px-2 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-red-500 text-base font-bold shrink-0">✕</span>
+                        <span className="text-xs font-bold text-red-600 truncate">
+                          {formatUserFriendlyError(uploadError.zip)}
                         </span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1 rounded-xl shrink-0">
-                        Retry Upload
-                      </span>
+                      <label htmlFor="zip-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] shrink-0 shadow-sm z-30">
+                        Try Again
+                      </label>
                     </div>
                   ) : form.storagePath ? (
                     /* Success / Uploaded Asset Card */
-                    <div className="flex items-center justify-between w-full z-20 px-1">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
-                          ✓
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full z-20 px-1 gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-base shrink-0">
+                          ✅
                         </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-extrabold text-[#2D004D] block truncate max-w-[220px]">
-                              {form.fileName || form.zipName}
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-[#2D004D] truncate max-w-[240px] sm:max-w-[300px]">
+                            Product file ready: {form.fileName || form.zipName}
+                          </span>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[10px] text-[#7B3FA0] font-medium">
+                              {form.fileSize ? formatBytes(form.fileSize) : ''}
                             </span>
-                            {packagingStatus?.isPackaged ? (
-                              <span className="text-[8px] font-extrabold bg-[#7B3FA0]/15 text-[#7B3FA0] px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
-                                📦 Auto-Packaged ({packagingStatus.originalCount} files)
-                              </span>
-                            ) : (
-                              <span className="text-[8px] font-extrabold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
-                                📄 Pass-through File
-                              </span>
-                            )}
+                            <span className="text-[9px] font-bold bg-[#7B3FA0]/15 text-[#7B3FA0] px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                              {getFileBadgeLabel(form.fileName || form.zipName, packagingStatus)}
+                            </span>
+                            <span className="text-[9px] text-emerald-600 font-bold">
+                              • Ready to upload
+                            </span>
                           </div>
-                          {form.fileSize && (
-                            <span className="text-[9px] text-[#7B3FA0] font-medium mt-0.5">
-                              {formatBytes(form.fileSize)} {packagingStatus?.compressionRatio ? `• Ratio: ${packagingStatus.compressionRatio}` : ''}
-                            </span>
-                          )}
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl shrink-0 shadow-sm">
-                        Replace Asset
-                      </span>
+                      <label 
+                        htmlFor="zip-file" 
+                        className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#D8BFE3] px-3.5 py-1.5 rounded-xl hover:bg-[#F3EAF8] transition-colors shadow-sm shrink-0 z-30"
+                      >
+                        Choose Another File
+                      </label>
                     </div>
                   ) : (
                     /* Empty / Ready State */
-                    <div className="flex flex-col items-center justify-center text-center z-20">
-                      <div className="w-8 h-8 rounded-full bg-[#7B3FA0]/10 flex items-center justify-center mb-1 text-[#7B3FA0]">
-                        <Icon name="Folder" size={16} />
+                    <div className="flex flex-col items-center justify-center text-center z-20 py-1">
+                      <div className="w-9 h-9 rounded-2xl bg-[#7B3FA0]/10 flex items-center justify-center mb-2 text-[#7B3FA0]">
+                        <Icon name="Folder" size={18} />
                       </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2D004D] mb-1">
-                        Drag ZIP, Project Folder, or Multiple Files Here
+                      <span className="text-xs font-bold text-[#2D004D] mb-1">
+                        Drag your file or folder here, or browse
                       </span>
-                      <div className="flex items-center gap-2 mt-1 pointer-events-auto">
+                      <span className="text-[10px] text-[#7B3FA0] mb-3 font-medium max-w-sm">
+                        We'll prepare everything automatically.
+                      </span>
+                      <div className="flex items-center gap-2.5 flex-wrap justify-center pointer-events-auto">
                         <label 
                           htmlFor="zip-file" 
-                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-[#2D004D] text-white px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0] transition-colors shadow-sm"
+                          className="cursor-pointer text-xs font-bold bg-[#2D004D] text-white px-3.5 py-1.5 rounded-xl hover:bg-[#7B3FA0] transition-colors shadow-sm"
                         >
-                          Browse Files / ZIP
+                          Choose File / ZIP
                         </label>
                         <input
                           type="file"
@@ -3104,9 +3114,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                         />
                         <label 
                           htmlFor="folder-file-input" 
-                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-white border border-[#7B3FA0]/40 text-[#7B3FA0] px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0]/10 transition-colors shadow-sm"
+                          className="cursor-pointer text-xs font-bold bg-white border border-[#7B3FA0]/40 text-[#7B3FA0] px-3.5 py-1.5 rounded-xl hover:bg-[#7B3FA0]/10 transition-colors shadow-sm"
                         >
-                          Browse Folder
+                          Choose Folder
                         </label>
                       </div>
                     </div>

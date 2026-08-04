@@ -2791,24 +2791,26 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Section: Live Asset Upload Station */}
+          {/* Section: Media & Deliverable Upload Engine */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-4 pb-1 border-b border-[#F3EAF8]">
-              4. Visual Preview Assets (Cinematic Upload Studio)
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
+              2. Media & Storage Payload Nodes
             </h3>
             
-            <div className="space-y-6">
-              {/* Dropzone 1: Display Thumbnail */}
+            <div className="space-y-4">
+              
+              {/* Dropzone 1: Master Thumbnail */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Primary Display Thumbnail
+                  Master Cover Image (Thumbnail) *
                 </label>
-                
                 <div 
                   className={`relative h-28 rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 ${
                     isDragging.thumbnail 
-                      ? 'border-[#D8BFE3] bg-[#D8BFE3]/5' 
-                      : 'border-[#F5E9DD] hover:border-[#D8BFE3]/60 bg-white/40'
+                      ? 'border-[#7B3FA0] bg-[#7B3FA0]/5' 
+                      : thumbnailPreview 
+                        ? 'border-emerald-200 bg-emerald-50/20' 
+                        : 'border-[#F3EAF8] hover:border-[#D8BFE3] bg-[#FAF5FC]/30'
                   }`}
                   onDragOver={(e) => handleDrag(e, 'thumbnail', true)}
                   onDragLeave={(e) => handleDrag(e, 'thumbnail', false)}
@@ -2816,64 +2818,65 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 >
                   <input 
                     type="file" 
-                    id="thumb-file"
+                    id="thumbnail-file"
                     accept="image/*"
                     onChange={(e) => handleFileChange(e, 'thumbnail')}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                   />
                   
                   {uploadProgress.thumbnail !== null ? (
                     <div className="flex flex-col items-center w-full px-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Uploading Display Node: {uploadProgress.thumbnail}%
+                        Uploading Cover Image: {uploadProgress.thumbnail}%
                       </span>
-                      <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg.F3EAF8 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] transition-all duration-75"
+                          className="h-full bg-[#7B3FA0] transition-all duration-75"
                           style={{ width: `${uploadProgress.thumbnail}%` }}
                         />
                       </div>
                     </div>
-                  ) : thumbPreview ? (
+                  ) : thumbnailPreview ? (
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#F5E9DD]">
-                          <img src={thumbPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
-                        </div>
+                        <img 
+                          src={thumbnailPreview} 
+                          alt="Thumbnail preview" 
+                          className="w-14 h-14 rounded-xl object-cover border border-[#F3EAF8] shadow-sm"
+                        />
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Active Display Node</span>
-                          <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider">Loaded Instantly</span>
+                          <span className="text-xs font-bold text-[#2D004D] truncate max-w-[200px]">Cover Image Ready</span>
+                          <span className="text-[10px] text-[#7B3FA0] font-medium block truncate max-w-[200px]">Primary Marketplace Asset</span>
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD]/80 px-3 py-1.5 rounded-xl">
-                        Replace Node
-                      </span>
+                      <label htmlFor="thumbnail-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#D8BFE3] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] transition-colors shadow-sm shrink-0 z-20">
+                        Choose Another Image
+                      </label>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-center">
-                      <Icon name="Plus" size={16} className="text-[#7B3FA0] mb-1" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Thumbnail Here or Browse
+                      <Icon name="Image" size={20} className="text-[#7B3FA0] mb-1" />
+                      <span className="text-xs font-bold text-[#2D004D]">
+                        Drag primary cover image here or click
                       </span>
-                      <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
-                        JPEG, PNG up to 10MB
+                      <span className="text-[10px] text-[#7B3FA0] mt-0.5">
+                        PNG, JPG, WEBP formats (Max 5MB)
                       </span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Dropzone 2: Gallery Uploads (Multiple Image Files) */}
+              {/* Dropzone 2: Multi-Image Gallery */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Creative Display Angles (Multiple Gallery Assets)
+                  Marketplace Screenshot Gallery
                 </label>
-                
                 <div 
-                  className={`relative h-24 rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 mb-3 ${
+                  className={`relative h-20 rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 ${
                     isDragging.gallery 
-                      ? 'border-[#D8BFE3] bg-[#D8BFE3]/5' 
-                      : 'border-[#F5E9DD] hover:border-[#D8BFE3]/60 bg-white/40'
+                      ? 'border-[#7B3FA0] bg-[#7B3FA0]/5' 
+                      : 'border-[#F3EAF8] hover:border-[#D8BFE3] bg-[#FAF5FC]/30'
                   }`}
                   onDragOver={(e) => handleDrag(e, 'gallery', true)}
                   onDragLeave={(e) => handleDrag(e, 'gallery', false)}
@@ -2885,17 +2888,17 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                     multiple
                     accept="image/*"
                     onChange={(e) => handleFileChange(e, 'gallery')}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                   />
                   
                   {uploadProgress.gallery !== null ? (
                     <div className="flex flex-col items-center w-full px-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Uploading Gallery Elements: {uploadProgress.gallery}%
+                        Syncing Gallery: {uploadProgress.gallery}%
                       </span>
-                      <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-[#F3EAF8] rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] transition-all duration-75"
+                          className="h-full bg-[#7B3FA0] transition-all duration-75"
                           style={{ width: `${uploadProgress.gallery}%` }}
                         />
                       </div>
@@ -2903,46 +2906,41 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   ) : (
                     <div className="flex flex-col items-center justify-center text-center">
                       <Icon name="Plus" size={16} className="text-[#7B3FA0] mb-1" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Additional Angles Here or Click
+                      <span className="text-xs font-bold text-[#2D004D]">
+                        Drag screenshot gallery images here or click
                       </span>
-                      <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
-                        Select multiple assets
+                      <span className="text-[10px] text-[#7B3FA0] mt-0.5">
+                        Upload multiple marketplace showcase images
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Render live gallery cards with deletions */}
+                {/* Gallery Previews */}
                 {galleryPreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-3 mt-3">
                     {galleryPreviews.map((preview, idx) => (
                       <div key={preview} className="relative group/thumb aspect-video rounded-xl border border-[#F3EAF8] overflow-hidden bg-white shadow-sm hover:border-[#D8BFE3] transition-all">
                         <img src={preview} alt={`Gallery preview ${idx+1}`} className="w-full h-full object-cover" />
-                        <button 
-                          type="button"
-                          onClick={() => handleRemoveGalleryItem(idx)}
-                          className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover/thumb:opacity-100 transition-opacity"
-                        >
-                          <Icon name="Trash2" size={14} />
-                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Dropzone 3: Demo Video */}
+              {/* Dropzone 3: Upload Preview Video */}
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Atmospheric Video Preview File
+                <label className="text-xs font-bold tracking-wide text-[#2D004D] uppercase block mb-2">
+                  Upload Preview Video
                 </label>
                 
                 <div 
                   className={`relative h-24 rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 ${
                     isDragging.video 
-                      ? 'border-[#D8BFE3] bg-[#D8BFE3]/5' 
-                      : 'border-[#F5E9DD] hover:border-[#D8BFE3]/60 bg-white/40'
+                      ? 'border-[#7B3FA0] bg-[#7B3FA0]/5' 
+                      : demoVideoPreview 
+                        ? 'border-emerald-200 bg-emerald-50/20' 
+                        : 'border-[#F3EAF8] hover:border-[#D8BFE3] bg-[#FAF5FC]/30'
                   }`}
                   onDragOver={(e) => handleDrag(e, 'video', true)}
                   onDragLeave={(e) => handleDrag(e, 'video', false)}
@@ -2953,15 +2951,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                     id="video-file"
                     accept="video/*"
                     onChange={(e) => handleFileChange(e, 'video')}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                   />
                   
                   {uploadProgress.video !== null ? (
-                    <div className="flex flex-col items-center w-full px-6">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Buffering Preview Node: {uploadProgress.video}%
+                    <div className="flex flex-col items-center w-full px-6 z-20">
+                      <span className="text-xs font-bold text-[#7B3FA0] mb-1">
+                        Uploading video... ({uploadProgress.video}%)
                       </span>
-                      <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#F5E9DD] rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-[#D8BFE3] transition-all duration-75"
                           style={{ width: `${uploadProgress.video}%` }}
@@ -2969,58 +2967,58 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                       </div>
                     </div>
                   ) : demoVideoPreview ? (
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3">
-                        <div className="w-16 h-12 rounded-xl overflow-hidden border border-[#F5E9DD] bg-black flex items-center justify-center">
-                          <Icon name="Play" size={12} className="text-white" />
+                    <div className="flex items-center justify-between w-full z-20">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-10 rounded-xl overflow-hidden border border-[#F5E9DD] bg-black flex items-center justify-center shrink-0">
+                          <Icon name="Play" size={14} className="text-white" />
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Atmospheric Preview Stream</span>
-                          <span className="text-[9px] text-[#7B3FA0] font-medium block truncate max-w-[200px]">{demoVideoPreview.substring(0, 30)}...</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-[#2D004D] truncate">Preview Video Ready</span>
+                          <span className="text-[10px] text-[#7B3FA0] font-medium truncate">{demoVideoPreview.substring(0, 35)}...</span>
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD]/80 px-3 py-1.5 rounded-xl">
-                        Replace Video
-                      </span>
+                      <label htmlFor="video-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#D8BFE3] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] transition-colors shadow-sm shrink-0 z-30">
+                        Choose Another Video
+                      </label>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <Icon name="Play" size={16} className="text-[#7B3FA0] mb-1" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Preview MP4 Here or Browse
+                    <div className="flex flex-col items-center justify-center text-center z-20">
+                      <Icon name="Play" size={18} className="text-[#7B3FA0] mb-1" />
+                      <span className="text-xs font-bold text-[#2D004D]">
+                        Drag a video here or click to choose
                       </span>
-                      <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
-                        MP4, WebM formats
+                      <span className="text-[10px] text-[#7B3FA0] font-medium mt-0.5">
+                        Supported: MP4 • WEBM
                       </span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Dropzone 4: Enterprise Hybrid Product Deliverable */}
+              {/* Dropzone 4: Product File */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block">
-                    Product Asset Deliverable
+                  <label className="text-xs font-bold tracking-wide text-[#2D004D] uppercase block">
+                    Product File
                   </label>
-                  <span className="text-[9px] font-extrabold text-[#7B3FA0] bg-[#7B3FA0]/10 px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
-                    ⚡ Enterprise Hybrid Upload Engine
+                  <span className="text-[10px] font-extrabold text-[#7B3FA0] bg-[#7B3FA0]/10 px-2.5 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                    ⚡ Smart Upload
                   </span>
                 </div>
-                <p className="text-[9px] text-[#7B3FA0] mb-2 font-medium">
-                  Supported Formats: ZIP, Folder, Multiple Files, PDF, MP4, PSD, FIG, DOCX, EPUB, Templates, Assets
+                <p className="text-[10px] text-[#7B3FA0] mb-2 font-medium">
+                  Upload your product. You can upload: ZIP • Folder • PDF • Video • Template • Multiple Files
                 </p>
                 
                 <div 
-                  className={`relative rounded-2xl border border-dashed transition-all flex flex-col items-center justify-center p-4 ${
+                  className={`relative rounded-2xl border border-dashed transition-all flex flex-col items-center justify-center p-4 sm:p-5 ${
                     isDragging.zip 
                       ? 'border-[#7B3FA0] bg-[#7B3FA0]/10 scale-[1.01]' 
                       : uploadError.zip
                         ? 'border-red-300 bg-red-50/40'
                         : form.storagePath
                           ? 'border-emerald-300 bg-emerald-50/40'
-                          : 'border-[#F5E9DD] hover:border-[#7B3FA0]/60 bg-white/40'
-                  } ${uploadingFile.zip ? 'min-h-[5.5rem]' : 'min-h-[5rem]'}`}
+                          : 'border-[#F3EAF8] hover:border-[#7B3FA0]/60 bg-white/40'
+                  } ${uploadingFile.zip ? 'min-h-[6rem]' : 'min-h-[5.5rem]'}`}
                   onDragOver={(e) => handleDrag(e, 'zip', true)}
                   onDragLeave={(e) => handleDrag(e, 'zip', false)}
                   onDrop={(e) => {
@@ -3032,7 +3030,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                     }
                   }}
                 >
-                  {/* Invisible file input for file/zip/asset selection */}
+                  {/* Hidden file input for file/zip/asset selection */}
                   <input 
                     type="file" 
                     id="zip-file"
@@ -3048,12 +3046,12 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   />
 
                   {uploadProgress.packaging !== undefined && uploadProgress.packaging !== null && uploadProgress.packaging < 100 ? (
-                    /* Stage 1: Browser-Side Packaging Progress */
-                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
+                    /* Stage 1: Packaging Progress */
+                    <div className="flex flex-col items-center w-full px-4 sm:px-6 gap-2 z-20">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[#7B3FA0] animate-ping" />
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
-                          Stage 1/2: Packaging into ZIP Archive ({uploadProgress.packaging}%)
+                        <span className="text-xs font-bold text-[#7B3FA0]">
+                          Preparing file... ({uploadProgress.packaging}%)
                         </span>
                       </div>
                       <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
@@ -3062,15 +3060,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           style={{ width: `${uploadProgress.packaging}%` }}
                         />
                       </div>
-                      <span className="text-[9px] text-[#7B3FA0] font-bold">
-                        Preserving directory paths & building browser zip...
+                      <span className="text-[10px] text-[#7B3FA0] font-medium">
+                        Preserving directory paths & building archive...
                       </span>
                     </div>
                   ) : uploadProgress.zip !== null && uploadProgress.zip !== undefined ? (
                     /* Stage 2: Storage Upload Progress */
-                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
-                        Stage 2/2: Uploading Deliverable ({uploadProgress.zip}%)
+                    <div className="flex flex-col items-center w-full px-4 sm:px-6 gap-2 z-20">
+                      <span className="text-xs font-bold text-[#7B3FA0]">
+                        Uploading... ({uploadProgress.zip}%)
                       </span>
                       <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
                         <div 
@@ -3078,15 +3076,15 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           style={{ width: `${uploadProgress.zip}%` }}
                         />
                       </div>
-                      <span className="text-[9px] text-[#7B3FA0] font-medium truncate max-w-[300px]">
-                        {form.fileName || form.zipName || 'Transferring to Storage...'}
+                      <span className="text-[10px] text-[#7B3FA0] font-medium truncate max-w-[280px]">
+                        {form.fileName || form.zipName || 'Transferring file...'}
                       </span>
                     </div>
                   ) : pendingVideoConfirm ? (
                     /* Large Video Confirmation Modal Banner */
                     <div className="flex flex-col items-center gap-2 z-20 p-2 text-center">
-                      <span className="text-[10px] font-bold text-amber-700">
-                        ⚠ Large video assets detected ({formatBytes(validateUploadSelection(pendingVideoConfirm).totalSize)}). Package as ZIP archive or upload directly?
+                      <span className="text-xs font-bold text-amber-700">
+                        ⚠ Large video files detected ({formatBytes(validateUploadSelection(pendingVideoConfirm).totalSize)}). Package as ZIP or upload directly?
                       </span>
                       <div className="flex items-center gap-2">
                         <button
@@ -3096,80 +3094,81 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                             setPendingVideoConfirm(null);
                             handleProductAssetSelection(files, true);
                           }}
-                          className="px-3 py-1 bg-[#7B3FA0] text-white text-[9px] font-bold rounded-lg uppercase shadow-sm hover:bg-[#2D004D]"
+                          className="px-3 py-1.5 bg-[#7B3FA0] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#2D004D]"
                         >
                           Package as ZIP
                         </button>
                         <button
                           type="button"
                           onClick={() => setPendingVideoConfirm(null)}
-                          className="px-3 py-1 bg-stone-200 text-stone-700 text-[9px] font-bold rounded-lg uppercase hover:bg-stone-300"
+                          className="px-3 py-1.5 bg-stone-200 text-stone-700 text-xs font-bold rounded-xl hover:bg-stone-300"
                         >
                           Cancel
                         </button>
                       </div>
                     </div>
                   ) : uploadError.zip ? (
-                    /* Error State */
-                    <div className="flex items-center justify-between w-full z-20 px-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-red-500 text-sm font-bold">✕</span>
-                        <span className="text-[10px] font-bold text-red-600 block truncate max-w-[260px]">
-                          {uploadError.zip}
+                    /* Error State — Creator Friendly */
+                    <div className="flex flex-col sm:flex-row items-center justify-between w-full z-20 px-2 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-red-500 text-base font-bold shrink-0">✕</span>
+                        <span className="text-xs font-bold text-red-600 truncate">
+                          {formatUserFriendlyError(uploadError.zip)}
                         </span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1 rounded-xl shrink-0">
-                        Retry Upload
-                      </span>
+                      <label htmlFor="zip-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] shrink-0 shadow-sm z-30">
+                        Try Again
+                      </label>
                     </div>
                   ) : form.storagePath ? (
                     /* Success / Uploaded Asset Card */
-                    <div className="flex items-center justify-between w-full z-20 px-1">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
-                          ✓
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full z-20 px-1 gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-base shrink-0">
+                          ✅
                         </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-extrabold text-[#2D004D] block truncate max-w-[220px]">
-                              {form.fileName || form.zipName}
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-[#2D004D] truncate max-w-[240px] sm:max-w-[300px]">
+                            Product file ready: {form.fileName || form.zipName}
+                          </span>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[10px] text-[#7B3FA0] font-medium">
+                              {form.fileSize ? formatBytes(form.fileSize) : ''}
                             </span>
-                            {packagingStatus?.isPackaged ? (
-                              <span className="text-[8px] font-extrabold bg-[#7B3FA0]/15 text-[#7B3FA0] px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
-                                📦 Auto-Packaged ({packagingStatus.originalCount} files)
-                              </span>
-                            ) : (
-                              <span className="text-[8px] font-extrabold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
-                                📄 Pass-through File
-                              </span>
-                            )}
+                            <span className="text-[9px] font-bold bg-[#7B3FA0]/15 text-[#7B3FA0] px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                              {getFileBadgeLabel(form.fileName || form.zipName, packagingStatus)}
+                            </span>
+                            <span className="text-[9px] text-emerald-600 font-bold">
+                              • Ready to upload
+                            </span>
                           </div>
-                          {form.fileSize && (
-                            <span className="text-[9px] text-[#7B3FA0] font-medium mt-0.5">
-                              {formatBytes(form.fileSize)} {packagingStatus?.compressionRatio ? `• Ratio: ${packagingStatus.compressionRatio}` : ''}
-                            </span>
-                          )}
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl shrink-0 shadow-sm">
-                        Replace Asset
-                      </span>
+                      <label 
+                        htmlFor="zip-file" 
+                        className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#D8BFE3] px-3.5 py-1.5 rounded-xl hover:bg-[#F3EAF8] transition-colors shadow-sm shrink-0 z-30"
+                      >
+                        Choose Another File
+                      </label>
                     </div>
                   ) : (
                     /* Empty / Ready State */
-                    <div className="flex flex-col items-center justify-center text-center z-20">
-                      <div className="w-8 h-8 rounded-full bg-[#7B3FA0]/10 flex items-center justify-center mb-1 text-[#7B3FA0]">
-                        <Icon name="Folder" size={16} />
+                    <div className="flex flex-col items-center justify-center text-center z-20 py-1">
+                      <div className="w-9 h-9 rounded-2xl bg-[#7B3FA0]/10 flex items-center justify-center mb-2 text-[#7B3FA0]">
+                        <Icon name="Folder" size={18} />
                       </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2D004D] mb-1">
-                        Drag ZIP, Project Folder, or Multiple Files Here
+                      <span className="text-xs font-bold text-[#2D004D] mb-1">
+                        Drag your file or folder here, or browse
                       </span>
-                      <div className="flex items-center gap-2 mt-1 pointer-events-auto">
+                      <span className="text-[10px] text-[#7B3FA0] mb-3 font-medium max-w-sm">
+                        We'll prepare everything automatically.
+                      </span>
+                      <div className="flex items-center gap-2.5 flex-wrap justify-center pointer-events-auto">
                         <label 
                           htmlFor="zip-file" 
-                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-[#2D004D] text-white px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0] transition-colors shadow-sm"
+                          className="cursor-pointer text-xs font-bold bg-[#2D004D] text-white px-3.5 py-1.5 rounded-xl hover:bg-[#7B3FA0] transition-colors shadow-sm"
                         >
-                          Browse Files / ZIP
+                          Choose File / ZIP
                         </label>
                         <input
                           type="file"
@@ -3186,9 +3185,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                         />
                         <label 
                           htmlFor="folder-file-input" 
-                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-white border border-[#7B3FA0]/40 text-[#7B3FA0] px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0]/10 transition-colors shadow-sm"
+                          className="cursor-pointer text-xs font-bold bg-white border border-[#7B3FA0]/40 text-[#7B3FA0] px-3.5 py-1.5 rounded-xl hover:bg-[#7B3FA0]/10 transition-colors shadow-sm"
                         >
-                          Browse Folder
+                          Choose Folder
                         </label>
                       </div>
                     </div>

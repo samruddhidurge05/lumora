@@ -638,16 +638,16 @@ export default function EditProduct() {
                 )}
               </div>
 
-              {/* Product File Deliverable */}
+              {/* Product File */}
               <div className="v-card v-card-pad">
                 <div className="v-section-title" style={{ marginBottom:12, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <span>Product Asset Deliverable</span>
+                  <span>Product File</span>
                   <span style={{ fontSize:'0.70rem', fontWeight:800, padding:'2px 8px', borderRadius:10, background:'rgba(123,63,160,0.1)', color:'var(--v-purple)' }}>
-                    ⚡ Enterprise Hybrid Upload Engine
+                    ⚡ Smart Upload
                   </span>
                 </div>
                 <div style={{ fontSize:'0.75rem', color:'var(--v-text2)', marginBottom:16 }}>
-                  Supported Formats: ZIP, Folder, Multiple Files, PDF, MP4, PSD, FIG, DOCX, EPUB, Templates, Assets
+                  Upload your product. You can upload: ZIP • Folder • PDF • Video • Template • Multiple Files
                 </div>
 
                 <div className="v-field">
@@ -656,7 +656,7 @@ export default function EditProduct() {
                   {pendingVendorVideoConfirm ? (
                     <div style={{ padding:'14px', borderRadius:12, background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.3)', textCenter:'center' }}>
                       <div style={{ fontSize:12, fontWeight:700, color:'#b45309', marginBottom:10 }}>
-                        ⚠ Large video assets detected ({formatBytes(validateUploadSelection(pendingVendorVideoConfirm).totalSize)}). Package as ZIP archive or cancel?
+                        ⚠ Large video files detected ({formatBytes(validateUploadSelection(pendingVendorVideoConfirm).totalSize)}). Package as ZIP archive or cancel?
                       </div>
                       <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
                         <button type="button" className="v-btn v-btn-primary v-btn-sm" onClick={() => {
@@ -668,14 +668,16 @@ export default function EditProduct() {
                       </div>
                     </div>
                   ) : form.file_url ? (
-                    <div style={{ padding:'12px 16px', borderRadius:10, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ padding:'12px 16px', borderRadius:10, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
                       <FileText size={18} style={{ color:'#16a34a', flexShrink:0 }} />
-                      <div style={{ flex:1, overflow:'hidden' }}>
+                      <div style={{ flex:1, minWidth:160, overflow:'hidden' }}>
                         <span style={{ fontSize:13, color:'#15803d', fontWeight:600, display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                          {form.fileName || 'File uploaded'}
+                          ✅ Product file ready: {form.fileName || 'File ready'}
                         </span>
-                        {form.file_size && <span style={{ fontSize:11, color:'var(--v-text3)' }}>{form.file_size}</span>}
+                        {form.file_size && <span style={{ fontSize:11, color:'var(--v-text3)' }}>{form.file_size} • Ready to upload</span>}
                       </div>
+                      <button type="button" className="v-btn v-btn-secondary v-btn-sm" style={{ cursor:'pointer' }}
+                        onClick={() => fileRef.current?.click()}>Choose Another File</button>
                       <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color:'#dc2626' }}
                         onClick={() => { set('file_url',''); set('fileName',''); set('file_size',''); }}>Remove</button>
                     </div>
@@ -687,7 +689,7 @@ export default function EditProduct() {
                       {packagingPct !== null && packagingPct !== undefined && packagingPct < 100 ? (
                         <>
                           <Upload size={24} style={{ color:'var(--v-purple)', margin:'0 auto 8px', display:'block', animation:'bounce 0.6s ease-in-out infinite alternate' }} />
-                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Stage 1/2: Packaging files into ZIP archive… {packagingPct}%</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Preparing file… {packagingPct}%</div>
                           <div className="v-progress-track" style={{ height:5, maxWidth:200, margin:'10px auto 0' }}>
                             <div className="v-progress-fill" style={{ width:`${packagingPct}%` }} />
                           </div>
@@ -695,7 +697,7 @@ export default function EditProduct() {
                       ) : uploadingFile ? (
                         <>
                           <Upload size={24} style={{ color:'var(--v-purple)', margin:'0 auto 8px', display:'block', animation:'bounce 0.6s ease-in-out infinite alternate' }} />
-                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Stage 2/2: Uploading Deliverable… {filePct}%</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Uploading… {filePct}%</div>
                           <div className="v-progress-track" style={{ height:5, maxWidth:200, margin:'10px auto 0' }}>
                             <div className="v-progress-fill" style={{ width:`${filePct}%` }} />
                           </div>
@@ -703,12 +705,15 @@ export default function EditProduct() {
                       ) : (
                         <>
                           <Upload size={24} style={{ color:'var(--v-text3)', margin:'0 auto 8px', display:'block' }} />
-                          <div style={{ fontSize:13, color:'var(--v-text2)', fontWeight:500, marginBottom:8 }}>
-                            Drag ZIP, Project Folder, or Multiple Files Here
+                          <div style={{ fontSize:13, color:'var(--v-text2)', fontWeight:500, marginBottom:4 }}>
+                            Drag your file or folder here, or browse
                           </div>
-                          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+                          <div style={{ fontSize:11, color:'var(--v-text3)', marginBottom:12 }}>
+                            We'll prepare everything automatically.
+                          </div>
+                          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
                             <button type="button" className="v-btn v-btn-primary v-btn-sm" onClick={() => fileRef.current?.click()}>
-                              Browse Files / ZIP
+                              Choose File / ZIP
                             </button>
                             <input
                               type="file"
@@ -724,7 +729,7 @@ export default function EditProduct() {
                               style={{ display:'none' }}
                             />
                             <button type="button" className="v-btn v-btn-secondary v-btn-sm" onClick={() => document.getElementById('vendor-folder-input')?.click()}>
-                              Browse Folder
+                              Choose Folder
                             </button>
                           </div>
                         </>

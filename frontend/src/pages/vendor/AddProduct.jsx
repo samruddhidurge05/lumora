@@ -666,11 +666,13 @@ export default function AddProduct() {
                 <label className="v-label">Product File (ZIP / PDF / Figma)</label>
                 <input type="file" ref={fileRef} style={{ display:'none' }} onChange={handleFileChange} />
                 {form.file_url ? (
-                  <div style={{ padding:'12px 16px', borderRadius:10, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ padding:'12px 16px', borderRadius:10, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
                     <FileText size={18} style={{ color:'#16a34a', flexShrink:0 }} />
-                    <span style={{ flex:1, fontSize:13, color:'#15803d', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {form.fileName || 'File uploaded'}
+                    <span style={{ flex:1, minWidth:160, fontSize:13, color:'#15803d', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      ✅ Product file ready: {form.fileName || 'File ready'}
                     </span>
+                    <button type="button" className="v-btn v-btn-secondary v-btn-sm" style={{ cursor:'pointer' }}
+                      onClick={() => fileRef.current?.click()}>Choose Another File</button>
                     <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color:'#dc2626' }}
                       onClick={() => { set('file_url',''); set('fileName',''); }}>Remove</button>
                   </div>
