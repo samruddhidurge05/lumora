@@ -28,9 +28,11 @@ def get_all_refund_requests(
             page_size=page_size
         )
     except Exception as e:
+        import logging, traceback
+        logging.getLogger("lumora.admin.refunds").error(f"[admin_refunds] Error fetching refund requests: {e}\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=f"Refunds query failed: {type(e).__name__}: {str(e)}"
         )
 
 @router.put("/{request_id}/status", response_model=RefundRequestResponse)

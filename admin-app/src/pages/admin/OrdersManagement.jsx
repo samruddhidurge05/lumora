@@ -453,13 +453,7 @@ export default function OrdersManagement() {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await backendFetchWithRetry(
-        '/admin/refunds/',
-        {},
-        (secondsLeft) => {
-          setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
-        }
-      );
+      const data = await backendFetch('/admin/refunds/');
       const items = Array.isArray(data) ? data : [];
       setRefundTickets(items);
       if (items.length > 0) setSelectedTicketId(items[0].id);

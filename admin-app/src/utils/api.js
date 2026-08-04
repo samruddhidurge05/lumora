@@ -78,13 +78,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     });
   } catch (netErr) {
     // Network failure (e.g. Render server cold-starting / un-routable connection)
-    const isProduction = typeof window !== 'undefined' &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1';
     const error = new Error(
-      isProduction
-        ? 'The server is warming up. Please wait a moment and try again.'
-        : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+      netErr.message || 'Backend server network failure or connection refused.'
     );
     error.status = 503;
     error.code = 'BACKEND_OFFLINE';
@@ -134,13 +129,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
 
   // Cold start gateway responses (502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout)
   if (res.status === 502 || res.status === 503 || res.status === 504) {
-    const isProduction = typeof window !== 'undefined' &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1';
     const error = new Error(
-      isProduction
-        ? 'The server is warming up. Please wait a moment and try again.'
-        : 'Backend server returned gateway warmup status. Retrying...'
+      `Backend Gateway Error ${res.status}: ${res.statusText || 'Server Unavailable'}`
     );
     error.status = res.status;
     error.code = 'BACKEND_OFFLINE';
@@ -158,13 +148,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
       // Not JSON or empty — check if we got HTML (Render cold-start, reverse proxy error, or wrong route)
       const isHtml = errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html');
       if (isHtml) {
-        const isProduction = typeof window !== 'undefined' &&
-          window.location.hostname !== 'localhost' &&
-          window.location.hostname !== '127.0.0.1';
         const error = new Error(
-          isProduction
-            ? 'The server is warming up. Please wait a moment and try again.'
-            : 'Backend server is not responding. Make sure the backend is running on http://localhost:8000'
+          `Server returned HTML Error ${res.status}: ${errorText.slice(0, 150)}`
         );
         error.status = res.status;
         error.code = 'BACKEND_OFFLINE';
@@ -183,7 +168,7 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
       : (detail?.message || (typeof detail === 'string' ? detail : null));
 
     const error = new Error(
-      extractedMessage || `API error: ${res.status} ${errorText || res.statusText}`
+      extractedMessage || `API error ${res.status}: ${errorText || res.statusText}`
     );
     error.status = res.status;
     error.code = code;
@@ -200,13 +185,8 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
   if (!contentType.includes('application/json')) {
     const text = await res.text();
     if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-      const isProduction = typeof window !== 'undefined' &&
-        window.location.hostname !== 'localhost' &&
-        window.location.hostname !== '127.0.0.1';
       const error = new Error(
-        isProduction
-          ? 'The server is warming up. Please wait a moment and try again.'
-          : 'Backend server returned an HTML page. Make sure the backend is running and the route exists.'
+        `Unexpected HTML response (${res.status}): ${text.slice(0, 150)}`
       );
       error.status = res.status;
       error.code = 'BACKEND_OFFLINE';
