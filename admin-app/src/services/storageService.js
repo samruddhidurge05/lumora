@@ -49,7 +49,11 @@ function _uploadToBackend(file, endpoint, onProgress) {
 
     let uploadUrl = endpoint;
     if (!endpoint.startsWith('http')) {
-      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      // Canonical trailing slash enforcement to prevent HTTP 307 -> 405 redirects
+      if (cleanEndpoint === '/api/uploads') {
+        cleanEndpoint = '/api/uploads/';
+      }
       if (cleanEndpoint.startsWith('/api/')) {
         const baseOrigin = API_BASE.replace(/\/api\/?$/, '');
         uploadUrl = `${baseOrigin}${cleanEndpoint}`;

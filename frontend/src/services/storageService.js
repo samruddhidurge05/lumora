@@ -47,7 +47,20 @@ async function _uploadToBackend(file, endpoint, onProgress, _isRetry = false) {
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const uploadUrl = buildBackendUrl(endpoint);
+    let uploadUrl = endpoint;
+    if (!endpoint.startsWith('http')) {
+      let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      // Canonical trailing slash enforcement to prevent HTTP 307 -> 405 redirects
+      if (cleanEndpoint === '/api/uploads') {
+        cleanEndpoint = '/api/uploads/';
+      }
+      if (cleanEndpoint.startsWith('/api/')) {
+        const baseOrigin = API_BASE.replace(/\/api\/?$/, '');
+        uploadUrl = `${baseOrigin}${cleanEndpoint}`;
+      } else {
+        uploadUrl = `${API_BASE}${cleanEndpoint}`;
+      }
+    }
     xhr.open('POST', uploadUrl);
 
     // Attach JWT token
