@@ -249,6 +249,10 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_email_logs ADD COLUMN IF NOT EXISTS message_id VARCHAR(255)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
+            # orders — client device and network attribution metadata columns
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip_address  VARCHAR(64)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS device_type VARCHAR(50)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS browser     VARCHAR(100)",
             # affiliate_profiles — Phase 2 earnings breakdown & financial profile
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS pending_earnings   FLOAT DEFAULT 0.0",
             "ALTER TABLE affiliate_profiles ADD COLUMN IF NOT EXISTS paid_earnings      FLOAT DEFAULT 0.0",
@@ -389,6 +393,12 @@ def _run_schema_migrations() -> None:
                 # users - add last_login_at
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
                 if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+
+                # orders - add ip_address, device_type, browser
+                ord_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(orders)"))}
+                if "ip_address"  not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN ip_address VARCHAR(64)"))
+                if "device_type" not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN device_type VARCHAR(50)"))
+                if "browser"     not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN browser VARCHAR(100)"))
 
                 # products - extended metadata + affiliate columns
                 prod_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(products)"))}
