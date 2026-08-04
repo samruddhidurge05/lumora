@@ -1752,6 +1752,7 @@ def get_order_attribution_trace(
                 "referral_link_name": ref_link_name,
                 "device_type": (attribution and getattr(attribution, 'device_type', None)) or (commission and getattr(commission, 'device_type', None)) or "Desktop",
                 "browser": (attribution and getattr(attribution, 'browser', None)) or (commission and getattr(commission, 'browser', None)) or "Chrome",
+                "ip_address": (attribution and getattr(attribution, 'ip_address', None)) or (commission and getattr(commission, 'ip_address', None)) or "Not Available",
                 "status": (attribution and getattr(attribution, 'status', None)) or (commission and (getattr(commission, 'commission_status', None) or getattr(commission, 'status', None))) or "attributed",
                 "fraud_flags": getattr(attribution, 'fraud_flags', None) if attribution else None,
             },
@@ -1782,6 +1783,7 @@ def get_order_attribution_trace(
                 "referral_link_name": "Referral Link",
                 "device_type": "Desktop",
                 "browser": "Chrome",
+                "ip_address": "Not Available",
                 "status": "none",
                 "fraud_flags": None
             },

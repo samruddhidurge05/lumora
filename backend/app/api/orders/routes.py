@@ -13,7 +13,7 @@ from app.services.purchase_service import PurchaseService
 router = APIRouter()
 
 
-def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer_user_id: int) -> None:
+def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer_user_id: int, request = None) -> None:
     """
     Enterprise-grade, idempotent affiliate attribution and commission creation.
 
@@ -35,6 +35,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
     from app.models.user import User
     from app.models.audit_log import AuditLog
     from app.utils.db_sync import get_product_by_id
+    from app.utils.ip_utils import get_client_ip, parse_user_agent
 
     logger = logging.getLogger(__name__)
 
@@ -42,6 +43,11 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
     if not v2_enabled:
         logger.info("[_create_affiliate_commissions] AFFILIATE_V2_ENABLED is false; skipping attribution.")
         return
+
+    # Extract client metadata
+    req_ip = get_client_ip(request) if request else "Not Available"
+    ua_header = request.headers.get("user-agent") if (request and hasattr(request, "headers")) else None
+    dev_type, browser_name = parse_user_agent(ua_header)
 
     code_upper = affiliate_code.strip().upper()
     referral_link_id = None
@@ -123,6 +129,9 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
                 referral_link_id=referral_link_id,
                 product_id=item.product_id,
                 status="pending_review" if is_self_referral else "attributed",
+                device_type=dev_type,
+                browser=browser_name,
+                ip_address=req_ip,
                 fraud_flags=fraud_flags,
                 created_at=datetime.utcnow()
             )
@@ -143,6 +152,9 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
                 customer_email=customer_email,
                 commission_status=comm_initial_status,
                 status=comm_initial_status,
+                device_type=dev_type,
+                browser=browser_name,
+                ip_address=req_ip,
                 referral_attribution_id=attribution.id,
                 referral_link_id=referral_link_id,
                 created_at=datetime.utcnow()
@@ -203,9 +215,12 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
             logger.error(f"[_create_affiliate_commissions] Failed to create commission: {ex}")
             raise
 
+from fastapi import Request
+
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_new_order(
     order_in: OrderCreate,
+    request: Request,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):

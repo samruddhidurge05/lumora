@@ -305,10 +305,20 @@ function AffiliateAttributionCard({ orderId }) {
         </div>
 
         {attr.device_type && (
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-[10px] text-[#7B3FA0] font-medium">Device & Browser</span>
-            <span className="text-[9px] text-[#2D004D] font-mono">{attr.device_type} • {attr.browser}</span>
-          </div>
+          <>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-[10px] text-[#7B3FA0] font-medium">Customer Device</span>
+              <span className="text-[9px] text-[#2D004D] font-mono">{attr.device_type}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-[10px] text-[#7B3FA0] font-medium">Browser</span>
+              <span className="text-[9px] text-[#2D004D] font-mono">{attr.browser}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-[10px] text-[#7B3FA0] font-medium">IP Address</span>
+              <span className="text-[9px] text-[#2D004D] font-mono">{attr.ip_address || 'Not Available'}</span>
+            </div>
+          </>
         )}
 
         {msg && (
