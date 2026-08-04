@@ -13,6 +13,7 @@
     "firebase": "^10.12.2",
     "framer-motion": "^11.18.2",
     "gsap": "^3.12.5",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.395.0",
     "playwright": "^1.61.1",
     "react": "^18.3.1",

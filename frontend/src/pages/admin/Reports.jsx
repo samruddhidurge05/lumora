@@ -491,14 +491,6 @@ export default function Reports() {
         setReportError(err?.message || 'Failed to sync report data.');
         triggerNotification("Failed to sync report data", "error");
       });
-  };report data synced from Firestore.");
-      })
-      .catch(err => {
-        console.error('[Reports] Refresh error:', err);
-        setIsGenerating(false);
-        setReportError(err?.message || 'Failed to sync report data.');
-        triggerNotification("Failed to sync report data", "error");
-      });
   };
 
   return (

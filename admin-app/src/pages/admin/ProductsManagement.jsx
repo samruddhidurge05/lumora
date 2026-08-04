@@ -6,6 +6,7 @@ import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } f
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
 import { backendFetch } from '../../utils/api';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
+import { prepareUploadPayload, formatBytes, validateUploadSelection } from '../../utils/hybridUploadHelper';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -2297,104 +2298,71 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     zip: false,
   });
 
-  // Error state for failed Storage uploads
-  const [uploadError, setUploadError] = useState({
-    thumbnail: null,
-    zip: null,
-    gallery: null,
-  });
+  const [packagingStatus, setPackagingStatus] = useState(null);
+  const [pendingVideoConfirm, setPendingVideoConfirm] = useState(null);
 
-  const simulateUpload = (file, field, onComplete) => {
+  const handleProductAssetSelection = async (fileOrFiles, skipVideoConfirm = false) => {
+    const tempId = product?.id ? String(product.id) : `tmp_${Date.now()}`;
+    const bundleName = form.title ? form.title : 'product_deliverable';
+
+    setUploadError(prev => ({ ...prev, zip: null }));
+    setUploadingFile(prev => ({ ...prev, zip: true }));
+    setUploadProgress(prev => ({ ...prev, zip: 0, packaging: 0 }));
+    setPackagingStatus(null);
     sysSound.playTap();
-    setUploadProgress(prev => ({ ...prev, [field]: 0 }));
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        sysSound.playSuccess();
-        setTimeout(() => {
-          setUploadProgress(prev => ({ ...prev, [field]: null }));
-          onComplete();
-        }, 300);
+
+    try {
+      // Step 1: Packaging & Normalization Phase (Browser JSZip)
+      const prepared = await prepareUploadPayload(fileOrFiles, {
+        bundleName,
+        skipVideoConfirm,
+        onPackagingProgress: (percent) => {
+          setUploadProgress(prev => ({ ...prev, packaging: percent }));
+        }
+      });
+
+      setPackagingStatus({
+        isPackaged: prepared.isPackaged,
+        originalCount: prepared.originalCount,
+        formattedSize: prepared.formattedSize,
+        fileName: prepared.fileName,
+        compressionRatio: prepared.compressionRatio
+      });
+
+      // Step 2: Upload Payload to Storage
+      const uploadResult = await uploadProductFile(prepared.file, tempId, (percent) => {
+        setUploadProgress(prev => ({ ...prev, zip: percent }));
+      });
+
+      sysSound.playSuccess();
+      setUploadProgress(prev => ({ ...prev, zip: null, packaging: null }));
+      setUploadingFile(prev => ({ ...prev, zip: false }));
+
+      setForm(prev => ({
+        ...prev,
+        zipName: uploadResult.fileName,
+        storagePath: uploadResult.storagePath,
+        downloadUrl: uploadResult.downloadUrl,
+        fileSize: uploadResult.fileSize,
+        fileName: uploadResult.fileName,
+      }));
+    } catch (err) {
+      if (err.message === 'LARGE_VIDEO_CONFIRM_REQUIRED') {
+        setPendingVideoConfirm(fileOrFiles);
+        setUploadingFile(prev => ({ ...prev, zip: false }));
+        return;
       }
-      setUploadProgress(prev => ({ ...prev, [field]: progress }));
-    }, 80);
-  };
-
-  const handleDrag = (e, type, active) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(prev => ({ ...prev, [type]: active }));
-  };
-
-  const handleDrop = (e, type) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(prev => ({ ...prev, [type]: false }));
-    
-    if (type === 'gallery') {
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length === 0) return;
-      handleGalleryFiles(files);
-    } else {
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-      handleSingleFile(file, type);
-    }
-  };
-
-  const handleFileChange = (e, type) => {
-    if (type === 'gallery') {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-      handleGalleryFiles(files);
-    } else {
-      const file = e.target.files[0];
-      if (!file) return;
-      handleSingleFile(file, type);
+      console.error('[ProductForm] Deliverable upload failed:', err);
+      setUploadProgress(prev => ({ ...prev, zip: null, packaging: null }));
+      setUploadingFile(prev => ({ ...prev, zip: false }));
+      setUploadError(prev => ({ ...prev, zip: err.message }));
     }
   };
 
   const handleSingleFile = (file, type) => {
-    // ── ZIP / product deliverable — upload to Firebase Storage ────────────────
+    // ── ZIP / product deliverable — upload to Storage via Enterprise Hybrid Engine ──
     if (type === 'zip') {
-      // We need a productId to build the storage path.
-      // If editing an existing product, use its id.
-      // If creating a new product, use a temporary ID; the save handler will
-      // use the Firestore-assigned docId on the final record.
-      const tempId = product?.id ? String(product.id) : `tmp_${Date.now()}`;
-
-      setUploadError(prev => ({ ...prev, zip: null }));
-      setUploadingFile(prev => ({ ...prev, zip: true }));
-      setUploadProgress(prev => ({ ...prev, zip: 0 }));
-      sysSound.playTap();
-
-      uploadProductFile(file, tempId, (percent) => {
-        setUploadProgress(prev => ({ ...prev, zip: percent }));
-      })
-        .then((result) => {
-          sysSound.playSuccess();
-          setUploadProgress(prev => ({ ...prev, zip: null }));
-          setUploadingFile(prev => ({ ...prev, zip: false }));
-          // Store all three storage fields into form state
-          setForm(prev => ({
-            ...prev,
-            zipName:     result.fileName,
-            storagePath: result.storagePath,
-            downloadUrl: result.downloadUrl,
-            fileSize:    result.fileSize,
-            fileName:    result.fileName,
-          }));
-        })
-        .catch((err) => {
-          console.error('[ProductForm] ZIP upload failed:', err);
-          setUploadProgress(prev => ({ ...prev, zip: null }));
-          setUploadingFile(prev => ({ ...prev, zip: false }));
-          setUploadError(prev => ({ ...prev, zip: `Upload failed: ${err.message}` }));
-        });
-
+      handleProductAssetSelection(file);
       return;
     }
 
@@ -3022,94 +2990,200 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 </div>
               </div>
 
-              {/* Dropzone 4: ZIP File Deliverable */}
+              {/* Dropzone 4: Enterprise Hybrid Product Deliverable */}
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Distribution ZIP Deliverable
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block">
+                    Product Asset Deliverable
+                  </label>
+                  <span className="text-[9px] font-extrabold text-[#7B3FA0] bg-[#7B3FA0]/10 px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                    ⚡ Enterprise Hybrid Upload Engine
+                  </span>
+                </div>
+                <p className="text-[9px] text-[#7B3FA0] mb-2 font-medium">
+                  Supported Formats: ZIP, Folder, Multiple Files, PDF, MP4, PSD, FIG, DOCX, EPUB, Templates, Assets
+                </p>
                 
                 <div 
-                  className={`relative rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 ${
+                  className={`relative rounded-2xl border border-dashed transition-all flex flex-col items-center justify-center p-4 ${
                     isDragging.zip 
-                      ? 'border-[#D8BFE3] bg-[#D8BFE3]/5' 
+                      ? 'border-[#7B3FA0] bg-[#7B3FA0]/10 scale-[1.01]' 
                       : uploadError.zip
                         ? 'border-red-300 bg-red-50/40'
                         : form.storagePath
-                          ? 'border-green-300 bg-green-50/40'
-                          : 'border-[#F5E9DD] hover:border-[#D8BFE3]/60 bg-white/40'
-                  } ${uploadingFile.zip ? 'min-h-[5rem]' : 'h-20'}`}
+                          ? 'border-emerald-300 bg-emerald-50/40'
+                          : 'border-[#F5E9DD] hover:border-[#7B3FA0]/60 bg-white/40'
+                  } ${uploadingFile.zip ? 'min-h-[5.5rem]' : 'min-h-[5rem]'}`}
                   onDragOver={(e) => handleDrag(e, 'zip', true)}
                   onDragLeave={(e) => handleDrag(e, 'zip', false)}
-                  onDrop={(e) => handleDrop(e, 'zip')}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(prev => ({ ...prev, zip: false }));
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleProductAssetSelection(e.dataTransfer.files);
+                    }
+                  }}
                 >
+                  {/* Invisible file input for file/zip/asset selection */}
                   <input 
                     type="file" 
                     id="zip-file"
-                    accept=".zip"
-                    onChange={(e) => handleFileChange(e, 'zip')}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    multiple
+                    accept=".zip,.pdf,.epub,.docx,.doc,.ppt,.pptx,.mp4,.mov,.webm,.avi,.mp3,.wav,.fig,.psd,.ai,.sketch,.blend"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleProductAssetSelection(e.target.files);
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                     disabled={uploadingFile.zip}
                   />
-                  
-                  {uploadProgress.zip !== null ? (
-                    /* Real Firebase Storage upload in progress */
-                    <div className="flex flex-col items-center w-full px-6 gap-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0]">
-                        Uploading to Firebase Storage: {uploadProgress.zip}%
-                      </span>
-                      <div className="w-full h-1.5 bg-[#F5E9DD] rounded-full overflow-hidden">
+
+                  {uploadProgress.packaging !== undefined && uploadProgress.packaging !== null && uploadProgress.packaging < 100 ? (
+                    /* Stage 1: Browser-Side Packaging Progress */
+                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#7B3FA0] animate-ping" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
+                          Stage 1/2: Packaging into ZIP Archive ({uploadProgress.packaging}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
                         <div 
-                          className="h-full bg-[#7B3FA0] transition-all duration-75 rounded-full"
+                          className="h-full bg-gradient-to-r from-[#D8BFE3] to-[#7B3FA0] transition-all duration-100 rounded-full"
+                          style={{ width: `${uploadProgress.packaging}%` }}
+                        />
+                      </div>
+                      <span className="text-[9px] text-[#7B3FA0] font-bold">
+                        Preserving directory paths & building browser zip...
+                      </span>
+                    </div>
+                  ) : uploadProgress.zip !== null && uploadProgress.zip !== undefined ? (
+                    /* Stage 2: Storage Upload Progress */
+                    <div className="flex flex-col items-center w-full px-6 gap-1.5 z-20">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7B3FA0]">
+                        Stage 2/2: Uploading Deliverable ({uploadProgress.zip}%)
+                      </span>
+                      <div className="w-full h-2 bg-[#F5E9DD] rounded-full overflow-hidden shadow-inner">
+                        <div 
+                          className="h-full bg-[#7B3FA0] transition-all duration-100 rounded-full"
                           style={{ width: `${uploadProgress.zip}%` }}
                         />
                       </div>
-                      <span className="text-[9px] text-[#8E6AA8]">{form.zipName || 'Uploading...'}</span>
+                      <span className="text-[9px] text-[#7B3FA0] font-medium truncate max-w-[300px]">
+                        {form.fileName || form.zipName || 'Transferring to Storage...'}
+                      </span>
+                    </div>
+                  ) : pendingVideoConfirm ? (
+                    /* Large Video Confirmation Modal Banner */
+                    <div className="flex flex-col items-center gap-2 z-20 p-2 text-center">
+                      <span className="text-[10px] font-bold text-amber-700">
+                        ⚠ Large video assets detected ({formatBytes(validateUploadSelection(pendingVideoConfirm).totalSize)}). Package as ZIP archive or upload directly?
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const files = pendingVideoConfirm;
+                            setPendingVideoConfirm(null);
+                            handleProductAssetSelection(files, true);
+                          }}
+                          className="px-3 py-1 bg-[#7B3FA0] text-white text-[9px] font-bold rounded-lg uppercase shadow-sm hover:bg-[#2D004D]"
+                        >
+                          Package as ZIP
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingVideoConfirm(null)}
+                          className="px-3 py-1 bg-stone-200 text-stone-700 text-[9px] font-bold rounded-lg uppercase hover:bg-stone-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   ) : uploadError.zip ? (
-                    /* Upload error state */
-                    <div className="flex items-center justify-between w-full">
+                    /* Error State */
+                    <div className="flex items-center justify-between w-full z-20 px-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-red-400 text-sm">✗</span>
-                        <span className="text-[10px] font-bold text-red-500 block truncate max-w-[210px]">
+                        <span className="text-red-500 text-sm font-bold">✕</span>
+                        <span className="text-[10px] font-bold text-red-600 block truncate max-w-[260px]">
                           {uploadError.zip}
                         </span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl shrink-0">
-                        Retry
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1 rounded-xl shrink-0">
+                        Retry Upload
                       </span>
                     </div>
                   ) : form.storagePath ? (
-                    /* File successfully uploaded to Storage */
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-500 text-sm">✓</span>
+                    /* Success / Uploaded Asset Card */
+                    <div className="flex items-center justify-between w-full z-20 px-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
+                          ✓
+                        </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#2D004D] block truncate max-w-[200px]">
-                            {form.fileName || form.zipName}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-extrabold text-[#2D004D] block truncate max-w-[220px]">
+                              {form.fileName || form.zipName}
+                            </span>
+                            {packagingStatus?.isPackaged ? (
+                              <span className="text-[8px] font-extrabold bg-[#7B3FA0]/15 text-[#7B3FA0] px-2 py-0.5 rounded-full border border-[#7B3FA0]/20">
+                                📦 Auto-Packaged ({packagingStatus.originalCount} files)
+                              </span>
+                            ) : (
+                              <span className="text-[8px] font-extrabold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                                📄 Pass-through File
+                              </span>
+                            )}
+                          </div>
                           {form.fileSize && (
-                            <span className="text-[9px] text-[#7B3FA0]">
-                              {(form.fileSize / (1024 * 1024)).toFixed(2)} MB · Stored in Firebase
+                            <span className="text-[9px] text-[#7B3FA0] font-medium mt-0.5">
+                              {formatBytes(form.fileSize)} {packagingStatus?.compressionRatio ? `• Ratio: ${packagingStatus.compressionRatio}` : ''}
                             </span>
                           )}
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl shrink-0">
-                        Replace
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl shrink-0 shadow-sm">
+                        Replace Asset
                       </span>
                     </div>
                   ) : (
-                    /* Default empty state */
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <Icon name="Folder" size={16} className="text-[#7B3FA0]" />
-                        <span className="text-[10px] font-bold text-[#2D004D] block truncate max-w-[240px]">
-                          {form.zipName || "Drop ZIP package or browse"}
-                        </span>
+                    /* Empty / Ready State */
+                    <div className="flex flex-col items-center justify-center text-center z-20">
+                      <div className="w-8 h-8 rounded-full bg-[#7B3FA0]/10 flex items-center justify-center mb-1 text-[#7B3FA0]">
+                        <Icon name="Folder" size={16} />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl">
-                        Attach ZIP
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2D004D] mb-1">
+                        Drag ZIP, Project Folder, or Multiple Files Here
                       </span>
+                      <div className="flex items-center gap-2 mt-1 pointer-events-auto">
+                        <label 
+                          htmlFor="zip-file" 
+                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-[#2D004D] text-white px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0] transition-colors shadow-sm"
+                        >
+                          Browse Files / ZIP
+                        </label>
+                        <input
+                          type="file"
+                          id="folder-file-input"
+                          webkitdirectory="true"
+                          directory="true"
+                          multiple
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              handleProductAssetSelection(e.target.files);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <label 
+                          htmlFor="folder-file-input" 
+                          className="cursor-pointer text-[9px] font-extrabold uppercase tracking-widest bg-white border border-[#7B3FA0]/40 text-[#7B3FA0] px-3 py-1.5 rounded-xl hover:bg-[#7B3FA0]/10 transition-colors shadow-sm"
+                        >
+                          Browse Folder
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>

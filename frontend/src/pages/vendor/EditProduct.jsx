@@ -5,7 +5,8 @@ import VendorLayout from './VendorLayout';
 import '../styles/vendor.css';
 import { useVendorProducts } from '../../hooks/useVendorData';
 import { backendFetch } from '../../utils/api';
-import { uploadFile } from '../../services/storageService';
+import { uploadFile, deleteFile } from '../../services/storageService';
+import { prepareUploadPayload, formatBytes, validateUploadSelection } from '../../utils/hybridUploadHelper';
 import { useApp } from '../../context/AppContext';
 
 function useIsMobile(bp = 768) {
@@ -212,26 +213,48 @@ export default function EditProduct() {
     }
   };
 
-  /* ── Digital file: upload to backend → store URL in DB ─── */
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [packagingPct, setPackagingPct] = useState(null);
+  const [pendingVendorVideoConfirm, setPendingVendorVideoConfirm] = useState(null);
+
+  /* ── Digital file: upload via Enterprise Hybrid Engine ─── */
+  const handleVendorFileSelection = async (fileOrFiles, skipVideoConfirm = false) => {
     setSaveError('');
-    setUploadingFile(true); setFilePct(5);
+    setUploadingFile(true); setFilePct(5); setPackagingPct(0);
     try {
-      // Pass type 'file' so it routes to /api/uploads/ (accepts ZIP/PDF/etc.)
-      const result = await uploadFile(file, 'file', (pct) => {
+      // Step 1: Package/normalize via Enterprise Hybrid Engine (JSZip in browser)
+      const prepared = await prepareUploadPayload(fileOrFiles, {
+        bundleName: form.title || 'vendor_product_package',
+        skipVideoConfirm,
+        onPackagingProgress: (pct) => setPackagingPct(pct)
+      });
+
+      // Step 2: Upload normalized File to backend storage
+      const result = await uploadFile(prepared.file, 'file', (pct) => {
         setFilePct(Math.round(pct));
       });
       setFilePct(100);
       set('file_url', result.downloadUrl);
-      set('fileName', file.name);
-      set('file_size', `${Math.round((result.fileSize || file.size) / 1024)} KB`);
+      set('fileName', prepared.fileName || result.fileName);
+      set('file_size', prepared.formattedSize || `${Math.round((result.fileSize || prepared.file.size) / 1024)} KB`);
     } catch (err) {
+      if (err.message === 'LARGE_VIDEO_CONFIRM_REQUIRED') {
+        setPendingVendorVideoConfirm(fileOrFiles);
+        setUploadingFile(false);
+        return;
+      }
       setSaveError(`File upload failed: ${err.message}`);
     } finally {
-      setTimeout(() => setUploadingFile(false), 300);
+      setTimeout(() => {
+        setUploadingFile(false);
+        setPackagingPct(null);
+      }, 300);
     }
+  };
+
+  const handleFileChange = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    handleVendorFileSelection(files);
   };
 
   /* ── Additional preview screenshots: upload to Firebase Storage ─────── */
@@ -615,31 +638,64 @@ export default function EditProduct() {
                 )}
               </div>
 
-              {/* Product File */}
+              {/* Product File Deliverable */}
               <div className="v-card v-card-pad">
-                <div className="v-section-title" style={{ marginBottom:20 }}>Product File</div>
+                <div className="v-section-title" style={{ marginBottom:12, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                  <span>Product Asset Deliverable</span>
+                  <span style={{ fontSize:'0.70rem', fontWeight:800, padding:'2px 8px', borderRadius:10, background:'rgba(123,63,160,0.1)', color:'var(--v-purple)' }}>
+                    ⚡ Enterprise Hybrid Upload Engine
+                  </span>
+                </div>
+                <div style={{ fontSize:'0.75rem', color:'var(--v-text2)', marginBottom:16 }}>
+                  Supported Formats: ZIP, Folder, Multiple Files, PDF, MP4, PSD, FIG, DOCX, EPUB, Templates, Assets
+                </div>
 
                 <div className="v-field">
-                  <label className="v-label">Product File (ZIP / PDF / Figma)</label>
-                  <input type="file" ref={fileRef} style={{ display:'none' }} onChange={handleFileChange} />
-                  {form.file_url ? (
+                  <input type="file" ref={fileRef} multiple accept=".zip,.pdf,.epub,.docx,.doc,.ppt,.pptx,.mp4,.mov,.webm,.avi,.mp3,.wav,.fig,.psd,.ai,.sketch,.blend" style={{ display:'none' }} onChange={handleFileChange} />
+                  
+                  {pendingVendorVideoConfirm ? (
+                    <div style={{ padding:'14px', borderRadius:12, background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.3)', textCenter:'center' }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:'#b45309', marginBottom:10 }}>
+                        ⚠ Large video assets detected ({formatBytes(validateUploadSelection(pendingVendorVideoConfirm).totalSize)}). Package as ZIP archive or cancel?
+                      </div>
+                      <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+                        <button type="button" className="v-btn v-btn-primary v-btn-sm" onClick={() => {
+                          const files = pendingVendorVideoConfirm;
+                          setPendingVendorVideoConfirm(null);
+                          handleVendorFileSelection(files, true);
+                        }}>Package as ZIP</button>
+                        <button type="button" className="v-btn v-btn-secondary v-btn-sm" onClick={() => setPendingVendorVideoConfirm(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : form.file_url ? (
                     <div style={{ padding:'12px 16px', borderRadius:10, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', gap:10 }}>
                       <FileText size={18} style={{ color:'#16a34a', flexShrink:0 }} />
-                      <span style={{ flex:1, fontSize:13, color:'#15803d', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {form.fileName || 'File uploaded'}
-                      </span>
+                      <div style={{ flex:1, overflow:'hidden' }}>
+                        <span style={{ fontSize:13, color:'#15803d', fontWeight:600, display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {form.fileName || 'File uploaded'}
+                        </span>
+                        {form.file_size && <span style={{ fontSize:11, color:'var(--v-text3)' }}>{form.file_size}</span>}
+                      </div>
                       <button type="button" className="v-btn v-btn-ghost v-btn-sm" style={{ color:'#dc2626' }}
-                        onClick={() => { set('file_url',''); set('fileName',''); }}>Remove</button>
+                        onClick={() => { set('file_url',''); set('fileName',''); set('file_size',''); }}>Remove</button>
                     </div>
                   ) : (
-                    <div onClick={() => fileRef.current?.click()}
+                    <div
                       style={{ border:'2px dashed rgba(184,134,208,0.40)', borderRadius:12, padding:'28px 20px', textAlign:'center', cursor:'pointer', background:'rgba(255,255,255,0.40)', transition:'border-color 0.2s' }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = '#B886D0'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(184,134,208,0.40)'}>
-                      {uploadingFile ? (
+                      {packagingPct !== null && packagingPct !== undefined && packagingPct < 100 ? (
                         <>
                           <Upload size={24} style={{ color:'var(--v-purple)', margin:'0 auto 8px', display:'block', animation:'bounce 0.6s ease-in-out infinite alternate' }} />
-                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Uploading… {filePct}%</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Stage 1/2: Packaging files into ZIP archive… {packagingPct}%</div>
+                          <div className="v-progress-track" style={{ height:5, maxWidth:200, margin:'10px auto 0' }}>
+                            <div className="v-progress-fill" style={{ width:`${packagingPct}%` }} />
+                          </div>
+                        </>
+                      ) : uploadingFile ? (
+                        <>
+                          <Upload size={24} style={{ color:'var(--v-purple)', margin:'0 auto 8px', display:'block', animation:'bounce 0.6s ease-in-out infinite alternate' }} />
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--v-purple)' }}>Stage 2/2: Uploading Deliverable… {filePct}%</div>
                           <div className="v-progress-track" style={{ height:5, maxWidth:200, margin:'10px auto 0' }}>
                             <div className="v-progress-fill" style={{ width:`${filePct}%` }} />
                           </div>
@@ -647,8 +703,30 @@ export default function EditProduct() {
                       ) : (
                         <>
                           <Upload size={24} style={{ color:'var(--v-text3)', margin:'0 auto 8px', display:'block' }} />
-                          <div style={{ fontSize:13, color:'var(--v-text2)', fontWeight:500 }}>Click to upload your product file</div>
-                          <div style={{ fontSize:11, color:'var(--v-text3)', marginTop:4 }}>ZIP, PDF, Figma, Sketch, MP4 — stored in local storage</div>
+                          <div style={{ fontSize:13, color:'var(--v-text2)', fontWeight:500, marginBottom:8 }}>
+                            Drag ZIP, Project Folder, or Multiple Files Here
+                          </div>
+                          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+                            <button type="button" className="v-btn v-btn-primary v-btn-sm" onClick={() => fileRef.current?.click()}>
+                              Browse Files / ZIP
+                            </button>
+                            <input
+                              type="file"
+                              id="vendor-folder-input"
+                              webkitdirectory="true"
+                              directory="true"
+                              multiple
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  handleVendorFileSelection(e.target.files);
+                                }
+                              }}
+                              style={{ display:'none' }}
+                            />
+                            <button type="button" className="v-btn v-btn-secondary v-btn-sm" onClick={() => document.getElementById('vendor-folder-input')?.click()}>
+                              Browse Folder
+                            </button>
+                          </div>
                         </>
                       )}
                     </div>
