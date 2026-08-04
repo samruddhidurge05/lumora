@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
@@ -337,8 +338,35 @@ export default function OrdersManagement() {
   const [selectedProductType, setSelectedProductType] = useState("All");
   const [sortBy, setSortBy] = useState("newest"); // newest | value-desc | risk-desc
 
-  // Refund request state management
-  const [viewMode, setViewMode] = useState("orders"); // "orders" | "tickets"
+  // Refund request state management & URL tab synchronization
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [viewMode, setViewMode] = useState(
+    (tabParam === 'refunds' || tabParam === 'tickets') ? 'tickets' : 'orders'
+  );
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'refunds' || tab === 'tickets') {
+      setViewMode('tickets');
+    } else if (tab === 'orders') {
+      setViewMode('orders');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (mode) => {
+    sysSound.playTap();
+    setViewMode(mode);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (mode === 'tickets') {
+        next.set('tab', 'refunds');
+      } else {
+        next.delete('tab');
+      }
+      return next;
+    }, { replace: true });
+  };
   const [refundTickets, setRefundTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [ticketApproveNotes, setTicketApproveNotes] = useState("");
@@ -921,7 +949,7 @@ export default function OrdersManagement() {
             {/* --- VIEW MODE TOGGLE --- */}
             <div className="flex gap-3 mb-6 p-1 bg-stone-100/50 rounded-2xl border border-stone-200/30 w-fit">
               <button
-                onClick={() => { sysSound.playTap(); setViewMode("orders"); }}
+                onClick={() => handleTabChange("orders")}
                 className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 ${viewMode === "orders"
                     ? "bg-[#2D004D] text-white shadow-md"
                     : "hover:bg-white/60 text-[#7B3FA0]"
@@ -930,7 +958,7 @@ export default function OrdersManagement() {
                 All Orders
               </button>
               <button
-                onClick={() => { sysSound.playTap(); setViewMode("tickets"); }}
+                onClick={() => handleTabChange("tickets")}
                 className={`px-5 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center gap-2 ${viewMode === "tickets"
                     ? "bg-[#2D004D] text-white shadow-md"
                     : "hover:bg-white/60 text-[#7B3FA0]"

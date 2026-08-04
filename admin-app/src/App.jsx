@@ -44,7 +44,6 @@ const AdminUserManagement = safeLazy(() => import('./pages/admin/AdminUserManage
 const AcceptInvite = safeLazy(() => import('./pages/admin/AcceptInvite'));
 const AdminRegister = safeLazy(() => import('./pages/admin/AdminRegister'));
 const PlatformFinance = safeLazy(() => import('./pages/admin/PlatformFinance'));
-const AdminRefundManagement = safeLazy(() => import('./pages/admin/RefundManagement'));
 
 // ── Error Boundary for SPA chunk loading / render errors ─────────────
 class ErrorBoundary extends React.Component {
@@ -166,9 +165,8 @@ function AppContent() {
           <Route path="/admin/finance"
             element={<ProtectedRoute requiredRole="admin"><PlatformFinance /></ProtectedRoute>}
           />
-          <Route path="/admin/refunds"
-            element={<ProtectedRoute requiredRole="admin"><AdminRefundManagement /></ProtectedRoute>}
-          />
+          {/* Refund requests consolidated into Orders → Refund Requests tab */}
+          <Route path="/admin/refunds" element={<Navigate to="/admin/orders?tab=refunds" replace />} />
 
           {/* ── Admin app fallbacks ── */}
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
