@@ -16,12 +16,11 @@
 
 import { PROD_BACKEND_ORIGIN } from '../utils/api.js';
 
-// On Vercel production, use relative /api so all API traffic flows through the
-// Vercel proxy rewrite (vercel.json). This eliminates cross-origin requests
-// and CORS preflight failures entirely.
+// For file uploads in production, route directly to PROD_BACKEND_ORIGIN to bypass
+// Vercel proxy rewrite trailing slash truncation that causes HTTP 307 -> 405 method conversions.
 const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return '/api';
+    return `${PROD_BACKEND_ORIGIN}/api`;
   }
   return 'http://localhost:8000/api';
 })();

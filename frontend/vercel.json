@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/api/uploads/", "destination": "https://lumora-backend-8mf6.onrender.com/api/uploads/" },
+    { "source": "/api/uploads/image", "destination": "https://lumora-backend-8mf6.onrender.com/api/uploads/image" },
     { "source": "/api/:path*", "destination": "https://lumora-backend-8mf6.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
