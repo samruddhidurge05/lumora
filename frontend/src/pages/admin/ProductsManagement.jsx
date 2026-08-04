@@ -2226,6 +2226,13 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     zip: false,
   });
 
+  // Error state for failed Storage uploads
+  const [uploadError, setUploadError] = useState({
+    thumbnail: null,
+    zip: null,
+    gallery: null,
+  });
+
   const [packagingStatus, setPackagingStatus] = useState(null);
   const [pendingVideoConfirm, setPendingVideoConfirm] = useState(null);
 
