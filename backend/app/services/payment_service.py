@@ -197,6 +197,7 @@ class PaymentService:
         items_payload: List[Dict[str, Any]],
         payment_method: str = "upi",
         skip_signature_verify: bool = False,
+        request: Optional[Any] = None,
     ) -> Any:  # Returns Order
         """
         FRONTEND CONFIRMATION PATH - Step 2 of checkout.
@@ -367,6 +368,7 @@ class PaymentService:
                 promo_code=payment.promo_code,
                 discount_amount=payment.discount_amount or 0.0,
                 affiliate_code=payment.affiliate_code,
+                request=request,
             )
             nested.commit()  # RELEASE SAVEPOINT - all order data is now part of outer transaction
 

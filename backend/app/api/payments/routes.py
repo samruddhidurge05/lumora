@@ -265,6 +265,7 @@ def confirm_payment(
         items_payload=items_payload,
         payment_method=body.payment_method,
         skip_signature_verify=skip_verify,
+        request=request,
     )
 
     # Generate short-lived secure download URLs for the response

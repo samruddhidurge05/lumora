@@ -28,6 +28,7 @@ class PurchaseService:
         discount_amount: float = 0.0,
         affiliate_code: Optional[str] = None,
         notes: Optional[str] = None,
+        request: Optional[Any] = None,
     ) -> Order:
         """
         Create an order and fulfil everything atomically.
@@ -47,6 +48,12 @@ class PurchaseService:
             if not customer:
                 raise HTTPException(status_code=404, detail="Customer user not found")
 
+            # Extract client metadata
+            from app.utils.ip_utils import get_client_ip, parse_user_agent
+            req_ip = get_client_ip(request) if request else "Not Available"
+            ua_header = request.headers.get("user-agent") if (request and hasattr(request, "headers")) else None
+            dev_type, browser_name = parse_user_agent(ua_header)
+
             # 2. Create the Order
             order = Order(
                 user_id=user_id,
@@ -54,6 +61,9 @@ class PurchaseService:
                 payment_method=payment_method,
                 status="completed",  # Paid and verified - order is complete
                 notes=notes,
+                ip_address=req_ip,
+                device_type=dev_type,
+                browser=browser_name,
             )
             db.add(order)
             db.flush()  # Populate order.id
@@ -254,6 +264,9 @@ class PurchaseService:
                                         status="attributed",
                                         attribution_source=attr_source,
                                         coupon_code=coupon_code_used,
+                                        device_type=dev_type,
+                                        browser=browser_name,
+                                        ip_address=req_ip,
                                         created_at=now_time
                                     )
                                     db.add(attribution)
@@ -273,6 +286,9 @@ class PurchaseService:
                                         commission_rate=comm_rate,
                                         customer_name=customer.name if customer else "Customer",
                                         customer_email=customer.email if customer else None,
+                                        device_type=dev_type,
+                                        browser=browser_name,
+                                        ip_address=req_ip,
                                         referral_attribution_id=attribution.id,
                                         referral_link_id=ref_link_id,
                                         attribution_source=attr_source,

@@ -25,7 +25,10 @@ class Order(Base):
     referral_link_id   = Column(Integer, ForeignKey("referral_links.id"), nullable=True, index=True)
     referral_code_used = Column(String(50), nullable=True, index=True)
     attribution_source = Column(String(30), default="referral_link", index=True)  # referral_link | coupon_code
-    coupon_code_used   = Column(String(50), nullable=True, index=True)
+    # Client Device & Network Attribution Metadata
+    ip_address         = Column(String(45), nullable=True)
+    device_type        = Column(String(50), nullable=True)
+    browser            = Column(String(100), nullable=True)
 
     user  = relationship("User",      back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
