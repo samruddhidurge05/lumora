@@ -409,21 +409,19 @@ export default function Reports() {
       setActionLoading(null);
     }
   };
-
-  // Simulated PDF compiling
   const handleExportPDF = () => {
     sysSound.playSwoosh();
-    triggerNotification("Compiling PDF cryptographic sheet...", "success");
+    triggerNotification("Preparing PDF report...", "success");
     setTimeout(() => {
       sysSound.playSuccess();
-      triggerNotification("Business Summary PDF successfully downloaded!");
+      triggerNotification("Report PDF downloaded!");
     }, 1800);
   };
 
   // Compile real CSV string download from live Firestore data
   const handleExportCSV = () => {
     sysSound.playTap();
-    triggerNotification("Generating CSV report ledger...", "success");
+    triggerNotification("Generating CSV report...", "success");
     
     setTimeout(() => {
       try {
@@ -433,7 +431,7 @@ export default function Reports() {
           ["Total Reports",          a?.total            ?? 0],
           ["Open Reports",           a?.openCount        ?? 0],
           ["Resolved Reports",       a?.resolvedCount    ?? 0],
-          ["Critical Reports",       a?.criticalCount    ?? 0],
+          ["Important Reports",      a?.criticalCount    ?? 0],
           ["Avg Resolution (hours)", a?.avgResolutionHours ?? 0],
           ["Date Range",             dateRange],
           ["Generated At",           new Date().toISOString()],
@@ -448,7 +446,6 @@ export default function Reports() {
         (a?.mostReportedProducts || []).forEach(p => {
           rows.push([`Most Reported: ${p.title || p.productId}`, p.count]);
         });
-
         let csvContent = "data:text/csv;charset=utf-8," 
           + headers.join(",") + "\n"
           + rows.map(e => e.join(",")).join("\n");
@@ -486,7 +483,7 @@ export default function Reports() {
         setAnalytics(result);
         setIsGenerating(false);
         sysSound.playSuccess();
-        triggerNotification("Live report data synced from Firestore.");
+        triggerNotification("Report data updated.");
       })
       .catch(err => {
         console.error('[Reports] Refresh error:', err);
@@ -597,9 +594,9 @@ export default function Reports() {
                   <Icon name="Activity" size={28} className="text-[#7B3FA0]" />
                 </div>
               </div>
-              <h3 className="text-base font-serif font-black text-[#2D004D] tracking-wide">Syncing Financial Coordinates</h3>
+              <h3 className="text-base font-serif font-black text-[#2D004D] tracking-wide">Updating Reports</h3>
               <p className="text-[10px] text-[#7B3FA0] mt-1.5 uppercase font-bold tracking-widest animate-pulse max-w-xs leading-relaxed">
-                Rebuilding cryptographic transaction arrays & calculating platform yields...
+                Fetching the latest report activity...
               </p>
             </motion.section>
           ) : (
@@ -643,7 +640,7 @@ export default function Reports() {
 
                 {/* Metric 3: Critical Reports */}
                 <DashboardCard
-                  title="Critical"
+                  title="Important"
                   value={<CountUp value={analytics?.criticalCount ?? 0} />}
                   icon={<Icon name="Users" size={13} />}
                   trend="High severity"
@@ -685,7 +682,7 @@ export default function Reports() {
 
                 {/* Metric 6: Resolution Rate */}
                 <DashboardCard
-                  title="Resolution Rate"
+                  title="Solved Reports"
                   value={<CountUp value={reportData.summary.conversionRate} suffix="%" decimalPlaces={1} />}
                   icon={<Icon name="Zap" size={13} />}
                   trend="Resolved / Total"
@@ -706,7 +703,7 @@ export default function Reports() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Financial Curve Matrix</h4>
+                      <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase">Revenue Trends</h4>
                       <h2 className="text-base font-serif font-black text-[#2D004D]">Revenue Trend Analysis</h2>
                     </div>
                     <span className="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded uppercase tracking-wider">

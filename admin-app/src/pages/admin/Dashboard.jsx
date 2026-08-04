@@ -490,7 +490,7 @@ export default function Dashboard() {
             }
           />
           <DashboardCard
-            title="Velocity"
+            title="Growth Rate"
             value={isLoading ? "..." : `${metrics.growthVelocity}%`}
             icon={<Icon name="Zap" size={12} />}
             trend={isLoading ? undefined : `${metrics.growthVelocity >= 0 ? '+' : ''}${metrics.growthVelocity}%`}
@@ -513,7 +513,7 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8 md:mb-12">
           
           {/* 1. Live Activity Stream (Event Log) - 4 cols */}
-          <GlassCard title="Live Activity Log" subtitle="REALTIME EVENT FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
+          <GlassCard title="Live Activity" subtitle="REAL-TIME ACTIVITY" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
             {/* Vertical scrolling event containers */}
             <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin">
               {isLoading ? (
@@ -572,8 +572,8 @@ export default function Dashboard() {
 
           {/* 2. Risk & Fraud Intelligence (4 cols) */}
           <GlassCard 
-            title="Risk & Security Audit" 
-            subtitle="SECURITY LOG" 
+            title="Security Audit" 
+            subtitle="SECURITY ACTIVITY" 
             className="lg:col-span-4 h-[380px] flex flex-col justify-between relative overflow-hidden"
             headerActions={
               <button 
@@ -610,7 +610,7 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : suspiciousLogs.length === 0 ? (
-                <p className="text-[11px] text-[#7B3FA0] text-center py-4">No risk flags detected. Platform secure.</p>
+                <p className="text-[11px] text-[#7B3FA0] text-center py-4">No security alerts. Platform secure.</p>
               ) : suspiciousLogs.map((log) => (
                 <div 
                   key={log.id} 
@@ -640,7 +640,7 @@ export default function Dashboard() {
           </GlassCard>
 
           {/* 3. Quick Actions & Platform Health Deck (4 cols) */}
-          <GlassCard title="Operations & System Health" subtitle="QUICK ACTIONS & SYSTEM STATUS" className="lg:col-span-4 h-[380px] flex flex-col justify-between">
+          <GlassCard title="Quick Actions & System Health" subtitle="ACTIONS & STATUS" className="lg:col-span-4 h-[380px] flex flex-col justify-between">
             
             {/* Quick Actions Deck */}
             <div className="flex flex-col gap-2.5">
@@ -665,7 +665,7 @@ export default function Dashboard() {
                   className="p-2.5 bg-white/80 hover:bg-white border border-[#F3EAF8] rounded-xl text-left transition-all duration-200 hover:shadow-sm flex items-center gap-2"
                 >
                   <Icon name="Users" size={13} className="text-[#B886D0]" />
-                  <span className="text-[10px] font-bold text-[#2D004D]">Team Management</span>
+                  <span className="text-[10px] font-bold text-[#2D004D]">Team</span>
                 </button>
                 <button
                   onClick={() => { sysSound.playTap(); navigate('/admin/support'); }}
@@ -754,7 +754,7 @@ export default function Dashboard() {
 
               <h4 className="text-[9px] font-extrabold tracking-widest text-[#8E6AA8] uppercase flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#B886D0] animate-pulse" />
-                NEURAL LEDGER ANALYTICS
+                METRIC DETAILS
               </h4>
               <h2 className="text-xl font-serif font-black text-[#2D004D] mt-1.5 mb-2">
                 {metricModalDetails[activeModalCard]?.title}
@@ -785,7 +785,7 @@ export default function Dashboard() {
                 onClick={() => { sysSound.playTap(); setActiveModalCard(null); }}
                 className="w-full py-3.5 bg-[#2D004D] hover:bg-[#7B3FA0] text-white text-[10px] font-extrabold uppercase tracking-widest rounded-2xl transition-colors shadow-sm"
               >
-                Close Metrics Sheet
+                Close
               </button>
 
             </motion.div>

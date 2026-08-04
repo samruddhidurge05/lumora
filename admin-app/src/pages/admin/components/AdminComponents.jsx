@@ -9,7 +9,7 @@ export function PageHeader({ title, subtitle, actions }) {
       <div className="flex-1 min-w-0 max-w-full">
         <div className="flex items-center gap-3 mb-1 flex-wrap">
           <span className="px-2.5 py-0.5 rounded-full bg-[#D8BFE3]/20 text-[#7B3FA0] text-[8px] sm:text-[9px] font-bold tracking-widest uppercase">
-            MARKETPLACE ADMINISTRATION
+            ADMIN PANEL
           </span>
         </div>
         <h1 className="text-lg sm:text-2xl md:text-3xl font-serif text-[#2D004D] font-black tracking-tight leading-tight mb-1 break-words">
@@ -199,7 +199,7 @@ export function TableContainer({
   isLoading,
   isEmpty,
   emptyTitle = "No records found",
-  emptyDesc = "There is no matching data in our database.",
+  emptyDesc = "No matching records found.",
   emptyAction,
   columnsCount,
   pagination

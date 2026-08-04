@@ -8,32 +8,32 @@
 
 export const systemMessages = {
   success: {
-    adminActivated: "Admin access is now active.",
-    paymentUpdated: "Payment info updated.",
+    adminActivated: "Administrator access is active.",
+    paymentUpdated: "Payment settings updated.",
     productPublished: "Product published to marketplace.",
     settingsSaved: "Settings saved successfully.",
   },
   info: {
-    preparingWorkspace: "Loading...",
-    loadingData: "Loading your data...",
+    preparingWorkspace: "Loading Admin Panel...",
+    loadingData: "Loading data...",
     establishingSession: "Signing in...",
-    syncingUpdates: "Updating your data...",
+    syncingUpdates: "Updating...",
   },
   warning: {
     temporarilyUnavailable: "Some information is temporarily unavailable.",
-    connectionUnstable: "Your connection seems unstable. Trying to reconnect...",
+    connectionUnstable: "Connection unstable. Attempting to reconnect automatically.",
     syncPaused: "Sync paused. Reconnecting...",
   },
   error: {
-    requestFailed: "Something went wrong. Please try again.",
+    requestFailed: "Unable to complete request right now.",
     serviceUnavailable: "Service is temporarily unavailable.",
-    unableToLoad: "Couldn't load this data right now.",
-    permissionDenied: "You don't have access to do this.",
-    sessionExpired: "Your session expired. Please sign in again.",
+    unableToLoad: "Unable to load information right now.",
+    permissionDenied: "You don't have permission to perform this action.",
+    sessionExpired: "Your session has expired. Please sign in again.",
   },
   recovery: {
-    standard: "Something went wrong. Please try again. If the issue continues, contact support.",
+    standard: "An error occurred. Please try again or contact support.",
     refreshPage: "Please refresh the page. If the issue continues, contact support.",
-    checkConnection: "Please check your internet connection and try again.",
+    checkConnection: "Please check your network connection and try again.",
   },
 };

@@ -94,14 +94,15 @@ export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
     {
       title: 'Platform',
       items: [
-        { id: 'reviews',          label: 'Reviews',         icon: <MessageSquare size={18} />, path: '/admin/reviews',          requiredPermission: 'write:reviews' },
-        { id: 'reports',              label: 'Reports',           icon: <FileText size={18} />,      path: '/admin/reports',              requiredPermission: 'read:reports' },
-        { id: 'admin-campaigns',      label: 'Admin Referrals',   icon: <Compass size={18} />,       path: '/admin/campaign-manager',     requiredPermission: 'write:referral_links' },
-        { id: 'affiliate-management', label: 'Affiliate Program', icon: <Share2 size={18} />,        path: '/admin/affiliate-management', requiredPermission: 'write:referral_links' },
-        { id: 'platform',         label: 'Platform Status', icon: <ShieldAlert size={18} />,   path: '/admin/platform',         requiredPermission: 'write:platform_settings' },
-        { id: 'settings',         label: 'Settings',        icon: <Settings size={18} />,      path: '/admin/settings',         requiredPermission: 'write:platform_settings' },
-        { id: 'audit-logs',       label: 'Audit Logs',      icon: <ShieldCheck size={18} />,   path: '/admin/audit-logs',       requiredPermission: 'read:audit_logs' },
-        { id: 'team',             label: 'Team Management', icon: <Users size={18} />,          path: '/admin/team',             requiredPermission: 'write:team' },
+        { id: 'finance',              label: 'Platform Finance',   icon: <Landmark size={18} />,       path: '/admin/finance',          requiredPermission: 'read:treasury' },
+        { id: 'reviews',              label: 'Reviews',            icon: <MessageSquare size={18} />,  path: '/admin/reviews',          requiredPermission: 'write:reviews' },
+        { id: 'reports',              label: 'Reports',            icon: <FileText size={18} />,       path: '/admin/reports',          requiredPermission: 'read:reports' },
+        { id: 'admin-campaigns',      label: 'Referral Campaigns', icon: <Compass size={18} />,        path: '/admin/campaign-manager', requiredPermission: 'write:referral_links' },
+        { id: 'affiliate-management', label: 'Affiliates',         icon: <Share2 size={18} />,         path: '/admin/affiliate-management', requiredPermission: 'write:referral_links' },
+        { id: 'platform',             label: 'System Status',      icon: <ShieldAlert size={18} />,    path: '/admin/platform',         requiredPermission: 'write:platform_settings' },
+        { id: 'settings',             label: 'Settings',          icon: <Settings size={18} />,       path: '/admin/settings',         requiredPermission: 'write:platform_settings' },
+        { id: 'audit-logs',           label: 'Audit Logs',        icon: <ShieldCheck size={18} />,    path: '/admin/audit-logs',       requiredPermission: 'read:audit_logs' },
+        { id: 'team',                 label: 'Team',              icon: <Users size={18} />,          path: '/admin/team',             requiredPermission: 'write:team' },
       ]
     }
   ];
@@ -137,8 +138,8 @@ export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
               Lumora
             </div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase',
-                          letterSpacing: '0.06em', color: '#8E6AA8' }}>
-              Admin Console
+                          letterSpacing: '0.06em', color: '#8E6AA8', lineHeight: 1.2 }}>
+              Admin Panel
             </div>
             {/* Global unread badge (support + reports + contact) */}
             {notifCounts.total > 0 && (

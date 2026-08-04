@@ -450,7 +450,7 @@ export default function Dashboard() {
             }
           />
           <DashboardCard
-            title="Revenue Growth"
+            title="Growth Rate"
             value={isLoading ? "..." : `${metrics.growthVelocity}%`}
             icon={<Icon name="Zap" size={12} />}
             trend={isLoading ? undefined : `${metrics.growthVelocity >= 0 ? '+' : ''}${metrics.growthVelocity}%`}
@@ -468,7 +468,7 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
           
           {/* 1. Live Activity Stream (Event Log) - 4 cols */}
-          <GlassCard title="Live Activity Log" subtitle="REAL-TIME ACTIVITY FEED" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
+          <GlassCard title="Live Activity" subtitle="REAL-TIME ACTIVITY" className="lg:col-span-4 h-[380px] overflow-hidden flex flex-col justify-between">
             {/* Vertical scrolling event containers */}
             <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 my-1 scrollbar-thin">
               {isLoading ? (

@@ -786,14 +786,14 @@ export default function Analytics() {
                   onClick={() => {
                     sysSound.playTap();
                     setActiveMetricModal({
-                      title: 'Gross Revenue Pipeline',
+                      title: 'Gross Revenue Overview',
                       value: `₹${(data.revenueAnalytics.today * 12).toLocaleString()}`,
                       change: `+${data.revenueAnalytics.change}%`,
-                      desc: 'Gross revenue processed across all tokenized items, downloadable tools, and creator licenses inside your catalog. Excludes regional taxes.',
+                      desc: 'Gross revenue processed across all digital products and vendor licenses in your marketplace.',
                       details: [
-                        { label: 'Settlement Speed', value: 'Instant T+0' },
-                        { label: 'Transaction Security', value: '99.98% OK' },
-                        { label: 'Ecosystem Margin', value: '4.5%' }
+                        { label: 'Payout Speed', value: 'Instant T+0' },
+                        { label: 'Security Rating', value: '99.98% OK' },
+                        { label: 'Platform Commission', value: '4.5%' }
                       ]
                     });
                   }}
