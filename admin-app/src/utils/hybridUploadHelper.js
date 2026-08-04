@@ -28,6 +28,62 @@ export function formatBytes(bytes) {
 }
 
 /**
+ * User-friendly error message formatter for upload operations.
+ * Safely parses string errors, HTTP status codes (503, 500, 405, timeouts),
+ * network failures, or Error objects without throwing exceptions.
+ */
+export function formatUserFriendlyError(rawErr) {
+  if (!rawErr) return null;
+  
+  const errStr = typeof rawErr === 'string' 
+    ? rawErr 
+    : (rawErr?.message || String(rawErr || ''));
+  const str = errStr.toLowerCase();
+
+  // Storage Service Unavailable / Timeout / Backblaze 503
+  if (str.includes('503') || str.includes('unavailable') || str.includes('timed out') || str.includes('timeout') || str.includes('backblaze')) {
+    return 'Upload failed. Storage service is temporarily unavailable. Please try again.';
+  }
+  // File size limit
+  if (str.includes('too large') || str.includes('exceeds')) {
+    return 'This file is too large.';
+  }
+  // Unsupported file type
+  if (str.includes('unsupported') || str.includes('invalid file type')) {
+    return "This file type isn't supported.";
+  }
+  // Network connection error / offline
+  if (str.includes('network') || str.includes('failed to fetch') || str.includes('offline') || str.includes('abort')) {
+    return "Couldn't upload. Check your connection.";
+  }
+  // Storage quota
+  if (str.includes('storage') || str.includes('quota')) {
+    return 'Storage is temporarily unavailable.';
+  }
+  // Server error / HTTP 405 / HTTP 500
+  if (str.includes('405') || str.includes('500') || str.includes('server') || str.includes('upload failed')) {
+    return 'Upload failed. Please try again.';
+  }
+  
+  // Safe fallback to raw string message if available, or generic message
+  return errStr.length < 80 ? errStr : 'Upload failed. Please try again.';
+}
+
+/**
+ * Returns a human-friendly badge label for uploaded assets.
+ */
+export function getFileBadgeLabel(fileName, packaging) {
+  if (packaging?.isFolder) return 'Folder Uploaded';
+  if (packaging?.isPackaged) return 'Prepared Automatically';
+  const ext = (fileName || '').split('.').pop()?.toLowerCase();
+  if (ext === 'pdf') return 'PDF';
+  if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'Video';
+  if (['zip', 'rar', '7z'].includes(ext)) return 'ZIP';
+  if (['psd', 'fig', 'ai', 'sketch', 'docx', 'doc', 'epub', 'ppt', 'pptx'].includes(ext)) return 'Template';
+  return 'Ready';
+}
+
+/**
  * Inspects and validates files before packaging or uploading.
  */
 export function validateUploadSelection(fileList) {

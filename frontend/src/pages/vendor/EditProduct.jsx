@@ -6,7 +6,7 @@ import '../styles/vendor.css';
 import { useVendorProducts } from '../../hooks/useVendorData';
 import { backendFetch } from '../../utils/api';
 import { uploadFile, deleteFile } from '../../services/storageService';
-import { prepareUploadPayload, formatBytes, validateUploadSelection } from '../../utils/hybridUploadHelper';
+import { prepareUploadPayload, formatBytes, validateUploadSelection, formatUserFriendlyError } from '../../utils/hybridUploadHelper';
 import { useApp } from '../../context/AppContext';
 
 function useIsMobile(bp = 768) {
@@ -242,7 +242,7 @@ export default function EditProduct() {
         setUploadingFile(false);
         return;
       }
-      setSaveError(`File upload failed: ${err.message}`);
+      setSaveError(formatUserFriendlyError(err));
     } finally {
       setTimeout(() => {
         setUploadingFile(false);

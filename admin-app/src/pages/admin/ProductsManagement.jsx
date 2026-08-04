@@ -6,7 +6,7 @@ import { Sparkles, Compass, Users, LayoutDashboard, HelpCircle, ArrowUpRight } f
 import { productService, mapDocToProduct } from '../../services/productService'; // API service — create/update/delete persist to PostgreSQL
 import { backendFetch } from '../../utils/api';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
-import { prepareUploadPayload, formatBytes, validateUploadSelection } from '../../utils/hybridUploadHelper';
+import { prepareUploadPayload, formatBytes, validateUploadSelection, formatUserFriendlyError, getFileBadgeLabel } from '../../utils/hybridUploadHelper';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -2362,7 +2362,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
       console.error('[ProductForm] Deliverable upload failed:', err);
       setUploadProgress(prev => ({ ...prev, zip: null, packaging: null }));
       setUploadingFile(prev => ({ ...prev, zip: false }));
-      setUploadError(prev => ({ ...prev, zip: err.message }));
+      setUploadError(prev => ({ ...prev, zip: err?.message || String(err || 'Upload failed') }));
     }
   };
 
@@ -3113,7 +3113,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-red-500 text-base font-bold shrink-0">✕</span>
                         <span className="text-xs font-bold text-red-600 truncate">
-                          {formatUserFriendlyError(uploadError.zip)}
+                          {typeof formatUserFriendlyError === 'function' 
+                            ? formatUserFriendlyError(uploadError.zip) 
+                            : (uploadError.zip?.message || String(uploadError.zip || 'Upload failed'))}
                         </span>
                       </div>
                       <label htmlFor="zip-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] shrink-0 shadow-sm z-30">

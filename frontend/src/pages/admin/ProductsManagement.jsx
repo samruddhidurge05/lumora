@@ -7,7 +7,7 @@ import { productService, mapDocToProduct } from '../../services/productService';
 import { backendFetch } from '../../utils/api';
 import { getAdminProductsApi } from '../../api/productApi';
 import { uploadProductFile, uploadThumbnail, uploadGalleryImage } from '../../services/storageService.js';
-import { prepareUploadPayload, formatBytes, validateUploadSelection } from '../../utils/hybridUploadHelper';
+import { prepareUploadPayload, formatBytes, validateUploadSelection, formatUserFriendlyError, getFileBadgeLabel } from '../../utils/hybridUploadHelper';
 import { getOrders } from '../../services/orderService';
 import { db } from '../../firebase.js';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -2223,28 +2223,6 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   const [packagingStatus, setPackagingStatus] = useState(null);
   const [pendingVideoConfirm, setPendingVideoConfirm] = useState(null);
 
-  const formatUserFriendlyError = (rawErr) => {
-    if (!rawErr) return null;
-    const str = String(rawErr).toLowerCase();
-    if (str.includes('too large') || str.includes('exceeds')) return 'This file is too large.';
-    if (str.includes('unsupported') || str.includes('invalid file type')) return "This file type isn't supported.";
-    if (str.includes('network') || str.includes('failed to fetch')) return "Couldn't upload. Check your connection.";
-    if (str.includes('storage') || str.includes('quota')) return 'Storage is temporarily unavailable.';
-    if (str.includes('405') || str.includes('500') || str.includes('server') || str.includes('upload failed')) return 'Upload failed. Please try again.';
-    return 'Something went wrong while uploading.';
-  };
-
-  const getFileBadgeLabel = (fileName, packaging) => {
-    if (packaging?.isFolder) return 'Folder Uploaded';
-    if (packaging?.isPackaged) return 'Prepared Automatically';
-    const ext = (fileName || '').split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') return 'PDF';
-    if (['mp4', 'webm', 'mov', 'avi'].includes(ext)) return 'Video';
-    if (['zip', 'rar', '7z'].includes(ext)) return 'ZIP';
-    if (['psd', 'fig', 'ai', 'sketch', 'docx', 'doc', 'epub'].includes(ext)) return 'Template';
-    return 'Ready';
-  };
-
   const handleProductAssetSelection = async (fileOrFiles, skipVideoConfirm = false) => {
     const tempId = product?.id ? String(product.id) : `tmp_${Date.now()}`;
     const bundleName = form.title ? form.title : 'product_deliverable';
@@ -2299,7 +2277,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
       console.error('[ProductForm] Deliverable upload failed:', err);
       setUploadProgress(prev => ({ ...prev, zip: null, packaging: null }));
       setUploadingFile(prev => ({ ...prev, zip: false }));
-      setUploadError(prev => ({ ...prev, zip: err.message }));
+      setUploadError(prev => ({ ...prev, zip: err?.message || String(err || 'Upload failed') }));
     }
   };
 
@@ -3042,7 +3020,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-red-500 text-base font-bold shrink-0">✕</span>
                         <span className="text-xs font-bold text-red-600 truncate">
-                          {formatUserFriendlyError(uploadError.zip)}
+                          {typeof formatUserFriendlyError === 'function' 
+                            ? formatUserFriendlyError(uploadError.zip) 
+                            : (uploadError.zip?.message || String(uploadError.zip || 'Upload failed'))}
                         </span>
                       </div>
                       <label htmlFor="zip-file" className="cursor-pointer text-xs font-bold text-[#7B3FA0] bg-white border border-[#F5E9DD] px-3 py-1.5 rounded-xl hover:bg-[#F3EAF8] shrink-0 shadow-sm z-30">
