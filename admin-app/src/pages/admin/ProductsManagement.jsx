@@ -2808,7 +2808,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   className={`relative h-28 rounded-2xl border border-dashed transition-all flex items-center justify-center p-4 ${
                     isDragging.thumbnail 
                       ? 'border-[#7B3FA0] bg-[#7B3FA0]/5' 
-                      : thumbnailPreview 
+                      : thumbPreview 
                         ? 'border-emerald-200 bg-emerald-50/20' 
                         : 'border-[#F3EAF8] hover:border-[#D8BFE3] bg-[#FAF5FC]/30'
                   }`}
@@ -2829,18 +2829,18 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
                         Uploading Cover Image: {uploadProgress.thumbnail}%
                       </span>
-                      <div className="w-full h-1 bg.F3EAF8 rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-[#F3EAF8] rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-[#7B3FA0] transition-all duration-75"
                           style={{ width: `${uploadProgress.thumbnail}%` }}
                         />
                       </div>
                     </div>
-                  ) : thumbnailPreview ? (
+                  ) : thumbPreview ? (
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={thumbnailPreview} 
+                          src={thumbPreview} 
                           alt="Thumbnail preview" 
                           className="w-14 h-14 rounded-xl object-cover border border-[#F3EAF8] shadow-sm"
                         />
