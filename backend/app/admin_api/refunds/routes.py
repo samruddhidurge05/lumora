@@ -12,6 +12,7 @@ from app.api.refunds_router import RefundRequestResponse
 router = APIRouter()
 
 @router.get("/", response_model=List[RefundRequestResponse])
+@router.get("", response_model=List[RefundRequestResponse])
 def get_all_refund_requests(
     status_filter: Optional[str] = Query(None, alias="status"),
     page: int = Query(1, ge=1),

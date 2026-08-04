@@ -453,13 +453,20 @@ export default function OrdersManagement() {
     setLoading(true);
     setLoadError('');
     try {
-      const data = await backendFetch('/admin/refunds/');
+      const data = await backendFetchWithRetry(
+        '/admin/refunds/',
+        {},
+        (secondsLeft) => {
+          setLoadError(`Server is warming up… retrying for up to ${secondsLeft}s`);
+        }
+      );
       const items = Array.isArray(data) ? data : [];
       setRefundTickets(items);
       if (items.length > 0) setSelectedTicketId(items[0].id);
+      setLoadError('');
     } catch (err) {
       console.error('Failed to load refund tickets:', err);
-      setLoadError('Failed to load refund tickets.');
+      setLoadError(err.message || 'Failed to load refund tickets.');
     } finally {
       console.log('[OrdersManagement] 🏁 loadRefundTickets finally block reached — calling setLoading(false)');
       setLoading(false);
