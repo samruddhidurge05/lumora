@@ -6,6 +6,9 @@ from app.models.conversation import Conversation
 from app.models.user import User
 from app.shared.firebase.connection import db as firestore_db, firebase_connected
 from sqlalchemy.orm import Session
+import logging
+
+_logger = logging.getLogger("lumora.admin.notifications")
 
 router = APIRouter()
 
@@ -71,13 +74,26 @@ def get_notification_counts(
     except Exception:
         team_invites = 0
 
+    # Pending refund requests — PENDING status awaiting admin action
+    pending_refunds = 0
+    try:
+        from app.models.refund_request import RefundRequest
+        pending_refunds = db.query(RefundRequest).filter(
+            RefundRequest.status.in_(["PENDING", "UNDER_REVIEW"])
+        ).count()
+        _logger.debug("[notifications] pending_refunds count: %d", pending_refunds)
+    except Exception as refund_err:
+        _logger.warning("[notifications] Could not count pending refunds: %s", refund_err)
+        pending_refunds = 0
+
     result = {
         "support_tickets": support_tickets,
         "reports": reports,
         "contact_requests": contact_requests,
         "pending_orders": pending_orders,
         "team_invites": team_invites,
-        "total": support_tickets + reports + contact_requests + pending_orders + team_invites,
+        "pending_refunds": pending_refunds,
+        "total": support_tickets + reports + contact_requests + pending_orders + team_invites + pending_refunds,
     }
 
     _cache["data"] = result

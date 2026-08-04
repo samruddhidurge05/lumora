@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, ShoppingBag, Compass, Users, CreditCard,
   MessageSquare, FileText, ShieldCheck, Settings, User, LogOut,
-  ChevronLeft, ChevronRight, ShieldAlert, Sparkles, Bell, Share2, Landmark
+  ChevronLeft, ChevronRight, ShieldAlert, Sparkles, Bell, Share2, Landmark, RotateCcw
 } from 'lucide-react';
 import useAuth from '../../../hooks/useAuth';
 import { backendFetch } from '../../../utils/api';
@@ -21,7 +21,7 @@ export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
 
   const [notifCounts, setNotifCounts] = useState({
     support_tickets: 0, reports: 0, contact_requests: 0,
-    pending_orders: 0, team_invites: 0, total: 0,
+    pending_orders: 0, team_invites: 0, pending_refunds: 0, total: 0,
   });
 
   const toggleCollapse = () => {
@@ -76,6 +76,7 @@ export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
         { id: 'products',  label: 'Products',  icon: <Compass size={18} />,   path: '/admin/products',  requiredPermission: 'write:products' },
         { id: 'orders',    label: 'Orders',    icon: <ShoppingBag size={18}/>, path: '/admin/orders',    requiredPermission: 'read:orders' },
         { id: 'payments',  label: 'Payments',  icon: <CreditCard size={18} />, path: '/admin/payments',  requiredPermission: 'read:payments' },
+        { id: 'refunds',   label: 'Refunds',   icon: <RotateCcw size={18} />,  path: '/admin/refunds',   requiredPermission: 'read:payments' },
       ]
     },
     {
@@ -242,6 +243,14 @@ export default function AdminSidebar({ activePage, isMobileDrawer = false }) {
                                        fontSize: '0.6rem', fontWeight: 800, padding: '1px 6px',
                                        minWidth: '18px', textAlign: 'center', lineHeight: 1.5 }}>
                           {notifCounts.team_invites}
+                        </span>
+                      )}
+                      {/* Pending refunds badge */}
+                      {!isCollapsed && item.id === 'refunds' && notifCounts.pending_refunds > 0 && (
+                        <span style={{ background: '#D97706', color: '#fff', borderRadius: '10px',
+                                       fontSize: '0.6rem', fontWeight: 800, padding: '1px 6px',
+                                       minWidth: '18px', textAlign: 'center', lineHeight: 1.5 }}>
+                          {notifCounts.pending_refunds}
                         </span>
                       )}
                     </a>
