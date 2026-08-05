@@ -328,44 +328,47 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 640px) {
-  /* ── Horizontal scroll carousel — cards side by side, swipe to browse ── */
+  /* ── Product grids: 2-column vertical layout (Amazon/Flipkart style) ── */
   .home-product-grid,
-  .lumora-home-products-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+  .lumora-home-products-grid,
+  .lumora-products-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex-direction: unset !important;
+    flex-wrap: unset !important;
+    overflow-x: visible !important;
     overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    /* Bleed the carousel edge-to-edge past the section's side padding */
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important; /* room for scrollbar on some browsers */
-    /* Hide scrollbar but keep scrollability */
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    white-space: normal !important;
+    scroll-snap-type: none !important;
+    -webkit-overflow-scrolling: auto !important;
+    gap: 10px !important;
+    /* Reset any margin bleed from the old carousel approach */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
-  .home-product-grid::-webkit-scrollbar,
-  .lumora-home-products-grid::-webkit-scrollbar { display: none; }
 
-  /* Each card: fixed width so two peek on screen */
+  /* Each card fills its column — never fixed width */
   .home-product-grid > *,
-  .lumora-home-products-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
+  .lumora-home-products-grid > *,
+  .lumora-products-grid > * {
+    flex: unset !important;
+    max-width: 100% !important;
     min-width: 0 !important;
-    scroll-snap-align: start !important;
+    width: 100% !important;
+    scroll-snap-align: unset !important;
   }
 
-  /* PCard image: compact height */
+  /* Card image: consistent height across all cards in a row */
   .pcard-img {
-    height: 160px !important;
-    min-height: 160px !important;
-    max-height: 160px !important;
+    height: 140px !important;
+    min-height: 140px !important;
+    max-height: 140px !important;
   }
 
   /* Section padding reduced on mobile */
@@ -373,12 +376,19 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 360px) {
-  .home-product-grid > *,
-  .lumora-home-products-grid > * {
-    flex: 0 0 80vw !important;
-    max-width: 80vw !important;
+  /* Keep 2-col even on very small screens (320px) — each card ~150px */
+  .home-product-grid,
+  .lumora-home-products-grid,
+  .lumora-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
   }
-  .pcard-img { height: 140px !important; max-height: 140px !important; }
+  .home-product-grid > *,
+  .lumora-home-products-grid > *,
+  .lumora-products-grid > * {
+    max-width: 100% !important;
+  }
+  .pcard-img { height: 120px !important; max-height: 120px !important; }
 }
 
 

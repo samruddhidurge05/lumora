@@ -123,7 +123,7 @@ export default function RecentlyViewed() {
       )}
 
       {/* Grid of recently viewed items */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+      <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
         {items.map(item => (
           <div
             key={item.id}

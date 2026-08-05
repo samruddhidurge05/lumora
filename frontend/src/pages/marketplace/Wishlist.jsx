@@ -29,7 +29,7 @@ export default function Wishlist() {
             <button onClick={() => navigateTo('marketplace')} className="btn-premium btn-premium-solid" style={{ marginTop: '24px', padding: '12px 28px' }}>Browse Products</button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: '24px' }}>
+          <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
             {wishlist.map(product => (
               <div key={product.id} className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(196,181,253,0.22)' }}>
                 <div style={{ position: 'relative', height: '180px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigateTo('product-detail', product.id)}>

@@ -57,7 +57,7 @@ export default function ProductCard({ product }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Container with Zoom & Slide-up Quick Actions */}
-      <div style={{ position: 'relative', height: '195px', overflow: 'hidden' }}>
+      <div className="pcard-img" style={{ position: 'relative', height: '195px', overflow: 'hidden' }}>
         <div style={{
           width: '100%',
           height: '100%',
@@ -192,7 +192,7 @@ export default function ProductCard({ product }) {
           <p style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {product.category}
           </p>
-          <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-espresso)', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', whiteSpace: 'normal', lineHeight: 1.35, maxHeight: '2.7em' }}>
             {product.title}
           </h3>
 
@@ -212,29 +212,30 @@ export default function ProductCard({ product }) {
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
             <span style={{
-              fontSize: '1.15rem',
+              fontSize: '1.05rem',
               fontWeight: 800,
               color: 'var(--color-espresso)',
               textShadow: isHovered ? '0 0 12px rgba(192, 132, 252, 0.4)' : 'none',
               transition: 'text-shadow 0.3s ease',
+              flexShrink: 0,
             }}>
               {formatPrice(product.price)}
             </span>
             <button
               onClick={e => { e.stopPropagation(); addToCart(product); }}
               className={`btn-premium ${inCart ? 'btn-added-state' : ''}`}
-              style={{ padding: '7px 12px', fontSize: '0.72rem', borderRadius: '10px' }}
+              style={{ padding: '6px 10px', fontSize: '0.68rem', borderRadius: '10px', flexShrink: 0 }}
             >
-              <ShoppingBag size={12} className={inCart ? 'cart-added-icon' : ''} /> {inCart ? '✓ Added' : 'Add'}
+              <ShoppingBag size={11} className={inCart ? 'cart-added-icon' : ''} /> {inCart ? '✓' : 'Add'}
             </button>
           </div>
 
           <button
             onClick={e => { e.stopPropagation(); buyNow(product); }}
             className="btn-premium btn-premium-solid btn-shine-sweep buy-now-glow"
-            style={{ width: '100%', padding: '9px', fontSize: '0.78rem', borderRadius: '12px', justifyContent: 'center' }}
+            style={{ width: '100%', padding: '8px', fontSize: '0.76rem', borderRadius: '12px', justifyContent: 'center' }}
           >
             Buy Now
           </button>

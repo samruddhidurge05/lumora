@@ -154,7 +154,7 @@ export default function Products() {
               </button>
             </div>
           ) : view === 'grid' ? (
-            <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: '20px' }}>
+            <div className="lumora-products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(270px,100%),1fr))', gap: '20px' }}>
               {filtered.map((p, i) => <GlassProductCard key={p.id} product={p} index={i} />)}
             </div>
           ) : (
