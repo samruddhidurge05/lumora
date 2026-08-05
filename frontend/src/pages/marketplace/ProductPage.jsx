@@ -74,7 +74,7 @@ function getGallery(product) {
 }
 
 export default function ProductPage() {
-  const { getActiveProduct, activeProductId, addToCart, buyNow, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview, cart } = useApp();
+  const { getActiveProduct, activeProductId, addToCart, buyNow, setBuyNowProduct, navigateTo, formatPrice, wishlist, toggleWishlist, ownedProducts, products, addReview, cart } = useApp();
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
 
@@ -138,7 +138,8 @@ export default function ProductPage() {
 
   const handleConfirmPurchase = () => {
     setShowConfirmDialog(false);
-    buyNow(product);
+    setBuyNowProduct(product);
+    navigateTo('checkout');
   };
 
 

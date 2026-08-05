@@ -1507,21 +1507,12 @@ export function AppContextProvider({ children }) {
   };
 
   const buyNow = (product) => {
-    if (platformStatus.isPlatformPaused) {
-      alert(`Platform is currently under maintenance. Purchases are temporarily disabled. ${platformStatus.pauseMessage}`);
-      return;
+    const prodId = product?.id || (typeof product === 'string' || typeof product === 'number' ? product : activeProductId);
+    if (prodId) {
+      navigateTo('product-detail', prodId);
+    } else {
+      navigateTo('marketplace');
     }
-    if (!user) {
-      alert("Please sign in or create an account to purchase products.");
-      const prodId = product?.id || activeProductId;
-      const targetRedirect = prodId ? `/#product/${prodId}` : '/#products';
-      const refCode = sessionStorage.getItem('lumora_aff_ref') || '';
-      const refParam = refCode ? `&ref=${encodeURIComponent(refCode)}` : '';
-      navigate(`/auth/login?role=customer&redirect=${encodeURIComponent(targetRedirect)}${refParam}`);
-      return;
-    }
-    setBuyNowProduct(product);
-    navigateTo('checkout');
   };
 
   const removeFromCart = (id) => {
