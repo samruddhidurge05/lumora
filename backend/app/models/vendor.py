@@ -40,3 +40,8 @@ class Vendor(Base):
     ifsc_code           = Column(String(20),  nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# Alias for backward compatibility / schema imports
+VendorProfile = Vendor
+
