@@ -8,21 +8,42 @@ from app.models.user import User as UserModel
 from app.models.product import Product as ProductModel
 
 def _map_order(doc) -> Dict[str, Any]:
-    d = doc.to_dict()
-    price_val = d.get("price", d.get("total", d.get("totalAmount", d.get("total_amount", d.get("totalUSD", d.get("customerPaid", 0))))))
+    d = doc.to_dict() or {}
+    price_val = 0.0
+    for key in ("totalAmount", "total_amount", "total", "price", "totalUSD", "customerPaid"):
+        val = d.get(key)
+        if val is not None and str(val).strip() != "":
+            try:
+                f_val = float(val)
+                if f_val > 0:
+                    price_val = f_val
+                    break
+                elif price_val == 0.0:
+                    price_val = f_val
+            except (ValueError, TypeError):
+                pass
+
+    status_val = d.get("status", "Completed")
+    pay_status = d.get("paymentStatus")
+    if not pay_status:
+        is_paid = str(status_val).lower() in ("completed", "paid", "processing", "success", "placed")
+        pay_status = "Paid" if is_paid else "Pending"
+
     return {
         "id":            doc.id,
         "orderId":       d.get("orderId", doc.id),
         "customerName":  d.get("customerName", "Anonymous"),
         "customerEmail": d.get("customerEmail", ""),
-        "price":         float(price_val or 0.0),
-        "status":        d.get("status", "Completed"),
-        "paymentStatus": d.get("paymentStatus", "Paid"),
+        "price":         price_val,
+        "total":         price_val,
+        "status":        status_val,
+        "paymentStatus": pay_status,
         "createdAt":     d.get("createdAt") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "vendorId":      d.get("vendorId", d.get("vendor_id", "")),
         "productName":   d.get("productName", "Product"),
-        "method":        d.get("method", ""),
-        "region":        d.get("region", ""),
+        "method":        d.get("method", d.get("paymentMethod", "")),
+        "paymentMethod": d.get("method", d.get("paymentMethod", "")),
+        "region":        d.get("region", "India"),
     }
 
 def _map_vendor(doc) -> Dict[str, Any]:
