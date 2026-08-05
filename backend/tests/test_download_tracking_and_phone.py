@@ -7,6 +7,7 @@ from datetime import datetime
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.db.session import get_db
@@ -15,18 +16,19 @@ from app.models.product import Product
 from app.models.order import Order, OrderItem
 from app.core.security import get_password_hash, create_access_token
 
-# Use SQLite in-memory database for unit testing
+# Use SQLite in-memory database with StaticPool for thread-shared memory in tests
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create tables
-Base.metadata.create_all(bind=engine)
+test_engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 def override_get_db():
+    db = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
         yield db
     finally:
         db.close()
@@ -38,9 +40,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_clean_db():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
     yield
+    Base.metadata.drop_all(bind=test_engine)
 
 
 def test_contact_number_registration_valid():
@@ -99,7 +102,8 @@ def test_update_profile_phone():
         email="profile@example.com",
         password_hash=get_password_hash("Password123!"),
         phone="+919999999999",
-        role="customer"
+        role="customer",
+        is_active=True
     )
     db.add(user)
     db.commit()
@@ -130,7 +134,8 @@ def test_permanent_download_tracking():
         email="downloader@example.com",
         password_hash=get_password_hash("Password123!"),
         phone="+919876543210",
-        role="customer"
+        role="customer",
+        is_active=True
     )
     db.add(user)
     db.commit()
@@ -186,6 +191,7 @@ def test_permanent_download_tracking():
     # Verify DB now has downloaded=True and downloaded_at timestamp recorded
     db2 = TestingSessionLocal()
     updated_item = db2.query(OrderItem).filter(OrderItem.id == order_item_id).first()
+    assert updated_item is not None
     assert updated_item.downloaded is True
     assert updated_item.downloaded_at is not None
     db2.close()

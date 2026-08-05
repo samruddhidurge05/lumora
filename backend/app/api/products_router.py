@@ -531,10 +531,10 @@ def download_product(
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",
-            "thumbnail": product.thumbnail or product.preview,
+            "thumbnail": getattr(product, "thumbnail", None) or getattr(product, "preview", None),
             "vendor": vendor_name,
             "price": float(cast(Any, product.price or 0)),
-            "description": product.description[:200] + "..." if product.description and len(product.description) > 200 else product.description
+            "description": (product.description[:200] + "...") if (product.description and len(product.description) > 200) else (product.description or "")
         },
         "download_stats": {
             "total_downloads": int(cast(Any, product.downloads or 0)),
