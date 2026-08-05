@@ -7,6 +7,7 @@ class OrderItemBase(BaseModel):
     price_paid: float
     download_url: Optional[str] = None
     downloaded: bool = False
+    downloaded_at: Optional[datetime] = None
 
 class OrderItemCreate(OrderItemBase):
     pass

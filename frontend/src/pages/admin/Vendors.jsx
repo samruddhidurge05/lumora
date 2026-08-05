@@ -288,8 +288,8 @@ export default function Vendors() {
       ];
 
   const tableHeaders = activeTab === 'vendors'
-    ? ['Name', 'Email', 'Status', 'Joined', 'Actions']
-    : ['Name', 'Email', 'Code', 'Clicks', 'Conversions', 'Earnings', 'Status', 'Actions'];
+    ? ['Name', 'Email', 'Phone', 'Status', 'Joined', 'Actions']
+    : ['Name', 'Email', 'Phone', 'Code', 'Clicks', 'Conversions', 'Earnings', 'Status', 'Actions'];
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -489,6 +489,12 @@ export default function Vendors() {
                             </td>
 
                             <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 600 }}>
+                                {vendor.phone || vendor.phoneNumber || '—'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
                               <StatusBadge label={normStatus} statusType={normStatus} />
                             </td>
 
@@ -587,6 +593,12 @@ export default function Vendors() {
                             <td style={{ padding: '14px 20px' }}>
                               <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 300 }}>
                                 {affiliate.email || '—'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 600 }}>
+                                {affiliate.phone || affiliate.phoneNumber || '—'}
                               </span>
                             </td>
 

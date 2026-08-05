@@ -249,6 +249,7 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_email_logs ADD COLUMN IF NOT EXISTS message_id VARCHAR(255)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30)",
             # orders — client device and network attribution metadata columns
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip_address  VARCHAR(64)",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS device_type VARCHAR(50)",
@@ -403,9 +404,10 @@ def _run_schema_migrations() -> None:
                 if "next_retry_at"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN next_retry_at DATETIME"))
                 if "provider"           not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN provider VARCHAR(50) DEFAULT 'gmail_smtp'"))
 
-                # users - add last_login_at
+                # users - add last_login_at, phone
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
                 if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+                if "phone"         not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN phone VARCHAR(30)"))
 
                 # orders - add ip_address, device_type, browser
                 ord_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(orders)"))}

@@ -523,6 +523,8 @@ def download_product(
     response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
         "download_available": download_available,
+        "downloaded": bool(getattr(owned, "downloaded", False) if owned else False),
+        "downloaded_at": owned.downloaded_at.isoformat() if (owned and getattr(owned, "downloaded_at", None)) else None,
         "product_details": {
             "id": product.id,
             "name": product.title,
@@ -598,6 +600,8 @@ def get_download_center(
             "download_url": download_url,
             "download_available": download_available and can_download,
             "can_download": can_download,
+            "downloaded": bool(getattr(order_item, "downloaded", False)),
+            "downloaded_at": order_item.downloaded_at.isoformat() if getattr(order_item, "downloaded_at", None) else None,
             "refund_status": refund_status,
             "refund_message": msg,
             "token_expires_in": "15 minutes" if can_download else "N/A"

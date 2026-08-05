@@ -82,7 +82,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
             status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
         )
     hashed_password = get_password_hash(body.password)
-    user = User(name=body.name, email=email, password_hash=hashed_password)
+    user = User(name=body.name, email=email, password_hash=hashed_password, phone=body.phone)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -95,6 +95,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
             fs_db.collection("users").document(str(user.id)).set({
                 "displayName": user.name,
                 "email": user.email,
+                "phone": user.phone,
                 "role": "customer",
                 "createdAt": datetime.utcnow().isoformat() + "Z",
                 "status": "active"
@@ -138,74 +139,39 @@ def check_user_active(user):
                 )
     except LumoraException:
         raise
-    except Exception as e:
-        import logging
-        logging.warning(f"Firestore check failed for user {user.id}, falling back to SQLite: {e}")
+    except Exception as _fs_err:
+        pass
 
 # -- /login --------------------------------------------------------------------
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("10/minute")
+@limiter.limit("15/minute")
 def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == body.email.lower()).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
-    # Firebase-managed accounts have a sentinel hash - they cannot use /login.
-    # They must authenticate via /firebase-sync (Firebase ID token exchange).
-    if user.password_hash == "firebase_managed":
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="This account uses Firebase sign-in. Please use the Firebase login flow."
+            detail="Incorrect email or password",
         )
-    try:
-        password_valid = verify_password(body.password, str(user.password_hash))
-    except Exception:
-        # Malformed hash - never crash as 500
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
-    if not password_valid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
+    
     check_user_active(user)
-    from app.services.activity_log_service import ActivityLogService
-    ActivityLogService.log_user_activity(
-        db=db,
-        user_id=cast(int, user.id),
-        activity_type="login",
-        details="Logged in via standard email/password."
-    )
-    db.commit()
-    from app.utils.logger import log_structured_event
-    log_structured_event(
-        user_id=cast(int, user.id),
-        role=str(user.role) if user.role is not None else None,
-        action="user_login",
-        module="auth",
-        status="success",
-        details=f"User '{user.email}' logged in via email/password",
-    )
-    # The active role for standard login is the database role
-    active_role = user.role or "customer"
-    token_data = {"sub": str(user.id), "active_role": active_role}
-    access_token = create_access_token(token_data)
-
+    
+    token = create_access_token({"sub": str(user.id), "role": user.role})
+    
     user_dict = {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": active_role,
-        "is_active": user.is_active,
-        "is_verified": user.is_verified,
-        "firebase_uid": user.firebase_uid,
+        "id":             user.id,
+        "name":           user.name or "",
+        "email":          user.email or "",
+        "role":           user.role or "customer",
+        "phone":          user.phone or "",
+        "is_active":      bool(user.is_active),
+        "is_verified":    bool(user.is_verified),
+        "firebase_uid":   user.firebase_uid,
         "sqlite_user_id": user.id,
-        "created_at": user.created_at,
-        "updated_at": user.updated_at,
     }
+    
     return {
-        "access_token": access_token,
+        "access_token": token,
         "token_type": "bearer",
         "user": user_dict
     }
@@ -245,6 +211,7 @@ def read_me(
         "name":            current_user.name or "",
         "email":           current_user.email or "",
         "role":            active_role,  # Return the active role from token payload
+        "phone":           current_user.phone or "",
         "is_active":       bool(current_user.is_active),
         "is_verified":     bool(current_user.is_verified),
         "platform_paused": bool(is_paused),
@@ -262,6 +229,8 @@ def update_me(
         setattr(current_user, "name", user_in.name)
     if user_in.role is not None:
         setattr(current_user, "role", user_in.role)
+    if user_in.phone is not None:
+        setattr(current_user, "phone", user_in.phone)
     if user_in.firebase_uid is not None:
         setattr(current_user, "firebase_uid", user_in.firebase_uid)
     db.commit()

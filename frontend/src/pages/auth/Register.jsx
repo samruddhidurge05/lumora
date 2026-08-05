@@ -66,6 +66,7 @@ export default function Register() {
   // All hooks must be unconditional — declared before any early return
   const [name, setName] = useState('');
   const [email, setEmail] = useState(inviteEmail); // pre-fill from invite URL
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +98,7 @@ export default function Register() {
     const e = {};
     if (!name || name.trim().length < 2) e.name = 'Full name must be at least 2 characters.';
     if (!email || !/\S+@\S+\.\S+/.test(email)) e.email = 'Please enter a valid email address.';
+    if (!phone || !/^\+?[0-9]{10,15}$/.test(phone.trim())) e.phone = 'Contact number must be 10 to 15 digits (digits only, optional leading +).';
     if (!password || password.length < 6) e.password = 'Password must be at least 6 characters.';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -112,7 +114,7 @@ export default function Register() {
     try {
       // Register with 'customer' role for admin invites — role is elevated by accept-invite endpoint
       const registrationRole = isAdminInvite ? 'customer' : role;
-      await register(name, normalizedEmail, password, registrationRole);
+      await register(name, normalizedEmail, password, registrationRole, phone.trim());
       
       // On success, redirect to verification screen
       const nextParam = isAdminInvite
@@ -209,6 +211,24 @@ export default function Register() {
                 />
               </div>
               {errors.email && <div className="field-error">{errors.email}</div>}
+            </div>
+
+            {/* Contact Number */}
+            <div className="field">
+              <label className="field-label" htmlFor="phone">Contact Number</label>
+              <div className="field-input-wrapper">
+                <input
+                  className="field-input"
+                  id="phone"
+                  type="tel"
+                  placeholder="+91 9876543210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={isLoading}
+                  autoComplete="tel"
+                />
+              </div>
+              {errors.phone && <div className="field-error">{errors.phone}</div>}
             </div>
 
             {/* Password */}

@@ -391,7 +391,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /** Registration with email/password - supports multi-role */
-  const register = async (fullName, email, password, role = 'user') => {
+  const register = async (fullName, email, password, role = 'user', phone = '') => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role === 'user' ? 'customer' : role;
     let firebaseUser;
