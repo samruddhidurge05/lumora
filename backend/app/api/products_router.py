@@ -496,11 +496,11 @@ def download_product(
         func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
     ).first()
         
-    is_owner = (str(product.vendor_id) == str(current_user.id)) or ((product.seller or "") == (current_user.name or ""))
-    is_admin = (current_user.role or "") == "admin"
+    is_owner = bool((str(product.vendor_id) == str(current_user.id)) or ((product.seller or "") == (current_user.name or "")))
+    is_admin = bool((getattr(current_user, "role", "") or "") == "admin")
     
     # Production-Safe Refund Download Lock Check
-    check_download_permission(db, current_user.id, product_id, is_owner=is_owner, is_admin=is_admin)
+    check_download_permission(db, int(str(current_user.id)), product_id, is_owner=is_owner, is_admin=is_admin)
     
     # Get user's download history for this product
     user_downloads = db.query(OrderItem).join(Order).filter(
@@ -569,7 +569,7 @@ def get_download_center(
     
     downloads = []
     for order_item, product, order, vendor_name in purchased_items:
-        refund_status, can_download, msg = get_product_refund_status(db, current_user.id, int(product.id))
+        refund_status, can_download, msg = get_product_refund_status(db, int(getattr(current_user, "id")), int(getattr(product, "id")))
         
         # Generate download token ONLY if download is permitted
         if can_download:
@@ -624,7 +624,7 @@ def get_download_center(
 def download_product_file(
     product_id: int,
     token: str,
-    request: Request = None,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -651,8 +651,8 @@ def download_product_file(
         func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
     ).first()
 
-    is_owner = (str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or ""))
-    is_admin = (user.role or "") == "admin"
+    is_owner = bool((str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or "")))
+    is_admin = bool((getattr(user, "role", "") or "") == "admin")
 
     # Production-Safe Refund Download Lock Check
     check_download_permission(db, user_id, product_id, is_owner=is_owner, is_admin=is_admin)
