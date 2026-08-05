@@ -1737,7 +1737,7 @@ def get_order_attribution_trace(
 
         # Query Customer Download Audit Evidence
         from app.models.product_download_event import ProductDownloadEvent
-        from app.models.refund import RefundRequest
+        from app.models.refund_request import RefundRequest
 
         download_events = db.query(ProductDownloadEvent).filter(ProductDownloadEvent.order_id == numeric_order_id).order_by(ProductDownloadEvent.downloaded_at.asc()).all()
         refund_req = db.query(RefundRequest).filter(RefundRequest.order_id == numeric_order_id).first()
@@ -1988,6 +1988,75 @@ def get_funnel_analytics(
             {"stage": "Commissions Paid Out", "count": paid_commissions, "pct": round((paid_paid_commissions := paid_commissions) / clicks * 100, 2) if clicks > 0 else 0.0},
         ],
         "conversion_rate": conv_rate,
+    }
+
+
+@router.get("/orders/{order_id}")
+def get_order_affiliate_trace(
+    order_id: str,
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """
+    Returns full forensic affiliate attribution trace for an order.
+    """
+    clean_id_str = re.sub(r'[^\d]', '', order_id)
+    if not clean_id_str:
+        raise HTTPException(status_code=400, detail="Invalid order ID format.")
+    numeric_order_id = int(clean_id_str)
+
+    order = db.query(Order).filter(Order.id == numeric_order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
+
+    from app.services.customer_identity_service import resolve_customer_identity
+    cust_name, cust_email = resolve_customer_identity(db, user_id=order.user_id, order_id=order.id)
+
+    comm = db.query(AffiliateCommission).filter(AffiliateCommission.order_id == numeric_order_id).first()
+    aff_profile = None
+    aff_user = None
+    if comm and comm.affiliate_id:
+        aff_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == comm.affiliate_id).first()
+        if aff_profile and aff_profile.user_id:
+            aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
+    elif order.affiliate_id:
+        aff_profile = db.query(AffiliateProfile).filter(AffiliateProfile.id == order.affiliate_id).first()
+        if aff_profile and aff_profile.user_id:
+            aff_user = db.query(User).filter(User.id == aff_profile.user_id).first()
+
+    customer_data = {
+        "id": str(order.user_id) if order.user_id else "",
+        "name": cust_name,
+        "email": cust_email,
+    }
+
+    attribution_data = {
+        "affiliate_id": str(aff_profile.id) if aff_profile else (str(order.affiliate_id) if order.affiliate_id else None),
+        "affiliate_name": aff_user.name if aff_user else (aff_profile.referral_code if aff_profile else None),
+        "affiliate_code": order.referral_code_used or (aff_profile.referral_code if aff_profile else None),
+        "commission_amt": float(comm.commission_amt) if comm else 0.0,
+        "commission_status": comm.commission_status if comm else "none",
+    }
+
+    timeline = [
+        {
+            "event": "Order Placed",
+            "timestamp": order.created_at.isoformat() + "Z" if order.created_at else "",
+            "details": f"Order #{order.id} total: INR {order.total_amount or 0.0}"
+        }
+    ]
+    if comm:
+        timeline.append({
+            "event": "Commission Generated",
+            "timestamp": comm.created_at.isoformat() + "Z" if comm.created_at else "",
+            "details": f"Commission of INR {comm.commission_amt} ({comm.commission_status})"
+        })
+
+    return {
+        "order_id": str(order.id),
+        "customer": customer_data,
+        "attribution": attribution_data,
+        "timeline": timeline,
     }
 
 

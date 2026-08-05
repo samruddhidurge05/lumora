@@ -39,9 +39,18 @@ import { backendFetch } from '../utils/api';
 export const subscribeToPaymentsTelemetry = (callback) => {
   let ordersList = [];
   let vendorsList = [];
-  let paymentsList = [];
+  let telemetryOrders = [];
 
   const handleUpdate = () => {
+    if (telemetryOrders && telemetryOrders.length > 0) {
+      callback({
+        orders: telemetryOrders,
+        vendors: vendorsList,
+        loading: false
+      });
+      return;
+    }
+
     // If we have actual SQL payments, map them to order stats expected by Payments.jsx
     const mappedOrders = paymentsList.map(p => {
       let statusVal = 'Pending';
@@ -84,6 +93,20 @@ export const subscribeToPaymentsTelemetry = (callback) => {
   };
 
   const fetchPayments = async () => {
+    try {
+      const data = await backendFetch('/admin/payments/telemetry');
+      if (data && data.orders && data.orders.length > 0) {
+        telemetryOrders = data.orders;
+        if (data.vendors && data.vendors.length > 0) {
+          vendorsList = data.vendors;
+        }
+        handleUpdate();
+        return;
+      }
+    } catch (e) {
+      console.warn('[paymentService] Telemetry fetch fallback:', e);
+    }
+
     try {
       const data = await backendFetch('/payments/admin/all?limit=200');
       if (data && data.payments) {

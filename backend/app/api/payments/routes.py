@@ -476,6 +476,11 @@ def admin_get_all_payments(
         status=status_filter,
         gateway=gateway,
     )
+    from app.services.customer_identity_service import resolve_customer_identity
+    for p in payments:
+        c_name, c_email = resolve_customer_identity(db, user_id=p.customer_id, order_id=p.order_id)
+        p.customer_name = c_name
+        p.customer_email = c_email
     return PaymentListResponse(payments=payments, total=len(payments), skip=skip, limit=limit)
 
 

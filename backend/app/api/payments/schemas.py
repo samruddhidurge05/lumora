@@ -111,6 +111,8 @@ class PaymentResponse(BaseModel):
     payment_ref:        str
     order_id:           Optional[int]
     customer_id:        int
+    customer_name:      Optional[str] = None
+    customer_email:     Optional[str] = None
     gateway:            str
     gateway_order_id:   Optional[str]
     gateway_payment_id: Optional[str]
