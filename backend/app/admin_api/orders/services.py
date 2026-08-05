@@ -84,6 +84,9 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 except Exception:
                     created_at_str = str(o.created_at)
 
+            is_paid = (o.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+            is_downloaded = (getattr(o, "download_count", 0) or 0) > 0 or any(getattr(item, "downloaded", False) for item in getattr(o, "items", []))
+
             result.append({
                 "id": str(o.id),
                 "orderId": f"ORD-{o.id}",
@@ -94,12 +97,21 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 "totalUSD": customer_paid,
                 "price": customer_paid,
                 "status": o.status or "completed",
-                "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                "paymentStatus": "Paid" if is_paid else "Pending",
+                "downloadGranted": is_paid,
                 "paymentMethod": o.payment_method or "upi",
                 "createdAt": created_at_str,
                 "affiliateId": str(o.affiliate_id) if o.affiliate_id else None,
                 "referralCodeUsed": getattr(o, "referral_code_used", None),
                 "referralLinkId": str(o.referral_link_id) if getattr(o, "referral_link_id", None) else None,
+                # Download evidence audit fields
+                "downloaded": is_downloaded,
+                "download_count": getattr(o, "download_count", 0) or 0,
+                "first_downloaded_at": o.first_downloaded_at.isoformat() + "Z" if getattr(o, "first_downloaded_at", None) else None,
+                "last_downloaded_at": o.last_downloaded_at.isoformat() + "Z" if getattr(o, "last_downloaded_at", None) else None,
+                "download_ip": getattr(o, "download_ip", None),
+                "download_device": getattr(o, "download_device", None),
+                "download_browser": getattr(o, "download_browser", None),
                 # Financial breakdown fields — used by Transaction Ledger in admin UI
                 "customerPaid": customer_paid,
                 "affiliateCommission": affiliate_commission,
@@ -133,6 +145,10 @@ def get_order_by_id(order_id: str) -> dict:
                     "productName": item.product.title if item.product else "Product",
                     "price": float(item.price_paid or 0.0),
                 })
+
+            is_paid = (order.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+            is_downloaded = (getattr(order, "download_count", 0) or 0) > 0 or any(getattr(item, "downloaded", False) for item in getattr(order, "items", []))
+
             return {
                 "id": str(order.id),
                 "orderId": f"ORD-{order.id}",
@@ -143,22 +159,42 @@ def get_order_by_id(order_id: str) -> dict:
                 "totalUSD": float(order.total_amount or 0.0),
                 "price": float(order.total_amount or 0.0),
                 "status": order.status or "completed",
-                "paymentStatus": "Paid" if (order.status or "").lower() == "completed" else "Pending",
+                "paymentStatus": "Paid" if is_paid else "Pending",
+                "downloadGranted": is_paid,
                 "paymentMethod": order.payment_method or "upi",
                 "createdAt": order.created_at.isoformat() + "Z" if order.created_at else "",
                 "affiliateId": str(order.affiliate_id) if order.affiliate_id else None,
                 "referralCodeUsed": order.referral_code_used or None,
                 "referralLinkId": str(order.referral_link_id) if order.referral_link_id else None,
+                "downloaded": is_downloaded,
+                "download_count": getattr(order, "download_count", 0) or 0,
+                "first_downloaded_at": order.first_downloaded_at.isoformat() + "Z" if getattr(order, "first_downloaded_at", None) else None,
+                "last_downloaded_at": order.last_downloaded_at.isoformat() + "Z" if getattr(order, "last_downloaded_at", None) else None,
+                "download_ip": getattr(order, "download_ip", None),
+                "download_device": getattr(order, "download_device", None),
+                "download_browser": getattr(order, "download_browser", None),
             }
         finally:
             db_s.close()
 
     try:
-        doc_snap = db.collection("orders").document(clean_id).get()
+        # Try both ORD-ID and raw numeric ID document keys
+        doc_snap = db.collection("orders").document(f"ORD-{clean_id}").get()
+        if not doc_snap.exists:
+            doc_snap = db.collection("orders").document(clean_id).get()
         if not doc_snap.exists:
             raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
         order_data = doc_snap.to_dict() or {}
-        return {"id": doc_snap.id, **order_data}
+
+        # Enrich with SQLite download audit fallback if Firestore doc lacks downloadGranted/evidence
+        status_val = str(order_data.get("status") or "").lower()
+        is_paid = status_val in ("completed", "paid", "processing", "success", "placed")
+        if "downloadGranted" not in order_data:
+            order_data["downloadGranted"] = is_paid
+        if "paymentStatus" not in order_data:
+            order_data["paymentStatus"] = "Paid" if is_paid else "Pending"
+
+        return {"id": clean_id, **order_data}
     except Exception as e:
         print(f"[orders] Firestore order get failed: {e}. Falling back to SQLite.")
         _firestore_broken = True

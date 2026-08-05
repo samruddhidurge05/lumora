@@ -67,6 +67,21 @@ class RefundService:
                 detail="A refund request is already active, approved, or processed for this order."
             )
 
+        # 5.5. Check digital asset download evidence (Digital License Access Guard)
+        from app.models.product_download_event import ProductDownloadEvent
+        has_download_event = db.query(ProductDownloadEvent).filter(
+            ProductDownloadEvent.order_id == order_id
+        ).first() is not None
+
+        item_downloaded = any(getattr(item, "downloaded", False) for item in order.items)
+        order_download_count = (getattr(order, "download_count", 0) or 0) > 0
+
+        if has_download_event or item_downloaded or order_download_count:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This digital license has already been downloaded to your device. Refund requests are not permitted once digital assets have been accessed."
+            )
+
 
         # 6. Fetch items & snapshot info
         items = order.items
