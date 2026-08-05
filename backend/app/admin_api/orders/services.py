@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from app.db.session import SessionLocal
 from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
+from app.services.customer_identity_service import resolve_customer_identity
 
 
 def _get_order_commission_amt(db_s, order_id: int) -> float:
@@ -47,11 +48,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
         result = []
         for o in orders:
             try:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
-                if not customer and o.user_id:
-                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
-                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
-                cust_email = getattr(customer, "email", None) or ""
+                cust_name, cust_email = resolve_customer_identity(db_s, user_id=o.user_id, order_id=o.id)
             except Exception:
                 cust_name = f"User #{o.user_id}" if o.user_id else "Customer Account"
                 cust_email = ""
@@ -146,20 +143,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                         pay_st = "Paid" if is_p else "Pending"
 
                     u_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
-                    c_name = d.get("customerName")
-                    c_email = d.get("customerEmail") or ""
-                    if not c_name or c_name in ("Anonymous", "Customer"):
-                        matched_u = None
-                        if u_key and str(u_key).isdigit():
-                            matched_u = db_s.query(UserModel).filter(UserModel.id == int(u_key)).first()
-                        if not matched_u and u_key:
-                            matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(u_key)).first()
-                        if matched_u:
-                            c_name = matched_u.name or matched_u.email
-                            if not c_email:
-                                c_email = matched_u.email or ""
-                    if not c_name:
-                        c_name = c_email or (f"User #{u_key}" if u_key else "Customer Account")
+                    c_name, c_email = resolve_customer_identity(db_s, user_id=u_key, order_id=doc.id, fallback_doc=d)
 
                     fs_items.append({
                         "id": doc.id,
@@ -204,9 +188,7 @@ def get_order_by_id(order_id: str) -> dict:
             order = db_s.query(OrderModel).filter(OrderModel.id == int(clean_id)).first()
             if not order:
                 raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
-            customer = db_s.query(UserModel).filter(UserModel.id == order.user_id).first()
-            cust_name = customer.name if customer else "Customer"
-            cust_email = customer.email if customer else ""
+            cust_name, cust_email = resolve_customer_identity(db_s, user_id=order.user_id, order_id=order.id)
             
             items_data = []
             for item in order.items:
@@ -263,6 +245,11 @@ def get_order_by_id(order_id: str) -> dict:
             order_data["downloadGranted"] = is_paid
         if "paymentStatus" not in order_data:
             order_data["paymentStatus"] = "Paid" if is_paid else "Pending"
+
+        u_key = order_data.get("userId") or order_data.get("user_id") or order_data.get("customerId") or order_data.get("customer_id")
+        c_name, c_email = resolve_customer_identity(None, user_id=u_key, order_id=clean_id, fallback_doc=order_data)
+        order_data["customerName"] = c_name
+        order_data["customerEmail"] = c_email
 
         return {"id": clean_id, **order_data}
     except Exception as e:

@@ -602,6 +602,11 @@ class RefundService:
             RefundRequest.user_id == req.user_id,
             RefundRequest.status == "REFUNDED"
         ).count()
+
+        from app.services.customer_identity_service import resolve_customer_identity
+        c_name, c_email = resolve_customer_identity(db, user_id=req.user_id, order_id=req.order_id)
+        req.customer_name = c_name
+        req.customer_email = c_email
         
         return req
 

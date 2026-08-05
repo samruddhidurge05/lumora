@@ -11,7 +11,8 @@ def _map_user(doc):
         data.get("displayName")
         or data.get("fullName")
         or data.get("name")
-        or "User"
+        or data.get("email")
+        or (f"User #{doc.id}" if doc.id else "Customer Account")
     )
     raw_role = (data.get("role") or "user").lower()
     normalized_role = "customer" if raw_role in ("user", "customer", "") else raw_role
@@ -26,10 +27,11 @@ def _map_user(doc):
     }
 
 def _map_user_sqlite(user):
+    display = user.name or user.email or f"User #{user.id}"
     return {
         "id":          str(user.id),
         "uid":         str(user.id),
-        "displayName": user.name or "User",
+        "displayName": display,
         "email":       user.email,
         "role":        "customer" if (user.role or "").lower() in ("user", "customer", "") else (user.role or "customer").lower(),
         "createdAt":   user.created_at.isoformat() + "Z" if user.created_at else datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",

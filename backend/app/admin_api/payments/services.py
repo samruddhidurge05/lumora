@@ -6,6 +6,7 @@ from app.db.session import SessionLocal
 from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
 from app.models.product import Product as ProductModel
+from app.services.customer_identity_service import resolve_customer_identity
 
 def _map_order(doc) -> Dict[str, Any]:
     d = doc.to_dict() or {}
@@ -30,26 +31,11 @@ def _map_order(doc) -> Dict[str, Any]:
         pay_status = "Paid" if is_paid else "Pending"
 
     user_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
-    cust_name = d.get("customerName")
-    cust_email = d.get("customerEmail") or ""
-
-    if not cust_name or cust_name in ("Anonymous", "Customer"):
-        db_s = SessionLocal()
-        try:
-            matched_u = None
-            if user_key and str(user_key).isdigit():
-                matched_u = db_s.query(UserModel).filter(UserModel.id == int(user_key)).first()
-            if not matched_u and user_key:
-                matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(user_key)).first()
-            if matched_u:
-                cust_name = matched_u.name or matched_u.email
-                if not cust_email:
-                    cust_email = matched_u.email or ""
-        finally:
-            db_s.close()
-
-    if not cust_name:
-        cust_name = cust_email or (f"User #{user_key}" if user_key else "Customer Account")
+    db_s = SessionLocal()
+    try:
+        cust_name, cust_email = resolve_customer_identity(db_s, user_id=user_key, order_id=doc.id, fallback_doc=d)
+    finally:
+        db_s.close()
 
     return {
         "id":            doc.id,
@@ -90,11 +76,7 @@ def get_payments_telemetry() -> Dict[str, Any]:
             
             orders = []
             for o in sql_orders:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
-                if not customer and o.user_id:
-                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
-                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
-                cust_email = getattr(customer, "email", None) or ""
+                cust_name, cust_email = resolve_customer_identity(db_s, user_id=o.user_id, order_id=o.id)
                 
                 v_id = ""
                 p_name = "Product"
