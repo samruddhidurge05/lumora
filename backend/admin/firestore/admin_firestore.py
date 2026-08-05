@@ -222,23 +222,33 @@ def sync_order_to_firestore(order):
             else datetime.now(timezone.utc).isoformat()
         )
 
-        # Upsert the orders document.  ``merge=True`` ensures idempotency:
-        # re-syncing the same order never creates a duplicate document.
         order_id_str = f"ORD-{order.id}"
-        doc_ref = db.collection("orders").document(order_id_str)
-        doc_ref.set(
-            {
-                "orderId":       order_id_str,
-                "userId":        str(order.user_id),
-                "vendorId":      first_vendor_id,
-                "items":         firestore_items,
-                "totalAmount":   float(order.total_amount or 0.0),
-                "status":        order.status or "completed",
-                "paymentMethod": order.payment_method or "",
-                "createdAt":     created_at_str,
-            },
-            merge=True,
-        )
+        clean_id_str = str(order.id)
+        is_paid = (order.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+
+        payload = {
+            "orderId": order_id_str,
+            "id": clean_id_str,
+            "userId": str(order.user_id),
+            "vendorId": first_vendor_id,
+            "items": firestore_items,
+            "totalAmount": float(order.total_amount or 0.0),
+            "status": order.status or "completed",
+            "paymentStatus": "Paid" if is_paid else "Pending",
+            "downloadGranted": is_paid,
+            "paymentMethod": order.payment_method or "",
+            "createdAt": created_at_str,
+            "download_count": getattr(order, "download_count", 0) or 0,
+            "first_downloaded_at": order.first_downloaded_at.isoformat() + "Z" if getattr(order, "first_downloaded_at", None) else None,
+            "last_downloaded_at": order.last_downloaded_at.isoformat() + "Z" if getattr(order, "last_downloaded_at", None) else None,
+            "download_ip": getattr(order, "download_ip", None),
+            "download_device": getattr(order, "download_device", None),
+            "download_browser": getattr(order, "download_browser", None),
+        }
+
+        # Sync to both document key formats (ORD-ID and raw numeric ID) for complete compatibility
+        db.collection("orders").document(order_id_str).set(payload, merge=True)
+        db.collection("orders").document(clean_id_str).set(payload, merge=True)
 
     except Exception as e:
         print(f"[firestore-sync] Error syncing order {order.id} to Firestore: {e}")

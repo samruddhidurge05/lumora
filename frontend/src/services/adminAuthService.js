@@ -46,14 +46,16 @@ export const adminLogin = async (firebaseUser) => {
     throw new Error(data.detail || 'Admin login failed');
   }
 
-  // Store backend JWT — NOT the Firebase idToken
+  // Store backend JWT — BOTH general lumora_backend_token AND role-scoped lumora_token_admin
   if (data.access_token) {
     localStorage.setItem('lumora_backend_token', data.access_token);
+    localStorage.setItem('lumora_token_admin', data.access_token);
   }
 
   // Store backend integer user ID for API calls that need it
   if (data.user?.id != null) {
     localStorage.setItem('lumora_backend_uid', String(data.user.id));
+    localStorage.setItem('lumora_uid_admin', String(data.user.id));
   }
 
   // Mark the active role as admin so other parts of the app can branch on it

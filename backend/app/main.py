@@ -249,6 +249,7 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE admin_email_logs ADD COLUMN IF NOT EXISTS message_id VARCHAR(255)",
             # users
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30)",
             # orders — client device and network attribution metadata columns
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip_address  VARCHAR(64)",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS device_type VARCHAR(50)",
@@ -403,15 +404,36 @@ def _run_schema_migrations() -> None:
                 if "next_retry_at"      not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN next_retry_at DATETIME"))
                 if "provider"           not in inv_cols: conn.execute(_text("ALTER TABLE admin_invitations ADD COLUMN provider VARCHAR(50) DEFAULT 'gmail_smtp'"))
 
-                # users - add last_login_at
+                # users - add last_login_at, phone
                 user_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(users)"))}
                 if "last_login_at" not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+                if "phone"         not in user_cols: conn.execute(_text("ALTER TABLE users ADD COLUMN phone VARCHAR(30)"))
 
-                # orders - add ip_address, device_type, browser
+                # orders - add ip_address, device_type, browser & download audit columns
                 ord_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(orders)"))}
                 if "ip_address"  not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN ip_address VARCHAR(64)"))
                 if "device_type" not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN device_type VARCHAR(50)"))
                 if "browser"     not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN browser VARCHAR(100)"))
+                if "download_count"      not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN download_count INTEGER DEFAULT 0"))
+                if "first_downloaded_at" not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN first_downloaded_at DATETIME"))
+                if "last_downloaded_at"  not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN last_downloaded_at DATETIME"))
+                if "download_ip"         not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN download_ip VARCHAR(64)"))
+                if "download_device"     not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN download_device VARCHAR(50)"))
+                if "download_browser"    not in ord_cols: conn.execute(_text("ALTER TABLE orders ADD COLUMN download_browser VARCHAR(100)"))
+
+                # order_items - add download audit columns
+                item_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(order_items)"))}
+                if "downloaded"     not in item_cols: conn.execute(_text("ALTER TABLE order_items ADD COLUMN downloaded BOOLEAN DEFAULT 0"))
+                if "downloaded_at"  not in item_cols: conn.execute(_text("ALTER TABLE order_items ADD COLUMN downloaded_at DATETIME"))
+                if "download_count" not in item_cols: conn.execute(_text("ALTER TABLE order_items ADD COLUMN download_count INTEGER DEFAULT 0"))
+                if "download_ip"    not in item_cols: conn.execute(_text("ALTER TABLE order_items ADD COLUMN download_ip VARCHAR(64)"))
+
+                # product_download_events - table & columns for SQLite
+                conn.execute(_text("CREATE TABLE IF NOT EXISTS product_download_events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id), order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), downloaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ip_address VARCHAR(64), user_agent VARCHAR(512), created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"))
+                pde_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(product_download_events)"))}
+                if "device_type" not in pde_cols: conn.execute(_text("ALTER TABLE product_download_events ADD COLUMN device_type VARCHAR(50)"))
+                if "browser"     not in pde_cols: conn.execute(_text("ALTER TABLE product_download_events ADD COLUMN browser VARCHAR(100)"))
+                if "os"          not in pde_cols: conn.execute(_text("ALTER TABLE product_download_events ADD COLUMN os VARCHAR(100)"))
 
                 # products - extended metadata + affiliate columns
                 prod_cols = {row[1] for row in conn.execute(_text("PRAGMA table_info(products)"))}

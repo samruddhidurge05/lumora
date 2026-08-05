@@ -14,7 +14,7 @@ from app.models.order import Order, OrderItem
 from app.models.review import Review
 from app.models.coupon import Coupon
 from app.models.payment import Payment
-from app.models.vendor import Vendor
+from app.models.vendor import Vendor, VendorProfile
 from app.models.wishlist import WishlistItem, CartItem
 from app.models.affiliate import AffiliateProfile, AffiliateCommission, AffiliatePayout, ReferralLink, ReferralClick, AffiliateReferral, ReferralAttribution
 from app.models.withdrawal import Withdrawal
@@ -53,6 +53,7 @@ __all__ = [
     "Coupon",
     "Payment",
     "Vendor",
+    "VendorProfile",
     "WishlistItem",
     "CartItem",
     "AffiliateProfile",

@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any, List
 from app.shared.firebase.connection import db, firebase_connected
 from datetime import datetime, timezone
 from fastapi import HTTPException
@@ -6,24 +7,68 @@ from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
 from app.models.product import Product as ProductModel
 
-def _map_order(doc):
-    d = doc.to_dict()
+def _map_order(doc) -> Dict[str, Any]:
+    d = doc.to_dict() or {}
+    price_val = 0.0
+    for key in ("totalAmount", "total_amount", "total", "price", "totalUSD", "customerPaid"):
+        val = d.get(key)
+        if val is not None and str(val).strip() != "":
+            try:
+                f_val = float(val)
+                if f_val > 0:
+                    price_val = f_val
+                    break
+                elif price_val == 0.0:
+                    price_val = f_val
+            except (ValueError, TypeError):
+                pass
+
+    status_val = d.get("status", "Completed")
+    pay_status = d.get("paymentStatus")
+    if not pay_status:
+        is_paid = str(status_val).lower() in ("completed", "paid", "processing", "success", "placed")
+        pay_status = "Paid" if is_paid else "Pending"
+
+    user_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
+    cust_name = d.get("customerName")
+    cust_email = d.get("customerEmail") or ""
+
+    if not cust_name or cust_name in ("Anonymous", "Customer"):
+        db_s = SessionLocal()
+        try:
+            matched_u = None
+            if user_key and str(user_key).isdigit():
+                matched_u = db_s.query(UserModel).filter(UserModel.id == int(user_key)).first()
+            if not matched_u and user_key:
+                matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(user_key)).first()
+            if matched_u:
+                cust_name = matched_u.name or matched_u.email
+                if not cust_email:
+                    cust_email = matched_u.email or ""
+        finally:
+            db_s.close()
+
+    if not cust_name:
+        cust_name = cust_email or (f"User #{user_key}" if user_key else "Customer Account")
+
     return {
         "id":            doc.id,
         "orderId":       d.get("orderId", doc.id),
-        "customerName":  d.get("customerName", "Anonymous"),
-        "customerEmail": d.get("customerEmail", ""),
-        "price":         float(d.get("price", d.get("total", 0))),
-        "status":        d.get("status", "Completed"),
-        "paymentStatus": d.get("paymentStatus", "Paid"),
-        "createdAt":     d.get("createdAt") or datetime.utcnow().isoformat() + "Z",
+        "customerName":  cust_name,
+        "customerEmail": cust_email,
+        "price":         price_val,
+        "total":         price_val,
+        "status":        status_val,
+        "paymentStatus": pay_status,
+        "createdAt":     d.get("createdAt") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "vendorId":      d.get("vendorId", d.get("vendor_id", "")),
         "productName":   d.get("productName", "Product"),
-        "method":        d.get("method", ""),
-        "region":        d.get("region", ""),
+        "method":        d.get("method", d.get("paymentMethod", "")),
+        "paymentMethod": d.get("method", d.get("paymentMethod", "")),
+        "region":        d.get("region", "India"),
     }
 
-def _map_vendor(doc):
+def _map_vendor(doc) -> Dict[str, Any]:
     d = doc.to_dict()
     return {
         "id":            doc.id,
@@ -35,7 +80,7 @@ def _map_vendor(doc):
 
 _firestore_broken = False
 
-def get_payments_telemetry():
+def get_payments_telemetry() -> Dict[str, Any]:
     global _firestore_broken
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
@@ -45,9 +90,11 @@ def get_payments_telemetry():
             
             orders = []
             for o in sql_orders:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
-                cust_name = customer.name if customer else "Customer"
-                cust_email = customer.email if customer else ""
+                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
+                if not customer and o.user_id:
+                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
+                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
+                cust_email = getattr(customer, "email", None) or ""
                 
                 v_id = ""
                 p_name = "Product"
@@ -62,10 +109,10 @@ def get_payments_telemetry():
                     "orderId":       f"ORD-{o.id}",
                     "customerName":  cust_name,
                     "customerEmail": cust_email,
-                    "price":         float(o.total_amount or 0.0),
+                    "price":         float(getattr(o, "total_amount", 0.0) or 0.0),
                     "status":        o.status or "Completed",
                     "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
-                    "createdAt":     o.created_at.isoformat() + "Z" if o.created_at else "",
+                    "createdAt":     (o.created_at.isoformat().replace("+00:00", "Z") if "Z" in o.created_at.isoformat() else o.created_at.isoformat() + "Z") if o.created_at else "",
                     "vendorId":      v_id,
                     "productName":   p_name,
                     "method":        o.payment_method or "upi",
@@ -94,7 +141,7 @@ def get_payments_telemetry():
         _firestore_broken = True
         return get_payments_telemetry()
 
-def get_payments_overview():
+def get_payments_overview() -> Dict[str, Any]:
     telemetry = get_payments_telemetry()
     orders    = telemetry["orders"]
 
@@ -124,7 +171,7 @@ def get_payments_overview():
         "totalTransactions":  len(orders),
     }
 
-def get_vendor_payouts():
+def get_vendor_payouts() -> List[Dict[str, Any]]:
     """
     Returns vendor gross sales data from actual order records.
     Commission percentages and payout splits are NOT calculated here because
@@ -157,12 +204,12 @@ def get_vendor_payouts():
             "commission":     None,
             "paidPayout":     None,
             "pendingPayout":  round(pending_amount, 2),
-            "lastPayoutDate": datetime.utcnow().strftime("%Y-%m-%d"),
+            "lastPayoutDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         })
 
     return payouts
 
-def get_refund_monitor_list():
+def get_refund_monitor_list() -> List[Dict[str, Any]]:
     telemetry = get_payments_telemetry()
     orders    = telemetry["orders"]
 
@@ -189,7 +236,7 @@ def get_refund_monitor_list():
 
     return refunds
 
-def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None):
+def get_transactions_list(page: int = 1, page_size: int = 50, status: Optional[str] = None) -> Dict[str, Any]:
     page = max(1, page)
     page_size = max(1, min(200, page_size))
     telemetry = get_payments_telemetry()
@@ -201,7 +248,7 @@ def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None
             "amount":  o["price"],
             "method":  o["method"],
             "status":  "Success" if o["paymentStatus"] == "Paid" else "Failed",
-            "date":    o["createdAt"][:10] if o["createdAt"] else datetime.utcnow().strftime("%Y-%m-%d"),
+            "date":    o["createdAt"][:10] if o["createdAt"] else datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         }
         for o in telemetry["orders"]
     ]
@@ -211,7 +258,7 @@ def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None
     items = all_txns[(page - 1) * page_size: page * page_size]
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
-def process_vendor_payout(vendor_id: str, amount: float):
+def process_vendor_payout(vendor_id: str, amount: float) -> Dict[str, Any]:
     db_s = SessionLocal()
     payee_role = "vendor"
     try:
@@ -268,7 +315,7 @@ def process_vendor_payout(vendor_id: str, amount: float):
                         try:
                             db.collection("affiliateConversions").document(f"COMM-{comm.id}").update({
                                 "status": "paid",
-                                "updatedAt": datetime.utcnow().isoformat() + "Z"
+                                "updatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                             })
                         except Exception:
                             pass
@@ -326,7 +373,7 @@ def process_vendor_payout(vendor_id: str, amount: float):
             "affiliateId": vendor_id,
             "amount":      amount,
             "status":      "Completed",
-            "createdAt":   datetime.utcnow().isoformat() + "Z",
+            "createdAt":   datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "type":        "affiliate_payout",
         })
     else:
@@ -334,14 +381,14 @@ def process_vendor_payout(vendor_id: str, amount: float):
             "vendorId":  vendor_id,
             "amount":    amount,
             "status":    "Completed",
-            "createdAt": datetime.utcnow().isoformat() + "Z",
+            "createdAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "type":      "vendor_payout",
         })
         vendor_ref = db.collection("vendors").document(vendor_id)
         if vendor_ref.get().exists:
             vendor_ref.update({
                 "lastPayoutAmount": amount,
-                "lastPayoutDate":   datetime.utcnow().isoformat() + "Z",
+                "lastPayoutDate":   datetime.now(timezone.utc).isoformat(),
             })
             
     return {"success": True, "vendorId": vendor_id, "amount": amount, "role": payee_role}

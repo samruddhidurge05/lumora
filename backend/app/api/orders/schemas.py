@@ -7,6 +7,9 @@ class OrderItemBase(BaseModel):
     price_paid: float
     download_url: Optional[str] = None
     downloaded: bool = False
+    downloaded_at: Optional[datetime] = None
+    download_count: int = 0
+    download_ip: Optional[str] = None
 
 class OrderItemCreate(OrderItemBase):
     pass
@@ -47,6 +50,15 @@ class OrderResponse(OrderBase):
     created_at: datetime
     updated_at: datetime
     items: List[OrderItemResponse] = []
+    
+    # Download audit evidence fields
+    downloadGranted: bool = True
+    download_count: int = 0
+    first_downloaded_at: Optional[datetime] = None
+    last_downloaded_at: Optional[datetime] = None
+    download_ip: Optional[str] = None
+    download_device: Optional[str] = None
+    download_browser: Optional[str] = None
 
     class Config:
         from_attributes = True

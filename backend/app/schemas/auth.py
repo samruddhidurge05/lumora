@@ -3,10 +3,20 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional
 
+def validate_phone_number(v: Optional[str]) -> Optional[str]:
+    if v is None or v == "":
+        return None
+    v = str(v).strip()
+    if not re.match(r"^\+?[0-9]{10,15}$", v):
+        raise ValueError("Contact number must be 10 to 15 digits and contain digits only (optional leading +).")
+    return v
+
+
 class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1)
     email: EmailStr
     password: str = Field(..., min_length=8)
+    phone: Optional[str] = None
 
     @field_validator('name')
     @classmethod
@@ -22,6 +32,11 @@ class RegisterRequest(BaseModel):
             raise ValueError("Name cannot contain control characters.")
         return v
 
+    @field_validator('phone', mode='before')
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        return validate_phone_number(v)
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -29,13 +44,20 @@ class LoginRequest(BaseModel):
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = None
     role: Optional[str] = None
+    phone: Optional[str] = None
     firebase_uid: Optional[str] = None
+
+    @field_validator('phone', mode='before')
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        return validate_phone_number(v)
 
 class UserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
     role: str
+    phone: Optional[str] = None
     is_active: bool = True
     is_verified: bool = False
     firebase_uid: Optional[str] = None

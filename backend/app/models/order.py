@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.models.user import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Order(Base):
@@ -17,8 +17,8 @@ class Order(Base):
     payment_method = Column(String(30), nullable=True)
     payment_id     = Column(String(120), nullable=True)    # gateway reference
     notes          = Column(Text, nullable=True)
-    created_at     = Column(DateTime, default=datetime.utcnow)
-    updated_at     = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at     = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at     = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Permanent Affiliate Attribution Fields
     affiliate_id       = Column(Integer, ForeignKey("affiliate_profiles.id"), nullable=True, index=True)

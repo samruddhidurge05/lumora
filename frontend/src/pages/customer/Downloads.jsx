@@ -36,7 +36,7 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, canDownload, refundStatus, refundMessage }) {
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, canDownload, refundStatus, refundMessage, downloaded }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -256,10 +256,18 @@ function DownloadButton({ productName, variant = 'primary', downloadUrl, product
 
   const c = configs[state] || configs.idle;
 
+  const handleClick = () => {
+    if (downloaded) {
+      handleDownload();
+    } else {
+      setShowConfirmModal(true);
+    }
+  };
+
   return (
     <>
       <button
-        onClick={() => setShowConfirmModal(true)}
+        onClick={handleClick}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: '7px',
           padding: '9px 18px', borderRadius: '12px',
@@ -458,6 +466,8 @@ export default function CustomerDownloads() {
             downloadUrl: dl.download_url,
             downloadAvailable: dl.download_available,
             canDownload: dl.can_download,
+            downloaded: Boolean(dl.downloaded),
+            downloadedAt: dl.downloaded_at,
             refundStatus: dl.refund_status || refundMap[String(dl.order_id)] || 'NONE',
             refundMessage: dl.refund_message,
             verified: true,
@@ -493,6 +503,8 @@ export default function CustomerDownloads() {
               downloadUrl: item.download_url,
               downloadAvailable: canDownload,
               canDownload,
+              downloaded: Boolean(item.downloaded),
+              downloadedAt: item.downloaded_at,
               refundStatus: ordRefundStatus,
               verified: true,
             });
@@ -1176,6 +1188,11 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
               <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', fontWeight: 700, background: 'rgba(78,59,49,0.05)', padding: '2px 8px', borderRadius: 6 }}>
                 {product.version}
               </span>
+              {product.downloaded && (
+                <span style={{ fontSize: '0.63rem', color: '#15803D', fontWeight: 800, background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '2px 8px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <CheckCircle size={10} /> Downloaded
+                </span>
+              )}
               <span style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', display: 'flex', alignItems: 'center', gap: 3 }}>
                 <HardDrive size={9} /> {product.fileSize}
               </span>
@@ -1235,7 +1252,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                   <BookOpen size={13} />
                   Preview
                 </button>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} downloaded={product.downloaded} />
               </div>
             )}
           </div>

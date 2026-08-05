@@ -405,7 +405,7 @@ export default function CustomersManagement() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(216,191,227,0.20)' }}>
-                      {['Customer', 'Email', 'UID', 'Joined', 'Orders', 'Spent', 'Status', 'Actions'].map(h => (
+                      {['Customer', 'Email', 'Phone', 'UID', 'Joined', 'Orders', 'Spent', 'Status', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: '9px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#7B3FA0', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
@@ -428,6 +428,7 @@ export default function CustomersManagement() {
                           </div>
                         </td>
                         <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0' }}>{customer.email}</span></td>
+                        <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0', fontWeight: 600 }}>{customer.phone || customer.phoneNumber || '—'}</span></td>
                         <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#8E6AA8' }}>{customer.uid}</span></td>
                         <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#7B3FA0' }}>{formatJoinedDate(customer.joinedDate)}</span></td>
                         <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '12px', color: '#2D004D', fontWeight: 600 }}>{customer.totalOrders}</span></td>

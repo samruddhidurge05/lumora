@@ -334,7 +334,14 @@ export default function CustomerPurchases() {
                           style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} 
                         />
                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase' }}>{product.category}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#7B3FA0', textTransform: 'uppercase' }}>{product.category}</span>
+                            {item.downloaded && (
+                              <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#15803D', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '1px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                <CheckCircle size={9} /> Downloaded
+                              </span>
+                            )}
+                          </div>
                           <h4 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</h4>
                           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>{formatPrice(item.price_paid || product.price)}</span>
                         </div>

@@ -523,16 +523,18 @@ def download_product(
     response_data = {
         "download_url": f"/api/products/{product_id}/download-file?token={token}",
         "download_available": download_available,
+        "downloaded": bool(getattr(owned, "downloaded", False) if owned else False),
+        "downloaded_at": owned.downloaded_at.isoformat() if (owned and getattr(owned, "downloaded_at", None)) else None,
         "product_details": {
             "id": product.id,
             "name": product.title,
             "category": product.category or "Uncategorized",
             "file_size": product.file_size or "Unknown size",
             "version": product.version or "v1.0.0",
-            "thumbnail": product.thumbnail or product.preview,
+            "thumbnail": getattr(product, "thumbnail", None) or getattr(product, "preview", None),
             "vendor": vendor_name,
             "price": float(cast(Any, product.price or 0)),
-            "description": product.description[:200] + "..." if product.description and len(product.description) > 200 else product.description
+            "description": (product.description[:200] + "...") if (product.description and len(product.description) > 200) else (product.description or "")
         },
         "download_stats": {
             "total_downloads": int(cast(Any, product.downloads or 0)),
@@ -598,6 +600,8 @@ def get_download_center(
             "download_url": download_url,
             "download_available": download_available and can_download,
             "can_download": can_download,
+            "downloaded": bool(getattr(order_item, "downloaded", False)),
+            "downloaded_at": order_item.downloaded_at.isoformat() if getattr(order_item, "downloaded_at", None) else None,
             "refund_status": refund_status,
             "refund_message": msg,
             "token_expires_in": "15 minutes" if can_download else "N/A"
@@ -648,13 +652,14 @@ def download_product_file(
     owned = db.query(OrderItem).join(Order).filter(
         or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
         or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
-        func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
-    ).first()
+        func.lower(Order.status).in_(["completed", "paid", "processing", "success", "placed"])
+    ).order_by(Order.created_at.desc()).first()
 
     is_owner = bool((str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or "")))
     is_admin = bool((getattr(user, "role", "") or "") == "admin")
 
     # Production-Safe Refund Download Lock Check
+    from app.services.download_auth_service import check_download_permission
     check_download_permission(db, user_id, product_id, is_owner=is_owner, is_admin=is_admin)
 
     clean_title = str(product.title or f"Product-{product_id}")
@@ -800,6 +805,15 @@ Thank you for your purchase on Lumora!
                     setattr(target_order, "last_downloaded_at", now_utc)
 
                 db.commit()
+
+                # Sync download evidence & downloadGranted to Firestore
+                if target_order:
+                    try:
+                        from admin.firestore.admin_firestore import sync_order_to_firestore
+                        sync_order_to_firestore(target_order)
+                    except Exception as fs_sync_err:
+                        print(f"[DOWNLOAD_AUDIT] Firestore download audit sync warning: {fs_sync_err}")
+
                 audit_logger.info("[DOWNLOAD_AUDIT] Download event recorded: Order #%s, Product #%s, IP=%s", owned.order_id, product_id, client_ip)
         except Exception as audit_err:
             db.rollback()

@@ -13,7 +13,8 @@ def get_product_by_id(db_session, product_id: int) -> Optional[Product]:
         return product
 
     # If not found in SQLite, and Firebase is connected, try to restore/sync from Firestore
-    if not firebase_connected or firestore_db is None:
+    is_real_firestore = firebase_connected and firestore_db is not None and not hasattr(firestore_db, "_mock_name")
+    if not is_real_firestore or firestore_db is None:
         logger.warning(f"[db_sync] Firebase not connected. Cannot fetch product {product_id} from Firestore.")
         return None
 

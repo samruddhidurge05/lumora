@@ -9,6 +9,7 @@ export default function CustomerSettings() {
   const { accentTheme, setAccentTheme, glassMode, setGlassMode, borderGlow, setBorderGlow } = useApp();
   const { user, updateProfile } = useAuth();
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -25,12 +26,14 @@ export default function CustomerSettings() {
     try {
       // Try backend first
       const backendUserData = await backendFetch('/auth/me').catch(() => null);
-      if (backendUserData && backendUserData.name) {
-        setName(backendUserData.name);
+      if (backendUserData) {
+        if (backendUserData.name) setName(backendUserData.name);
+        if (backendUserData.phone) setPhone(backendUserData.phone);
       } else {
         // Fallback to Firestore profile or auth user
         const profile = await getUserProfile(user.uid);
         setName(profile?.name || user.displayName || '');
+        setPhone(profile?.phone || profile?.phoneNumber || '');
       }
     } catch (err) {
       console.warn('[Settings] Profile load notice:', err);
@@ -47,12 +50,24 @@ export default function CustomerSettings() {
   // 2, 3, 4. Update profile, preferences & Save settings
   const handleSave = async () => {
     if (!user) return;
+    if (phone && !/^\+?[0-9]{10,15}$/.test(phone.trim())) {
+      setError('Contact number must be 10 to 15 digits (digits only, optional leading +).');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      // Update profile name on backend & Firestore
+      // Update backend auth /me
+      await backendFetch('/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify({ name, phone: phone.trim() })
+      }).catch(err => console.warn('[Settings] Backend update notice:', err));
+
+      // Update profile name & phone on Firestore
       await updateUserProfile(user.uid, {
         name,
+        phone: phone.trim(),
+        phoneNumber: phone.trim(),
         accentTheme,
         glassMode,
         borderGlow
@@ -127,6 +142,15 @@ export default function CustomerSettings() {
                   value={user?.email || ''} 
                   disabled 
                   style={{ padding: '11px 16px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.2)', background: 'rgba(245,243,255,0.8)', fontSize: '0.85rem', fontFamily: 'var(--font-sans)', fontWeight: 500, color: 'var(--text-muted)', width: '100%', boxSizing: 'border-box' }} 
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-mocha)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '6px' }}>Contact Number</label>
+                <input 
+                  value={phone} 
+                  onChange={e => setPhone(e.target.value)} 
+                  placeholder="+91 9876543210"
+                  style={{ padding: '11px 16px', borderRadius: '10px', border: '1px solid rgba(196,181,253,0.3)', background: '#fff', fontSize: '0.85rem', fontFamily: 'var(--font-sans)', fontWeight: 500, color: 'var(--color-espresso)', outline: 'none', width: '100%', boxSizing: 'border-box' }} 
                 />
               </div>
             </div>

@@ -30,7 +30,7 @@ def _get_order_commission_amt(db_s, order_id: int) -> float:
         return 0.0
 
 
-def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = None):
+def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = None) -> dict:
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
@@ -48,10 +48,12 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
         for o in orders:
             try:
                 customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
-                cust_name = getattr(customer, "name", None) or "Customer"
+                if not customer and o.user_id:
+                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
+                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
                 cust_email = getattr(customer, "email", None) or ""
             except Exception:
-                cust_name = "Customer"
+                cust_name = f"User #{o.user_id}" if o.user_id else "Customer Account"
                 cust_email = ""
 
             items_data = []
@@ -73,7 +75,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
             except Exception as e:
                 print(f"[get_orders_list] Error loading items for order {o.id}: {e}")
 
-            customer_paid = float(o.total_amount or 0.0)
+            customer_paid = float(getattr(o, "total_amount", 0.0) or 0.0)
             affiliate_commission = _get_order_commission_amt(db_s, o.id)
             net_platform_revenue = round(customer_paid - affiliate_commission, 2)
 
@@ -83,6 +85,9 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                     created_at_str = o.created_at.isoformat() + "Z"
                 except Exception:
                     created_at_str = str(o.created_at)
+
+            is_paid = (o.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+            is_downloaded = (getattr(o, "download_count", 0) or 0) > 0 or any(getattr(item, "downloaded", False) for item in getattr(o, "items", []))
 
             result.append({
                 "id": str(o.id),
@@ -94,17 +99,94 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 "totalUSD": customer_paid,
                 "price": customer_paid,
                 "status": o.status or "completed",
-                "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
+                "paymentStatus": "Paid" if is_paid else "Pending",
+                "downloadGranted": is_paid,
                 "paymentMethod": o.payment_method or "upi",
                 "createdAt": created_at_str,
                 "affiliateId": str(o.affiliate_id) if o.affiliate_id else None,
                 "referralCodeUsed": getattr(o, "referral_code_used", None),
                 "referralLinkId": str(o.referral_link_id) if getattr(o, "referral_link_id", None) else None,
+                # Download evidence audit fields
+                "downloaded": is_downloaded,
+                "download_count": getattr(o, "download_count", 0) or 0,
+                "first_downloaded_at": o.first_downloaded_at.isoformat() + "Z" if getattr(o, "first_downloaded_at", None) else None,
+                "last_downloaded_at": o.last_downloaded_at.isoformat() + "Z" if getattr(o, "last_downloaded_at", None) else None,
+                "download_ip": getattr(o, "download_ip", None),
+                "download_device": getattr(o, "download_device", None),
+                "download_browser": getattr(o, "download_browser", None),
                 # Financial breakdown fields — used by Transaction Ledger in admin UI
                 "customerPaid": customer_paid,
                 "affiliateCommission": affiliate_commission,
                 "netPlatformRevenue": net_platform_revenue,
             })
+        if total == 0 and firebase_connected and db is not None:
+            try:
+                fs_docs = list(db.collection("orders").stream())
+                fs_items = []
+                for doc in fs_docs:
+                    d = doc.to_dict() or {}
+                    p_val = 0.0
+                    for k in ("totalAmount", "total_amount", "total", "price", "totalUSD", "customerPaid"):
+                        v = d.get(k)
+                        if v is not None and str(v).strip() != "":
+                            try:
+                                f_val = float(v)
+                                if f_val > 0:
+                                    p_val = f_val
+                                    break
+                                elif p_val == 0.0:
+                                    p_val = f_val
+                            except (ValueError, TypeError):
+                                pass
+
+                    st_val = d.get("status", "Completed")
+                    pay_st = d.get("paymentStatus")
+                    if not pay_st:
+                        is_p = str(st_val).lower() in ("completed", "paid", "processing", "success", "placed")
+                        pay_st = "Paid" if is_p else "Pending"
+
+                    u_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
+                    c_name = d.get("customerName")
+                    c_email = d.get("customerEmail") or ""
+                    if not c_name or c_name in ("Anonymous", "Customer"):
+                        matched_u = None
+                        if u_key and str(u_key).isdigit():
+                            matched_u = db_s.query(UserModel).filter(UserModel.id == int(u_key)).first()
+                        if not matched_u and u_key:
+                            matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(u_key)).first()
+                        if matched_u:
+                            c_name = matched_u.name or matched_u.email
+                            if not c_email:
+                                c_email = matched_u.email or ""
+                    if not c_name:
+                        c_name = c_email or (f"User #{u_key}" if u_key else "Customer Account")
+
+                    fs_items.append({
+                        "id": doc.id,
+                        "orderId": d.get("orderId", doc.id),
+                        "customerName": c_name,
+                        "customerEmail": c_email,
+                        "price": p_val,
+                        "totalUSD": p_val,
+                        "total": p_val,
+                        "status": st_val,
+                        "paymentStatus": pay_st,
+                        "downloadGranted": pay_st == "Paid",
+                        "createdAt": d.get("createdAt") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                        "paymentMethod": d.get("method", d.get("paymentMethod", "upi")),
+                        "customerPaid": p_val,
+                        "affiliateCommission": 0.0,
+                        "netPlatformRevenue": p_val,
+                    })
+                if status:
+                    fs_items = [i for i in fs_items if str(i.get("status", "")).lower() == status.lower()]
+                fs_total = len(fs_items)
+                start_idx = (page - 1) * page_size
+                paged_items = fs_items[start_idx : start_idx + page_size]
+                return {"total": fs_total, "page": page, "page_size": page_size, "items": paged_items}
+            except Exception as fs_err:
+                print(f"[get_orders_list] Firestore fallback error: {fs_err}")
+
         return {"total": total, "page": page, "page_size": page_size, "items": result}
     finally:
         db_s.close()
@@ -133,6 +215,10 @@ def get_order_by_id(order_id: str) -> dict:
                     "productName": item.product.title if item.product else "Product",
                     "price": float(item.price_paid or 0.0),
                 })
+
+            is_paid = (order.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+            is_downloaded = (getattr(order, "download_count", 0) or 0) > 0 or any(getattr(item, "downloaded", False) for item in getattr(order, "items", []))
+
             return {
                 "id": str(order.id),
                 "orderId": f"ORD-{order.id}",
@@ -143,22 +229,42 @@ def get_order_by_id(order_id: str) -> dict:
                 "totalUSD": float(order.total_amount or 0.0),
                 "price": float(order.total_amount or 0.0),
                 "status": order.status or "completed",
-                "paymentStatus": "Paid" if (order.status or "").lower() == "completed" else "Pending",
+                "paymentStatus": "Paid" if is_paid else "Pending",
+                "downloadGranted": is_paid,
                 "paymentMethod": order.payment_method or "upi",
                 "createdAt": order.created_at.isoformat() + "Z" if order.created_at else "",
                 "affiliateId": str(order.affiliate_id) if order.affiliate_id else None,
                 "referralCodeUsed": order.referral_code_used or None,
                 "referralLinkId": str(order.referral_link_id) if order.referral_link_id else None,
+                "downloaded": is_downloaded,
+                "download_count": getattr(order, "download_count", 0) or 0,
+                "first_downloaded_at": order.first_downloaded_at.isoformat() + "Z" if getattr(order, "first_downloaded_at", None) else None,
+                "last_downloaded_at": order.last_downloaded_at.isoformat() + "Z" if getattr(order, "last_downloaded_at", None) else None,
+                "download_ip": getattr(order, "download_ip", None),
+                "download_device": getattr(order, "download_device", None),
+                "download_browser": getattr(order, "download_browser", None),
             }
         finally:
             db_s.close()
 
     try:
-        doc_snap = db.collection("orders").document(clean_id).get()
+        # Try both ORD-ID and raw numeric ID document keys
+        doc_snap = db.collection("orders").document(f"ORD-{clean_id}").get()
+        if not doc_snap.exists:
+            doc_snap = db.collection("orders").document(clean_id).get()
         if not doc_snap.exists:
             raise HTTPException(status_code=404, detail=f"Order {order_id} not found.")
         order_data = doc_snap.to_dict() or {}
-        return {"id": doc_snap.id, **order_data}
+
+        # Enrich with SQLite download audit fallback if Firestore doc lacks downloadGranted/evidence
+        status_val = str(order_data.get("status") or "").lower()
+        is_paid = status_val in ("completed", "paid", "processing", "success", "placed")
+        if "downloadGranted" not in order_data:
+            order_data["downloadGranted"] = is_paid
+        if "paymentStatus" not in order_data:
+            order_data["paymentStatus"] = "Paid" if is_paid else "Pending"
+
+        return {"id": clean_id, **order_data}
     except Exception as e:
         print(f"[orders] Firestore order get failed: {e}. Falling back to SQLite.")
         _firestore_broken = True

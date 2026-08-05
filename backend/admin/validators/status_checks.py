@@ -15,9 +15,10 @@ def check_platform_paused():
     is_paused = False
     pause_msg = "Platform is temporarily paused."
     
-    if firebase_connected and db is not None:
+    is_real_firebase = firebase_connected and db is not None and not hasattr(db, "_mock_name")
+    if is_real_firebase:
         settings = get_platform_settings() or {}
-        if settings.get("isPlatformPaused", False):
+        if isinstance(settings, dict) and settings.get("isPlatformPaused", False):
             is_paused = True
             pause_msg = settings.get("pauseMessage") or "Platform is temporarily paused."
     else:

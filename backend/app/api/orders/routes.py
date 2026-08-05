@@ -407,7 +407,9 @@ def get_my_orders(
     from app.api.products_router import generate_download_token
     from app.services.download_auth_service import get_product_refund_status
     for o in orders:
-        if (o.status or "").lower() in ["completed", "paid"]:
+        is_paid = (o.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+        setattr(o, "downloadGranted", is_paid)
+        if is_paid:
             for item in o.items:
                 refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
                 if can_download:
@@ -447,7 +449,9 @@ def get_order_by_id(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this order")
 
     # Inject 15-minute secure download token if permitted
-    if (order.status or "").lower() in ["completed", "paid"]:
+    is_paid = (order.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
+    setattr(order, "downloadGranted", is_paid)
+    if is_paid:
         from app.api.products_router import generate_download_token
         from app.services.download_auth_service import get_product_refund_status
         for item in order.items:
