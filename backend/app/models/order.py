@@ -30,6 +30,14 @@ class Order(Base):
     device_type        = Column(String(50), nullable=True)
     browser            = Column(String(100), nullable=True)
 
+    # Customer Download Evidence Audit Metadata
+    download_count     = Column(Integer, default=0)
+    first_downloaded_at = Column(DateTime, nullable=True)
+    last_downloaded_at  = Column(DateTime, nullable=True)
+    download_ip        = Column(String(64), nullable=True)
+    download_device    = Column(String(50), nullable=True)
+    download_browser   = Column(String(100), nullable=True)
+
     user  = relationship("User",      back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
@@ -43,6 +51,9 @@ class OrderItem(Base):
     price_paid  = Column(Float,  nullable=False)
     download_url= Column(String(512), nullable=True)
     downloaded  = Column(Boolean, default=False)
+    downloaded_at = Column(DateTime, nullable=True)
+    download_count = Column(Integer, default=0)
+    download_ip = Column(String(64), nullable=True)
     created_at  = Column(DateTime, default=datetime.utcnow)
 
     order   = relationship("Order",   back_populates="items")

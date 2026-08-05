@@ -564,6 +564,74 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               </div>
             )}
 
+            {/* 6B. CUSTOMER DOWNLOAD AUDIT EVIDENCE CARD */}
+            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50/30 border border-blue-200/80 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                    <Download size={14} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-blue-950 uppercase tracking-wider">Customer Download Audit Evidence</h4>
+                    <p className="text-[10px] text-stone-500">Forensic digital asset delivery verification & license status</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                  (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                    : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                  {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
+                    ? 'LICENSE REVOKED'
+                    : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
+                    ? 'ASSET DOWNLOADED'
+                    : 'NOT DOWNLOADED YET'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Status</div>
+                  <div className="font-bold text-blue-900 mt-0.5">
+                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'Downloaded' : 'Not downloaded yet'}
+                  </div>
+                  <div className="text-[9px] font-mono text-stone-500">Count: {traceData?.download_audit?.download_count || orderData?.download_count || 0}</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">First / Last Download</div>
+                  <div className="font-mono text-[10px] font-bold text-stone-800 mt-0.5 truncate">
+                    {traceData?.download_audit?.first_downloaded_at ? new Date(traceData.download_audit.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : (orderData?.first_downloaded_at ? new Date(orderData.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')}
+                  </div>
+                  <div className="text-[9px] text-stone-400">
+                    Latest: {traceData?.download_audit?.last_downloaded_at ? new Date(traceData.download_audit.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : (orderData?.last_downloaded_at ? new Date(orderData.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—')}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer Download IP</div>
+                  <div className="font-mono font-bold text-blue-950 mt-0.5">
+                    {traceData?.download_audit?.ip_address || orderData?.download_ip || 'Not Available'}
+                  </div>
+                  <div className="text-[9px] text-stone-400">Proxy Verified</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Device & License</div>
+                  <div className="font-bold text-stone-800 mt-0.5 truncate">
+                    {traceData?.download_audit?.device_type || orderData?.download_device || 'Desktop'} ({traceData?.download_audit?.browser || orderData?.download_browser || 'Chrome'})
+                  </div>
+                  <div className={`text-[9px] font-bold ${
+                    (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
+                  }`}>
+                    License: {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* 7. SYSTEM DETAILS & AUDIT FINGERPRINT */}
             <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 text-[10px] text-stone-500 font-mono grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>

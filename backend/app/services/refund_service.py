@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from app.models.refund_request import RefundRequest
@@ -46,7 +46,9 @@ class RefundService:
             )
 
         # 4. Check refund window
-        purchase_age = datetime.utcnow() - order.created_at
+        now_utc = datetime.now(timezone.utc)
+        order_created = order.created_at.replace(tzinfo=timezone.utc) if (order.created_at and order.created_at.tzinfo is None) else order.created_at
+        purchase_age = now_utc - order_created
         max_age_days = getattr(settings, "REFUND_WINDOW_DAYS", 14)
         if purchase_age.days >= max_age_days:
             raise HTTPException(
@@ -124,7 +126,7 @@ class RefundService:
                     "orderId": f"ORD-{order.id}",
                     "customerId": str(user_id),
                     "productName": product_name,
-                    "amount": float(req.requested_amount),
+                    "amount": float(getattr(req, "requested_amount", 0.0)),
                     "status": "PENDING",
                     "reasonCategory": reason_category,
                     "createdAt": req.created_at.isoformat() + "Z",
@@ -175,7 +177,7 @@ class RefundService:
 
         req.status = new_status_upper
         req.last_updated_by = admin_id
-        req.last_updated_at = datetime.utcnow()
+        req.last_updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(req)
@@ -208,13 +210,13 @@ class RefundService:
         req.status = "APPROVED"
         req.admin_notes = notes
         req.reviewed_by = admin_id
-        req.admin_decision_at = datetime.utcnow()
+        req.admin_decision_at = datetime.now(timezone.utc)
         req.last_updated_by = admin_id
-        req.last_updated_at = datetime.utcnow()
+        req.last_updated_at = datetime.now(timezone.utc)
 
         # Attempt payment gateway refund if a valid payment reference exists
         order = db.query(Order).filter(Order.id == req.order_id).first()
-        payment_ref = (order.payment_id if order and order.payment_id else req.payment_id)
+        payment_ref = (order.payment_id if order and getattr(order, "payment_id", None) else req.payment_id)
 
         if payment_ref and str(payment_ref).strip().lower() not in ("none", "", "null", "undefined"):
             try:
@@ -229,6 +231,11 @@ class RefundService:
                     req.gateway_refund_id = payment.gateway_payment_id
             except Exception as e:
                 print(f"[refund-service] Gateway refund warning for TKT-{req.id}: {e}")
+
+        # Transition Order status to "refunded" to revoke digital download license while preserving historical audit logs
+        if order:
+            setattr(order, "status", "refunded")
+            db.add(order)
 
         db.commit()
         db.refresh(req)
@@ -260,9 +267,9 @@ class RefundService:
         req.status = "REJECTED"
         req.admin_notes = notes
         req.reviewed_by = admin_id
-        req.admin_decision_at = datetime.utcnow()
+        req.admin_decision_at = datetime.now(timezone.utc)
         req.last_updated_by = admin_id
-        req.last_updated_at = datetime.utcnow()
+        req.last_updated_at = datetime.now(timezone.utc)
         
         db.commit()
         db.refresh(req)
@@ -299,7 +306,7 @@ class RefundService:
             
         req.status = "CANCELLED"
         req.last_updated_by = user_id
-        req.last_updated_at = datetime.utcnow()
+        req.last_updated_at = datetime.now(timezone.utc)
         
         ActivityLogService.log_user_activity(
             db=db,
@@ -364,7 +371,7 @@ class RefundService:
         else:
             req.status = "FAILED"
             req.decision_reason = "Recovered from stuck PROCESSING state: gateway refund was not found."
-            req.last_updated_at = datetime.utcnow()
+            req.last_updated_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(req)
             
@@ -388,7 +395,7 @@ class RefundService:
         req.status = "REFUNDED"
         if gateway_refund_id:
             req.gateway_refund_id = gateway_refund_id
-        req.last_updated_at = datetime.utcnow()
+        req.last_updated_at = datetime.now(timezone.utc)
         
         # Modify associated Order status
         order = db.query(Order).filter(Order.id == req.order_id).first()

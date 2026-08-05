@@ -13,7 +13,7 @@ import time
 from typing import Any, List, Optional, cast
 import zipfile
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from jose import JWTError, jwt
 from sqlalchemy import String, cast as sql_cast, func, or_
@@ -498,16 +498,32 @@ def download_product(
     is_owner = (str(product.vendor_id) == str(current_user.id)) or ((product.seller or "") == (current_user.name or ""))
     is_admin = (current_user.role or "") == "admin"
     
-    if not owned and not is_owner and not is_admin:
-        any_order = db.query(Order).filter(
-            or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id)),
-            func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
+    # Phase 2 & 3: Check if order was refunded or license revoked
+    refunded_order = db.query(OrderItem).join(Order).filter(
+        or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id)),
+        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
+        func.lower(Order.status).in_(["refunded", "cancelled", "disputed"])
+    ).first()
+
+    approved_refund = None
+    if owned:
+        from app.models.refund import RefundRequest
+        approved_refund = db.query(RefundRequest).filter(
+            RefundRequest.order_id == owned.order_id,
+            func.upper(RefundRequest.status).in_(["APPROVED", "REFUNDED"])
         ).first()
-        if not any_order:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You must purchase this product to download it."
-            )
+
+    if (refunded_order or approved_refund) and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This digital license has been revoked because this order was refunded."
+        )
+
+    if not owned and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must purchase this product to download it."
+        )
     
     # Get user's download history for this product
     user_downloads = db.query(OrderItem).join(Order).filter(
@@ -623,11 +639,12 @@ def get_download_center(
 def download_product_file(
     product_id: int,
     token: str,
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """
     Public proxy endpoint that verifies the 15-minute token query parameter.
-    If valid, streams the file using FastAPI's StreamingResponse.
+    If valid, logs the download audit evidence and streams the file using FastAPI's StreamingResponse.
     """
     try:
         user_id = verify_download_token(token, product_id)
@@ -652,16 +669,32 @@ def download_product_file(
     is_owner = (str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or ""))
     is_admin = (user.role or "") == "admin"
 
-    if not owned and not is_owner and not is_admin:
-        any_order = db.query(Order).filter(
-            or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
-            func.lower(Order.status).in_(["completed", "paid", "processing", "success"])
+    # Phase 2 & 3: Refund revocation & remove insecure any_order fallback
+    refunded_order = db.query(OrderItem).join(Order).filter(
+        or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
+        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
+        func.lower(Order.status).in_(["refunded", "cancelled", "disputed"])
+    ).first()
+
+    approved_refund = None
+    if owned:
+        from app.models.refund import RefundRequest
+        approved_refund = db.query(RefundRequest).filter(
+            RefundRequest.order_id == owned.order_id,
+            func.upper(RefundRequest.status).in_(["APPROVED", "REFUNDED"])
         ).first()
-        if not any_order:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You must purchase this product to download it."
-            )
+
+    if (refunded_order or approved_refund) and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This digital license has been revoked because this order was refunded."
+        )
+
+    if not owned and not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must purchase this product to download it."
+        )
 
     clean_title = str(product.title or f"Product-{product_id}")
     safe_title_base = re.sub(r'[^\w\s-]', '', clean_title).strip().replace(' ', '_') or f"product-{product_id}"
@@ -739,6 +772,77 @@ Thank you for your purchase on Lumora!
             yield fallback_bytes
 
         stream = iter_fallback_bytes()
+
+    # Phase 1: Atomic Download Event Audit Evidence Recording
+    if owned and owned.order_id:
+        try:
+            from app.utils.ip_utils import get_client_ip, parse_user_agent
+            from app.models.product_download_event import ProductDownloadEvent
+            import logging
+            audit_logger = logging.getLogger(__name__)
+
+            client_ip = get_client_ip(request)
+            ua_header = request.headers.get("user-agent") if (request and hasattr(request, "headers")) else None
+            dev_type, browser_name = parse_user_agent(ua_header)
+
+            os_name = "Windows"
+            if ua_header:
+                ua_lower = ua_header.lower()
+                if "macintosh" in ua_lower or "mac os" in ua_lower: os_name = "macOS"
+                elif "linux" in ua_lower: os_name = "Linux"
+                elif "iphone" in ua_lower or "ipad" in ua_lower: os_name = "iOS"
+                elif "android" in ua_lower: os_name = "Android"
+                elif "windows" in ua_lower: os_name = "Windows"
+                else: os_name = "Desktop OS"
+
+            now_utc = datetime.utcnow()
+
+            # Idempotent 60-second duplicate protection window
+            sixty_sec_ago = now_utc - timedelta(seconds=60)
+            recent_evt = db.query(ProductDownloadEvent).filter(
+                ProductDownloadEvent.user_id == user_id,
+                ProductDownloadEvent.order_id == owned.order_id,
+                ProductDownloadEvent.product_id == product_id,
+                ProductDownloadEvent.downloaded_at >= sixty_sec_ago
+            ).first()
+
+            if not recent_evt:
+                download_evt = ProductDownloadEvent(
+                    user_id=user_id,
+                    order_id=owned.order_id,
+                    product_id=product_id,
+                    downloaded_at=now_utc,
+                    ip_address=client_ip,
+                    user_agent=ua_header,
+                    device_type=dev_type,
+                    browser=browser_name,
+                    os=os_name,
+                    created_at=now_utc
+                )
+                db.add(download_evt)
+
+                # Update OrderItem flags & audit metadata
+                setattr(owned, "downloaded", True)
+                setattr(owned, "downloaded_at", now_utc)
+                setattr(owned, "download_count", (getattr(owned, "download_count", 0) or 0) + 1)
+                setattr(owned, "download_ip", client_ip)
+
+                # Update Order level audit metadata
+                target_order = db.query(Order).filter(Order.id == owned.order_id).first()
+                if target_order:
+                    setattr(target_order, "download_count", (getattr(target_order, "download_count", 0) or 0) + 1)
+                    setattr(target_order, "download_ip", client_ip)
+                    setattr(target_order, "download_device", dev_type)
+                    setattr(target_order, "download_browser", browser_name)
+                    if not getattr(target_order, "first_downloaded_at", None):
+                        setattr(target_order, "first_downloaded_at", now_utc)
+                    setattr(target_order, "last_downloaded_at", now_utc)
+
+                db.commit()
+                audit_logger.info("[DOWNLOAD_AUDIT] Download event recorded: Order #%s, Product #%s, IP=%s", owned.order_id, product_id, client_ip)
+        except Exception as audit_err:
+            db.rollback()
+            print(f"[DOWNLOAD_AUDIT] Non-fatal exception recording download event: {audit_err}")
 
     return StreamingResponse(
         stream,

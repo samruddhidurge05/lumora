@@ -294,6 +294,19 @@ def _run_schema_migrations() -> None:
             "ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS paid_at          TIMESTAMP",
             # product_download_events table creation for PostgreSQL
             "CREATE TABLE IF NOT EXISTS product_download_events (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), downloaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ip_address VARCHAR(64), user_agent VARCHAR(512), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            "ALTER TABLE product_download_events ADD COLUMN IF NOT EXISTS device_type VARCHAR(50)",
+            "ALTER TABLE product_download_events ADD COLUMN IF NOT EXISTS browser VARCHAR(100)",
+            "ALTER TABLE product_download_events ADD COLUMN IF NOT EXISTS os VARCHAR(100)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS first_downloaded_at TIMESTAMP",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS last_downloaded_at TIMESTAMP",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS download_ip VARCHAR(64)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS download_device VARCHAR(50)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS download_browser VARCHAR(100)",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS downloaded BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS downloaded_at TIMESTAMP",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS download_ip VARCHAR(64)",
             # affiliate_referrals table creation for PostgreSQL
             "CREATE TABLE IF NOT EXISTS affiliate_referrals (id SERIAL PRIMARY KEY, affiliate_id INTEGER NOT NULL REFERENCES affiliate_profiles(id), referral_code VARCHAR(50) NOT NULL, product_id INTEGER NOT NULL REFERENCES products(id), customer_id INTEGER REFERENCES users(id), session_id VARCHAR(100) NOT NULL UNIQUE, order_id INTEGER REFERENCES orders(id), status VARCHAR(30) NOT NULL DEFAULT 'CLICKED', ip_address VARCHAR(45), user_agent TEXT, clicked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, authenticated_at TIMESTAMP, converted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
             # platform_withdrawals table — Platform Treasury Phase 1

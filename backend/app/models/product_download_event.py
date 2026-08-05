@@ -13,6 +13,9 @@ class ProductDownloadEvent(Base):
     downloaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     ip_address    = Column(String(64), nullable=True)
     user_agent    = Column(String(512), nullable=True)
+    device_type   = Column(String(50), nullable=True)
+    browser       = Column(String(100), nullable=True)
+    os            = Column(String(100), nullable=True)
     created_at    = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships

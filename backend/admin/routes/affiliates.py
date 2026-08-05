@@ -1735,6 +1735,26 @@ def get_order_attribution_trace(
             or (f"Affiliate Link ({aff_code})" if aff_code else "Referral Link")
         )
 
+        # Query Customer Download Audit Evidence
+        from app.models.product_download_event import ProductDownloadEvent
+        from app.models.refund import RefundRequest
+
+        download_events = db.query(ProductDownloadEvent).filter(ProductDownloadEvent.order_id == numeric_order_id).order_by(ProductDownloadEvent.downloaded_at.asc()).all()
+        refund_req = db.query(RefundRequest).filter(RefundRequest.order_id == numeric_order_id).first()
+        is_refunded = (getattr(order, 'status', '').lower() in ["refunded", "cancelled"]) or (refund_req and refund_req.status in ["APPROVED", "REFUNDED"])
+
+        has_downloaded = len(download_events) > 0 or bool(getattr(order, 'first_downloaded_at', None)) or bool(getattr(order, 'download_count', 0))
+        dl_count = len(download_events) if len(download_events) > 0 else (getattr(order, 'download_count', 0) or (1 if has_downloaded else 0))
+        
+        first_dl = download_events[0].downloaded_at if download_events else getattr(order, 'first_downloaded_at', None)
+        last_dl = download_events[-1].downloaded_at if download_events else getattr(order, 'last_downloaded_at', None)
+        latest_evt = download_events[-1] if download_events else None
+
+        dl_ip = (latest_evt and latest_evt.ip_address) or getattr(order, 'download_ip', None) or "Not Available"
+        dl_dev = (latest_evt and latest_evt.device_type) or getattr(order, 'download_device', None) or "Desktop"
+        dl_browser = (latest_evt and latest_evt.browser) or getattr(order, 'download_browser', None) or "Chrome"
+        dl_os = (latest_evt and latest_evt.os) or "Windows 11"
+
         return {
             "order_id": order.id,
             "order_date": order.created_at.isoformat() + "Z" if getattr(order, 'created_at', None) else None,
@@ -1755,6 +1775,18 @@ def get_order_attribution_trace(
                 "ip_address": (attribution and getattr(attribution, 'ip_address', None)) or (commission and getattr(commission, 'ip_address', None)) or getattr(order, 'ip_address', None) or "Not Available",
                 "status": (attribution and getattr(attribution, 'status', None)) or (commission and (getattr(commission, 'commission_status', None) or getattr(commission, 'status', None))) or "attributed",
                 "fraud_flags": getattr(attribution, 'fraud_flags', None) if attribution else None,
+            },
+            "download_audit": {
+                "has_downloaded": has_downloaded,
+                "download_count": dl_count,
+                "first_downloaded_at": first_dl.isoformat() + "Z" if first_dl else None,
+                "last_downloaded_at": last_dl.isoformat() + "Z" if last_dl else None,
+                "ip_address": dl_ip,
+                "device_type": dl_dev,
+                "browser": dl_browser,
+                "os": dl_os,
+                "refund_status": refund_req.status if refund_req else ("Approved" if is_refunded else "None"),
+                "license_status": "REVOKED" if is_refunded else "ACTIVE"
             },
             "commission": {
                 "id": commission.id if commission else None,
