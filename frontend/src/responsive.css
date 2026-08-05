@@ -327,11 +327,18 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 20px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   /* ── Product grids: 2-column vertical layout (Amazon/Flipkart style) ── */
   .home-product-grid,
   .lumora-home-products-grid,
-  .lumora-products-grid {
+  .lumora-products-grid,
+  .product-auto-grid,
+  .dash-product-grid,
+  .wishlist-grid,
+  .downloads-grid,
+  .purchases-card-grid,
+  .product-related-grid,
+  .search-results-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     flex-direction: unset !important;
@@ -342,7 +349,6 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
     scroll-snap-type: none !important;
     -webkit-overflow-scrolling: auto !important;
     gap: 10px !important;
-    /* Reset any margin bleed from the old carousel approach */
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -356,19 +362,183 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   /* Each card fills its column — never fixed width */
   .home-product-grid > *,
   .lumora-home-products-grid > *,
-  .lumora-products-grid > * {
+  .lumora-products-grid > *,
+  .product-auto-grid > *,
+  .dash-product-grid > *,
+  .wishlist-grid > *,
+  .downloads-grid > *,
+  .purchases-card-grid > *,
+  .product-related-grid > *,
+  .search-results-grid > * {
     flex: unset !important;
     max-width: 100% !important;
     min-width: 0 !important;
     width: 100% !important;
+    height: 100% !important;
     scroll-snap-align: unset !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Equal height card styling */
+  .dash-product-grid .glass-card,
+  .home-product-grid .glass-card,
+  .lumora-products-grid .glass-card,
+  .product-auto-grid .glass-card,
+  .wishlist-grid .glass-card,
+  .product-related-grid .glass-card,
+  .search-results-grid .glass-card {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
 
   /* Card image: consistent height across all cards in a row */
-  .pcard-img {
-    height: 140px !important;
-    min-height: 140px !important;
-    max-height: 140px !important;
+  .pcard-img,
+  .lumora-product-card-img,
+  .dash-product-grid .glass-card > div:first-child,
+  .lumora-products-grid .glass-card > div:first-child,
+  .product-auto-grid .glass-card > div:first-child,
+  .wishlist-grid .glass-card > div:first-child,
+  .related-card-img {
+    height: 130px !important;
+    min-height: 130px !important;
+    max-height: 130px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+    border-top-left-radius: 14px !important;
+    border-top-right-radius: 14px !important;
+  }
+
+  .pcard-img img,
+  .lumora-product-card-img img,
+  .dash-product-grid img,
+  .lumora-products-grid img,
+  .product-auto-grid img,
+  .wishlist-grid img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  /* Card Body */
+  .dash-product-grid .glass-card > div:nth-child(2),
+  .lumora-products-grid .glass-card > div:nth-child(2),
+  .product-auto-grid .glass-card > div:nth-child(2),
+  .wishlist-grid .glass-card > div:nth-child(2),
+  .pcard-body {
+    padding: 10px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Category badge */
+  .dash-product-grid span[style*="uppercase"],
+  .lumora-products-grid span[style*="uppercase"],
+  .pcard-category-badge {
+    font-size: 0.52rem !important;
+    padding: 2px 5px !important;
+    letter-spacing: 0.04em !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: inline-block !important;
+  }
+
+  /* Title: max 2 lines with ellipsis */
+  .dash-product-grid h3,
+  .dash-product-grid h4,
+  .home-product-grid h3,
+  .lumora-products-grid h3,
+  .lumora-products-grid h4,
+  .wishlist-grid h3,
+  .wishlist-grid h4,
+  .pcard-title {
+    font-size: 0.78rem !important;
+    line-height: 1.25 !important;
+    font-weight: 700 !important;
+    margin: 2px 0 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    max-height: 2.5em !important;
+  }
+
+  /* Description: max 2 lines with ellipsis */
+  .dash-product-grid p,
+  .lumora-products-grid p,
+  .wishlist-grid p,
+  .pcard-desc {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    max-height: 2.6em !important;
+  }
+
+  /* Card footer & actions row */
+  .dash-product-grid div[style*="marginTop: 'auto'"],
+  .lumora-products-grid div[style*="marginTop: 'auto'"],
+  .pcard-footer,
+  .pcard-actions-row {
+    margin-top: auto !important;
+    padding-top: 6px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Price text */
+  .dash-product-grid span[style*="fontWeight: 800"],
+  .lumora-products-grid span[style*="fontWeight: 800"],
+  .pcard-price {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    flex-shrink: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Buttons adaptation */
+  .dash-product-grid button,
+  .lumora-products-grid button,
+  .pcard-cart-btn,
+  .pcard-add-btn,
+  .pcard-buy-btn {
+    padding: 5px 7px !important;
+    font-size: 0.62rem !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    min-height: 26px !important;
   }
 
   /* Section padding reduced on mobile */
@@ -376,19 +546,33 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
 }
 
 @media (max-width: 360px) {
-  /* Keep 2-col even on very small screens (320px) — each card ~150px */
   .home-product-grid,
   .lumora-home-products-grid,
-  .lumora-products-grid {
+  .lumora-products-grid,
+  .product-auto-grid,
+  .dash-product-grid,
+  .wishlist-grid,
+  .downloads-grid,
+  .purchases-card-grid,
+  .product-related-grid,
+  .search-results-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
-  .home-product-grid > *,
-  .lumora-home-products-grid > *,
-  .lumora-products-grid > * {
-    max-width: 100% !important;
+  .pcard-img,
+  .lumora-product-card-img {
+    height: 115px !important;
+    min-height: 115px !important;
+    max-height: 115px !important;
   }
-  .pcard-img { height: 120px !important; max-height: 120px !important; }
+  .pcard-price {
+    font-size: 0.80rem !important;
+  }
+  .dash-product-grid button,
+  .lumora-products-grid button {
+    padding: 4px 6px !important;
+    font-size: 0.58rem !important;
+  }
 }
 
 
@@ -443,39 +627,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 18px;
 }
 
-/* ── Horizontal scroll carousel on mobile ── */
-@media (max-width: 640px) {
-  .dash-product-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  .dash-product-grid::-webkit-scrollbar { display: none; }
-  .dash-product-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
-    min-width: 0 !important;
-    scroll-snap-align: start !important;
-  }
-}
-@media (max-width: 360px) {
-  .dash-product-grid > * {
-    flex: 0 0 82vw !important;
-    max-width: 82vw !important;
-  }
-}
+/* ── Dash product grid uses global 2-column mobile grid rules ── */
 
 @media (max-width: 768px) {
   .dash-welcome-card  { padding: 24px 20px !important; flex-direction: column-reverse !important; gap: 16px !important; }
@@ -667,44 +819,6 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   gap: 20px;
 }
 
-/* ── Horizontal scroll carousel on mobile ── */
-@media (max-width: 640px) {
-  .product-auto-grid,
-  .lumora-products-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  .product-auto-grid::-webkit-scrollbar,
-  .lumora-products-grid::-webkit-scrollbar { display: none; }
-  .product-auto-grid > *,
-  .lumora-products-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
-    min-width: 0 !important;
-    scroll-snap-align: start !important;
-  }
-}
-@media (max-width: 360px) {
-  .product-auto-grid > *,
-  .lumora-products-grid > * {
-    flex: 0 0 82vw !important;
-    max-width: 82vw !important;
-  }
-}
-
 /* Product cards: smaller image on mobile — 2-col readable */
 @media (max-width: 640px) {
   .lumora-product-card-img { height: 130px !important; }
@@ -883,34 +997,7 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   .product-detail-inner { padding: 0 !important; }
 }
 
-/* Related products on mobile — horizontal scroll carousel */
-@media (max-width: 640px) {
-  .product-related-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  .product-related-grid::-webkit-scrollbar { display: none; }
-  .product-related-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
-    min-width: 0 !important;
-    scroll-snap-align: start !important;
-  }
-  .product-related-grid .related-card-img { height: 160px !important; }
-}
+/* Related products uses global 2-column mobile grid rules */
 
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1017,35 +1104,6 @@ button, [role="button"], a, select, input[type="submit"], input[type="button"], 
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
   gap: 16px;
-}
-@media (max-width: 640px) {
-  .wishlist-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 12px !important;
-    margin-left: calc(-1 * var(--mob-pad)) !important;
-    margin-right: calc(-1 * var(--mob-pad)) !important;
-    padding-left: var(--mob-pad) !important;
-    padding-right: var(--mob-pad) !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  .wishlist-grid::-webkit-scrollbar { display: none; }
-  .wishlist-grid > * {
-    flex: 0 0 72vw !important;
-    max-width: 72vw !important;
-    min-width: 0 !important;
-    scroll-snap-align: start !important;
-  }
-}
-@media (max-width: 360px) {
-  .wishlist-grid > * { flex: 0 0 80vw !important; max-width: 80vw !important; }
 }
 
 /* Notifications on mobile */

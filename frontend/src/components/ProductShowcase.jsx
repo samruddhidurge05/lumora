@@ -64,6 +64,7 @@ export default function ProductShowcase() {
 
         {/* Product Cards Grid */}
         <div 
+          className="lumora-products-grid home-product-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',

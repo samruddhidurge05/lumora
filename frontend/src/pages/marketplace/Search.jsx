@@ -382,7 +382,7 @@ export default function Search() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="search-results-grid lumora-products-grid" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {paginatedResults.map(p => {
                   const isWished = wishlist.some(w => w.id === p.id);
                   return (
