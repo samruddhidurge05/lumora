@@ -40,6 +40,7 @@ export const subscribeToPaymentsTelemetry = (callback) => {
   let ordersList = [];
   let vendorsList = [];
   let telemetryOrders = [];
+  let paymentsList = [];
 
   const handleUpdate = () => {
     if (telemetryOrders && telemetryOrders.length > 0) {

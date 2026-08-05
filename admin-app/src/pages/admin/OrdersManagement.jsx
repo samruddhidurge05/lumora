@@ -442,8 +442,8 @@ export default function OrdersManagement() {
       );
       console.log('[OrdersManagement] ✅ Loaded orders successfully:', data);
       
-      // Handle both paginated shape {total, items} and legacy bare array
-      const items = Array.isArray(data) ? data : (data.items || []);
+      // Handle paginated shapes {orders: [...]}, {items: [...]}, and legacy bare array
+      const items = Array.isArray(data) ? data : (data.items || data.orders || []);
       setOrders(items);
       setOrderTotal(Array.isArray(data) ? items.length : (data.total || items.length));
       setOrderTotalPages(Array.isArray(data) ? 1 : Math.max(1, Math.ceil((data.total || items.length) / ORDER_PAGE_SIZE)));
