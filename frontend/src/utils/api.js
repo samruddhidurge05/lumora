@@ -83,6 +83,10 @@ export const getRoleToken = (targetRole) => {
   const roleToken = localStorage.getItem(`lumora_token_${normRole}`);
   if (roleToken) return roleToken;
 
+  if (normRole === 'admin') {
+    return localStorage.getItem('lumora_backend_token') || localStorage.getItem('lumora_token_admin');
+  }
+
   try {
     const tabRole = sessionStorage.getItem('lumora_tab_role');
     if (tabRole && tabRole !== normRole) {
@@ -91,7 +95,7 @@ export const getRoleToken = (targetRole) => {
     }
   } catch (_) {}
 
-  return localStorage.getItem(`lumora_token_customer`) || localStorage.getItem('lumora_backend_token');
+  return localStorage.getItem(`lumora_token_${normRole}`) || localStorage.getItem(`lumora_token_customer`) || localStorage.getItem('lumora_backend_token');
 };
 
 export const backendFetch = async (endpoint, options = {}, _isRetry = false) => {

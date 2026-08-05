@@ -117,6 +117,58 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 "affiliateCommission": affiliate_commission,
                 "netPlatformRevenue": net_platform_revenue,
             })
+        if total == 0 and firebase_connected and db is not None:
+            try:
+                fs_docs = list(db.collection("orders").stream())
+                fs_items = []
+                for doc in fs_docs:
+                    d = doc.to_dict() or {}
+                    p_val = 0.0
+                    for k in ("totalAmount", "total_amount", "total", "price", "totalUSD", "customerPaid"):
+                        v = d.get(k)
+                        if v is not None and str(v).strip() != "":
+                            try:
+                                f_val = float(v)
+                                if f_val > 0:
+                                    p_val = f_val
+                                    break
+                                elif p_val == 0.0:
+                                    p_val = f_val
+                            except (ValueError, TypeError):
+                                pass
+
+                    st_val = d.get("status", "Completed")
+                    pay_st = d.get("paymentStatus")
+                    if not pay_st:
+                        is_p = str(st_val).lower() in ("completed", "paid", "processing", "success", "placed")
+                        pay_st = "Paid" if is_p else "Pending"
+
+                    fs_items.append({
+                        "id": doc.id,
+                        "orderId": d.get("orderId", doc.id),
+                        "customerName": d.get("customerName", "Anonymous"),
+                        "customerEmail": d.get("customerEmail", ""),
+                        "price": p_val,
+                        "totalUSD": p_val,
+                        "total": p_val,
+                        "status": st_val,
+                        "paymentStatus": pay_st,
+                        "downloadGranted": pay_st == "Paid",
+                        "createdAt": d.get("createdAt") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                        "paymentMethod": d.get("method", d.get("paymentMethod", "upi")),
+                        "customerPaid": p_val,
+                        "affiliateCommission": 0.0,
+                        "netPlatformRevenue": p_val,
+                    })
+                if status:
+                    fs_items = [i for i in fs_items if str(i.get("status", "")).lower() == status.lower()]
+                fs_total = len(fs_items)
+                start_idx = (page - 1) * page_size
+                paged_items = fs_items[start_idx : start_idx + page_size]
+                return {"total": fs_total, "page": page, "page_size": page_size, "items": paged_items}
+            except Exception as fs_err:
+                print(f"[get_orders_list] Firestore fallback error: {fs_err}")
+
         return {"total": total, "page": page, "page_size": page_size, "items": result}
     finally:
         db_s.close()
