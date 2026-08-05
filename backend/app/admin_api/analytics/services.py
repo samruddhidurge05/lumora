@@ -6,6 +6,8 @@ from app.models.order import Order as OrderModel
 from app.models.product import Product as ProductModel
 from app.models.user import User as UserModel
 from app.models.review import Review as ReviewModel
+from app.services.customer_identity_service import resolve_customer_identity
+
 
 
 def compute_growth(current_period_orders, previous_period_orders):
@@ -456,11 +458,6 @@ def get_analytics_dashboard_data(date_range: str = "all") -> dict:
 
 def get_full_dashboard_data() -> dict:
     global _firestore_broken
-    orders: list = []
-    products: list = []
-    vendors: list = []
-    reviews: list = []
-    reports: list = []
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
         try:
@@ -470,21 +467,22 @@ def get_full_dashboard_data() -> dict:
             
             orders = []
             for o in sql_orders:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
-                cust_name = customer.name if customer else "Customer"
-                cust_email = customer.email if customer else ""
-                
+                cust_name, cust_email = resolve_customer_identity(db_s, user_id=o.user_id, order_id=o.id)
                 p_name = "Product"
                 if o.items:
                     prod = db_s.query(ProductModel.id, ProductModel.title).filter(ProductModel.id == o.items[0].product_id).first()
                     p_name = getattr(prod, "title", "Product") if prod else "Product"
 
+                p_amt = float(getattr(o, "total_amount", 0.0) or 0.0)
+                st_lower = (getattr(o, "status", "") or "").lower()
+                is_paid_status = "Paid" if st_lower in ("completed", "paid", "placed", "success") else "Pending"
+
                 orders.append({
                     "id": str(o.id),
-                    "price": float(getattr(o, 'total_amount', None) or 0.0),
-                    "total": float(getattr(o, 'total_amount', None) or 0.0),
-                    "status": getattr(o, 'status', None) or "completed",
-                    "paymentStatus": "Paid" if (getattr(o, 'status', None) or "").lower() == "completed" else "Pending",
+                    "price": p_amt,
+                    "total": p_amt,
+                    "status": o.status or "completed",
+                    "paymentStatus": is_paid_status,
                     "customerName": cust_name,
                     "customerEmail": cust_email,
                     "createdAt": o.created_at.isoformat() + "Z" if o.created_at else "",
@@ -522,7 +520,6 @@ def get_full_dashboard_data() -> dict:
             total_orders = len(orders)
             refund_rate  = round(refunded / total_orders * 100, 2) if total_orders > 0 else 0.0
 
-            # Compute real KPI metrics for SQL branch of get_full_dashboard_data
             try:
                 now_sql = datetime.now(timezone.utc).replace(tzinfo=None)
                 cutoff_30d = now_sql - timedelta(days=30)
@@ -552,12 +549,6 @@ def get_full_dashboard_data() -> dict:
                 "ordersChange":        sql_orders_change,
                 "activeProductsChange":0,
                 "modalData": {
-                    # All sparkline arrays contain only real computed values.
-                    # Previously some arrays contained fabricated historical points
-                    # (e.g. [2.5, 2.7, 2.9, 3.0, 3.1, 3.2, ...] for conversionRate,
-                    #  [10, 12, 14, 15, 16, 17, ...] for growthVelocity).
-                    # These have been replaced with real current values only.
-                    # Historical sparklines require a separate time-series endpoint.
                     "totalRevenue":   [round(total_revenue, 2)],
                     "ordersToday":    [orders_today],
                     "conversionRate": [sql_conversion_rate],
@@ -590,7 +581,7 @@ def get_full_dashboard_data() -> dict:
                     "text":     f"{user} purchased {item}",
                     "category": "purchase",
                     "time":     time_label,
-                    "value":    f"+?{round(amt)}",
+                    "value":    f"+₹{round(amt)}",
                 })
 
             prod_sales = {}
@@ -635,15 +626,9 @@ def get_full_dashboard_data() -> dict:
                 geo[region] = geo.get(region, 0) + 1
             geo_distribution = [{"region": r, "sales": c} for r, c in geo.items()]
 
-            # Build revenueChart from real daily order data.
-            # Source: orders table, WHERE paymentStatus='Paid' OR status='Completed'.
-            # The 'net' field previously contained price*0.95 (a phantom 5% platform fee
-            # that does not exist in Lumora's business model). It has been removed.
-            # Only 'gross' (actual order amount) is stored. Revenue is gross and immutable.
             daily_rev: dict = {}
             weekly_rev: dict = {}
             monthly_rev: dict = {}
-            now_chart = datetime.now(timezone.utc).replace(tzinfo=None)
             for o in orders:
                 price      = float(o.get("price", o.get("total", 0)))
                 pay_status = o.get("paymentStatus", "")
@@ -654,17 +639,14 @@ def get_full_dashboard_data() -> dict:
                     dt = datetime.fromisoformat(o.get("createdAt", "").replace("Z", "+00:00")).replace(tzinfo=None)
                 except Exception:
                     continue
-                # Daily (last 30 days) — keyed by calendar date label
                 day_key = dt.strftime("%b %d")
                 if day_key not in daily_rev:
                     daily_rev[day_key] = {"gross": 0.0, "label": day_key}
                 daily_rev[day_key]["gross"] += price
-                # Weekly (last 12 weeks) — keyed by ISO week number
                 week_key = f"Wk {dt.isocalendar()[1]}"
                 if week_key not in weekly_rev:
                     weekly_rev[week_key] = {"gross": 0.0, "label": week_key}
                 weekly_rev[week_key]["gross"] += price
-                # Monthly (last 12 months) — keyed by month/year to avoid cross-year collision
                 mon_key = dt.strftime("%b %Y")
                 if mon_key not in monthly_rev:
                     monthly_rev[mon_key] = {"gross": 0.0, "label": dt.strftime("%b")}
@@ -679,7 +661,6 @@ def get_full_dashboard_data() -> dict:
                 "monthly": _sort_chart(monthly_rev)[-12:],
             }
 
-            # Health score from real metrics (0-100)
             health_deductions = 0
             if refund_rate > 5:
                 health_deductions += 20
@@ -713,6 +694,7 @@ def get_full_dashboard_data() -> dict:
             }
         finally:
             db_s.close()
+
 
     try:
         orders_docs  = list(db.collection("orders").stream())

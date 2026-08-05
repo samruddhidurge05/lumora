@@ -67,61 +67,63 @@ def _map_vendor(doc) -> Dict[str, Any]:
 _firestore_broken = False
 
 def get_payments_telemetry() -> Dict[str, Any]:
-    global _firestore_broken
-    if not firebase_connected or db is None or _firestore_broken:
-        db_s = SessionLocal()
-        try:
-            sql_orders = db_s.query(OrderModel).all()
-            sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
-            
-            orders = []
-            for o in sql_orders:
-                cust_name, cust_email = resolve_customer_identity(db_s, user_id=o.user_id, order_id=o.id)
-                
-                v_id = ""
-                p_name = "Product"
-                if o.items:
-                    prod = db_s.query(ProductModel).filter(ProductModel.id == o.items[0].product_id).first()
-                    if prod:
-                        p_name = prod.title
-                        v_id = str(prod.vendor_id) if prod.vendor_id else ""
-
-                orders.append({
-                    "id":            str(o.id),
-                    "orderId":       f"ORD-{o.id}",
-                    "customerName":  cust_name,
-                    "customerEmail": cust_email,
-                    "price":         float(getattr(o, "total_amount", 0.0) or 0.0),
-                    "status":        o.status or "Completed",
-                    "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
-                    "createdAt":     (o.created_at.isoformat().replace("+00:00", "Z") if "Z" in o.created_at.isoformat() else o.created_at.isoformat() + "Z") if o.created_at else "",
-                    "vendorId":      v_id,
-                    "productName":   p_name,
-                    "method":        o.payment_method or "upi",
-                    "region":        "India",
-                })
-                
-            vendors = []
-            for v in sql_vendors:
-                vendors.append({
-                    "id":            str(v.id),
-                    "name":          v.name or "Vendor",
-                    "email":         v.email,
-                    "status":        "Approved" if v.is_verified else "Pending",
-                    "totalEarnings": 0.0,
-                })
-            return {"orders": orders, "vendors": vendors}
-        finally:
-            db_s.close()
-
+    db_s = SessionLocal()
     try:
-        orders  = [_map_order(d)  for d in db.collection("orders").stream()]
-        vendors = [_map_vendor(d) for d in db.collection("vendors").stream()]
-        return {"orders": orders, "vendors": vendors}
-    except Exception as e:
-        print(f"[payments] Firestore error: {e}. Falling back to SQLite.")
-        _firestore_broken = True
-        return get_payments_telemetry()
+        sql_orders = db_s.query(OrderModel).all()
+        sql_vendors = db_s.query(UserModel).filter(UserModel.role.in_(["vendor", "Vendor"])).all()
+        
+        orders = []
+        for o in sql_orders:
+            cust_name, cust_email = resolve_customer_identity(db_s, user_id=o.user_id, order_id=o.id)
+            
+            v_id = ""
+            p_name = "Product"
+            if o.items:
+                prod = db_s.query(ProductModel).filter(ProductModel.id == o.items[0].product_id).first()
+                if prod:
+                    p_name = prod.title
+                    v_id = str(prod.vendor_id) if prod.vendor_id else ""
+
+            orders.append({
+                "id":            str(o.id),
+                "orderId":       f"ORD-{o.id}",
+                "customerName":  cust_name,
+                "customerEmail": cust_email,
+                "price":         float(getattr(o, "total_amount", 0.0) or 0.0),
+                "status":        o.status or "Completed",
+                "paymentStatus": "Paid" if (o.status or "").lower() in ("completed", "paid", "placed", "success") else "Pending",
+                "createdAt":     (o.created_at.isoformat().replace("+00:00", "Z") if "Z" in o.created_at.isoformat() else o.created_at.isoformat() + "Z") if o.created_at else "",
+                "vendorId":      v_id,
+                "productName":   p_name,
+                "method":        o.payment_method or "upi",
+                "region":        "India",
+            })
+            
+        vendors = []
+        for v in sql_vendors:
+            vendors.append({
+                "id":            str(v.id),
+                "name":          v.name or "Vendor",
+                "email":         v.email,
+                "status":        "Approved" if v.is_verified else "Pending",
+                "totalEarnings": 0.0,
+            })
+            
+        if len(orders) > 0:
+            return {"orders": orders, "vendors": vendors}
+    finally:
+        db_s.close()
+
+    if firebase_connected and db is not None:
+        try:
+            fs_orders  = [_map_order(d)  for d in db.collection("orders").stream()]
+            fs_vendors = [_map_vendor(d) for d in db.collection("vendors").stream()]
+            if len(fs_orders) > 0:
+                return {"orders": fs_orders, "vendors": fs_vendors}
+        except Exception as e:
+            print(f"[payments] Firestore error: {e}")
+
+    return {"orders": [], "vendors": []}
 
 def get_payments_overview() -> Dict[str, Any]:
     telemetry = get_payments_telemetry()
