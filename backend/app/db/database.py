@@ -12,6 +12,15 @@ if db_url.startswith("postgresql://") and "sslmode" not in db_url:
     delimiter = "&" if "?" in db_url else "?"
     db_url = f"{db_url}{delimiter}sslmode=require"
 
+if db_url.startswith("sqlite"):
+    from pathlib import Path
+    if "./lumora.db" in db_url or "lumora.db" in db_url:
+        # Find root directory (where lumora.db lives)
+        root_dir = Path(__file__).resolve().parent.parent.parent
+        canonical_db = root_dir / "lumora.db"
+        if canonical_db.exists():
+            db_url = f"sqlite:///{canonical_db.as_posix()}"
+
 connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 engine_kwargs: dict[str, Any] = {"echo": False, "connect_args": connect_args}
 if db_url.startswith("postgresql"):
