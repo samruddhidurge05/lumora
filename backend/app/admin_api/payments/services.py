@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any, List
 from app.shared.firebase.connection import db, firebase_connected
 from datetime import datetime, timezone
 from fastapi import HTTPException
@@ -6,24 +7,25 @@ from app.models.order import Order as OrderModel
 from app.models.user import User as UserModel
 from app.models.product import Product as ProductModel
 
-def _map_order(doc):
+def _map_order(doc) -> Dict[str, Any]:
     d = doc.to_dict()
+    price_val = d.get("price", d.get("total", d.get("totalAmount", d.get("total_amount", d.get("totalUSD", d.get("customerPaid", 0))))))
     return {
         "id":            doc.id,
         "orderId":       d.get("orderId", doc.id),
         "customerName":  d.get("customerName", "Anonymous"),
         "customerEmail": d.get("customerEmail", ""),
-        "price":         float(d.get("price", d.get("total", 0))),
+        "price":         float(price_val or 0.0),
         "status":        d.get("status", "Completed"),
         "paymentStatus": d.get("paymentStatus", "Paid"),
-        "createdAt":     d.get("createdAt") or datetime.utcnow().isoformat() + "Z",
+        "createdAt":     d.get("createdAt") or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "vendorId":      d.get("vendorId", d.get("vendor_id", "")),
         "productName":   d.get("productName", "Product"),
         "method":        d.get("method", ""),
         "region":        d.get("region", ""),
     }
 
-def _map_vendor(doc):
+def _map_vendor(doc) -> Dict[str, Any]:
     d = doc.to_dict()
     return {
         "id":            doc.id,
@@ -35,7 +37,7 @@ def _map_vendor(doc):
 
 _firestore_broken = False
 
-def get_payments_telemetry():
+def get_payments_telemetry() -> Dict[str, Any]:
     global _firestore_broken
     if not firebase_connected or db is None or _firestore_broken:
         db_s = SessionLocal()
@@ -62,10 +64,10 @@ def get_payments_telemetry():
                     "orderId":       f"ORD-{o.id}",
                     "customerName":  cust_name,
                     "customerEmail": cust_email,
-                    "price":         float(o.total_amount or 0.0),
+                    "price":         float(getattr(o, "total_amount", 0.0) or 0.0),
                     "status":        o.status or "Completed",
                     "paymentStatus": "Paid" if (o.status or "").lower() == "completed" else "Pending",
-                    "createdAt":     o.created_at.isoformat() + "Z" if o.created_at else "",
+                    "createdAt":     (o.created_at.isoformat().replace("+00:00", "Z") if "Z" in o.created_at.isoformat() else o.created_at.isoformat() + "Z") if o.created_at else "",
                     "vendorId":      v_id,
                     "productName":   p_name,
                     "method":        o.payment_method or "upi",
@@ -94,7 +96,7 @@ def get_payments_telemetry():
         _firestore_broken = True
         return get_payments_telemetry()
 
-def get_payments_overview():
+def get_payments_overview() -> Dict[str, Any]:
     telemetry = get_payments_telemetry()
     orders    = telemetry["orders"]
 
@@ -124,7 +126,7 @@ def get_payments_overview():
         "totalTransactions":  len(orders),
     }
 
-def get_vendor_payouts():
+def get_vendor_payouts() -> List[Dict[str, Any]]:
     """
     Returns vendor gross sales data from actual order records.
     Commission percentages and payout splits are NOT calculated here because
@@ -157,12 +159,12 @@ def get_vendor_payouts():
             "commission":     None,
             "paidPayout":     None,
             "pendingPayout":  round(pending_amount, 2),
-            "lastPayoutDate": datetime.utcnow().strftime("%Y-%m-%d"),
+            "lastPayoutDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         })
 
     return payouts
 
-def get_refund_monitor_list():
+def get_refund_monitor_list() -> List[Dict[str, Any]]:
     telemetry = get_payments_telemetry()
     orders    = telemetry["orders"]
 
@@ -189,7 +191,7 @@ def get_refund_monitor_list():
 
     return refunds
 
-def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None):
+def get_transactions_list(page: int = 1, page_size: int = 50, status: Optional[str] = None) -> Dict[str, Any]:
     page = max(1, page)
     page_size = max(1, min(200, page_size))
     telemetry = get_payments_telemetry()
@@ -201,7 +203,7 @@ def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None
             "amount":  o["price"],
             "method":  o["method"],
             "status":  "Success" if o["paymentStatus"] == "Paid" else "Failed",
-            "date":    o["createdAt"][:10] if o["createdAt"] else datetime.utcnow().strftime("%Y-%m-%d"),
+            "date":    o["createdAt"][:10] if o["createdAt"] else datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         }
         for o in telemetry["orders"]
     ]
@@ -211,7 +213,7 @@ def get_transactions_list(page: int = 1, page_size: int = 50, status: str = None
     items = all_txns[(page - 1) * page_size: page * page_size]
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 
-def process_vendor_payout(vendor_id: str, amount: float):
+def process_vendor_payout(vendor_id: str, amount: float) -> Dict[str, Any]:
     db_s = SessionLocal()
     payee_role = "vendor"
     try:
@@ -268,7 +270,7 @@ def process_vendor_payout(vendor_id: str, amount: float):
                         try:
                             db.collection("affiliateConversions").document(f"COMM-{comm.id}").update({
                                 "status": "paid",
-                                "updatedAt": datetime.utcnow().isoformat() + "Z"
+                                "updatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                             })
                         except Exception:
                             pass
@@ -326,7 +328,7 @@ def process_vendor_payout(vendor_id: str, amount: float):
             "affiliateId": vendor_id,
             "amount":      amount,
             "status":      "Completed",
-            "createdAt":   datetime.utcnow().isoformat() + "Z",
+            "createdAt":   datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "type":        "affiliate_payout",
         })
     else:
@@ -334,14 +336,14 @@ def process_vendor_payout(vendor_id: str, amount: float):
             "vendorId":  vendor_id,
             "amount":    amount,
             "status":    "Completed",
-            "createdAt": datetime.utcnow().isoformat() + "Z",
+            "createdAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "type":      "vendor_payout",
         })
         vendor_ref = db.collection("vendors").document(vendor_id)
         if vendor_ref.get().exists:
             vendor_ref.update({
                 "lastPayoutAmount": amount,
-                "lastPayoutDate":   datetime.utcnow().isoformat() + "Z",
+                "lastPayoutDate":   datetime.now(timezone.utc).isoformat(),
             })
             
     return {"success": True, "vendorId": vendor_id, "amount": amount, "role": payee_role}

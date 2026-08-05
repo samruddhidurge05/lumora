@@ -157,8 +157,8 @@ const getProductType = (o) => {
   return o.productSnapshot?.category || 'Asset';
 };
 
-// Helper: get effective price for display (supports both new `total` and old `price` fields)
-const getOrderPrice = (o) => o?.total ?? o?.price ?? 0;
+// Helper: get effective price for display (supports totalAmount, total_amount, customerPaid, totalUSD, total, price)
+const getOrderPrice = (o) => Number(o?.totalAmount ?? o?.total_amount ?? o?.customerPaid ?? o?.totalUSD ?? o?.total ?? o?.price ?? 0);
 
 // Helper: riskScore — Firestore orders default to 0
 const getRiskScore = (o) => o?.riskScore ?? 0;

@@ -73,7 +73,7 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
             except Exception as e:
                 print(f"[get_orders_list] Error loading items for order {o.id}: {e}")
 
-            customer_paid = float(o.total_amount or 0.0)
+            customer_paid = float(getattr(o, "total_amount", 0.0) or 0.0)
             affiliate_commission = _get_order_commission_amt(db_s, o.id)
             net_platform_revenue = round(customer_paid - affiliate_commission, 2)
 
