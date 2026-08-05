@@ -21,6 +21,10 @@
 ## Price Alert Types
 - **NEVER** change the `product_id` parameter or DB column type for `PriceAlert` and `RecentlyViewed` from `Integer` to string (`str`/`Union`), to ensure full compatibility with SQL database queries and avoid type mismatch failures.
 
+## Customer Module Freeze Rule
+- **NEVER** modify, refactor, or edit any code in the customer module (`frontend/src/pages/customer/*`, customer UI components, customer dashboard, purchases, downloads, checkout, cart, or customer backend routes/endpoints) unless explicitly instructed by the user.
+- The customer side is now completely **FROZEN** for production release. All customer-facing features, styling, authentication, download locks, and preview security protections must remain intact without alteration.
+
 # ======================================================================
 # Admin Panel Preservation & Production Rules
 # ======================================================================
