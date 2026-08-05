@@ -150,7 +150,7 @@ export default function VendorBarChart({
           </div>
           {/* Arrow */}
           <div style={{
-            position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)',
+            position: 'absolute', bottom: -5, left: '50%',
             width: 10, height: 10,
             background: 'rgba(45,0,77,0.92)',
             border: '1px solid rgba(196,148,230,0.35)',

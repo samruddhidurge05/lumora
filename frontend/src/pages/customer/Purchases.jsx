@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
 import { getUserPurchases } from '../../services/purchaseService';
 import PolicyAcknowledgementCheckbox from '../../components/policy/PolicyAcknowledgementCheckbox';
+import EnterpriseInvoiceModal from '../../components/common/EnterpriseInvoiceModal';
+import { FileText } from 'lucide-react';
 
 export default function CustomerPurchases() {
   const { ownedProducts, products, formatPrice, navigateTo, setDashboardTab } = useApp();
@@ -14,6 +16,7 @@ export default function CustomerPurchases() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showInvoiceOrder, setShowInvoiceOrder] = useState(null);
 
   // Refund request state management
   const [refundRequests, setRefundRequests] = useState([]);
@@ -641,6 +644,12 @@ export default function CustomerPurchases() {
             {/* Modal Actions */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button 
+                onClick={() => { setShowInvoiceOrder(selectedOrder); }} 
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #7B3FA0', background: '#FAF8FC', color: '#7B3FA0', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <FileText size={14} /> Commercial Invoice
+              </button>
+              <button 
                 onClick={() => { setSelectedOrder(null); setDashboardTab('Downloads'); setShowRefundForm(false); setRefundError(null); }} 
                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
@@ -655,6 +664,15 @@ export default function CustomerPurchases() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Enterprise Commercial Invoice Modal */}
+      {showInvoiceOrder && (
+        <EnterpriseInvoiceModal
+          order={showInvoiceOrder}
+          onClose={() => setShowInvoiceOrder(null)}
+          allProducts={products}
+        />
       )}
     </div>
   );

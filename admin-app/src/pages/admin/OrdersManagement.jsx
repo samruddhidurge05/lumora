@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from './components/AdminLayout';
+import EnterpriseInvoiceModal from '../../components/common/EnterpriseInvoiceModal';
 import { PageHeader, StatsGrid, DashboardCard, GlassCard, FilterBar, TableContainer, AdminSelect, MobileSectionSwitcher, MobileFilterDrawer, MobileFilterTrigger, MobileRecordCard } from './components/AdminComponents';
 import { backendFetch, backendFetchWithRetry } from '../../utils/api';
 import {
@@ -2104,129 +2105,13 @@ export default function OrdersManagement() {
 
       </div>
 
-      {/* --- MODAL 1: GLASSMORPHIC INVOICE DIALOG --- */}
-      <AnimatePresence>
-        {invoiceOrder && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 w-full h-full bg-[#2D004D]/30 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden"
-            style={{ zIndex: 1000 }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full border border-stone-200/50 shadow-2xl relative"
-            >
-
-              {/* Close Button */}
-              <button
-                onClick={() => {
-                  sysSound.playTap();
-                  setInvoiceOrder(null);
-                }}
-                className="absolute right-6 top-6 p-2 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors border-none cursor-pointer text-[#7B3FA0]"
-              >
-                <Icon name="X" size={12} />
-              </button>
-
-              {/* Invoice Logo */}
-              <div className="flex items-center gap-1.5 mb-6 text-editorial font-serif text-lg text-[#2D004D]">
-                <span>✧</span> Lumora Invoice
-              </div>
-
-              {/* Invoice Core Details */}
-              <div className="flex flex-col gap-6 font-sans">
-
-                <div className="flex justify-between text-xs">
-                  <div className="flex flex-col">
-                    <span className="text-[#7B3FA0]">INVOICE TO</span>
-                    <span className="font-bold text-[#2D004D] mt-0.5">{invoiceOrder.customerName}</span>
-                    <span className="text-[10px] text-stone-400 font-mono mt-0.5">{invoiceOrder.customerEmail}</span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[#7B3FA0]">INVOICE ID</span>
-                    <span className="font-mono font-bold text-[#2D004D] mt-0.5">INV-{invoiceOrder.orderId || invoiceOrder.id}</span>
-                    <span className="text-[9px] text-stone-400 mt-0.5">{(invoiceOrder.createdAt || '').split('T')[0]}</span>
-                  </div>
-                </div>
-
-                <div className="h-px bg-stone-100" />
-
-                {/* Table details */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-[9px] font-extrabold tracking-widest text-[#7B3FA0] uppercase">Purchased Node</span>
-
-                  <div className="flex justify-between items-center bg-stone-50 p-4 rounded-2xl border border-stone-200/30">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#2D004D]">{getProductName(invoiceOrder)}</span>
-                      <span className="text-[8px] text-[#7B3FA0] uppercase font-bold tracking-widest mt-0.5">{getProductType(invoiceOrder)}</span>
-                    </div>
-                    <span className="text-xs font-black text-[#2D004D]">₹{getOrderPrice(invoiceOrder).toFixed(2)}</span>
-                  </div>
-
-                </div>
-
-                <div className="h-px bg-stone-100" />
-
-                {/* Calculation */}
-                <div className="flex flex-col gap-2.5 text-xs text-[#7B3FA0]">
-
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span className="font-bold text-[#2D004D]">₹{getOrderPrice(invoiceOrder).toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>Processing Fee (0%)</span>
-                    <span>₹0.00</span>
-                  </div>
-
-                  <div className="h-px bg-stone-100/50 my-1" />
-
-                  <div className="flex justify-between text-sm font-serif font-black text-[#2D004D]">
-                    <span>Total Paid (INR)</span>
-                    <span>₹{getOrderPrice(invoiceOrder).toFixed(2)}</span>
-                  </div>
-
-                </div>
-
-                {/* Notice text */}
-                <p className="text-[8px] text-[#7B3FA0] text-center mt-4">
-                  Thank you for shopping inside the Lumora creator ecosystem. This document confirms direct settlement coordinates for licensing rights.
-                </p>
-
-                {/* Action buttons */}
-                <div className="flex gap-3.5 mt-2">
-                  <button
-                    onClick={() => {
-                      sysSound.playTap();
-                      triggerNotification("Invoice print instruction sent");
-                      setInvoiceOrder(null);
-                    }}
-                    className="flex-1 py-3 bg-white hover:bg-stone-50 border border-stone-200/70 rounded-2xl text-[10px] font-extrabold uppercase tracking-widest text-[#2D004D] transition-colors"
-                  >
-                    Print PDF
-                  </button>
-                  <button
-                    onClick={() => {
-                      sysSound.playSuccess();
-                      setInvoiceOrder(null);
-                    }}
-                    className="flex-1 py-3 bg-[#2D004D] hover:bg-[#7B3FA0] rounded-2xl text-[10px] font-extrabold uppercase tracking-widest text-white transition-colors"
-                  >
-                    Done
-                  </button>
-                </div>
-
-              </div>
-
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* --- MODAL 1: ENTERPRISE COMMERCIAL INVOICE DIALOG --- */}
+      {invoiceOrder && (
+        <EnterpriseInvoiceModal
+          order={invoiceOrder}
+          onClose={() => setInvoiceOrder(null)}
+        />
+      )}
 
       {/* --- MODAL 2: BULK REFUND WARNING MODAL --- */}
       <AnimatePresence>
