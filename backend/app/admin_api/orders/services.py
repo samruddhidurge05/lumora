@@ -30,7 +30,7 @@ def _get_order_commission_amt(db_s, order_id: int) -> float:
         return 0.0
 
 
-def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = None):
+def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = None) -> dict:
     page = max(1, page)
     page_size = max(1, min(200, page_size))
 
@@ -48,10 +48,12 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
         for o in orders:
             try:
                 customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
-                cust_name = getattr(customer, "name", None) or "Customer"
+                if not customer and o.user_id:
+                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
+                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
                 cust_email = getattr(customer, "email", None) or ""
             except Exception:
-                cust_name = "Customer"
+                cust_name = f"User #{o.user_id}" if o.user_id else "Customer Account"
                 cust_email = ""
 
             items_data = []
@@ -143,11 +145,27 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                         is_p = str(st_val).lower() in ("completed", "paid", "processing", "success", "placed")
                         pay_st = "Paid" if is_p else "Pending"
 
+                    u_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
+                    c_name = d.get("customerName")
+                    c_email = d.get("customerEmail") or ""
+                    if not c_name or c_name in ("Anonymous", "Customer"):
+                        matched_u = None
+                        if u_key and str(u_key).isdigit():
+                            matched_u = db_s.query(UserModel).filter(UserModel.id == int(u_key)).first()
+                        if not matched_u and u_key:
+                            matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(u_key)).first()
+                        if matched_u:
+                            c_name = matched_u.name or matched_u.email
+                            if not c_email:
+                                c_email = matched_u.email or ""
+                    if not c_name:
+                        c_name = c_email or (f"User #{u_key}" if u_key else "Customer Account")
+
                     fs_items.append({
                         "id": doc.id,
                         "orderId": d.get("orderId", doc.id),
-                        "customerName": d.get("customerName", "Anonymous"),
-                        "customerEmail": d.get("customerEmail", ""),
+                        "customerName": c_name,
+                        "customerEmail": c_email,
                         "price": p_val,
                         "totalUSD": p_val,
                         "total": p_val,

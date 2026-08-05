@@ -169,16 +169,92 @@ class RefundService:
         if status:
             q = q.filter(RefundRequest.status == status.upper())
         requests = q.order_by(RefundRequest.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
-        
-        enriched = []
-        for r in requests:
-            if r.status == "PROCESSING":
-                try:
-                    r = self.sync_stuck_refund(db, r.id)
-                except Exception as sync_err:
-                    print(f"[refund-service] Automatic recovery failed for TKT-{r.id}: {sync_err}")
-            enriched.append(self._enrich_request(db, r))
-        return enriched
+
+        # If explicit RefundRequest table rows exist, return enriched rows
+        if len(requests) > 0:
+            enriched = []
+            for r in requests:
+                if r.status == "PROCESSING":
+                    try:
+                        r = self.sync_stuck_refund(db, r.id)
+                    except Exception as sync_err:
+                        print(f"[refund-service] Automatic recovery failed for TKT-{r.id}: {sync_err}")
+                enriched.append(self._enrich_request(db, r))
+            return enriched
+
+        # Fallback: Synthesize refund request objects from historical refunded or disputed Order records
+        synthesized = []
+        try:
+            refunded_orders = db.query(Order).filter(Order.status.ilike("%refund%")).all()
+            disputed_orders = db.query(Order).filter(Order.status.ilike("%disput%")).all()
+            all_target_orders = list({o.id: o for o in (refunded_orders + disputed_orders)}.values())
+
+            for ord_obj in all_target_orders:
+                cust = db.query(User).filter(User.id == ord_obj.user_id).first() if ord_obj.user_id else None
+                prod_title = "Digital Asset"
+                if ord_obj.items:
+                    p = get_product_by_id(db, ord_obj.items[0].product_id)
+                    if p and getattr(p, "title", None):
+                        prod_title = p.title
+
+                st_upper = "REFUNDED" if "refund" in (ord_obj.status or "").lower() else "UNDER_REVIEW"
+                if status and st_upper != status.upper():
+                    continue
+
+                synth_req = RefundRequest(
+                    id=ord_obj.id,
+                    order_id=ord_obj.id,
+                    user_id=ord_obj.user_id or 1,
+                    reason_category="customer_request",
+                    details="Historical refund transaction",
+                    status=st_upper,
+                    requested_amount=float(getattr(ord_obj, "total_amount", 0.0) or 0.0),
+                    currency=ord_obj.currency or "INR",
+                    payment_id=ord_obj.payment_id or f"PAY-ORD-{ord_obj.id}",
+                    product_name=prod_title,
+                    order_total=float(getattr(ord_obj, "total_amount", 0.0) or 0.0),
+                    payment_method=ord_obj.payment_method or "upi",
+                    purchase_date=ord_obj.created_at,
+                    created_at=ord_obj.created_at or datetime.now(timezone.utc),
+                    updated_at=ord_obj.updated_at or datetime.now(timezone.utc)
+                )
+                synthesized.append(self._enrich_request(db, synth_req))
+        except Exception as synth_err:
+            print(f"[refund-service] Historical order refund synthesis warning: {synth_err}")
+
+        # Firestore mirror lookup
+        if len(synthesized) == 0 and firebase_connected and fs_db is not None:
+            try:
+                fs_docs = list(fs_db.collection("refund_requests").stream())
+                for doc in fs_docs:
+                    d = doc.to_dict() or {}
+                    st = d.get("status", "PENDING").upper()
+                    if status and st != status.upper():
+                        continue
+                    clean_ord_id = int(str(d.get("orderId", doc.id)).replace("ORD-", "")) if str(d.get("orderId", doc.id)).replace("ORD-", "").isdigit() else 1
+                    c_id = int(d.get("customerId", 1)) if str(d.get("customerId", 1)).isdigit() else 1
+                    synth_req = RefundRequest(
+                        id=int(doc.id) if doc.id.isdigit() else clean_ord_id,
+                        order_id=clean_ord_id,
+                        user_id=c_id,
+                        reason_category=d.get("reasonCategory", "customer_request"),
+                        details=d.get("details", "Customer refund request"),
+                        status=st,
+                        requested_amount=float(d.get("amount", 0.0)),
+                        currency=d.get("currency", "INR"),
+                        payment_id=d.get("paymentId"),
+                        product_name=d.get("productName", "Digital Product"),
+                        order_total=float(d.get("amount", 0.0)),
+                        payment_method="upi",
+                        created_at=datetime.now(timezone.utc),
+                        updated_at=datetime.now(timezone.utc)
+                    )
+                    synthesized.append(self._enrich_request(db, synth_req))
+            except Exception as fs_err:
+                print(f"[refund-service] Firestore refund queue stream warning: {fs_err}")
+
+        start_idx = (page - 1) * page_size
+        return synthesized[start_idx : start_idx + page_size]
 
     def update_request_status(self, db: Session, request_id: int, new_status: str, admin_id: int) -> RefundRequest:
         req = db.query(RefundRequest).filter(RefundRequest.id == request_id).with_for_update().first()

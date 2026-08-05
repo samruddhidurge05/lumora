@@ -29,11 +29,33 @@ def _map_order(doc) -> Dict[str, Any]:
         is_paid = str(status_val).lower() in ("completed", "paid", "processing", "success", "placed")
         pay_status = "Paid" if is_paid else "Pending"
 
+    user_key = d.get("userId") or d.get("user_id") or d.get("customerId") or d.get("customer_id")
+    cust_name = d.get("customerName")
+    cust_email = d.get("customerEmail") or ""
+
+    if not cust_name or cust_name in ("Anonymous", "Customer"):
+        db_s = SessionLocal()
+        try:
+            matched_u = None
+            if user_key and str(user_key).isdigit():
+                matched_u = db_s.query(UserModel).filter(UserModel.id == int(user_key)).first()
+            if not matched_u and user_key:
+                matched_u = db_s.query(UserModel).filter(UserModel.firebase_uid == str(user_key)).first()
+            if matched_u:
+                cust_name = matched_u.name or matched_u.email
+                if not cust_email:
+                    cust_email = matched_u.email or ""
+        finally:
+            db_s.close()
+
+    if not cust_name:
+        cust_name = cust_email or (f"User #{user_key}" if user_key else "Customer Account")
+
     return {
         "id":            doc.id,
         "orderId":       d.get("orderId", doc.id),
-        "customerName":  d.get("customerName", "Anonymous"),
-        "customerEmail": d.get("customerEmail", ""),
+        "customerName":  cust_name,
+        "customerEmail": cust_email,
         "price":         price_val,
         "total":         price_val,
         "status":        status_val,
@@ -68,9 +90,11 @@ def get_payments_telemetry() -> Dict[str, Any]:
             
             orders = []
             for o in sql_orders:
-                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first()
-                cust_name = customer.name if customer else "Customer"
-                cust_email = customer.email if customer else ""
+                customer = db_s.query(UserModel).filter(UserModel.id == o.user_id).first() if o.user_id else None
+                if not customer and o.user_id:
+                    customer = db_s.query(UserModel).filter(UserModel.firebase_uid == str(o.user_id)).first()
+                cust_name = (getattr(customer, "name", None) or getattr(customer, "email", None) or (f"User #{o.user_id}" if o.user_id else "Customer Account"))
+                cust_email = getattr(customer, "email", None) or ""
                 
                 v_id = ""
                 p_name = "Product"
