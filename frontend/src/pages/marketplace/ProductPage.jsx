@@ -523,6 +523,8 @@ export default function ProductPage() {
                       key="video"
                       src={videoUrl}
                       controls
+                      controlsList="nodownload no-focused-cell"
+                      onContextMenu={(e) => e.preventDefault()}
                       className="product-gallery-img lumora-product-gallery-img"
                       style={{ width: '100%', height: '420px', objectFit: 'cover', display: 'block' }}
                     />

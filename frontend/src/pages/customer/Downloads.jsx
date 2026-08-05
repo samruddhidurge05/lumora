@@ -1453,9 +1453,10 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
               {!loading && !errorMsg && viewerMode === 'stream' && previewUrl && (
                 <ProtectedPreviewViewer productTitle={product.name} style={{ width: '100%', height: '100%' }}>
                   <iframe
-                    src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                    src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
                     title={`PDF Web Viewer ${product.name}`}
                     style={{ width: '100%', height: '100%', border: 'none', background: '#FFFFFF' }}
+                    onContextMenu={(e) => e.preventDefault()}
                   />
                 </ProtectedPreviewViewer>
               )}

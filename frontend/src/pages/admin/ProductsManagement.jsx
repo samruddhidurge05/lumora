@@ -3360,6 +3360,8 @@ function ProductPreviewModal({ product, onClose }) {
                 loop
                 muted
                 controls
+                controlsList="nodownload no-focused-cell"
+                onContextMenu={(e) => e.preventDefault()}
               />
             ) : (product.thumbnail || product.preview) ? (
               <img 

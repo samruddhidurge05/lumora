@@ -126,6 +126,7 @@ export default function ProtectedPreviewViewer({
       className={`lumora-protected-preview-wrapper ${className}`}
       onDragStart={(e) => e.preventDefault()}
       onCopy={(e) => { e.preventDefault(); triggerProtection('Copy Action Prevented'); }}
+      onContextMenu={(e) => { e.preventDefault(); triggerProtection('Right-Click Context Menu & Save Disabled'); }}
       style={{
         position: 'relative',
         width: '100%',
@@ -140,11 +141,17 @@ export default function ProtectedPreviewViewer({
       {/* CSS @media print protection element */}
       <style>{`
         @media print {
-          .lumora-protected-preview-content {
+          .lumora-protected-preview-content,
+          .lumora-protected-preview-wrapper iframe,
+          .lumora-protected-preview-wrapper video,
+          .lumora-protected-preview-wrapper img,
+          .lumora-protected-preview-wrapper embed,
+          .lumora-protected-preview-wrapper object {
             display: none !important;
+            visibility: hidden !important;
           }
           .lumora-protected-preview-wrapper::after {
-            content: "🛡️ Protected Preview Content — Printing & Screen Export Prohibited";
+            content: "🛡️ Protected Preview Content — Printing, Saving to Drive & Exporting Prohibited";
             display: flex !important;
             align-items: center;
             justify-content: center;
