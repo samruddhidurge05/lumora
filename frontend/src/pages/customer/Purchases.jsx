@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Download, ExternalLink, Search, Clock, AlertCircle, RefreshCw, Eye, CheckCircle2, X, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Download, ExternalLink, Search, Clock, AlertCircle, RefreshCw, Eye, CheckCircle, CheckCircle2, X, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { backendFetch } from '../../utils/api';
