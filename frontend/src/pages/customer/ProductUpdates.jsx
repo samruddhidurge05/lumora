@@ -54,18 +54,32 @@ export default function ProductUpdates() {
     fetchVersions();
   }, [selectedProduct]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    if (!selectedProduct) return;
     setDownloading(true);
-    setTimeout(() => {
+    try {
+      const res = await backendFetch(`/products/${selectedProduct.id}/download`);
+      if (res?.can_download === false || res?.download_available === false) {
+        alert(res?.refund_message || 'Download disabled while refund request is under review.');
+        setDownloading(false);
+        return;
+      }
+      if (res && res.download_url) {
+        const fileCheckUrl = res.download_url.startsWith('/api') ? res.download_url.replace('/api', '') : res.download_url;
+        const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+        const fullUrl = `${BACKEND_URL}${fileCheckUrl.startsWith('/') ? fileCheckUrl : '/' + fileCheckUrl}`;
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.setAttribute('download', `${selectedProduct.title.toLowerCase().replace(/\s+/g, '-')}-latest.zip`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+    } catch (err) {
+      alert(err.message || 'Download disabled while refund request is under review.');
+    } finally {
       setDownloading(false);
-      // Trigger download link
-      const link = document.createElement('a');
-      link.href = selectedProduct?.file_url || `/downloads/product-${selectedProduct.id}.zip`;
-      link.setAttribute('download', `${selectedProduct.title.toLowerCase().replace(/\s+/g, '-')}-latest.zip`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }, 1500);
+    }
   };
 
   if (ownedItems.length === 0) {

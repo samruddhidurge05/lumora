@@ -403,13 +403,18 @@ def get_my_orders(
 ):
     orders = db.query(Order).filter(Order.user_id == current_user.id).order_by(Order.created_at.desc()).all()
     
-    # Dynamically inject 15-minute token URLs for the user's vaults/downloads
+    # Dynamically inject 15-minute token URLs for the user's vaults/downloads if permitted
     from app.api.products_router import generate_download_token
+    from app.services.download_auth_service import get_product_refund_status
     for o in orders:
-        if o.status == "completed":
+        if (o.status or "").lower() in ["completed", "paid"]:
             for item in o.items:
-                token = generate_download_token(current_user.id, item.product_id)
-                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+                refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+                if can_download:
+                    token = generate_download_token(current_user.id, item.product_id)
+                    item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+                else:
+                    item.download_url = None
                 
     return orders
 
@@ -441,11 +446,16 @@ def get_order_by_id(
     if not (is_owner or is_admin or is_authorized_vendor):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this order")
 
-    # Inject 15-minute secure download token
-    if order.status == "completed":
+    # Inject 15-minute secure download token if permitted
+    if (order.status or "").lower() in ["completed", "paid"]:
         from app.api.products_router import generate_download_token
+        from app.services.download_auth_service import get_product_refund_status
         for item in order.items:
-            token = generate_download_token(current_user.id, item.product_id)
-            item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+            refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+            if can_download:
+                token = generate_download_token(current_user.id, item.product_id)
+                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+            else:
+                item.download_url = None
 
     return order

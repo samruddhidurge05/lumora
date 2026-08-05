@@ -268,12 +268,17 @@ def confirm_payment(
         request=request,
     )
 
-    # Generate short-lived secure download URLs for the response
+    # Generate short-lived secure download URLs for the response if permitted
     from app.api.products_router import generate_download_token
+    from app.services.download_auth_service import get_product_refund_status
     if hasattr(order, "items"):
         for item in order.items:
-            token = generate_download_token(current_user.id, item.product_id)
-            item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+            refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+            if can_download:
+                token = generate_download_token(current_user.id, item.product_id)
+                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+            else:
+                item.download_url = None
 
     return {
         "success": True,

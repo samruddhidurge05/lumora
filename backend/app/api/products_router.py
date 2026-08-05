@@ -28,6 +28,7 @@ from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.schemas import ProductCreate, ProductResponse, ProductUpdate
+from app.services.download_auth_service import check_download_permission, get_product_refund_status
 from app.services.product_service import ProductService
 from app.services.storage_service import storage_service
 
@@ -498,32 +499,8 @@ def download_product(
     is_owner = (str(product.vendor_id) == str(current_user.id)) or ((product.seller or "") == (current_user.name or ""))
     is_admin = (current_user.role or "") == "admin"
     
-    # Phase 2 & 3: Check if order was refunded or license revoked
-    refunded_order = db.query(OrderItem).join(Order).filter(
-        or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id)),
-        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
-        func.lower(Order.status).in_(["refunded", "cancelled", "disputed"])
-    ).first()
-
-    approved_refund = None
-    if owned:
-        from app.models.refund import RefundRequest
-        approved_refund = db.query(RefundRequest).filter(
-            RefundRequest.order_id == owned.order_id,
-            func.upper(RefundRequest.status).in_(["APPROVED", "REFUNDED"])
-        ).first()
-
-    if (refunded_order or approved_refund) and not is_owner and not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This digital license has been revoked because this order was refunded."
-        )
-
-    if not owned and not is_owner and not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You must purchase this product to download it."
-        )
+    # Production-Safe Refund Download Lock Check
+    check_download_permission(db, current_user.id, product_id, is_owner=is_owner, is_admin=is_admin)
     
     # Get user's download history for this product
     user_downloads = db.query(OrderItem).join(Order).filter(
@@ -592,9 +569,15 @@ def get_download_center(
     
     downloads = []
     for order_item, product, order, vendor_name in purchased_items:
-        # Generate download token for each product
-        token = generate_download_token(int(getattr(current_user, "id")), int(getattr(product, "id")))
+        refund_status, can_download, msg = get_product_refund_status(db, current_user.id, int(product.id))
         
+        # Generate download token ONLY if download is permitted
+        if can_download:
+            token = generate_download_token(int(getattr(current_user, "id")), int(getattr(product, "id")))
+            download_url = f"/api/products/{product.id}/download-file?token={token}"
+        else:
+            download_url = None
+
         # Determine if the download asset is actually available
         download_available = bool(product.storage_path or product.file_url or getattr(product, "pcloud_download_link", None))
         
@@ -612,10 +595,12 @@ def get_download_center(
                 "price_paid": float(cast(Any, order_item.price_paid or 0)),
                 "description": product.description[:150] + "..." if product.description and len(product.description) > 150 else product.description
             },
-            "download_url": f"/api/products/{product.id}/download-file?token={token}",
-            "download_available": download_available,
-            "can_download": True,
-            "token_expires_in": "15 minutes"
+            "download_url": download_url,
+            "download_available": download_available and can_download,
+            "can_download": can_download,
+            "refund_status": refund_status,
+            "refund_message": msg,
+            "token_expires_in": "15 minutes" if can_download else "N/A"
         })
     
     # Get download statistics
@@ -669,32 +654,8 @@ def download_product_file(
     is_owner = (str(product.vendor_id) == str(user_id)) or ((product.seller or "") == (user.name or ""))
     is_admin = (user.role or "") == "admin"
 
-    # Phase 2 & 3: Refund revocation & remove insecure any_order fallback
-    refunded_order = db.query(OrderItem).join(Order).filter(
-        or_(Order.user_id == user_id, sql_cast(Order.user_id, String) == str(user_id)),
-        or_(OrderItem.product_id == product_id, sql_cast(OrderItem.product_id, String) == str(product_id)),
-        func.lower(Order.status).in_(["refunded", "cancelled", "disputed"])
-    ).first()
-
-    approved_refund = None
-    if owned:
-        from app.models.refund import RefundRequest
-        approved_refund = db.query(RefundRequest).filter(
-            RefundRequest.order_id == owned.order_id,
-            func.upper(RefundRequest.status).in_(["APPROVED", "REFUNDED"])
-        ).first()
-
-    if (refunded_order or approved_refund) and not is_owner and not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This digital license has been revoked because this order was refunded."
-        )
-
-    if not owned and not is_owner and not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You must purchase this product to download it."
-        )
+    # Production-Safe Refund Download Lock Check
+    check_download_permission(db, user_id, product_id, is_owner=is_owner, is_admin=is_admin)
 
     clean_title = str(product.title or f"Product-{product_id}")
     safe_title_base = re.sub(r'[^\w\s-]', '', clean_title).strip().replace(' ', '_') or f"product-{product_id}"

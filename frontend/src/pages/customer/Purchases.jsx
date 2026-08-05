@@ -338,13 +338,48 @@ export default function CustomerPurchases() {
                           <h4 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</h4>
                           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>{formatPrice(item.price_paid || product.price)}</span>
                         </div>
-                        <button 
-                          onClick={() => setDashboardTab('Downloads')} 
-                          title="Go to Downloads Vault"
-                          style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <Download size={12} /> Download
-                        </button>
+                        {(() => {
+                          const orderRefundReq = refundRequests.find(r => String(r.order_id) === String(ord.id));
+                          const rStatus = (orderRefundReq?.status || ord.status || '').toUpperCase();
+                          const isPendingRefund = ['PENDING', 'REQUESTED', 'UNDER_REVIEW', 'PROCESSING'].includes(rStatus);
+                          const isApprovedRefund = ['APPROVED', 'REFUNDED'].includes(rStatus) || (ord.status || '').toLowerCase() === 'refunded';
+
+                          if (isPendingRefund) {
+                            return (
+                              <button 
+                                disabled
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                title="Download disabled while refund request is under review"
+                                style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.35)', background: 'rgba(234, 179, 8, 0.12)', color: '#B45309', fontSize: '0.70rem', fontWeight: 700, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.9 }}
+                              >
+                                <Clock size={12} /> Refund Under Review
+                              </button>
+                            );
+                          }
+
+                          if (isApprovedRefund) {
+                            return (
+                              <button 
+                                disabled
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                title="Download permanently disabled for refunded product"
+                                style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)', color: '#DC2626', fontSize: '0.70rem', fontWeight: 700, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.9 }}
+                              >
+                                <X size={12} /> Refunded
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <button 
+                              onClick={() => setDashboardTab('Downloads')} 
+                              title="Go to Downloads Vault"
+                              style={{ padding: '6px 10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', color: '#fff', fontSize: '0.70rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <Download size={12} /> Download
+                            </button>
+                          );
+                        })()}
                       </div>
                     );
                   })}

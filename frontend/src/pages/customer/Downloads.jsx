@@ -36,9 +36,55 @@ const CATEGORY_ICONS = {
 };
 
 /* ─── DOWNLOAD BUTTON COMPONENT ──────────────────────────────── */
-function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable }) {
+function DownloadButton({ productName, variant = 'primary', downloadUrl, productId, downloadAvailable, canDownload, refundStatus, refundMessage }) {
   const [state, setState] = useState('idle'); // idle | downloading | done | pending
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const statusUpper = (refundStatus || '').toUpperCase();
+  const isRefundPending = ['PENDING', 'REQUESTED', 'UNDER_REVIEW', 'PROCESSING'].includes(statusUpper);
+  const isRefundApproved = ['APPROVED', 'REFUNDED'].includes(statusUpper);
+
+  if (isRefundPending) {
+    return (
+      <button
+        disabled
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          padding: '9px 18px', borderRadius: '12px',
+          background: 'rgba(234, 179, 8, 0.12)', color: '#B45309',
+          border: '1px solid rgba(234, 179, 8, 0.35)',
+          fontSize: '0.75rem', fontWeight: 700,
+          fontFamily: 'var(--font-sans)', cursor: 'not-allowed',
+          outline: 'none', opacity: 0.9, whiteSpace: 'nowrap',
+        }}
+        title="Download disabled while refund request is under review"
+      >
+        <Clock size={14} /> Refund Under Review
+      </button>
+    );
+  }
+
+  if (isRefundApproved) {
+    return (
+      <button
+        disabled
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          padding: '9px 18px', borderRadius: '12px',
+          background: 'rgba(239, 68, 68, 0.12)', color: '#DC2626',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
+          fontSize: '0.75rem', fontWeight: 700,
+          fontFamily: 'var(--font-sans)', cursor: 'not-allowed',
+          outline: 'none', opacity: 0.9, whiteSpace: 'nowrap',
+        }}
+        title="Download permanently disabled for refunded product"
+      >
+        <X size={14} /> Refunded
+      </button>
+    );
+  }
 
   const handleDownload = async () => {
     if (state !== 'idle') return;
@@ -376,26 +422,60 @@ export default function CustomerDownloads() {
         });
       }
 
-      const orders = await backendFetch('/orders/me').catch(err => {
-        console.warn('Backend orders fetch notice:', err);
-        return null;
-      });
+      const [refunds, centerRes, orders] = await Promise.all([
+        backendFetch('/refunds/me').catch(() => []),
+        backendFetch('/products/downloads/center').catch(() => null),
+        backendFetch('/orders/me').catch(() => null)
+      ]);
 
-      if (Array.isArray(orders)) {
+      const refundMap = {};
+      if (Array.isArray(refunds)) {
+        refunds.forEach(r => {
+          if (r.order_id) {
+            refundMap[String(r.order_id)] = (r.status || '').toUpperCase();
+          }
+        });
+      }
+
+      if (centerRes && Array.isArray(centerRes.downloads)) {
+        const itemsList = centerRes.downloads.map(dl => {
+          const pid = String(dl.product_details.id);
+          const prod = products.find(p => String(p.id) === pid);
+          return {
+            id: pid,
+            name: dl.product_details.name || prod?.title || `Digital Asset #${pid}`,
+            category: dl.product_details.category || prod?.category || 'Digital Asset',
+            version: dl.product_details.version || prod?.version || 'v1.0.0',
+            fileSize: dl.product_details.file_size || prod?.fileSize || '142 MB',
+            lastUpdated: 'Recently',
+            purchaseDate: dl.purchase_date ? new Date(dl.purchase_date).toLocaleDateString() : 'Recent',
+            thumbnail: dl.product_details.thumbnail || prod?.preview || prod?.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=70',
+            compatibility: prod?.compatibility || ['Web', 'Design'],
+            hasUpdate: false,
+            rating: prod?.rating || 4.9,
+            gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
+            accentColor: '#4E3B31',
+            downloadUrl: dl.download_url,
+            downloadAvailable: dl.download_available,
+            canDownload: dl.can_download,
+            refundStatus: dl.refund_status || refundMap[String(dl.order_id)] || 'NONE',
+            refundMessage: dl.refund_message,
+            verified: true,
+          };
+        });
+        setBackendOwnedProducts(itemsList);
+      } else if (Array.isArray(orders)) {
         const itemsList = [];
         const seenPids = new Set();
         orders.forEach(ord => {
+          const ordRefundStatus = refundMap[String(ord.id)] || (ord.status === 'refunded' ? 'REFUNDED' : 'NONE');
           (ord.items || []).forEach(item => {
             const pid = String(item.product_id);
             if (seenPids.has(pid)) return;
             seenPids.add(pid);
             
             const prod = products.find(p => String(p.id) === pid);
-            // Determine download availability from the order item's download_url
-            // and from any backend download_available flag if present.
-            // A product with a real download_url path (not just the /download endpoint)
-            // will be treated as available; the actual pending check happens server-side.
-            const downloadAvailable = item.download_available !== false; // default true unless explicitly false
+            const canDownload = item.can_download !== false && item.download_url != null && !['PENDING', 'REQUESTED', 'UNDER_REVIEW', 'APPROVED', 'REFUNDED'].includes(ordRefundStatus);
             itemsList.push({
               id: pid,
               name: prod?.title || `Digital Asset #${item.product_id}`,
@@ -410,8 +490,10 @@ export default function CustomerDownloads() {
               rating: prod?.rating || 4.9,
               gradient: 'linear-gradient(135deg, rgba(250,247,242,0.9), rgba(255,255,255,0.95))',
               accentColor: '#4E3B31',
-              downloadUrl: item.download_url || `/downloads/product-${item.product_id}.zip`,
-              downloadAvailable,
+              downloadUrl: item.download_url,
+              downloadAvailable: canDownload,
+              canDownload,
+              refundStatus: ordRefundStatus,
               verified: true,
             });
           });
@@ -872,7 +954,7 @@ export default function CustomerDownloads() {
                   <p style={{ fontSize: '0.72rem', color: 'var(--color-mocha)', marginTop: 3 }}>{product.updateNote}</p>
                   <p style={{ fontSize: '0.63rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.7 }}>{product.version} → {product.newVersion}</p>
                 </div>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} />
               </div>
             ))}
           </div>
@@ -1153,7 +1235,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                   <BookOpen size={13} />
                   Preview
                 </button>
-                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} />
               </div>
             )}
           </div>
@@ -1246,7 +1328,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                       </button>
                     </div>
                   )}
-                  <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                  <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} />
                 </div>
               </div>
             </div>
@@ -1343,7 +1425,7 @@ function VaultCard({ product, isHovered, onHover, isSelected, onToggleSelect }) 
                         >
                           Close Preview
                         </button>
-                        <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} />
+                        <DownloadButton productName={product.name} variant="primary" downloadUrl={product.downloadUrl} productId={product.id} canDownload={product.canDownload} refundStatus={product.refundStatus} refundMessage={product.refundMessage} />
                       </div>
 
                     </div>
