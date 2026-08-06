@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -9,6 +10,8 @@ from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.api.orders.schemas import OrderCreate, OrderResponse
 from app.services.purchase_service import PurchaseService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -418,13 +421,17 @@ def get_my_orders(
         setattr(o, "downloadGranted", is_paid)
         if is_paid:
             for item in o.items:
-                user_id = int(getattr(current_user, "id"))
-                prod_id = int(getattr(item, "product_id"))
-                refund_status, can_download, _ = get_product_refund_status(db, user_id, prod_id)
-                if can_download:
-                    token = generate_download_token(user_id, prod_id)
-                    setattr(item, "download_url", f"/api/products/{prod_id}/download-file?token={token}")
-                else:
+                try:
+                    user_id = int(getattr(current_user, "id"))
+                    prod_id = int(getattr(item, "product_id"))
+                    refund_status, can_download, _ = get_product_refund_status(db, user_id, prod_id)
+                    if can_download:
+                        token = generate_download_token(user_id, prod_id)
+                        setattr(item, "download_url", f"/api/products/{prod_id}/download-file?token={token}")
+                    else:
+                        setattr(item, "download_url", None)
+                except Exception as _dl_err:
+                    logger.warning(f"[get_my_orders] Download URL injection skipped for item: {_dl_err}")
                     setattr(item, "download_url", None)
                 
     return orders
