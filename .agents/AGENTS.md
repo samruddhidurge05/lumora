@@ -296,4 +296,8 @@ If any unrelated behavior changes, treat it as a regression and restore the prev
 ## Strict Requirement
 - If any requested task requires changing business logic, **STOP**, explain why, and request approval before proceeding.
 - This freeze applies **specifically to the Admin Backend logic**. Operational database work, parity verification, performance indexing, and diagnostic logging remain fully permitted.
-
+
+
+## Mandatory Git Commit Rule
+- **NEVER** complete a task involving file modifications without automatically staging, committing, and pushing the changes to the repository.
+- The commit message must always be highly detailed, structured, and explain exactly what changes were made (e.g. using bullet points).
