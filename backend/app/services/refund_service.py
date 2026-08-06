@@ -256,10 +256,57 @@ class RefundService:
         start_idx = (page - 1) * page_size
         return synthesized[start_idx : start_idx + page_size]
 
-    def update_request_status(self, db: Session, request_id: int, new_status: str, admin_id: int) -> RefundRequest:
+    def _find_or_create_refund_request(self, db: Session, request_id: int) -> Optional[RefundRequest]:
+        # Tier 1: Primary Key lookup
         req = db.query(RefundRequest).filter(RefundRequest.id == request_id).with_for_update().first()
+        if req:
+            return req
+
+        # Tier 2: Order ID lookup
+        req = db.query(RefundRequest).filter(RefundRequest.order_id == request_id).with_for_update().first()
+        if req:
+            return req
+
+        # Tier 3: Order fallback - Auto-create & persist RefundRequest in PostgreSQL
+        order = db.query(Order).filter(Order.id == request_id).first()
+        if order:
+            existing = db.query(RefundRequest).filter(RefundRequest.order_id == order.id).first()
+            if existing:
+                return db.query(RefundRequest).filter(RefundRequest.id == existing.id).with_for_update().first()
+
+            first_prod = "Digital Product"
+            if order.items:
+                p = get_product_by_id(db, order.items[0].product_id)
+                if p and getattr(p, "title", None):
+                    first_prod = p.title
+
+            req = RefundRequest(
+                order_id=order.id,
+                user_id=order.user_id or 1,
+                reason_category="customer_request",
+                details="Refund request for order",
+                status="PENDING",
+                requested_amount=float(getattr(order, "total_amount", 0.0) or 0.0),
+                currency=order.currency or "INR",
+                payment_id=order.payment_id or f"PAY-ORD-{order.id}",
+                product_name=first_prod,
+                order_total=float(getattr(order, "total_amount", 0.0) or 0.0),
+                payment_method=order.payment_method or "upi",
+                purchase_date=order.created_at,
+                last_updated_by=order.user_id or 1
+            )
+            db.add(req)
+            db.commit()
+            db.refresh(req)
+            return db.query(RefundRequest).filter(RefundRequest.id == req.id).with_for_update().first()
+
+        return None
+
+    def update_request_status(self, db: Session, request_id: int, new_status: str, admin_id: int) -> RefundRequest:
+        req = self._find_or_create_refund_request(db, request_id)
         if not req:
             raise HTTPException(status_code=404, detail="Refund request not found.")
+        assert req is not None
 
         valid_statuses = ["PENDING", "UNDER_REVIEW", "APPROVED", "PROCESSING", "REFUNDED", "FAILED", "REJECTED", "CANCELLED"]
         new_status_upper = new_status.upper()
@@ -287,9 +334,10 @@ class RefundService:
 
     def approve_refund(self, db: Session, request_id: int, admin_id: int, notes: Optional[str] = None) -> RefundRequest:
         # Use SELECT FOR UPDATE to lock the row and serialize admins
-        req = db.query(RefundRequest).filter(RefundRequest.id == request_id).with_for_update().first()
+        req = self._find_or_create_refund_request(db, request_id)
         if not req:
             raise HTTPException(status_code=404, detail="Refund request not found.")
+        assert req is not None
 
         # Guard status (must not be approved or refunded already)
         if req.status in ("APPROVED", "REFUNDED"):
@@ -307,15 +355,16 @@ class RefundService:
 
         # Attempt payment gateway refund if a valid payment reference exists
         order = db.query(Order).filter(Order.id == req.order_id).first()
-        payment_ref = (order.payment_id if order and getattr(order, "payment_id", None) else req.payment_id)
+        raw_ref = (order.payment_id if order and getattr(order, "payment_id", None) else req.payment_id)
+        payment_ref = str(raw_ref) if raw_ref is not None else ""
 
-        if payment_ref and str(payment_ref).strip().lower() not in ("none", "", "null", "undefined"):
+        if payment_ref and payment_ref.strip().lower() not in ("none", "", "null", "undefined"):
             try:
                 payment = payment_service.initiate_refund(
                     db=db,
                     payment_ref=payment_ref,
                     admin_user_id=admin_id,
-                    amount=req.requested_amount,
+                    amount=float(getattr(req, "requested_amount", 0.0) or 0.0),
                     reason=f"Approved refund for ORD-{req.order_id}"
                 )
                 if payment and getattr(payment, "gateway_payment_id", None):
@@ -325,7 +374,7 @@ class RefundService:
 
         # Transition Order status to "refunded" to revoke digital download license while preserving historical audit logs
         if order:
-            setattr(order, "status", "refunded")
+            setattr(order, "status", "refunded") 
             db.add(order)
 
         db.commit()
@@ -345,9 +394,10 @@ class RefundService:
         return self._enrich_request(db, req)
 
     def reject_refund(self, db: Session, request_id: int, admin_id: int, notes: Optional[str] = None) -> RefundRequest:
-        req = db.query(RefundRequest).filter(RefundRequest.id == request_id).with_for_update().first()
+        req = self._find_or_create_refund_request(db, request_id)
         if not req:
             raise HTTPException(status_code=404, detail="Refund request not found.")
+        assert req is not None
 
         if req.status in ("APPROVED", "PROCESSING", "REFUNDED"):
             raise HTTPException(
@@ -388,6 +438,7 @@ class RefundService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Refund request not found."
             )
+        assert req is not None
             
         if req.status not in ("PENDING", "UNDER_REVIEW"):
             raise HTTPException(

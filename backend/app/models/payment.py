@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from app.models.user import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Payment(Base):
@@ -76,8 +76,8 @@ class Payment(Base):
     affiliate_code      = Column(String(50),  nullable=True)
 
     # -- Audit Timestamps ------------------------------------------------------
-    created_at          = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at          = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at          = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at          = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     verified_at         = Column(DateTime, nullable=True)    # When signature was verified
     completed_at        = Column(DateTime, nullable=True)    # When order was confirmed
     refunded_at         = Column(DateTime, nullable=True)    # When refund was processed
