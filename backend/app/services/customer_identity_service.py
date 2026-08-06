@@ -6,9 +6,9 @@ def _is_real_name(val: Optional[str]) -> bool:
     if not val or not val.strip():
         return False
     s = val.strip().lower()
-    if s in ("user", "anonymous", "customer", "guest", "unknown", "default customer", "customer account"):
+    if s in ("user", "anonymous", "customer", "guest", "unknown", "default customer", "customer account", "pretoken customer", "pretoken"):
         return False
-    if s.startswith("user #") or s.startswith("user#") or s.startswith("customer #") or s.startswith("customer#"):
+    if s.startswith("user #") or s.startswith("user#") or s.startswith("customer #") or s.startswith("customer#") or s.startswith("pretoken"):
         return False
     return True
 

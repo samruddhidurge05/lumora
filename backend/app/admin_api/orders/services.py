@@ -68,6 +68,8 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                             "productId": str(getattr(item, "product_id", "") or ""),
                             "productName": prod_title,
                             "price": float(getattr(item, "price_paid", 0.0) or 0.0),
+                            "snapshot": {"title": prod_title, "price": float(getattr(item, "price_paid", 0.0) or 0.0)},
+                            "title": prod_title,
                         })
             except Exception as e:
                 print(f"[get_orders_list] Error loading items for order {o.id}: {e}")
@@ -84,7 +86,9 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                     created_at_str = str(o.created_at)
 
             is_paid = (o.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
-            is_downloaded = (getattr(o, "download_count", 0) or 0) > 0 or any(getattr(item, "downloaded", False) for item in getattr(o, "items", []))
+            is_downloaded = (getattr(o, "download_count", 0) or 0) > 0
+
+            first_prod_title = items_data[0]["productName"] if items_data else "Digital Asset"
 
             result.append({
                 "id": str(o.id),
@@ -93,6 +97,9 @@ def get_orders_list(page: int = 1, page_size: int = 50, status: str | None = Non
                 "customerName": cust_name,
                 "customerEmail": cust_email,
                 "items": items_data,
+                "productSnapshot": {"title": first_prod_title, "price": customer_paid},
+                "product_name": first_prod_title,
+                "productTitle": first_prod_title,
                 "totalUSD": customer_paid,
                 "price": customer_paid,
                 "status": o.status or "completed",
