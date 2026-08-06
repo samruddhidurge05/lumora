@@ -148,6 +148,13 @@ def serve_product_media(file_path: str, db: Session = Depends(get_db)):
 
 # -- Public read endpoints (no auth) ------------------------------------------
 
+def is_test_product(p: Product) -> bool:
+    title = (getattr(p, "title", "") or "").lower()
+    desc = (getattr(p, "description", "") or "").lower()
+    test_keywords = ["test", "demo", "e2e", "verification", "sample", "405 fix", "placeholder"]
+    return any(kw in title for kw in test_keywords) or ("e2e" in desc or "test product" in desc)
+
+
 @router.get("/", response_model=List[ProductResponse])
 def read_products(
     background_tasks: BackgroundTasks,
@@ -170,6 +177,10 @@ def read_products(
         query = query.filter(Product.category == category)
     query = query.order_by(Product.created_at.desc(), Product.id.desc())
     results = query.offset(skip).limit(limit).all()
+
+    # Sort so production items come first and test/demo items come LAST
+    results = sorted(results, key=lambda p: (1 if is_test_product(p) else 0))
+
     return resolve_products_media(results, db)
 
 
@@ -218,6 +229,9 @@ def search_products(
         products = sorted(products, key=lambda p: p.created_at or datetime.min, reverse=True)
     else:  # featured
         products = sorted(products, key=lambda p: bool(cast(Any, p.featured)), reverse=True)
+
+    # Push test products to the end
+    products = sorted(products, key=lambda p: (1 if is_test_product(p) else 0))
 
     results = products[skip : skip + limit]
     return resolve_products_media(results, db)

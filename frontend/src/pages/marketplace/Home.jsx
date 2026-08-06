@@ -257,7 +257,15 @@ export default function Home() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const { scrollYProgress } = useScroll();
 
-  // ── Deduplicate by ID (backend + JSON can both emit same product) ──
+  // ── Helper to detect test/demo products ──
+  const isTestProd = (p) => {
+    const title = (p?.title || p?.name || '').toLowerCase();
+    const desc = (p?.description || '').toLowerCase();
+    const testKeywords = ['test', 'demo', 'e2e', 'verification', 'sample', '405 fix', 'placeholder'];
+    return testKeywords.some(kw => title.includes(kw)) || desc.includes('e2e') || desc.includes('test product');
+  };
+
+  // ── Deduplicate by ID & sort test products last ──
   const seenIds = new Set();
   const uniqueProducts = products.filter(p => {
     const key = String(p.id);
@@ -266,8 +274,12 @@ export default function Home() {
     return true;
   });
 
-  // ── Order: use default unique products order ──
-  const ordered = uniqueProducts;
+  // Put production items first and test/demo products LAST
+  const ordered = [...uniqueProducts].sort((a, b) => {
+    const isTestA = isTestProd(a) ? 1 : 0;
+    const isTestB = isTestProd(b) ? 1 : 0;
+    return isTestA - isTestB;
+  });
 
   // ── Partition into non-overlapping sections of 8 ──
   const SECTION_SIZE = 8;

@@ -50,6 +50,13 @@ export default function Products() {
   }, [products]);
 
   const filtered = useMemo(() => {
+    const isTestProd = (p) => {
+      const title = (p?.title || p?.name || '').toLowerCase();
+      const desc = (p?.description || '').toLowerCase();
+      const testKeywords = ['test', 'demo', 'e2e', 'verification', 'sample', '405 fix', 'placeholder'];
+      return testKeywords.some(kw => title.includes(kw)) || desc.includes('e2e') || desc.includes('test product');
+    };
+
     const range = PRICE_RANGES[priceIdx];
     let list = products
       .filter(p => activeCategory === 'All' || p.category === activeCategory)
@@ -59,22 +66,30 @@ export default function Products() {
         const q = search.toLowerCase();
         return p.title?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q);
       });
+
+    let resultList = [];
     switch (sort) {
-      case 'price-asc': return [...list].sort((a, b) => a.price - b.price);
-      case 'price-desc': return [...list].sort((a, b) => b.price - a.price);
-      case 'rating': return [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      case 'popular': return [...list].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-      case 'newest': return [...list].sort((a, b) => {
+      case 'price-asc': resultList = [...list].sort((a, b) => a.price - b.price); break;
+      case 'price-desc': resultList = [...list].sort((a, b) => b.price - a.price); break;
+      case 'rating': resultList = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+      case 'popular': resultList = [...list].sort((a, b) => (b.downloads || 0) - (a.downloads || 0)); break;
+      case 'newest': resultList = [...list].sort((a, b) => {
         const tsA = a.createdAt || a.created_at;
         const tsB = b.createdAt || b.created_at;
         const ta = tsA ? new Date(tsA).getTime() : (Number(a.id) || 0);
         const tb = tsB ? new Date(tsB).getTime() : (Number(b.id) || 0);
         if (tb !== ta) return tb - ta;
-        // Secondary: new_arrival flag for mock products
         return (b.newArrival || b.new_arrival ? 1 : 0) - (a.newArrival || a.new_arrival ? 1 : 0);
-      });
-      default: return [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      }); break;
+      default: resultList = [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)); break;
     }
+
+    // Always sort test/demo products LAST
+    return resultList.sort((a, b) => {
+      const isTestA = isTestProd(a) ? 1 : 0;
+      const isTestB = isTestProd(b) ? 1 : 0;
+      return isTestA - isTestB;
+    });
   }, [products, activeCategory, search, sort, priceIdx]);
 
   return (

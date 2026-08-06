@@ -127,14 +127,29 @@ export default function Search() {
       p.price >= range.min && p.price < range.max &&
       (p.rating || 5.0) >= ratingFilter
     ));
+
+    const isTestProd = (p) => {
+      const title = (p?.title || p?.name || '').toLowerCase();
+      const desc = (p?.description || '').toLowerCase();
+      const testKeywords = ['test', 'demo', 'e2e', 'verification', 'sample', '405 fix', 'placeholder'];
+      return testKeywords.some(kw => title.includes(kw)) || desc.includes('e2e') || desc.includes('test product');
+    };
+
+    let resultList = [];
     switch (sort) {
-      case 'price-asc':  return [...list].sort((a,b) => a.price - b.price);
-      case 'price-desc': return [...list].sort((a,b) => b.price - a.price);
-      case 'rating':     return [...list].sort((a,b) => (b.rating||0) - (a.rating||0));
-      case 'popular':    return [...list].sort((a,b) => (b.downloads||0) - (a.downloads||0));
-      case 'newest':     return [...list].sort((a,b) => (b.newArrival?1:0) - (a.newArrival?1:0));
-      default:           return list; // relevance = natural order
+      case 'price-asc':  resultList = [...list].sort((a,b) => a.price - b.price); break;
+      case 'price-desc': resultList = [...list].sort((a,b) => b.price - a.price); break;
+      case 'rating':     resultList = [...list].sort((a,b) => (b.rating||0) - (a.rating||0)); break;
+      case 'popular':    resultList = [...list].sort((a,b) => (b.downloads||0) - (a.downloads||0)); break;
+      case 'newest':     resultList = [...list].sort((a,b) => (b.newArrival?1:0) - (a.newArrival?1:0)); break;
+      default:           resultList = list; break;
     }
+
+    return resultList.sort((a, b) => {
+      const isTestA = isTestProd(a) ? 1 : 0;
+      const isTestB = isTestProd(b) ? 1 : 0;
+      return isTestA - isTestB;
+    });
   }, [submitted, products, sort, priceIdx, activeCategory, ratingFilter]);
 
   useEffect(() => {
