@@ -165,24 +165,25 @@ class RefundService:
         return enriched
 
     def get_all_requests(self, db: Session, status: Optional[str] = None, page: int = 1, page_size: int = 50) -> List[RefundRequest]:
+        # 1. Fetch explicit RefundRequest rows from PostgreSQL
         q = db.query(RefundRequest)
         if status:
             q = q.filter(RefundRequest.status == status.upper())
-        requests = q.order_by(RefundRequest.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+        explicit_requests = q.order_by(RefundRequest.created_at.desc()).all()
 
-        # If explicit RefundRequest table rows exist, return enriched rows
-        if len(requests) > 0:
-            enriched = []
-            for r in requests:
-                if r.status == "PROCESSING":
-                    try:
-                        r = self.sync_stuck_refund(db, r.id)
-                    except Exception as sync_err:
-                        print(f"[refund-service] Automatic recovery failed for TKT-{r.id}: {sync_err}")
-                enriched.append(self._enrich_request(db, r))
-            return enriched
+        enriched_explicit = []
+        covered_order_ids = set()
+        for r in explicit_requests:
+            if r.status == "PROCESSING":
+                try:
+                    r = self.sync_stuck_refund(db, r.id)
+                except Exception as sync_err:
+                    print(f"[refund-service] Automatic recovery failed for TKT-{r.id}: {sync_err}")
+            enriched_explicit.append(self._enrich_request(db, r))
+            if r.order_id:
+                covered_order_ids.add(r.order_id)
 
-        # Fallback: Synthesize refund request objects from historical refunded or disputed Order records
+        # 2. Synthesize unlinked historical refunded or disputed Order records
         synthesized = []
         try:
             refunded_orders = db.query(Order).filter(Order.status.ilike("%refund%")).all()
@@ -190,7 +191,9 @@ class RefundService:
             all_target_orders = list({o.id: o for o in (refunded_orders + disputed_orders)}.values())
 
             for ord_obj in all_target_orders:
-                cust = db.query(User).filter(User.id == ord_obj.user_id).first() if ord_obj.user_id else None
+                if ord_obj.id in covered_order_ids:
+                    continue  # Skip orders already covered by an explicit RefundRequest ticket
+
                 prod_title = "Digital Asset"
                 if ord_obj.items:
                     p = get_product_by_id(db, ord_obj.items[0].product_id)
@@ -222,8 +225,11 @@ class RefundService:
         except Exception as synth_err:
             print(f"[refund-service] Historical order refund synthesis warning: {synth_err}")
 
-        # Firestore mirror lookup
-        if len(synthesized) == 0 and firebase_connected and fs_db is not None:
+        # Combine explicit + synthesized requests
+        all_merged = enriched_explicit + synthesized
+
+        # 3. Firestore mirror lookup fallback if combined list is empty
+        if len(all_merged) == 0 and firebase_connected and fs_db is not None:
             try:
                 fs_docs = list(fs_db.collection("refund_requests").stream())
                 for doc in fs_docs:
@@ -249,12 +255,12 @@ class RefundService:
                         created_at=datetime.now(timezone.utc),
                         updated_at=datetime.now(timezone.utc)
                     )
-                    synthesized.append(self._enrich_request(db, synth_req))
+                    all_merged.append(self._enrich_request(db, synth_req))
             except Exception as fs_err:
                 print(f"[refund-service] Firestore refund queue stream warning: {fs_err}")
 
         start_idx = (page - 1) * page_size
-        return synthesized[start_idx : start_idx + page_size]
+        return all_merged[start_idx : start_idx + page_size]
 
     def _find_or_create_refund_request(self, db: Session, request_id: int) -> Optional[RefundRequest]:
         # Tier 1: Primary Key lookup
