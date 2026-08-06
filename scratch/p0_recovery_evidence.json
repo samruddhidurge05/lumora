@@ -1,0 +1,527 @@
+{
+  "phase1_order_write_sites": [
+    {
+      "file": "backend\\admin\\firestore\\admin_firestore.py",
+      "line": 250,
+      "keyword": "collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(order_id_str).set(payload, merge=True)"
+    },
+    {
+      "file": "backend\\admin\\firestore\\admin_firestore.py",
+      "line": 251,
+      "keyword": "collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(clean_id_str).set(payload, merge=True)"
+    },
+    {
+      "file": "backend\\admin\\firestore\\admin_firestore.py",
+      "line": 250,
+      "keyword": "db.collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(order_id_str).set(payload, merge=True)"
+    },
+    {
+      "file": "backend\\admin\\firestore\\admin_firestore.py",
+      "line": 251,
+      "keyword": "db.collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(clean_id_str).set(payload, merge=True)"
+    },
+    {
+      "file": "backend\\app\\services\\customer_identity_service.py",
+      "line": 155,
+      "keyword": "collection(\"orders\")",
+      "code": "o_doc = fs_db.collection(\"orders\").document(clean_ord).get()"
+    },
+    {
+      "file": "backend\\app\\services\\customer_identity_service.py",
+      "line": 158,
+      "keyword": "collection(\"orders\")",
+      "code": "o_doc = fs_db.collection(\"orders\").document(raw_id).get()"
+    },
+    {
+      "file": "backend\\app\\services\\customer_identity_service.py",
+      "line": 155,
+      "keyword": "db.collection(\"orders\")",
+      "code": "o_doc = fs_db.collection(\"orders\").document(clean_ord).get()"
+    },
+    {
+      "file": "backend\\app\\services\\customer_identity_service.py",
+      "line": 158,
+      "keyword": "db.collection(\"orders\")",
+      "code": "o_doc = fs_db.collection(\"orders\").document(raw_id).get()"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 234,
+      "keyword": "collection(\"orders\")",
+      "code": "doc_snap = db.collection(\"orders\").document(f\"ORD-{clean_id}\").get()"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 236,
+      "keyword": "collection(\"orders\")",
+      "code": "doc_snap = db.collection(\"orders\").document(clean_id).get()"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 322,
+      "keyword": "collection(\"orders\")",
+      "code": "ref = db.collection(\"orders\").document(clean_id)"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 333,
+      "keyword": "collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(clean_id).update({"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 234,
+      "keyword": "db.collection(\"orders\")",
+      "code": "doc_snap = db.collection(\"orders\").document(f\"ORD-{clean_id}\").get()"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 236,
+      "keyword": "db.collection(\"orders\")",
+      "code": "doc_snap = db.collection(\"orders\").document(clean_id).get()"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 322,
+      "keyword": "db.collection(\"orders\")",
+      "code": "ref = db.collection(\"orders\").document(clean_id)"
+    },
+    {
+      "file": "backend\\app\\admin_api\\orders\\services.py",
+      "line": 333,
+      "keyword": "db.collection(\"orders\")",
+      "code": "db.collection(\"orders\").document(clean_id).update({"
+    }
+  ],
+  "phase2_backups_found": [
+    {
+      "file": "firebase.json",
+      "size_bytes": 856,
+      "name": "firebase.json"
+    },
+    {
+      "file": "firestore.indexes.json",
+      "size_bytes": 1238,
+      "name": "firestore.indexes.json"
+    },
+    {
+      "file": "lumora-e6ddc-firebase-adminsdk-fbsvc-abcf2d8c21.json",
+      "size_bytes": 2376,
+      "name": "lumora-e6ddc-firebase-adminsdk-fbsvc-abcf2d8c21.json"
+    },
+    {
+      "file": "package-lock.json",
+      "size_bytes": 71158,
+      "name": "package-lock.json"
+    },
+    {
+      "file": "package.json",
+      "size_bytes": 137,
+      "name": "package.json"
+    },
+    {
+      "file": "pyrightconfig.json",
+      "size_bytes": 137,
+      "name": "pyrightconfig.json"
+    },
+    {
+      "file": ".vscode\\settings.json",
+      "size_bytes": 116,
+      "name": "settings.json"
+    },
+    {
+      "file": "admin-app\\package-lock.json",
+      "size_bytes": 189487,
+      "name": "package-lock.json"
+    },
+    {
+      "file": "admin-app\\package.json",
+      "size_bytes": 767,
+      "name": "package.json"
+    },
+    {
+      "file": "admin-app\\vercel.json",
+      "size_bytes": 842,
+      "name": "vercel.json"
+    },
+    {
+      "file": "frontend\\package-lock.json",
+      "size_bytes": 141148,
+      "name": "package-lock.json"
+    },
+    {
+      "file": "frontend\\package.json",
+      "size_bytes": 865,
+      "name": "package.json"
+    },
+    {
+      "file": "frontend\\vercel.json",
+      "size_bytes": 668,
+      "name": "vercel.json"
+    },
+    {
+      "file": "scratch\\p0_forensics_data.json",
+      "size_bytes": 13332,
+      "name": "p0_forensics_data.json"
+    },
+    {
+      "file": "backend\\backups\\cleanup_manifest.json",
+      "size_bytes": 24147,
+      "name": "cleanup_manifest.json"
+    },
+    {
+      "file": "backend\\backups\\dry_run_manifest_20260718_230744.json",
+      "size_bytes": 103515,
+      "name": "dry_run_manifest_20260718_230744.json"
+    },
+    {
+      "file": "backend\\backups\\dry_run_manifest_latest.json",
+      "size_bytes": 103515,
+      "name": "dry_run_manifest_latest.json"
+    },
+    {
+      "file": "backend\\backups\\firestore_backup_20260718_233756.json",
+      "size_bytes": 46811,
+      "name": "firestore_backup_20260718_233756.json"
+    },
+    {
+      "file": "backend\\backups\\firestore_backup_reviews_20260719_000428.json",
+      "size_bytes": 1547,
+      "name": "firestore_backup_reviews_20260719_000428.json"
+    },
+    {
+      "file": "backend\\backups\\review_cleanup_manifest.json",
+      "size_bytes": 26919,
+      "name": "review_cleanup_manifest.json"
+    },
+    {
+      "file": "backend\\scripts\\audit_readonly_report.json",
+      "size_bytes": 73463,
+      "name": "audit_readonly_report.json"
+    },
+    {
+      "file": "backend\\scripts\\audit_storage_report.json",
+      "size_bytes": 60308,
+      "name": "audit_storage_report.json"
+    },
+    {
+      "file": "database\\collections\\analytics.json",
+      "size_bytes": 0,
+      "name": "analytics.json"
+    },
+    {
+      "file": "database\\collections\\categories.json",
+      "size_bytes": 0,
+      "name": "categories.json"
+    },
+    {
+      "file": "database\\collections\\coupons.json",
+      "size_bytes": 0,
+      "name": "coupons.json"
+    },
+    {
+      "file": "database\\collections\\downloads.json",
+      "size_bytes": 0,
+      "name": "downloads.json"
+    },
+    {
+      "file": "database\\collections\\notifications.json",
+      "size_bytes": 0,
+      "name": "notifications.json"
+    },
+    {
+      "file": "database\\collections\\orders.json",
+      "size_bytes": 0,
+      "name": "orders.json"
+    },
+    {
+      "file": "database\\collections\\payments.json",
+      "size_bytes": 0,
+      "name": "payments.json"
+    },
+    {
+      "file": "database\\collections\\products.json",
+      "size_bytes": 0,
+      "name": "products.json"
+    },
+    {
+      "file": "database\\collections\\reviews.json",
+      "size_bytes": 0,
+      "name": "reviews.json"
+    },
+    {
+      "file": "database\\collections\\users.json",
+      "size_bytes": 0,
+      "name": "users.json"
+    },
+    {
+      "file": "database\\collections\\vendors.json",
+      "size_bytes": 0,
+      "name": "vendors.json"
+    },
+    {
+      "file": "database\\collections\\wishlist.json",
+      "size_bytes": 0,
+      "name": "wishlist.json"
+    },
+    {
+      "file": "database\\collections\\withdrawals.json",
+      "size_bytes": 0,
+      "name": "withdrawals.json"
+    },
+    {
+      "file": "frontend\\src\\data\\products.json",
+      "size_bytes": 107557,
+      "name": "products.json"
+    },
+    {
+      "file": "backend\\migrations\\phase_b5_email_persistence.sql",
+      "size_bytes": 2707,
+      "name": "phase_b5_email_persistence.sql"
+    },
+    {
+      "file": "backend\\migrations\\phase_b6_message_id_traceability.sql",
+      "size_bytes": 764,
+      "name": "phase_b6_message_id_traceability.sql"
+    },
+    {
+      "file": "lumora.db",
+      "size_bytes": 782336,
+      "name": "lumora.db"
+    },
+    {
+      "file": "test.db",
+      "size_bytes": 978944,
+      "name": "test.db"
+    },
+    {
+      "file": "test_admin_auth.db",
+      "size_bytes": 786432,
+      "name": "test_admin_auth.db"
+    },
+    {
+      "file": "test_financial_precision.db",
+      "size_bytes": 786432,
+      "name": "test_financial_precision.db"
+    },
+    {
+      "file": "test_payout_enterprise.db",
+      "size_bytes": 786432,
+      "name": "test_payout_enterprise.db"
+    },
+    {
+      "file": "test_upload_auth.db",
+      "size_bytes": 598016,
+      "name": "test_upload_auth.db"
+    },
+    {
+      "file": "backend\\lumora.db",
+      "size_bytes": 782336,
+      "name": "lumora.db"
+    },
+    {
+      "file": "backend\\test_admin_auth.db",
+      "size_bytes": 786432,
+      "name": "test_admin_auth.db"
+    },
+    {
+      "file": "backend\\test_financial_precision.db",
+      "size_bytes": 786432,
+      "name": "test_financial_precision.db"
+    },
+    {
+      "file": "backend\\test_lumora_sandbox.db",
+      "size_bytes": 2039808,
+      "name": "test_lumora_sandbox.db"
+    },
+    {
+      "file": "backend\\test_payout_enterprise.db",
+      "size_bytes": 786432,
+      "name": "test_payout_enterprise.db"
+    },
+    {
+      "file": "backend\\test_upload_auth.db",
+      "size_bytes": 425984,
+      "name": "test_upload_auth.db"
+    },
+    {
+      "file": "backend\\backups\\lumora_backup_20260718_233756.db",
+      "size_bytes": 552960,
+      "name": "lumora_backup_20260718_233756.db"
+    },
+    {
+      "file": "backend\\backups\\lumora_backup_pre_cleanup.db",
+      "size_bytes": 536576,
+      "name": "lumora_backup_pre_cleanup.db"
+    },
+    {
+      "file": "backend\\backups\\lumora_backup_reviews_20260719_000428.db",
+      "size_bytes": 552960,
+      "name": "lumora_backup_reviews_20260719_000428.db"
+    },
+    {
+      "file": "backend\\test.db.bak",
+      "size_bytes": 770048,
+      "name": "test.db.bak"
+    },
+    {
+      "file": "frontend\\src\\data\\products.json.bak",
+      "size_bytes": 105373,
+      "name": "products.json.bak"
+    },
+    {
+      "file": ".hypothesis\\unicode_data\\15.0.0\\charmap.json.gz",
+      "size_bytes": 21726,
+      "name": "charmap.json.gz"
+    },
+    {
+      "file": ".hypothesis\\unicode_data\\15.0.0\\codec-utf-8.json.gz",
+      "size_bytes": 60,
+      "name": "codec-utf-8.json.gz"
+    },
+    {
+      "file": ".hypothesis\\unicode_data\\16.0.0\\charmap.json.gz",
+      "size_bytes": 22308,
+      "name": "charmap.json.gz"
+    },
+    {
+      "file": ".hypothesis\\unicode_data\\16.0.0\\codec-utf-8.json.gz",
+      "size_bytes": 60,
+      "name": "codec-utf-8.json.gz"
+    },
+    {
+      "file": "backend\\.hypothesis\\unicode_data\\15.0.0\\charmap.json.gz",
+      "size_bytes": 21726,
+      "name": "charmap.json.gz"
+    },
+    {
+      "file": "backend\\.hypothesis\\unicode_data\\15.0.0\\codec-utf-8.json.gz",
+      "size_bytes": 60,
+      "name": "codec-utf-8.json.gz"
+    },
+    {
+      "file": "backend\\.hypothesis\\unicode_data\\16.0.0\\charmap.json.gz",
+      "size_bytes": 22308,
+      "name": "charmap.json.gz"
+    },
+    {
+      "file": "backend\\.hypothesis\\unicode_data\\16.0.0\\codec-utf-8.json.gz",
+      "size_bytes": 60,
+      "name": "codec-utf-8.json.gz"
+    }
+  ],
+  "phase5_migration_scripts": [
+    {
+      "file": "backend\\scripts\\audit_production_storage_readonly.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "Production-safe READ-ONLY diagnostic tool for the Lumora file-storage system.\nfrom app.db.database import engine\nfrom app.models.product import Product\nproducts = db.query(Product).order_by(Product.id.asc()).all()\nitem[\"notes\"].append(\"Product references a temporary vendor staging path.\")\nitem[\"notes\"].append(\"Product references legacy pCloud storage provider.\")\nprint(f\"Total Products Checked: {len(products)}\")\nparser = argparse.ArgumentParser(description=\"Read-Only Diagnostic Tool for Lumora Product Storage\")"
+    },
+    {
+      "file": "backend\\scripts\\migrate_affiliate_attribution.py",
+      "has_products_migration": false,
+      "has_orders_migration": true,
+      "summary_snippet": "from app.db.database import engine, SessionLocal\nfrom app.models.order import Order\nBase.metadata.create_all(bind=engine)\n# Update Order attribution if missing\norder = db.query(Order).filter(Order.id == comm.order_id).first()"
+    },
+    {
+      "file": "backend\\scripts\\migrate_sqlite_to_postgres.py",
+      "has_products_migration": true,
+      "has_orders_migration": true,
+      "summary_snippet": "from sqlalchemy import create_engine, text, MetaData, Table, inspect\npg_url = settings.DATABASE_URL\nif pg_url.startswith(\"postgres://\"):\npg_url = pg_url.replace(\"postgres://\", \"postgresql://\", 1)\nif not pg_url.startswith(\"postgresql\"):\nprint(f\"Error: DATABASE_URL in .env must be a PostgreSQL URL. Found: {pg_url}\")\nif \"sslmode\" not in pg_url:\ndelimiter = \"&\" if \"?\" in pg_url else \"?\"\npg_url = f\"{pg_url}{delimiter}sslmode=require\"\npg_engine = create_engine(pg_url, pool_pre_ping=True, pool_recycle=300)"
+    },
+    {
+      "file": "backend\\scripts\\verify_product_storage.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.models.product import Product\nproduct = db_session.query(Product).filter(Product.id == product_id).first()\nprint(f\"\\n[verify_product_storage] Product ID {product_id} NOT FOUND in PostgreSQL.\")\nprint(f\"Product ID:         {product_id}\")"
+    },
+    {
+      "file": "backend\\migrations\\migrate_orders_ip_columns.py",
+      "has_products_migration": false,
+      "has_orders_migration": true,
+      "summary_snippet": "from sqlalchemy import create_engine, text\nengine = create_engine(settings.DATABASE_URL)\ndialect = engine.dialect.name\nraw_conn = engine.raw_connection()\nwith engine.connect() as conn:\nlogger.info(\"[migration] Orders schema migration complete!\")"
+    },
+    {
+      "file": "backend\\migrations\\migrate_product_ownership_architecture.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "MIGRATION SCRIPT: Product Ownership Architecture Refactoring\nTarget Platform Product IDs:\nfrom app.db.database import engine, SessionLocal\nfrom app.models.product import Product\ninspector = inspect(engine)\nwith engine.begin() as conn:\nis_sqlite = engine.dialect.name == 'sqlite'\nproducts = db.query(Product).all()\nprint(f\"  -> Platform Products updated (`owner_type='PLATFORM'`): {platform_count}\")\nprint(f\"  -> Vendor Products updated   (`owner_type='VENDOR'`):   {vendor_count}\")"
+    },
+    {
+      "file": "backend\\check_116_db.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from sqlalchemy import create_engine, text\nengine = create_engine(db_url)\nwith engine.connect() as conn:\nprint(\"Product:\", product)"
+    },
+    {
+      "file": "backend\\check_query.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from sqlalchemy import create_engine, or_, func, cast, String\nfrom app.models.product import Product\nengine = create_engine(db_url)\nSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)\nquery = db.query(Product).outerjoin(User, Product.vendor_id == cast(User.id, String))\nquery = query.filter(Product.id == pid)\nprint(\"Product found!\", product.id, product.status)\nprint(\"Product NOT FOUND by the query!\")"
+    },
+    {
+      "file": "backend\\check_vendor.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from sqlalchemy import create_engine, text\nengine = create_engine(db_url)\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_add_firebase_uid.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": ""
+    },
+    {
+      "file": "backend\\migrate_affiliate_profile.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.db.database import engine\ninspector = inspect(engine)\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_affiliate_referral_nullable_product.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": "from sqlalchemy import create_engine, text\nengine = create_engine(str(settings.DATABASE_URL))\nwith engine.connect() as conn:\ndialect = engine.dialect.name"
+    },
+    {
+      "file": "backend\\migrate_db.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.db.database import engine\ninspector = inspect(engine)\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_kyc_fields.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.db.database import engine\ninspector = inspect(engine)\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_payout_v2.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.db.database import engine\nwith engine.connect() as conn:\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_products.py",
+      "has_products_migration": true,
+      "has_orders_migration": false,
+      "summary_snippet": "from app.db.database import engine\nfrom app.models.product import Product\ninspector = inspect(engine)\n# We want to check all columns in the Product model\nfor col_name, col_obj in Product.__table__.columns.items():\nwith engine.connect() as conn:"
+    },
+    {
+      "file": "backend\\migrate_rc_fix.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": ""
+    },
+    {
+      "file": "backend\\sync_firestore_affiliate_to_postgres.py",
+      "has_products_migration": false,
+      "has_orders_migration": false,
+      "summary_snippet": ""
+    }
+  ]
+}

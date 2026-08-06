@@ -1,0 +1,807 @@
+{
+  "backend_team_occurrences": [
+    {
+      "file": "backend/app/main.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/audit_all_backup_datasources.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/audit_all_backup_datasources.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_leftovers.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_leftovers.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_test_admin_records.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_test_admin_records.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_test_admin_records.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/cleanup_test_admin_records.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase1_audit_backup.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase1_audit_backup.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase1_audit_backup.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase1_audit_backup.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase2_investigate.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase2_investigate.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase2_investigate.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase3_root_db_audit.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/phase3_root_db_audit.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_cleanup_auto.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_cleanup_auto.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_cleanup_production.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_cleanup_production.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_forensic_audit.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_forensic_audit.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_historical_forensics.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/postgresql_historical_forensics.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/production_recovery_audit.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/production_recovery_audit.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/restore_production_state.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/restore_production_state.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/restore_production_state.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/seed_postgres_admin_roles.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/seed_postgres_admin_roles.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/seed_system_admin.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_postgres_team_flow.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_postgres_team_flow.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_postgres_team_flow.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_postgres_team_flow.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "accept_invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "team/invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "team/invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/verify_team_lifecycle.py",
+      "keyword": "team/accept-invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/zero_assumption_forensics.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/zero_assumption_forensics.py",
+      "keyword": "invite_admin",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scratch/zero_assumption_forensics.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/migrate_sqlite_to_postgres.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/migrate_sqlite_to_postgres.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/phase_c_staging_config_check.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/phase_c_staging_config_check.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/production_cleanup.py",
+      "keyword": "admin_roles",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/verify_admin_regression.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/scripts/verify_admin_regression.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/conftest.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/tests/conftest.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/tests/test_email_infrastructure.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_email_infrastructure.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_email_infrastructure.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_email_infrastructure.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "accept_invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_enterprise_e2e_certification.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b5_operations.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b5_operations.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b5_operations.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b5_operations.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b_persistence.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b_persistence.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b_persistence.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b_persistence.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_b_persistence.py",
+      "keyword": "team/invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_disaster_recovery.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_disaster_recovery.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_disaster_recovery.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_load_benchmark.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_load_benchmark.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_load_benchmark.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_load_benchmark.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "accept_invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_phase_c_security_audit.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_team_management_production.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_team_management_production.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_team_management_production.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_team_management_production.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/tests/test_treasury_production_validation.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/firestore/admin_firestore.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/firestore/admin_firestore.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/firestore/admin_firestore.py",
+      "keyword": "accept_invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/firestore/admin_firestore.py",
+      "keyword": "team/invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/routes/auth.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/admin/routes/auth.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/api/auth_router.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/core/permissions.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/models/admin_email_log.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/admin_email_log.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/admin_invitation.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/admin_invitation.py",
+      "keyword": "admin_invitations",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/admin_role.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/admin_role.py",
+      "keyword": "admin_roles",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/__init__.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/models/__init__.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/services/email_service.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": false
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "AdminInvitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "admin_invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "invite_admin",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "send_invitation",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "accept_invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "AdminRole",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "team/invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "team/invitations",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/admin_users/routes.py",
+      "keyword": "team/accept-invite",
+      "has_write": true,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/notifications/routes.py",
+      "keyword": "AdminInvitation",
+      "has_write": false,
+      "has_read": true
+    },
+    {
+      "file": "backend/app/admin_api/treasury/routes.py",
+      "keyword": "AdminRole",
+      "has_write": false,
+      "has_read": true
+    }
+  ],
+  "firestore_team_collections_found": [
+    "invitations",
+    "members"
+  ],
+  "mock_team_files_found": [],
+  "backup_team_audit": {
+    "cleanup_manifest.json": {
+      "keys": [
+        "timestamp",
+        "total_deletions",
+        "manifest_entries"
+      ],
+      "has_invitations": false
+    },
+    "dry_run_manifest_20260718_230744.json": {
+      "keys": [
+        "timestamp",
+        "total_deletions",
+        "deletions_by_phase",
+        "deletions_by_collection",
+        "deletions_queue"
+      ],
+      "has_invitations": false
+    },
+    "dry_run_manifest_latest.json": {
+      "keys": [
+        "timestamp",
+        "total_deletions",
+        "deletions_by_phase",
+        "deletions_by_collection",
+        "deletions_queue"
+      ],
+      "has_invitations": false
+    },
+    "firestore_backup_20260718_233756.json": {
+      "keys": [
+        "orders",
+        "conversations",
+        "reports",
+        "promotionParticipants",
+        "adminAffiliateOrders",
+        "adminAnalytics",
+        "adminPromotions",
+        "customer "
+      ],
+      "has_invitations": false
+    },
+    "firestore_backup_reviews_20260719_000428.json": {
+      "keys": [
+        "DBytyJkJvqe5rlZHoYGyMitj5u22_10",
+        "eKhujMHNCTMH4afXkaT8R22UFww2_10",
+        "zQrMwbynrsU07j8ysOqGgcduhDA3_1"
+      ],
+      "has_invitations": false
+    },
+    "review_cleanup_manifest.json": {
+      "keys": [
+        "timestamp",
+        "reviews_count_before",
+        "reviews_to_delete",
+        "products_before"
+      ],
+      "has_invitations": false
+    }
+  }
+}

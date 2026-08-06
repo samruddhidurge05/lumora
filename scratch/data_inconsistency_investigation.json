@@ -1,0 +1,257 @@
+{
+  "dependency_map": {
+    "Orders": {
+      "service_file": "backend/app/admin_api/orders/services.py",
+      "route_file": "backend/app/admin_api/orders/routes.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "SQL (SessionLocal / DATABASE_URL)"
+    },
+    "Payments": {
+      "service_file": "backend/app/admin_api/payments/services.py",
+      "route_file": "backend/app/admin_api/payments/routes.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "SQL (SessionLocal / DATABASE_URL)"
+    },
+    "Reviews": {
+      "service_file": "backend/app/admin_api/reviews/services.py",
+      "route_file": "backend/app/admin_api/reviews/routes.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "SQL (SessionLocal / DATABASE_URL)"
+    },
+    "Reports": {
+      "service_file": "backend/app/admin_api/reports/services.py",
+      "route_file": "backend/app/admin_api/reports/routes.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "SQL (SessionLocal / DATABASE_URL)"
+    },
+    "Team / Admins / Invitations": {
+      "service_file": "backend/admin/routes/admin_team.py",
+      "route_file": "backend/admin/routes/admin_invitations.py",
+      "uses_firestore": false,
+      "uses_sql": false,
+      "has_fallback": false,
+      "fallback_target": "None"
+    },
+    "Customers / Users": {
+      "service_file": "backend/app/admin_api/customers/services.py",
+      "route_file": "backend/app/admin_api/customers/routes.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "SQL (SessionLocal / DATABASE_URL)"
+    },
+    "Vendors": {
+      "service_file": "backend/app/admin_api/vendors/services.py",
+      "route_file": "backend/app/admin_api/vendors/routes.py",
+      "uses_firestore": false,
+      "uses_sql": false,
+      "has_fallback": false,
+      "fallback_target": "None"
+    },
+    "Affiliates": {
+      "service_file": "backend/admin/routes/affiliates.py",
+      "route_file": "backend/admin/routes/affiliates.py",
+      "uses_firestore": true,
+      "uses_sql": true,
+      "has_fallback": true,
+      "fallback_target": "JSON / Mock Fallback"
+    }
+  },
+  "render_postgres_data": {
+    "tables_found": [
+      "affiliate_referrals",
+      "affiliate_commissions",
+      "refund_requests",
+      "product_download_events",
+      "orders",
+      "products",
+      "coupons",
+      "vendors",
+      "withdrawals",
+      "reports",
+      "storage_metadata",
+      "audit_logs",
+      "users",
+      "platform_settings",
+      "product_versions",
+      "conversations",
+      "notifications",
+      "price_alerts",
+      "recently_viewed",
+      "search_history",
+      "user_activities",
+      "reviews",
+      "wishlists",
+      "cart_items",
+      "affiliate_profiles",
+      "verifications",
+      "admin_roles",
+      "admin_invitations",
+      "platform_withdrawals",
+      "platform_treasury_ledgers",
+      "messages",
+      "affiliate_payouts",
+      "referral_links",
+      "admin_email_logs",
+      "referral_clicks",
+      "order_items",
+      "payments",
+      "referral_attributions"
+    ],
+    "row_counts": {
+      "users": 4,
+      "admin_roles": 1,
+      "admin_invitations": 0,
+      "orders": 1,
+      "payments": 2,
+      "reviews": 0,
+      "reports": 0,
+      "products": 194,
+      "refund_requests": 0
+    },
+    "admin_users": [
+      {
+        "id": 2,
+        "name": "Platform Admin",
+        "email": "avikapawar08@gmail.com",
+        "role": "admin",
+        "active": true
+      }
+    ],
+    "invitations_count": 0
+  },
+  "lumora_db_data": {
+    "tables": [
+      "users",
+      "products",
+      "coupons",
+      "vendors",
+      "withdrawals",
+      "reports",
+      "audit_logs",
+      "platform_settings",
+      "product_versions",
+      "conversations",
+      "notifications",
+      "recently_viewed",
+      "price_alerts",
+      "search_history",
+      "user_activities",
+      "orders",
+      "reviews",
+      "wishlists",
+      "cart_items",
+      "affiliate_profiles",
+      "verifications",
+      "admin_roles",
+      "admin_invitations",
+      "messages",
+      "order_items",
+      "payments",
+      "affiliate_commissions",
+      "affiliate_payouts",
+      "referral_links",
+      "refund_requests",
+      "referral_clicks",
+      "referral_attributions",
+      "affiliate_referrals",
+      "product_download_events",
+      "storage_metadata",
+      "admin_email_logs",
+      "platform_withdrawals",
+      "platform_treasury_ledgers"
+    ],
+    "row_counts": {
+      "users": 46,
+      "admin_roles": 0,
+      "admin_invitations": 0,
+      "orders": 22,
+      "payments": 21,
+      "reviews": 0,
+      "reports": 0,
+      "products": 91
+    },
+    "admin_users": [
+      {
+        "id": 1,
+        "name": "Platform Admin",
+        "email": "avikapawar08@gmail.com",
+        "role": "admin"
+      }
+    ],
+    "invitations_count": 0
+  },
+  "test_db_data": {
+    "tables": [
+      "users",
+      "products",
+      "coupons",
+      "vendors",
+      "withdrawals",
+      "reports",
+      "storage_metadata",
+      "audit_logs",
+      "platform_settings",
+      "product_versions",
+      "conversations",
+      "notifications",
+      "recently_viewed",
+      "price_alerts",
+      "search_history",
+      "user_activities",
+      "reviews",
+      "wishlists",
+      "cart_items",
+      "affiliate_profiles",
+      "verifications",
+      "admin_roles",
+      "admin_invitations",
+      "messages",
+      "affiliate_payouts",
+      "referral_links",
+      "admin_email_logs",
+      "orders",
+      "referral_clicks",
+      "order_items",
+      "payments",
+      "referral_attributions",
+      "affiliate_referrals",
+      "refund_requests",
+      "product_download_events",
+      "affiliate_commissions"
+    ],
+    "row_counts": {
+      "users": 21,
+      "admin_roles": 0,
+      "admin_invitations": 0,
+      "orders": 6,
+      "payments": 0,
+      "reviews": 0,
+      "reports": 0,
+      "products": 105
+    },
+    "admin_users": [
+      {
+        "id": 1,
+        "name": "Lumora Admin",
+        "email": "admin@lumora.co",
+        "role": "admin"
+      },
+      {
+        "id": 2,
+        "name": "Admin User",
+        "email": "avikapawar08@gmail.com",
+        "role": "admin"
+      }
+    ],
+    "invitations_count": 0
+  }
+}

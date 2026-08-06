@@ -1,0 +1,466 @@
+{
+  "phase1_db_matches_count": 1059,
+  "lumora_orders": [
+    {
+      "order_id": 1,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 1000.0,
+      "status": "completed",
+      "created_at": "2026-07-22 14:05:52.276590",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 2,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 1000.0,
+      "status": "completed",
+      "created_at": "2026-07-22 14:06:54.579394",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 3,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 1000.0,
+      "status": "completed",
+      "created_at": "2026-07-22 14:06:56.445164",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 4,
+      "user_id": 21,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784810102@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:05:03.800732",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 5,
+      "user_id": 23,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784810134@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:05:34.726878",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 6,
+      "user_id": 25,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784810154@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:05:55.184082",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 7,
+      "user_id": 27,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784810206@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:06:46.833177",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 8,
+      "user_id": 35,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784810889@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:18:09.945248",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 9,
+      "user_id": 37,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784811423@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:27:04.595943",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 10,
+      "user_id": 39,
+      "customer_name": "Bob Customer",
+      "email": "customer_1784811451@test.com",
+      "amount": 100.0,
+      "status": "completed",
+      "created_at": "2026-07-23 18:27:32.305786",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 11,
+      "user_id": 41,
+      "customer_name": "Test Buyer",
+      "email": "buyer_b0fbc6@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-07-24 05:38:27.547002",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 12,
+      "user_id": 42,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_ddef93@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-07-24 05:38:27.672776",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 13,
+      "user_id": 44,
+      "customer_name": "Test Buyer",
+      "email": "buyer_f0a100@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-07-24 05:40:47.852262",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 14,
+      "user_id": 45,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_07ed2b@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-07-24 05:40:47.971996",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 15,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 1000.0,
+      "status": "completed",
+      "created_at": "2026-08-03 07:47:46.336644",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 16,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 1000.0,
+      "status": "completed",
+      "created_at": "2026-08-03 07:47:47.013333",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 17,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 250.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:34:39.557018",
+      "payment_id": "LUM-TEST-IP-1785852279",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 18,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 250.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:34:57.777160",
+      "payment_id": "LUM-TEST-IP-1785852297",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 19,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 250.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:35:31.176424",
+      "payment_id": "LUM-TEST-IP-1785852331",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 20,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 250.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:36:01.896578",
+      "payment_id": "LUM-TEST-IP-1785852361",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 21,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 250.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:38:27.413799",
+      "payment_id": "LUM-TEST-IP-1785852507",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 22,
+      "user_id": 3,
+      "customer_name": "E2E Test Customer",
+      "email": "test_customer_e2e@lumora.com",
+      "amount": 500.0,
+      "status": "completed",
+      "created_at": "2026-08-04 19:47:28.498427",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    }
+  ],
+  "test_orders": [
+    {
+      "order_id": 1,
+      "user_id": 4,
+      "customer_name": "Test Buyer",
+      "email": "buyer_7a377d@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-07-28 06:21:23.115690",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 2,
+      "user_id": 5,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_9cf9cf@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-07-28 06:21:23.198072",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 3,
+      "user_id": 1,
+      "customer_name": "Lumora Admin",
+      "email": "admin@lumora.co",
+      "amount": 49.99,
+      "status": "completed",
+      "created_at": "2026-07-28 06:21:36.655352",
+      "payment_id": "N/A",
+      "classification": "Internal Admin"
+    },
+    {
+      "order_id": 4,
+      "user_id": 35,
+      "customer_name": "Test Buyer",
+      "email": "buyer_0dbe47@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-07-29 08:56:19.513880",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 5,
+      "user_id": 36,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_507dfd@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-07-29 08:56:19.587194",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 6,
+      "user_id": 1,
+      "customer_name": "Lumora Admin",
+      "email": "admin@lumora.co",
+      "amount": 49.99,
+      "status": "completed",
+      "created_at": "2026-07-29 08:56:31.748896",
+      "payment_id": "N/A",
+      "classification": "Internal Admin"
+    }
+  ],
+  "sandbox_orders": [
+    {
+      "order_id": 1,
+      "user_id": 6,
+      "customer_name": "Test Buyer",
+      "email": "buyer_7df87f@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-08-05 13:25:03.602311",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 2,
+      "user_id": 7,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_9d1024@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-08-05 13:25:03.679401",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 3,
+      "user_id": 1,
+      "customer_name": "Super Test",
+      "email": "super_test@lumora.io",
+      "amount": 49.99,
+      "status": "completed",
+      "created_at": "2026-08-05 13:25:17.082662",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 4,
+      "user_id": 34,
+      "customer_name": "Test Buyer",
+      "email": "buyer_bc5a29@lumora.com",
+      "amount": 1000.0,
+      "status": "paid",
+      "created_at": "2026-08-05 14:17:25.195836",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    },
+    {
+      "order_id": 5,
+      "user_id": 35,
+      "customer_name": "Self Ref Affiliate",
+      "email": "selfref_af2ec4@lumora.com",
+      "amount": 500.0,
+      "status": "paid",
+      "created_at": "2026-08-05 14:17:25.307148",
+      "payment_id": "N/A",
+      "classification": "Developer / Test Account"
+    },
+    {
+      "order_id": 6,
+      "user_id": 1,
+      "customer_name": "Super Test",
+      "email": "super_test@lumora.io",
+      "amount": 49.99,
+      "status": "completed",
+      "created_at": "2026-08-05 14:17:41.417298",
+      "payment_id": "N/A",
+      "classification": "E2E Test / Automated Testing"
+    }
+  ],
+  "database_matrix": {
+    "lumora.db (root)": {
+      "size_bytes": 782336,
+      "users": 46,
+      "orders": 22,
+      "payments": 21,
+      "refunds": 0,
+      "products": 91,
+      "revenue": 10450.0
+    },
+    "lumora.db (backend)": {
+      "size_bytes": 782336,
+      "users": 46,
+      "orders": 22,
+      "payments": 21,
+      "refunds": 0,
+      "products": 91,
+      "revenue": 10450.0
+    },
+    "test.db (root)": {
+      "size_bytes": 978944,
+      "users": 21,
+      "orders": 6,
+      "payments": 0,
+      "refunds": 0,
+      "products": 105,
+      "revenue": 3099.98
+    },
+    "test_lumora_sandbox.db": {
+      "size_bytes": 2039808,
+      "users": 54,
+      "orders": 6,
+      "payments": 0,
+      "refunds": 0,
+      "products": 105,
+      "revenue": 3099.98
+    },
+    "test_financial_precision.db": {
+      "size_bytes": 786432,
+      "users": 0,
+      "orders": 0,
+      "payments": 0,
+      "refunds": 0,
+      "products": 0,
+      "revenue": 0.0
+    },
+    "test_admin_auth.db": {
+      "size_bytes": 786432,
+      "users": 0,
+      "orders": 0,
+      "payments": 0,
+      "refunds": 0,
+      "products": 0,
+      "revenue": 0.0
+    },
+    "test_payout_enterprise.db": {
+      "size_bytes": 786432,
+      "users": 0,
+      "orders": 0,
+      "payments": 0,
+      "refunds": 0,
+      "products": 0,
+      "revenue": 0.0
+    },
+    "test_upload_auth.db": {
+      "size_bytes": 598016,
+      "users": 0,
+      "orders": 0,
+      "payments": 0,
+      "refunds": 0,
+      "products": 0,
+      "revenue": 0.0
+    },
+    "Render PostgreSQL": {
+      "size_bytes": "Remote Database",
+      "users": 4,
+      "orders": 0,
+      "payments": 0,
+      "refunds": 0,
+      "products": 194,
+      "revenue": 0.0
+    }
+  }
+}

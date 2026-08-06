@@ -1,0 +1,830 @@
+{
+  "admin_pages_inventory": [
+    "AcceptInvite.jsx",
+    "AdminLogin.jsx",
+    "AdminSupportInbox.jsx",
+    "AdminUserManagement.jsx",
+    "AffiliateManagement.jsx",
+    "AffiliateTransactions.jsx",
+    "Analytics.jsx",
+    "AuditLogs.jsx",
+    "CampaignManager.jsx",
+    "CustomersManagement.jsx",
+    "Dashboard.jsx",
+    "Navbar.jsx",
+    "OrdersManagement.jsx",
+    "Payments.jsx",
+    "ProductsManagement.jsx",
+    "PromotionsManagement.jsx",
+    "Reports.jsx",
+    "Reviews.jsx",
+    "Settings.jsx",
+    "Vendors.jsx"
+  ],
+  "backend_file_analysis": {
+    "backend/app/admin_api/routes.py": {
+      "endpoints": [
+        "GET /system/config"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/app/admin_api/admin_users/routes.py": {
+      "endpoints": [
+        "GET /me",
+        "GET /team",
+        "POST /team/invite",
+        "POST /team/invitations/{invitation_id}/resend",
+        "GET /team/invitations/{invitation_id}/history",
+        "GET /team/invitations/diagnostic-version",
+        "GET /team/email-logs",
+        "GET /team/email-dlq",
+        "POST /team/email-dlq/{log_id}/retry",
+        "GET /team/email-health",
+        "GET /team/email-metrics",
+        "POST /team/{user_id}/activate",
+        "POST /team/accept-invite",
+        "POST /team/{user_id}/deactivate",
+        "PUT /team/{user_id}/role",
+        "GET /team/invitations",
+        "DELETE /team/invitations/{invitation_id}",
+        "GET /team/invitations/verify",
+        "GET /team/audit-log"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "User",
+        "AdminEmailLog",
+        "AdminInvitation",
+        "AdminRole",
+        "AuditLog"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": true,
+      "has_mock_references": true
+    },
+    "backend/app/admin_api/admin_users/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/analytics/routes.py": {
+      "endpoints": [
+        "GET /dashboard-full",
+        "GET /dashboard",
+        "GET /revenue",
+        "GET /products",
+        "GET /customers",
+        "GET /forecast"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/analytics/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "orders",
+        "products",
+        "reports",
+        "vendors",
+        "reviews"
+      ],
+      "sql_models": [
+        "ReviewModel",
+        "OrderModel",
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/customers/routes.py": {
+      "endpoints": [
+        "GET /",
+        "GET /{customer_id}",
+        "PUT /{customer_id}"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/customers/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "users"
+      ],
+      "sql_models": [
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/customers/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/notifications/routes.py": {
+      "endpoints": [
+        "GET /counts"
+      ],
+      "firestore_collections": [
+        "reports",
+        "orders"
+      ],
+      "sql_models": [
+        "RefundRequest",
+        "AdminInvitation",
+        "Conversation"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/notifications/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/orders/routes.py": {
+      "endpoints": [
+        "GET /",
+        "GET /{order_id}",
+        "PUT /{order_id}/status",
+        "POST /{order_id}/refund",
+        "POST /{order_id}/dispute",
+        "GET /{order_id}/download-info"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "ProductModel",
+        "OrderModel",
+        "Order"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/orders/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "orders",
+        "affiliateConversions"
+      ],
+      "sql_models": [
+        "AffiliateCommissionModel",
+        "AffiliateProfile",
+        "OrderModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/orders/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/payments/routes.py": {
+      "endpoints": [
+        "GET /telemetry",
+        "GET /dashboard",
+        "GET /overview",
+        "GET /vendor-payouts",
+        "GET /refunds",
+        "GET /transactions",
+        "POST /payout"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/payments/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "vendors",
+        "affiliatePayouts",
+        "orders",
+        "affiliateConversions"
+      ],
+      "sql_models": [
+        "ProductModel",
+        "OrderModel",
+        "AffiliateCommissionModel",
+        "AffiliatePayoutModel",
+        "WithdrawalModel",
+        "AffiliateProfile",
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/payments/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/products/routes.py": {
+      "endpoints": [
+        "GET /",
+        "GET /pending",
+        "POST /{product_id}/approve",
+        "POST /{product_id}/reject"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "Product"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/products/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/refunds/routes.py": {
+      "endpoints": [
+        "GET /",
+        "PUT /{request_id}/status",
+        "POST /{request_id}/approve",
+        "POST /{request_id}/reject"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/reports/routes.py": {
+      "endpoints": [
+        "GET /",
+        "GET /analytics",
+        "GET /dashboard",
+        "POST /resolve",
+        "POST /reject",
+        "POST /assign",
+        "POST /delete"
+      ],
+      "firestore_collections": [
+        "reports"
+      ],
+      "sql_models": [],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/reports/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "reports",
+        "products"
+      ],
+      "sql_models": [
+        "SQLReport",
+        "Product"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/reports/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/reviews/routes.py": {
+      "endpoints": [
+        "GET /",
+        "GET /dashboard",
+        "GET /analytics",
+        "POST /moderate"
+      ],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/reviews/services.py": {
+      "endpoints": [],
+      "firestore_collections": [
+        "users",
+        "reviews"
+      ],
+      "sql_models": [
+        "ReviewModel",
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/support/routes.py": {
+      "endpoints": [
+        "GET /tickets",
+        "GET /{ticket_id}/messages",
+        "POST /{ticket_id}/reply",
+        "PUT /{ticket_id}/status"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "Conversation",
+        "Message"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/support/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/app/admin_api/treasury/routes.py": {
+      "endpoints": [
+        "GET /summary",
+        "GET /withdrawals",
+        "GET /withdrawals/{withdrawal_id}",
+        "GET /ledger",
+        "GET /timeline",
+        "POST /settlement/request",
+        "POST /settlement/{withdrawal_id}/approve",
+        "POST /settlement/{withdrawal_id}/complete",
+        "POST /settlement/{withdrawal_id}/cancel"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "AuditLog",
+        "PlatformWithdrawal",
+        "AdminRole",
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/app/admin_api/treasury/webhook.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [
+        "PlatformWithdrawal"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/app/admin_api/treasury/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/affiliates.py": {
+      "endpoints": [
+        "GET /",
+        "PUT /{uid}/status",
+        "POST /{id}/enable",
+        "POST /{id}/disable",
+        "GET /kpis",
+        "GET /commissions",
+        "GET /commissions/export/csv",
+        "PATCH /commissions/{commission_id}/status",
+        "GET /{affiliate_id}/profile",
+        "GET /{affiliate_id}/commissions",
+        "GET /payouts",
+        "PATCH /payouts/{payout_id}/status",
+        "GET /payouts/{payout_id}/supporting-orders",
+        "GET /payouts/{payout_id}/audit-timeline",
+        "POST /payouts/{payout_id}/pay",
+        "GET /products/performance",
+        "GET /activity",
+        "GET /orders/{order_id}",
+        "GET /customer-attributions",
+        "GET /customer-attributions/export/csv",
+        "GET /funnel-analytics",
+        "GET /orders/{order_id}",
+        "POST /orders/{order_id}/regenerate-commission",
+        "GET /affiliate-products",
+        "GET /affiliate-products/{product_id}/details"
+      ],
+      "firestore_collections": [
+        "users",
+        "affiliates"
+      ],
+      "sql_models": [
+        "ProductDownloadEvent",
+        "AffiliatePayout",
+        "User",
+        "RefundRequest",
+        "AffiliateReferral",
+        "ReferralAttribution",
+        "ReferralLink",
+        "Product",
+        "AffiliateProfile",
+        "AffiliateCommission",
+        "Order"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/admin/routes/analytics.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/auth.py": {
+      "endpoints": [
+        "POST /login",
+        "GET /audit-logs"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "User",
+        "AdminInvitation",
+        "AdminRole",
+        "AuditLog"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/admin/routes/customers.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/orders.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/products.py": {
+      "endpoints": [
+        "GET /",
+        "POST /",
+        "PUT /{product_id}",
+        "PATCH /{product_id}/status",
+        "PATCH /{product_id}/featured",
+        "PATCH /{product_id}/affiliate",
+        "PUT /{product_id}/affiliate",
+        "DELETE /{product_id}"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "Review",
+        "AffiliateReferral",
+        "ReferralAttribution",
+        "ReferralLink",
+        "Product",
+        "PriceAlert",
+        "RecentlyViewed",
+        "AffiliateCommission",
+        "OrderItem"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/referral_links.py": {
+      "endpoints": [
+        "GET /",
+        "POST /",
+        "DELETE /{link_id}",
+        "PATCH /{link_id}/status"
+      ],
+      "firestore_collections": [
+        "adminReferralLinks"
+      ],
+      "sql_models": [
+        "ReferralLink",
+        "AffiliateProfile",
+        "Product"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/admin/routes/reports.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/reviews.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/settings.py": {
+      "endpoints": [
+        "GET /",
+        "PUT /",
+        "PUT /vendor-marketplace",
+        "PUT /affiliate-program",
+        "POST /pause",
+        "POST /resume"
+      ],
+      "firestore_collections": [
+        "platformSettings"
+      ],
+      "sql_models": [
+        "PlatformSetting"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": false,
+      "has_mock_references": true
+    },
+    "backend/admin/routes/storage.py": {
+      "endpoints": [
+        "GET /health"
+      ],
+      "firestore_collections": [],
+      "sql_models": [
+        "Product"
+      ],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/vendors.py": {
+      "endpoints": [
+        "GET /",
+        "PUT /{uid}/status",
+        "POST /{id}/enable",
+        "POST /{id}/disable",
+        "POST /{id}/restrict"
+      ],
+      "firestore_collections": [
+        "users"
+      ],
+      "sql_models": [
+        "User",
+        "UserModel"
+      ],
+      "has_firestore_broken_guard": true,
+      "uses_sql_session": true,
+      "has_mock_references": false
+    },
+    "backend/admin/routes/__init__.py": {
+      "endpoints": [],
+      "firestore_collections": [],
+      "sql_models": [],
+      "has_firestore_broken_guard": false,
+      "uses_sql_session": false,
+      "has_mock_references": false
+    }
+  },
+  "firestore_collections_discovered": [
+    "admin",
+    "adminAffiliateOrders",
+    "adminAnalytics",
+    "adminPromotions",
+    "adminReferralLinks",
+    "affiliateConversions",
+    "affiliateLinks",
+    "affiliatePayouts",
+    "affiliates",
+    "conversations",
+    "customers",
+    "downloads",
+    "invitations",
+    "items",
+    "members",
+    "orders",
+    "platformSettings",
+    "products",
+    "promotionParticipants",
+    "purchases",
+    "refund_requests",
+    "reports",
+    "reviews",
+    "userNotifications",
+    "users",
+    "vendorNotifications",
+    "vendors"
+  ],
+  "sql_models_discovered": [
+    "AdminEmailLog",
+    "AdminInvitation",
+    "AdminRole",
+    "AffiliateCommission",
+    "AffiliateCommissionModel",
+    "AffiliatePayout",
+    "AffiliatePayoutModel",
+    "AffiliateProfile",
+    "AffiliateReferral",
+    "AuditLog",
+    "CartItem",
+    "Conversation",
+    "Message",
+    "Notification",
+    "Order",
+    "OrderItem",
+    "OrderModel",
+    "Payment",
+    "PaymentModel",
+    "PlatformSetting",
+    "PlatformTreasuryLedger",
+    "PlatformWithdrawal",
+    "PriceAlert",
+    "Product",
+    "ProductDownloadEvent",
+    "ProductModel",
+    "ProductVersion",
+    "RecentlyViewed",
+    "ReferralAttribution",
+    "ReferralClick",
+    "ReferralLink",
+    "RefundRequest",
+    "Review",
+    "ReviewModel",
+    "SQLReport",
+    "SearchHistory",
+    "StorageMetadata",
+    "User",
+    "UserActivity",
+    "UserModel",
+    "Vendor",
+    "VendorModel",
+    "WishlistItem",
+    "Withdrawal",
+    "WithdrawalModel"
+  ],
+  "sqlite_references": [
+    "backend/app/core/config.py",
+    "backend/app/db/database.py",
+    "backend/check_116_db.py",
+    "backend/check_db.py",
+    "backend/check_users.py",
+    "backend/migrate_add_firebase_uid.py",
+    "backend/migrate_rc_fix.py",
+    "backend/migrations/phase3_razorpayx_payout_columns.py",
+    "backend/scratch/audit_all_backup_datasources.py",
+    "backend/scratch/check_affiliate.py",
+    "backend/scratch/check_b2_files.py",
+    "backend/scratch/check_db_counts.py",
+    "backend/scratch/check_inactive_vendors.py",
+    "backend/scratch/check_products.py",
+    "backend/scratch/check_sqlite_prod.py",
+    "backend/scratch/cleanup_test_admin_records.py",
+    "backend/scratch/debug_payments.py",
+    "backend/scratch/debug_table_inserts.py",
+    "backend/scratch/enable_affiliate.py",
+    "backend/scratch/fix_sqlite_schema.py",
+    "backend/scratch/inspect_db.py",
+    "backend/scratch/migrate_email_logs.py",
+    "backend/scratch/migrate_payments.py",
+    "backend/scratch/phase1_audit_backup.py",
+    "backend/scratch/phase2_investigate.py",
+    "backend/scratch/phase3_root_db_audit.py",
+    "backend/scratch/query_pcloud_db.py",
+    "backend/scratch/render_fix_notes.py",
+    "backend/scratch/seed_test_order.py",
+    "backend/scratch/zero_assumption_forensics.py",
+    "backend/scripts/migrate_sqlite_to_postgres.py",
+    "backend/scripts/production_cleanup.py",
+    "backend/scripts/run_reviews_cleanup.py",
+    "backend/scripts/test_reviews_recalculation.py",
+    "backend/scripts/verify_admin_regression.py",
+    "backend/scripts/verify_integrity.py",
+    "backend/tests/conftest.py"
+  ],
+  "mock_references_backend": [
+    "backend/admin/routes/affiliates.py",
+    "backend/admin/validators/status_checks.py",
+    "backend/app/admin_api/admin_users/routes.py",
+    "backend/app/admin_api/routes.py",
+    "backend/app/api/cart_router.py",
+    "backend/app/api/orders/routes.py",
+    "backend/app/api/payments/schemas.py",
+    "backend/app/core/config.py",
+    "backend/app/dependencies.py",
+    "backend/app/main.py",
+    "backend/app/models/affiliate.py",
+    "backend/app/models/payment.py",
+    "backend/app/payments/gateway/factory.py",
+    "backend/app/payments/gateway/interface.py",
+    "backend/app/payments/gateway/mock_gateway.py",
+    "backend/app/payments/gateway/razorpay_gateway.py",
+    "backend/app/payments/payout/__init__.py",
+    "backend/app/payments/payout/completion_handler.py",
+    "backend/app/payments/payout/factory.py",
+    "backend/app/payments/payout/mock_provider.py",
+    "backend/app/payments/payout/provider.py",
+    "backend/app/repositories/payment_repo.py",
+    "backend/app/services/email_providers.py",
+    "backend/app/services/email_service.py",
+    "backend/app/services/payment_service.py",
+    "backend/app/services/refund_service.py",
+    "backend/app/services/storage_service.py",
+    "backend/app/utils/db_sync.py",
+    "backend/check_firebase_sync.py",
+    "backend/check_payment.py",
+    "backend/debug_payment.py",
+    "backend/migrate_payout_v2.py",
+    "backend/scratch/audit_download_issue.py",
+    "backend/scratch/compare_products.py",
+    "backend/scratch/fix_121.py",
+    "backend/scratch/payment_health_check.py",
+    "backend/scratch/phase2_investigate.py",
+    "backend/scratch/phase3_root_db_audit.py",
+    "backend/scratch/postgresql_cleanup_auto.py",
+    "backend/scratch/postgresql_cleanup_production.py",
+    "backend/scratch/postgresql_forensic_audit.py",
+    "backend/scratch/seed_test_order.py",
+    "backend/scratch/test_affiliate_e2e.py",
+    "backend/scratch/test_b2_public_private_storage.py",
+    "backend/scratch/test_download_audit_verification.py",
+    "backend/scratch/test_download_issue_resolution.py",
+    "backend/scratch/test_firebase_sync.py",
+    "backend/scratch/test_purchase_flow.py",
+    "backend/scratch/verify_affiliate_dashboard_live.py",
+    "backend/scratch/verify_campaign_manager_e2e.py",
+    "backend/scratch/verify_flow.py",
+    "backend/scripts/audit_storage.py",
+    "backend/scripts/cleanup_firestore_mock_products.py",
+    "backend/scripts/run_reviews_cleanup.py",
+    "backend/scripts/verify_admin_regression.py",
+    "backend/scripts/verify_integrity.py",
+    "backend/test_flow.py",
+    "backend/tests/conftest.py",
+    "backend/tests/test_admin_auth_regression.py",
+    "backend/tests/test_affiliate_attribution_bug_condition.py",
+    "backend/tests/test_affiliate_attribution_enterprise.py",
+    "backend/tests/test_affiliate_attribution_preservation_pbt.py",
+    "backend/tests/test_cleanup_script_pbt.py",
+    "backend/tests/test_cleanup_script_unit.py",
+    "backend/tests/test_firestore_delete_unit.py",
+    "backend/tests/test_firestore_sync_bug_condition.py",
+    "backend/tests/test_firestore_sync_pbt.py",
+    "backend/tests/test_firestore_sync_preservation.py",
+    "backend/tests/test_firestore_sync_unit.py",
+    "backend/tests/test_phase_b5_operations.py",
+    "backend/tests/test_phase_b_persistence.py",
+    "backend/tests/test_phase_c_disaster_recovery.py",
+    "backend/tests/test_product_deletion_integrity.py",
+    "backend/tests/test_product_patch_endpoints.py",
+    "backend/tests/test_production_storage_reliability.py",
+    "backend/tests/test_production_storage_repair.py",
+    "backend/tests/test_razorpay_affiliate_payout_enterprise.py",
+    "backend/tests/test_schema_migrations.py",
+    "backend/tests/test_storage_validation.py",
+    "backend/tests/test_treasury_production_validation.py",
+    "backend/tests/test_upload_auth.py"
+  ]
+}

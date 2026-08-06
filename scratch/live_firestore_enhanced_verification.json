@@ -1,0 +1,26 @@
+{
+  "orders": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  },
+  "users": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  },
+  "payments": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  },
+  "refund_requests": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  },
+  "vendors": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  },
+  "products": {
+    "status": "429_QUOTA_EXHAUSTED",
+    "error": "429 Quota exceeded."
+  }
+}

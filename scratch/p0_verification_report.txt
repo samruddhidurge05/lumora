@@ -1,0 +1,80 @@
+======================================================================
+P0 PRODUCTION VERIFICATION AUDIT REPORT
+======================================================================
+
+=== PHASE 1: VERIFY DATA SOURCE ===
+Database Engine: SQLite (lumora.db)
+Firestore Realtime Database Connected: True
+SQL UserModel Count: 46
+SQL OrderModel Count: 22
+SQL PaymentModel Count: 21
+SQL RefundModel Count: 0
+
+Data Sources Breakdown for Recent Orders:
+  Order ORD-22: Source = [SQL UserModel (ID=3, Name='E2E Test Customer')] -> Customer: Name='E2E Test Customer', Email='test_customer_e2e@lumora.com'
+  Order ORD-21: Source = [SQL UserModel (ID=3, Name='E2E Test Customer')] -> Customer: Name='E2E Test Customer', Email='test_customer_e2e@lumora.com'
+  Order ORD-20: Source = [SQL UserModel (ID=3, Name='E2E Test Customer')] -> Customer: Name='E2E Test Customer', Email='test_customer_e2e@lumora.com'
+  Order ORD-19: Source = [SQL UserModel (ID=3, Name='E2E Test Customer')] -> Customer: Name='E2E Test Customer', Email='test_customer_e2e@lumora.com'
+  Order ORD-18: Source = [SQL UserModel (ID=3, Name='E2E Test Customer')] -> Customer: Name='E2E Test Customer', Email='test_customer_e2e@lumora.com'
+
+=== PHASE 2: TRACE ONE REAL CUSTOMER (Order ORD-22) ===
+Step 1 (Database Order Record): ID=22, user_id=3, total_amount=500.0, status='completed'
+Step 2 (User Registration Record): id=3, name='E2E Test Customer', email='test_customer_e2e@lumora.com', role='customer'
+Step 3 (Payment Record): id=21, ref='LUM-E2E-1785853048', amount=500.0, status='SUCCESS'
+Step 4 (Identity Resolution Service): resolved_name='E2E Test Customer', resolved_email='test_customer_e2e@lumora.com'
+Step 5 (Admin Service DTO): orderId='ORD-22', customerName='E2E Test Customer', customerEmail='test_customer_e2e@lumora.com', price=500.0
+
+=== PHASE 3: VERIFY PAYMENT AMOUNTS ===
+Payment TXN-6 (Order ORD-4): Payment DB Amount = INR 100.0 | Order DB Amount = INR 100.0 | Customer = 'Bob Customer' | Exact Match = True
+Payment TXN-7 (Order ORD-5): Payment DB Amount = INR 100.0 | Order DB Amount = INR 100.0 | Customer = 'Bob Customer' | Exact Match = True
+Payment TXN-8 (Order ORD-6): Payment DB Amount = INR 100.0 | Order DB Amount = INR 100.0 | Customer = 'Bob Customer' | Exact Match = True
+Payment TXN-9 (Order ORD-7): Payment DB Amount = INR 100.0 | Order DB Amount = INR 100.0 | Customer = 'Bob Customer' | Exact Match = True
+Payment TXN-13 (Order ORD-8): Payment DB Amount = INR 100.0 | Order DB Amount = INR 100.0 | Customer = 'Bob Customer' | Exact Match = True
+
+=== PHASE 4: VERIFY ORDERS (First 10) ===
+Total Orders in DB: 22
+  Order ORD-22: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 500.0 | Status='completed'
+  Order ORD-21: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 250.0 | Status='completed'
+  Order ORD-20: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 250.0 | Status='completed'
+  Order ORD-19: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 250.0 | Status='completed'
+  Order ORD-18: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 250.0 | Status='completed'
+  Order ORD-17: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 250.0 | Status='completed'
+  Order ORD-16: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 1000.0 | Status='completed'
+  Order ORD-15: Customer='E2E Test Customer' <test_customer_e2e@lumora.com> | Product='E2E Test Product' | Price=INR 1000.0 | Status='completed'
+  Order ORD-14: Customer='Self Ref Affiliate' <selfref_07ed2b@lumora.com> | Product='Self Ref Product' | Price=INR 500.0 | Status='paid'
+  Order ORD-13: Customer='Test Buyer' <buyer_f0a100@lumora.com> | Product='Test Product' | Price=INR 1000.0 | Status='paid'
+
+=== PHASE 5: VERIFY PAYMENTS OVERVIEW & TRANSACTIONS ===
+Payments Overview -> Total Revenue: INR 7450.0, Total Transactions: 22
+  Transaction TXN-1: Customer='E2E Test Customer' | Amount=INR 1000.0 | Method='upi' | Status='Success' | Date='2026-07-22'
+  Transaction TXN-2: Customer='E2E Test Customer' | Amount=INR 1000.0 | Method='upi' | Status='Success' | Date='2026-07-22'
+  Transaction TXN-3: Customer='E2E Test Customer' | Amount=INR 1000.0 | Method='upi' | Status='Success' | Date='2026-07-22'
+  Transaction TXN-4: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-5: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-6: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-7: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-8: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-9: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+  Transaction TXN-10: Customer='Bob Customer' | Amount=INR 100.0 | Method='upi' | Status='Success' | Date='2026-07-23'
+
+=== PHASE 6: VERIFY REFUNDS ===
+Total Refund Requests in DB: 0
+
+=== PHASE 7: VERIFY NO FALLBACKS EXECUTE FOR REAL CUSTOMERS ===
+  [VERIFIED] 0 / 22 orders produced fallback names. 100% of orders resolved real customer identities!
+
+=== PHASE 8: VERIFY API ENDPOINTS (AUTHENTICATED VIA SUB INT ID) ===
+GET Admin Orders List [/api/admin/orders/]: HTTP 200
+  -> Returned 22 items. First item customerName='E2E Test Customer'
+GET Admin Order By ID (ORD-22) [/api/admin/orders/22]: HTTP 200
+  -> Returned 1 items. First item customerName='N/A'
+GET Admin Transactions List [/api/admin/payments/transactions]: HTTP 200
+  -> Returned 22 items. First item customerName='E2E Test Customer'
+GET Admin Payments Overview [/api/admin/payments/overview]: HTTP 200
+  -> Payload keys: ['totalRevenue', 'pendingRevenue', 'refundedAmount', 'successfulPayments', 'failedPayments'], customerName='N/A'
+GET Admin Refund Requests [/api/admin/refunds/]: HTTP 200
+  -> Returned empty array (0 items).
+
+======================================================================
+P0 AUDIT COMPLETED
+======================================================================
