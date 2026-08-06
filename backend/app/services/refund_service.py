@@ -522,6 +522,7 @@ class RefundService:
         download_count = 0
         first_download_at = None
         last_download_at = None
+        dl_events = []
         
         if order:
             # Primary: ProductDownloadEvent records
