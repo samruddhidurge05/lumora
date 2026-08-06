@@ -127,6 +127,9 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
 
   if (!order) return null;
 
+  // Alias for order object to guarantee orderData references never throw ReferenceError
+  const orderData = order;
+
   // Clean IDs and numbers
   const rawId = order.id || order.orderId || '95';
   const cleanIdStr = String(rawId).replace(/[^0-9]/g, '') || '95';
