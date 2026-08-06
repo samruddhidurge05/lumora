@@ -396,12 +396,16 @@ def create_new_order(
     return order
 
 
+from sqlalchemy import or_, cast as sql_cast, String
+
 @router.get("/me", response_model=List[OrderResponse])
 def get_my_orders(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    orders = db.query(Order).filter(Order.user_id == current_user.id).order_by(Order.created_at.desc()).all()
+    orders = db.query(Order).filter(
+        or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == str(current_user.id))
+    ).order_by(Order.created_at.desc()).all()
     
     # Dynamically inject 15-minute token URLs for the user's vaults/downloads if permitted
     from app.api.products_router import generate_download_token

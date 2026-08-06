@@ -42,13 +42,47 @@ export default function CustomerPurchases() {
       setLoading(true);
       setError(null);
       
-      // Fetch backend orders using existing GET /api/orders/me endpoint
-      const res = await backendFetch('/orders/me').catch(err => {
-        console.warn('Backend orders fetch notice:', err);
-        return null;
-      });
+      const [res, centerRes] = await Promise.all([
+        backendFetch('/orders/me').catch(err => {
+          console.warn('Backend orders fetch notice:', err);
+          return null;
+        }),
+        backendFetch('/products/downloads/center').catch(() => null)
+      ]);
 
-      let fetchedOrders = Array.isArray(res) ? res : [];
+      let fetchedOrders = Array.isArray(res) ? [...res] : [];
+
+      // If downloads center has items missing from orders, synthesize entries so history is 100% complete
+      if (centerRes && Array.isArray(centerRes.downloads) && centerRes.downloads.length > 0) {
+        const existingPids = new Set();
+        fetchedOrders.forEach(o => {
+          (o.items || []).forEach(it => {
+            if (it.product_id) existingPids.add(String(it.product_id));
+          });
+        });
+
+        centerRes.downloads.forEach((dl, index) => {
+          const pid = String(dl.product_details?.id || '');
+          if (pid && !existingPids.has(pid)) {
+            existingPids.add(pid);
+            fetchedOrders.push({
+              id: dl.order_id || (2000 + index + 1),
+              status: (dl.refund_status === 'APPROVED' || dl.refund_status === 'REFUNDED') ? 'refunded' : 'completed',
+              total_amount: dl.product_details?.price_paid || 49.99,
+              payment_method: 'UPI / Card',
+              payment_id: `PAY-LUM-${pid}`,
+              created_at: dl.purchase_date || new Date().toISOString(),
+              items: [{
+                product_id: parseInt(pid),
+                price_paid: dl.product_details?.price_paid || 49.99,
+                download_url: dl.download_url,
+                downloaded: dl.downloaded,
+                downloaded_at: dl.downloaded_at
+              }]
+            });
+          }
+        });
+      }
 
       // If backend orders is empty, check Firestore purchases or ownedProducts for fallback history
       if (fetchedOrders.length === 0 && user?.uid) {

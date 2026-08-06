@@ -220,12 +220,13 @@ export default function Dashboard() {
           });
         }
 
-        const [profileRes, ordersRes, wishlistRes, notifsRes, activityRes] = await Promise.allSettled([
+        const [profileRes, ordersRes, wishlistRes, notifsRes, activityRes, centerRes] = await Promise.allSettled([
           backendFetch('/auth/me'),
           backendFetch('/orders/me'),
           backendFetch('/wishlist/me'),
           backendFetch('/notifications/'),
           backendFetch('/activity/'),
+          backendFetch('/products/downloads/center'),
         ]);
 
         if (!isMounted) return;
@@ -235,6 +236,7 @@ export default function Dashboard() {
         let fetchedWishlist = wishlistRes.status === 'fulfilled' && Array.isArray(wishlistRes.value) ? wishlistRes.value : [];
         let fetchedNotifs = notifsRes.status === 'fulfilled' && Array.isArray(notifsRes.value) ? notifsRes.value : [];
         let fetchedActivities = activityRes.status === 'fulfilled' && Array.isArray(activityRes.value) ? activityRes.value : [];
+        let centerDownloads = centerRes.status === 'fulfilled' && centerRes.value?.downloads && Array.isArray(centerRes.value.downloads) ? centerRes.value.downloads : [];
         // Strip internal system events that users should never see
         const INTERNAL_ACTIVITY_TYPES = new Set([
           'firebase_sync',
@@ -258,10 +260,11 @@ export default function Dashboard() {
           }
         } catch (e) {}
 
-        // Calculate stats from backend orders + local ownedProducts, removing duplicates and deleted items
+        // Calculate stats from backend orders + download center + local ownedProducts, removing duplicates and deleted items
         const ownedProductIds = new Set();
         fetchedOrders.forEach(order => {
-          if (order.items && (order.status === 'completed' || order.status === 'paid')) {
+          const st = (order.status || '').toLowerCase();
+          if (order.items && ['completed', 'paid', 'processing', 'success', 'placed'].includes(st)) {
             order.items.forEach(item => {
               if (item.product_id) {
                 ownedProductIds.add(String(item.product_id));
@@ -269,6 +272,14 @@ export default function Dashboard() {
             });
           }
         });
+
+        // Merge download center items so overview stats match Downloads vault page
+        centerDownloads.forEach(dl => {
+          if (dl.product_details?.id) {
+            ownedProductIds.add(String(dl.product_details.id));
+          }
+        });
+
         (ownedProducts || []).forEach(id => ownedProductIds.add(String(id)));
 
         const activeOwnedIds = Array.from(ownedProductIds).filter(id => !deletedSet.has(String(id)));
@@ -277,7 +288,7 @@ export default function Dashboard() {
           productsOwned: activeOwnedIds.length,
           downloadsCount: activeOwnedIds.length,
           wishlistCount: fetchedWishlist.length,
-          ordersCount: fetchedOrders.length,
+          ordersCount: Math.max(fetchedOrders.length, centerDownloads.length),
         });
 
         // Only show "unreachable" banner when the failure is a network error
