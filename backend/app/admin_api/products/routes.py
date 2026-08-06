@@ -356,7 +356,7 @@ def create_admin_product(
         "description": new_product.description,
         "short_desc": new_product.short_desc,
         "category": new_product.category,
-        "price": float(new_product.price or 0),
+        "price": float(getattr(new_product, "price", 0) or 0),
         "thumbnail": new_product.thumbnail,
         "preview": new_product.preview,
         "file_url": new_product.file_url,

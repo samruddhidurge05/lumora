@@ -759,7 +759,7 @@ Thank you for your purchase on Lumora!
                 elif "windows" in ua_lower: os_name = "Windows"
                 else: os_name = "Desktop OS"
 
-            now_utc = datetime.utcnow()
+            now_utc = datetime.now(timezone.utc)
 
             # Idempotent 60-second duplicate protection window
             sixty_sec_ago = now_utc - timedelta(seconds=60)

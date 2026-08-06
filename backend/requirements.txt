@@ -4,6 +4,7 @@ sqlalchemy>=2.0.35
 pydantic>=2.9.0
 pydantic-settings>=2.4.0
 python-jose[cryptography]==3.3.0
+types-python-jose
 passlib[bcrypt]==1.7.4
 python-multipart>=0.0.12
 aiofiles==23.2.1
