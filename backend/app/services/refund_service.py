@@ -575,25 +575,37 @@ class RefundService:
         req.first_download_at = first_download_at
         req.last_download_at = last_download_at
 
-        # Attempt to pull IP / device from the most recent checkout activity
-        ip_address = None
-        device_details = None
-        try:
-            from app.models.user_activity import UserActivity
-            session_log = (
-                db.query(UserActivity)
-                .filter(
-                    UserActivity.user_id == req.user_id,
-                    UserActivity.activity_type.in_(["checkout", "purchase", "payment"])
+        # Attempt to pull IP / device from ProductDownloadEvent or Order metadata
+        ip_address = getattr(order, "download_ip", None) if order else None
+        device_details = f"{getattr(order, 'download_device', '')} ({getattr(order, 'download_browser', '')})".strip() if order and getattr(order, 'download_device', None) else None
+        
+        if dl_events:
+            last_event = dl_events[-1]
+            if getattr(last_event, "ip_address", None):
+                ip_address = last_event.ip_address
+            dev_str = f"{getattr(last_event, 'device_type', '')} ({getattr(last_event, 'browser', '')})".strip()
+            if dev_str and dev_str != "()":
+                device_details = dev_str
+
+        if not ip_address or not device_details:
+            try:
+                from app.models.user_activity import UserActivity
+                session_log = (
+                    db.query(UserActivity)
+                    .filter(
+                        UserActivity.user_id == req.user_id,
+                        UserActivity.activity_type.in_(["download", "checkout", "purchase", "payment"])
+                    )
+                    .order_by(UserActivity.created_at.desc())
+                    .first()
                 )
-                .order_by(UserActivity.created_at.desc())
-                .first()
-            )
-            if session_log:
-                ip_address = getattr(session_log, "ip_address", None)
-                device_details = getattr(session_log, "user_agent", None)
-        except Exception:
-            pass
+                if session_log:
+                    if not ip_address:
+                        ip_address = getattr(session_log, "ip_address", None)
+                    if not device_details:
+                        device_details = getattr(session_log, "user_agent", None)
+            except Exception:
+                pass
 
         req.ip_address = ip_address
         req.device_details = device_details
