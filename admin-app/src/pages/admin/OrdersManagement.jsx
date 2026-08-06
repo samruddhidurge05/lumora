@@ -190,7 +190,7 @@ function AffiliateAttributionCard({ orderId }) {
     setMsg(null);
     try {
       let url = `/admin/affiliates/orders/${cleanId}/regenerate-commission?force=true`;
-      if (overrideCode) {
+      if (typeof overrideCode === 'string' && overrideCode.trim()) {
         url += `&referral_code=${encodeURIComponent(overrideCode.trim().toUpperCase())}`;
       }
       const data = await backendFetch(url, { method: 'POST' });
@@ -303,7 +303,7 @@ function AffiliateAttributionCard({ orderId }) {
         )}
 
         <div className="pt-2 border-t border-[#F3EAF8] flex justify-end">
-          <button onClick={handleRegenerate} disabled={regenerating} className="px-3 py-1.5 rounded-xl bg-[#7B3FA0] hover:bg-[#5C2B7C] text-white text-[10px] font-bold transition-all shadow-sm">
+          <button onClick={() => handleRegenerate()} disabled={regenerating} className="px-3 py-1.5 rounded-xl bg-[#7B3FA0] hover:bg-[#5C2B7C] text-white text-[10px] font-bold transition-all shadow-sm">
             {regenerating ? 'Regenerating...' : 'Regenerate Commission'}
           </button>
         </div>
