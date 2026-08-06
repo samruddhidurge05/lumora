@@ -566,10 +566,13 @@ class RefundService:
                         if not last_download_at or sorted_logs[-1].created_at > last_download_at:
                             last_download_at = sorted_logs[-1].created_at
         
-        if is_downloaded and not first_download_at and order:
-            first_download_at = getattr(order, "first_downloaded_at", None) or order.created_at
-            last_download_at = getattr(order, "last_downloaded_at", None) or order.created_at
-            download_count = max(1, download_count)
+        if order and (is_downloaded or (getattr(order, "download_count", 0) or 0) > 0 or getattr(order, "first_downloaded_at", None) is not None):
+            is_downloaded = True
+            if not first_download_at:
+                first_download_at = getattr(order, "first_downloaded_at", None) or order.created_at
+            if not last_download_at:
+                last_download_at = getattr(order, "last_downloaded_at", None) or getattr(order, "first_downloaded_at", None) or order.created_at
+            download_count = max(getattr(order, "download_count", 0) or 0, download_count, 1)
             
         req.is_downloaded = is_downloaded
         req.download_count = download_count
