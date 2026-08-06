@@ -92,7 +92,7 @@ function resolveProductInfo(order, catalogProducts = []) {
   };
 }
 
-export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [] }) {
+export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [], isAdminView = false }) {
   // Hooks MUST be unconditional and declared at top level
   const [traceData, setTraceData] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
