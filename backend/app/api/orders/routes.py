@@ -115,7 +115,8 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
             else:
                 commission_amt = quantize_money(sale_amount * float(comm_value) / 100.0)
         else:
-            commission_amt = quantize_money(sale_amount * float(profile.commission_rate or 20.0) / 100.0)
+            comm_rate = getattr(profile, "commission_rate", None) or 20.0
+            commission_amt = quantize_money(sale_amount * float(comm_rate) / 100.0)
 
         commission_amt = max(0.0, commission_amt)
 
@@ -162,7 +163,7 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
             db.add(commission)
             db.flush()
 
-            attribution.commission_id = commission.id
+            attribution.commission_id = commission.id  # type: ignore
             total_commission += commission_amt
             commissions_created += 1
 
@@ -179,10 +180,10 @@ def _create_affiliate_commissions(db: Session, order, affiliate_code: str, buyer
                 ).order_by(AffiliateReferral.created_at.desc()).first()
 
                 if referral:
-                    referral.customer_id = buyer_user_id
-                    referral.order_id = order.id
-                    referral.status = "PURCHASED"
-                    referral.converted_at = datetime.utcnow()
+                    referral.customer_id = buyer_user_id  # type: ignore
+                    referral.order_id = order.id  # type: ignore
+                    referral.status = "PURCHASED"  # type: ignore
+                    referral.converted_at = datetime.utcnow()  # type: ignore
             except Exception as ref_err:
                 logger.warning(f"[_create_affiliate_commissions] Warning updating AffiliateReferral: {ref_err}")
 
@@ -308,7 +309,7 @@ def create_new_order(
         order = payment_service.confirm_payment(
             db=db,
             payment_ref=payment.payment_ref,
-            customer_id=current_user.id,
+            customer_id=int(str(current_user.id)),
             gateway_payment_id="mock_pay_id",
             gateway_signature="mock_sig",
             items_payload=items_payload,
@@ -334,10 +335,11 @@ def create_new_order(
     if not aff_code:
         try:
             from app.models.affiliate import AffiliateReferral
-            for item in order.items:
+            for item in order.items:  # type: ignore
+                item_obj: OrderItem = item  # type: ignore
                 ref = db.query(AffiliateReferral).filter(
                     AffiliateReferral.customer_id == current_user.id,
-                    AffiliateReferral.product_id == item.product_id
+                    AffiliateReferral.product_id == item_obj.product_id
                 ).order_by(AffiliateReferral.created_at.desc()).first()
                 if ref:
                     aff_code = ref.referral_code
@@ -347,7 +349,7 @@ def create_new_order(
 
     if aff_code:
         try:
-            _create_affiliate_commissions(db, order, aff_code, current_user.id)
+            _create_affiliate_commissions(db, order, str(aff_code), int(str(current_user.id)))
         except Exception as aff_err:
             import logging
             _aff_logger = logging.getLogger(__name__)
@@ -378,15 +380,16 @@ def create_new_order(
 
     # 3. Dynamically set short-lived secure download links for the response
     from app.api.products_router import generate_download_token
-    for item in order.items:
-        token = generate_download_token(current_user.id, item.product_id)
-        item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+    for item in order.items:  # type: ignore
+        item_obj: OrderItem = item  # type: ignore
+        token = generate_download_token(current_user.id, item_obj.product_id)  # type: ignore
+        setattr(item_obj, "download_url", f"/api/products/{item_obj.product_id}/download-file?token={token}")
 
     # Structured log
     from app.utils.logger import log_structured_event
     log_structured_event(
-        user_id=current_user.id,
-        role=current_user.role,
+        user_id=int(str(current_user.id)),
+        role=str(current_user.role) if current_user.role else None,
         action="checkout_completed",
         module="orders",
         status="success",
@@ -415,12 +418,14 @@ def get_my_orders(
         setattr(o, "downloadGranted", is_paid)
         if is_paid:
             for item in o.items:
-                refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+                user_id = int(getattr(current_user, "id"))
+                prod_id = int(getattr(item, "product_id"))
+                refund_status, can_download, _ = get_product_refund_status(db, user_id, prod_id)
                 if can_download:
-                    token = generate_download_token(current_user.id, item.product_id)
-                    item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+                    token = generate_download_token(user_id, prod_id)
+                    setattr(item, "download_url", f"/api/products/{prod_id}/download-file?token={token}")
                 else:
-                    item.download_url = None
+                    setattr(item, "download_url", None)
                 
     return orders
 
@@ -459,11 +464,13 @@ def get_order_by_id(
         from app.api.products_router import generate_download_token
         from app.services.download_auth_service import get_product_refund_status
         for item in order.items:
-            refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+            user_id = int(getattr(current_user, "id"))
+            prod_id = int(getattr(item, "product_id"))
+            refund_status, can_download, _ = get_product_refund_status(db, user_id, prod_id)
             if can_download:
-                token = generate_download_token(current_user.id, item.product_id)
-                item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
+                token = generate_download_token(user_id, prod_id)
+                setattr(item, "download_url", f"/api/products/{prod_id}/download-file?token={token}")
             else:
-                item.download_url = None
+                setattr(item, "download_url", None)
 
     return order
