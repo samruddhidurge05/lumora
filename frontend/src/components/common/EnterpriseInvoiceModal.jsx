@@ -606,15 +606,15 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                  (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
+                  (order?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
                     ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                    : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
+                    : (traceData?.download_audit?.has_downloaded || order?.download_count > 0)
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                     : 'bg-slate-100 text-slate-700 border border-slate-200'
                 }`}>
-                  {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
+                  {(order?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
                     ? 'LICENSE REVOKED'
-                    : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
+                    : (traceData?.download_audit?.has_downloaded || order?.download_count > 0)
                     ? 'LICENSE ACTIVE & DOWNLOADED'
                     : 'LICENSE ACTIVE (NOT DOWNLOADED YET)'}
                 </span>
@@ -624,57 +624,57 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Status</div>
                   <div className={`font-bold text-sm mt-0.5 ${
-                    (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'text-emerald-700' : 'text-slate-700'
+                    (traceData?.download_audit?.has_downloaded || order?.download_count > 0) ? 'text-emerald-700' : 'text-slate-700'
                   }`}>
-                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'YES' : 'NO'}
+                    {(traceData?.download_audit?.has_downloaded || order?.download_count > 0) ? 'YES' : 'NO'}
                   </div>
                   <div className="text-[9px] font-mono text-stone-500 mt-0.5">
-                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'Downloaded to device' : 'Awaiting first download'}
+                    {(traceData?.download_audit?.has_downloaded || order?.download_count > 0) ? 'Downloaded to device' : 'Awaiting first download'}
                   </div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">First Download</div>
                   <div className="font-mono text-[10px] font-bold text-stone-800 mt-0.5 truncate">
-                    {traceData?.download_audit?.first_downloaded_at ? new Date(traceData.download_audit.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : (orderData?.first_downloaded_at ? new Date(orderData.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')}
+                    {traceData?.download_audit?.first_downloaded_at ? new Date(traceData.download_audit.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : (order?.first_downloaded_at ? new Date(order.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')}
                   </div>
                   <div className="text-[9px] text-stone-400">
-                    Latest: {traceData?.download_audit?.last_downloaded_at ? new Date(traceData.download_audit.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : (orderData?.last_downloaded_at ? new Date(orderData.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—')}
+                    Latest: {traceData?.download_audit?.last_downloaded_at ? new Date(traceData.download_audit.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : (order?.last_downloaded_at ? new Date(order.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—')}
                   </div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Count</div>
                   <div className="font-mono font-black text-blue-950 text-sm mt-0.5">
-                    {traceData?.download_audit?.download_count || orderData?.download_count || 0} Downloads
+                    {traceData?.download_audit?.download_count || order?.download_count || 0} Downloads
                   </div>
                   <div className="text-[9px] text-stone-400">Total successful downloads</div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer Device</div>
-                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_device || traceData?.download_audit?.device_type || systemInfo.device || 'Desktop'}</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5">{order?.download_device || traceData?.download_audit?.device_type || systemInfo.device || 'Desktop'}</div>
                   <div className="text-[9px] text-stone-400">OS: {traceData?.download_audit?.os || systemInfo.os || 'Windows'}</div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Browser</div>
-                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_browser || traceData?.download_audit?.browser || systemInfo.browser || 'Chrome'}</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5">{order?.download_browser || traceData?.download_audit?.browser || systemInfo.browser || 'Chrome'}</div>
                   <div className="text-[9px] text-stone-400">Web Client</div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer IP Address</div>
-                  <div className="font-mono font-bold text-stone-800 text-[10px] mt-0.5">{orderData?.download_ip || orderData?.ip_address || traceData?.download_audit?.ip_address || traceData?.customer_ip || '150.107.18.39'}</div>
+                  <div className="font-mono font-bold text-stone-800 text-[10px] mt-0.5">{order?.download_ip || order?.ip_address || traceData?.download_audit?.ip_address || traceData?.customer_ip || 'Not Available'}</div>
                   <div className="text-[9px] text-stone-400">Fulfillment Audit IP</div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100 col-span-2 sm:col-span-2">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">License Status</div>
                   <div className={`font-bold text-sm mt-0.5 ${
-                    (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
+                    (order?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
                   }`}>
-                    {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
+                    {(order?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
                   </div>
                   <div className="text-[9px] text-stone-400">Commercial Digital Asset License</div>
                 </div>
