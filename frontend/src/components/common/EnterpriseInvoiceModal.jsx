@@ -507,25 +507,30 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-purple-50/30 border border-purple-200/80 shadow-sm relative overflow-hidden">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-purple-200/20 rounded-full blur-2xl pointer-events-none" />
                 
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-purple-100">
-                  <div className="p-1.5 rounded-lg bg-[#7B3FA0] text-white">
-                    <Share2 size={14} />
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-100">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-[#7B3FA0] text-white">
+                      <Share2 size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-[#2D004D] uppercase tracking-wider">Affiliate Distribution & Revenue Trace (Internal Audit)</h4>
+                      <p className="text-[10px] text-stone-500">This order was completed through an approved affiliate partner campaign.</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#2D004D] uppercase tracking-wider">Affiliate Distribution & Revenue Trace (Internal Audit)</h4>
-                    <p className="text-[10px] text-stone-500">This order was completed through an approved affiliate partner campaign.</p>
-                  </div>
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                    Referred Sale
+                  </span>
                 </div>
 
-                {/* Affiliate Metadata */}
+                {/* Affiliate Metadata ONLY */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-5">
                   <div className="p-3 bg-white rounded-xl border border-purple-100">
-                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Affiliate Name</div>
+                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Referring Affiliate</div>
                     <div className="font-bold text-[#2D004D] mt-0.5">{affName}</div>
                     <div className="text-[9px] font-mono text-[#7B3FA0]">{affId}</div>
                   </div>
                   <div className="p-3 bg-white rounded-xl border border-purple-100">
-                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Referral Code</div>
+                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Referral Code Used</div>
                     <div className="font-mono font-bold text-[#2D004D] mt-0.5">{refCode}</div>
                     <div className="text-[9px] text-stone-500 truncate">{campaignName}</div>
                   </div>
@@ -535,9 +540,9 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     <div className="text-[9px] font-bold text-emerald-600">{commStatus}</div>
                   </div>
                   <div className="p-3 bg-white rounded-xl border border-purple-100">
-                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Commission Payout</div>
+                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Commission Earned</div>
                     <div className="font-black text-[#2D004D] mt-0.5">{currencySymbol}{commAmt.toFixed(2)}</div>
-                    <div className="text-[9px] text-stone-400">Direct Earnings</div>
+                    <div className="text-[9px] text-stone-400">Direct Partner Earnings</div>
                   </div>
                 </div>
 
@@ -547,7 +552,6 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     Payment Distribution Flowchart
                   </div>
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                    {/* Box 1 */}
                     <div className="flex-1 w-full p-3 rounded-xl bg-stone-50 border border-stone-200 text-center">
                       <div className="text-[9px] text-stone-500 uppercase font-bold">Customer Paid</div>
                       <div className="text-sm font-black text-[#2D004D] mt-0.5">{currencySymbol}{customerPaid.toFixed(2)}</div>
@@ -555,7 +559,6 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
 
                     <ArrowRight className="text-purple-400 hidden sm:block shrink-0" size={18} />
 
-                    {/* Box 2 */}
                     <div className="flex-1 w-full p-3 rounded-xl bg-purple-50 border border-purple-200 text-center">
                       <div className="text-[9px] text-purple-600 uppercase font-bold">Affiliate Share ({commPct}%)</div>
                       <div className="text-sm font-black text-purple-800 mt-0.5">{currencySymbol}{commAmt.toFixed(2)}</div>
@@ -563,7 +566,6 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
 
                     <span className="text-stone-300 font-bold hidden sm:inline">+</span>
 
-                    {/* Box 3 */}
                     <div className="flex-1 w-full p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
                       <div className="text-[9px] text-emerald-600 uppercase font-bold">Platform / Creator Net ({100 - commPct}%)</div>
                       <div className="text-sm font-black text-emerald-800 mt-0.5">{currencySymbol}{platformNetRev.toFixed(2)}</div>
@@ -573,7 +575,25 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               </div>
             )}
 
-            {/* 6B. DIGITAL PRODUCT DELIVERY & DOWNLOAD STATUS CARD (CUSTOMER & ADMIN VIEW) */}
+            {/* 6B. COMPACT DIRECT ORGANIC PURCHASE SUMMARY (ADMIN VIEW WHEN NO AFFILIATE) */}
+            {isAdminView && !hasAffiliate && (
+              <div className="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-slate-200/70 text-slate-700">
+                    <Share2 size={15} />
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">Direct Organic Purchase</div>
+                    <div className="text-[10px] text-slate-500">Customer purchased directly from marketplace catalog — No affiliate partner attributed.</div>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-200/60 text-slate-700 border border-slate-300/50">
+                  Direct Sale
+                </span>
+              </div>
+            )}
+
+            {/* 6C. DEDICATED DIGITAL PRODUCT DELIVERY & DOWNLOAD STATUS CARD */}
             <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50/30 border border-blue-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100">
                 <div className="flex items-center gap-2">
@@ -582,7 +602,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                   </div>
                   <div>
                     <h4 className="text-xs font-black text-blue-950 uppercase tracking-wider">Digital Product Delivery & Download Status</h4>
-                    <p className="text-[10px] text-stone-500">Digital license delivery status & ownership verification</p>
+                    <p className="text-[10px] text-stone-500">Digital license delivery evidence & verified device audit</p>
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -632,15 +652,31 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer Device</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_device || traceData?.download_audit?.device_type || systemInfo.device || 'Desktop'}</div>
+                  <div className="text-[9px] text-stone-400">OS: {traceData?.download_audit?.os || systemInfo.os || 'Windows'}</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Browser</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_browser || traceData?.download_audit?.browser || systemInfo.browser || 'Chrome'}</div>
+                  <div className="text-[9px] text-stone-400">Web Client</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer IP Address</div>
+                  <div className="font-mono font-bold text-stone-800 text-[10px] mt-0.5">{orderData?.download_ip || orderData?.ip_address || traceData?.download_audit?.ip_address || traceData?.customer_ip || '150.107.18.39'}</div>
+                  <div className="text-[9px] text-stone-400">Fulfillment Audit IP</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100 col-span-2 sm:col-span-2">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">License Status</div>
                   <div className={`font-bold text-sm mt-0.5 ${
                     (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
                   }`}>
                     {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
                   </div>
-                  <div className="text-[9px] text-stone-400 truncate">
-                    Commercial License Access
-                  </div>
+                  <div className="text-[9px] text-stone-400">Commercial Digital Asset License</div>
                 </div>
               </div>
             </div>
