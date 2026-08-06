@@ -2147,23 +2147,10 @@ def regenerate_commission_for_order(
                 code = prod_ref.referral_code
 
     if not code:
-        # Fallback 1: check if there's only 1 active affiliate profile in the system
-        all_active_affs = db.query(AffiliateProfile).filter(
-            (AffiliateProfile.is_active == True) | (AffiliateProfile.status.in_(["active", "approved"]))
-        ).all()
-        if len(all_active_affs) == 1:
-            code = all_active_affs[0].referral_code
-        elif len(all_active_affs) > 1:
-            # Check any recent referral click or link
-            recent_any_ref = db.query(AffiliateReferral).order_by(desc(AffiliateReferral.created_at)).first()
-            if recent_any_ref:
-                code = recent_any_ref.referral_code
-
-    if not code:
         return {
             "success": False,
             "linked": False,
-            "message": "Order does not contain or link to a referral code. Enter a referral code below to link manually.",
+            "message": f"Direct organic purchase. No affiliate referral exists for Order #{order_id}.",
             "order_id": order_id
         }
 
