@@ -608,13 +608,13 @@ export default function CustomerDownloads() {
           SECTION 1: CINEMATIC HERO
           ═══════════════════════════════════════════════════════════ */}
       <section style={{
-        position: 'relative', borderRadius: '28px', overflow: 'hidden',
-        background: 'linear-gradient(135deg, rgba(220,198,255,0.20) 0%, rgba(220,238,255,0.15) 50%, rgba(207,232,214,0.15) 100%)',
-        border: '1px solid rgba(255,255,255,0.70)',
+        position: 'relative', borderRadius: '24px', overflow: 'hidden',
+        background: 'linear-gradient(135deg, rgba(220,198,255,0.22) 0%, rgba(220,238,255,0.18) 50%, rgba(207,232,214,0.15) 100%)',
+        border: '1.5px solid rgba(123, 63, 160, 0.38)',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 20px 60px -10px rgba(78,59,49,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
-        padding: 'clamp(36px, 6vw, 64px) clamp(28px, 5vw, 56px)',
-        minHeight: 240,
+        boxShadow: '0 12px 36px -8px rgba(123, 63, 160, 0.10), inset 0 1px 0 rgba(255,255,255,0.8)',
+        padding: 'clamp(20px, 3.5vw, 32px) clamp(24px, 4vw, 44px)',
+        minHeight: 140,
       }}>
         {/* Decorative floating glass spheres */}
         <div style={{ position: 'absolute', top: -40, right: 80, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(220,198,255,0.3))', boxShadow: 'inset -6px -8px 20px rgba(175,140,255,0.2), 0 10px 40px rgba(175,140,255,0.12)', border: '1px solid rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', animation: 'sphere-float-1 6s ease-in-out infinite alternate', pointerEvents: 'none' }} />
@@ -622,36 +622,36 @@ export default function CustomerDownloads() {
         <div style={{ position: 'absolute', top: 30, right: 300, width: 50, height: 50, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(207,232,214,0.5))', border: '1px solid rgba(255,255,255,0.7)', animation: 'sphere-float-3 5s ease-in-out infinite alternate', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 640 }}>
-          <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.14em', color: 'var(--color-mocha)', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
+          <span style={{ fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.14em', color: '#7B3FA0', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
             ✦ Lumora Digital Vault
           </span>
-          <h1 className="text-editorial" style={{ fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', fontWeight: 400, color: 'var(--color-espresso)', lineHeight: 1.05, marginTop: 8 }}>
+          <h1 className="text-editorial" style={{ fontSize: 'clamp(1.8rem, 3.8vw, 2.6rem)', fontWeight: 400, color: 'var(--color-espresso)', lineHeight: 1.05, marginTop: 4 }}>
             Your Digital Vault
           </h1>
-          <p style={{ fontSize: '1rem', color: 'var(--color-mocha)', marginTop: 10, fontWeight: 400, lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.88rem', color: 'var(--color-mocha)', marginTop: 4, fontWeight: 400, lineHeight: 1.4 }}>
             Access your premium creative assets beautifully.
           </p>
-          <p style={{ fontSize: '0.8rem', color: 'var(--color-mocha)', marginTop: 4, opacity: 0.75 }}>
+          <p style={{ fontSize: '0.76rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.75 }}>
             All your purchased digital products organized in one immersive workspace.
           </p>
 
           {/* Hero stats row — live data only */}
-          <div style={{ display: 'flex', gap: 20, marginTop: 28, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 14, marginTop: 16, flexWrap: 'wrap' }}>
             {[
-              { label: `${allProducts.length} Assets`, sub: 'In your vault', icon: <Package size={14} /> },
-              ...(updatesCount > 0 ? [{ label: `${updatesCount} Updates`, sub: 'Available now', icon: <Zap size={14} />, accent: true }] : []),
+              { label: `${allProducts.length} Assets`, sub: 'In your vault', icon: <Package size={13} /> },
+              ...(updatesCount > 0 ? [{ label: `${updatesCount} Updates`, sub: 'Available now', icon: <Zap size={13} />, accent: true }] : []),
             ].map((s, i) => (
               <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 18px', borderRadius: 14,
-                background: s.accent ? 'linear-gradient(135deg, rgba(220,198,255,0.4), rgba(205,183,255,0.3))' : 'rgba(255,255,255,0.55)',
-                border: s.accent ? '1px solid rgba(155,121,255,0.25)' : '1px solid rgba(255,255,255,0.7)',
-                backdropFilter: 'blur(10px)', boxShadow: '0 4px 16px rgba(78,59,49,0.04)',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 14px', borderRadius: 12,
+                background: s.accent ? 'linear-gradient(135deg, rgba(220,198,255,0.4), rgba(205,183,255,0.3))' : 'rgba(255,255,255,0.65)',
+                border: s.accent ? '1px solid rgba(123,63,160,0.35)' : '1px solid rgba(123,63,160,0.20)',
+                backdropFilter: 'blur(10px)', boxShadow: '0 3px 12px rgba(78,59,49,0.03)',
               }}>
-                <span style={{ color: s.accent ? '#9B79FF' : 'var(--color-mocha)' }}>{s.icon}</span>
+                <span style={{ color: s.accent ? '#7B3FA0' : '#7B3FA0' }}>{s.icon}</span>
                 <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{s.label}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--color-mocha)', fontWeight: 600 }}>{s.sub}</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.58rem', color: 'var(--color-mocha)', fontWeight: 600 }}>{s.sub}</div>
                 </div>
               </div>
             ))}
