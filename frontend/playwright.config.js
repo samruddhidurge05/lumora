@@ -53,7 +53,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     
     /* Record video automatically on test failure. */
-    video: 'retain-on-failure',
+    video: 'on',
   },
   
   /* Configure projects for major browsers */
