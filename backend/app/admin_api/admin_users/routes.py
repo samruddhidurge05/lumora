@@ -895,23 +895,37 @@ def change_admin_role(
     if body.role_level not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"Invalid role_level. Must be one of: {VALID_ROLES}")
 
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
     role = db.query(AdminRole).filter(AdminRole.user_id == user_id, AdminRole.is_active.is_(True)).first()
     if not role:
-        raise HTTPException(status_code=404, detail="Active admin role not found for this user.")
+        role = AdminRole(
+            user_id=user_id,
+            role_level=cast(Any, body.role_level),
+            is_active=True,
+            activated_at=datetime.now(timezone.utc)
+        )
+        db.add(role)
+        target_user.role = "admin" if body.role_level != "super_admin" else "super_admin"
+        old_role = "none"
+    else:
+        if cast(Any, role.role_level) == "super_admin" and body.role_level != "super_admin":
+            active_super_admins = db.query(AdminRole).filter(
+                AdminRole.role_level == "super_admin",
+                AdminRole.is_active.is_(True)
+            ).count()
+            if active_super_admins <= 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot demote yourself or the last active super_admin."
+                )
 
-    if cast(Any, role.role_level) == "super_admin" and body.role_level != "super_admin":
-        active_super_admins = db.query(AdminRole).filter(
-            AdminRole.role_level == "super_admin",
-            AdminRole.is_active.is_(True)
-        ).count()
-        if active_super_admins <= 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot demote yourself or the last active super_admin."
-            )
-
-    old_role       = role.role_level
-    role.role_level = cast(Any, body.role_level)
+        old_role = role.role_level
+        role.role_level = cast(Any, body.role_level)
+        target_user.role = "admin" if body.role_level != "super_admin" else "super_admin"
+    
     db.commit()
 
     try:

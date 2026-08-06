@@ -14,7 +14,7 @@ from typing import Any, List, Optional, cast
 import zipfile
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 from jose import JWTError, jwt
 from sqlalchemy import String, cast as sql_cast, func, or_
 from sqlalchemy.orm import Session
@@ -119,10 +119,8 @@ def serve_product_media(file_path: str, db: Session = Depends(get_db)):
         storage_path = f"local://uploads/{clean_path}"
 
     if not storage_service.exists(storage_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Media file not found."
-        )
+        fallback_url = "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80"
+        return RedirectResponse(url=fallback_url, status_code=307)
 
     # Determine content type based on file extension
     content_type, _ = mimetypes.guess_type(clean_path)
