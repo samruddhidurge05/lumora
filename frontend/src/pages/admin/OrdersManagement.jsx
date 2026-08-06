@@ -1984,6 +1984,7 @@ export default function OrdersManagement() {
         <EnterpriseInvoiceModal
           order={invoiceOrder}
           onClose={() => setInvoiceOrder(null)}
+          isAdminView={true}
         />
       )}
 

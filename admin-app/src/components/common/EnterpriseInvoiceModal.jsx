@@ -93,7 +93,7 @@ function resolveProductInfo(order, catalogProducts = []) {
   };
 }
 
-export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [] }) {
+export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [], isAdminView = false }) {
   // Hooks MUST be unconditional and declared at top level
   const [traceData, setTraceData] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -493,8 +493,8 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               </div>
             </div>
 
-            {/* 6. AFFILIATE SECTION (CONDITIONAL: ONLY SHOWN IF AFFILIATE ORIGINATED) */}
-            {hasAffiliate && (
+            {/* 6. ADMIN-ONLY AFFILIATE ATTRIBUTION & REVENUE TRACE CARD */}
+            {isAdminView && hasAffiliate && (
               <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-purple-50/30 border border-purple-200/80 shadow-sm relative overflow-hidden">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-purple-200/20 rounded-full blur-2xl pointer-events-none" />
                 
@@ -503,7 +503,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     <Share2 size={14} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-[#2D004D] uppercase tracking-wider">Affiliate Distribution & Revenue Trace</h4>
+                    <h4 className="text-xs font-black text-[#2D004D] uppercase tracking-wider">Affiliate Distribution & Revenue Trace (Internal Audit)</h4>
                     <p className="text-[10px] text-stone-500">This order was completed through an approved affiliate partner campaign.</p>
                   </div>
                 </div>
@@ -564,7 +564,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               </div>
             )}
 
-            {/* 6B. CUSTOMER DOWNLOAD AUDIT EVIDENCE CARD */}
+            {/* 6B. DIGITAL PRODUCT DELIVERY & DOWNLOAD STATUS CARD (CUSTOMER & ADMIN VIEW) */}
             <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50/30 border border-blue-200/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100">
                 <div className="flex items-center gap-2">
@@ -572,8 +572,8 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     <Download size={14} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-blue-950 uppercase tracking-wider">Customer Download Audit Evidence</h4>
-                    <p className="text-[10px] text-stone-500">Forensic digital asset delivery verification & license status</p>
+                    <h4 className="text-xs font-black text-blue-950 uppercase tracking-wider">Digital Product Delivery & Download Status</h4>
+                    <p className="text-[10px] text-stone-500">Digital license delivery status & ownership verification</p>
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -586,22 +586,26 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                   {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
                     ? 'LICENSE REVOKED'
                     : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
-                    ? 'ASSET DOWNLOADED'
-                    : 'NOT DOWNLOADED YET'}
+                    ? 'LICENSE ACTIVE & DOWNLOADED'
+                    : 'LICENSE ACTIVE (NOT DOWNLOADED YET)'}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Status</div>
-                  <div className="font-bold text-blue-900 mt-0.5">
-                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'Downloaded' : 'Not downloaded yet'}
+                  <div className={`font-bold text-sm mt-0.5 ${
+                    (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'text-emerald-700' : 'text-slate-700'
+                  }`}>
+                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'YES' : 'NO'}
                   </div>
-                  <div className="text-[9px] font-mono text-stone-500">Count: {traceData?.download_audit?.download_count || orderData?.download_count || 0}</div>
+                  <div className="text-[9px] font-mono text-stone-500 mt-0.5">
+                    {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'Downloaded to device' : 'Awaiting first download'}
+                  </div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">First / Last Download</div>
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">First Download</div>
                   <div className="font-mono text-[10px] font-bold text-stone-800 mt-0.5 truncate">
                     {traceData?.download_audit?.first_downloaded_at ? new Date(traceData.download_audit.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : (orderData?.first_downloaded_at ? new Date(orderData.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')}
                   </div>
@@ -611,22 +615,22 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer Download IP</div>
-                  <div className="font-mono font-bold text-blue-950 mt-0.5">
-                    {traceData?.download_audit?.ip_address || orderData?.download_ip || 'Not Available'}
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Count</div>
+                  <div className="font-mono font-black text-blue-950 text-sm mt-0.5">
+                    {traceData?.download_audit?.download_count || orderData?.download_count || 0} Downloads
                   </div>
-                  <div className="text-[9px] text-stone-400">Proxy Verified</div>
+                  <div className="text-[9px] text-stone-400">Total successful downloads</div>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Device & License</div>
-                  <div className="font-bold text-stone-800 mt-0.5 truncate">
-                    {traceData?.download_audit?.device_type || orderData?.download_device || 'Desktop'} ({traceData?.download_audit?.browser || orderData?.download_browser || 'Chrome'})
-                  </div>
-                  <div className={`text-[9px] font-bold ${
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">License Status</div>
+                  <div className={`font-bold text-sm mt-0.5 ${
                     (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
                   }`}>
-                    License: {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
+                    {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
+                  </div>
+                  <div className="text-[9px] text-stone-400 truncate">
+                    Commercial License Access
                   </div>
                 </div>
               </div>
