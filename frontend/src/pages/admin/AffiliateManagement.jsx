@@ -573,57 +573,70 @@ function PayoutReviewDrawer({ payout, onClose, onApprove, onReject, onHold, onRe
           </div>
 
           {/* DECISION ACTIONS FOOTER */}
-          <div className="p-6 border-t border-[#F3EAF8] bg-white space-y-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              {isSandbox ? (
-                <SandboxPaymentButton
-                  onClick={onSimulateSandbox}
-                  disabled={loading}
-                  loading={loading}
-                  label={`TEST PAY ${fmt(netPayable)}`}
-                />
-              ) : (
+          <div className="p-6 border-t border-[#F3EAF8] bg-white space-y-4">
+            {/* TWO CLEARLY SEPARATED BUTTONS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* BUTTON 1: Approve & Pay (RazorpayX) - DISABLED */}
+              <div className="flex flex-col space-y-1">
                 <button
-                  onClick={() => onApprove(payout.id, netPayable, internalNote)}
-                  disabled={loading || radarStatus.status === 'RED'}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={true}
+                  className="w-full py-3 px-4 rounded-xl bg-stone-200 text-stone-500 text-xs font-bold shadow-none cursor-not-allowed flex items-center justify-center gap-1.5 border border-stone-300 opacity-60"
+                  title="RazorpayX not configured."
                 >
-                  <Check size={15} /> {radarStatus.status === 'RED' ? 'PAYMENT BLOCKED (UNVERIFIED)' : `PAY NOW VIA RAZORPAYX (${fmt(netPayable)})`}
+                  <Lock size={14} /> Approve & Pay (RazorpayX)
                 </button>
-              )}
+                <p className="text-[10px] text-amber-700 font-bold text-center">
+                  RazorpayX not configured.
+                </p>
+              </div>
 
-              {payout.status === 'failed' && (
+              {/* BUTTON 2: Test Payout (Development Only) - ENABLED */}
+              <div className="flex flex-col space-y-1">
                 <button
-                  onClick={() => onRetry(payout.id)}
+                  onClick={() => onTestPayout && onTestPayout(payout.id)}
                   disabled={loading}
-                  className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5"
                 >
-                  <RotateCcw size={15} /> Retry Payout
+                  <Beaker size={14} /> Test Payout (Development Only)
                 </button>
-              )}
-
-              <button
-                onClick={() => onHold(payout.id, internalNote)}
-                disabled={loading}
-                className="py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-all flex items-center justify-center gap-1.5"
-              >
-                <Clock size={15} /> Hold Request
-              </button>
-
-              <button
-                onClick={() => onReject(payout.id, internalNote)}
-                disabled={loading}
-                className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1.5"
-              >
-                <X size={15} /> Reject
-              </button>
+                <p className="text-[10px] text-stone-500 font-medium text-center">
+                  Development mode only. No real money is transferred.
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-stone-500 pt-2 border-t border-stone-100">
-              <button onClick={handleExportStatement} className="hover:text-[#7B3FA0] font-bold flex items-center gap-1">
-                <Download size={13} /> Export Payout Statement CSV
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-stone-100">
+              <div className="flex items-center gap-2">
+                {payout.status === 'failed' && (
+                  <button
+                    onClick={() => onRetry(payout.id)}
+                    disabled={loading}
+                    className="py-2 px-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1"
+                  >
+                    <RotateCcw size={13} /> Retry
+                  </button>
+                )}
+
+                <button
+                  onClick={() => onHold(payout.id, internalNote)}
+                  disabled={loading}
+                  className="py-2 px-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 transition-all flex items-center justify-center gap-1"
+                >
+                  <Clock size={13} /> Hold
+                </button>
+
+                <button
+                  onClick={() => onReject(payout.id, internalNote)}
+                  disabled={loading}
+                  className="py-2 px-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-1"
+                >
+                  <X size={13} /> Reject
+                </button>
+              </div>
+
+              <button onClick={handleExportStatement} className="text-[#7B3FA0] hover:text-[#2D004D] font-bold text-[10px] flex items-center gap-1">
+                <Download size={13} /> CSV Statement
               </button>
-              <span className="font-mono text-[10px]">Audit Log Locked</span>
             </div>
           </div>
         </motion.div>
@@ -1128,12 +1141,20 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
 
     try {
       setExecuting(true);
-      const res = await backendFetch(`/admin/affiliates/payouts/${payout.id}/pay`, { method: 'POST' });
+      const res = await backendFetch(`/admin/affiliates/payouts/${payout.id}/test-payout`, { method: 'POST' });
       setExecutionResult(res);
 
       setStepperState(prev => prev.map(s => s.id === 3 ? { ...s, status: 'completed' } : s.id === 4 ? { ...s, status: 'completed' } : s));
       setStep('complete');
       if (onPaymentComplete) onPaymentComplete();
+      window.dispatchEvent(new CustomEvent('lumora_payout_completed', { detail: { payoutId: payout.id } }));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('lumora_sync');
+          bc.postMessage({ type: 'lumora_payout_completed', payoutId: payout.id });
+          bc.close();
+        } catch (e) { /* ignore */ }
+      }
     } catch (exc) {
       setErrorMsg(exc.message || 'Payment execution failed');
       setStepperState(prev => prev.map(s => s.id === 3 ? { ...s, status: 'failed' } : s));
@@ -1240,18 +1261,43 @@ function EnterprisePayoutModal({ payout, onClose, onPaymentComplete }) {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F3EAF8]">
-              <button onClick={onClose} className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#7B3FA0] hover:bg-[#F8F3FB]">
-                Cancel
-              </button>
-              <button
-                onClick={handleStartTransfer}
-                disabled={verifying || (verificationData && !verificationData.passes_all)}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center gap-2 disabled:opacity-50"
-              >
-                <Check size={15} /> Transfer Funds ({fmt(netAmt)})
-              </button>
+            {/* Actions: TWO CLEARLY SEPARATED BUTTONS */}
+            <div className="flex flex-col space-y-3 pt-3 border-t border-[#F3EAF8]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Button 1: Approve & Pay (RazorpayX) - Disabled */}
+                <div className="space-y-1">
+                  <button
+                    disabled={true}
+                    className="w-full py-2.5 px-4 rounded-xl bg-stone-200 text-stone-500 text-xs font-bold shadow-none cursor-not-allowed flex items-center justify-center gap-1.5 border border-stone-300 opacity-60"
+                    title="RazorpayX not configured."
+                  >
+                    <Lock size={14} /> Approve & Pay (RazorpayX)
+                  </button>
+                  <p className="text-[10px] text-amber-700 font-bold text-center">
+                    RazorpayX not configured.
+                  </p>
+                </div>
+
+                {/* Button 2: Test Payout (Development Only) - Enabled */}
+                <div className="space-y-1">
+                  <button
+                    onClick={handleStartTransfer}
+                    disabled={verifying}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Beaker size={14} /> Test Payout (Development Only)
+                  </button>
+                  <p className="text-[10px] text-stone-500 font-medium text-center">
+                    Development mode only. No real money is transferred.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button onClick={onClose} className="px-4 py-1.5 rounded-xl text-xs font-bold text-[#7B3FA0] hover:bg-[#F8F3FB]">
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1510,6 +1556,36 @@ export default function AffiliateManagement() {
   useEffect(() => { if (activeTab === 'ledger') loadLedger(); }, [ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter, loadLedger]);
 
   // Handlers for RazorpayX Payouts
+  const handleTestPayout = async (payoutId) => {
+    if (!window.confirm(`Execute Development Test Payout for Payout #${payoutId}?\nThis will perform full atomic PostgreSQL updates (wallet deduction, status paid, audit trail).`)) {
+      return;
+    }
+    setPayoutActionLoading(true);
+    try {
+      const res = await backendFetch(`/admin/affiliates/payouts/${payoutId}/test-payout`, {
+        method: 'POST'
+      });
+      alert(`Test Payout Completed Successfully! Transaction Ref: ${res.transaction_reference || res.provider_ref}`);
+      loadPayouts();
+      loadKpis();
+      loadLedger();
+      loadAffiliates();
+      setSelectedPayoutDrawer(null);
+      window.dispatchEvent(new CustomEvent('lumora_payout_completed', { detail: { payoutId } }));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('lumora_sync');
+          bc.postMessage({ type: 'lumora_payout_completed', payoutId });
+          bc.close();
+        } catch (e) { /* ignore */ }
+      }
+    } catch (e) {
+      alert(`Test Payout Error: ${e.message || e}`);
+    } finally {
+      setPayoutActionLoading(false);
+    }
+  };
+
   const handleApprovePayout = (payoutId) => {
     if (selectedPayoutDrawer) {
       setShowEnterprisePayoutModal(selectedPayoutDrawer);
@@ -2317,6 +2393,7 @@ export default function AffiliateManagement() {
             onReject={handleRejectPayout}
             onHold={handleHoldPayout}
             onRetry={handleRetryPayout}
+            onTestPayout={handleTestPayout}
             onSimulateSandbox={() => setShowSandboxModal(true)}
             loading={payoutActionLoading}
           />
@@ -2401,6 +2478,8 @@ export default function AffiliateManagement() {
             onPaymentComplete={() => {
               loadPayouts();
               loadKpis();
+              loadLedger();
+              loadAffiliates();
             }}
           />
         )}

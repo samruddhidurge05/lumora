@@ -3,6 +3,7 @@ import csv
 import io
 import os
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -984,6 +985,55 @@ def patch_payout_status(
         "[patch_payout_status] Payout #%d → %s (provider_ref=%s mode=%s)",
         payout_id, final_status, result.provider_ref, payout_mode,
     )
+    return {"success": True, "payout_id": payout_id, "status": final_status, "provider_ref": result.provider_ref}
+
+
+@router.post("/payouts/{payout_id}/test-payout")
+def execute_development_test_payout(
+    payout_id: int,
+    db: Session = Depends(get_db),
+    admin_user=Depends(require_admin_role)
+):
+    """
+    Development-Only Test Payout Flow.
+    Simulates a successful money transfer without contacting RazorpayX.
+    Executes the exact same atomic PostgreSQL database updates as production RazorpayX payout via complete_payout().
+    """
+    payout = db.query(AffiliatePayout).filter(AffiliatePayout.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout not found")
+
+    if payout.status not in ("pending", "processing"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payout #{payout_id} is in status '{payout.status}' and cannot be actioned."
+        )
+
+    test_ref = f"TEST-{uuid.uuid4().hex[:12].upper()}"
+    payout.payout_mode = "TEST"
+    payout.processed_at = datetime.now(timezone.utc)
+    payout.razorpay_payout_id = test_ref
+    db.commit()
+
+    success = complete_payout(
+        db=db,
+        payout_id=payout.id,
+        new_status="completed",
+        provider_ref=test_ref,
+        admin_user_id=admin_user.id,
+        source="TEST",
+    )
+
+    return {
+        "success": True,
+        "payout_id": payout_id,
+        "status": "completed",
+        "payout_mode": "TEST",
+        "transaction_reference": test_ref,
+        "provider_ref": test_ref,
+        "message": "Development test payout executed successfully. Database updated atomically."
+    }
+
 
 @router.get("/payouts/{payout_id}/supporting-orders")
 def get_payout_supporting_orders(

@@ -149,6 +149,33 @@ function AffiliateDashboardInner() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Listen for payout completed cross-tab events & BroadcastChannel
+  useEffect(() => {
+    const handlePayoutCompleted = () => {
+      if (user) loadAffiliateData();
+    };
+    window.addEventListener('lumora_payout_completed', handlePayoutCompleted);
+    window.addEventListener('lumora_refresh_user_data', handlePayoutCompleted);
+
+    let bc;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('lumora_sync');
+        bc.onmessage = (ev) => {
+          if (ev.data?.type === 'lumora_payout_completed' && user) {
+            loadAffiliateData();
+          }
+        };
+      } catch (e) { /* ignore */ }
+    }
+
+    return () => {
+      window.removeEventListener('lumora_payout_completed', handlePayoutCompleted);
+      window.removeEventListener('lumora_refresh_user_data', handlePayoutCompleted);
+      if (bc) bc.close();
+    };
+  }, [user]);
+
   // Smart polling for pending payouts (real-time sync simulation)
   useEffect(() => {
     if (!user) return;
@@ -159,7 +186,14 @@ function AffiliateDashboardInner() {
       try {
         const payRes = await backendFetch('/affiliate/payouts');
         if (Array.isArray(payRes)) {
+          const statusChanged = payRes.some(p => {
+            const oldP = payouts.find(op => op.id === p.id);
+            return oldP && oldP.status !== p.status;
+          });
           setPayouts(payRes);
+          if (statusChanged) {
+            loadAffiliateData();
+          }
         }
       } catch (err) {
         // Ignore polling errors to prevent UI disruption
