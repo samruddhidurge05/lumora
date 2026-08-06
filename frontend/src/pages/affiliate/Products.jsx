@@ -102,7 +102,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     });
 
   const buildAffLink = (prod) =>
-    buildAffiliateReferralLink(prod, REFERRAL_CODE);
+    buildAffiliateReferralLink(prod, profile?.referral_code || profile?.code || 'ERROR_NO_CODE');
 
   const handleCopy = (prod) => {
     const link = buildAffLink(prod);
