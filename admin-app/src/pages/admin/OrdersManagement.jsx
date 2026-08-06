@@ -237,33 +237,7 @@ function AffiliateAttributionCard({ orderId }) {
       <div className="bg-stone-50 border border-stone-200/60 p-4 rounded-2xl flex flex-col gap-2 text-xs text-[#7B3FA0]">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-medium text-stone-500">Direct Purchase (No Affiliate Referred)</span>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowInput(!showInput)} className="px-2.5 py-1 rounded-lg bg-[#7B3FA0]/10 hover:bg-[#7B3FA0]/20 text-[#7B3FA0] text-[10px] font-bold transition-all">
-              {showInput ? 'Cancel' : 'Enter Code'}
-            </button>
-            <button onClick={() => handleRegenerate()} disabled={regenerating} className="px-3 py-1 rounded-lg bg-[#7B3FA0] hover:bg-[#6A328C] text-white text-[10px] font-bold transition-all">
-              {regenerating ? 'Checking...' : 'Check / Regenerate'}
-            </button>
-          </div>
         </div>
-        {showInput && (
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200/80">
-            <input
-              type="text"
-              placeholder="e.g. AFF001 or LUMREF20"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              className="flex-1 px-3 py-1.5 rounded-lg border border-[#7B3FA0]/30 text-[11px] font-mono text-[#2D004D] focus:outline-none focus:border-[#7B3FA0]"
-            />
-            <button
-              onClick={() => manualCode.trim() && handleRegenerate(manualCode)}
-              disabled={regenerating || !manualCode.trim()}
-              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition-all disabled:opacity-50"
-            >
-              Link & Regenerate
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
