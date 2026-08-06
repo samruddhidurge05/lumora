@@ -269,4 +269,31 @@ If any unrelated behavior changes, treat it as a regression and restore the prev
 ## AppContext currentView State
 - `currentView` in `AppContext` controls which page the SPA renders (via `SPARouter`).
 - Navigations via `window.location.href` or `window.location.hash =` bypass `currentView` updates and will show stale/wrong content.
-- Always use `navigateTo(view, payload)` from `useApp()` for in-SPA navigation to ensure `currentView`, `activeProductId`, and `activeCreatorId` are correctly updated.
+- Always use `navigateTo(view, payload)` from `useApp()` for in-SPA navigation to ensure `currentView`, `activeProductId`, and `activeCreatorId` are correctly updated.
+
+# ======================================================================
+# P0 Admin Backend Logic Freeze Rules
+# ======================================================================
+
+## Admin Backend Logic Frozen (FROZEN)
+- From this point onward, the **Admin Backend business logic is FROZEN** for production stability.
+- The Admin Panel backend logic is considered production-stable. Every dashboard and API consumer expects exact backward compatibility.
+
+## Absolute Prohibitions (DO NOT MODIFY)
+- **NEVER** modify authentication flow, authorization, JWT verification, Firebase verification, role system, or permission system.
+- **NEVER** modify vendor workflow, affiliate workflow, customer workflow, product workflow, payment workflow, Razorpay workflow, checkout workflow, or refund workflow.
+- **NEVER** modify API contracts, request schemas, response schemas, validation rules, business calculations, revenue calculations, or commission calculations.
+- **NEVER** modify existing endpoint URLs, existing endpoint behavior, or existing frontend expectations.
+
+## Permitted Operational Work
+- **Production Data Recovery**: Restore missing production data (Orders, Payments, Reviews, Reports, Audit Logs, Invitations).
+- **Database Recovery**: Recover missing PostgreSQL records and perform verified migrations.
+- **Database Synchronization**: Synchronize Firestore and Render PostgreSQL to maintain PostgreSQL as the production source of truth.
+- **Performance Improvements**: Allowed ONLY if they do NOT change behavior (indexes, query optimization, pagination optimization, caching).
+- **Bug Fixes**: Allowed ONLY for bugs caused by missing production data, incorrect database references, or inconsistent database state. Do NOT rewrite business logic.
+- **Monitoring & Diagnostics**: Allowed logging, metrics, health checks, and diagnostics.
+
+## Strict Requirement
+- If any requested task requires changing business logic, **STOP**, explain why, and request approval before proceeding.
+- This freeze applies **specifically to the Admin Backend logic**. Operational database work, parity verification, performance indexing, and diagnostic logging remain fully permitted.
+
