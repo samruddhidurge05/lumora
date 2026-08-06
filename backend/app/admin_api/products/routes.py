@@ -262,3 +262,171 @@ def reject_product(
         "title": product.title,
         "reason": reason,
     }
+
+
+@router.post("")
+@router.post("/")
+def create_admin_product(
+    data: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """
+    Create a new product from Admin Panel.
+    Assigns vendor_id = "lumora-creator" (platform sentinel) to ensure Platform ownership.
+    """
+    title = data.get("title") or data.get("name")
+    if not title or not str(title).strip():
+        raise HTTPException(status_code=422, detail="Product title cannot be empty.")
+
+    try:
+        price = float(data.get("price") or 0.0)
+    except (ValueError, TypeError):
+        price = 0.0
+
+    if price < 0:
+        raise HTTPException(status_code=400, detail="Price cannot be negative.")
+
+    admin_id = getattr(admin_user, "id", None) or (admin_user.get("id") if isinstance(admin_user, dict) else None)
+    vendor_id = _PLATFORM_SENTINEL
+
+    new_product = Product(
+        title=str(title).strip(),
+        description=data.get("description", ""),
+        short_desc=data.get("short_desc", ""),
+        category=data.get("category", "General"),
+        subcategory=data.get("subcategory"),
+        price=price,
+        thumbnail=data.get("thumbnail") or data.get("image"),
+        preview=data.get("preview") or data.get("preview_url") or data.get("thumbnail"),
+        file_url=data.get("file_url") or data.get("download_url") or f"/products/product-new.zip",
+        file_size=data.get("file_size", "48 MB"),
+        seller=data.get("seller", "Lumora Official"),
+        vendor_id=vendor_id,
+        status=data.get("status", "published"),
+        featured=bool(data.get("featured", False)),
+        trending=bool(data.get("trending", False)),
+        badge=data.get("badge"),
+        tags=data.get("tags") if isinstance(data.get("tags"), list) else [],
+        highlights=data.get("highlights") if isinstance(data.get("highlights"), list) else [],
+        features=data.get("features") if isinstance(data.get("features"), list) else [],
+        what_you_get=data.get("what_you_get") if isinstance(data.get("what_you_get"), list) else [],
+        system_requirements=data.get("system_requirements") if isinstance(data.get("system_requirements"), list) else [],
+        installation_guide=data.get("installation_guide", ""),
+        affiliate_enabled=bool(data.get("affiliate_enabled", True)),
+        commission_type=data.get("commission_type", "percentage"),
+        commission_value=float(data.get("commission_value") or 15.0),
+        rating=float(data.get("rating") or 5.0),
+        reviews=int(data.get("reviews") or 0),
+        downloads=int(data.get("downloads") or 0),
+        is_platform_product=True,
+        owner_type="PLATFORM",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    )
+
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+
+    # Sync to Firestore
+    if firebase_connected and firestore_db is not None:
+        try:
+            from admin.firestore.admin_firestore import sync_product_to_firestore
+            sync_product_to_firestore(new_product)
+        except Exception as e:
+            print(f"[AdminProductCreate] Firestore sync warning: {e}")
+
+    # Audit log
+    try:
+        log_admin_action(
+            db=db,
+            admin_user_id=admin_id,
+            action="product_created",
+            target_type="product",
+            target_id=str(new_product.id),
+            metadata={"title": new_product.title, "price": new_product.price},
+        )
+    except Exception:
+        pass
+
+    return {
+        "id": new_product.id,
+        "title": new_product.title,
+        "description": new_product.description,
+        "short_desc": new_product.short_desc,
+        "category": new_product.category,
+        "price": float(new_product.price or 0),
+        "thumbnail": new_product.thumbnail,
+        "preview": new_product.preview,
+        "file_url": new_product.file_url,
+        "vendor_id": new_product.vendor_id,
+        "seller": new_product.seller,
+        "status": new_product.status,
+        "featured": new_product.featured,
+        "badge": new_product.badge,
+        "created_at": new_product.created_at.isoformat() if new_product.created_at else None,
+    }
+
+
+@router.put("/{product_id}")
+def update_admin_product(
+    product_id: int,
+    data: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Update existing product from Admin Panel."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    updatable_fields = [
+        "title", "description", "short_desc", "category", "subcategory",
+        "price", "thumbnail", "preview", "file_url", "file_size", "seller",
+        "status", "featured", "trending", "badge", "tags", "highlights",
+        "features", "what_you_get", "system_requirements", "installation_guide",
+        "affiliate_enabled", "commission_type", "commission_value"
+    ]
+    for field in updatable_fields:
+        if field in data:
+            setattr(product, field, data[field])
+
+    product.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(product)
+
+    # Sync to Firestore
+    if firebase_connected and firestore_db is not None:
+        try:
+            from admin.firestore.admin_firestore import sync_product_to_firestore
+            sync_product_to_firestore(product)
+        except Exception as e:
+            print(f"[AdminProductUpdate] Firestore sync warning: {e}")
+
+    return {"id": product.id, "title": product.title, "status": product.status}
+
+
+@router.delete("/{product_id}")
+def delete_admin_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin_role),
+):
+    """Delete product from Admin Panel."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    title = product.title
+    db.delete(product)
+    db.commit()
+
+    # Firestore deletion
+    if firebase_connected and firestore_db is not None:
+        try:
+            firestore_db.collection("products").document(str(product_id)).delete()
+        except Exception as e:
+            print(f"[AdminProductDelete] Firestore delete warning: {e}")
+
+    return {"id": product_id, "message": f"Product '{title}' deleted successfully."}

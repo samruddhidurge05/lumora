@@ -454,6 +454,7 @@ export default function App() {
   // --- M4-M7: Pending Review state ---
   const [pendingProducts, setPendingProducts] = useState([]);
   const [rejectModal, setRejectModal] = useState(null); // { productId, reason }
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null); // target product to delete
 
   // --- UI STATES ---
   const [isNewProductOpen, setIsNewProductOpen] = useState(false);
@@ -1610,7 +1611,7 @@ export default function App() {
                     onTogglePublish={() => handleTogglePublish(product.id)}
                     onDuplicate={() => handleDuplicateProduct(product.id)}
                     onToggleFeatured={() => handleToggleFeatured(product.id)}
-                    onDelete={() => handleDeleteProduct(product.id)}
+                    onDelete={() => setDeleteConfirmModal(product)}
                   />
                 ))}
               </motion.div>
@@ -1638,7 +1639,7 @@ export default function App() {
                         onTogglePublish={() => handleTogglePublish(product.id)}
                         onDuplicate={() => handleDuplicateProduct(product.id)}
                         onToggleFeatured={() => handleToggleFeatured(product.id)}
-                        onDelete={() => handleDeleteProduct(product.id)}
+                        onDelete={() => setDeleteConfirmModal(product)}
                       />
                     ))}
                   </div>
@@ -1718,6 +1719,53 @@ export default function App() {
               setSelectedProductPreview(null);
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* =================================================#
+          7. MODAL: SAFE PRODUCT DELETE CONFIRMATION
+          =================================================# */}
+      <AnimatePresence>
+        {deleteConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-white">
+              <div className="flex items-center space-x-3 text-rose-500">
+                <div className="p-2 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100">Delete Product?</h3>
+                  <p className="text-xs text-rose-400 font-mono mt-0.5">Permanent Marketplace Deletion</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                This action permanently deletes <span className="font-semibold text-white">"{deleteConfirmModal.title || deleteConfirmModal.name || 'this product'}"</span> from the marketplace.
+              </p>
+              <p className="text-xs text-slate-400 font-mono bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                This cannot be undone.
+              </p>
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/80">
+                <button 
+                  onClick={() => setDeleteConfirmModal(null)}
+                  className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={async () => {
+                    const targetId = deleteConfirmModal.id || deleteConfirmModal;
+                    setDeleteConfirmModal(null);
+                    await handleDeleteProduct(targetId);
+                  }}
+                  className="px-4 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-lg shadow-rose-600/20 transition"
+                >
+                  Delete Product
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
