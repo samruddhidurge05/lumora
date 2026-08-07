@@ -97,7 +97,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
     </>
   );
 
-  const baseClass = "glass-surface rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 border border-slate-300/30 hover:border-slate-400/50 hover:-translate-y-0.5 transition-all duration-[220ms] shadow-sm relative overflow-hidden group min-h-[100px] sm:min-h-[120px] flex flex-col justify-between";
+  const baseClass = "glass-surface rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 border border-[var(--card-border)] hover:border-[var(--card-border-hover)] hover:-translate-y-0.5 transition-all duration-[220ms] shadow-sm relative overflow-hidden group min-h-[100px] sm:min-h-[120px] flex flex-col justify-between";
   
   if (onClick) {
     return (
@@ -122,7 +122,7 @@ export function DashboardCard({ title, value, icon: IconComponent, trend, trendL
 // Custom container element matching design details with compressed padding
 export function GlassCard({ children, className = '', title, subtitle, headerActions }) {
   return (
-    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 border border-slate-300/30 shadow-sm relative overflow-hidden h-auto ${className}`}>
+    <div className={`glass-surface rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 border border-[var(--card-border)] shadow-sm relative overflow-hidden h-auto ${className}`}>
       {(title || subtitle || headerActions) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3.5 mb-3.5 sm:mb-4 pb-2.5 sm:pb-3 border-b border-stone-200/50">
           <div>
@@ -151,7 +151,7 @@ export function FilterBar({
   actions 
 }) {
   return (
-    <div className="glass-surface rounded-2xl p-3 sm:p-3.5 border border-slate-300/30 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 relative z-30 overflow-visible">
+    <div className="glass-surface rounded-2xl p-3 sm:p-3.5 border border-[var(--card-border)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 relative z-30 overflow-visible">
       <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5 relative z-30 overflow-visible">
         {onSearchChange !== undefined && (
           <div className="relative flex-1 min-w-[200px] md:max-w-md">
@@ -206,7 +206,7 @@ export function TableContainer({
     return (
       <div className="flex flex-col gap-3.5 w-full min-w-0">
         {/* Desktop Table View (≥768px) */}
-        <div className={`w-full ${mobileCardRender ? 'admin-desktop-table-view' : ''} overflow-x-auto rounded-2xl sm:rounded-3xl border border-slate-300/30 bg-white/62 backdrop-blur-[40px] shadow-sm`}>
+        <div className={`w-full ${mobileCardRender ? 'admin-desktop-table-view' : ''} overflow-x-auto rounded-2xl sm:rounded-3xl border border-[var(--card-border)] bg-white/62 backdrop-blur-[40px] shadow-sm`}>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#8E6AA8]/5 border-b border-[#8E6AA8]/10">
@@ -254,7 +254,7 @@ export function TableContainer({
           <div className="admin-mobile-cards-view md:hidden">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="glass-surface p-4 rounded-2xl border border-slate-300/30 animate-pulse flex flex-col gap-2">
+                <div key={idx} className="glass-surface p-4 rounded-2xl border border-[var(--card-border)] animate-pulse flex flex-col gap-2">
                   <div className="h-4 bg-[#381347]/10 rounded w-1/2" />
                   <div className="h-3 bg-[#381347]/5 rounded w-3/4" />
                   <div className="h-8 bg-[#381347]/10 rounded w-full mt-2" />
@@ -287,7 +287,7 @@ export function TableContainer({
 
   // Plain card wrapper — used by pages that manage their own table structure
   return (
-    <div className="w-full rounded-2xl sm:rounded-3xl border border-slate-300/30 bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden min-w-0">
+    <div className="w-full rounded-2xl sm:rounded-3xl border border-[var(--card-border)] bg-white/62 backdrop-blur-[40px] shadow-sm overflow-hidden min-w-0">
       {children}
       {pagination && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3.5 py-2 mt-1 min-h-[48px]">

@@ -27,8 +27,8 @@
    * shadow only adds the faintest depth below.
    * ─────────────────────────────────────────────────────────────────
    */
-  --card-border:        rgba(214, 205, 234, 0.60);   /* lavender-gray/60 — resting */
-  --card-border-hover:  rgba(192, 176, 218, 0.82);   /* lavender-gray/82 — hover  */
+  --card-border:        rgba(135, 110, 160, 0.35);   /* Crisp cool-neutral border — visible on light and dark */
+  --card-border-hover:  rgba(123, 63, 160, 0.55);   /* Interactive hover accent */
   --card-border-width:  1px;
 
   --glass-bg: rgba(255, 255, 255, 0.62);
@@ -207,59 +207,47 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ENTERPRISE PREMIUM CARD BORDER SYSTEM
-   Reference-locked: matches the reference Vendor Console image.
-   Design language: Stripe · Linear · Vercel · Supabase · Notion
+   UNIFIED ENTERPRISE CARD BORDER SYSTEM (Stripe / Linear / Vercel style)
+   Design language: Stripe · Linear · Vercel · Supabase · GitHub Enterprise
 
-   SINGLE SOURCE OF TRUTH — all card borders derive from these two rules.
-   Rule 1 → shared component classes (glass-surface, glass-card, etc.)
-   Rule 2 → standalone inline card wrappers (section, div) found in audit
-   Hover  → border brightens slightly; lift stays at 2px max.
-   NO purple outlines. NO 1.5px lines. NO heavy shadows.
-═══════════════════════════════════════════════════════════════════════ */
+   SINGLE SOURCE OF TRUTH — automatically applies a crisp, elegant 1px
+   cool-neutral border to EVERY card, KPI widget, table, chart container,
+   modal, upload panel, and section across all admin pages.
+   ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── Rule 1: Shared component classes ─────────────────────────────── */
+/* ── Rule 1: All Admin Cards, Widgets, Sections & Glass Surfaces ────── */
 .admin-main-content .glass-surface,
 .admin-main-content .glass-card,
-.admin-main-content .premium-flat-card {
+.admin-main-content .premium-flat-card,
+.admin-main-content .stats-grid > div,
+.admin-main-content section[class*="rounded"],
+.admin-main-content div[class*="rounded-2xl"],
+.admin-main-content div[class*="rounded-3xl"],
+.admin-main-content div[class*="rounded-xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-2xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-3xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-2xl"][class*="shadow"],
+.admin-main-content div[class*="rounded-3xl"][class*="shadow"] {
   border: var(--card-border-width) solid var(--card-border) !important;
-  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.60) !important;
+  box-shadow: var(--admin-shadow-md) !important;
   transition:
     transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.22s ease !important;
   box-sizing: border-box !important;
 }
+
+/* ── Hover State for Interactive Cards ───────────────────────────── */
 .admin-main-content .glass-surface:hover,
 .admin-main-content .glass-card:hover,
-.admin-main-content .premium-flat-card:hover {
+.admin-main-content .premium-flat-card:hover,
+.admin-main-content .admin-card-hover:hover,
+.admin-main-content .stats-grid > div:hover {
   transform: translateY(-2px) !important;
-  box-shadow: var(--admin-shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+  box-shadow: var(--admin-shadow-hover) !important;
   border-color: var(--card-border-hover) !important;
 }
 
-/* ── Rule 2: Standalone inline card wrappers (audit-identified) ────
-   Targets every section / div used as a card in Analytics, AuditLogs,
-   AdminUserManagement, Reviews, Payments, Platform pages, Modals, etc.
-   Uses the most specific safe selector: element + rounded corner class. */
-.admin-main-content section.glass-surface,
-.admin-main-content section[class*="rounded-2xl"],
-.admin-main-content section[class*="rounded-3xl"] {
-  border: var(--card-border-width) solid var(--card-border) !important;
-  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.60) !important;
-}
-
-/* Standalone div cards: must have both a rounded corner AND shadow/border to qualify */
-.admin-main-content div.glass-surface[class*="rounded"],
-.admin-main-content div[class*="rounded-3xl"][class*="shadow-sm"],
-.admin-main-content div[class*="rounded-2xl"][class*="shadow-sm"] {
-  border-color: var(--card-border) !important;
-  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.60) !important;
-}
-
-/* ── Rule 3: Modal / Drawer outer container borders ────────────────
-   Keeps modal shape; only softens the hard white border. */
-.admin-main-content div[class*="rounded-3xl"][class*="bg-white"],
 .admin-main-content div[class*="rounded-2xl"][class*="bg-white"] {
   border-color: var(--card-border) !important;
 }
