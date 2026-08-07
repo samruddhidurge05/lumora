@@ -881,9 +881,10 @@ function DashboardHome({
       </div>
 
       {/* Stats row */}
+      {/* Stats row */}
       <div className="dash-stat-grid">
         {QUICK_STATS.map((s, i) => (
-          <div key={i} className="premium-flat-card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div key={i} className="premium-flat-card" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1.5px solid rgba(123, 63, 160, 0.38)' }}>
             <div>
               <span style={{ fontSize: '0.58rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
               <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', lineHeight: 1 }}>{s.value}</div>
@@ -899,7 +900,7 @@ function DashboardHome({
       {/* Recent Purchases & Recent Activity Dual Grid */}
       <div className="dash-two-col">
         {/* Recent Purchases */}
-        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1.5px solid rgba(123, 63, 160, 0.38)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
               <ShoppingBag size={14} style={{ color: '#7B3FA0' }} /> Recent Purchases
@@ -920,7 +921,7 @@ function DashboardHome({
               transition: 'all 0.3s ease'
             }}>
               {(expandPurchases ? recentOrders : recentOrders.slice(0, 1)).map((ord, idx) => (
-                <div key={ord.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={ord.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1.5px solid rgba(123,63,160,0.28)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}>Order #{ord.id}</div>
                     <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : 'Recent'} · {ord.items?.length || 1} items</div>
@@ -933,14 +934,14 @@ function DashboardHome({
               ))}
             </div>
           ) : (
-            <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+            <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1.5px dashed rgba(123,63,160,0.38)' }}>
               No recent order history recorded yet.
             </div>
           )}
         </div>
 
         {/* Recent Activity */}
-        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1.5px solid rgba(123, 63, 160, 0.38)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
               <Clock size={14} style={{ color: '#7B3FA0' }} /> Recent Activity & Alerts
@@ -986,7 +987,7 @@ function DashboardHome({
             const visible = activities.filter(a => !HIDDEN_TYPES.has(a.activity_type || a.event));
             if (visible.length === 0) {
               return (
-                <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1px dashed rgba(196,148,230,0.3)' }}>
+                <div style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', background: 'rgba(255,255,255,0.40)', borderRadius: '10px', border: '1.5px dashed rgba(123,63,160,0.38)' }}>
                   No recent activity logged.
                 </div>
               );
@@ -1000,7 +1001,7 @@ function DashboardHome({
                 transition: 'all 0.3s ease'
               }}>
                 {(expandAlerts ? visible : visible.slice(0, 1)).map((act, idx) => (
-                  <div key={act.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(196,148,230,0.20)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={act.id || idx} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1.5px solid rgba(123,63,160,0.28)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <CheckCircle size={14} style={{ color: '#7B3FA0', flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>
