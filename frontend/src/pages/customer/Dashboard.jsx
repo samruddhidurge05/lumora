@@ -424,6 +424,7 @@ export default function Dashboard() {
             recentOrders={recentOrders}
             activities={activities}
             notifsSummary={notifsSummary}
+            displayAvatar={displayAvatar}
           />
         );
     }
@@ -844,7 +845,8 @@ function DashboardHome({
   selectedCategory, setSelectedCategory, allCategories,
   addToCart, buyNow, toggleWishlist, wishlist, formatPrice,
   aiResponse, setAiResponse, handleAISearch, globalSearch, setGlobalSearch,
-  loading, apiError, profile, stats, recentOrders, activities, notifsSummary
+  loading, apiError, profile, stats, recentOrders, activities, notifsSummary,
+  displayAvatar
 }) {
 
   const QUICK_STATS = [
