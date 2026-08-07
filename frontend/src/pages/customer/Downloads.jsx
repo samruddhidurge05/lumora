@@ -607,55 +607,52 @@ export default function CustomerDownloads() {
       {/* ═══════════════════════════════════════════════════════════
           SECTION 1: CINEMATIC HERO
           ═══════════════════════════════════════════════════════════ */}
+      {/* Digital Vault Hero Header Banner — Compact Height */}
       <section style={{
-        position: 'relative', borderRadius: '24px', overflow: 'hidden',
+        position: 'relative', borderRadius: '18px', overflow: 'hidden',
         background: 'linear-gradient(135deg, rgba(220,198,255,0.22) 0%, rgba(220,238,255,0.18) 50%, rgba(207,232,214,0.15) 100%)',
         border: '1.5px solid rgba(123, 63, 160, 0.38)',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 12px 36px -8px rgba(123, 63, 160, 0.10), inset 0 1px 0 rgba(255,255,255,0.8)',
-        padding: 'clamp(20px, 3.5vw, 32px) clamp(24px, 4vw, 44px)',
-        minHeight: 140,
+        boxShadow: '0 8px 24px -6px rgba(123, 63, 160, 0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+        padding: '14px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px'
       }}>
         {/* Decorative floating glass spheres */}
-        <div style={{ position: 'absolute', top: -40, right: 80, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(220,198,255,0.3))', boxShadow: 'inset -6px -8px 20px rgba(175,140,255,0.2), 0 10px 40px rgba(175,140,255,0.12)', border: '1px solid rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', animation: 'sphere-float-1 6s ease-in-out infinite alternate', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -20, right: 260, width: 90, height: 90, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.85), rgba(220,238,255,0.4))', boxShadow: 'inset -4px -5px 14px rgba(100,160,240,0.18)', border: '1px solid rgba(255,255,255,0.6)', animation: 'sphere-float-2 8s ease-in-out infinite alternate', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: 30, right: 300, width: 50, height: 50, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(207,232,214,0.5))', border: '1px solid rgba(255,255,255,0.7)', animation: 'sphere-float-3 5s ease-in-out infinite alternate', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -30, right: 60, width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(220,198,255,0.3))', border: '1px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -15, right: 180, width: 60, height: 60, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.85), rgba(220,238,255,0.4))', border: '1px solid rgba(255,255,255,0.6)', pointerEvents: 'none' }} />
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 640 }}>
-          <span style={{ fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.14em', color: '#7B3FA0', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
+        <div style={{ position: 'relative', zIndex: 2, flex: 1, minWidth: '240px' }}>
+          <span style={{ fontSize: '0.60rem', fontWeight: 800, letterSpacing: '0.12em', color: '#7B3FA0', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>
             ✦ Lumora Digital Vault
           </span>
-          <h1 className="text-editorial" style={{ fontSize: 'clamp(1.8rem, 3.8vw, 2.6rem)', fontWeight: 400, color: 'var(--color-espresso)', lineHeight: 1.05, marginTop: 4 }}>
+          <h1 className="text-editorial" style={{ fontSize: '1.45rem', fontWeight: 500, color: 'var(--color-espresso)', lineHeight: 1.15, marginTop: '2px', marginBottom: '2px' }}>
             Your Digital Vault
           </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--color-mocha)', marginTop: 4, fontWeight: 400, lineHeight: 1.4 }}>
-            Access your premium creative assets beautifully.
+          <p style={{ fontSize: '0.78rem', color: 'var(--color-mocha)', margin: 0, fontWeight: 500, opacity: 0.9 }}>
+            Access all your purchased digital products organized in one workspace.
           </p>
-          <p style={{ fontSize: '0.76rem', color: 'var(--color-mocha)', marginTop: 2, opacity: 0.75 }}>
-            All your purchased digital products organized in one immersive workspace.
-          </p>
+        </div>
 
-          {/* Hero stats row — live data only */}
-          <div style={{ display: 'flex', gap: 14, marginTop: 16, flexWrap: 'wrap' }}>
-            {[
-              { label: `${allProducts.length} Assets`, sub: 'In your vault', icon: <Package size={13} /> },
-              ...(updatesCount > 0 ? [{ label: `${updatesCount} Updates`, sub: 'Available now', icon: <Zap size={13} />, accent: true }] : []),
-            ].map((s, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '6px 14px', borderRadius: 12,
-                background: s.accent ? 'linear-gradient(135deg, rgba(220,198,255,0.4), rgba(205,183,255,0.3))' : 'rgba(255,255,255,0.65)',
-                border: s.accent ? '1px solid rgba(123,63,160,0.35)' : '1px solid rgba(123,63,160,0.20)',
-                backdropFilter: 'blur(10px)', boxShadow: '0 3px 12px rgba(78,59,49,0.03)',
-              }}>
-                <span style={{ color: s.accent ? '#7B3FA0' : '#7B3FA0' }}>{s.icon}</span>
-                <div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-espresso)' }}>{s.label}</div>
-                  <div style={{ fontSize: '0.58rem', color: 'var(--color-mocha)', fontWeight: 600 }}>{s.sub}</div>
-                </div>
+        {/* Hero stats pill */}
+        <div style={{ position: 'relative', zIndex: 2, display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {[
+            { label: `${allProducts.length} Assets`, sub: 'In your vault', icon: <Package size={13} /> },
+            ...(updatesCount > 0 ? [{ label: `${updatesCount} Updates`, sub: 'Available now', icon: <Zap size={13} />, accent: true }] : []),
+          ].map((s, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '6px 12px', borderRadius: '10px',
+              background: s.accent ? 'linear-gradient(135deg, rgba(220,198,255,0.45), rgba(205,183,255,0.35))' : 'rgba(255,255,255,0.75)',
+              border: s.accent ? '1px solid rgba(123,63,160,0.35)' : '1px solid rgba(123,63,160,0.20)',
+              backdropFilter: 'blur(10px)', boxShadow: '0 2px 8px rgba(78,59,49,0.03)',
+            }}>
+              <span style={{ color: '#7B3FA0' }}>{s.icon}</span>
+              <div>
+                <div style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--color-espresso)', lineHeight: 1.1 }}>{s.label}</div>
+                <div style={{ fontSize: '0.58rem', color: 'var(--color-mocha)', fontWeight: 600 }}>{s.sub}</div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
