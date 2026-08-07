@@ -660,9 +660,6 @@ export default function CustomerDownloads() {
       </section>
 
 
-      <PolicyBanner style={{ marginTop: '20px', marginBottom: '0px' }} />
-
-
 
 
       {/* Loading state notification */}

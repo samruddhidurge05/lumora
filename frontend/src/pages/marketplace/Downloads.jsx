@@ -301,8 +301,6 @@ export default function Downloads() {
           )}
         </div>
 
-        <PolicyBanner style={{ marginBottom: '24px' }} />
-
 
         {/* Error banner */}
         {error && (
