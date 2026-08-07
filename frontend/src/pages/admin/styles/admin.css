@@ -198,9 +198,7 @@ html, body {
 .admin-main-content .glass-card, 
 .admin-main-content .premium-flat-card {
   border-radius: var(--admin-radius-card) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
-  border-top: 2px solid rgba(255, 255, 255, 0.6) !important;
-  border-left: 2px solid rgba(255, 255, 255, 0.5) !important;
+  border: 1.5px solid rgba(123, 63, 160, 0.38) !important;
   background: var(--glass-bg) !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
@@ -214,7 +212,7 @@ html, body {
 .admin-main-content .premium-flat-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: var(--admin-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(123, 63, 160, 0.65) !important;
 }
 
 /* Ensure equal spacing, alignment, and wrapping for stats cards */

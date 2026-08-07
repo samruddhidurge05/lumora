@@ -42,7 +42,7 @@ export default function ProductCard({ product }) {
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '20px',
-        border: isHovered ? '1px solid rgba(192, 132, 252, 0.55)' : '1px solid rgba(255, 255, 255, 0.45)',
+        border: isHovered ? '1.5px solid rgba(123, 63, 160, 0.65)' : '1.5px solid rgba(123, 63, 160, 0.38)',
         background: 'rgba(255, 255, 255, 0.55)',
         boxShadow: isHovered
           ? '0 20px 48px rgba(90, 30, 126, 0.16), 0 4px 12px rgba(90, 30, 126, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.90)'

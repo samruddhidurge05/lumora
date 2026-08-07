@@ -170,9 +170,7 @@
   background     : var(--v-glass);
   backdrop-filter: blur(40px) saturate(200%) brightness(1.06);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.06);
-  border         : 1px solid var(--v-border);
-  border-top     : 1.5px solid rgba(255,255,255,0.65);
-  border-left    : 1.5px solid rgba(255,255,255,0.55);
+  border         : 1.5px solid rgba(123, 63, 160, 0.38) !important;
   border-radius  : var(--v-radius);
   box-shadow     : var(--v-shadow);
   transition     : transform .3s var(--v-ease), box-shadow .3s var(--v-ease), border-color .25s;
@@ -183,13 +181,13 @@
   content: '';
   position: absolute;
   top: 0; left: 8%; right: 8%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.70), transparent);
+  background: linear-gradient(90deg, transparent, rgba(196,148,230,0.50), transparent);
   pointer-events: none;
 }
 .v-card:hover {
   transform  : translateY(-5px);
   box-shadow : var(--v-shadow-hov);
-  border-color: rgba(255,255,255,0.60);
+  border-color: rgba(123, 63, 160, 0.65) !important;
 }
 .v-card-pad { padding: 24px; }
 
@@ -198,9 +196,7 @@
   background     : rgba(255,255,255,0.30);
   backdrop-filter: blur(40px) saturate(190%) brightness(1.04);
   -webkit-backdrop-filter: blur(40px) saturate(190%) brightness(1.04);
-  border         : 1px solid rgba(255,255,255,0.45);
-  border-top     : 1.5px solid rgba(255,255,255,0.55);
-  border-left    : 1.5px solid rgba(255,255,255,0.45);
+  border         : 1.5px solid rgba(123, 63, 160, 0.38) !important;
   border-radius  : 18px;
   box-shadow     : var(--v-shadow);
   transition     : transform .25s, box-shadow .25s, border-color .25s;
@@ -208,7 +204,7 @@
 .v-flat-card:hover {
   transform  : translateY(-4px);
   box-shadow : var(--v-shadow-hov);
-  border-color: rgba(255,255,255,0.55);
+  border-color: rgba(123, 63, 160, 0.65) !important;
 }
 
 /* ── Stat Grid ────────────────────────────────────────────────────────────── */
