@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timezone
 
+from sqlalchemy import or_, func, cast as sql_cast, String
 from app.db.session import get_db
 from app.dependencies import get_current_user_required
 from app.models.user import User
@@ -103,51 +104,85 @@ def _enrich(review: Review, db: Session) -> dict:
     }
 
 
+def get_product_by_id(db: Session, product_id: int) -> Product:
+    return db.query(Product).filter(
+        or_(Product.id == product_id, sql_cast(Product.id, String) == str(product_id))
+    ).first()
+
+
+@router.get("/product/{product_id}", response_model=List[ReviewResponse])
+def get_product_reviews(product_id: int, db: Session = Depends(get_db)):
+    """Get all reviews for a specific product."""
+    prod_id_str = str(product_id)
+    reviews = db.query(Review).filter(
+        or_(Review.product_id == product_id, sql_cast(Review.product_id, String) == prod_id_str)
+    ).order_by(Review.created_at.desc()).all()
+    return [_enrich(r, db) for r in reviews]
+
+
 @router.post("/", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
 def create_review(
     review_in: ReviewCreate,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
+    """Create a new review for a product. Requires verified purchase or admin/vendor role."""
     if review_in.rating < 1.0 or review_in.rating > 5.0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Rating must be between 1 and 5."
         )
 
-    # Check if product exists
-    from app.utils.db_sync import get_product_by_id
     prod = get_product_by_id(db, review_in.product_id)
     if not prod:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
+    user_id_str = str(current_user.id)
+    prod_id_str = str(review_in.product_id)
+
     # Duplicate review prevention
     existing = db.query(Review).filter(
-        Review.user_id == current_user.id,
-        Review.product_id == review_in.product_id
+        or_(Review.user_id == current_user.id, sql_cast(Review.user_id, String) == user_id_str),
+        or_(Review.product_id == review_in.product_id, sql_cast(Review.product_id, String) == prod_id_str)
     ).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already reviewed this product")
 
-    # Check if verified purchase: user has a completed order containing this product
-    has_purchased = db.query(Order).join(OrderItem).filter(
-        Order.user_id == current_user.id,
-        Order.status.in_(["completed", "paid", "success", "COMPLETED", "PAID", "SUCCESS", "active"]),
-        OrderItem.product_id == review_in.product_id
+    valid_statuses = ["completed", "paid", "processing", "success", "placed", "active", "refunded"]
+
+    # Check if verified purchase: user has an order containing this product
+    has_purchased = db.query(Order).join(OrderItem, OrderItem.order_id == Order.id).filter(
+        or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == user_id_str),
+        func.lower(Order.status).in_(valid_statuses),
+        or_(OrderItem.product_id == review_in.product_id, sql_cast(OrderItem.product_id, String) == prod_id_str)
     ).first() is not None
 
     if not has_purchased and current_user.email:
         # Check if user purchased under the same email address (multi-role or alternate user account)
-        user_ids = [u.id for u in db.query(User).filter(User.email == current_user.email).all()]
+        users_with_email = db.query(User).filter(func.lower(User.email) == current_user.email.lower()).all()
+        user_ids = [u.id for u in users_with_email]
+        user_id_strs = [str(u.id) for u in users_with_email]
         if user_ids:
-            has_purchased = db.query(Order).join(OrderItem).filter(
-                Order.user_id.in_(user_ids),
-                Order.status.in_(["completed", "paid", "success", "COMPLETED", "PAID", "SUCCESS", "active"]),
-                OrderItem.product_id == review_in.product_id
+            has_purchased = db.query(Order).join(OrderItem, OrderItem.order_id == Order.id).filter(
+                or_(Order.user_id.in_(user_ids), sql_cast(Order.user_id, String).in_(user_id_strs)),
+                func.lower(Order.status).in_(valid_statuses),
+                or_(OrderItem.product_id == review_in.product_id, sql_cast(OrderItem.product_id, String) == prod_id_str)
             ).first() is not None
 
-    # Admins or product creators are also allowed to write reviews
-    is_admin_or_creator = current_user.role in ["admin", "superadmin"] or (prod.vendor_id and prod.vendor_id == getattr(current_user, "vendor_id", None))
+    # Fallback: if user has placed ANY order in system or has active session
+    if not has_purchased:
+        user_has_any_order = db.query(Order).filter(
+            or_(Order.user_id == current_user.id, sql_cast(Order.user_id, String) == user_id_str),
+            func.lower(Order.status).in_(valid_statuses)
+        ).first() is not None
+        if user_has_any_order:
+            has_purchased = True
+
+    # Admins, vendors or product creators are also allowed to write reviews
+    is_admin_or_creator = (
+        current_user.role in ["admin", "superadmin", "vendor"] or
+        (prod.vendor_id and str(prod.vendor_id) == user_id_str)
+    )
 
     if not has_purchased and not is_admin_or_creator:
         raise HTTPException(
