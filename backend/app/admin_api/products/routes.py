@@ -82,6 +82,8 @@ def list_admin_products(
 
     if status:
         query = query.filter(Product.status == status.lower())
+    else:
+        query = query.filter(~Product.status.in_(["archived", "deleted"]))
     if category and category != "All":
         query = query.filter(Product.category == category)
 
