@@ -125,6 +125,9 @@ export default function AffiliateEarnings({
   /* Available balance = approved (ready to withdraw) commissions */
   const availableBalance = approvedEarnings;
 
+  const hasPendingWithdrawal = activePayouts.some(p => p.status === 'pending' || p.status === 'processing');
+  const canWithdraw = availableBalance >= 50 && !hasPendingWithdrawal;
+
   /* ── Monthly chart ──────────────────────────────────────────────────── */
   const monthlyEarnings = useMemo(() => buildMonthlyChart(activeCommissions), [activeCommissions]);
   const monthLabels     = useMemo(() => buildMonthLabels(), []);
@@ -165,9 +168,13 @@ export default function AffiliateEarnings({
 
   /* ── Withdrawal handler ───────────────────────────────────────────────── */
   const handleWithdrawal = async () => {
+    if (hasPendingWithdrawal) {
+      setWithdrawError('You already have a pending withdrawal request.');
+      return;
+    }
     const amt = Number(withdrawAmount);
-    if (!withdrawAmount || isNaN(amt) || amt <= 0) {
-      setWithdrawError('Please enter a valid positive withdrawal amount.');
+    if (!withdrawAmount || isNaN(amt) || amt < 50) {
+      setWithdrawError('Minimum withdrawal amount is ₹50.');
       return;
     }
     if (amt > availableBalance) {
@@ -292,13 +299,23 @@ export default function AffiliateEarnings({
           )}
           <button
             onClick={() => setShowWithdrawal(true)}
+            disabled={!canWithdraw}
+            title={
+              hasPendingWithdrawal 
+                ? "You already have a pending withdrawal request." 
+                : availableBalance < 50 
+                  ? "Minimum withdrawal amount is ₹50." 
+                  : ""
+            }
             className="aff-withdrawal-btn"
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               padding: '11px 20px', minHeight: '44px', fontSize: '0.84rem', fontWeight: 700,
               borderRadius: '12px', border: 'none',
-              background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', color: '#fff',
-              cursor: 'pointer', boxShadow: '0 4px 18px rgba(123,63,160,0.38)',
+              background: canWithdraw ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : '#E5E7EB',
+              color: canWithdraw ? '#fff' : '#9CA3AF',
+              cursor: canWithdraw ? 'pointer' : 'not-allowed',
+              boxShadow: canWithdraw ? '0 4px 18px rgba(123,63,160,0.38)' : 'none',
               fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
               flex: isMobile ? 1 : 'none',
             }}
