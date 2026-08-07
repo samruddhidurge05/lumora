@@ -347,7 +347,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
 
                   {/* Affiliate link preview */}
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <Link2 size={10} style={{ flexShrink: 0 }} />
+                    <Link2 size={10} style={{ flexShrink: 0, pointerEvents: 'none' }} />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{buildAffLink(product.id)}</span>
                   </div>
 
@@ -371,7 +371,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
                     >
-                      <Eye size={12} /> Details
+                      <Eye size={12} style={{ pointerEvents: 'none' }} /> Details
                     </button>
 
                     {/* Direct Analytics */}
@@ -392,7 +392,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(123,63,160,0.06)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.80)'; }}
                     >
-                      <BarChart2 size={12} /> Analytics
+                      <BarChart2 size={12} style={{ pointerEvents: 'none' }} /> Analytics
                     </button>
 
                     {/* Toggle Wishlist */}

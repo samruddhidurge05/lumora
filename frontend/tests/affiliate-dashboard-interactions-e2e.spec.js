@@ -92,6 +92,7 @@ test.describe('Affiliate Dashboard Comprehensive Interactions E2E', () => {
       // Close drawer (click outside)
       await page.mouse.click(50, 50);
       await expect(drawer).not.toBeVisible({ timeout: 5000 });
+      await page.waitForTimeout(1000); // Wait for drawer closing animation to finish
 
       // View Details
       await page.locator('button:has-text("Details")').first().click();

@@ -423,7 +423,10 @@ def get_my_orders(
             for item in o.items:
                 try:
                     user_id = int(getattr(current_user, "id"))
-                    prod_id = int(getattr(item, "product_id"))
+                    prod_id_attr = getattr(item, "product_id", None)
+                    if prod_id_attr is None:
+                        continue
+                    prod_id = int(prod_id_attr)
                     refund_status, can_download, _ = get_product_refund_status(db, user_id, prod_id)
                     if can_download:
                         token = generate_download_token(user_id, prod_id)
