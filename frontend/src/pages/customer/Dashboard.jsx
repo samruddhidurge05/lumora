@@ -641,17 +641,38 @@ export default function Dashboard() {
               <button type="submit" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#7B3FA0' }}><Sparkles size={12} /></button>
             </form>
 
-            {/* User avatar */}
-            <div className="cust-avatar-pill" style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '4px 10px', borderRadius: '20px',
-              background: 'rgba(255,255,255,0.60)',
-              border: '1px solid rgba(196,148,230,0.22)',
-            }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.72rem', flexShrink: 0 }}>
-                {username[0]?.toUpperCase()}
+            {/* User avatar chip — click to open Settings / Profile */}
+            <div 
+              onClick={() => handleNavClick('Settings')}
+              className="cust-avatar-pill" 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '4px 10px 4px 4px', borderRadius: '20px',
+                background: 'rgba(255,255,255,0.75)',
+                border: '1.5px solid rgba(196,148,230,0.35)',
+                cursor: 'pointer',
+                transition: 'all 0.22s cubic-bezier(0.16,1,0.3,1)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+                e.currentTarget.style.borderColor = 'rgba(123,63,160,0.55)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(123,63,160,0.18)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.75)';
+                e.currentTarget.style.borderColor = 'rgba(196,148,230,0.35)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              title="Click to view Account Settings & Profile"
+            >
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.72rem', flexShrink: 0, overflow: 'hidden' }}>
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  username[0]?.toUpperCase()
+                )}
               </div>
-              <span className="dash-user-name" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
+              <span className="dash-user-name" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</span>
             </div>
 
             {/* Exit */}
@@ -875,8 +896,19 @@ function DashboardHome({
             </button>
           </div>
         </div>
-        <div className="dash-welcome-avatar" style={{ width: '68px', height: '68px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', border: '2px solid rgba(123,63,160,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(123,63,160,0.30)', fontSize: '1.75rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0 }}>
-          {(profile?.name || username)[0]?.toUpperCase()}
+        <div 
+          onClick={() => navigateTo('settings')}
+          className="dash-welcome-avatar" 
+          style={{ width: '68px', height: '68px', borderRadius: '50%', background: 'linear-gradient(135deg,#D8BFE3,#9B5CC4)', border: '2px solid rgba(123,63,160,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(123,63,160,0.30)', fontSize: '1.75rem', color: '#fff', fontFamily: 'var(--font-editorial)', position: 'relative', zIndex: 2, flexShrink: 0, cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          title="Click to edit profile & account settings"
+        >
+          {profile?.avatar || profile?.photoURL ? (
+            <img src={profile.avatar || profile.photoURL} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            (profile?.name || username)[0]?.toUpperCase()
+          )}
         </div>
       </div>
 
