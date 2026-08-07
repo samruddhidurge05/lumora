@@ -18,6 +18,10 @@
   --admin-shadow-md: 0 8px 32px rgba(90, 30, 126, 0.07);
   --admin-shadow-lg: 0 20px 56px rgba(90, 30, 126, 0.12);
   
+  --card-border:        rgba(135, 110, 160, 0.35);   /* Crisp cool-neutral border — visible on light & dark */
+  --card-border-hover:  rgba(123, 63, 160, 0.55);   /* Interactive hover accent */
+  --card-border-width:  1px;
+
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-blur: 40px;
 }
@@ -193,28 +197,61 @@ html, body {
   }
 }
 
-/* --- Card System Consistency Pass --- */
-.admin-main-content .glass-surface, 
-.admin-main-content .glass-card, 
-.admin-main-content .premium-flat-card {
-  border-radius: var(--admin-radius-card) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
-  border-top: 2px solid rgba(255, 255, 255, 0.6) !important;
-  border-left: 2px solid rgba(255, 255, 255, 0.5) !important;
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
-  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s !important;
+/* ═══════════════════════════════════════════════════════════════════════
+   UNIFIED ENTERPRISE CARD BORDER SYSTEM (Stripe / Linear / Vercel style)
+   Design language: Stripe · Linear · Vercel · Supabase · GitHub Enterprise
+
+   SINGLE SOURCE OF TRUTH — automatically applies a crisp, elegant 1px
+   cool-neutral border to EVERY card, KPI widget, table, chart container,
+   modal, upload panel, and section across all admin pages.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Rule 1: All Admin Cards, Widgets, Sections & Glass Surfaces ────── */
+.admin-main-content .glass-surface,
+.admin-main-content .glass-card,
+.admin-main-content .premium-flat-card,
+.admin-main-content .stats-grid > div,
+.admin-main-content section[class*="rounded"],
+.admin-main-content div[class*="rounded-2xl"],
+.admin-main-content div[class*="rounded-3xl"],
+.admin-main-content div[class*="rounded-xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-2xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-3xl"][class*="bg-white"],
+.admin-main-content div[class*="rounded-2xl"][class*="shadow"],
+.admin-main-content div[class*="rounded-3xl"][class*="shadow"] {
+  border: var(--card-border-width) solid var(--card-border) !important;
+  box-shadow: var(--admin-shadow-md) !important;
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease !important;
   box-sizing: border-box !important;
 }
 
-.admin-main-content .glass-surface:hover, 
-.admin-main-content .glass-card:hover, 
-.admin-main-content .premium-flat-card:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: var(--admin-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.65) !important;
+/* ── Hover State for Interactive Cards ───────────────────────────── */
+.admin-main-content .glass-surface:hover,
+.admin-main-content .glass-card:hover,
+.admin-main-content .premium-flat-card:hover,
+.admin-main-content .admin-card-hover:hover,
+.admin-main-content .stats-grid > div:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--admin-shadow-lg) !important;
+  border-color: var(--card-border-hover) !important;
+}
+
+/* ── Rule 2: Tables, Scroll Containers & Managed Wrappers ─────────── */
+.admin-main-content table,
+.admin-main-content .admin-desktop-table-view,
+.admin-main-content .overflow-x-auto[class*="rounded"] {
+  border: var(--card-border-width) solid var(--card-border) !important;
+}
+
+/* ── Rule 3: Modals, Drawers & Overlays ────────────────────────────── */
+.admin-layout-grid div[class*="fixed"] div[class*="rounded"],
+div[class*="admin-modal"] div[class*="rounded"],
+.admin-modal-sheet-content {
+  border: var(--card-border-width) solid var(--card-border) !important;
+  box-shadow: var(--admin-shadow-lg) !important;
 }
 
 /* Ensure equal spacing, alignment, and wrapping for stats cards */

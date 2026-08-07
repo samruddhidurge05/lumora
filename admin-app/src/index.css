@@ -75,9 +75,7 @@ button { font-family: inherit; }
   background     : var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.06);
-  border         : 1px solid var(--glass-border);
-  border-top     : 1.5px solid rgba(255,255,255,0.60);
-  border-left    : 1.5px solid rgba(255,255,255,0.50);
+  border         : 1px solid rgba(135, 110, 160, 0.35);
   border-radius  : 22px;
   box-shadow     : var(--glass-shadow);
   transition     : transform .3s cubic-bezier(.16,1,.3,1),
@@ -96,9 +94,9 @@ button { font-family: inherit; }
   pointer-events: none;
 }
 .glass-card:hover {
-  transform  : translateY(-5px);
+  transform  : translateY(-2px);
   box-shadow : var(--glass-shadow-hover);
-  border-color: rgba(255,255,255,0.55);
+  border-color: rgba(123, 63, 160, 0.55);
 }
 
 /* Lighter variant */
@@ -106,9 +104,9 @@ button { font-family: inherit; }
   background     : rgba(255,255,255,0.18);
   backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
   -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
-  border         : 1px solid rgba(255,255,255,0.35);
+  border         : 1px solid rgba(135, 110, 160, 0.35);
   border-radius  : 14px;
-  box-shadow     : 0 4px 20px rgba(90,30,126,0.08), inset 0 1px 0 rgba(255,255,255,0.50);
+  box-shadow     : 0 4px 20px rgba(90,30,126,0.08);
 }
 
 /* Solid-ish card (dashboard, settings) -> Now premium Glassmorphism */
@@ -116,17 +114,15 @@ button { font-family: inherit; }
   background     : rgba(255,255,255,0.30);
   backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04);
-  border         : 1px solid rgba(255,255,255,0.45);
-  border-top     : 1.5px solid rgba(255, 255, 255, 0.55);
-  border-left    : 1.5px solid rgba(255, 255, 255, 0.45);
+  border         : 1px solid rgba(135, 110, 160, 0.35);
   border-radius  : 18px;
   box-shadow     : var(--glass-shadow);
   transition     : transform .25s, box-shadow .25s, border-color .25s;
 }
 .premium-flat-card:hover {
-  transform  : translateY(-4px);
+  transform  : translateY(-2px);
   box-shadow : var(--glass-shadow-hover);
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: rgba(123, 63, 160, 0.55);
 }
 
 /* Input glass */
