@@ -58,30 +58,30 @@ export function getCustomerBaseUrl() {
 
 export function buildProductUrl(product, options = {}) {
   const baseUrl = getCustomerBaseUrl();
-  if (!product) return `${baseUrl}/#products`;
+  const refCode = options.refCode || (typeof product === 'object' ? (product.refCode || product.referralCode) : '');
+  const cleanRef = (refCode || '').trim();
 
   let slugPart = '';
-  if (typeof product === 'object') {
+  if (typeof product === 'object' && product !== null) {
     slugPart = product.slug || slugify(product.title || product.name || '') || product.id || product.productId || '';
   } else if (product) {
     slugPart = String(product);
   }
+  const cleanSlug = slugify(slugPart) || String((product && product.id) || product || '');
 
-  const cleanSlug = slugify(slugPart) || String(product.id || product || '');
-  const refCode = options.refCode || (typeof product === 'object' ? (product.refCode || product.referralCode) : '');
-  const cleanRef = (refCode || '').trim();
-
-  const queryParams = [];
-  if (cleanRef) queryParams.push(`ref=${encodeURIComponent(cleanRef)}`);
-  if (options.qr) queryParams.push('src=qr');
-
-  const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-
-  if (cleanSlug) {
-    return `${baseUrl}/product/${cleanSlug}${queryString}`;
+  // If there is a referral code, we MUST use the /ref/ routing format
+  if (cleanRef) {
+    if (cleanSlug) {
+      return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}/product/${encodeURIComponent(cleanSlug)}`;
+    }
+    return `${baseUrl}/ref/${encodeURIComponent(cleanRef)}`;
   }
 
-  return `${baseUrl}/#products${queryString}`;
+  // Without a referral code, just route normally via hash router (SPA)
+  if (cleanSlug) {
+    return `${baseUrl}/#product/${encodeURIComponent(cleanSlug)}`;
+  }
+  return `${baseUrl}/#products`;
 }
 
 export function buildAffiliateReferralLink(product, affCode) {
