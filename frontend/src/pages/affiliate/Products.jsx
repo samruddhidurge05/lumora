@@ -82,6 +82,16 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
     );
   }
 
+  const dynamicCategories = React.useMemo(() => {
+    const cats = new Set(['All']);
+    products.forEach(p => {
+      if (p.category && p.affiliate_enabled !== false && (!p.status || p.status === 'published' || p.status === 'active')) {
+        cats.add(p.category);
+      }
+    });
+    return Array.from(cats);
+  }, [products]);
+
   const filtered = products
     .filter(p => (!p.status || p.status === 'published' || p.status === 'active') && p.affiliate_enabled !== false) // Only affiliate-enabled published products
     .filter(p => activeCategory === 'All' || p.category === activeCategory)
@@ -220,7 +230,7 @@ export default function AffiliateProducts({ profile, stats, commissions }) {
       <div className="aff-category-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         {/* Categories */}
         <div className="aff-category-strip" style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {CATEGORIES.map(cat => (
+          {dynamicCategories.map(cat => (
             <button
               key={cat}
               onClick={() => { setActiveCategory(cat); setShowCount(24); }}

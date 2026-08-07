@@ -59,6 +59,7 @@ body {
 
 img { display: block; max-width: 100%; }
 button { font-family: inherit; }
+button svg { pointer-events: none; /* Prevents SVG from intercepting button clicks */ }
 ::selection { background: rgba(123,63,160,0.22); color: #2D004D; }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
