@@ -72,15 +72,15 @@ def update_vendor_rating(db: Session, vendor_id: str):
     products = db.query(Product).filter(Product.vendor_id == vendor_id).all()
     prod_ids = [p.id for p in products]
     if not prod_ids:
-        vendor.rating = "5.0 ?"
+        vendor.rating = "5.0 ★"
         db.add(vendor)
         return
     reviews = db.query(Review).filter(Review.product_id.in_(prod_ids)).all()
     if not reviews:
-        vendor.rating = "5.0 ?"
+        vendor.rating = "5.0 ★"
     else:
         avg_rating = sum(r.rating for r in reviews) / len(reviews)
-        vendor.rating = f"{avg_rating:.1f} ?"
+        vendor.rating = f"{avg_rating:.1f} ★"
     db.add(vendor)
 
 
@@ -218,7 +218,7 @@ def create_review(
             from app.services.notification_service import NotificationService
             NotificationService.create_notification(
                 db=db,
-                user_id=vendor_user.id,
+                user_id=int(vendor_user.id),  # type: ignore
                 title="New Review Received ?",
                 message=f"Your product '{prod.title}' received a {review.rating}? review from {current_user.name}.",
                 category="review"
@@ -272,7 +272,7 @@ def delete_review(
     if review.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this review")
 
-    prod_id = review.product_id
+    prod_id = int(review.product_id)  # type: ignore
     db.delete(review)
     db.commit()
 
@@ -324,19 +324,20 @@ def update_review(
     if review_in.rating is not None:
         if review_in.rating < 1.0 or review_in.rating > 5.0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Rating must be between 1 and 5.")
-        review.rating = review_in.rating
+        review.rating = float(review_in.rating)  # type: ignore
 
     if review_in.comment is not None:
-        review.comment = review_in.comment
+        review.comment = review_in.comment  # type: ignore
 
     db.commit()
     db.refresh(review)
 
     # Recalculate product rating
     from app.utils.db_sync import get_product_by_id
-    prod = get_product_by_id(db, review.product_id)
+    prod_id = int(review.product_id)  # type: ignore
+    prod = get_product_by_id(db, prod_id)
     if prod:
-        reviews = db.query(Review).filter(Review.product_id == review.product_id).all()
+        reviews = db.query(Review).filter(Review.product_id == prod_id).all()
         if reviews:
             all_ratings = [r.rating for r in reviews]
             prod.rating = round(sum(all_ratings) / len(all_ratings), 1)  # type: ignore
