@@ -14,10 +14,16 @@
   --admin-radius-input: 12px;
   --admin-radius-button: 12px;
 
-  --admin-shadow-sm: 0 4px 20px rgba(90, 30, 126, 0.04);
-  --admin-shadow-md: 0 8px 32px rgba(90, 30, 126, 0.07);
-  --admin-shadow-lg: 0 20px 56px rgba(90, 30, 126, 0.12);
-  
+  --admin-shadow-sm: 0 1px 3px rgba(45, 0, 77, 0.04), 0 4px 12px rgba(45, 0, 77, 0.04);
+  --admin-shadow-md: 0 1px 4px rgba(45, 0, 77, 0.04), 0 6px 20px rgba(45, 0, 77, 0.06);
+  --admin-shadow-lg: 0 2px 8px rgba(45, 0, 77, 0.05), 0 16px 40px rgba(45, 0, 77, 0.10);
+  --admin-shadow-hover: 0 2px 8px rgba(45, 0, 77, 0.06), 0 12px 32px rgba(45, 0, 77, 0.10);
+
+  /* Enterprise Premium Card Border System */
+  --card-border: rgba(148, 163, 184, 0.28);        /* slate-400/28 — default resting border */
+  --card-border-hover: rgba(148, 163, 184, 0.50);  /* slate-400/50 — brighter on hover, still soft */
+  --card-border-width: 1px;
+
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-blur: 40px;
 }
@@ -193,26 +199,35 @@ html, body {
   }
 }
 
-/* --- Card System Consistency Pass --- */
+/* --- Enterprise Premium Card Border System --- */
+/*
+ * Design language: Stripe / Linear / Vercel / Supabase
+ * Rule:  1px soft neutral border  +  layered shadow depth
+ * Hover: slightly brighter border +  gentle 2px lift only
+ * NO heavy purple outlines. NO thick borders. NO high contrast.
+ */
 .admin-main-content .glass-surface, 
 .admin-main-content .glass-card, 
 .admin-main-content .premium-flat-card {
   border-radius: var(--admin-radius-card) !important;
-  border: 1.5px solid rgba(123, 63, 160, 0.38) !important;
+  border: var(--card-border-width) solid var(--card-border) !important;
   background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.04) !important;
-  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.03) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.03) !important;
+  box-shadow: var(--admin-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease !important;
   box-sizing: border-box !important;
 }
 
 .admin-main-content .glass-surface:hover, 
 .admin-main-content .glass-card:hover, 
 .admin-main-content .premium-flat-card:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: var(--admin-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(123, 63, 160, 0.65) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--admin-shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  border-color: var(--card-border-hover) !important;
 }
 
 /* Ensure equal spacing, alignment, and wrapping for stats cards */
@@ -713,17 +728,20 @@ button:active:not(:disabled),
   transform: scale(0.97) !important;
 }
 
-/* Premium Soft Elevation & Micro Glow for Cards */
+/* Premium Soft Elevation — enterprise card hover utility */
 .admin-card-hover {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              border-color 0.25s ease !important;
-  will-change: transform, box-shadow;
+  border: var(--card-border-width) solid var(--card-border) !important;
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease !important;
+  will-change: transform, box-shadow, border-color;
 }
 
 .admin-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(90, 30, 126, 0.08) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--admin-shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  border-color: var(--card-border-hover) !important;
 }
 
 /* Seamless Page Transition Container (180ms Fade + Subtle Translate) */
