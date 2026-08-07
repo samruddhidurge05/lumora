@@ -183,6 +183,20 @@ export default function Navbar() {
   const displayLabel = displayName || (displayEmail ? (displayEmail.length > 15 ? displayEmail.slice(0, 12) + '...' : displayEmail) : 'Account');
   const initial = (displayName || displayEmail || 'U')[0].toUpperCase();
 
+  const [customAvatar, setCustomAvatar] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('lumora_user_avatar') : null);
+
+  useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      if (e.detail?.photoURL) {
+        setCustomAvatar(e.detail.photoURL);
+      }
+    };
+    window.addEventListener('lumora_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('lumora_profile_updated', handleProfileUpdate);
+  }, []);
+
+  const displayAvatar = customAvatar || user?.photoURL || user?.avatar || user?.profileImage || (typeof window !== 'undefined' ? localStorage.getItem('lumora_user_avatar') : null);
+
   const handleMouseMove = (e) => {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
@@ -581,9 +595,9 @@ export default function Navbar() {
                   }
                 }}
               >
-                {user?.photoURL ? (
+                {displayAvatar ? (
                   <img
-                    src={user.photoURL}
+                    src={displayAvatar}
                     alt={displayName || 'User'}
                     style={{
                       width: '28px',
@@ -678,9 +692,9 @@ export default function Navbar() {
                         marginBottom: '4px',
                       }}
                     >
-                      {user?.photoURL ? (
+                      {displayAvatar ? (
                         <img
-                          src={user.photoURL}
+                          src={displayAvatar}
                           alt={displayName || 'User'}
                           style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(123, 63, 160, 0.4)', flexShrink: 0 }}
                         />
@@ -993,8 +1007,8 @@ export default function Navbar() {
           {user ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid rgba(123, 63, 160, 0.15)', paddingTop: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '12px', background: 'rgba(123, 63, 160, 0.06)' }}>
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt={displayName || 'User'} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={displayName || 'User'} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FA0, #5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
                     {initial}

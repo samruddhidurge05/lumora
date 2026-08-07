@@ -160,6 +160,11 @@ export default function CustomerSettings() {
         });
       }
 
+      if (finalAvatar) {
+        try { localStorage.setItem('lumora_user_avatar', finalAvatar); } catch {}
+      }
+      window.dispatchEvent(new CustomEvent('lumora_profile_updated', { detail: { photoURL: finalAvatar, displayName: name } }));
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3500);
     } catch (err) {

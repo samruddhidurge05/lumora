@@ -182,11 +182,24 @@ export default function Dashboard() {
   const [loading, setLoading]             = useState(true);
   const [apiError, setApiError]           = useState(null);
   const [profile, setProfile]             = useState(null);
+  const [customAvatar, setCustomAvatar]   = useState(() => typeof window !== 'undefined' ? localStorage.getItem('lumora_user_avatar') : null);
   const [stats, setStats]                 = useState({ productsOwned: 0, downloadsCount: 0, wishlistCount: 0, ordersCount: 0 });
   const [recentOrders, setRecentOrders]   = useState([]);
   const [activities, setActivities]       = useState([]);
   const [notifsSummary, setNotifsSummary] = useState([]);
   const loadBackendDataRef = useRef(null); // exposed so global event listener can trigger it
+
+  useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      if (e.detail?.photoURL) {
+        setCustomAvatar(e.detail.photoURL);
+      }
+    };
+    window.addEventListener('lumora_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('lumora_profile_updated', handleProfileUpdate);
+  }, []);
+
+  const displayAvatar = customAvatar || profile?.profileImage || profile?.avatar || profile?.photoURL || user?.photoURL || (typeof window !== 'undefined' ? localStorage.getItem('lumora_user_avatar') : null);
 
   useEffect(() => {
     setProfile(null);
@@ -666,8 +679,8 @@ export default function Dashboard() {
               title="Click to view Account Settings & Profile"
             >
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FA0,#5A1E7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.72rem', flexShrink: 0, overflow: 'hidden' }}>
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   username[0]?.toUpperCase()
                 )}
@@ -904,8 +917,8 @@ function DashboardHome({
           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           title="Click to edit profile & account settings"
         >
-          {profile?.avatar || profile?.photoURL ? (
-            <img src={profile.avatar || profile.photoURL} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {displayAvatar ? (
+            <img src={displayAvatar} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             (profile?.name || username)[0]?.toUpperCase()
           )}
