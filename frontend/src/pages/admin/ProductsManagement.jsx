@@ -357,6 +357,13 @@ export default function App() {
       whatYouGet:           Array.isArray(p.what_you_get)        ? p.what_you_get        : [],
       systemRequirements:   Array.isArray(p.system_requirements) ? p.system_requirements : [],
       installation_guide:   p.installation_guide || '',
+      // Affiliate fields — MUST be carried so the edit modal toggle initialises correctly
+      affiliate_enabled:        Boolean(p.affiliate_enabled || false),
+      commission_type:          p.commission_type  || 'percentage',
+      commission_value:         p.commission_value != null ? p.commission_value : 0,
+      affiliate_cookie_days:    p.affiliate_cookie_days  ?? 30,
+      affiliate_visibility:     p.affiliate_visibility   || 'public',
+      affiliate_program_status: p.affiliate_program_status || 'active',
     });
 
     const loadFromBackend = () => {
@@ -804,6 +811,13 @@ export default function App() {
         subcategory:        saved.subcategory || '',
         discount:           saved.discount    || 0,
         visibility:         saved.visibility  || 'public',
+        // Affiliate fields — carry from CREATE response so edit modal is correct without reload
+        affiliate_enabled:        Boolean(saved.affiliate_enabled || false),
+        commission_type:          saved.commission_type  || 'percentage',
+        commission_value:         saved.commission_value != null ? saved.commission_value : 0,
+        affiliate_cookie_days:    saved.affiliate_cookie_days  ?? 30,
+        affiliate_visibility:     saved.affiliate_visibility   || 'public',
+        affiliate_program_status: saved.affiliate_program_status || 'active',
       };
 
       setProducts([uiProduct, ...products]);
@@ -869,6 +883,17 @@ export default function App() {
           subcategory:        saved.subcategory || '',
           discount:           saved.discount    || 0,
           visibility:         saved.visibility  || 'public',
+          // Affiliate fields — carry from UPDATE response so edit modal is correct without reload
+          affiliate_enabled:        Boolean(
+            saved.affiliate_enabled != null
+              ? saved.affiliate_enabled
+              : updatedProductData.affiliate_enabled || false
+          ),
+          commission_type:          saved.commission_type  || updatedProductData.commission_type  || 'percentage',
+          commission_value:         saved.commission_value != null ? saved.commission_value : (updatedProductData.commission_value ?? 0),
+          affiliate_cookie_days:    saved.affiliate_cookie_days  ?? updatedProductData.affiliate_cookie_days  ?? 30,
+          affiliate_visibility:     saved.affiliate_visibility   || updatedProductData.affiliate_visibility   || 'public',
+          affiliate_program_status: saved.affiliate_program_status || updatedProductData.affiliate_program_status || 'active',
         };
         setProducts(products.map(p => p.id === targetId ? mapped : p));
       }

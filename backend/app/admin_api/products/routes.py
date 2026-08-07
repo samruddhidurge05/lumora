@@ -365,9 +365,16 @@ def create_admin_product(
         "vendor_id": new_product.vendor_id,
         "seller": new_product.seller,
         "status": new_product.status,
-        "featured": new_product.featured,
+        "featured": bool(new_product.featured),
         "badge": new_product.badge,
         "created_at": new_product.created_at.isoformat() if new_product.created_at else None,
+        # Affiliate fields — must be in response so frontend state carries them correctly
+        "affiliate_enabled":   bool(new_product.affiliate_enabled),
+        "commission_type":     new_product.commission_type or "percentage",
+        "commission_value":    float(new_product.commission_value or 0),
+        "affiliate_cookie_days":    new_product.affiliate_cookie_days or 30,
+        "affiliate_visibility":     new_product.affiliate_visibility or "public",
+        "affiliate_program_status": new_product.affiliate_program_status or "active",
     }
 
 
@@ -406,7 +413,18 @@ def update_admin_product(
         except Exception as e:
             print(f"[AdminProductUpdate] Firestore sync warning: {e}")
 
-    return {"id": product.id, "title": product.title, "status": product.status}
+    return {
+        "id": product.id,
+        "title": product.title,
+        "status": product.status,
+        # Affiliate fields — must be in response so frontend state carries them correctly
+        "affiliate_enabled":        bool(product.affiliate_enabled),
+        "commission_type":          product.commission_type or "percentage",
+        "commission_value":         float(product.commission_value or 0),
+        "affiliate_cookie_days":    product.affiliate_cookie_days or 30,
+        "affiliate_visibility":     product.affiliate_visibility or "public",
+        "affiliate_program_status": product.affiliate_program_status or "active",
+    }
 
 
 @router.delete("/{product_id}")
