@@ -2526,10 +2526,10 @@ function ProductFormModal({ product, onClose, onSubmit }) {
         <div className="px-8 py-6 border-b border-[#F3EAF8] flex items-center justify-between bg-white/45 backdrop-blur-md">
           <div>
             <span className="text-[10px] tracking-widest uppercase font-extrabold text-[#7B3FA0] block mb-1">
-              CREATOR DESIGN MATRIX
+              PRODUCT MANAGEMENT
             </span>
             <h2 className="text-xl font-serif text-[#2D004D]">
-              {product ? `Edit Artifact: ${product.name}` : "Create Creative Product"}
+              {product ? `Edit Product: ${product.name}` : "Add New Product"}
             </h2>
           </div>
           <button 
@@ -2546,7 +2546,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
           {/* Section: Basic Metadata */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
-              1. Identity Parameters
+              1. Product Information
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
@@ -2554,7 +2554,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Celestial Core Shaders"
+                  placeholder="e.g. Modern UI Kit & Icons"
                   value={form.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3] text-[#2D004D]"
@@ -2562,7 +2562,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Creator Persona</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Creator / Author Name</label>
                 <input 
                   type="text" 
                   value={form.creatorName}
@@ -2572,7 +2572,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Category Bracket</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Product Category</label>
                 <AdminSelect 
                   value={form.category}
                   onChange={(e) => handleChange('category', e.target.value)}
@@ -2582,11 +2582,11 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Editorial Hook (Short Description)</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Short Description</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="Atmospheric shaders forged in light..."
+                  placeholder="Brief summary of your product..."
                   value={form.shortDesc}
                   onChange={(e) => handleChange('shortDesc', e.target.value)}
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3]"
@@ -2594,10 +2594,10 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Technical Specifications (Long Description)</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Full Description</label>
                 <textarea 
                   rows={4}
-                  placeholder="Complete blueprint properties for creators..."
+                  placeholder="Detailed description and overview of your product..."
                   value={form.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#D8BFE3]"
@@ -2609,11 +2609,11 @@ function ProductFormModal({ product, onClose, onSubmit }) {
           {/* Section: Pricing System */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
-              2. Commercial Valuation
+              2. Pricing
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Base Price (₹)</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Price (₹)</label>
                 <input 
                   type="number" 
                   required
@@ -2623,7 +2623,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Campaign Discount Price (₹)</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Discount Price (₹)</label>
                 <input 
                   type="number" 
                   placeholder="No active discounts"
@@ -2747,14 +2747,14 @@ function ProductFormModal({ product, onClose, onSubmit }) {
           {/* Section: Live Asset Upload Station */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-4 pb-1 border-b border-[#F3EAF8]">
-              4. Visual Preview Assets (Cinematic Upload Studio)
+              4. Visual Assets & Media
             </h3>
             
             <div className="space-y-6">
               {/* Dropzone 1: Display Thumbnail */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Primary Display Thumbnail
+                  Main Product Image (Thumbnail) *
                 </label>
                 
                 <div 
@@ -2778,7 +2778,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   {uploadProgress.thumbnail !== null ? (
                     <div className="flex flex-col items-center w-full px-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Uploading Display Node: {uploadProgress.thumbnail}%
+                        Uploading Image: {uploadProgress.thumbnail}%
                       </span>
                       <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
                         <div 
@@ -2794,22 +2794,22 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           <img src={thumbPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Active Display Node</span>
+                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Active Image</span>
                           <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider">Loaded Instantly</span>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD]/80 px-3 py-1.5 rounded-xl">
-                        Replace Node
+                        Change Image
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-center">
                       <Icon name="Plus" size={16} className="text-[#7B3FA0] mb-1" />
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Thumbnail Here or Browse
+                        Drag primary cover image here or click
                       </span>
                       <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
-                        JPEG, PNG up to 10MB
+                        PNG, JPG, WEBP formats (Max 5MB)
                       </span>
                     </div>
                   )}
@@ -2819,7 +2819,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               {/* Dropzone 2: Gallery Uploads (Multiple Image Files) */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Creative Display Angles (Multiple Gallery Assets)
+                  Gallery Images (Optional)
                 </label>
                 
                 <div 
@@ -2844,7 +2844,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   {uploadProgress.gallery !== null ? (
                     <div className="flex flex-col items-center w-full px-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Uploading Gallery Elements: {uploadProgress.gallery}%
+                        Uploading Gallery Images: {uploadProgress.gallery}%
                       </span>
                       <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
                         <div 
@@ -2857,10 +2857,10 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                     <div className="flex flex-col items-center justify-center text-center">
                       <Icon name="Plus" size={16} className="text-[#7B3FA0] mb-1" />
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Additional Angles Here or Click
+                        Drag Additional Images Here or Click
                       </span>
                       <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
-                        Select multiple assets
+                        Select multiple images
                       </span>
                     </div>
                   )}
@@ -2888,7 +2888,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               {/* Dropzone 3: Demo Video */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-2">
-                  Atmospheric Video Preview File
+                  Preview Video File (Optional)
                 </label>
                 
                 <div 
@@ -2912,7 +2912,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                   {uploadProgress.video !== null ? (
                     <div className="flex flex-col items-center w-full px-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B3FA0] mb-1">
-                        Buffering Preview Node: {uploadProgress.video}%
+                        Uploading Video: {uploadProgress.video}%
                       </span>
                       <div className="w-full h-1 bg-[#F5E9DD] rounded-full overflow-hidden">
                         <div 
@@ -2928,19 +2928,19 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                           <Icon name="Play" size={12} className="text-white" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Atmospheric Preview Stream</span>
+                          <span className="text-[10px] font-bold text-[#2D004D] truncate max-w-[200px]">Preview Video</span>
                           <span className="text-[9px] text-[#7B3FA0] font-medium block truncate max-w-[200px]">{demoVideoPreview.substring(0, 30)}...</span>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-[#7B3FA0] bg-white border border-[#F5E9DD]/80 px-3 py-1.5 rounded-xl">
-                        Replace Video
+                        Change Video
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-center">
                       <Icon name="Play" size={16} className="text-[#7B3FA0] mb-1" />
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D004D]">
-                        Drag Preview MP4 Here or Browse
+                        Drag Preview Video (MP4) Here or Browse
                       </span>
                       <span className="text-[9px] text-[#7B3FA0] uppercase tracking-widest mt-0.5">
                         MP4, WebM formats
@@ -3159,11 +3159,11 @@ function ProductFormModal({ product, onClose, onSubmit }) {
           {/* Section: Search Engine Optimizations & Tags */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
-              4. Global Distribution & SEO
+              5. Status &amp; SEO Tags
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Status Launch Stage</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Product Status</label>
                 <AdminSelect 
                   value={form.status}
                   onChange={(e) => handleChange('status', e.target.value)}
@@ -3176,7 +3176,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Ecosystem tags (comma separated)</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">Tags (comma separated)</label>
                 <input 
                   type="text" 
                   value={form.tagsInput}
@@ -3186,10 +3186,10 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">SEO Title Header</label>
+                <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">SEO Title</label>
                 <input 
                   type="text" 
-                  placeholder="Optimal Google/Search metadata title"
+                  placeholder="Title for search engines (e.g. Google)"
                   value={form.seoTitle}
                   onChange={(e) => handleChange('seoTitle', e.target.value)}
                   className="w-full bg-white border border-[#F5E9DD]/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none"
@@ -3198,14 +3198,14 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* ── Section 5: Features & Specs ─────────────────────────────────────────── */}
+          {/* ── Section 6: Features & Specs ─────────────────────────────────────────── */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#7B3FA0] mb-3 pb-1 border-b border-[#F3EAF8]">
-              5. Features &amp; Specs
+              6. Features &amp; Specs
             </h3>
             <div className="space-y-5">
 
-              {/* ── 5.1 Key Features ── */}
+              {/* ── 6.1 Key Features ── */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
                   Key Features <span className="normal-case text-[#7B3FA0] font-normal">(one per line)</span>
@@ -3225,7 +3225,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 <p className="text-[10px] text-[#8B6B5B] mt-1">Type each feature on a new line. All features are saved automatically when you click Save.</p>
               </div>
 
-              {/* ── 5.2 What's Included ── */}
+              {/* ── 6.2 What's Included ── */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
                   What&apos;s Included
@@ -3279,7 +3279,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 </div>
               </div>
 
-              {/* ── 5.3 System Requirements ── */}
+              {/* ── 6.3 System Requirements ── */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
                   System Requirements
@@ -3333,7 +3333,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
                 </div>
               </div>
 
-              {/* ── 5.4 Installation Guide ── */}
+              {/* ── 6.4 Installation Guide ── */}
               <div>
                 <label className="text-[10px] font-bold tracking-wider text-[#2D004D] uppercase block mb-1">
                   Installation Guide
@@ -3366,7 +3366,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             onClick={handleSubmit}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#D8BFE3] to-[#D8BFE3] text-xs font-bold uppercase tracking-widest text-[#2D004D] transition-all hover:shadow-[0_4px_20px_rgba(216,191,227,0.3)]"
           >
-            {product ? "Commit Parameter Updates" : "Deploy Brand Node"}
+            {product ? "Save Changes" : "Create Product"}
           </button>
         </div>
 
