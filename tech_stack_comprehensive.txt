@@ -1,0 +1,74 @@
+COMPREHENSIVE TECH STACK & FEATURE LIST (Auth, Affiliate, Vendor)
+
+This document outlines not only the technologies used but also every major feature and functionality built using them within each module.
+
+=========================================
+1. AUTHENTICATION MODULE
+=========================================
+Frontend Technologies:
+- Firebase Authentication SDK: Primary identity provider.
+- React 18 & React Router DOM: Protected route management and role-based redirects.
+- Context API: Global AuthContext for session state.
+
+Backend Technologies:
+- FastAPI: High-performance authentication API endpoints.
+- Firebase Admin SDK: Token verification for incoming requests.
+- python-jose: JWT generation and verification.
+- passlib (bcrypt): Password hashing.
+- PostgreSQL & SQLAlchemy: User record storage.
+
+Features & Functionalities:
+- Social Login Integration: Secure sign-in via Google and GitHub.
+- Email/Password Authentication: Standard login and registration flows with secure hashing.
+- Role-Based Access Control (RBAC): Automatic routing and access restrictions based on user roles (Customer, Vendor, Affiliate, Admin).
+- JWT Session Management: Stateless and secure session handling via HTTP-only or secure tokens.
+- Authentication Context: Global state sharing to update UI elements (like navbars and dashboards) based on login status.
+
+=========================================
+2. AFFILIATE MODULE
+=========================================
+Frontend Technologies:
+- React 18: Core framework for the Affiliate SPA.
+- TailwindCSS: Responsive and modern styling.
+- Recharts / Chart.js: Visual data representations.
+- Framer Motion: Page transitions and micro-interactions.
+
+Backend Technologies:
+- FastAPI: RESTful API endpoints (`/api/affiliate/*`).
+- SQLAlchemy: ORM models for AffiliateProfile, ReferralLink, Commission.
+- PostgreSQL: Ledger of affiliate activities.
+- Pydantic: Request and response validation.
+
+Features & Functionalities:
+- Affiliate Activation: Onboarding flow for new affiliates to set up their profiles.
+- Affiliate Dashboard: Central hub summarizing key performance indicators (KPIs).
+- Analytics Tracking: Visual charts tracking link clicks, conversion rates, and overall traffic performance.
+- Earnings Management: Detailed ledger of commissions earned, pending payouts, and withdrawal history.
+- Product Marketplace: Browsing available products to promote, with detailed views for each product.
+- Referral Link Generation: Creating and managing unique tracking links for specific products or store pages.
+- Profile Management: Updating affiliate personal details and payment information.
+
+=========================================
+3. VENDOR MODULE (Frontend)
+=========================================
+Frontend Technologies:
+- React 18: Core framework for the Vendor portal.
+- React Router DOM: Nested routing for the complex vendor dashboard layout.
+- TailwindCSS: Utility-first design system for responsive management interfaces.
+- Firebase Firestore (Client SDK): Real-time synchronization for orders and inventory.
+- Framer Motion: Fluid animations for data state changes (e.g., adding products).
+- Custom React Hooks: Reusable logic for data fetching (`useVendorData`).
+
+Features & Functionalities:
+- Vendor Dashboard: High-level overview of store health, recent sales, and active alerts.
+- Product Management (CRUD): 
+  - Add new digital/physical products with media uploads.
+  - Edit existing product details (pricing, descriptions, stock).
+  - Manage product listings and visibility.
+- Order Tracking: Viewing and managing customer orders, updating fulfillment statuses.
+- Store Analytics: In-depth metrics on sales volume, popular products, and revenue trends.
+- Earnings & Withdrawals: Tracking vendor revenue, requesting payouts, and viewing financial history.
+- Review Management: Reading and responding to customer reviews on vendor products.
+- Store Settings & Profile: Customizing the store's public appearance, policies, and vendor profile details.
+- Vendor Verification: KYC or identity verification flows to ensure marketplace trust.
+- Affiliate Management: Tools for vendors to manage affiliates promoting their products (setting commission rates, viewing affiliate performance).
