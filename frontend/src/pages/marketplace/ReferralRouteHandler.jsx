@@ -78,6 +78,19 @@ export default function ReferralRouteHandler() {
             sessionStorage.removeItem('lumora_aff_ref');
             sessionStorage.removeItem('lumora_ref_session_id');
           } catch (_) {}
+          // Attribution failed / invalid code — still open the product so the user isn't stuck (enforces AGENTS.md rule)
+          if (validProdId) {
+            if (typeof openProductModal === 'function') {
+              openProductModal(validProdId);
+            } else if (typeof navigateTo === 'function') {
+              navigateTo('product-detail', validProdId);
+              navigate(`/#product/${validProdId}`, { replace: true });
+            } else {
+              navigate(`/#product/${validProdId}`, { replace: true });
+            }
+          } else {
+            navigate('/#products', { replace: true });
+          }
           return;
         }
 
