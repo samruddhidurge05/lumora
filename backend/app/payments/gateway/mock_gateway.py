@@ -40,6 +40,8 @@ class MockGateway(PaymentGateway):
         amount_inr: float,
         currency: str = "INR",
         receipt: str = "",
+        notes: Optional[dict] = None,
+        **kwargs,
     ) -> GatewayOrder:
         """
         Creates a mock gateway order.
@@ -72,6 +74,7 @@ class MockGateway(PaymentGateway):
         amount_inr: float,
         currency: str,
         receipt: str,
+        notes: Optional[dict] = None,
     ) -> dict:
         """
         Create a mock UPI QR intent and details.
