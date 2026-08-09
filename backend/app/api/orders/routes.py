@@ -417,6 +417,14 @@ def get_my_orders(
     from app.api.products_router import generate_download_token
     from app.services.download_auth_service import get_product_refund_status
     for o in orders:
+        if getattr(o, "discount_amount", None) is None:
+            setattr(o, "discount_amount", 0.0)
+        if getattr(o, "download_count", None) is None:
+            setattr(o, "download_count", 0)
+        for item in o.items:
+            if getattr(item, "download_count", None) is None:
+                setattr(item, "download_count", 0)
+
         is_paid = (o.status or "").lower() in ("completed", "paid", "processing", "success", "placed")
         setattr(o, "downloadGranted", is_paid)
         if is_paid:

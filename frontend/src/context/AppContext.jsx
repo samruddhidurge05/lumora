@@ -1174,7 +1174,15 @@ export function AppContextProvider({ children }) {
           const trackedKey = `lumora_tracked_click_${cleanCode}`;
           if (!sessionStorage.getItem(trackedKey)) {
             sessionStorage.setItem(trackedKey, 'true');
-            backendFetch(`/affiliate/track-click/${cleanCode}`, { method: 'POST' }).catch(() => {});
+            backendFetch(`/affiliate/track-click/${cleanCode}`, { method: 'POST' }).catch((err) => {
+              if (err?.status === 404 || err?.message?.includes('404')) {
+                try {
+                  localStorage.removeItem('lumora_pending_referral');
+                  localStorage.removeItem('lumora_aff_ref');
+                  sessionStorage.removeItem('lumora_aff_ref');
+                } catch (_) {}
+              }
+            });
           }
         }
       }

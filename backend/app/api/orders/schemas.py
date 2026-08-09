@@ -3,12 +3,12 @@ from typing import List, Optional
 from datetime import datetime
 
 class OrderItemBase(BaseModel):
-    product_id: int
+    product_id: Optional[int] = None
     price_paid: float
     download_url: Optional[str] = None
     downloaded: bool = False
     downloaded_at: Optional[datetime] = None
-    download_count: int = 0
+    download_count: Optional[int] = 0
     download_ip: Optional[str] = None
 
 class OrderItemCreate(OrderItemBase):
@@ -27,7 +27,7 @@ class OrderBase(BaseModel):
     total_amount: float
     currency: str = "INR"
     promo_code: Optional[str] = None
-    discount_amount: float = 0.0
+    discount_amount: Optional[float] = 0.0
     payment_method: Optional[str] = None
     payment_id: Optional[str] = None
     notes: Optional[str] = None
@@ -53,7 +53,7 @@ class OrderResponse(OrderBase):
     
     # Download audit evidence fields
     downloadGranted: bool = True
-    download_count: int = 0
+    download_count: Optional[int] = 0
     first_downloaded_at: Optional[datetime] = None
     last_downloaded_at: Optional[datetime] = None
     download_ip: Optional[str] = None

@@ -360,8 +360,11 @@ function AppContent() {
               // Use SPA navigateTo so AppContext currentView and activeProductId update correctly.
               setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
             }
-          }).catch(() => {
-            // Attribution failed silently — still open the product so the user isn't stuck
+          }).catch((err) => {
+            // Attribution failed silently — if 404 / invalid code, clear stale pending referral
+            if (err?.status === 404 || err?.message?.includes('404')) {
+              try { localStorage.removeItem('lumora_pending_referral'); } catch (_) {}
+            }
             if (pending.product_id) {
               setTimeout(() => navigateTo('product-detail', pending.product_id), 0);
             }

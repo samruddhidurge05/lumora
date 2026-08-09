@@ -36,6 +36,7 @@ export default function ReferralRouteHandler() {
       try {
         let sessionId = null;
         let validProdId = isNaN(numericProdId) ? null : numericProdId;
+        let isCodeValid = true;
 
         // 1. Register referral click on backend
         if (validProdId) {
@@ -53,6 +54,9 @@ export default function ReferralRouteHandler() {
             }
           } catch (err) {
             console.warn('[ReferralRouteHandler] Backend click tracking notice:', err);
+            if (err?.status === 404 || err?.message?.includes('404')) {
+              isCodeValid = false;
+            }
           }
         } else {
           try {
@@ -61,7 +65,20 @@ export default function ReferralRouteHandler() {
             });
           } catch (err) {
             console.warn('[ReferralRouteHandler] Backend track-click notice:', err);
+            if (err?.status === 404 || err?.message?.includes('404')) {
+              isCodeValid = false;
+            }
           }
+        }
+
+        if (!isCodeValid) {
+          try {
+            localStorage.removeItem('lumora_pending_referral');
+            localStorage.removeItem('lumora_aff_ref');
+            sessionStorage.removeItem('lumora_aff_ref');
+            sessionStorage.removeItem('lumora_ref_session_id');
+          } catch (_) {}
+          return;
         }
 
         // Store pending referral in localStorage & sessionStorage for persistent cross-tab/refresh recovery
