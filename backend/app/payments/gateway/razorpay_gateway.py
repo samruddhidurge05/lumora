@@ -14,7 +14,7 @@ are detected. No other code changes are needed.
 """
 import logging
 import os
-from typing import Optional, Any, Dict
+from typing import Optional
 
 from app.payments.gateway.interface import (
     PaymentGateway,
@@ -42,7 +42,6 @@ class RazorpayGateway(PaymentGateway):
         self.key_id = os.getenv("RAZORPAY_KEY_ID", "")
         self.key_secret = os.getenv("RAZORPAY_KEY_SECRET", "")
         self.currency = os.getenv("PAYMENT_CURRENCY", "INR")
-        self._client: Any = None
 
         if not self.key_id or not self.key_secret:
             raise EnvironmentError(
@@ -52,7 +51,7 @@ class RazorpayGateway(PaymentGateway):
 
         # Lazy import - razorpay package only required when live gateway is active
         try:
-            import razorpay as _rzp_sdk  # type: ignore
+            import razorpay as _rzp_sdk
             self._client = _rzp_sdk.Client(auth=(self.key_id, self.key_secret))
         except ImportError as exc:
             raise ImportError(
@@ -79,7 +78,7 @@ class RazorpayGateway(PaymentGateway):
         Create a Razorpay order and return the gateway_order_id.
 
         Args:
-            amount_inr: Total amount in INR (e.g. 999.0 for ₹999)
+            amount_inr: Total amount in INR (e.g. 999.0 for ?999)
             currency:   Currency code - always INR for Indian payments
             receipt:    Internal receipt ID for audit trail
 
@@ -87,11 +86,11 @@ class RazorpayGateway(PaymentGateway):
             GatewayOrder with gateway_order_id used by the frontend
             to open the Razorpay Checkout popup.
         """
-        # Razorpay requires amount in paise (₹1 = 100 paise)
-        amount_paise = int(round(amount_inr * 100))  # type: ignore
+        # Razorpay requires amount in paise (?1 = 100 paise)
+        amount_paise = int(round(amount_inr * 100))
 
         try:
-            data: Dict[str, Any] = {
+            data = {
                 "amount": amount_paise,
                 "currency": currency or self.currency,
                 "receipt": receipt or f"lumora_{amount_paise}",
@@ -100,7 +99,7 @@ class RazorpayGateway(PaymentGateway):
             if notes:
                 data["notes"] = notes
 
-            raw_order = self._client.order.create(data=data)  # type: ignore
+            raw_order = self._client.order.create(data=data)
             logger.info(
                 "[RazorpayGateway] Order created: order_id=%s amount_paise=%d",
                 raw_order["id"],
@@ -151,7 +150,7 @@ class RazorpayGateway(PaymentGateway):
                 "razorpay_payment_id": gateway_payment_id,
                 "razorpay_signature": signature,
             }
-            self._client.utility.verify_payment_signature(params)  # type: ignore
+            self._client.utility.verify_payment_signature(params)
             logger.info(
                 "[RazorpayGateway] Signature verified OK for payment_id=%s",
                 gateway_payment_id,
@@ -182,7 +181,7 @@ class RazorpayGateway(PaymentGateway):
         completeness and for manual-capture configurations.
         """
         try:
-            payment = self._client.payment.fetch(gateway_payment_id)  # type: ignore
+            payment = self._client.payment.fetch(gateway_payment_id)
             current_status = payment.get("status", "")
 
             # If already captured, return success immediately (idempotent)
@@ -201,7 +200,7 @@ class RazorpayGateway(PaymentGateway):
             capture_amount = amount_paise or payment.get("amount", 0)
             # Razorpay SDK capture() expects: capture(payment_id, amount, data={})
             # where amount is an integer (paise) passed as positional arg
-            result = self._client.payment.capture(gateway_payment_id, capture_amount, {"currency": "INR"})  # type: ignore
+            result = self._client.payment.capture(gateway_payment_id, capture_amount, {"currency": "INR"})
             success = result.get("status") == "captured"
 
             if not success:
@@ -253,7 +252,7 @@ class RazorpayGateway(PaymentGateway):
             if reason:
                 refund_payload["notes"] = {"reason": reason}
 
-            refund = self._client.payment.refund(gateway_payment_id, refund_payload)  # type: ignore
+            refund = self._client.payment.refund(gateway_payment_id, refund_payload)
             success = refund.get("entity") == "refund"
 
             logger.info(
@@ -291,7 +290,6 @@ class RazorpayGateway(PaymentGateway):
         amount_inr: float,
         currency: str = "INR",
         receipt: str = "",
-        notes: Optional[dict] = None,
     ) -> dict:
         """
         Create a Razorpay UPI QR code for the UPI QR payment method.
@@ -301,7 +299,7 @@ class RazorpayGateway(PaymentGateway):
         """
         try:
             # Create a standard order first and use the order ID as the QR reference
-            order = self.create_order(amount_inr, currency, receipt, notes=notes)
+            order = self.create_order(amount_inr, currency, receipt)
             # Return UPI QR intent - Razorpay order link is used for QR generation
             return {
                 "gateway_order_id": order.gateway_order_id,
