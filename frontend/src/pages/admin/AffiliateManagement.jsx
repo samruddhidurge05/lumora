@@ -1421,6 +1421,7 @@ export default function AffiliateManagement() {
   const [payoutActionLoading, setPayoutActionLoading]   = useState(false);
   const [showSandboxModal, setShowSandboxModal]         = useState(false);
   const [showEnterprisePayoutModal, setShowEnterprisePayoutModal] = useState(null);
+  const [payoutNoticeModal, setPayoutNoticeModal]                 = useState(null);
 
   // Promoters CRM State
   const [affiliates, setAffiliates]           = useState([]);
@@ -1580,7 +1581,11 @@ export default function AffiliateManagement() {
         } catch (e) { /* ignore */ }
       }
     } catch (e) {
-      alert(`Test Payout Error: ${e.message || e}`);
+      setPayoutNoticeModal({
+        title: 'Test Payout Unavailable',
+        message: e.message || `Payout #${payoutId} cannot be actioned again.`,
+        type: 'error'
+      });
     } finally {
       setPayoutActionLoading(false);
     }
@@ -2483,6 +2488,67 @@ export default function AffiliateManagement() {
             }}
           />
         )}
+
+        {/* Lumora Admin Payout Notice Modal */}
+        <AnimatePresence>
+          {payoutNoticeModal && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#F3EAF8] overflow-hidden"
+              >
+                <div className={`h-2.5 w-full ${
+                  payoutNoticeModal.type === 'success'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                    : payoutNoticeModal.type === 'info'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                      : 'bg-gradient-to-r from-rose-500 via-purple-600 to-[#7B3FA0]'
+                }`} />
+
+                <div className="p-6 text-center">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border ${
+                    payoutNoticeModal.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      : payoutNoticeModal.type === 'info'
+                        ? 'bg-blue-50 text-blue-600 border-blue-200'
+                        : 'bg-rose-50 text-rose-600 border-rose-200'
+                  }`}>
+                    {payoutNoticeModal.type === 'success' ? (
+                      <CheckCircle2 size={28} />
+                    ) : payoutNoticeModal.type === 'info' ? (
+                      <HelpCircle size={28} />
+                    ) : (
+                      <AlertOctagon size={28} />
+                    )}
+                  </div>
+
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-widest uppercase bg-[#7B3FA0]/10 text-[#7B3FA0] border border-[#7B3FA0]/20">
+                    Lumora Payout Notice
+                  </span>
+
+                  <h3 className="text-base sm:text-lg font-serif font-black text-[#2D004D] mt-2 mb-2">
+                    {payoutNoticeModal.title || 'Test Payout Unavailable'}
+                  </h3>
+
+                  <div className="p-3.5 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]/90 font-medium leading-relaxed mb-6">
+                    {payoutNoticeModal.message}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setPayoutNoticeModal(null)}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#2D004D] via-[#5C2B7C] to-[#7B3FA0] text-white font-extrabold text-xs shadow-md hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer"
+                  >
+                    OK
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </AdminLayout>
   );
