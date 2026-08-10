@@ -1396,6 +1396,7 @@ export default function AffiliateManagement() {
   const [showSandboxModal, setShowSandboxModal]         = useState(false);
   const [showEnterprisePayoutModal, setShowEnterprisePayoutModal] = useState(null);
   const [payoutNoticeModal, setPayoutNoticeModal]                 = useState(null);
+  const [payoutConfirmModal, setPayoutConfirmModal]               = useState(null);
 
   // Promoters CRM State
   const [affiliates, setAffiliates]           = useState([]);
@@ -1519,16 +1520,22 @@ export default function AffiliateManagement() {
   useEffect(() => { if (!authLoading && activeTab === 'ledger') loadLedger(); }, [authLoading, ledgerPage, ledgerSearch, ledgerCommStatus, ledgerPurchaseStatus, ledgerAffFilter, loadLedger]);
 
   // Handlers for RazorpayX Payouts
-  const handleTestPayout = async (payoutId) => {
-    if (!window.confirm(`Execute Development Test Payout for Payout #${payoutId}?\nThis will perform full atomic PostgreSQL updates (wallet deduction, status paid, audit trail).`)) {
-      return;
-    }
+  const handleTestPayout = (payoutId) => {
+    setPayoutConfirmModal({ payoutId });
+  };
+
+  const confirmExecuteTestPayout = async (payoutId) => {
+    setPayoutConfirmModal(null);
     setPayoutActionLoading(true);
     try {
       const res = await backendFetch(`/admin/affiliates/payouts/${payoutId}/test-payout`, {
         method: 'POST'
       });
-      alert(`Test Payout Completed Successfully! Transaction Ref: ${res.transaction_reference || res.provider_ref}`);
+      setPayoutNoticeModal({
+        title: 'Test Payout Completed',
+        message: `Test Payout Completed Successfully! Transaction Ref: ${res.transaction_reference || res.provider_ref}`,
+        type: 'success'
+      });
       loadPayouts();
       loadKpis();
       loadLedger();
@@ -2440,6 +2447,86 @@ export default function AffiliateManagement() {
             }}
           />
         )}
+
+        {/* Lumora Admin Development Test Payout Confirmation Modal */}
+        <AnimatePresence>
+          {payoutConfirmModal && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#F3EAF8] overflow-hidden relative"
+              >
+                {/* Top Accent Gradient Bar */}
+                <div className="h-2.5 w-full bg-gradient-to-r from-[#2D004D] via-[#5C2B7C] to-[#7B3FA0]" />
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setPayoutConfirmModal(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="p-6 text-center">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3.5 bg-[#7B3FA0]/10 text-[#7B3FA0] border border-[#7B3FA0]/20">
+                    <Beaker size={28} />
+                  </div>
+
+                  {/* Badge */}
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-widest uppercase bg-[#7B3FA0]/10 text-[#7B3FA0] border border-[#7B3FA0]/20">
+                    DEVELOPMENT ONLY
+                  </span>
+
+                  {/* Title */}
+                  <h3 className="text-lg font-serif font-black text-[#2D004D] mt-2 mb-2">
+                    Development Test Payout
+                  </h3>
+
+                  {/* Description Card */}
+                  <div className="p-4 rounded-xl bg-[#F8F3FB] border border-[#F3EAF8] text-xs text-[#2D004D]/90 font-medium leading-relaxed mb-6 text-left space-y-2">
+                    <p className="font-bold text-[#2D004D]">
+                      Execute Development Test Payout for Payout #{payoutConfirmModal.payoutId}?
+                    </p>
+                    <p className="text-gray-600 text-[11px]">
+                      This will perform the development payout workflow, including PostgreSQL wallet deduction, paid status update, and audit trail.
+                    </p>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPayoutConfirmModal(null)}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => confirmExecuteTestPayout(payoutConfirmModal.payoutId)}
+                      disabled={payoutActionLoading}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#2D004D] via-[#5C2B7C] to-[#7B3FA0] text-white font-extrabold text-xs shadow-md hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {payoutActionLoading ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'OK, Proceed'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Lumora Admin Payout Notice Modal */}
         <AnimatePresence>
