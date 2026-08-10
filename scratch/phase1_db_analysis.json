@@ -1,0 +1,4904 @@
+{
+  "pg_version": "PostgreSQL 18.4 (Debian 18.4-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+  "db_size": "13 MB",
+  "tables": {
+    "admin_email_logs": {
+      "row_count": 0,
+      "columns_count": 13,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "invitation_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "event",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "job_id",
+          "type": "VARCHAR(36)",
+          "nullable": true
+        },
+        {
+          "name": "correlation_id",
+          "type": "VARCHAR(36)",
+          "nullable": true
+        },
+        {
+          "name": "recipient",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "attempt",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "latency_ms",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "status_code",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "error_message",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "message_id",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "invitation_id"
+          ],
+          "referred_table": "admin_invitations",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_admin_email_logs_correlation_id",
+          "column_names": [
+            "correlation_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_created_at",
+          "column_names": [
+            "created_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_event",
+          "column_names": [
+            "event"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_invitation_id",
+          "column_names": [
+            "invitation_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_job_id",
+          "column_names": [
+            "job_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_email_logs_message_id",
+          "column_names": [
+            "message_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "admin_invitations": {
+      "row_count": 5,
+      "columns_count": 19,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "role_level",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "invite_token",
+          "type": "VARCHAR(128)",
+          "nullable": false
+        },
+        {
+          "name": "invited_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "accepted_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "revoked_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "invited_name",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "email_status",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "last_email_sent_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "email_error_log",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "resend_count",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "first_sent_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "last_attempt_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "next_retry_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "invited_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_admin_invitations_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_admin_invitations_invite_token",
+          "column_names": [
+            "invite_token"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "admin_roles": {
+      "row_count": 2,
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "role_level",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "permissions",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "invited_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false
+        },
+        {
+          "name": "activated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "deactivated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "invited_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "admin_roles_user_id_key",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_admin_roles_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "affiliate_commissions": {
+      "row_count": 3,
+      "columns_count": 34,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "product_name",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "sale_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "commission_amt",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "referral_attribution_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "referral_link_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "attribution_source",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "coupon_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "referral_code_used",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "device_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "browser",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "referral_url_used",
+          "type": "VARCHAR(500)",
+          "nullable": true
+        },
+        {
+          "name": "commission_type",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "commission_rate",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "customer_name",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "customer_email",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "cookie_attr_date",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "last_click_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "gateway_tx_id",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "commission_status",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "purchase_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "refund_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "admin_notes",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "reversed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "refund_deduction",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "approved_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "paid_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "referral_attribution_id"
+          ],
+          "referred_table": "referral_attributions",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "referral_link_id"
+          ],
+          "referred_table": "referral_links",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_affiliate_commissions_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_attribution_source",
+          "column_names": [
+            "attribution_source"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_commission_status",
+          "column_names": [
+            "commission_status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_coupon_code",
+          "column_names": [
+            "coupon_code"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_created_at",
+          "column_names": [
+            "created_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_referral_code_used",
+          "column_names": [
+            "referral_code_used"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_commissions_referral_link_id",
+          "column_names": [
+            "referral_link_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "uq_affiliate_commission_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "affiliate_payouts": {
+      "row_count": 3,
+      "columns_count": 23,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "method",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "upi_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "bank_account",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "net_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "tds_deduction",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "tier_bonus",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "utr",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_data",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "retry_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "last_retried_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "payout_mode",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "razorpay_payout_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "razorpay_fund_account_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "failure_reason",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "processed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_affiliate_payouts_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_payouts_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_payouts_razorpay_payout_id",
+          "column_names": [
+            "razorpay_payout_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_payouts_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_payouts_utr",
+          "column_names": [
+            "utr"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "affiliate_profiles": {
+      "row_count": 18,
+      "columns_count": 43,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "referral_code",
+          "type": "VARCHAR(20)",
+          "nullable": false
+        },
+        {
+          "name": "commission_rate",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "total_earnings",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "total_clicks",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "total_sales",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "upi_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "bank_name",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "account_number",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "ifsc_code",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "display_name",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "short_bio",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "youtube",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "instagram",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "linkedin",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "preferred_categories",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "promotion_methods",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "primary_audience",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "audience_size",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "preferred_language",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "preferred_currency",
+          "type": "VARCHAR(10)",
+          "nullable": true
+        },
+        {
+          "name": "timezone",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "email_notifications",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "pending_earnings",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "paid_earnings",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "rejected_earnings",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "frozen_balance",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "unique_clicks",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "avg_order_value",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "last_active_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "kyc_status",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "pan_number",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "pan_holder_name",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "gstin",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "is_bank_verified",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "razorpay_contact_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "razorpay_fund_account_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "affiliate_profiles_referral_code_key",
+          "column_names": [
+            "referral_code"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_affiliate_profiles_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_profiles_razorpay_contact_id",
+          "column_names": [
+            "razorpay_contact_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_profiles_razorpay_fund_account_id",
+          "column_names": [
+            "razorpay_fund_account_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_profiles_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "affiliate_referrals": {
+      "row_count": 20,
+      "columns_count": 17,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "referral_code",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "session_id",
+          "type": "VARCHAR(100)",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "attribution_source",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "coupon_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "clicked_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "authenticated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "converted_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "customer_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_affiliate_referrals_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_attribution_source",
+          "column_names": [
+            "attribution_source"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_coupon_code",
+          "column_names": [
+            "coupon_code"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_customer_id",
+          "column_names": [
+            "customer_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_referral_code",
+          "column_names": [
+            "referral_code"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_affiliate_referrals_session_id",
+          "column_names": [
+            "session_id"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_affiliate_referrals_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "audit_logs": {
+      "row_count": 175,
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "admin_user_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR(100)",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "target_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "target_id",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "metadata",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "actor_metadata",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "admin_user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    "cart_items": {
+      "row_count": 1,
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "added_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_cart_items_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_cart_items_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_cart_items_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "conversations": {
+      "row_count": 0,
+      "columns_count": 11,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "buyer_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "seller_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "assigned_to",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "resolved_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "assigned_to"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "buyer_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "seller_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_conversations_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "coupons": {
+      "row_count": 0,
+      "columns_count": 11,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "discount_type",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "discount_value",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "min_order_value",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "max_uses",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "uses_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_coupons_code",
+          "column_names": [
+            "code"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_coupons_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "messages": {
+      "row_count": 0,
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "conversation_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "sender_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": false
+        },
+        {
+          "name": "attachment_url",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "is_read",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "conversation_id"
+          ],
+          "referred_table": "conversations",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "sender_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_messages_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "notifications": {
+      "row_count": 58,
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "is_read",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_notifications_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "order_items": {
+      "row_count": 92,
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "price_paid",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "download_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "downloaded",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "downloaded_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "download_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "download_ip",
+          "type": "VARCHAR(64)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_order_items_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "orders": {
+      "row_count": 92,
+      "columns_count": 26,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "total_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "nullable": true
+        },
+        {
+          "name": "promo_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "discount_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "payment_method",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "payment_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "referral_link_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "referral_code_used",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "attribution_source",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "device_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "browser",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "download_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "first_downloaded_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "last_downloaded_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "download_ip",
+          "type": "VARCHAR(64)",
+          "nullable": true
+        },
+        {
+          "name": "download_device",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "download_browser",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "coupon_code_used",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "referral_link_id"
+          ],
+          "referred_table": "referral_links",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_orders_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_orders_attribution_source",
+          "column_names": [
+            "attribution_source"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_orders_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_orders_referral_code_used",
+          "column_names": [
+            "referral_code_used"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_orders_referral_link_id",
+          "column_names": [
+            "referral_link_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_orders_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "payments": {
+      "row_count": 17,
+      "columns_count": 27,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "payment_ref",
+          "type": "VARCHAR(64)",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "vendor_ids",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "gateway",
+          "type": "VARCHAR(30)",
+          "nullable": false
+        },
+        {
+          "name": "gateway_order_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "gateway_payment_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "gateway_signature",
+          "type": "VARCHAR(256)",
+          "nullable": true
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "discount_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "tax_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "payment_method",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": false
+        },
+        {
+          "name": "failure_reason",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "retry_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "idempotency_key",
+          "type": "VARCHAR(128)",
+          "nullable": true
+        },
+        {
+          "name": "items_json",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "promo_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "verified_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "refunded_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "customer_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_payments_customer_id",
+          "column_names": [
+            "customer_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_customer_status",
+          "column_names": [
+            "customer_id",
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_gateway_order",
+          "column_names": [
+            "gateway",
+            "gateway_order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_gateway_order_id",
+          "column_names": [
+            "gateway_order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_gateway_payment_id",
+          "column_names": [
+            "gateway_payment_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_idempotency_key",
+          "column_names": [
+            "idempotency_key"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_payments_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_payments_payment_ref",
+          "column_names": [
+            "payment_ref"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_payments_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "platform_settings": {
+      "row_count": 2,
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "key",
+          "type": "VARCHAR(100)",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "type": "TEXT",
+          "nullable": false
+        },
+        {
+          "name": "updated_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "updated_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    "platform_treasury_ledgers": {
+      "row_count": 17,
+      "columns_count": 9,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "ledger_type",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "running_balance",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "reference_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "reference_id",
+          "type": "VARCHAR(64)",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "created_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_platform_treasury_ledgers_created_at",
+          "column_names": [
+            "created_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_treasury_ledgers_created_by",
+          "column_names": [
+            "created_by"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_treasury_ledgers_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_treasury_ledgers_ledger_type",
+          "column_names": [
+            "ledger_type"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_treasury_ledgers_reference_id",
+          "column_names": [
+            "reference_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_treasury_ledgers_reference_type",
+          "column_names": [
+            "reference_type"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_treasury_ledger_ref",
+          "column_names": [
+            "reference_type",
+            "reference_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_treasury_ledger_type_date",
+          "column_names": [
+            "ledger_type",
+            "created_at"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "platform_withdrawals": {
+      "row_count": 0,
+      "columns_count": 20,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "withdrawal_number",
+          "type": "VARCHAR(64)",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": false
+        },
+        {
+          "name": "requested_by",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "requested_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "approved_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "approved_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "completed_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "transaction_reference",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "razorpayx_payout_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "razorpayx_fund_account_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "destination_type",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "destination_account",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "failure_reason",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "approved_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "completed_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "requested_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_platform_withdrawals_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_razorpayx_payout_id",
+          "column_names": [
+            "razorpayx_payout_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_requested_by",
+          "column_names": [
+            "requested_by"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_status_req",
+          "column_names": [
+            "status",
+            "requested_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_transaction_reference",
+          "column_names": [
+            "transaction_reference"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_platform_withdrawals_withdrawal_number",
+          "column_names": [
+            "withdrawal_number"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "price_alerts": {
+      "row_count": 1,
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "original_price",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "target_price",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_price_alerts_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "product_download_events": {
+      "row_count": 4,
+      "columns_count": 11,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "downloaded_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(64)",
+          "nullable": true
+        },
+        {
+          "name": "user_agent",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "device_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "browser",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "os",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_product_download_events_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_product_download_events_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_product_download_events_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_product_download_events_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "product_versions": {
+      "row_count": 0,
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "version_number",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "changelog",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "is_major",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "file_url",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_product_versions_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "products": {
+      "row_count": 195,
+      "columns_count": 55,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "price",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "rating",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "reviews",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "downloads",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "thumbnail",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "preview",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "file_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "seller",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "vendor_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "featured",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "trending",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "new_arrival",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "badge",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "tags",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "highlights",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "version",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "file_size",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "last_updated",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "license",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "owner_type",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "created_by_role",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "is_platform_product",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_enabled",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "commission_type",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "commission_mode",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "commission_value",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_cookie_days",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_visibility",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_program_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "short_desc",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "features",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "system_requirements",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "what_you_get",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "installation_guide",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "subcategory",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "discount",
+          "type": "DOUBLE PRECISION",
+          "nullable": true
+        },
+        {
+          "name": "preview_images",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "preview_video",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "seo_title",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "seo_description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "visibility",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "pcloud_download_link",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "image_urls",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "storage_path",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "thumbnail_path",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "preview_path",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "content_type",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "hash",
+          "type": "VARCHAR(128)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_products_affiliate_enabled",
+          "column_names": [
+            "affiliate_enabled"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_category",
+          "column_names": [
+            "category"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_created_by_role",
+          "column_names": [
+            "created_by_role"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_is_platform_product",
+          "column_names": [
+            "is_platform_product"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_owner_type",
+          "column_names": [
+            "owner_type"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_products_title",
+          "column_names": [
+            "title"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "recently_viewed": {
+      "row_count": 15,
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "viewed_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_recently_viewed_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "referral_attributions": {
+      "row_count": 3,
+      "columns_count": 19,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_code",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "referral_link_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "vendor_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "click_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "commission_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "fraud_flags",
+          "type": "JSON",
+          "nullable": true
+        },
+        {
+          "name": "attribution_source",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "coupon_code",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "device_type",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "browser",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "referral_url",
+          "type": "VARCHAR(500)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "click_id"
+          ],
+          "referred_table": "referral_clicks",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "customer_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "referral_link_id"
+          ],
+          "referred_table": "referral_links",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_referral_attributions_affiliate_code",
+          "column_names": [
+            "affiliate_code"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_attribution_source",
+          "column_names": [
+            "attribution_source"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_coupon_code",
+          "column_names": [
+            "coupon_code"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_created_at",
+          "column_names": [
+            "created_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_customer_id",
+          "column_names": [
+            "customer_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_referral_attributions_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_referral_link_id",
+          "column_names": [
+            "referral_link_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_attributions_vendor_id",
+          "column_names": [
+            "vendor_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "referral_clicks": {
+      "row_count": 11,
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "referral_link_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR(45)",
+          "nullable": true
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "clicked_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "referral_link_id"
+          ],
+          "referred_table": "referral_links",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_referral_clicks_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_clicks_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_clicks_referral_link_id",
+          "column_names": [
+            "referral_link_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "referral_links": {
+      "row_count": 0,
+      "columns_count": 8,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "affiliate_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "referral_code",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "clicks_count",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "affiliate_id"
+          ],
+          "referred_table": "affiliate_profiles",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_referral_links_affiliate_id",
+          "column_names": [
+            "affiliate_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_links_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_links_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_referral_links_referral_code",
+          "column_names": [
+            "referral_code"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "refund_requests": {
+      "row_count": 5,
+      "columns_count": 22,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "reason_category",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "details",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(30)",
+          "nullable": false
+        },
+        {
+          "name": "requested_amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "nullable": false
+        },
+        {
+          "name": "payment_id",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "gateway_refund_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "admin_notes",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "admin_decision_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "reviewed_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "decision_reason",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "last_updated_by",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "last_updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "product_name",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "order_total",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "payment_method",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "purchase_date",
+          "type": "TIMESTAMP",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "last_updated_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "order_id"
+          ],
+          "referred_table": "orders",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "reviewed_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_refund_requests_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_refund_requests_order_id",
+          "column_names": [
+            "order_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_refund_requests_status",
+          "column_names": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_refund_requests_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "reports": {
+      "row_count": 7,
+      "columns_count": 12,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "VARCHAR(50)",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(100)",
+          "nullable": false
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "reporter",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(250)",
+          "nullable": true
+        },
+        {
+          "name": "severity",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "assignee",
+          "type": "VARCHAR(150)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "resolved_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_reports_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "reviews": {
+      "row_count": 2,
+      "columns_count": 9,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "rating",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "comment",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "reply",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "verified",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_reviews_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_reviews_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_reviews_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "search_history": {
+      "row_count": 0,
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "query",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "searched_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_search_history_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "storage_metadata": {
+      "row_count": 0,
+      "columns_count": 11,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "storage_path",
+          "type": "VARCHAR(512)",
+          "nullable": false
+        },
+        {
+          "name": "etag",
+          "type": "VARCHAR(128)",
+          "nullable": true
+        },
+        {
+          "name": "size_bytes",
+          "type": "BIGINT",
+          "nullable": true
+        },
+        {
+          "name": "checksum_sha256",
+          "type": "VARCHAR(64)",
+          "nullable": true
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "verification_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "verified_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_storage_path_ver",
+          "column_names": [
+            "storage_path",
+            "verification_status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_storage_metadata_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_storage_metadata_storage_path",
+          "column_names": [
+            "storage_path"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "user_activities": {
+      "row_count": 316,
+      "columns_count": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "activity_type",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "details",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_user_activities_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "users": {
+      "row_count": 91,
+      "columns_count": 13,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "avatar_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "is_verified",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "firebase_uid",
+          "type": "VARCHAR(128)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "last_login_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_users_email",
+          "column_names": [
+            "email"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_users_firebase_uid",
+          "column_names": [
+            "firebase_uid"
+          ],
+          "unique": true
+        },
+        {
+          "name": "ix_users_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "vendors": {
+      "row_count": 22,
+      "columns_count": 30,
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "avatar",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "bio",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "banner",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "sales",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "rating",
+          "type": "VARCHAR(10)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "store_url",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "github",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "tagline",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "instagram",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "website",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "twitter",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "refund_policy",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "support_email",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "response_time",
+          "type": "VARCHAR(50)",
+          "nullable": true
+        },
+        {
+          "name": "announcement",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "announcement_active",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "vacation_mode",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "vacation_message",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "upi_id",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "account_holder_name",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "bank_name",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "account_number",
+          "type": "VARCHAR(100)",
+          "nullable": true
+        },
+        {
+          "name": "ifsc_code",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_vendors_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "verifications": {
+      "row_count": 0,
+      "columns_count": 22,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "vendor_id",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "pan_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "pan_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "pan_note",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "aadhaar_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "aadhaar_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "aadhaar_note",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "bank_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "bank_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "bank_note",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "gst_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "gst_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "gst_note",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "address_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "address_url",
+          "type": "VARCHAR(512)",
+          "nullable": true
+        },
+        {
+          "name": "address_note",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "email_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "profile_status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "progress_pct",
+          "type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "vendor_id"
+          ],
+          "referred_table": "vendors",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_verifications_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_verifications_vendor_id",
+          "column_names": [
+            "vendor_id"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    "wishlists": {
+      "row_count": 5,
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "added_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "constrained_columns": [
+            "product_id"
+          ],
+          "referred_table": "products",
+          "referred_columns": [
+            "id"
+          ]
+        },
+        {
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_wishlists_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_wishlists_product_id",
+          "column_names": [
+            "product_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_wishlists_user_id",
+          "column_names": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "withdrawals": {
+      "row_count": 0,
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "vendor_id",
+          "type": "VARCHAR(120)",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "DOUBLE PRECISION",
+          "nullable": false
+        },
+        {
+          "name": "method",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "upi_id",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "bank_account",
+          "type": "VARCHAR(120)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true
+        },
+        {
+          "name": "eta",
+          "type": "VARCHAR(30)",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "ix_withdrawals_id",
+          "column_names": [
+            "id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "ix_withdrawals_vendor_id",
+          "column_names": [
+            "vendor_id"
+          ],
+          "unique": false
+        }
+      ]
+    }
+  },
+  "sequences": [
+    "affiliate_referrals_id_seq",
+    "affiliate_commissions_id_seq",
+    "refund_requests_id_seq",
+    "product_download_events_id_seq",
+    "users_id_seq",
+    "products_id_seq",
+    "coupons_id_seq",
+    "withdrawals_id_seq",
+    "reports_id_seq",
+    "storage_metadata_id_seq",
+    "audit_logs_id_seq",
+    "product_versions_id_seq",
+    "recently_viewed_id_seq",
+    "conversations_id_seq",
+    "notifications_id_seq",
+    "price_alerts_id_seq",
+    "search_history_id_seq",
+    "user_activities_id_seq",
+    "reviews_id_seq",
+    "wishlists_id_seq",
+    "cart_items_id_seq",
+    "affiliate_profiles_id_seq",
+    "verifications_id_seq",
+    "admin_roles_id_seq",
+    "admin_invitations_id_seq",
+    "platform_withdrawals_id_seq",
+    "platform_treasury_ledgers_id_seq",
+    "messages_id_seq",
+    "affiliate_payouts_id_seq",
+    "referral_links_id_seq",
+    "admin_email_logs_id_seq",
+    "orders_id_seq",
+    "referral_clicks_id_seq",
+    "order_items_id_seq",
+    "payments_id_seq",
+    "referral_attributions_id_seq"
+  ]
+}

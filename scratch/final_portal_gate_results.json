@@ -1,0 +1,109 @@
+{
+  "source_db": "postgresql://<user>:<redacted>@dpg-d9ffegf41pts73e35qe0-a.oregon-postgres.render.com/lumora_db_k4ni",
+  "target_db": "postgresql://<user>:<redacted>@dpg-d9svagv40ujc73dvo4ag-a.oregon-postgres.render.com/lumoradb_o3xd?sslmode=require",
+  "all_portals_pass": true,
+  "discrepancy_count": 0,
+  "discrepancies": [],
+  "runtime_source_matrix": [
+    {
+      "feature": "Customer Auth & Users",
+      "pg": "PRIMARY",
+      "firestore": "Firebase Auth Token",
+      "runtime": "PostgreSQL (Users) / Firebase (JWT)"
+    },
+    {
+      "feature": "Product Catalog & Details",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Orders & Purchases",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Payments & Treasury",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Refund Requests",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Reviews & Ratings",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Reports",
+      "pg": "PRIMARY",
+      "firestore": "Optional Stream (SQL Fallback)",
+      "runtime": "PostgreSQL (SQLReport)"
+    },
+    {
+      "feature": "Affiliate Tracking & Payouts",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Downloads & Vault Locks",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Vendor Management & Pricing",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Admin Audit Logs & Settings",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL (SQLAuditLog)"
+    }
+  ],
+  "portal_gate": [
+    [
+      "Customer",
+      "EXACT (93 users, 92 orders)",
+      "EXACT (93 users, 92 orders)",
+      "MATCH",
+      "MATCH",
+      "PASS"
+    ],
+    [
+      "Vendor",
+      "EXACT (22 vendors, 195 prods)",
+      "EXACT (22 vendors, 195 prods)",
+      "MATCH",
+      "MATCH",
+      "PASS"
+    ],
+    [
+      "Affiliate",
+      "EXACT (19 profs, 3 comms)",
+      "EXACT (19 profs, 3 comms)",
+      "MATCH",
+      "MATCH",
+      "PASS"
+    ],
+    [
+      "Admin",
+      "EXACT (2 roles, 176 audit)",
+      "EXACT (2 roles, 176 audit)",
+      "MATCH",
+      "MATCH",
+      "PASS"
+    ]
+  ]
+}

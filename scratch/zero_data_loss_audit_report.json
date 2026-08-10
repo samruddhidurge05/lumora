@@ -1,0 +1,407 @@
+{
+  "source_db": "postgresql://<user>:<redacted>@dpg-d9ffegf41pts73e35qe0-a.oregon-postgres.render.com/lumora_db_k4ni",
+  "target_db": "postgresql://<user>:<redacted>@dpg-d9svagv40ujc73dvo4ag-a.oregon-postgres.render.com/lumoradb_o3xd?sslmode=require",
+  "total_restored_rows": 1192,
+  "all_fingerprints_match": true,
+  "portal_gate_all_pass": true,
+  "fingerprints": [
+    {
+      "table": "users",
+      "orig_count": 93,
+      "target_count": 93,
+      "orig_hash": "03c4a3c331f8...",
+      "target_hash": "03c4a3c331f8...",
+      "status": "PASS"
+    },
+    {
+      "table": "vendors",
+      "orig_count": 22,
+      "target_count": 22,
+      "orig_hash": "3645c0efe269...",
+      "target_hash": "3645c0efe269...",
+      "status": "PASS"
+    },
+    {
+      "table": "affiliate_profiles",
+      "orig_count": 19,
+      "target_count": 19,
+      "orig_hash": "14e8e218dfd1...",
+      "target_hash": "14e8e218dfd1...",
+      "status": "PASS"
+    },
+    {
+      "table": "products",
+      "orig_count": 195,
+      "target_count": 195,
+      "orig_hash": "8e68d44b50e4...",
+      "target_hash": "8e68d44b50e4...",
+      "status": "PASS"
+    },
+    {
+      "table": "platform_settings",
+      "orig_count": 2,
+      "target_count": 2,
+      "orig_hash": "1f8dbb6d0a05...",
+      "target_hash": "1f8dbb6d0a05...",
+      "status": "PASS"
+    },
+    {
+      "table": "coupons",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "referral_links",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "orders",
+      "orig_count": 92,
+      "target_count": 92,
+      "orig_hash": "c03c0c925eb1...",
+      "target_hash": "c03c0c925eb1...",
+      "status": "PASS"
+    },
+    {
+      "table": "order_items",
+      "orig_count": 92,
+      "target_count": 92,
+      "orig_hash": "ce316a721087...",
+      "target_hash": "ce316a721087...",
+      "status": "PASS"
+    },
+    {
+      "table": "payments",
+      "orig_count": 17,
+      "target_count": 17,
+      "orig_hash": "506e66c147c3...",
+      "target_hash": "506e66c147c3...",
+      "status": "PASS"
+    },
+    {
+      "table": "affiliate_referrals",
+      "orig_count": 20,
+      "target_count": 20,
+      "orig_hash": "f21a52a7d9dc...",
+      "target_hash": "f21a52a7d9dc...",
+      "status": "PASS"
+    },
+    {
+      "table": "referral_attributions",
+      "orig_count": 3,
+      "target_count": 3,
+      "orig_hash": "6f6af6c3e58a...",
+      "target_hash": "6f6af6c3e58a...",
+      "status": "PASS"
+    },
+    {
+      "table": "affiliate_commissions",
+      "orig_count": 3,
+      "target_count": 3,
+      "orig_hash": "1c262a4a3ab4...",
+      "target_hash": "1c262a4a3ab4...",
+      "status": "PASS"
+    },
+    {
+      "table": "affiliate_payouts",
+      "orig_count": 3,
+      "target_count": 3,
+      "orig_hash": "61ea73d82e22...",
+      "target_hash": "61ea73d82e22...",
+      "status": "PASS"
+    },
+    {
+      "table": "referral_clicks",
+      "orig_count": 11,
+      "target_count": 11,
+      "orig_hash": "837b3c9718a7...",
+      "target_hash": "837b3c9718a7...",
+      "status": "PASS"
+    },
+    {
+      "table": "product_download_events",
+      "orig_count": 4,
+      "target_count": 4,
+      "orig_hash": "7ef150f4ebe5...",
+      "target_hash": "7ef150f4ebe5...",
+      "status": "PASS"
+    },
+    {
+      "table": "product_versions",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "user_activities",
+      "orig_count": 321,
+      "target_count": 321,
+      "orig_hash": "27b099848511...",
+      "target_hash": "27b099848511...",
+      "status": "PASS"
+    },
+    {
+      "table": "admin_roles",
+      "orig_count": 2,
+      "target_count": 2,
+      "orig_hash": "30a91ad709a5...",
+      "target_hash": "30a91ad709a5...",
+      "status": "PASS"
+    },
+    {
+      "table": "admin_invitations",
+      "orig_count": 5,
+      "target_count": 5,
+      "orig_hash": "dbbbd729d268...",
+      "target_hash": "dbbbd729d268...",
+      "status": "PASS"
+    },
+    {
+      "table": "admin_email_logs",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "audit_logs",
+      "orig_count": 176,
+      "target_count": 176,
+      "orig_hash": "28cacb4e9246...",
+      "target_hash": "28cacb4e9246...",
+      "status": "PASS"
+    },
+    {
+      "table": "notifications",
+      "orig_count": 59,
+      "target_count": 59,
+      "orig_hash": "2d4212de8bda...",
+      "target_hash": "2d4212de8bda...",
+      "status": "PASS"
+    },
+    {
+      "table": "storage_metadata",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "conversations",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "messages",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "price_alerts",
+      "orig_count": 1,
+      "target_count": 1,
+      "orig_hash": "f3de756964cd...",
+      "target_hash": "f3de756964cd...",
+      "status": "PASS"
+    },
+    {
+      "table": "recently_viewed",
+      "orig_count": 15,
+      "target_count": 15,
+      "orig_hash": "ce7162fa1903...",
+      "target_hash": "ce7162fa1903...",
+      "status": "PASS"
+    },
+    {
+      "table": "refund_requests",
+      "orig_count": 5,
+      "target_count": 5,
+      "orig_hash": "38b9449bded8...",
+      "target_hash": "38b9449bded8...",
+      "status": "PASS"
+    },
+    {
+      "table": "reports",
+      "orig_count": 7,
+      "target_count": 7,
+      "orig_hash": "be2b6753fe82...",
+      "target_hash": "be2b6753fe82...",
+      "status": "PASS"
+    },
+    {
+      "table": "reviews",
+      "orig_count": 2,
+      "target_count": 2,
+      "orig_hash": "49f83bc8547c...",
+      "target_hash": "49f83bc8547c...",
+      "status": "PASS"
+    },
+    {
+      "table": "search_history",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "verifications",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "wishlists",
+      "orig_count": 5,
+      "target_count": 5,
+      "orig_hash": "d3662c0a00ea...",
+      "target_hash": "d3662c0a00ea...",
+      "status": "PASS"
+    },
+    {
+      "table": "withdrawals",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    },
+    {
+      "table": "cart_items",
+      "orig_count": 1,
+      "target_count": 1,
+      "orig_hash": "e3d14f7ba947...",
+      "target_hash": "e3d14f7ba947...",
+      "status": "PASS"
+    },
+    {
+      "table": "platform_treasury_ledgers",
+      "orig_count": 17,
+      "target_count": 17,
+      "orig_hash": "82bb3897c5f7...",
+      "target_hash": "82bb3897c5f7...",
+      "status": "PASS"
+    },
+    {
+      "table": "platform_withdrawals",
+      "orig_count": 0,
+      "target_count": 0,
+      "orig_hash": "e3b0c44298fc...",
+      "target_hash": "e3b0c44298fc...",
+      "status": "PASS"
+    }
+  ],
+  "relational_chains": [
+    {
+      "chain": "Customer Orders-Items-Payments Chain",
+      "orig": 15,
+      "target": 15,
+      "pass": true
+    },
+    {
+      "chain": "Vendor Products Chain",
+      "orig": 3806,
+      "target": 3806,
+      "pass": true
+    },
+    {
+      "chain": "Affiliate Profiles-Referrals Chain",
+      "orig": 20,
+      "target": 20,
+      "pass": true
+    },
+    {
+      "chain": "Admin Roles-Users Chain",
+      "orig": 2,
+      "target": 2,
+      "pass": true
+    }
+  ],
+  "portal_gate": [
+    {
+      "category": "Customer Portal",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Vendor Portal",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Affiliate Portal",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Admin Portal",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Orders Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Payments Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Refunds Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Reviews Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Reports Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Downloads Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    },
+    {
+      "category": "Team / Admin Data",
+      "source": "MATCH",
+      "target": "MATCH",
+      "status": "PASS"
+    }
+  ]
+}

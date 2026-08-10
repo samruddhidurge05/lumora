@@ -1,0 +1,301 @@
+{
+  "verification_passed": true,
+  "all_tables_matched": true,
+  "comparison": [
+    {
+      "table": "admin_email_logs",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "admin_invitations",
+      "orig_count": 5,
+      "new_count": 5,
+      "status": "MATCH"
+    },
+    {
+      "table": "admin_roles",
+      "orig_count": 2,
+      "new_count": 2,
+      "status": "MATCH"
+    },
+    {
+      "table": "affiliate_commissions",
+      "orig_count": 3,
+      "new_count": 3,
+      "status": "MATCH"
+    },
+    {
+      "table": "affiliate_payouts",
+      "orig_count": 3,
+      "new_count": 3,
+      "status": "MATCH"
+    },
+    {
+      "table": "affiliate_profiles",
+      "orig_count": 18,
+      "new_count": 18,
+      "status": "MATCH"
+    },
+    {
+      "table": "affiliate_referrals",
+      "orig_count": 20,
+      "new_count": 20,
+      "status": "MATCH"
+    },
+    {
+      "table": "audit_logs",
+      "orig_count": 175,
+      "new_count": 175,
+      "status": "MATCH"
+    },
+    {
+      "table": "cart_items",
+      "orig_count": 1,
+      "new_count": 1,
+      "status": "MATCH"
+    },
+    {
+      "table": "conversations",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "coupons",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "messages",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "notifications",
+      "orig_count": 58,
+      "new_count": 58,
+      "status": "MATCH"
+    },
+    {
+      "table": "order_items",
+      "orig_count": 92,
+      "new_count": 92,
+      "status": "MATCH"
+    },
+    {
+      "table": "orders",
+      "orig_count": 92,
+      "new_count": 92,
+      "status": "MATCH"
+    },
+    {
+      "table": "payments",
+      "orig_count": 17,
+      "new_count": 17,
+      "status": "MATCH"
+    },
+    {
+      "table": "platform_settings",
+      "orig_count": 2,
+      "new_count": 2,
+      "status": "MATCH"
+    },
+    {
+      "table": "platform_treasury_ledgers",
+      "orig_count": 17,
+      "new_count": 17,
+      "status": "MATCH"
+    },
+    {
+      "table": "platform_withdrawals",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "price_alerts",
+      "orig_count": 1,
+      "new_count": 1,
+      "status": "MATCH"
+    },
+    {
+      "table": "product_download_events",
+      "orig_count": 4,
+      "new_count": 4,
+      "status": "MATCH"
+    },
+    {
+      "table": "product_versions",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "products",
+      "orig_count": 195,
+      "new_count": 195,
+      "status": "MATCH"
+    },
+    {
+      "table": "recently_viewed",
+      "orig_count": 15,
+      "new_count": 15,
+      "status": "MATCH"
+    },
+    {
+      "table": "referral_attributions",
+      "orig_count": 3,
+      "new_count": 3,
+      "status": "MATCH"
+    },
+    {
+      "table": "referral_clicks",
+      "orig_count": 11,
+      "new_count": 11,
+      "status": "MATCH"
+    },
+    {
+      "table": "referral_links",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "refund_requests",
+      "orig_count": 5,
+      "new_count": 5,
+      "status": "MATCH"
+    },
+    {
+      "table": "reports",
+      "orig_count": 7,
+      "new_count": 7,
+      "status": "MATCH"
+    },
+    {
+      "table": "reviews",
+      "orig_count": 2,
+      "new_count": 2,
+      "status": "MATCH"
+    },
+    {
+      "table": "search_history",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "storage_metadata",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "user_activities",
+      "orig_count": 316,
+      "new_count": 316,
+      "status": "MATCH"
+    },
+    {
+      "table": "users",
+      "orig_count": 91,
+      "new_count": 91,
+      "status": "MATCH"
+    },
+    {
+      "table": "vendors",
+      "orig_count": 22,
+      "new_count": 22,
+      "status": "MATCH"
+    },
+    {
+      "table": "verifications",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    },
+    {
+      "table": "wishlists",
+      "orig_count": 5,
+      "new_count": 5,
+      "status": "MATCH"
+    },
+    {
+      "table": "withdrawals",
+      "orig_count": 0,
+      "new_count": 0,
+      "status": "MATCH"
+    }
+  ],
+  "business_verification": [
+    {
+      "entity": "Products (Total)",
+      "count": 195,
+      "valid": true
+    },
+    {
+      "entity": "Affiliate-Enabled Products",
+      "count": 55,
+      "valid": true
+    },
+    {
+      "entity": "Affiliate Profiles",
+      "count": 18,
+      "valid": true
+    },
+    {
+      "entity": "Active Referral Codes",
+      "count": 18,
+      "valid": true
+    },
+    {
+      "entity": "Affiliate Commissions",
+      "count": 3,
+      "valid": true
+    },
+    {
+      "entity": "Affiliate Payout Requests",
+      "count": 3,
+      "valid": true
+    },
+    {
+      "entity": "Orders",
+      "count": 92,
+      "valid": true
+    },
+    {
+      "entity": "Payments",
+      "count": 17,
+      "valid": true
+    },
+    {
+      "entity": "Refund Requests",
+      "count": 5,
+      "valid": true
+    },
+    {
+      "entity": "Reviews",
+      "count": 2,
+      "valid": true
+    },
+    {
+      "entity": "Reports",
+      "count": 7,
+      "valid": true
+    },
+    {
+      "entity": "Users",
+      "count": 91,
+      "valid": true
+    },
+    {
+      "entity": "Vendors",
+      "count": 22,
+      "valid": true
+    }
+  ]
+}

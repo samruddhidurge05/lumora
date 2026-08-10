@@ -1,0 +1,182 @@
+{
+  "original_db": "postgresql://<user>:<redacted>@dpg-d9ffegf41pts73e35qe0-a.oregon-postgres.render.com/lumora_db_k4ni?sslmode=require",
+  "new_db": "postgresql://<user>:<redacted>@dpg-d9svagv40ujc73dvo4ag-a.oregon-postgres.render.com/lumoradb_o3xd?sslmode=require",
+  "all_summary_pass": true,
+  "p1_connectivity": {
+    "Database connection": "PASS",
+    "Authentication": "PASS",
+    "Database accessibility": "PASS",
+    "Read permission": "PASS",
+    "Expected tables accessible": "PASS"
+  },
+  "schema_matched": true,
+  "financial_pass": true,
+  "relationships_pass": true,
+  "sequences_pass": true,
+  "summary_table": [
+    {
+      "area": "Database connectivity",
+      "orig": "PASS",
+      "new": "PASS",
+      "result": "PASS"
+    },
+    {
+      "area": "Schema",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Customer data",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Vendor data",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Affiliate data",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Admin data",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Orders",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Payments",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Refunds",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Reviews",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Reports",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Downloads",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Team/Admin",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Financial records",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Relationships",
+      "orig": "MATCH",
+      "new": "MATCH",
+      "result": "PASS"
+    },
+    {
+      "area": "Sequences",
+      "orig": "VALID",
+      "new": "VALID",
+      "result": "PASS"
+    }
+  ],
+  "firestore_matrix": [
+    {
+      "feature": "Customer Auth & Users",
+      "pg": "PRIMARY",
+      "firestore": "Firebase Auth Token",
+      "runtime": "PostgreSQL (Users) / Firebase (JWT)"
+    },
+    {
+      "feature": "Product Catalog & Details",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Orders & Purchases",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Payments & Treasury",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Refund Requests",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Reviews & Ratings",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Reports",
+      "pg": "PRIMARY",
+      "firestore": "Optional Stream (SQL Fallback)",
+      "runtime": "PostgreSQL (SQLReport)"
+    },
+    {
+      "feature": "Affiliate Tracking & Payouts",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Downloads & Vault Locks",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Vendor Management & Pricing",
+      "pg": "PRIMARY",
+      "firestore": "None",
+      "runtime": "PostgreSQL"
+    },
+    {
+      "feature": "Admin Audit Logs & Settings",
+      "pg": "PRIMARY",
+      "firestore": "Dual-Write Mirror",
+      "runtime": "PostgreSQL (SQLAuditLog)"
+    }
+  ]
+}
