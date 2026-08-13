@@ -916,35 +916,43 @@ export default function App() {
 
   const handleDeleteProduct = async (productId) => {
     const targetProduct = products.find(p => p.id === productId || String(p.id) === String(productId));
+    if (!targetProduct) return;
 
-    // 1. Optimistically update local admin UI state immediately so product vanishes instantly
+    const previousProducts = products;
+
+    // 1. Optimistically hide product from local UI list
     setProducts(prev => prev.filter(p => p.id !== productId && String(p.id) !== String(productId)));
-    triggerNotification(`Removed "${targetProduct?.name || targetProduct?.title || 'product'}" from Lumora`, 'info');
 
-    // 2. Dispatch real-time events for instant zero-refresh synchronization across SPA & Admin
-    window.dispatchEvent(new CustomEvent('lumora:product:created'));
-    window.dispatchEvent(new CustomEvent('lumora:admin-state-mutation', { 
-      detail: { domain: 'product', payload: { productId, action: 'deleted' }, timestamp: Date.now() } 
-    }));
-
-    // 3. Perform backend API deletion
+    // 2. Perform authoritative backend API deletion FIRST
     try {
       if (productId) {
         await productService.remove(productId);
       }
-    } catch (err) {
-      console.warn('[ProductsManagement] Backend API delete warning:', err.message);
-    }
 
-    // 4. ALSO perform direct Firestore document deletion if client Firestore instance is loaded
-    try {
+      sysSound.playSuccess();
+      triggerNotification(`Removed "${targetProduct?.name || targetProduct?.title || 'product'}" from Lumora`, 'info');
+
+      // 3. Dispatch real-time events ONLY AFTER backend deletion succeeds
+      window.dispatchEvent(new CustomEvent('lumora:product:created'));
+      window.dispatchEvent(new CustomEvent('lumora:admin-state-mutation', { 
+        detail: { domain: 'product', payload: { productId, action: 'deleted' }, timestamp: Date.now() } 
+      }));
+
+      // 4. ALSO perform direct Firestore document deletion if client Firestore instance is loaded
       if (db && productId) {
-        const { doc, deleteDoc } = await import('firebase/firestore');
-        const docId = String(productId);
-        await deleteDoc(doc(db, "products", docId));
+        try {
+          const { doc, deleteDoc } = await import('firebase/firestore');
+          const docId = String(productId);
+          await deleteDoc(doc(db, "products", docId));
+        } catch (fsErr) {
+          console.warn('[ProductsManagement] Direct Firestore client delete warning:', fsErr.message);
+        }
       }
-    } catch (fsErr) {
-      console.warn('[ProductsManagement] Direct Firestore client delete warning:', fsErr.message);
+    } catch (err) {
+      console.error('[ProductsManagement] Backend API delete error:', err.message);
+      // Rollback local state if backend API deletion failed so product remains visible and UI state is truthful
+      setProducts(previousProducts);
+      triggerNotification(`Failed to delete product: ${err.message}`, 'error');
     }
   };
 
