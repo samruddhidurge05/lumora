@@ -2550,6 +2550,35 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     }));
   };
 
+  const handleDrag = (e, type, dragging) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(prev => ({ ...prev, [type]: dragging }));
+  };
+
+  const handleDrop = (e, type) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(prev => ({ ...prev, [type]: false }));
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+    if (type === 'gallery') {
+      handleGalleryFiles(files);
+    } else {
+      handleSingleFile(files[0], type);
+    }
+  };
+
+  const handleFileChange = (e, type) => {
+    const files = e.target?.files;
+    if (!files || files.length === 0) return;
+    if (type === 'gallery') {
+      handleGalleryFiles(files);
+    } else {
+      handleSingleFile(files[0], type);
+    }
+  };
+
   const handleChange = (field, val) => {
     setForm(prev => ({ ...prev, [field]: val }));
   };
