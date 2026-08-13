@@ -279,7 +279,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 w-full h-full bg-[#1A0B2E]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+        className="fixed inset-0 w-full h-full bg-[#1A0B2E]/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
         style={{ zIndex: 99999 }}
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
@@ -287,22 +287,22 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
           initial={{ scale: 0.96, y: 15 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.96, y: 15 }}
-          className="bg-white rounded-3xl max-w-4xl w-full border border-stone-200/80 shadow-2xl overflow-hidden relative my-auto flex flex-col max-h-[92vh]"
+          className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full border border-stone-200/80 shadow-2xl overflow-hidden relative my-auto flex flex-col max-h-[95vh] sm:max-h-[92vh]"
         >
           {/* Header Action Bar */}
-          <div className="flex items-center justify-between px-6 py-4 bg-stone-50 border-b border-stone-200/60 no-print">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 bg-stone-50 border-b border-stone-200/60 no-print flex-shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7B3FA0] to-[#2D004D] text-white flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7B3FA0] to-[#2D004D] text-white flex items-center justify-center shadow-md flex-shrink-0">
                 <FileText size={16} />
               </div>
-              <div>
-                <h2 className="text-sm font-extrabold text-[#2D004D] tracking-tight">Commercial Invoice</h2>
-                <p className="text-[10px] text-stone-500 font-mono">{invoiceNumber}</p>
+              <div className="min-w-0">
+                <h2 className="text-xs sm:text-sm font-extrabold text-[#2D004D] tracking-tight truncate">Commercial Invoice</h2>
+                <p className="text-[10px] text-stone-500 font-mono truncate">{invoiceNumber}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-stone-200/70 hover:bg-stone-300/80 text-stone-600 flex items-center justify-center transition-colors border-none cursor-pointer"
+              className="w-8 h-8 rounded-full bg-stone-200/70 hover:bg-stone-300/80 text-stone-600 flex items-center justify-center transition-colors border-none cursor-pointer flex-shrink-0"
               title="Close Modal"
             >
               <X size={16} />
@@ -310,28 +310,28 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
           </div>
 
           {/* Scrollable Printable Invoice Content */}
-          <div className="p-6 sm:p-10 overflow-y-auto flex-1 bg-white" ref={invoiceRef}>
+          <div className="p-4 sm:p-8 md:p-10 overflow-y-auto flex-1 bg-white space-y-6 sm:space-y-8" ref={invoiceRef}>
             
             {/* 1. BRAND HEADER & INVOICE METADATA */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-8 border-b border-stone-200 gap-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 sm:pb-8 border-b border-stone-200 gap-4 sm:gap-6">
               <div>
-                <div className="flex items-center gap-2 text-2xl font-black text-[#2D004D] tracking-tight">
-                  <span className="text-[#7B3FA0] text-3xl">✧</span> LUMORA
+                <div className="flex items-center gap-2 text-xl sm:text-2xl font-black text-[#2D004D] tracking-tight">
+                  <span className="text-[#7B3FA0] text-2xl sm:text-3xl">✧</span> LUMORA
                 </div>
-                <p className="text-xs font-semibold text-[#7B3FA0] tracking-widest uppercase mt-0.5">Enterprise Digital Marketplace</p>
-                <p className="text-[11px] text-stone-400 mt-1 max-w-xs leading-relaxed">
+                <p className="text-[11px] sm:text-xs font-semibold text-[#7B3FA0] tracking-widest uppercase mt-0.5">Enterprise Digital Marketplace</p>
+                <p className="text-[10px] sm:text-[11px] text-stone-400 mt-1 max-w-xs leading-relaxed">
                   Verified Tax Invoice & Direct Settlement Coordinates for Creator IP Licensing.
                 </p>
               </div>
 
-              <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 min-w-[240px] text-right font-sans">
+              <div className="bg-stone-50 p-3.5 sm:p-4 rounded-2xl border border-stone-200/80 w-full sm:w-auto sm:min-w-[240px] text-left sm:text-right font-sans">
                 <div className="text-[10px] font-bold tracking-widest uppercase text-[#7B3FA0]">Official Invoice</div>
-                <div className="text-base font-black text-[#2D004D] font-mono mt-0.5">{invoiceNumber}</div>
+                <div className="text-sm sm:text-base font-black text-[#2D004D] font-mono mt-0.5 truncate">{invoiceNumber}</div>
                 
-                <div className="mt-3 pt-3 border-t border-stone-200/60 flex flex-col gap-1 text-[11px]">
+                <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-stone-200/60 flex flex-col gap-1 text-[10px] sm:text-[11px]">
                   <div className="flex justify-between gap-4">
                     <span className="text-stone-400">Order Number:</span>
-                    <span className="font-mono font-bold text-[#2D004D]">{orderNumber}</span>
+                    <span className="font-mono font-bold text-[#2D004D] truncate">{orderNumber}</span>
                   </div>
                   <div className="flex justify-between gap-4">
                     <span className="text-stone-400">Purchase Date:</span>
@@ -350,87 +350,87 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
             </div>
 
             {/* 2. CUSTOMER & VENDOR METADATA GRID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 my-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 my-6 sm:my-8">
               {/* Customer Box */}
-              <div className="p-5 rounded-2xl bg-purple-50/40 border border-purple-100/80 flex flex-col gap-1">
+              <div className="p-4 sm:p-5 rounded-2xl bg-purple-50/40 border border-purple-100/80 flex flex-col gap-1 overflow-hidden">
                 <div className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-widest uppercase text-[#7B3FA0]">
                   <User size={13} /> Customer Details
                 </div>
-                <div className="text-sm font-extrabold text-[#2D004D] mt-1">{customerName}</div>
-                <div className="text-xs font-mono text-stone-600">{customerEmail}</div>
-                <div className="text-[10px] font-mono text-stone-400 mt-2 pt-2 border-t border-purple-100/60 flex justify-between">
+                <div className="text-xs sm:text-sm font-extrabold text-[#2D004D] mt-1 truncate">{customerName}</div>
+                <div className="text-[11px] sm:text-xs font-mono text-stone-600 truncate">{customerEmail}</div>
+                <div className="text-[10px] font-mono text-stone-400 mt-2 pt-2 border-t border-purple-100/60 flex justify-between gap-2">
                   <span>Customer ID:</span>
-                  <span className="font-bold text-[#7B3FA0]">{customerId}</span>
+                  <span className="font-bold text-[#7B3FA0] truncate">{customerId}</span>
                 </div>
               </div>
 
               {/* Vendor Box */}
-              <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200/80 flex flex-col gap-1">
+              <div className="p-4 sm:p-5 rounded-2xl bg-stone-50 border border-stone-200/80 flex flex-col gap-1 overflow-hidden">
                 <div className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-widest uppercase text-stone-500">
                   <Store size={13} /> Vendor / Creator Details
                 </div>
-                <div className="text-sm font-extrabold text-[#2D004D] mt-1">{vendorName}</div>
-                <div className="text-xs font-mono text-stone-600">{vendorEmail}</div>
-                <div className="text-[10px] font-mono text-stone-400 mt-2 pt-2 border-t border-stone-200/60 flex justify-between">
+                <div className="text-xs sm:text-sm font-extrabold text-[#2D004D] mt-1 truncate">{vendorName}</div>
+                <div className="text-[11px] sm:text-xs font-mono text-stone-600 truncate">{vendorEmail}</div>
+                <div className="text-[10px] font-mono text-stone-400 mt-2 pt-2 border-t border-stone-200/60 flex justify-between gap-2">
                   <span>Vendor ID:</span>
-                  <span className="font-bold text-stone-700">{vendorId}</span>
+                  <span className="font-bold text-stone-700 truncate">{vendorId}</span>
                 </div>
               </div>
             </div>
 
             {/* 3. STATUS BADGES ROW */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-[#1A0B2E]/5 border border-[#1A0B2E]/10 mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#1A0B2E]/5 border border-[#1A0B2E]/10 mb-6 sm:mb-8">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-extrabold tracking-wider uppercase text-stone-500">System Status:</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
                 {/* Payment Status Badge */}
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1">
+                <span className="px-2.5 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1">
                   <CheckCircle2 size={12} /> Payment: {paymentStatusStr}
                 </span>
 
                 {/* Download Status Badge */}
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-indigo-100 text-indigo-800 border border-indigo-200/80 flex items-center gap-1">
+                <span className="px-2.5 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-indigo-100 text-indigo-800 border border-indigo-200/80 flex items-center gap-1">
                   <Package size={12} /> Download: Ready
                 </span>
 
                 {/* License Status Badge */}
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-purple-100 text-purple-800 border border-purple-200/80 flex items-center gap-1">
+                <span className="px-2.5 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-purple-100 text-purple-800 border border-purple-200/80 flex items-center gap-1">
                   <ShieldCheck size={12} /> License: Active
                 </span>
 
                 {/* Order Status Badge */}
-                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-teal-100 text-teal-800 border border-teal-200/80 flex items-center gap-1">
+                <span className="px-2.5 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-teal-100 text-teal-800 border border-teal-200/80 flex items-center gap-1">
                   <Sparkles size={12} /> Order: Fulfilled
                 </span>
               </div>
             </div>
 
             {/* 4. PURCHASED PRODUCT DETAILS TABLE */}
-            <div className="mb-8 overflow-hidden rounded-2xl border border-stone-200">
-              <table className="w-full text-left border-collapse font-sans">
+            <div className="mb-6 sm:mb-8 overflow-x-auto rounded-2xl border border-stone-200 shadow-sm">
+              <table className="w-full min-w-[500px] sm:min-w-full text-left border-collapse font-sans">
                 <thead>
                   <tr className="bg-stone-100/80 text-[10px] font-extrabold tracking-wider uppercase text-stone-600 border-b border-stone-200">
-                    <th className="p-4">Item Details & SKU</th>
-                    <th className="p-4">Category</th>
-                    <th className="p-4">Version / License</th>
-                    <th className="p-4 text-right">Price</th>
+                    <th className="p-3 sm:p-4">Item Details & SKU</th>
+                    <th className="p-3 sm:p-4">Category</th>
+                    <th className="p-3 sm:p-4">Version / License</th>
+                    <th className="p-3 sm:p-4 text-right">Price</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100 text-xs">
                   <tr>
-                    <td className="p-4">
-                      <div className="font-bold text-sm text-[#2D004D]">{productInfo.title}</div>
+                    <td className="p-3 sm:p-4">
+                      <div className="font-bold text-xs sm:text-sm text-[#2D004D]">{productInfo.title}</div>
                       <div className="text-[10px] font-mono text-stone-400 mt-0.5">
                         SKU: {productInfo.sku} • ID: {productInfo.productId}
                       </div>
                     </td>
-                    <td className="p-4 font-semibold text-stone-600">{productInfo.category}</td>
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4 font-semibold text-stone-600">{productInfo.category}</td>
+                    <td className="p-3 sm:p-4">
                       <div className="font-semibold text-stone-700">{productInfo.version}</div>
                       <div className="text-[10px] text-[#7B3FA0] font-medium">{productInfo.licenseType}</div>
                     </td>
-                    <td className="p-4 text-right font-black text-[#2D004D] text-sm">
+                    <td className="p-3 sm:p-4 text-right font-black text-[#2D004D] text-xs sm:text-sm">
                       {currencySymbol}{subtotal.toFixed(2)}
                     </td>
                   </tr>
@@ -439,34 +439,34 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
             </div>
 
             {/* 5. FINANCIAL PAYMENT SUMMARY CARD */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8 items-start">
               {/* Payment Details Box */}
-              <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200/80 text-xs flex flex-col gap-2.5">
+              <div className="p-4 sm:p-5 rounded-2xl bg-stone-50 border border-stone-200/80 text-xs flex flex-col gap-2.5 overflow-hidden">
                 <div className="text-[10px] font-extrabold tracking-widest uppercase text-[#7B3FA0] flex items-center gap-1.5 mb-1">
                   <CreditCard size={13} /> Payment Verification
                 </div>
-                <div className="flex justify-between border-b border-stone-200/50 pb-2">
-                  <span className="text-stone-500">Payment Method:</span>
-                  <span className="font-bold text-[#2D004D]">{paymentMethod}</span>
+                <div className="flex justify-between items-center border-b border-stone-200/50 pb-2 gap-2">
+                  <span className="text-stone-500 shrink-0">Payment Method:</span>
+                  <span className="font-bold text-[#2D004D] truncate">{paymentMethod}</span>
                 </div>
-                <div className="flex justify-between border-b border-stone-200/50 pb-2 font-mono">
-                  <span className="text-stone-500">Transaction ID:</span>
-                  <span className="font-bold text-stone-800">{transactionId}</span>
+                <div className="flex justify-between items-center border-b border-stone-200/50 pb-2 font-mono gap-2">
+                  <span className="text-stone-500 shrink-0">Transaction ID:</span>
+                  <span className="font-bold text-stone-800 truncate max-w-[160px] sm:max-w-[220px]">{transactionId}</span>
                 </div>
-                <div className="flex justify-between border-b border-stone-200/50 pb-2">
-                  <span className="text-stone-500">Applied Coupon:</span>
-                  <span className="font-bold text-[#7B3FA0]">{couponCode}</span>
+                <div className="flex justify-between items-center border-b border-stone-200/50 pb-2 gap-2">
+                  <span className="text-stone-500 shrink-0">Applied Coupon:</span>
+                  <span className="font-bold text-[#7B3FA0] truncate">{couponCode}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-500">Settlement Guarantee:</span>
-                  <span className="font-extrabold text-emerald-600 flex items-center gap-1">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-stone-500 shrink-0">Settlement Guarantee:</span>
+                  <span className="font-extrabold text-emerald-600 flex items-center gap-1 shrink-0">
                     <ShieldCheck size={12} /> Instant 100% Verified
                   </span>
                 </div>
               </div>
 
               {/* Price Calculation Summary */}
-              <div className="p-5 rounded-2xl bg-[#1A0B2E]/5 border border-[#1A0B2E]/10 text-xs flex flex-col gap-2.5">
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#1A0B2E]/5 border border-[#1A0B2E]/10 text-xs flex flex-col gap-2.5">
                 <div className="text-[10px] font-extrabold tracking-widest uppercase text-[#2D004D] mb-1">
                   Payment Breakdown
                 </div>
@@ -489,18 +489,21 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                   <span>{currencySymbol}{platformFee.toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-stone-300 my-1" />
-                <div className="flex justify-between items-baseline text-base font-black text-[#2D004D]">
+                <div className="flex flex-wrap justify-between items-baseline gap-2 text-sm sm:text-base font-black text-[#2D004D]">
                   <span>Total Amount Paid</span>
-                  <span className="text-xl text-[#7B3FA0]">{currencySymbol}{customerPaid.toFixed(2)} INR</span>
+                  <span className="text-lg sm:text-xl text-[#7B3FA0]">{currencySymbol}{customerPaid.toFixed(2)} INR</span>
                 </div>
-                  {/* 6. ADMIN-ONLY AFFILIATE ATTRIBUTION & REVENUE TRACE CARD */}
+              </div>
+            </div>
+
+            {/* 6. ADMIN-ONLY AFFILIATE ATTRIBUTION & REVENUE TRACE CARD */}
             {isAdminView && hasAffiliate && (
-              <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-purple-50/30 border border-purple-200/80 shadow-sm relative overflow-hidden">
+              <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-purple-50/30 border border-purple-200/80 shadow-sm relative overflow-hidden">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-purple-200/20 rounded-full blur-2xl pointer-events-none" />
                 
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-100">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 pb-3 border-b border-purple-100 gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-[#7B3FA0] text-white">
+                    <div className="p-1.5 rounded-lg bg-[#7B3FA0] text-white shrink-0">
                       <Share2 size={14} />
                     </div>
                     <div>
@@ -508,37 +511,37 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                       <p className="text-[10px] text-stone-500">This order was completed through an approved affiliate partner campaign.</p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
                     Referred Sale
                   </span>
                 </div>
 
                 {/* Affiliate Metadata ONLY */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-5">
-                  <div className="p-3 bg-white rounded-xl border border-purple-100">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs mb-5">
+                  <div className="p-3 bg-white rounded-xl border border-purple-100 overflow-hidden">
                     <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Referring Affiliate</div>
-                    <div className="font-bold text-[#2D004D] mt-0.5">{affName}</div>
-                    <div className="text-[9px] font-mono text-[#7B3FA0]">{affId}</div>
+                    <div className="font-bold text-[#2D004D] mt-0.5 truncate">{affName}</div>
+                    <div className="text-[9px] font-mono text-[#7B3FA0] truncate">{affId}</div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-purple-100">
+                  <div className="p-3 bg-white rounded-xl border border-purple-100 overflow-hidden">
                     <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Referral Code Used</div>
-                    <div className="font-mono font-bold text-[#2D004D] mt-0.5">{refCode}</div>
+                    <div className="font-mono font-bold text-[#2D004D] mt-0.5 truncate">{refCode}</div>
                     <div className="text-[9px] text-stone-500 truncate">{campaignName}</div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-purple-100">
+                  <div className="p-3 bg-white rounded-xl border border-purple-100 overflow-hidden">
                     <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Commission Rate</div>
                     <div className="font-extrabold text-purple-700 mt-0.5">{commPct}%</div>
-                    <div className="text-[9px] font-bold text-emerald-600">{commStatus}</div>
+                    <div className="text-[9px] font-bold text-emerald-600 truncate">{commStatus}</div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-purple-100">
+                  <div className="p-3 bg-white rounded-xl border border-purple-100 overflow-hidden">
                     <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Commission Earned</div>
-                    <div className="font-black text-[#2D004D] mt-0.5">{currencySymbol}{commAmt.toFixed(2)}</div>
+                    <div className="font-black text-[#2D004D] mt-0.5 truncate">{currencySymbol}{commAmt.toFixed(2)}</div>
                     <div className="text-[9px] text-stone-400">Direct Partner Earnings</div>
                   </div>
                 </div>
 
                 {/* Visual Payment Distribution Flow Diagram */}
-                <div className="bg-white p-4 rounded-xl border border-purple-100">
+                <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-purple-100">
                   <div className="text-[10px] font-extrabold text-[#7B3FA0] uppercase tracking-widest mb-3 text-center">
                     Payment Distribution Flowchart
                   </div>
@@ -568,9 +571,9 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
 
             {/* 6B. COMPACT DIRECT ORGANIC PURCHASE SUMMARY (ADMIN VIEW WHEN NO AFFILIATE) */}
             {isAdminView && !hasAffiliate && (
-              <div className="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm flex items-center justify-between text-xs">
+              <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-slate-200/70 text-slate-700">
+                  <div className="p-2 rounded-xl bg-slate-200/70 text-slate-700 shrink-0">
                     <Share2 size={15} />
                   </div>
                   <div>
@@ -578,17 +581,17 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     <div className="text-[10px] text-slate-500">Customer purchased directly from marketplace catalog — No affiliate partner attributed.</div>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-200/60 text-slate-700 border border-slate-300/50">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-200/60 text-slate-700 border border-slate-300/50 shrink-0">
                   Direct Sale
                 </span>
               </div>
             )}
 
             {/* 6C. DEDICATED DIGITAL PRODUCT DELIVERY & DOWNLOAD STATUS CARD */}
-            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50/30 border border-blue-200/80 shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100">
+            <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50/30 border border-blue-200/80 shadow-sm relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 pb-3 border-b border-blue-100 gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                  <div className="p-1.5 rounded-lg bg-blue-600 text-white shrink-0">
                     <Download size={14} />
                   </div>
                   <div>
@@ -596,7 +599,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                     <p className="text-[10px] text-stone-500">Digital license delivery evidence & verified device audit</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                <span className={`px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0 ${
                   (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED')
                     ? 'bg-rose-100 text-rose-700 border border-rose-200'
                     : (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0)
@@ -611,100 +614,98 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs font-sans">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Status</div>
                   <div className={`font-bold text-sm mt-0.5 ${
                     (traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'text-emerald-700' : 'text-slate-700'
                   }`}>
                     {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'YES' : 'NO'}
                   </div>
-                  <div className="text-[9px] font-mono text-stone-500 mt-0.5">
+                  <div className="text-[9px] font-mono text-stone-500 mt-0.5 truncate">
                     {(traceData?.download_audit?.has_downloaded || orderData?.download_count > 0) ? 'Downloaded to device' : 'Awaiting first download'}
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">First Download</div>
                   <div className="font-mono text-[10px] font-bold text-stone-800 mt-0.5 truncate">
                     {traceData?.download_audit?.first_downloaded_at ? new Date(traceData.download_audit.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : (orderData?.first_downloaded_at ? new Date(orderData.first_downloaded_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—')}
                   </div>
-                  <div className="text-[9px] text-stone-400">
+                  <div className="text-[9px] text-stone-400 truncate">
                     Latest: {traceData?.download_audit?.last_downloaded_at ? new Date(traceData.download_audit.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : (orderData?.last_downloaded_at ? new Date(orderData.last_downloaded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—')}
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Download Count</div>
-                  <div className="font-mono font-black text-blue-950 text-sm mt-0.5">
+                  <div className="font-mono font-black text-blue-950 text-sm mt-0.5 truncate">
                     {traceData?.download_audit?.download_count || orderData?.download_count || 0} Downloads
                   </div>
-                  <div className="text-[9px] text-stone-400">Total successful downloads</div>
+                  <div className="text-[9px] text-stone-400 truncate">Total successful downloads</div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer Device</div>
-                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_device || traceData?.download_audit?.device_type || systemInfo.device || 'Desktop'}</div>
-                  <div className="text-[9px] text-stone-400">OS: {traceData?.download_audit?.os || systemInfo.os || 'Windows'}</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5 truncate">{orderData?.download_device || traceData?.download_audit?.device_type || systemInfo.device || 'Desktop'}</div>
+                  <div className="text-[9px] text-stone-400 truncate">OS: {traceData?.download_audit?.os || systemInfo.os || 'Windows'}</div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Browser</div>
-                  <div className="font-bold text-[#2D004D] mt-0.5">{orderData?.download_browser || traceData?.download_audit?.browser || systemInfo.browser || 'Chrome'}</div>
-                  <div className="text-[9px] text-stone-400">Web Client</div>
+                  <div className="font-bold text-[#2D004D] mt-0.5 truncate">{orderData?.download_browser || traceData?.download_audit?.browser || systemInfo.browser || 'Chrome'}</div>
+                  <div className="text-[9px] text-stone-400 truncate">Web Client</div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Customer IP Address</div>
-                  <div className="font-mono font-bold text-stone-800 text-[10px] mt-0.5">{orderData?.download_ip || orderData?.ip_address || traceData?.download_audit?.ip_address || traceData?.customer_ip || '150.107.18.39'}</div>
-                  <div className="text-[9px] text-stone-400">Fulfillment Audit IP</div>
+                  <div className="font-mono font-bold text-stone-800 text-[10px] mt-0.5 truncate">{orderData?.download_ip || orderData?.ip_address || traceData?.download_audit?.ip_address || traceData?.customer_ip || '150.107.18.39'}</div>
+                  <div className="text-[9px] text-stone-400 truncate">Fulfillment Audit IP</div>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100 col-span-2 sm:col-span-2">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 col-span-2 sm:col-span-2 overflow-hidden">
                   <div className="text-[9px] text-stone-400 font-bold uppercase tracking-wider">License Status</div>
                   <div className={`font-bold text-sm mt-0.5 ${
                     (orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'text-rose-600' : 'text-emerald-600'
                   }`}>
                     {(orderData?.status?.toLowerCase() === 'refunded' || traceData?.download_audit?.license_status === 'REVOKED') ? 'REVOKED' : 'ACTIVE'}
                   </div>
-                  <div className="text-[9px] text-stone-400">Commercial Digital Asset License</div>
+                  <div className="text-[9px] text-stone-400 truncate">Commercial Digital Asset License</div>
                 </div>
-              </div>
-            </div>
               </div>
             </div>
 
             {/* 7. SYSTEM DETAILS & AUDIT FINGERPRINT */}
-            <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 text-[10px] text-stone-500 font-mono grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-stone-50 border border-stone-200/80 text-[10px] text-stone-500 font-mono grid grid-cols-2 sm:grid-cols-4 gap-3 overflow-hidden">
+              <div className="overflow-hidden">
                 <span className="text-stone-400 block uppercase text-[8px] font-bold">Device & OS</span>
-                <span className="font-bold text-stone-700">{systemInfo.device} ({systemInfo.os})</span>
+                <span className="font-bold text-stone-700 truncate block">{systemInfo.device} ({systemInfo.os})</span>
               </div>
-              <div>
+              <div className="overflow-hidden">
                 <span className="text-stone-400 block uppercase text-[8px] font-bold">Browser</span>
-                <span className="font-bold text-stone-700">{systemInfo.browser}</span>
+                <span className="font-bold text-stone-700 truncate block">{systemInfo.browser}</span>
               </div>
-              <div>
+              <div className="overflow-hidden">
                 <span className="text-stone-400 block uppercase text-[8px] font-bold">Timezone</span>
-                <span className="font-bold text-stone-700">{systemInfo.tz}</span>
+                <span className="font-bold text-stone-700 truncate block">{systemInfo.tz}</span>
               </div>
-              <div>
+              <div className="overflow-hidden">
                 <span className="text-stone-400 block uppercase text-[8px] font-bold">Security Audit</span>
-                <span className="font-bold text-emerald-600">SSL 256-bit Verified</span>
+                <span className="font-bold text-emerald-600 truncate block">SSL 256-bit Verified</span>
               </div>
             </div>
 
             {/* Commercial Legal Notice Footer */}
-            <p className="text-[9px] text-stone-400 text-center mt-6 leading-relaxed">
+            <p className="text-[9px] text-stone-400 text-center mt-4 sm:mt-6 leading-relaxed">
               Thank you for purchasing inside the Lumora creator ecosystem. This digital commercial receipt serves as official proof of licensing rights for the purchased software node. All transactions are securely processed and verified under international digital commerce laws.
             </p>
           </div>
 
-          {/* 8. NEW ACTION FOOTER BUTTONS: Download PDF | Print | Close */}
-          <div className="p-4 sm:p-6 bg-stone-50 border-t border-stone-200/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 no-print">
-            <div className="text-xs text-stone-500 font-medium">
+          {/* 8. ACTION FOOTER BUTTONS: Download PDF | Print | Close */}
+          <div className="p-3.5 sm:p-6 bg-stone-50 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 no-print flex-shrink-0">
+            <div className="text-xs text-stone-500 font-medium text-center sm:text-left">
               {downloadSuccess ? (
-                <span className="text-emerald-600 font-bold flex items-center gap-1">
+                <span className="text-emerald-600 font-bold flex items-center justify-center sm:justify-start gap-1">
                   <Check size={14} /> PDF downloaded successfully!
                 </span>
               ) : (
@@ -712,17 +713,17 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               )}
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {/* Action 1: Download PDF */}
               <button
                 onClick={handleDownloadPdf}
                 disabled={isGeneratingPdf}
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] hover:from-[#6b358c] hover:to-[#1a002e] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="flex-1 sm:flex-none px-3.5 sm:px-5 py-2.5 bg-gradient-to-r from-[#7B3FA0] to-[#2D004D] hover:from-[#6b358c] hover:to-[#1a002e] text-white rounded-xl text-[11px] sm:text-xs font-extrabold uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isGeneratingPdf ? (
                   <>
                     <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                    Generating PDF…
+                    Generating…
                   </>
                 ) : (
                   <>
@@ -734,7 +735,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               {/* Action 2: Print */}
               <button
                 onClick={handlePrint}
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                className="flex-1 sm:flex-none px-3.5 sm:px-5 py-2.5 bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-xl text-[11px] sm:text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-sm"
               >
                 <Printer size={14} /> Print
               </button>
@@ -742,7 +743,7 @@ export default function EnterpriseInvoiceModal({ order, onClose, allProducts = [
               {/* Action 3: Close */}
               <button
                 onClick={onClose}
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 sm:flex-none px-3.5 sm:px-5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-[11px] sm:text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 Close
               </button>
