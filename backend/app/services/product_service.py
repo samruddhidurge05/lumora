@@ -489,7 +489,11 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found")
 
         # Authorization check: owner or admin
-        if product.vendor_id != vendor_id:
+        from app.models.user import User
+        user = db.query(User).filter(User.firebase_uid == vendor_id).first() if not str(vendor_id).isdigit() else db.query(User).filter(User.id == int(vendor_id)).first()
+        is_admin = user and getattr(user, "role", None) == "admin"
+
+        if product.vendor_id != vendor_id and not is_admin:
             raise HTTPException(status_code=403, detail="Not authorized to delete this product")
 
         try:

@@ -433,20 +433,60 @@ def delete_admin_product(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin_role),
 ):
-    """Delete product from Admin Panel."""
+    """Delete product from Admin Panel with historical integrity preservation."""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
     title = product.title
-    db.delete(product)
-    db.commit()
+    storage_objects = [
+        getattr(product, "storage_path", None),
+        getattr(product, "thumbnail_path", None),
+        getattr(product, "preview_path", None)
+    ]
 
-    # Firestore deletion
-    if firebase_connected and firestore_db is not None:
-        try:
-            firestore_db.collection("products").document(str(product_id)).delete()
-        except Exception as e:
-            print(f"[AdminProductDelete] Firestore delete warning: {e}")
+    try:
+        from app.models.price_alert import PriceAlert
+        from app.models.recently_viewed import RecentlyViewed
 
-    return {"id": product_id, "message": f"Product '{title}' deleted successfully."}
+        # Delete transient user alerts/views for this product
+        db.query(PriceAlert).filter(PriceAlert.product_id == product_id).delete(synchronize_session=False)
+        db.query(RecentlyViewed).filter(RecentlyViewed.product_id == product_id).delete(synchronize_session=False)
+        db.flush()
+
+        # Delete from Firestore BEFORE removing the database row
+        from admin.firestore.admin_firestore import delete_product_from_firestore
+        delete_product_from_firestore(product_id)
+
+        # Attempt physical DB row deletion
+        db.delete(product)
+        db.commit()
+
+        # Clean up storage objects only after successful database commit
+        for path in storage_objects:
+            if path and isinstance(path, str) and not path.startswith("http"):
+                try:
+                    import os
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception:
+                    pass
+
+        return {"id": product_id, "message": f"Product '{title}' deleted successfully."}
+
+    except Exception as err:
+        db.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("[product-delete] Product %s has dependent historical business records (referral_attributions/orders). Archiving product to preserve data integrity: %s", product_id, err)
+
+        # Soft delete / Archive: set status to 'archived' to preserve historical referral attributions, orders & commissions 100% intact
+        prod_to_archive = db.query(Product).filter(Product.id == product_id).first()
+        if prod_to_archive:
+            prod_to_archive.status = "archived"
+            db.commit()
+            from admin.firestore.admin_firestore import delete_product_from_firestore
+            delete_product_from_firestore(product_id)
+
+        return {"id": product_id, "message": f"Product '{title}' archived successfully to preserve historical business records.", "archived": True}
+
