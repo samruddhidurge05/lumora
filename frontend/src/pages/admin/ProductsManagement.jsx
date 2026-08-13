@@ -2505,13 +2505,13 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     }
   };
 
-  const handleFileChange = (e, type) => {
-    const files = e.target?.files;
+  const handleFileChange = (e, type = 'thumbnail') => {
+    const files = e.target?.files || (e.dataTransfer ? e.dataTransfer.files : null);
     if (!files || files.length === 0) return;
     if (type === 'gallery') {
       handleGalleryFiles(files);
     } else {
-      handleSingleFile(files[0], type);
+      handleSingleFile(files[0], type || 'thumbnail');
     }
   };
 
