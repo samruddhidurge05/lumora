@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks, Response
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
 from pydantic import BaseModel
@@ -254,7 +254,7 @@ def patch_product_affiliate(
 
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = Depends(require_admin_role)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -267,60 +267,44 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin_user = 
         product.preview_path
     ]
 
-    # -- Clean up child dependencies to prevent IntegrityError on delete ---------
+    # Attempt physical deletion if no historical business records exist
     try:
-        from app.models.order import OrderItem
-        from app.models.affiliate import ReferralLink, AffiliateCommission, ReferralAttribution, AffiliateReferral
-        from app.models.review import Review
         from app.models.price_alert import PriceAlert
         from app.models.recently_viewed import RecentlyViewed
 
-        # 1. Clean up OrderItems
-        db.query(OrderItem).filter(OrderItem.product_id == product_id).delete(synchronize_session=False)
-
-        # 2. Delete associated ReferralLinks for this product
-        db.query(ReferralLink).filter(ReferralLink.product_id == product_id).delete(synchronize_session=False)
-
-        # 3. Clean up AffiliateCommissions
-        db.query(AffiliateCommission).filter(AffiliateCommission.product_id == product_id).delete(synchronize_session=False)
-
-        # 4. Clean up ReferralAttributions
-        db.query(ReferralAttribution).filter(ReferralAttribution.product_id == product_id).delete(synchronize_session=False)
-
-        # 5. Clean up AffiliateReferrals
-        db.query(AffiliateReferral).filter(AffiliateReferral.product_id == product_id).delete(synchronize_session=False)
-
-        # 6. Clean up Reviews, PriceAlerts, RecentlyViewed
-        db.query(Review).filter(Review.product_id == product_id).delete(synchronize_session=False)
+        # Delete transient user alerts/views for this product
         db.query(PriceAlert).filter(PriceAlert.product_id == product_id).delete(synchronize_session=False)
         db.query(RecentlyViewed).filter(RecentlyViewed.product_id == product_id).delete(synchronize_session=False)
-
         db.flush()
-    except Exception as cleanup_err:
-        logger.warning("[product-delete] Warning cleaning child references for product %s: %s", product_id, cleanup_err)
 
-    # -- Delete from Firestore BEFORE removing the database row ------------------
-    result = delete_product_from_firestore(product_id)
-    if not result.get("deleted") and result.get("reason") != "firestore_unavailable":
-        logger.warning(
-            "[firestore-sync] Firestore delete failed for product %s: %s",
-            product_id,
-            result.get("reason"),
-        )
+        # Delete from Firestore BEFORE removing the database row
+        delete_product_from_firestore(product_id)
 
-    db.delete(product)
-    db.commit()
+        # Attempt physical DB row deletion
+        db.delete(product)
+        db.commit()
 
-    # Clean up storage objects only after successful database commit
-    for path in storage_objects:
-        if path:
-            try:
-                storage_service.delete(path)
-            except Exception as e:
-                logger.warning("[storage-cleanup] Failed to delete path %s: %s", path, e)
+        # Clean up storage objects only after successful database commit
+        for path in storage_objects:
+            if path and not path.startswith("http"):
+                try:
+                    import os
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception:
+                    pass
 
-    try:
-        log_admin_action(db, admin_user_id=admin_user.id, action="product_deleted", target_type="product", target_id=str(product_id))
-    except Exception:
-        pass
-    return None
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    except Exception as err:
+        db.rollback()
+        logger.info("[product-delete] Product %s has dependent historical business records (orders/referrals). Archiving product to preserve data: %s", product_id, err)
+        
+        # Soft delete / Archive: update status to 'archived' to preserve historical referral attributions, orders & commissions intact
+        prod_to_archive = db.query(Product).filter(Product.id == product_id).first()
+        if prod_to_archive:
+            prod_to_archive.status = "archived"
+            db.commit()
+            delete_product_from_firestore(product_id)
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
