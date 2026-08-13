@@ -719,6 +719,60 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ── MOBILE HORIZONTAL SCROLL NAV BAR ────────────────────── */}
+        <div
+          className="cust-mobile-nav-scroll"
+          style={{
+            display: 'none',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            padding: '8px 14px',
+            gap: '8px',
+            background: 'rgba(255,255,255,0.95)',
+            borderTop: '1px solid rgba(196,148,230,0.18)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          {[...PRIMARY_NAV, ...MORE_NAV].map(item => {
+            const isActive = dashboardTab === item.name;
+            const labelText = item.label || item.name;
+            return (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item.name)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 14px', borderRadius: '18px',
+                  border: isActive ? '1px solid rgba(123,63,160,0.40)' : '1px solid rgba(196,148,230,0.25)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '0.78rem', fontWeight: isActive ? 700 : 600,
+                  background: isActive ? 'linear-gradient(135deg, #7B3FA0, #5A1E7E)' : 'rgba(255,255,255,0.85)',
+                  color: isActive ? '#FFFFFF' : '#4A3B5A',
+                  boxShadow: isActive ? '0 4px 12px rgba(123,63,160,0.25)' : 'none',
+                  whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                }}
+              >
+                <span style={{ color: isActive ? '#FFFFFF' : '#7B3FA0', display: 'flex', alignItems: 'center' }}>
+                  {item.icon}
+                </span>
+                <span>{labelText}</span>
+                {item.badge && unreadCount > 0 && (
+                  <span style={{
+                    fontSize: '0.55rem', padding: '1px 5px', borderRadius: '10px',
+                    background: isActive ? '#FFFFFF' : '#7B3FA0',
+                    color: isActive ? '#7B3FA0' : '#FFFFFF',
+                    fontWeight: 800
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div style={{
@@ -787,9 +841,11 @@ export default function Dashboard() {
         }
         .cust-nav-bar { scrollbar-width: none; }
         .cust-nav-bar::-webkit-scrollbar { display: none; }
+        .cust-mobile-nav-scroll::-webkit-scrollbar { display: none; }
         @media (max-width: 860px) {
-          .cust-hamburger { display: flex !important; }
+          .cust-hamburger { display: flex !important; flex-shrink: 0; }
           .cust-nav-bar   { display: none !important; }
+          .cust-mobile-nav-scroll { display: flex !important; }
           .dash-ai-search { display: none !important; }
           .dash-user-name { display: none !important; }
           .cust-cart-label { display: none !important; }
@@ -809,6 +865,16 @@ export default function Dashboard() {
           /* Right action group — icon-only, tight gap */
           .cust-actions {
             gap: 6px !important;
+          }
+          .cust-affiliate-nav-btn {
+            padding: 6px 8px !important;
+            border-radius: 12px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            justify-content: center !important;
+          }
+          .cust-affiliate-nav-btn span {
+            display: none !important;
           }
           /* Cart button — icon only, no label */
           .cust-cart-btn {
