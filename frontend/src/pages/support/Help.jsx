@@ -19,8 +19,17 @@ const AFFILIATE_TOPICS = [
   { icon: <MessageSquare size={20} />, title: 'Payout Process', body: 'Request payouts directly from the Earnings tab once your available balance meets the minimum withdrawal threshold.' },
 ];
 
+const VENDOR_TOPICS = [
+  { icon: <Download size={20} />, title: 'Adding & Managing Products', body: 'Upload product ZIP bundles, set preview assets, pricing, and category tags from the Manage Products tab.' },
+  { icon: <ShoppingBag size={20} />, title: 'Order Fulfillment & Sales', body: 'Orders are fulfilled automatically upon purchase. Monitor buyer receipts and license statuses in the Orders tab.' },
+  { icon: <CreditCard size={20} />, title: 'Earnings & Payout Requests', body: 'Track your gross revenue, platform fee deductions, and request direct bank/PayPal withdrawals in Earnings & Withdrawals.' },
+  { icon: <RefreshCw size={20} />, title: 'Seller Verification', body: 'Verify your identity and store credentials in the Verification section to earn verified badge status.' },
+  { icon: <Shield size={20} />, title: 'Reviews & Ratings', body: 'Engage with customer reviews, address feedback, and request assistance for fraudulent review removal.' },
+  { icon: <MessageSquare size={20} />, title: 'Affiliate Promotion', body: 'Enable affiliate commission percentages to allow Lumora affiliates to promote your products for higher sales volume.' },
+];
+
 export default function Help({ role }) {
-  const data = role === 'affiliate' ? AFFILIATE_TOPICS : TOPICS;
+  const data = role === 'vendor' ? VENDOR_TOPICS : (role === 'affiliate' ? AFFILIATE_TOPICS : TOPICS);
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: 'clamp(2rem,5vw,5rem) clamp(1.5rem,5vw,2rem)' }}>
       <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#7B3FA0', textTransform: 'uppercase' }}>Documentation</span>

@@ -179,6 +179,7 @@ const VendorAffiliate     = safeLazy(() => import('./pages/vendor/Affiliate'));
 const VendorVerification  = safeLazy(() => import('./pages/vendor/Verification'));
 const VendorStoreSettings = safeLazy(() => import('./pages/vendor/StoreSettings'));
 const VendorProfile       = safeLazy(() => import('./pages/vendor/Profile'));
+const VendorSupport       = safeLazy(() => import('./pages/vendor/Support'));
 
 const NotFound = safeLazy(() => import('./pages/error/NotFound'));
 
@@ -655,6 +656,9 @@ function AppContent() {
           />
           <Route path="/vendor/profile"
             element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorProfile /></ProtectedRoute></VendorRouteGuard>}
+          />
+          <Route path="/vendor/support"
+            element={<VendorRouteGuard><ProtectedRoute redirectTo="/auth/login?role=vendor" requiredRole="vendor"><VendorSupport /></ProtectedRoute></VendorRouteGuard>}
           />
 
           {/* ── Admin routes ── */}

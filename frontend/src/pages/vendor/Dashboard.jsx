@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   DollarSign, Package, ShoppingBag, Star,
   PlusCircle, BarChart2, CreditCard, ClipboardList,
-  Award, Shield, TrendingUp,
+  Award, Shield, TrendingUp, HelpCircle,
   RefreshCw, AlertCircle, Clock, CheckCircle,
   Eye, MessageSquare, ArrowRight,
 } from 'lucide-react';
@@ -47,6 +47,7 @@ const QUICK_ACTIONS = [
   { label: 'View Orders',  path: '/vendor/orders',        icon: <ClipboardList size={15} /> },
   { label: 'Analytics',    path: '/vendor/analytics',     icon: <BarChart2     size={15} /> },
   { label: 'Withdraw',     path: '/vendor/withdrawals',   icon: <CreditCard    size={15} /> },
+  { label: 'Support',      path: '/vendor/support',       icon: <HelpCircle    size={15} /> },
 ];
 
 /* ── Status colours ──────────────────────────────────────────────────────── */

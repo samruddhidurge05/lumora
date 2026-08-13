@@ -5,6 +5,7 @@ import Contact from '../support/Contact';
 import FAQ from '../support/FAQ';
 import Help from '../support/Help';
 import PrivacyPolicy from '../support/PrivacyPolicy';
+import RefundPolicy from '../support/RefundPolicy';
 import { useAuth } from '../../context/AuthContext';
 import { createTicket, getMyTickets, getTicketMessages, sendReply } from '../../services/supportService';
 
@@ -157,6 +158,7 @@ export default function SupportCenter() {
           { id: 'contact', label: 'Contact', icon: <Phone size={14} /> },
           { id: 'about', label: 'About', icon: <Info size={14} /> },
           { id: 'privacy', label: 'Privacy', icon: <Shield size={14} /> },
+          { id: 'refund', label: 'Refund Policy', icon: <Shield size={14} /> },
         ].map(tab => (
           <button
             key={tab.id}
@@ -391,7 +393,11 @@ export default function SupportCenter() {
 
           {/* Support FAQ cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {(userRole === 'affiliate' ? [
+            {(userRole === 'vendor' ? [
+              { q: "How are product payouts calculated?", a: "Payouts equal total product revenue minus platform service fees and any affiliate referral rates you configure." },
+              { q: "When do earnings clear for withdrawal?", a: "Earnings clear for payout request after the standard holding window for customer orders." },
+              { q: "How do product updates work for buyers?", a: "Upload updated files under Manage Products → Edit. Previous buyers get instant update notifications." },
+            ] : userRole === 'affiliate' ? [
               { q: "How are commissions calculated?", a: "Commissions are applied based on the vendor's fixed or percentage rate for each qualifying purchase." },
               { q: "Why is my commission pending?", a: "Commissions enter a pending state until the product's refund period has passed." },
               { q: "How do I monitor performance?", a: "Check your Earnings tab for a detailed breakdown of clicks and conversions." },
@@ -414,6 +420,7 @@ export default function SupportCenter() {
       {supportTab === 'faq' && <FAQ role={userRole} />}
       {supportTab === 'help' && <Help role={userRole} />}
       {supportTab === 'privacy' && <PrivacyPolicy role={userRole} />}
+      {supportTab === 'refund' && <RefundPolicy role={userRole} />}
     </div>
   );
 }

@@ -23,9 +23,20 @@ const AFFILIATE_FAQS = [
   { q: 'How do I monitor my performance?', a: 'Use the Earnings and Dashboard tabs to view real-time statistics on your clicks, conversions, pending earnings, and approved payouts.' },
 ];
 
+const VENDOR_FAQS = [
+  { q: 'How do product listings get approved?', a: 'All new digital product submissions are automatically validated and listed immediately on Lumora marketplace, subject to platform compliance checks.' },
+  { q: 'When can I request a payout for my earnings?', a: 'Earnings become eligible for withdrawal once the standard return/holding period clears for customer purchases and your balance meets the minimum threshold.' },
+  { q: 'What platform fees apply to my seller sales?', a: 'You keep your full revenue minus standard platform fees and any affiliate commission rates you have enabled for promoters.' },
+  { q: 'How do customer refunds affect my balance?', a: 'If a buyer qualifies for a refund under policy terms (e.g., broken asset download), the corresponding pending earnings are reversed.' },
+  { q: 'How do I upload product updates?', a: 'Go to Manage Products, select "Edit" for the product, and upload your revised file bundle. Previous buyers can re-download updates for free.' },
+  { q: 'How do affiliate promotions work for vendors?', a: 'You can toggle affiliate promotion for any of your products under the Affiliate tab, setting custom referral commission percentages.' },
+  { q: 'How do I get verified as an official vendor?', a: 'Complete your store profile and submit your identity verification documents under the Verification tab in your seller console.' },
+  { q: 'How can I respond to customer reviews?', a: 'Head to the Reviews tab in your Vendor console. You can view, reply to, or flag customer ratings and reviews directly.' },
+];
+
 export default function FAQ({ role }) {
   const [open, setOpen] = useState(null);
-  const data = role === 'affiliate' ? AFFILIATE_FAQS : FAQS;
+  const data = role === 'vendor' ? VENDOR_FAQS : (role === 'affiliate' ? AFFILIATE_FAQS : FAQS);
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: 'clamp(2rem,5vw,5rem) clamp(1.5rem,5vw,2rem)' }}>
