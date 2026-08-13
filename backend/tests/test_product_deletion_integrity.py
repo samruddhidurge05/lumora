@@ -7,6 +7,8 @@ PriceAlert, RecentlyViewed).
 """
 
 import pytest
+from typing import cast
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.product import Product
@@ -21,6 +23,9 @@ from admin.routes.products import delete_product
 def test_delete_demo_product_with_full_child_references():
     db: Session = SessionLocal()
     try:
+        if db.bind and db.bind.dialect.name == "sqlite":
+            db.execute(text("PRAGMA foreign_keys=ON"))
+
         # 1. Ensure admin user exists
         admin_user = db.query(User).filter(User.role == "admin").first()
         if not admin_user:
@@ -44,7 +49,7 @@ def test_delete_demo_product_with_full_child_references():
         db.add(demo_product)
         db.commit()
         db.refresh(demo_product)
-        prod_id = demo_product.id
+        prod_id = cast(int, demo_product.id)
 
         # 3. Create dummy parent order and child OrderItem
         dummy_order = Order(user_id=admin_user.id, total_amount=49.99, status="completed")
@@ -56,7 +61,9 @@ def test_delete_demo_product_with_full_child_references():
         db.add(order_item)
 
         # 4. Create child ReferralLink
-        ref_link = ReferralLink(affiliate_id=1, product_id=prod_id, referral_code=f"TESTREF_{prod_id}")
+        import time
+        ref_code = f"TESTREF_{prod_id}_{int(time.time()*1000)}"
+        ref_link = ReferralLink(affiliate_id=1, product_id=prod_id, referral_code=ref_code)
         db.add(ref_link)
 
         # 5. Create child AffiliateCommission
@@ -78,20 +85,40 @@ def test_delete_demo_product_with_full_child_references():
         # 8. Execute delete_product admin route handler
         delete_product(product_id=prod_id, db=db, admin_user=admin_user)
 
-        # 9. Verify product and all child references are deleted
+        # 9. Verify product status is set to 'archived' to preserve historical business records while removing from catalog
         deleted_prod = db.query(Product).filter(Product.id == prod_id).first()
-        assert deleted_prod is None, "Product was not deleted from database"
+        assert deleted_prod is not None, "Historical product record should remain for audit trail"
+        assert deleted_prod.status == "archived", "Product status was not set to archived"
 
-        remaining_items = db.query(OrderItem).filter(OrderItem.product_id == prod_id).count()
-        assert remaining_items == 0, "OrderItem references remain"
+        # 10. Verify historical child records remain 100% intact in database
+        saved_item = db.query(OrderItem).filter(OrderItem.id == order_item.id).first()
+        assert saved_item is not None, "Historical OrderItem must not be deleted"
 
-        remaining_links = db.query(ReferralLink).filter(ReferralLink.product_id == prod_id).count()
-        assert remaining_links == 0, "ReferralLink references remain"
+        saved_attr = db.query(ReferralAttribution).filter(ReferralAttribution.id == attr.id).first()
+        assert saved_attr is not None, "Historical ReferralAttribution must not be deleted"
 
-        remaining_comms = db.query(AffiliateCommission).filter(AffiliateCommission.product_id == prod_id).count()
-        assert remaining_comms == 0, "AffiliateCommission references remain"
+        saved_comm = db.query(AffiliateCommission).filter(AffiliateCommission.id == comm.id).first()
+        assert saved_comm is not None, "Historical AffiliateCommission must not be deleted"
 
-        print(f"Product {prod_id} and all child references deleted successfully!")
+        print(f"Product {prod_id} successfully archived and all historical child records preserved cleanly!")
+
+        # 11. Test clean physical deletion for a product with NO historical dependencies
+        clean_product = Product(
+            title="Clean Product With No History",
+            price=29.99,
+            category="Demo",
+            status="published",
+            seller="Demo Vendor"
+        )
+        db.add(clean_product)
+        db.commit()
+        db.refresh(clean_product)
+        clean_id = cast(int, clean_product.id)
+
+        delete_product(product_id=clean_id, db=db, admin_user=admin_user)
+        deleted_clean = db.query(Product).filter(Product.id == clean_id).first()
+        assert deleted_clean is None, "Clean product without history should be physically deleted"
+        print(f"Clean product {clean_id} physically deleted successfully!")
 
     finally:
         db.close()
