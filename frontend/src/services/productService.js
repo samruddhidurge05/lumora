@@ -75,12 +75,8 @@ export const mapDocToProduct = (docSnap) => {
       price: data.price != null ? parseFloat(data.price) : 0,
       discountPrice: data.discountPrice || null,
       category: data.category || 'General',
-      thumbnail: (data.thumbnail && !data.thumbnail.includes('unsplash.com'))
-        ? data.thumbnail
-        : (imageUrlsList[0] || data.thumbnail || null),
-      preview: (data.preview && !data.preview.includes('unsplash.com'))
-        ? data.preview
-        : (imageUrlsList[0] || data.preview || null),
+      thumbnail: data.thumbnail || imageUrlsList[0] || null,
+      preview: data.preview || data.thumbnail || imageUrlsList[0] || null,
       image_urls: imageUrlsList,
       previewImages: imageUrlsList,
       gallery: data.gallery || imageUrlsList,
@@ -133,12 +129,8 @@ export const mapDocToProduct = (docSnap) => {
     price: data.price != null ? parseFloat(data.price) : 0,
     discountPrice: data.discountPrice || null,
     category: data.category || 'General',
-    thumbnail: (data.thumbnail && !data.thumbnail.includes('unsplash.com'))
-      ? data.thumbnail
-      : (imageUrlsList[0] || data.thumbnail || null),
-    preview: (data.preview && !data.preview.includes('unsplash.com'))
-      ? data.preview
-      : (imageUrlsList[0] || data.preview || null),
+    thumbnail: data.thumbnail || imageUrlsList[0] || null,
+    preview: data.preview || data.thumbnail || imageUrlsList[0] || null,
     image_urls: imageUrlsList,
     previewImages: imageUrlsList,
     gallery: data.gallery || imageUrlsList,

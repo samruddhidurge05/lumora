@@ -660,8 +660,15 @@ function _resolveProductImageUrl(url) {
   return `${_BACKEND_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+const DUMMY_TITLE_KEYWORDS = ['test product', 'self ref', 'quota failure', 'restart persistence', 'demo', 'placeholder', 'debug product', 'temp product'];
+
+function isDummyProductRecord(p) {
+  if (!p) return false;
+  const t = (p.title || p.name || '').toLowerCase();
+  return DUMMY_TITLE_KEYWORDS.some(kw => t.includes(kw));
+}
+
 // Pick the best image URL from a Firestore product document.
-// Priority: non-Unsplash https > image_urls array > null
 function _bestFirestoreImage(fd) {
   const candidates = [
     fd.thumbnail,
@@ -672,7 +679,6 @@ function _bestFirestoreImage(fd) {
   for (const url of candidates) {
     if (!url) continue;
     if (url.startsWith('data:')) continue;              // skip base64 blobs
-    if (url.includes('unsplash.com')) continue;         // skip placeholders
     if (url.includes('localhost')) continue;             // skip dev-only paths
     const resolved = _resolveProductImageUrl(url);
     if (resolved) return resolved;
@@ -681,7 +687,9 @@ function _bestFirestoreImage(fd) {
 }
 
 function enrichRawProducts(raw) {
-  return raw.map((p, idx) => {
+  if (!Array.isArray(raw)) return [];
+  const cleanRaw = raw.filter(p => p && !isDummyProductRecord(p));
+  return cleanRaw.map((p, idx) => {
     const creatorSeed = idx % CREATOR_AVATARS.length;
     // Support both camelCase (Firestore vendor docs) and snake_case (backend API)
     const sellerName = (typeof p.seller === 'object' ? p.seller?.name : p.seller) || p.vendor_id || 'Lumora Creator';
@@ -701,25 +709,23 @@ function enrichRawProducts(raw) {
       id: String(p.id),
       title: p.title || p.name || 'Untitled Product',
       price: typeof p.price === 'string' ? parseFloat(p.price) || 0 : (p.price || 0),
-      // Resolve image: Priority: pCloud CDN / real non-Unsplash URL > image_urls[0] > preview_images[0] > null
       preview: (() => {
         const candidates = [p.preview, p.thumbnail, ...(Array.isArray(p.image_urls) ? p.image_urls : []), ...(Array.isArray(p.preview_images) ? p.preview_images : [])];
         for (const u of candidates) {
           if (!u) continue;
           const r = _resolveProductImageUrl(u);
-          if (r && !r.includes('unsplash.com')) return r;
+          if (r) return r;
         }
-        // Last resort: Unsplash placeholder from thumbnail/preview
-        return _resolveProductImageUrl(p.preview || p.thumbnail) || null;
+        return null;
       })(),
       thumbnail: (() => {
         const candidates = [p.thumbnail, p.preview, ...(Array.isArray(p.image_urls) ? p.image_urls : []), ...(Array.isArray(p.preview_images) ? p.preview_images : [])];
         for (const u of candidates) {
           if (!u) continue;
           const r = _resolveProductImageUrl(u);
-          if (r && !r.includes('unsplash.com')) return r;
+          if (r) return r;
         }
-        return _resolveProductImageUrl(p.thumbnail || p.preview) || null;
+        return null;
       })(),
       // Filter gallery arrays: strip base64 blobs, localhost paths, resolve remaining URLs
       image_urls: Array.isArray(p.image_urls)
