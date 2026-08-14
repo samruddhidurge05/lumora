@@ -830,7 +830,9 @@ function pinnedFirst(arr) {
 
 // Helper: sort products by created_at / createdAt timestamp descending (newest first)
 function sortByCreationDateDesc(list) {
-  return [...list].sort((a, b) => {
+  if (!Array.isArray(list)) return [];
+  const cleanList = list.filter(p => p && p.id != null);
+  return cleanList.sort((a, b) => {
     const tsA = a.createdAt || a.created_at;
     const tsB = b.createdAt || b.created_at;
     const ta = tsA ? new Date(tsA).getTime() : 0;
@@ -846,8 +848,8 @@ export function AppContextProvider({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   // Merge: JSON products take priority; keep PRODUCTS as fallback for items not in JSON
-  const jsonIds = new Set(ENRICHED_JSON_PRODUCTS.map(p => String(p.id)));
-  const localFallback = PRODUCTS.filter(p => !jsonIds.has(String(p.id)));
+  const jsonIds = new Set(ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null).map(p => String(p.id)));
+  const localFallback = PRODUCTS.filter(p => p && p.id != null && !jsonIds.has(String(p.id)));
   const [products, setProducts] = useState(pinnedFirst(dedupeById(sortByCreationDateDesc([...ENRICHED_JSON_PRODUCTS, ...localFallback]))));
 
   // Track which product IDs came from the SQLite backend (the authoritative source).
@@ -863,12 +865,13 @@ export function AppContextProvider({ children }) {
     getProducts()
       .then(fetched => {
         if (fetched && Array.isArray(fetched)) {
+          const cleanFetched = fetched.filter(p => p && p.id != null);
           // Update the authoritative backend ID set
-          backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
+          backendProductIdsRef.current = new Set(cleanFetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
-          const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          const enrichedFetched = enrichRawProducts(fetched);
+          const localOnly = PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
+          const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
+          const enrichedFetched = enrichRawProducts(cleanFetched);
           setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly, ...localOnly]))));
         }
       })
@@ -881,12 +884,13 @@ export function AppContextProvider({ children }) {
     getProducts()
       .then(fetched => {
         if (fetched && fetched.length > 0) {
+          const cleanFetched = fetched.filter(p => p && p.id != null);
           // Record which IDs came from the backend
-          backendProductIdsRef.current = new Set(fetched.map(p => String(p.id)));
+          backendProductIdsRef.current = new Set(cleanFetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
-          const localOnly = PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => !backendIds.has(String(p.id)));
-          const enrichedFetched = enrichRawProducts(fetched);
+          const localOnly = PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
+          const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
+          const enrichedFetched = enrichRawProducts(cleanFetched);
           setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly, ...localOnly]))));
         }
       })
@@ -904,20 +908,26 @@ export function AppContextProvider({ children }) {
         if (snapshot.empty) return;
         const firestoreDocs = snapshot.docs.map(d => {
           const data = d.data();
-          return enrichRawProducts([{ ...data, id: d.id }])[0];
-        });
+          const enriched = enrichRawProducts([{ ...data, id: d.id }]);
+          return enriched && enriched.length > 0 ? enriched[0] : null;
+        }).filter(p => p && p.id != null);
+
         if (firestoreDocs.length > 0) {
           setProducts(prev => {
             const currentBackendIds = backendProductIdsRef.current;
-            const rawBackendProducts = prev.filter(p => currentBackendIds.has(String(p.id)));
+            const rawBackendProducts = prev.filter(p => p && p.id != null && currentBackendIds.has(String(p.id)));
 
             // Build a fast lookup of Firestore docs by id
             const firestoreById = {};
-            firestoreDocs.forEach(fd => { firestoreById[String(fd.id)] = fd; });
+            firestoreDocs.forEach(fd => {
+              if (fd && fd.id != null) {
+                firestoreById[String(fd.id)] = fd;
+              }
+            });
 
             // Helper: merge image fields from a Firestore doc into a product
             const _mergeFirestoreImages = (base, fd) => {
-              if (!fd) return base;
+              if (!base || !fd) return base;
               const fsImg = _bestFirestoreImage(fd);
               const fsImageUrls = (fd.image_urls || []).filter(
                 u => u && !u.startsWith('data:') && !u.includes('unsplash.com') && !u.includes('localhost')
@@ -937,7 +947,7 @@ export function AppContextProvider({ children }) {
             // Map over ALL previous products (whether from SQLite backend or local JSON/mock)
             // If the product exists in Firestore, merge its images/pcloud links on top of it.
             // This prevents Firestore documents with null image fields from blanking out valid local pCloud URLs.
-            const mergedProducts = prev.map(p => {
+            const mergedProducts = prev.filter(p => p && p.id != null).map(p => {
               const fd = firestoreById[String(p.id)];
               if (fd) {
                 return _mergeFirestoreImages(p, fd);
@@ -946,8 +956,8 @@ export function AppContextProvider({ children }) {
             });
 
             // Also include any completely new products from Firestore that did not exist in prev
-            const prevIds = new Set(prev.map(p => String(p.id)));
-            const newFirestoreProducts = firestoreDocs.filter(fd => !prevIds.has(String(fd.id)));
+            const prevIds = new Set(prev.filter(p => p && p.id != null).map(p => String(p.id)));
+            const newFirestoreProducts = firestoreDocs.filter(fd => fd && fd.id != null && !prevIds.has(String(fd.id)));
 
             return pinnedFirst(dedupeById(sortByCreationDateDesc([...mergedProducts, ...newFirestoreProducts])));
           });
