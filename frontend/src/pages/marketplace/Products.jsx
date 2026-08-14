@@ -84,8 +84,17 @@ export default function Products() {
       default: resultList = [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)); break;
     }
 
+    // Deduplicate by normalized product title so single products display only
+    const dedupeMap = new Map();
+    resultList.forEach(p => {
+      const t = (p.title || p.name || '').toLowerCase().trim();
+      if (t && !dedupeMap.has(t)) {
+        dedupeMap.set(t, p);
+      }
+    });
+
     // Always sort test/demo products LAST
-    return resultList.sort((a, b) => {
+    return Array.from(dedupeMap.values()).sort((a, b) => {
       const isTestA = isTestProd(a) ? 1 : 0;
       const isTestB = isTestProd(b) ? 1 : 0;
       return isTestA - isTestB;

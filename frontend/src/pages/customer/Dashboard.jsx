@@ -358,9 +358,18 @@ export default function Dashboard() {
 
   // Build dynamic category list from all products
   const allCategories = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
-  const filtered = products
+  const filteredRaw = products
     .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
     .filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Deduplicate products by title to guarantee single-single items only
+  const seenTitles = new Set();
+  const filtered = filteredRaw.filter(p => {
+    const t = (p.title || p.name || '').toLowerCase().trim();
+    if (!t || seenTitles.has(t)) return false;
+    seenTitles.add(t);
+    return true;
+  });
 
   const handleAISearch = (e) => {
     e.preventDefault();

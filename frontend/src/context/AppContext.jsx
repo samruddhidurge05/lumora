@@ -806,13 +806,19 @@ const ENRICHED_JSON_PRODUCTS = enrichRawProducts(rawProductsData);
 
 const AppContext = createContext();
 
-// Helper: deduplicate an array of products by id, keeping the first occurrence
+// Helper: deduplicate an array of products by id and normalized title, keeping single occurrence only
 function dedupeById(arr) {
-  const seen = new Set();
+  if (!Array.isArray(arr)) return [];
+  const seenIds = new Set();
+  const seenTitles = new Set();
   return arr.filter(p => {
-    const k = String(p.id);
-    if (seen.has(k)) return false;
-    seen.add(k);
+    if (!p) return false;
+    const idKey = String(p.id);
+    const titleKey = (p.title || p.name || '').toLowerCase().trim();
+    if (seenIds.has(idKey)) return false;
+    if (titleKey && seenTitles.has(titleKey)) return false;
+    seenIds.add(idKey);
+    if (titleKey) seenTitles.add(titleKey);
     return true;
   });
 }
