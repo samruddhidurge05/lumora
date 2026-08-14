@@ -326,7 +326,7 @@ export default function Dashboard() {
     loadBackendDataRef.current = loadBackendData;
     loadBackendData();
     return () => { isMounted = false; };
-  }, [user, wishlist.length, dashboardTab]);
+  }, [user, wishlist?.length, ownedProducts?.length, dashboardTab]);
 
   // Re-fetch dashboard data whenever a purchase or download completes
   useEffect(() => {
@@ -411,6 +411,7 @@ export default function Dashboard() {
             buyNow={buyNow}
             toggleWishlist={toggleWishlist}
             wishlist={wishlist}
+            ownedProducts={ownedProducts}
             formatPrice={formatPrice}
             aiResponse={aiResponse}
             setAiResponse={setAiResponse}
@@ -909,17 +910,22 @@ function DashboardHome({
   username, navigateTo, filtered, products, showCount, setShowCount,
   searchQuery, setSearchQuery,
   selectedCategory, setSelectedCategory, allCategories,
-  addToCart, buyNow, toggleWishlist, wishlist, formatPrice,
+  addToCart, buyNow, toggleWishlist, wishlist, ownedProducts, formatPrice,
   aiResponse, setAiResponse, handleAISearch, globalSearch, setGlobalSearch,
   loading, apiError, profile, stats, recentOrders, activities, notifsSummary,
   displayAvatar
 }) {
 
+  const activeWishlistCount = Array.isArray(wishlist) ? wishlist.length : (stats?.wishlistCount || 0);
+  const activeOwnedCount = Math.max(stats?.productsOwned || 0, Array.isArray(ownedProducts) ? ownedProducts.length : 0);
+  const activeDownloadsCount = Math.max(stats?.downloadsCount || 0, Array.isArray(ownedProducts) ? ownedProducts.length : 0);
+  const activeOrdersCount = Math.max(stats?.ordersCount || 0, Array.isArray(recentOrders) ? recentOrders.length : 0);
+
   const QUICK_STATS = [
-    { label: 'Products Owned',  value: String(stats?.productsOwned ?? 12),  icon: <Package size={15} />,  trend: 'Active licenses' },
-    { label: 'Downloads',       value: String(stats?.downloadsCount ?? 48), icon: <Download size={15} />, trend: 'All time' },
-    { label: 'Wishlist Items',  value: String(stats?.wishlistCount ?? 7),   icon: <Heart size={15} />,    trend: 'Saved' },
-    { label: 'Orders',          value: String(stats?.ordersCount ?? 4),     icon: <CreditCard size={15}/>, trend: 'Completed' },
+    { label: 'Products Owned',  value: String(activeOwnedCount),      icon: <Package size={15} />,  trend: 'Active licenses' },
+    { label: 'Downloads',       value: String(activeDownloadsCount),  icon: <Download size={15} />, trend: 'All time' },
+    { label: 'Wishlist Items',  value: String(activeWishlistCount),   icon: <Heart size={15} />,    trend: 'Saved' },
+    { label: 'Orders',          value: String(activeOrdersCount),     icon: <CreditCard size={15}/>, trend: 'Completed' },
   ];
 
   const [expandPurchases, setExpandPurchases] = React.useState(false);
