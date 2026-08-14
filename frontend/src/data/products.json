@@ -8,13 +8,13 @@
     "rating": 4.6,
     "downloads": 4322,
     "file_url": "/products/ui-kit-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 353,
-    "preview": "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -34,7 +34,8 @@
     "pcloud_download_link": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0",
     "pcloudDownloadLink": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0",
     "image_urls": null,
-    "fileUrl": "/products/ui-kit-001.zip"
+    "fileUrl": "/products/ui-kit-001.zip",
+    "name": "Modern SaaS Dashboard UI Kit"
   },
   {
     "id": 2,
@@ -45,13 +46,13 @@
     "rating": 4.9,
     "downloads": 2075,
     "file_url": "/products/ui-kit-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
     "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 174,
-    "preview": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -68,7 +69,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Fintech Mobile UI Kit"
   },
   {
     "id": 3,
@@ -79,13 +81,13 @@
     "rating": 4.8,
     "downloads": 3722,
     "file_url": "/products/ui-kit-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 305,
-    "preview": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -102,7 +104,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Healthcare App UI Kit"
   },
   {
     "id": 4,
@@ -113,13 +116,13 @@
     "rating": 4.9,
     "downloads": 4606,
     "file_url": "/products/ui-kit-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1556742049-0a67daf4005a?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 376,
-    "preview": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1556742049-0a67daf4005a?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -136,7 +139,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Popular"
+    "badge": "Popular",
+    "name": "Ecommerce Mobile UI Kit"
   },
   {
     "id": 5,
@@ -147,13 +151,13 @@
     "rating": 4.5,
     "downloads": 361,
     "file_url": "/products/ui-kit-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=800&q=80",
     "seller": "UXMasters",
     "featured": true,
     "status": "published",
     "vendor_id": "UXMasters",
     "reviews": 36,
-    "preview": "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -169,7 +173,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Value"
+    "badge": "Best Value",
+    "name": "Crypto Wallet UI Kit"
   },
   {
     "id": 6,
@@ -203,7 +208,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Editor's Pick"
+    "badge": "Editor's Pick",
+    "name": "Business Landing Page Template"
   },
   {
     "id": 7,
@@ -237,7 +243,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Hot Product"
+    "badge": "Hot Product",
+    "name": "Agency Website Template"
   },
   {
     "id": 8,
@@ -248,13 +255,13 @@
     "rating": 4.8,
     "downloads": 2872,
     "file_url": "/products/web-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 237,
-    "preview": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -271,7 +278,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Restaurant Website Template"
   },
   {
     "id": 9,
@@ -282,13 +290,13 @@
     "rating": 4.5,
     "downloads": 2451,
     "file_url": "/products/web-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
     "seller": "WebStudio",
     "featured": true,
     "status": "published",
     "vendor_id": "WebStudio",
     "reviews": 204,
-    "preview": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -305,7 +313,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Must Have"
+    "badge": "Must Have",
+    "name": "Law Firm Website Template"
   },
   {
     "id": 10,
@@ -316,13 +325,13 @@
     "rating": 4.9,
     "downloads": 2734,
     "file_url": "/products/web-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 226,
-    "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -339,7 +348,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Portfolio Website Template"
   },
   {
     "id": 11,
@@ -350,13 +360,13 @@
     "rating": 4.8,
     "downloads": 3416,
     "file_url": "/products/react-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 281,
-    "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -373,7 +383,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "React Admin Dashboard"
   },
   {
     "id": 12,
@@ -384,13 +395,13 @@
     "rating": 4.6,
     "downloads": 2289,
     "file_url": "/products/react-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 191,
-    "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -407,7 +418,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "React Ecommerce Template"
   },
   {
     "id": 13,
@@ -418,13 +430,13 @@
     "rating": 4.5,
     "downloads": 1331,
     "file_url": "/products/react-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 114,
-    "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -441,7 +453,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "React SaaS Template"
   },
   {
     "id": 14,
@@ -452,13 +465,13 @@
     "rating": 4.6,
     "downloads": 1677,
     "file_url": "/products/react-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 142,
-    "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -475,7 +488,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Premium"
+    "badge": "Premium",
+    "name": "React CRM Dashboard"
   },
   {
     "id": 15,
@@ -486,13 +500,13 @@
     "rating": 5,
     "downloads": 3130,
     "file_url": "/products/react-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 258,
-    "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -509,7 +523,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "React Analytics Dashboard"
   },
   {
     "id": 16,
@@ -520,13 +535,13 @@
     "rating": 4.8,
     "downloads": 4347,
     "file_url": "/products/next-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 355,
-    "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -543,7 +558,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Next.js SaaS Starter"
   },
   {
     "id": 17,
@@ -554,13 +570,13 @@
     "rating": 4.9,
     "downloads": 1866,
     "file_url": "/products/next-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 157,
-    "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -577,7 +593,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Next.js Ecommerce Starter"
   },
   {
     "id": 18,
@@ -588,13 +605,13 @@
     "rating": 4.6,
     "downloads": 4287,
     "file_url": "/products/next-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&q=80",
     "seller": "WebStudio",
     "featured": true,
     "status": "published",
     "vendor_id": "WebStudio",
     "reviews": 350,
-    "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -611,7 +628,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Popular"
+    "badge": "Popular",
+    "name": "Next.js Blog Template"
   },
   {
     "id": 19,
@@ -622,13 +640,13 @@
     "rating": 4.8,
     "downloads": 2183,
     "file_url": "/products/next-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 182,
-    "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -645,7 +663,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Value"
+    "badge": "Best Value",
+    "name": "Next.js Portfolio Template"
   },
   {
     "id": 20,
@@ -679,7 +698,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Next.js Dashboard Starter"
   },
   {
     "id": 21,
@@ -690,13 +710,13 @@
     "rating": 5,
     "downloads": 4260,
     "file_url": "/products/prompt-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
     "seller": "PromptMaster",
     "featured": true,
     "status": "published",
     "vendor_id": "PromptMaster",
     "reviews": 348,
-    "preview": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -712,7 +732,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "AI Prompt Collection Pro"
   },
   {
     "id": 22,
@@ -723,13 +744,13 @@
     "rating": 4.6,
     "downloads": 1319,
     "file_url": "/products/prompt-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1533750349088-cd871a92f312?auto=format&fit=crop&w=800&q=80",
     "seller": "PromptMaster",
     "featured": true,
     "status": "published",
     "vendor_id": "PromptMaster",
     "reviews": 113,
-    "preview": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1533750349088-cd871a92f312?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -745,7 +766,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New Release"
+    "badge": "New Release",
+    "name": "Marketing Prompt Bundle"
   },
   {
     "id": 23,
@@ -756,13 +778,13 @@
     "rating": 4.7,
     "downloads": 4021,
     "file_url": "/products/prompt-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
     "seller": "AILabs",
     "featured": true,
     "status": "published",
     "vendor_id": "AILabs",
     "reviews": 329,
-    "preview": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -778,7 +800,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Must Have"
+    "badge": "Must Have",
+    "name": "Coding Prompt Pack"
   },
   {
     "id": 24,
@@ -789,13 +812,13 @@
     "rating": 4.6,
     "downloads": 3350,
     "file_url": "/products/prompt-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80",
     "seller": "PromptMaster",
     "featured": true,
     "status": "published",
     "vendor_id": "PromptMaster",
     "reviews": 276,
-    "preview": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -811,7 +834,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Content Creation Prompts"
   },
   {
     "id": 25,
@@ -822,13 +846,13 @@
     "rating": 4.8,
     "downloads": 2414,
     "file_url": "/products/prompt-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
     "seller": "AILabs",
     "featured": true,
     "status": "published",
     "vendor_id": "AILabs",
     "reviews": 201,
-    "preview": "https://images.unsplash.com/photo-1684369175833-3d0774a385f0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -844,7 +868,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Fan Favorite"
+    "badge": "Fan Favorite",
+    "name": "Business Automation Prompts"
   },
   {
     "id": 26,
@@ -877,7 +902,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Staff Pick"
+    "badge": "Staff Pick",
+    "name": "Instagram Carousel Canva Bundle"
   },
   {
     "id": 27,
@@ -888,13 +914,13 @@
     "rating": 4.6,
     "downloads": 2710,
     "file_url": "/products/canva-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 224,
-    "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -910,7 +936,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Business Presentation Canva Kit"
   },
   {
     "id": 28,
@@ -921,13 +948,13 @@
     "rating": 4.6,
     "downloads": 2255,
     "file_url": "/products/canva-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 188,
-    "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -943,7 +970,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Premium"
+    "badge": "Premium",
+    "name": "Real Estate Canva Bundle"
   },
   {
     "id": 29,
@@ -954,13 +982,13 @@
     "rating": 4.5,
     "downloads": 1151,
     "file_url": "/products/canva-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
     "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 100,
-    "preview": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -976,7 +1004,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Restaurant Promotion Canva Pack"
   },
   {
     "id": 30,
@@ -987,13 +1016,13 @@
     "rating": 4.9,
     "downloads": 342,
     "file_url": "/products/canva-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 35,
-    "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -1009,7 +1038,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Fitness Coach Canva Templates"
   },
   {
     "id": 31,
@@ -1020,13 +1050,13 @@
     "rating": 4.9,
     "downloads": 2853,
     "file_url": "/products/canva-006.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 236,
-    "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1042,7 +1072,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Startup Pitch Canva Kit"
   },
   {
     "id": 32,
@@ -1053,13 +1084,13 @@
     "rating": 4.6,
     "downloads": 4574,
     "file_url": "/products/canva-007.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
     "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 373,
-    "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1075,7 +1106,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "YouTube Thumbnail Canva Pack"
   },
   {
     "id": 33,
@@ -1086,13 +1118,13 @@
     "rating": 5,
     "downloads": 2009,
     "file_url": "/products/canva-008.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 168,
-    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1109,7 +1141,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Value"
+    "badge": "Best Value",
+    "name": "Wedding Invitation Canva Bundle"
   },
   {
     "id": 34,
@@ -1120,13 +1153,13 @@
     "rating": 4.8,
     "downloads": 503,
     "file_url": "/products/canva-009.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 48,
-    "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1142,7 +1175,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Editor's Pick"
+    "badge": "Editor's Pick",
+    "name": "Personal Branding Canva Kit"
   },
   {
     "id": 35,
@@ -1153,13 +1187,13 @@
     "rating": 4.6,
     "downloads": 982,
     "file_url": "/products/canva-010.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 86,
-    "preview": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1175,7 +1209,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Hot Product"
+    "badge": "Hot Product",
+    "name": "Event Promotion Canva Bundle"
   },
   {
     "id": 36,
@@ -1208,7 +1243,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Ultimate Productivity Notion System"
   },
   {
     "id": 37,
@@ -1241,7 +1277,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Must Have"
+    "badge": "Must Have",
+    "name": "Student Planner Notion Template"
   },
   {
     "id": 38,
@@ -1252,13 +1289,13 @@
     "rating": 4.6,
     "downloads": 325,
     "file_url": "/products/notion-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
     "seller": "NotionFlow",
     "featured": true,
     "status": "published",
     "vendor_id": "NotionFlow",
     "reviews": 34,
-    "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1274,7 +1311,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Top Pick"
+    "badge": "Top Pick",
+    "name": "Freelancer CRM Notion Workspace"
   },
   {
     "id": 39,
@@ -1285,13 +1323,13 @@
     "rating": 4.7,
     "downloads": 805,
     "file_url": "/products/notion-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 72,
-    "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1307,7 +1345,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Fan Favorite"
+    "badge": "Fan Favorite",
+    "name": "Startup Operating System"
   },
   {
     "id": 40,
@@ -1318,13 +1357,13 @@
     "rating": 4.7,
     "downloads": 3590,
     "file_url": "/products/notion-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
     "seller": "CreatorTools",
     "featured": true,
     "status": "published",
     "vendor_id": "CreatorTools",
     "reviews": 295,
-    "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -1340,7 +1379,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Content Creator Notion Dashboard"
   },
   {
     "id": 41,
@@ -1351,13 +1391,13 @@
     "rating": 4.9,
     "downloads": 3384,
     "file_url": "/products/notion-006.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80",
     "seller": "FinanceFlow",
     "featured": true,
     "status": "published",
     "vendor_id": "FinanceFlow",
     "reviews": 278,
-    "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1373,7 +1413,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Personal Finance Notion Tracker"
   },
   {
     "id": 42,
@@ -1384,13 +1425,13 @@
     "rating": 4.6,
     "downloads": 769,
     "file_url": "/products/notion-007.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 69,
-    "preview": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1406,7 +1447,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Premium"
+    "badge": "Premium",
+    "name": "Job Application Notion Manager"
   },
   {
     "id": 43,
@@ -1417,13 +1459,13 @@
     "rating": 4.7,
     "downloads": 4502,
     "file_url": "/products/notion-008.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
     "seller": "NotionFlow",
     "featured": true,
     "status": "published",
     "vendor_id": "NotionFlow",
     "reviews": 368,
-    "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1439,7 +1481,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Habit Tracker Notion Template"
   },
   {
     "id": 44,
@@ -1450,13 +1493,13 @@
     "rating": 4.6,
     "downloads": 3043,
     "file_url": "/products/notion-009.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 251,
-    "preview": "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1472,7 +1515,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Top Choice"
+    "badge": "Top Choice",
+    "name": "Project Management Workspace"
   },
   {
     "id": 45,
@@ -1483,13 +1527,13 @@
     "rating": 4.9,
     "downloads": 3960,
     "file_url": "/products/notion-010.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
     "seller": "CreatorTools",
     "featured": true,
     "status": "published",
     "vendor_id": "CreatorTools",
     "reviews": 324,
-    "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1505,7 +1549,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Goal Setting Notion Dashboard"
   },
   {
     "id": 46,
@@ -1516,13 +1561,13 @@
     "rating": 4.8,
     "downloads": 1877,
     "file_url": "/products/resume-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 158,
-    "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -1539,7 +1584,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Executive Resume Template Pack"
   },
   {
     "id": 47,
@@ -1550,13 +1596,13 @@
     "rating": 4.9,
     "downloads": 517,
     "file_url": "/products/resume-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 49,
-    "preview": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1573,7 +1619,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Value"
+    "badge": "Best Value",
+    "name": "Modern ATS Resume Bundle"
   },
   {
     "id": 48,
@@ -1584,13 +1631,13 @@
     "rating": 4.7,
     "downloads": 2478,
     "file_url": "/products/resume-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1542744094-3a3172720177?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 206,
-    "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1542744094-3a3172720177?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1607,7 +1654,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Creative Designer Resume Kit"
   },
   {
     "id": 49,
@@ -1618,13 +1666,13 @@
     "rating": 4.6,
     "downloads": 470,
     "file_url": "/products/resume-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 45,
-    "preview": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1641,7 +1689,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Hot Product"
+    "badge": "Hot Product",
+    "name": "Tech Professional Resume Pack"
   },
   {
     "id": 50,
@@ -1652,13 +1701,13 @@
     "rating": 4.9,
     "downloads": 934,
     "file_url": "/products/resume-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 82,
-    "preview": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -1675,7 +1724,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "Graduate Resume Starter Kit"
   },
   {
     "id": 51,
@@ -1686,13 +1736,13 @@
     "rating": 5,
     "downloads": 4734,
     "file_url": "/products/ebook-001.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
     "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 386,
-    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1709,7 +1759,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Must Have"
+    "badge": "Must Have",
+    "name": "The Complete JavaScript Handbook"
   },
   {
     "id": 52,
@@ -1720,13 +1771,13 @@
     "rating": 4.6,
     "downloads": 2592,
     "file_url": "/products/ebook-002.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 215,
-    "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1743,7 +1794,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Top Pick"
+    "badge": "Top Pick",
+    "name": "Mastering React Development"
   },
   {
     "id": 53,
@@ -1754,13 +1806,13 @@
     "rating": 4.6,
     "downloads": 2001,
     "file_url": "/products/ebook-003.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 168,
-    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1777,7 +1829,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Fan Favorite"
+    "badge": "Fan Favorite",
+    "name": "UI/UX Design Principles"
   },
   {
     "id": 54,
@@ -1788,13 +1841,13 @@
     "rating": 4.9,
     "downloads": 2789,
     "file_url": "/products/ebook-004.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 231,
-    "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1811,7 +1864,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Staff Pick"
+    "badge": "Staff Pick",
+    "name": "Startup Growth Strategies"
   },
   {
     "id": 55,
@@ -1822,13 +1876,13 @@
     "rating": 4.9,
     "downloads": 898,
     "file_url": "/products/ebook-005.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80",
     "seller": "CareerBoost",
     "featured": true,
     "status": "published",
     "vendor_id": "CareerBoost",
     "reviews": 79,
-    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1845,7 +1899,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "The Freelancer's Playbook"
   },
   {
     "id": 56,
@@ -1856,13 +1911,13 @@
     "rating": 4.7,
     "downloads": 3677,
     "file_url": "/products/ebook-006.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
     "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 302,
-    "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1879,7 +1934,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Python for Beginners"
   },
   {
     "id": 57,
@@ -1890,13 +1946,13 @@
     "rating": 4.9,
     "downloads": 2905,
     "file_url": "/products/ebook-007.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 240,
-    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1913,7 +1969,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Modern Web Development"
   },
   {
     "id": 58,
@@ -1924,13 +1981,13 @@
     "rating": 4.7,
     "downloads": 3652,
     "file_url": "/products/ebook-008.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 300,
-    "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1947,7 +2004,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Top Choice"
+    "badge": "Top Choice",
+    "name": "Digital Marketing Blueprint"
   },
   {
     "id": 59,
@@ -1958,13 +2016,13 @@
     "rating": 4.8,
     "downloads": 3535,
     "file_url": "/products/ebook-009.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
     "seller": "TechReads",
     "featured": true,
     "status": "published",
     "vendor_id": "TechReads",
     "reviews": 290,
-    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -1980,7 +2038,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Productivity for Developers"
   },
   {
     "id": 60,
@@ -1991,13 +2050,13 @@
     "rating": 4.9,
     "downloads": 4608,
     "file_url": "/products/ebook-010.pdf",
-    "thumbnail": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 376,
-    "preview": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -2014,7 +2073,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Building SaaS Products"
   },
   {
     "id": 61,
@@ -2025,13 +2085,13 @@
     "rating": 4.5,
     "downloads": 2213,
     "file_url": "/products/course-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 185,
-    "preview": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2048,7 +2108,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Value"
+    "badge": "Best Value",
+    "name": "Complete React Bootcamp"
   },
   {
     "id": 62,
@@ -2059,13 +2120,13 @@
     "rating": 4.9,
     "downloads": 2677,
     "file_url": "/products/course-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 222,
-    "preview": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2082,7 +2143,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Editor's Pick"
+    "badge": "Editor's Pick",
+    "name": "Next.js Full Stack Course"
   },
   {
     "id": 63,
@@ -2093,13 +2155,13 @@
     "rating": 5,
     "downloads": 2654,
     "file_url": "/products/course-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 220,
-    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2115,7 +2177,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Hot Product"
+    "badge": "Hot Product",
+    "name": "UI/UX Design Masterclass"
   },
   {
     "id": 64,
@@ -2126,13 +2189,13 @@
     "rating": 4.9,
     "downloads": 2737,
     "file_url": "/products/course-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 226,
-    "preview": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2148,7 +2211,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Python Backend Development"
   },
   {
     "id": 65,
@@ -2159,13 +2223,13 @@
     "rating": 4.7,
     "downloads": 1528,
     "file_url": "/products/course-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?auto=format&fit=crop&w=800&q=80",
     "seller": "BusinessStack",
     "featured": true,
     "status": "published",
     "vendor_id": "BusinessStack",
     "reviews": 130,
-    "preview": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2181,7 +2245,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Must Have"
+    "badge": "Must Have",
+    "name": "Digital Marketing Academy"
   },
   {
     "id": 66,
@@ -2192,13 +2257,13 @@
     "rating": 4.6,
     "downloads": 929,
     "file_url": "/products/online-courses-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 82,
-    "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2215,7 +2280,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Top Pick"
+    "badge": "Top Pick",
+    "name": "AI-Powered Code Assistant Node"
   },
   {
     "id": 67,
@@ -2226,13 +2292,13 @@
     "rating": 4.7,
     "downloads": 2903,
     "file_url": "/products/online-courses-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 240,
-    "preview": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2249,7 +2315,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Fan Favorite"
+    "badge": "Fan Favorite",
+    "name": "Midjourney Design Automation Pipeline"
   },
   {
     "id": 68,
@@ -2260,13 +2327,13 @@
     "rating": 4.8,
     "downloads": 2120,
     "file_url": "/products/online-courses-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 177,
-    "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2283,7 +2350,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Staff Pick"
+    "badge": "Staff Pick",
+    "name": "ChatGPT Editorial Copywriter Pack"
   },
   {
     "id": 69,
@@ -2294,13 +2362,13 @@
     "rating": 4.6,
     "downloads": 281,
     "file_url": "/products/online-courses-004.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80",
     "seller": "PixelForge",
     "featured": true,
     "status": "published",
     "vendor_id": "PixelForge",
     "reviews": 30,
-    "preview": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2317,7 +2385,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Featured"
+    "badge": "Featured",
+    "name": "Stable Diffusion Conceptual Art Presets"
   },
   {
     "id": 70,
@@ -2328,13 +2397,13 @@
     "rating": 5,
     "downloads": 1425,
     "file_url": "/products/online-courses-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 122,
-    "preview": "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -2351,11 +2420,12 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "New"
+    "badge": "New",
+    "name": "AI Copilot Terminal Orchestration Node"
   },
   {
     "id": 75,
-    "title": "Icon Pack Collection 5",
+    "title": "Minimalist Line Icon Pack",
     "description": "Premium icon packs resource pack.",
     "category": "Icons & Illustrations",
     "price": 34.99,
@@ -2384,24 +2454,25 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Minimalist Line Icon Pack"
   },
   {
     "id": 80,
-    "title": "Font Pack Collection 5",
+    "title": "Editorial Typography & Font Pack",
     "description": "Premium font packs resource pack.",
     "category": "Design Assets",
     "price": 9.99,
     "rating": 4.9,
     "downloads": 3327,
     "file_url": "/products/font-packs-005.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
     "seller": "DesignHub",
     "featured": true,
     "status": "published",
     "vendor_id": "DesignHub",
     "reviews": 274,
-    "preview": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -2418,24 +2489,25 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Trending"
+    "badge": "Trending",
+    "name": "Editorial Typography & Font Pack"
   },
   {
     "id": 81,
-    "title": "Video Asset Collection 1",
+    "title": "Cinematic 4K Video Transitions",
     "description": "Premium video assets resource pack.",
     "category": "Design Assets",
     "price": 14.99,
     "rating": 4.9,
     "downloads": 2478,
     "file_url": "/products/video-assets-001.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80",
     "seller": "CodeForge",
     "featured": true,
     "status": "published",
     "vendor_id": "CodeForge",
     "reviews": 206,
-    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2452,24 +2524,25 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Cinematic 4K Video Transitions"
   },
   {
     "id": 87,
-    "title": "Music Pack Collection 2",
+    "title": "Ambient Lo-Fi Audio Track Bundle",
     "description": "Premium music packs resource pack.",
     "category": "Design Assets",
     "price": 44.99,
     "rating": 5,
     "downloads": 4491,
     "file_url": "/products/music-packs-002.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
     "seller": "CreativeLab",
     "featured": true,
     "status": "published",
     "vendor_id": "CreativeLab",
     "reviews": 367,
-    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2486,24 +2559,25 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "Ambient Lo-Fi Audio Track Bundle"
   },
   {
     "id": 93,
-    "title": "Motion Graphic Collection 3",
+    "title": "3D Motion Graphics Asset Pack",
     "description": "Premium motion graphics resource pack.",
     "category": "Design Assets",
     "price": 24.99,
     "rating": 5,
     "downloads": 1461,
     "file_url": "/products/motion-graphics-003.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80",
     "seller": "DevMarket",
     "featured": true,
     "status": "published",
     "vendor_id": "DevMarket",
     "reviews": 124,
-    "preview": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2520,7 +2594,8 @@
       "Lifetime updates & version revisions",
       "High-fidelity responsive components"
     ],
-    "badge": "Best Seller"
+    "badge": "Best Seller",
+    "name": "3D Motion Graphics Asset Pack"
   },
   {
     "id": 101,
@@ -2531,13 +2606,13 @@
     "rating": 4.9,
     "downloads": 480,
     "file_url": "/products/aura-journal-101.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=600&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "seller": "Sophia Vance",
     "featured": true,
     "status": "published",
     "vendor_id": "sophia-vance",
     "reviews": 34,
-    "preview": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=600&q=80",
+    "preview": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2570,7 +2645,8 @@
     ],
     "version": "v1.2.0",
     "fileSize": "48.2 MB",
-    "lastUpdated": "Yesterday"
+    "lastUpdated": "Yesterday",
+    "name": "Aura Daily Digital Journal"
   },
   {
     "id": 102,
@@ -2581,13 +2657,13 @@
     "rating": 4.8,
     "downloads": 280,
     "file_url": "/products/lunar-manifest-102.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1532012164546-623bf367975f?auto=format&fit=crop&w=800&q=80",
     "seller": "Marcus Kane",
     "featured": true,
     "status": "published",
     "vendor_id": "marcus-kane",
     "reviews": 22,
-    "preview": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80",
+    "preview": "https://images.unsplash.com/photo-1532012164546-623bf367975f?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": true,
     "tags": [
@@ -2617,7 +2693,8 @@
     ],
     "version": "v2.0.1",
     "fileSize": "12.4 MB",
-    "lastUpdated": "2 days ago"
+    "lastUpdated": "2 days ago",
+    "name": "Lunar Manifestation Monthly Planner"
   },
   {
     "id": 103,
@@ -2628,13 +2705,13 @@
     "rating": 5.0,
     "downloads": 640,
     "file_url": "/products/content-hub-103.zip",
-    "thumbnail": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80",
+    "thumbnail": "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=800&q=80",
     "seller": "Marcus Kane",
     "featured": true,
     "status": "published",
     "vendor_id": "marcus-kane",
     "reviews": 15,
-    "preview": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80",
+    "preview": "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=800&q=80",
     "trending": true,
     "newArrival": false,
     "tags": [
@@ -2667,7 +2744,8 @@
     ],
     "version": "v3.1.0",
     "fileSize": "84.2 MB",
-    "lastUpdated": "3 days ago"
+    "lastUpdated": "3 days ago",
+    "name": "Aesthetic TikTok & Reels Content Hub"
   },
   {
     "id": 108,
@@ -2677,9 +2755,10 @@
     "price": 299.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389100486&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389093041&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389092625&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389092796&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389093041&size=1024x768",
@@ -2708,7 +2787,8 @@
     ],
     "file_url": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
-    "trending": true
+    "trending": true,
+    "name": "Resume Template Pack"
   },
   {
     "id": 109,
@@ -2718,9 +2798,10 @@
     "price": 299.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389100486&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389093041&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389092625&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389092796&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389093041&size=1024x768",
@@ -2749,19 +2830,22 @@
     ],
     "file_url": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZ3a9r5ZiEfxzD6Rwz8si43xOwwD9yI0eeX0&fileid=90389080772",
-    "trending": true
+    "trending": true,
+    "name": "Resume Template Pack - Premium"
   },
   {
     "id": 110,
-    "title": "Resume template pack",
+    "title": "Executive CV & Resume Template DOCX",
     "description": "",
     "category": "General",
     "price": 0.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "/uploads/vendors/8/products/110/images/16a29b21-b8ca-4cf9-b0cb-b72691d1700c.png",
-    "preview": "/uploads/vendors/8/products/110/images/16a29b21-b8ca-4cf9-b0cb-b72691d1700c.png",
-    "image_urls": [],
+    "thumbnail": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "image_urls": [
+      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80"
+    ],
     "seller": "Lumora Creator",
     "vendor_id": "",
     "featured": true,
@@ -2778,19 +2862,21 @@
     "features": [],
     "what_you_get": [],
     "installation_guide": "",
-    "trending": true
+    "trending": true,
+    "name": "Executive CV & Resume Template DOCX"
   },
   {
     "id": 111,
-    "title": "digital planner",
+    "title": "2026 Digital Planner",
     "description": "",
     "category": "General",
     "price": 399.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389155194&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389163099&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389158264&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389180755&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389163099&size=1024x768",
@@ -2820,19 +2906,21 @@
     ],
     "file_url": "https://u.pcloud.link/publink/show?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389134413",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZ3i9r5Z6kgVesSWw7bi5HqqBxGgyz4FQA2y&fileid=90389134413",
-    "trending": true
+    "trending": true,
+    "name": "2026 Digital Planner"
   },
   {
     "id": 112,
-    "title": "Instagram content calendar",
+    "title": "Instagram Content Calendar",
     "description": "",
     "category": "General",
     "price": 149.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389249389&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389247267&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389241977&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389244070&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389247267&size=1024x768",
@@ -2862,19 +2950,21 @@
     ],
     "file_url": "https://u.pcloud.link/publink/show?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389234776",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZca9r5ZhCrIFBq83B0uxvVsiqpOvfJDXr2V&fileid=90389234776",
-    "trending": true
+    "trending": true,
+    "name": "Instagram Content Calendar"
   },
   {
     "id": 115,
-    "title": "UI Design Icon Pack & Guide",
+    "title": "UI Icon Pack Premium",
     "description": "",
     "category": "General",
     "price": 199.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389272502&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389270183&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389264002&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389267182&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389270183&size=1024x768",
@@ -2898,19 +2988,21 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389260091",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZPVPr5Zg0tysBTLgI8yBd8xRGM36BNU9eKyu&fileid=90389260091",
-    "trending": true
+    "trending": true,
+    "name": "UI Icon Pack Premium"
   },
   {
     "id": 116,
-    "title": "The Personal Budget Planner",
+    "title": "Personal Budget Planner",
     "description": "",
     "category": "General",
     "price": 249.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381486&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381008&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389380221&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389380485&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381008&size=1024x768",
@@ -2934,7 +3026,8 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381223",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZF0Pr5ZWDMyRxFiDDVWNv6kxVWRM0BwlTsk&fileid=90389381223",
-    "trending": true
+    "trending": true,
+    "name": "Personal Budget Planner"
   },
   {
     "id": 117,
@@ -2944,9 +3037,10 @@
     "price": 149.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405604&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405039&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389403699&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389403967&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405039&size=1024x768",
@@ -2970,19 +3064,21 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405324",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZoPwr5ZRdFKL7YNck47nNsNDEpYehi88GXys&fileid=90389405324",
-    "trending": true
+    "trending": true,
+    "name": "Study Planner & Exam Organizer"
   },
   {
     "id": 118,
-    "title": "The Freelancer Client Toolkit",
+    "title": "Freelance Contract & Client Bundle",
     "description": "",
     "category": "General",
     "price": 249.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389423333&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389422826&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389422121&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389422411&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389422826&size=1024x768",
@@ -3006,19 +3102,21 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389423067",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZ4Kwr5ZQEFmzSNMS8Xf5tUnnFV2Ij2UOC0y&fileid=90389423067",
-    "trending": true
+    "trending": true,
+    "name": "Freelance Contract & Client Bundle"
   },
   {
     "id": 119,
-    "title": "The Healthy Habit Tracker",
+    "title": "Healthy Habit Tracker",
     "description": "",
     "category": "General",
     "price": 149.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90389432032&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90389432837&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90389432032&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90389432265&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90389432837&size=1024x768"
@@ -3041,19 +3139,21 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90523943133",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZTdwr5ZWEtX8oeWiBzM5xbAgNzU4VDTNcK7&fileid=90523943133",
-    "trending": true
+    "trending": true,
+    "name": "Healthy Habit Tracker"
   },
   {
     "id": 120,
-    "title": "The Small Business Startup Workbook",
+    "title": "Small Business Startup Kit",
     "description": "",
     "category": "General",
     "price": 199.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526015213&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526014616&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526013633&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526013853&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526014616&size=1024x768",
@@ -3077,19 +3177,21 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526014883",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZx6tr5Z6iez758oaMREVNvsAXU2hkV5ErNV&fileid=90526014883",
-    "trending": true
+    "trending": true,
+    "name": "Small Business Startup Kit"
   },
   {
     "id": 121,
-    "title": "The Wedding Planning Toolkit",
+    "title": "Wedding Invitation Template Pack",
     "description": "",
     "category": "General",
     "price": 249.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528100996&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528099894&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528099037&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528099272&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528099894&size=1024x768",
@@ -3113,7 +3215,8 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528100583",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZXEtr5ZhkTM49N9c2bzfO8X4q0nVJizLkq7&fileid=90528100583",
-    "trending": true
+    "trending": true,
+    "name": "Wedding Invitation Template Pack"
   },
   {
     "id": 122,
@@ -3123,9 +3226,10 @@
     "price": 199.0,
     "rating": 4.5,
     "downloads": 0,
-    "thumbnail": "https://api.pcloud.com/getpubthumb?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182774&size=400x300",
-    "preview": "https://api.pcloud.com/getpubthumb?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182515&size=1024x768",
+    "thumbnail": "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80",
+    "preview": "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80",
     "image_urls": [
+      "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80",
       "https://api.pcloud.com/getpubthumb?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182181&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182090&size=1024x768",
       "https://api.pcloud.com/getpubthumb?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182515&size=1024x768",
@@ -3149,6 +3253,7 @@
     "installation_guide": "",
     "file_url": "https://u.pcloud.link/publink/show?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182797",
     "fileUrl": "https://u.pcloud.link/publink/show?code=kZhEtr5ZhK477zs5de4kGtuilpYJ352e9cI7&fileid=90528182797",
-    "trending": true
+    "trending": true,
+    "name": "Meal Prep & Recipe Planner"
   }
 ]
