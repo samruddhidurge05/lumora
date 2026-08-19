@@ -1,5 +1,6 @@
 import requests, sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 r = requests.get('http://localhost:8000/api/products/', timeout=10)
 data = r.json()
 print(f'API returned {len(data)} products')

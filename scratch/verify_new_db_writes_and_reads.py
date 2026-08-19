@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+from typing import cast
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -18,7 +19,12 @@ def run_verification_suite():
     db = SessionLocal()
     try:
         bind = db.get_bind()
-        db_url_str = str(bind.url)
+        if hasattr(bind, "url"):
+            db_url_str = str(bind.url)
+        elif hasattr(bind, "engine") and hasattr(bind.engine, "url"):
+            db_url_str = str(bind.engine.url)
+        else:
+            db_url_str = "unknown"
         print("==================================================")
         print("NEW DATABASE EXCLUSIVE ACTIVE AUDIT & VERIFICATION")
         print("==================================================")
@@ -88,10 +94,10 @@ def run_verification_suite():
         print("3. VERIFYING POSTGRESQL AUTO-INCREMENT SEQUENCES")
         print("--------------------------------------------------")
         
-        prod_max = db.execute(text("SELECT MAX(id) FROM products")).scalar()
-        prod_seq = db.execute(text("SELECT last_value FROM public.products_id_seq")).scalar()
-        orders_max = db.execute(text("SELECT MAX(id) FROM orders")).scalar()
-        orders_seq = db.execute(text("SELECT last_value FROM public.orders_id_seq")).scalar()
+        prod_max = cast(int, db.execute(text("SELECT MAX(id) FROM products")).scalar() or 0)
+        prod_seq = cast(int, db.execute(text("SELECT last_value FROM public.products_id_seq")).scalar() or 0)
+        orders_max = cast(int, db.execute(text("SELECT MAX(id) FROM orders")).scalar() or 0)
+        orders_seq = cast(int, db.execute(text("SELECT last_value FROM public.orders_id_seq")).scalar() or 0)
 
         print(f"  - products MAX(id) = {prod_max} | products_id_seq last_value = {prod_seq}")
         print(f"  - orders MAX(id)   = {orders_max} | orders_id_seq last_value   = {orders_seq}")

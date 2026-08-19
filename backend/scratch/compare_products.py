@@ -1,5 +1,6 @@
 import sys, json, requests
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 with open(r'frontend/src/data/products.json', encoding='utf-8', errors='replace') as f:
     json_data = json.load(f)
