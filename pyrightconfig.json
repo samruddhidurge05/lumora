@@ -3,6 +3,7 @@
   "venv": ".venv",
   "extraPaths": [
     "./backend",
+    "./scratch",
     "./backend/.venv/Lib/site-packages"
   ]
 }
