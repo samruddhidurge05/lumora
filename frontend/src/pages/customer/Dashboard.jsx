@@ -169,6 +169,9 @@ export default function Dashboard() {
   }, []);
 
   const [globalSearch, setGlobalSearch] = useState('');
+  const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const headerSearchRef = useRef(null);
   const [aiResponse, setAiResponse]     = useState('');
   const [searchQuery, setSearchQuery]   = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -344,13 +347,27 @@ export default function Dashboard() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside or pressing Escape
   useEffect(() => {
     const handler = (e) => {
       if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+      if (headerSearchRef.current && !headerSearchRef.current.contains(e.target)) {
+        setSearchDropdownOpen(false);
+        setSearchFocused(false);
+      }
+    };
+    const keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        setSearchDropdownOpen(false);
+        setSearchFocused(false);
+      }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    window.addEventListener('keydown', keyHandler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      window.removeEventListener('keydown', keyHandler);
+    };
   }, []);
 
   const username    = profile?.name || user?.displayName || user?.email?.split('@')[0] || 'Customer';
@@ -371,17 +388,52 @@ export default function Dashboard() {
     return true;
   });
 
+  // Real-time product search matches for top header search dropdown
+  const headerSearchMatchingProducts = React.useMemo(() => {
+    if (!globalSearch || !globalSearch.trim()) return [];
+    const q = globalSearch.toLowerCase().trim();
+    return products.filter(p => {
+      const title = (p.title || p.name || '').toLowerCase();
+      const category = (p.category || '').toLowerCase();
+      const desc = (p.shortDesc || p.short_desc || p.description || '').toLowerCase();
+      const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : (p.tags || '').toLowerCase();
+      return title.includes(q) || category.includes(q) || desc.includes(q) || tags.includes(q);
+    }).slice(0, 6);
+  }, [globalSearch, products]);
+
   const handleAISearch = (e) => {
-    e.preventDefault();
-    if (!globalSearch.trim()) return;
-    const q = globalSearch.toLowerCase();
-    setAiResponse(
-      q.includes('figma') || q.includes('ui')   ? '"Aurora UI Kit" is ready in Downloads.' :
-      q.includes('price') || q.includes('deal')  ? 'Wishlist items have recent price drops.' :
-      q.includes('recomm')                        ? '"Solace Mobile System" is recommended for you.' :
-      'Browse the discovery stream below for curated picks.'
-    );
-    setGlobalSearch('');
+    if (e && e.preventDefault) e.preventDefault();
+    const query = globalSearch.trim();
+    if (!query) return;
+
+    // Filter discovery stream on page
+    setSearchQuery(query);
+    setSelectedCategory('All');
+
+    // Switch to overview tab if user is on another tab
+    if (dashboardTab !== 'Dashboard') {
+      setDashboardTab('Dashboard');
+    }
+
+    const q = query.toLowerCase();
+    if (headerSearchMatchingProducts.length > 0) {
+      setAiResponse(`Found ${headerSearchMatchingProducts.length} product(s) matching "${query}".`);
+    } else {
+      setAiResponse(
+        q.includes('figma') || q.includes('ui')   ? '"Aurora UI Kit" is ready in Downloads.' :
+        q.includes('price') || q.includes('deal')  ? 'Wishlist items have recent price drops.' :
+        q.includes('recomm')                        ? '"Solace Mobile System" is recommended for you.' :
+        `No direct product match for "${query}". Showing all categories below.`
+      );
+    }
+
+    setSearchDropdownOpen(false);
+
+    // Scroll to products stream
+    setTimeout(() => {
+      const el = document.getElementById('discover-products-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   };
 
   const isMoreActive = MORE_NAV.some(i => i.name === dashboardTab);
@@ -645,25 +697,166 @@ export default function Dashboard() {
               <span className="dash-cart-label cust-cart-label">Cart ({cart?.length || 0})</span>
             </button>
 
-            {/* AI Search */}
-            <form onSubmit={handleAISearch} className="dash-ai-search" style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 12px', borderRadius: '20px',
-              background: 'rgba(255,255,255,0.70)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(196,148,230,0.28)',
-              width: '180px',
-            }}>
-              <Search size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Lumora AI…"
-                value={globalSearch}
-                onChange={e => setGlobalSearch(e.target.value)}
-                style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.75rem', color: 'var(--text-primary)', width: '100%' }}
-              />
-              <button type="submit" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#7B3FA0' }}><Sparkles size={12} /></button>
-            </form>
+            {/* AI & Product Search */}
+            <div ref={headerSearchRef} style={{ position: 'relative' }}>
+              <form onSubmit={handleAISearch} className="dash-ai-search" style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 12px', borderRadius: '20px',
+                background: searchFocused ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.70)',
+                backdropFilter: 'blur(20px)',
+                border: searchFocused ? '1.5px solid rgba(123,63,160,0.55)' : '1px solid rgba(196,148,230,0.28)',
+                boxShadow: searchFocused ? '0 4px 16px rgba(123,63,160,0.15)' : 'none',
+                width: searchFocused ? '230px' : '190px',
+                transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+              }}>
+                <Search size={12} style={{ color: searchFocused ? '#7B3FA0' : 'var(--text-muted)', flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Lumora AI or Product…"
+                  value={globalSearch}
+                  onFocus={() => { setSearchFocused(true); if (globalSearch.trim()) setSearchDropdownOpen(true); }}
+                  onChange={e => {
+                    setGlobalSearch(e.target.value);
+                    if (e.target.value.trim()) setSearchDropdownOpen(true);
+                    else setSearchDropdownOpen(false);
+                  }}
+                  style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.75rem', color: 'var(--text-primary)', width: '100%' }}
+                />
+                {globalSearch && (
+                  <button 
+                    type="button"
+                    onClick={() => { setGlobalSearch(''); setSearchDropdownOpen(false); }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '2px' }}
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+                <button type="submit" title="Search products & ask Lumora AI" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#7B3FA0', display: 'flex', alignItems: 'center' }}>
+                  <Sparkles size={12} />
+                </button>
+              </form>
+
+              {/* Instant Product Search Overlay Dropdown */}
+              {searchDropdownOpen && globalSearch.trim() && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: '330px',
+                  background: 'rgba(255, 255, 255, 0.98)',
+                  backdropFilter: 'blur(24px) saturate(180%)',
+                  borderRadius: '16px',
+                  padding: '12px',
+                  boxShadow: '0 16px 48px rgba(45,0,77,0.22), 0 2px 8px rgba(0,0,0,0.06)',
+                  border: '1.5px solid rgba(196,148,230,0.40)',
+                  zIndex: 999999,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}>
+                  {/* Dropdown Title Bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid rgba(196,148,230,0.18)' }}>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#7B3FA0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Matching Products ({headerSearchMatchingProducts.length})
+                    </span>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Press Enter to view all</span>
+                  </div>
+
+                  {/* Matching Products List */}
+                  {headerSearchMatchingProducts.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '260px', overflowY: 'auto' }}>
+                      {headerSearchMatchingProducts.map(p => (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            navigateTo('product-detail', p.id);
+                            setSearchDropdownOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 10px',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            transition: 'all 0.18s ease',
+                            background: 'rgba(255,255,255,0.6)',
+                            border: '1px solid transparent',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(123,63,160,0.08)';
+                            e.currentTarget.style.borderColor = 'rgba(196,148,230,0.35)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.6)';
+                            e.currentTarget.style.borderColor = 'transparent';
+                          }}
+                        >
+                          <div style={{ width: '36px', height: '36px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: 'rgba(123,63,160,0.1)' }}>
+                            <ProductImage product={p} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <h5 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {p.title || p.name}
+                            </h5>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                              <span style={{ fontSize: '0.6rem', color: '#7B3FA0', fontWeight: 600 }}>{p.category}</span>
+                              <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>·</span>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(p.price)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '14px 8px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                        No direct product matches for "<strong>{globalSearch}</strong>"
+                      </p>
+                      <button
+                        onClick={handleAISearch}
+                        style={{
+                          marginTop: '8px',
+                          padding: '6px 12px',
+                          borderRadius: '12px',
+                          border: '1px solid rgba(123,63,160,0.3)',
+                          background: 'rgba(123,63,160,0.08)',
+                          color: '#7B3FA0',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Ask Lumora AI assistant
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Submit CTA */}
+                  <div
+                    onClick={handleAISearch}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '8px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, rgba(123,63,160,0.1), rgba(90,30,126,0.15))',
+                      color: '#7B3FA0',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: '1px dashed rgba(123,63,160,0.3)',
+                      marginTop: '2px',
+                    }}
+                  >
+                    <Sparkles size={12} />
+                    <span>Filter product discovery stream for "{globalSearch}"</span>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User avatar chip — click to open Settings / Profile */}
             <div 
@@ -1230,7 +1423,7 @@ function DashboardHome({
       })()}
 
       {/* Discovery stream */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div id="discover-products-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* Header row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
           <div>
