@@ -106,6 +106,11 @@ In `src/utils/api.js`:
 - **Immediate Rendering**: On page reload (`F5`), React immediately populates state from `localStorage` while Firebase Auth initializes asynchronously in the background.
 - **Backend Reconciliation**: Once `lumora_backend_ready` fires, `syncBackend()` fetches authoritative data from FastAPI endpoints (`/wishlist/me`, `getCartApi()`, `/orders/me`) and merges server records with local state without data loss.
 
+### 3.4 Unified Product Identity System
+- **Single Source of Truth**: Obsolete frontend-only mock products with string slug IDs (`solace-mobile`) have been removed in favor of a **single canonical product catalog** seeded in `products.json` and PostgreSQL.
+- **Integer Database ID (`product.id: int`)**: Used for 100% of backend database persistence operations (`POST /api/wishlist/?product_id=X`, `POST /api/cart/?product_id=X`, `/orders/me`, `/downloads/center`, price alerts, affiliate click tracking).
+- **String Slug (`product.slug: str`)**: Used for human-readable SEO routing and shareable links (`/#product/solace-mobile` or `/#product/101`).
+
 ---
 
 # SECTION 4 — CUSTOMER DASHBOARD (HIGHEST PRIORITY)
