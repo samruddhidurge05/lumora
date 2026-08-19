@@ -48,13 +48,13 @@ export default function AdminLayout({ activePage, children }) {
 
       {/* Mobile Drawer Overlay (< 1024px) */}
       {isMobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
+        <div className="lg:hidden fixed inset-0 z-50 flex justify-end">
           <div
             className="fixed inset-0 bg-[#2D004D]/50 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
             onClick={() => setIsMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative z-10 w-[290px] max-w-[85vw] h-full bg-[#ffffff] shadow-2xl flex flex-col p-4 overflow-y-auto animate-in slide-in-from-left duration-250">
+          <div className="relative z-10 w-[290px] max-w-[85vw] h-full bg-[#ffffff] shadow-2xl flex flex-col p-4 overflow-y-auto animate-in slide-in-from-right duration-250">
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#8E6AA8]/10">
               <div className="flex items-center gap-2">
                 <span className="text-[#7B3FA0] text-sm">✧</span>

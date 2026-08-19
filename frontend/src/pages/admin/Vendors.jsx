@@ -128,7 +128,10 @@ export default function Vendors() {
   const [activeTab, setActiveTab] = useState('vendors'); // 'vendors' | 'affiliates'
   const [vendors, setVendors]     = useState([]);
   const [affiliates, setAffiliates] = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const [vendorsLoaded, setVendorsLoaded]       = useState(false);
+  const [affiliatesLoaded, setAffiliatesLoaded] = useState(false);
+  const loading = activeTab === 'vendors' ? !vendorsLoaded : !affiliatesLoaded;
+
   const [error, setError]         = useState(null);
   const [actionLoading, setActionLoading] = useState({}); // { [uid]: true/false }
   const [notification, setNotification]   = useState(null);
@@ -148,8 +151,11 @@ export default function Vendors() {
     try {
       const data = await backendFetch('/admin/vendors/');
       setVendors(sortByStatus(Array.isArray(data) ? data : []));
+      setError(null);
     } catch (err) {
       setError('Failed to load vendors. Check backend connection.');
+    } finally {
+      setVendorsLoaded(true);
     }
   }, [sortByStatus]);
 
@@ -157,14 +163,18 @@ export default function Vendors() {
     try {
       const data = await backendFetch('/admin/affiliates/');
       setAffiliates(sortByStatus(Array.isArray(data) ? data : []));
+      setError(null);
     } catch (err) {
       console.warn('[Vendors] REST affiliates fallback failed:', err.message);
+    } finally {
+      setAffiliatesLoaded(true);
     }
   }, [sortByStatus]);
 
   // ── Real-time listeners ────────────────────────────────────────────────────
   useEffect(() => {
-    setLoading(true);
+    setVendorsLoaded(false);
+    setAffiliatesLoaded(false);
     setError(null);
 
     const vendorQuery    = query(collection(db, 'users'), where('role', 'in', ['vendor', 'Vendor']));
@@ -179,7 +189,8 @@ export default function Vendors() {
       (snap) => {
         const data = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         setVendors(sortByStatus(data));
-        setLoading(false);
+        setError(null);
+        setVendorsLoaded(true);
       },
       async (err) => {
         if (unsubVendors) unsubVendors();
@@ -187,7 +198,7 @@ export default function Vendors() {
         vendorFetched = true;
         console.warn('[Vendors] Firestore vendor read error, falling back to REST API:', err.message);
         await fetchVendorsRest();
-        setLoading(false);
+        setVendorsLoaded(true);
       }
     );
 
@@ -197,7 +208,8 @@ export default function Vendors() {
       (snap) => {
         const data = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         setAffiliates(sortByStatus(data));
-        setLoading(false);
+        setError(null);
+        setAffiliatesLoaded(true);
       },
       async (err) => {
         if (unsubAffiliates) unsubAffiliates();
@@ -205,7 +217,7 @@ export default function Vendors() {
         affiliateFetched = true;
         console.warn('[Vendors] Firestore affiliate read error, falling back to REST API:', err.message);
         await fetchAffiliatesRest();
-        setLoading(false);
+        setAffiliatesLoaded(true);
       }
     );
 
@@ -322,13 +334,13 @@ export default function Vendors() {
           actions={
             <button
               onClick={async () => {
-                setLoading(true);
+                setVendorsLoaded(false);
+                setAffiliatesLoaded(false);
                 setError(null);
                 await Promise.all([
                   fetchVendorsRest(),
                   fetchAffiliatesRest(),
                 ]);
-                setLoading(false);
                 notify('Synced from backend');
               }}
               className="btn-admin-secondary flex items-center gap-2"
