@@ -1103,10 +1103,31 @@ export function AppContextProvider({ children }) {
     return 'Dashboard';
   });
 
-  // E-commerce items state
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [ownedProducts, setOwnedProducts] = useState([]);
+  // E-commerce items state with localStorage user-session persistence
+  const [cart, setCart] = useState(() => {
+    try {
+      const activeUid = typeof window !== 'undefined' ? localStorage.getItem('lumora_backend_uid') : null;
+      const key = activeUid ? `lumora_cart_user_${activeUid}` : 'lumora_cart';
+      const saved = localStorage.getItem(key) || localStorage.getItem('lumora_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) { return []; }
+  });
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const activeUid = typeof window !== 'undefined' ? localStorage.getItem('lumora_backend_uid') : null;
+      const key = activeUid ? `lumora_wishlist_user_${activeUid}` : 'lumora_wishlist';
+      const saved = localStorage.getItem(key) || localStorage.getItem('lumora_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) { return []; }
+  });
+  const [ownedProducts, setOwnedProducts] = useState(() => {
+    try {
+      const activeUid = typeof window !== 'undefined' ? localStorage.getItem('lumora_backend_uid') : null;
+      const key = activeUid ? `lumora_owned_user_${activeUid}` : 'lumora_owned';
+      const saved = localStorage.getItem(key) || localStorage.getItem('lumora_owned');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) { return []; }
+  });
 
   // Buy Now specific states
   const [buyNowProduct, setBuyNowProduct] = useState(null);
@@ -1229,6 +1250,40 @@ export function AppContextProvider({ children }) {
     state: '',
     city: '',
   });
+
+  // Persist cart, wishlist, and owned products to user-scoped localStorage so data never disappears on refresh
+  useEffect(() => {
+    try {
+      const activeUid = localStorage.getItem('lumora_backend_uid');
+      const key = activeUid ? `lumora_cart_user_${activeUid}` : 'lumora_cart';
+      if (cart.length > 0) {
+        localStorage.setItem(key, JSON.stringify(cart));
+        localStorage.setItem('lumora_cart', JSON.stringify(cart));
+      }
+    } catch (_) {}
+  }, [cart]);
+
+  useEffect(() => {
+    try {
+      const activeUid = localStorage.getItem('lumora_backend_uid');
+      const key = activeUid ? `lumora_wishlist_user_${activeUid}` : 'lumora_wishlist';
+      if (wishlist.length > 0) {
+        localStorage.setItem(key, JSON.stringify(wishlist));
+        localStorage.setItem('lumora_wishlist', JSON.stringify(wishlist));
+      }
+    } catch (_) {}
+  }, [wishlist]);
+
+  useEffect(() => {
+    try {
+      const activeUid = localStorage.getItem('lumora_backend_uid');
+      const key = activeUid ? `lumora_owned_user_${activeUid}` : 'lumora_owned';
+      if (ownedProducts.length > 0) {
+        localStorage.setItem(key, JSON.stringify(ownedProducts));
+        localStorage.setItem('lumora_owned', JSON.stringify(ownedProducts));
+      }
+    } catch (_) {}
+  }, [ownedProducts]);
 
   // State is managed in React memory context and fetched directly from the backend SQLite DB
 
@@ -1546,7 +1601,8 @@ export function AppContextProvider({ children }) {
   };
 
   const removeFromCart = (id) => {
-    setCart((prev) => prev.filter(item => item.id !== id));
+    const targetIdStr = String(id);
+    setCart((prev) => prev.filter(item => item && String(item.id) !== targetIdStr));
     // Persist to backend (non-blocking)
     const numericId = parseInt(id, 10);
     if (!isNaN(numericId)) {
@@ -1561,7 +1617,8 @@ export function AppContextProvider({ children }) {
       removeFromCart(id);
       return;
     }
-    setCart((prev) => prev.map(item => item.id === id ? { ...item, quantity } : item));
+    const targetIdStr = String(id);
+    setCart((prev) => prev.map(item => item && String(item.id) === targetIdStr ? { ...item, quantity } : item));
   };
 
   const clearCart = () => {
@@ -1574,9 +1631,13 @@ export function AppContextProvider({ children }) {
 
   // Wishlist operations
   const toggleWishlist = (product) => {
+    if (!product || product.id == null) return;
+    const prodIdStr = String(product.id);
+    const numericId = parseInt(product.id, 10);
+
     setWishlist((prev) => {
-      const exists = prev.find(item => item.id === product.id);
-      const numericId = parseInt(product.id, 10);
+      const prevArr = Array.isArray(prev) ? prev : [];
+      const exists = prevArr.some(item => item && String(item.id) === prodIdStr);
       if (exists) {
         // Persist removal to backend (non-blocking)
         if (!isNaN(numericId)) {
@@ -1584,7 +1645,7 @@ export function AppContextProvider({ children }) {
             console.warn('[AppContext] Backend wishlist remove failed (non-fatal):', err.message)
           );
         }
-        return prev.filter(item => item.id !== product.id);
+        return prevArr.filter(item => item && String(item.id) !== prodIdStr);
       }
       // Persist addition to backend (non-blocking)
       if (!isNaN(numericId)) {
@@ -1592,7 +1653,7 @@ export function AppContextProvider({ children }) {
           console.warn('[AppContext] Backend wishlist add failed (non-fatal):', err.message)
         );
       }
-      return [...prev, product];
+      return [...prevArr, product];
     });
   };
 
