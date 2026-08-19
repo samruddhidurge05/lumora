@@ -12,597 +12,8 @@ import { getMyOrdersApi, createOrderApi } from '../api/ordersApi';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, doc, where } from 'firebase/firestore';
 
-// Mock Databases of 10 Ultra-Premium Products
-const PRODUCTS = [
-  {
-    id: 'solace-mobile',
-    title: "Solace Mobile System",
-    category: "Mobile App Designs",
-    price: 59,
-    rating: 4.9,
-    reviews: 124,
-    downloads: 4521,
-    featured: true,
-    trending: false,
-    newArrival: false,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-mint-glow) 0%, var(--color-powder-blue) 100%)",
-    preview: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80",
-    badge: "Best Seller",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "An editorial-grade mobile layout system built with physical glassmorphic depth mappings and spring physics transitions. Perfect for fashion, portfolio, and creative e-commerce hubs.",
-    features: [
-      "24+ Premium screens in Figma and React Native",
-      "Dynamic light/dark ambient backgrounds",
-      "Preloaded with 100+ micro-animations",
-      "Fully responsive and GPU-accelerated layouts"
-    ],
-    compatibility: ["Figma", "React Native", "Tailwind CSS"],
-    version: "v2.1.0",
-    fileSize: "84.2 MB",
-    lastUpdated: "3 days ago",
-    reviewsList: [
-      { user: "Alexander W.", rating: 5, date: "2 weeks ago", comment: "The physics transitions feel incredibly premium. Solace raises the bar for templates." },
-      { user: "Clara M.", rating: 4.8, date: "1 month ago", comment: "Beautifully organized layer structure. Fits perfectly into our client's design stack." }
-    ]
-  },
-  {
-    id: 'zephyr-ai',
-    title: "Zephyr AI Creator Suite",
-    category: "AI Tools",
-    price: 79,
-    rating: 4.8,
-    reviews: 96,
-    downloads: 3872,
-    featured: true,
-    trending: true,
-    newArrival: false,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-lavender) 0%, var(--color-rose) 100%)",
-    preview: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=600&q=80",
-    badge: "Trending",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "An automated workflow engine that compiles Stable Diffusion and Midjourney prompt pipelines directly into creative design templates. Includes 480 prebuilt token credits.",
-    features: [
-      "Visual prompt builder node network",
-      "12 Custom luxury brand model checkpoints",
-      "Automated image post-processing upscale modules",
-      "Framer and Figma cloud integrations"
-    ],
-    compatibility: ["Stable Diffusion", "Midjourney", "Figma", "Framer"],
-    version: "v1.2.0",
-    fileSize: "1.4 GB",
-    lastUpdated: "5 days ago",
-    reviewsList: [
-      { user: "Elena R.", rating: 5, date: "3 days ago", comment: "Saves us hours of prompt tweaking. The upscale quality is phenomenal." },
-      { user: "Devon T.", rating: 4.5, date: "3 weeks ago", comment: "Excellent presets, though it requires a bit of GPU horsepower to run locally." }
-    ]
-  },
-  {
-    id: 'branding-archetype',
-    title: "Branding Archetype Library",
-    category: "Design Assets",
-    price: 45,
-    rating: 5.0,
-    reviews: 82,
-    downloads: 2100,
-    featured: false,
-    trending: false,
-    newArrival: true,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-vanilla-cream) 0%, var(--color-peach) 100%)",
-    preview: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&q=80",
-    badge: "New Release",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "Vector branding assets, typography guidelines, and luxury brand design frameworks curated specifically for high-end SaaS startups and boutique lifestyle studios.",
-    features: [
-      "8 Ready-to-use vector logo systems",
-      "Harmonious HSL typography scale grids",
-      "Interactive style guide document presets",
-      "Optimized for Illustrator and Figma"
-    ],
-    compatibility: ["Figma", "Adobe Illustrator", "PDF"],
-    version: "v3.0.1",
-    fileSize: "512.4 MB",
-    lastUpdated: "1 week ago",
-    reviewsList: [
-      { user: "Oliver P.", rating: 5, date: "1 week ago", comment: "Pure class. The typography rules are so well thought out. Perfect buy." }
-    ]
-  },
-  {
-    id: 'aura-glassmorphic',
-    title: "Aura Glassmorphic Web Kit",
-    category: "Website Templates",
-    price: 39,
-    rating: 4.7,
-    reviews: 148,
-    downloads: 5980,
-    featured: true,
-    trending: false,
-    newArrival: false,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-ice-blue) 0%, var(--color-lilac-glow) 100%)",
-    preview: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=600&q=80",
-    badge: "Popular",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "A breathtaking React component framework leveraging Tailwind CSS and Three.js to render floating transparent cards, ambient vector blobs, and cinematic shadows.",
-    features: [
-      "15 Frosted-glass modular React sections",
-      "Three.js particle background container",
-      "Custom cursor overlay and magnet effects",
-      "SEO optimized and fully accessible markup"
-    ],
-    compatibility: ["React", "Vite", "Tailwind CSS", "Three.js"],
-    version: "v2.4.0",
-    fileSize: "142.8 MB",
-    lastUpdated: "2 days ago",
-    reviewsList: [
-      { user: "Sophia K.", rating: 5, date: "Yesterday", comment: "Absolutely stunning rendering. Best glassmorphism system out there." },
-      { user: "Jared B.", rating: 4.2, date: "2 weeks ago", comment: "Amazing design, although React structure takes some time to learn." }
-    ]
-  },
-  {
-    id: 'framer-saas',
-    title: "Framer SaaS Master Kit",
-    category: "Website Templates",
-    price: 149,
-    rating: 5.0,
-    reviews: 67,
-    downloads: 3120,
-    featured: true,
-    trending: true,
-    newArrival: false,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-lavender) 0%, var(--color-mint-glow) 100%)",
-    preview: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80",
-    badge: "Best Seller",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "An elite landing page template build for Framer. Features fluid page animations, automatic routing, custom dynamic CMS grids, and premium responsive breakpoints.",
-    features: [
-      "Fully functional blog CMS engine built-in",
-      "Interactive product pricing calculator widgets",
-      "100% Core Web Vitals performance score",
-      "Dynamic mouse drag interactive elements"
-    ],
-    compatibility: ["Framer", "React CMS"],
-    version: "v1.5.2",
-    fileSize: "48.2 MB",
-    lastUpdated: "4 days ago",
-    reviewsList: [
-      { user: "Lucas M.", rating: 5, date: "1 month ago", comment: "Unbelievable responsiveness. The CMS bindings work perfectly." }
-    ]
-  },
-  {
-    id: 'cinematic-motion',
-    title: "Cinematic Motion Vol. 2",
-    category: "Design Assets",
-    price: 49,
-    rating: 4.7,
-    reviews: 112,
-    downloads: 4430,
-    featured: false,
-    trending: true,
-    newArrival: false,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-rose) 0%, var(--color-peach) 100%)",
-    preview: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&q=80",
-    badge: "Hot",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "An asset collection of 4K transition layers, dust particle overlays, and camera movement profiles designed for elite digital video storytelling.",
-    features: [
-      "45 High fidelity 4K video transition loops",
-      "12 Color grading LUTs inspired by luxury films",
-      "Dynamic sound effect waveforms pre-synced",
-      "Compatible with major non-linear editing software"
-    ],
-    compatibility: ["Premiere Pro", "DaVinci Resolve", "After Effects"],
-    version: "v1.5.0",
-    fileSize: "2.8 GB",
-    lastUpdated: "Yesterday",
-    reviewsList: [
-      { user: "Zoe H.", rating: 5, date: "4 days ago", comment: "Stunning film grains. Fits the luxury feel so well." }
-    ]
-  },
-  {
-    id: 'framer-master',
-    title: "Mastering Framer Interactive",
-    category: "E-books",
-    price: 189,
-    rating: 4.9,
-    reviews: 210,
-    downloads: 7890,
-    featured: true,
-    trending: false,
-    newArrival: false,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-powder-blue) 0%, var(--color-lilac-glow) 100%)",
-    preview: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=600&q=80",
-    badge: "Curator Pick",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "The definitive masterclass tutorial program for developing high-end interactive animations, magnetic pointer states, and spring system behaviors inside Framer and HTML.",
-    features: [
-      "8+ Hours of 4K cinematic video modules",
-      "Fully loaded dashboard code sandboxes",
-      "1-on-1 Discord review sessions included",
-      "Certificate of creative architecture license"
-    ],
-    compatibility: ["Framer", "React", "Vanilla JS"],
-    version: "v1.0.0",
-    fileSize: "4.5 GB",
-    lastUpdated: "3 weeks ago",
-    reviewsList: [
-      { user: "Nathan K.", rating: 5, date: "2 weeks ago", comment: "Hands down the best course on interactive design. Mind-blowing techniques." }
-    ]
-  },
-  {
-    id: 'smart-productivity',
-    title: "Smart Productivity Hub",
-    category: "Notion Templates",
-    price: 39,
-    rating: 4.6,
-    reviews: 74,
-    downloads: 2800,
-    featured: false,
-    trending: false,
-    newArrival: false,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-mint-glow) 0%, var(--color-peach) 100%)",
-    preview: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=600&q=80",
-    badge: "Popular",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "A highly customized Notion template layout containing premium workspace templates, project tracking tools, and client invoice automated grids.",
-    features: [
-      "Integrated dashboard for active freelancing tasks",
-      "Personal finances ledger and statement tracking",
-      "Asset library and license registry database",
-      "Simple one-click workspace installation"
-    ],
-    compatibility: ["Notion"],
-    version: "v1.4.0",
-    fileSize: "4.2 MB",
-    lastUpdated: "6 days ago",
-    reviewsList: [
-      { user: "Gavin L.", rating: 4.5, date: "1 week ago", comment: "Streamlined my freelance client tracking instantly. Super clean." }
-    ]
-  },
-  {
-    id: 'vespera-system',
-    title: "Vespera Branding System",
-    category: "Design Assets",
-    price: 65,
-    rating: 4.9,
-    reviews: 63,
-    downloads: 1960,
-    featured: false,
-    trending: false,
-    newArrival: true,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-lavender) 0%, var(--color-mint-glow) 100%)",
-    preview: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&q=80",
-    badge: "New Release",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "An interactive brand layout framework loaded with responsive corporate guidelines, high-fidelity vector patterns, and elegant typeface styling curves suited for futuristic start-ups.",
-    features: [
-      "12 Modular brand identity guidelines",
-      "High-fidelity vector grids and geometries",
-      "Fully custom typography maps in Figma",
-      "Ready-to-export assets with automated pipelines"
-    ],
-    compatibility: ["Figma", "Adobe Illustrator", "SVG"],
-    version: "v1.0.2",
-    fileSize: "184.5 MB",
-    lastUpdated: "4 days ago",
-    reviewsList: [
-      { user: "Sarah W.", rating: 5, date: "3 days ago", comment: "Vespera is an artistic masterpiece. Beautiful geometry grids!" }
-    ]
-  },
-  {
-    id: 'hologram-motion',
-    title: "Holographic Motion Suite",
-    category: "Design Assets",
-    price: 89,
-    rating: 4.8,
-    reviews: 51,
-    downloads: 1550,
-    featured: false,
-    trending: true,
-    newArrival: false,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-powder-blue) 0%, var(--color-rose) 100%)",
-    preview: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80",
-    badge: "Curator Pick",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "A stunning asset pack of 3D holographic transitions, realistic lighting lens flares, and dynamic glass shaders designed to elevate cinematic creator video production.",
-    features: [
-      "30 Holographic loop overlays in 4K resolution",
-      "Real-time responsive lens grading presets",
-      "DaVinci Resolve fusion nodes loaded",
-      "Free version revisions for life"
-    ],
-    compatibility: ["DaVinci Resolve", "Premiere Pro", "After Effects"],
-    version: "v2.1.0",
-    fileSize: "3.4 GB",
-    lastUpdated: "6 days ago",
-    reviewsList: [
-      { user: "Leo G.", rating: 4.8, date: "5 days ago", comment: "The holographic overlays feel so expensive and alive in video edits!" }
-    ]
-  },
-  {
-    id: 'aetheria-platform',
-    title: "Aetheria Creator Course",
-    category: "E-books",
-    price: 199,
-    rating: 5.0,
-    reviews: 118,
-    downloads: 4610,
-    featured: true,
-    trending: false,
-    newArrival: false,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-vanilla-cream) 0%, var(--color-lilac-glow) 100%)",
-    preview: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=600&q=80",
-    badge: "Elite Masterclass",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "Learn the high-end design secrets of WebGL shaders, visual layout mathematics, custom fluid scrolls, and premium glassmorphic UI architecture.",
-    features: [
-      "12 Video modules filmed in ultra-HD 4K studio",
-      "Fully custom sandbox React projects",
-      "Figma components and primitives compiled",
-      "Verified digital license certificate included"
-    ],
-    compatibility: ["React", "WebGL", "Figma", "GSAP"],
-    version: "v1.2.0",
-    fileSize: "6.8 GB",
-    lastUpdated: "2 weeks ago",
-    reviewsList: [
-      { user: "Marcus T.", rating: 5, date: "1 week ago", comment: "The WebGL shader breakdown is worth ten times the price alone." }
-    ]
-  },
-  {
-    id: 'lumos-ai-nodes',
-    title: "Lumos AI Assistant Nodes",
-    category: "AI Tools",
-    price: 99,
-    rating: 4.9,
-    reviews: 42,
-    downloads: 1870,
-    featured: false,
-    trending: true,
-    newArrival: true,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-mint-glow) 0%, var(--color-ice-blue) 100%)",
-    preview: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=600&q=80",
-    badge: "Trending",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "An elite graphical programming node collection that binds Stable Diffusion XL and custom typography assets together for instant editorial layout generation.",
-    features: [
-      "36 Customizable layout pipeline nodes",
-      "Fine-tuned editorial model weights",
-      "Framer and Figma cloud automated push hooks",
-      "One-click server configurations included"
-    ],
-    compatibility: ["Stable Diffusion XL", "Figma", "Framer", "Python"],
-    version: "v1.1.0",
-    fileSize: "2.1 GB",
-    lastUpdated: "Yesterday",
-    reviewsList: [
-      { user: "Elena F.", rating: 5, date: "Yesterday", comment: "Automates our draft presentation graphics in minutes. Absolutely phenomenal!" }
-    ]
-  },
-  {
-    id: 'aura-digital-journal',
-    title: "Aura Daily Digital Journal",
-    category: "Productivity Tools",
-    price: 12,
-    rating: 4.9,
-    reviews: 34,
-    downloads: 3240,
-    featured: false,
-    trending: true,
-    newArrival: true,
-    seller: { name: "Sophia Vance" },
-    gradient: "linear-gradient(135deg, var(--color-mint-glow) 0%, var(--color-rose) 100%)",
-    preview: "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=600&q=80",
-    badge: "Best Seller",
-    creator: {
-      id: 'sophia-vance',
-      name: "Sophia Vance",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-      bio: "Luxury UI Architect and 3D digital sculptress. Specializes in glassmorphism primitives and high-end interactive models.",
-      banner: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1200&q=80",
-      sales: "45K+",
-      rating: "4.9 ★"
-    },
-    description: "Minimalist daily diary template with GenZ aesthetic pastel gradients, integrated mood check-ins, hourly schedule blocks, and habit tracking. Fully hyperlinked for GoodNotes or Notion.",
-    features: [
-      "365 hyperlinked daily planner pages",
-      "12 monthly divider tabs and dashboards",
-      "Custom vector sticker packs in PNG",
-      "Instructional setup video tutorial"
-    ],
-    compatibility: ["GoodNotes", "Notability", "PDF", "Notion"],
-    version: "v1.2.0",
-    fileSize: "48.2 MB",
-    lastUpdated: "Yesterday",
-    reviewsList: [
-      { user: "Maya L.", rating: 5, date: "Yesterday", comment: "The pastel gradients are gorgeous. iPad journaling feels so therapeutic!" }
-    ]
-  },
-  {
-    id: 'lunar-manifest-planner',
-    title: "Lunar Manifestation Monthly Planner",
-    category: "Notion Templates",
-    price: 15,
-    rating: 4.8,
-    reviews: 22,
-    downloads: 1420,
-    featured: false,
-    trending: false,
-    newArrival: true,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-lavender) 0%, var(--color-ice-blue) 100%)",
-    preview: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80",
-    badge: "New Release",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "A monthly life organizer synced with lunar cycles and manifestation journals. Track daily mood, set deadlines, and organize habits in a dark-mode cyberpunk interface.",
-    features: [
-      "Notion workspace setup links",
-      "8 custom aesthetic widget templates",
-      "Daily manifestation journaling templates",
-      "Automated habit statistics ledger"
-    ],
-    compatibility: ["Notion"],
-    version: "v2.0.1",
-    fileSize: "12.4 MB",
-    lastUpdated: "2 days ago",
-    reviewsList: [
-      { user: "Devin K.", rating: 4.8, date: "3 days ago", comment: "The design details are incredible. Synthesizing lunar cycles is a nice touch." }
-    ]
-  },
-  {
-    id: 'reels-content-hub',
-    title: "Aesthetic TikTok & Reels Content Hub",
-    category: "Social Media Kits",
-    price: 19,
-    rating: 5.0,
-    reviews: 15,
-    downloads: 980,
-    featured: false,
-    trending: true,
-    newArrival: true,
-    seller: { name: "Marcus Kane" },
-    gradient: "linear-gradient(135deg, var(--color-rose) 0%, var(--color-peach) 100%)",
-    preview: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80",
-    badge: "GenZ Favorite",
-    creator: {
-      id: 'marcus-kane',
-      name: "Marcus Kane",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-      bio: "Creative Technologist and AI fine-tuner. Compiles high-performance automation node frameworks and model presets.",
-      banner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
-      sales: "28K+",
-      rating: "4.8 ★"
-    },
-    description: "The ultimate content creation planner designed for short-form creators. Includes trend-boarding panels, script drafting sheets with hook formulas, and automated sound tracker lists.",
-    features: [
-      "TikTok & Reels Figma storyboard template",
-      "Notion Creator Workspace integration link",
-      "Interactive sponsor pitch templates",
-      "Exclusive access to Discord creator chat"
-    ],
-    compatibility: ["Notion", "Figma", "Excel", "Google Sheets"],
-    version: "v3.1.0",
-    fileSize: "84.2 MB",
-    lastUpdated: "3 days ago",
-    reviewsList: [
-      { user: "Sarah J.", rating: 5, date: "Yesterday", comment: "This scripting guide is pure gold. My TikTok views literally doubled in a week." }
-    ]
-  }
-];
+// Canonical marketplace products are loaded directly from products.json and backend PostgreSQL DB
+const PRODUCTS = [];
 
 // ─── Enrichment helpers ───────────────────────────────────────────────
 const CREATOR_AVATARS = [
@@ -847,13 +258,10 @@ function sortByCreationDateDesc(list) {
 export function AppContextProvider({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // Merge: JSON products take priority; keep PRODUCTS as fallback for items not in JSON
-  const jsonIds = new Set(ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null).map(p => String(p.id)));
-  const localFallback = PRODUCTS.filter(p => p && p.id != null && !jsonIds.has(String(p.id)));
-  const [products, setProducts] = useState(pinnedFirst(dedupeById(sortByCreationDateDesc([...ENRICHED_JSON_PRODUCTS, ...localFallback]))));
+  // Canonical products catalog: JSON products serve as base local catalog
+  const [products, setProducts] = useState(pinnedFirst(dedupeById(sortByCreationDateDesc(ENRICHED_JSON_PRODUCTS))));
 
-  // Track which product IDs came from the SQLite backend (the authoritative source).
-  // This prevents the Firestore listener from overwriting backend-only products.
+  // Track which product IDs came from the FastAPI backend (the authoritative source).
   const backendProductIdsRef = useRef(new Set());
 
   /**
@@ -869,10 +277,9 @@ export function AppContextProvider({ children }) {
           // Update the authoritative backend ID set
           backendProductIdsRef.current = new Set(cleanFetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
-          const localOnly = PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
           const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
           const enrichedFetched = enrichRawProducts(cleanFetched);
-          setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly, ...localOnly]))));
+          setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly]))));
         }
       })
       .catch(err => console.warn('[Backend] Product refresh failed:', err.message));
@@ -880,7 +287,7 @@ export function AppContextProvider({ children }) {
 
   // Load products: backend first (authoritative), Firestore real-time augmentation
   useEffect(() => {
-    // ── Step 1: One-time fetch from FastAPI backend (SQLite = Source of Truth) ──
+    // ── Step 1: One-time fetch from FastAPI backend (Source of Truth) ──
     getProducts()
       .then(fetched => {
         if (fetched && fetched.length > 0) {
@@ -888,10 +295,9 @@ export function AppContextProvider({ children }) {
           // Record which IDs came from the backend
           backendProductIdsRef.current = new Set(cleanFetched.map(p => String(p.id)));
           const backendIds = backendProductIdsRef.current;
-          const localOnly = PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
           const jsonOnly = ENRICHED_JSON_PRODUCTS.filter(p => p && p.id != null && !backendIds.has(String(p.id)));
           const enrichedFetched = enrichRawProducts(cleanFetched);
-          setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly, ...localOnly]))));
+          setProducts(pinnedFirst(dedupeById(sortByCreationDateDesc([...enrichedFetched, ...jsonOnly]))));
         }
       })
       .catch(err => console.warn('[Backend] Product fetch failed (non-fatal):', err.message));
@@ -1569,19 +975,21 @@ export function AppContextProvider({ children }) {
       return;
     }
     setCart((prev) => {
-      const exists = prev.find(item => item.id === product.id);
+      const exists = prev.find(item => item && String(item.id) === String(product.id));
       if (exists) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => item && String(item.id) === String(product.id) ? { ...item, quantity: (item.quantity || 1) + 1 } : item);
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    // Persist to backend (non-blocking, fire-and-forget)
+    // Persist to backend database (non-blocking, fire-and-forget)
     const numericId = parseInt(product.id, 10);
-    if (!isNaN(numericId)) {
-      addCartItemApi(numericId).catch(err =>
-        console.warn('[AppContext] Backend cart add failed (non-fatal):', err.message)
-      );
+    if (isNaN(numericId)) {
+      console.error('[AppContext] Invalid non-integer product ID passed to addToCart:', product.id);
+      return;
     }
+    addCartItemApi(numericId).catch(err =>
+      console.warn('[AppContext] Backend cart add failed (non-fatal):', err.message)
+    );
     // Trigger visual notification drawer
     setIsCartOpen(true);
     confetti({
@@ -1603,9 +1011,9 @@ export function AppContextProvider({ children }) {
 
   const removeFromCart = (id) => {
     const targetIdStr = String(id);
-    setCart((prev) => prev.filter(item => item && String(item.id) !== targetIdStr));
-    // Persist to backend (non-blocking)
     const numericId = parseInt(id, 10);
+    setCart((prev) => prev.filter(item => item && String(item.id) !== targetIdStr));
+    // Persist to backend database
     if (!isNaN(numericId)) {
       removeCartItemApi(numericId).catch(err =>
         console.warn('[AppContext] Backend cart remove failed (non-fatal):', err.message)
@@ -1635,25 +1043,25 @@ export function AppContextProvider({ children }) {
     if (!product || product.id == null) return;
     const prodIdStr = String(product.id);
     const numericId = parseInt(product.id, 10);
+    if (isNaN(numericId)) {
+      console.error('[AppContext] Invalid non-integer product ID passed to toggleWishlist:', product.id);
+      return;
+    }
 
     setWishlist((prev) => {
       const prevArr = Array.isArray(prev) ? prev : [];
       const exists = prevArr.some(item => item && String(item.id) === prodIdStr);
       if (exists) {
-        // Persist removal to backend (non-blocking)
-        if (!isNaN(numericId)) {
-          backendFetch(`/wishlist/${numericId}`, { method: 'DELETE' }).catch(err =>
-            console.warn('[AppContext] Backend wishlist remove failed (non-fatal):', err.message)
-          );
-        }
+        // Persist removal to backend database
+        backendFetch(`/wishlist/${numericId}`, { method: 'DELETE' }).catch(err =>
+          console.warn('[AppContext] Backend wishlist remove failed (non-fatal):', err.message)
+        );
         return prevArr.filter(item => item && String(item.id) !== prodIdStr);
       }
-      // Persist addition to backend (non-blocking)
-      if (!isNaN(numericId)) {
-        backendFetch(`/wishlist/?product_id=${numericId}`, { method: 'POST' }).catch(err =>
-          console.warn('[AppContext] Backend wishlist add failed (non-fatal):', err.message)
-        );
-      }
+      // Persist addition to backend database
+      backendFetch(`/wishlist/?product_id=${numericId}`, { method: 'POST' }).catch(err =>
+        console.warn('[AppContext] Backend wishlist add failed (non-fatal):', err.message)
+      );
       return [...prevArr, product];
     });
   };
