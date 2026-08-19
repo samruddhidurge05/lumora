@@ -35,12 +35,12 @@ export default function CustomerWishlist() {
         return typeof p === 'object' ? String(p.id) : String(p);
       }).filter(Boolean);
 
-      // Combine and deduplicate product IDs
-      const combinedPids = Array.from(new Set([...backendPids, ...contextPids]));
+      // Use backend IDs from database as authoritative source when available
+      const targetPids = Array.isArray(res) ? backendPids : combinedPids;
       const catalogProducts = Array.isArray(products) ? products : [];
 
       // Map IDs to full product objects from catalog or preserve existing item objects
-      const matchedProducts = combinedPids
+      const matchedProducts = targetPids
         .map(id => {
           const found = catalogProducts.find(p => p && String(p.id) === String(id));
           if (found) return found;

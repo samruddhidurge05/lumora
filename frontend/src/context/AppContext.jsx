@@ -1317,37 +1317,38 @@ export function AppContextProvider({ children }) {
       const hasToken = () => !!localStorage.getItem('lumora_backend_token');
       if (!hasToken()) return;
 
-      // 1. Sync cart
+      // 1. Sync cart directly from backend SQLite DB (Source of Truth)
       try {
         const serverCartIds = await getCartApi();
-        if (Array.isArray(serverCartIds) && serverCartIds.length > 0) {
+        if (Array.isArray(serverCartIds)) {
           setCart(prev => {
-            const localIds = new Set(prev.map(i => String(i.id)));
-            const serverOnlyIds = serverCartIds.filter(id => !localIds.has(String(id)));
-            const serverOnlyProducts = serverOnlyIds
+            const mappedProducts = serverCartIds
               .map(id => {
-                const found = products.find(p => String(p.id) === String(id));
-                return found ? { ...found, quantity: 1 } : null;
+                const found = products.find(p => p && String(p.id) === String(id));
+                if (found) return { ...found, quantity: 1 };
+                return prev.find(i => i && String(i.id) === String(id)) || null;
               })
               .filter(Boolean);
-            return serverOnlyProducts.length > 0 ? [...prev, ...serverOnlyProducts] : prev;
+            return mappedProducts;
           });
         }
       } catch (err) {
         console.warn('[AppContext] Cart sync failed (backend may be offline):', err.message);
       }
 
-      // 2. Sync wishlist
+      // 2. Sync wishlist directly from backend SQLite DB (Source of Truth)
       try {
         const serverWishIds = await backendFetch('/wishlist/me');
-        if (Array.isArray(serverWishIds) && serverWishIds.length > 0) {
+        if (Array.isArray(serverWishIds)) {
           setWishlist(prev => {
-            const localIds = new Set(prev.map(i => String(i.id)));
-            const serverOnlyIds = serverWishIds.filter(id => !localIds.has(String(id)));
-            const serverOnlyProducts = serverOnlyIds
-              .map(id => products.find(p => String(p.id) === String(id)))
+            const mappedProducts = serverWishIds
+              .map(id => {
+                const found = products.find(p => p && String(p.id) === String(id));
+                if (found) return found;
+                return prev.find(i => i && String(i.id) === String(id)) || null;
+              })
               .filter(Boolean);
-            return serverOnlyProducts.length > 0 ? [...prev, ...serverOnlyProducts] : prev;
+            return mappedProducts;
           });
         }
       } catch (err) {
