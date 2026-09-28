@@ -22,7 +22,7 @@ Security:
     Webhook route validates X-Razorpay-Signature header (stub for now).
 """
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from sqlalchemy.orm import Session
@@ -126,8 +126,8 @@ def initiate_payment(
                     detail=f"Product '{prod.title}' is not available for purchase."
                 )
             # Override client price_paid with actual server price from DB
-            item.price_paid = float(prod.price)
-            subtotal += float(prod.price)
+            item.price_paid = float(prod.price)  # type: ignore
+            subtotal += float(prod.price)  # type: ignore
     except Exception as e:
         print("DEBUG INITIATE - Exception caught:")
         traceback.print_exc()
@@ -173,7 +173,7 @@ def initiate_payment(
 
     result = payment_service.initiate_payment(
         db=db,
-        customer_id=current_user.id,
+        customer_id=int(current_user.id),  # type: ignore
         amount=body.total_amount,
         items=items_as_dicts,
         currency=body.currency,
@@ -241,7 +241,7 @@ def confirm_payment(
     items_payload = []
     if payment.items_json:
         try:
-            items_payload = _json.loads(payment.items_json)
+            items_payload = _json.loads(payment.items_json)  # type: ignore
         except Exception:
             items_payload = []
 
@@ -259,7 +259,7 @@ def confirm_payment(
     order = payment_service.confirm_payment(
         db=db,
         payment_ref=body.payment_ref,
-        customer_id=current_user.id,
+        customer_id=int(current_user.id),  # type: ignore
         gateway_payment_id=body.gateway_payment_id,
         gateway_signature=body.gateway_signature,
         items_payload=items_payload,
@@ -273,9 +273,9 @@ def confirm_payment(
     from app.services.download_auth_service import get_product_refund_status
     if hasattr(order, "items"):
         for item in order.items:
-            refund_status, can_download, _ = get_product_refund_status(db, current_user.id, item.product_id)
+            refund_status, can_download, _ = get_product_refund_status(db, int(current_user.id), item.product_id)  # type: ignore
             if can_download:
-                token = generate_download_token(current_user.id, item.product_id)
+                token = generate_download_token(int(current_user.id), item.product_id)  # type: ignore
                 item.download_url = f"/api/products/{item.product_id}/download-file?token={token}"
             else:
                 item.download_url = None
@@ -312,7 +312,7 @@ def confirm_payment(
     }
 
 
-# --- 3. Cancel ----------------------------------------------------------------
+# --- 3.cancel---------------------------------------------------------------------------
 
 @router.post(
     "/{payment_ref}/cancel",
@@ -321,7 +321,7 @@ def confirm_payment(
 )
 def cancel_payment(
     payment_ref: str,
-    body: CancelPaymentRequest = None,
+    body: Optional[CancelPaymentRequest] = None,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db),
 ):
@@ -332,7 +332,7 @@ def cancel_payment(
     payment = payment_service.cancel_payment(
         db=db,
         payment_ref=payment_ref,
-        customer_id=current_user.id,
+        customer_id=int(current_user.id),  # type: ignore
     )
     return payment
 
@@ -356,7 +356,7 @@ def retry_payment(
     result = payment_service.retry_payment(
         db=db,
         payment_ref=payment_ref,
-        customer_id=current_user.id,
+        customer_id=int(current_user.id), #type:ignore
     )
     return result
 
@@ -378,7 +378,7 @@ def get_payment_history(
     """Return all payments for the authenticated customer, newest first."""
     payments = payment_service.customer_history(
         db=db,
-        customer_id=current_user.id,
+        customer_id=int(current_user.id), #type:ignore
         skip=skip,
         limit=limit,
     )
@@ -506,7 +506,7 @@ def admin_refund_payment(
     payment = payment_service.initiate_refund(
         db=db,
         payment_ref=payment_ref,
-        admin_user_id=current_user.id,
+        admin_user_id=int(cast(int, current_user.id)),
         amount=body.amount,
         reason=body.reason,
     )
@@ -652,7 +652,7 @@ async def razorpay_webhook(
             repo = PaymentRepository(db)
             payment = repo.find_by_gateway_order_id(event.gateway_order_id)
             if payment and payment.status == "PENDING":
-                repo.transition_status(payment, "FAILED")
+                repo.update_status(payment, "FAILED")
                 db.commit()
                 logger.info(
                     "[webhook/razorpay] Marked payment %s as FAILED via webhook",

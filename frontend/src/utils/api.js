@@ -167,6 +167,11 @@ export const backendFetch = async (endpoint, options = {}, _isRetry = false) => 
     error.status = 401;
     throw error;
   }
+  // ── Render cold-start (502/503/504) handling with auto-retry ────────────────
+  if ([502, 503, 504].includes(res.status) && !_isRetry) {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    return backendFetch(endpoint, options, true);
+  }
   // ──────────────────────────────────────────────────────────────────────────
 
   if (!res.ok) {
